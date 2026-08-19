@@ -1,0 +1,348 @@
+/* HUD 整体：竖向 flex 布局 —— 状态栏 / 情绪栏 / 牌局场景(flex:1) / 装备栏 / 手牌栏 */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+#hud {
+  position: fixed; inset: 0;
+  display: flex; flex-direction: column;
+  pointer-events: none; z-index: 20;
+  font-family: 'Segoe UI', system-ui, sans-serif; color: #e8e8f0;
+}
+
+/* ===== 阶段切换淡场 ===== */
+.hud-veil {
+  position: fixed; inset: 0; background: #000;
+  opacity: 0; pointer-events: none; z-index: 60;
+}
+@keyframes veilFlash { 0% { opacity: 0.55 } 100% { opacity: 0 } }
+.hud-veil.flash { animation: veilFlash 0.34s ease forwards; }
+
+/* 顶部资源条：固定高度，内部横向 flex，状态文字与右侧按钮垂直居中（仅竖屏设计） */
+.hud-top {
+  position: static; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 44px; padding: 0 8px;
+  background: linear-gradient(180deg, rgba(10,10,20,0.85), rgba(10,10,20,0.35));
+  pointer-events: none;
+}
+.hud-stats { display: flex; gap: 4px; align-items: center; }
+.hud-btns { display: flex; gap: 8px; align-items: center; pointer-events: auto; }
+.hud-icon {
+  width: 32px; height: 32px; border: 1px solid rgba(255,255,255,0.18); border-radius: 8px;
+  background: rgba(20,20,35,0.85); color: #e8e8f0; font-size: 15px;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.hud-icon:active { transform: scale(0.94); }
+.stat { display: flex; flex-direction: column; align-items: center; min-width: 40px; }
+.stat .label { font-size: 9px; opacity: 0.6; letter-spacing: 1px; }
+.stat .value { font-size: 15px; font-weight: 700; }
+.stat.hp .value { color: #ff6b6b; }
+.stat.san .value { color: #6b9eff; }
+.stat.gold .value { color: #ffd56b; }
+.stat.key .value { color: #c89bff; }
+.stat.floor .value { color: #8effc8; }
+.stat.turn .value { color: #cccccc; }
+
+/* 情绪栏：flex 流中紧贴状态栏下方，固定高度始终占位（布局稳定）；
+   同一行内：情绪文本居左 + 右侧 buff 提示（避免两行信息在场景顶部叠加） */
+.hud-emotion {
+  position: static; flex-shrink: 0;
+  display: flex; align-items: center;
+  height: 26px; max-width: 92vw; padding: 0 10px;
+  pointer-events: none; z-index: 24;
+}
+.emotion-text {
+  flex: 1; text-align: left;
+  font-size: 11px; font-weight: 600;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.emotion-buff {
+  flex-shrink: 0; margin-left: 8px; max-width: 45vw;
+  font-size: 10px; font-weight: 600; color: #b6f5d0;
+  background: rgba(20,40,30,0.85); border: 1px solid rgba(120,220,160,0.4);
+  border-radius: 10px; padding: 1px 8px;
+  display: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.emotion-buff.show { display: inline-block; }
+.hud-emotion.show { align-self: center; border-radius: 14px; }
+.hud-emotion.show.good  { background: rgba(60,180,110,0.20); color: #8fe6ad; border: 1px solid rgba(120,230,160,0.4); }
+.hud-emotion.show.mixed { background: rgba(220,170,70,0.20);  color: #f2cf72; border: 1px solid rgba(240,200,110,0.4); }
+.hud-emotion.show.bad   { background: rgba(220,80,80,0.20);   color: #ff9a9a; border: 1px solid rgba(255,130,130,0.45); }
+
+/* 日志（浮层，默认隐藏，由顶栏按钮切换） */
+.hud-log {
+  position: absolute; left: 8px; right: 8px; top: 48px; bottom: auto;
+  max-height: 32vh; display: none;
+  background: rgba(10,10,20,0.7); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px; padding: 10px; overflow-y: auto;
+  font-size: 12px; line-height: 1.6; pointer-events: auto;
+}
+.hud-log.show { display: block; }
+.hud-log .log-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.hud-log .log-title { font-size: 12px; font-weight: 700; opacity: 0.8; }
+.hud-log .log-send {
+  font-size: 11px; padding: 4px 10px; border-radius: 6px; cursor: pointer;
+  border: 1px solid rgba(255,213,107,0.5); background: rgba(255,213,107,0.15); color: #ffd56b;
+}
+.hud-log .log-send:hover { background: rgba(255,213,107,0.28); }
+.hud-log .log-send:disabled { opacity: 0.5; cursor: default; }
+.hud-log .log-body { max-height: 24vh; overflow-y: auto; }
+.hud-log .log-status { margin-top: 6px; font-size: 11px; opacity: 0.75; min-height: 14px; color: #8effc8; }
+.hud-log .line { padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+.hud-log .line:last-child { border: none; }
+
+/* 底部装备栏 + 手牌区：固定高度（由内容撑起），flex-shrink 0 */
+.hud-bottom {
+  position: static; flex-shrink: 0;
+  display: flex; flex-direction: column; gap: 6px; padding: 8px 10px 10px;
+  background: linear-gradient(0deg, rgba(10,10,20,0.9), rgba(10,10,20,0.35));
+  pointer-events: none;
+}
+.equip-row { display: flex; gap: 10px; align-items: center; pointer-events: none; }
+.equip-row .label { font-size: 11px; opacity: 0.5; width: auto; }
+.equip-slot {
+  flex: 1 1 0; width: auto; height: 50px; min-width: 0;
+  border: 2px dashed rgba(255,255,255,0.2);
+  border-radius: 8px; display: flex; flex-direction: column; justify-content: center;
+  align-items: center; padding: 4px 6px; cursor: pointer; background: rgba(0,0,0,0.3);
+  transition: all 0.15s;
+}
+.equip-slot.filled { border-style: solid; border-color: rgba(255,255,255,0.35); background: rgba(40,50,80,0.6); }
+.equip-slot.armed { border-color: #ffd56b; box-shadow: 0 0 14px rgba(255,213,107,0.5); background: rgba(80,60,20,0.6); }
+.equip-slot.target { border-color: #6bff9e; box-shadow: 0 0 14px rgba(107,255,158,0.4); }
+.equip-slot .nm { font-size: 12px; font-weight: 600; }
+.equip-slot .sub { font-size: 9px; opacity: 0.7; }
+.equip-slot .dur { width: 80%; height: 4px; background: #333; border-radius: 2px; margin-top: 4px; overflow: hidden; }
+.equip-slot .dur > i { display: block; height: 100%; background: #6bff9e; }
+
+.hand-row { position: relative; display: flex; gap: 6px; align-items: flex-end; overflow-x: auto; padding-bottom: 4px; max-width: 100%; min-height: 88px; }
+.hand-row .label { display: none; }
+.hand-count {
+  position: absolute; top: 0; right: 2px; z-index: 2;
+  font-size: 10px; opacity: 0.55; pointer-events: none;
+}
+.hand-count.full { opacity: 1; color: #ffd56b; font-weight: 700; }
+.hand-empty { flex-shrink: 0; align-self: stretch; display: flex; align-items: center; justify-content: center; min-width: 76px; font-size: 12px; opacity: 0.35; color: #aaa; border: 1px dashed rgba(255,255,255,0.15); border-radius: 8px; }
+.hand-card {
+  flex-shrink: 0; width: calc((100vw - 48px) / 5); min-height: 76px; border-radius: 8px; padding: 4px;
+  display: flex; flex-direction: column; gap: 3px; cursor: pointer; position: relative;
+  background: rgba(30,35,55,0.85); border: 1px solid rgba(255,255,255,0.15);
+  transition: transform 0.12s, box-shadow 0.12s;
+}
+.hand-card.selected {
+  border-color: #ffd56b; box-shadow: 0 0 14px rgba(255,213,107,0.6);
+  transform: scale(1.08); z-index: 3;   /* 原地稍微放大，便于查看 */
+}
+.hand-card.weapon { background: rgba(25,40,70,0.85); }
+.hand-card.potion { background: rgba(25,55,40,0.85); }
+.hand-card .nm { font-size: 11px; font-weight: 600; }
+.hand-card .sub { font-size: 9px; opacity: 0.75; }
+.hand-card .tags { font-size: 9px; opacity: 0.6; }
+.hand-card .dur { width: 100%; height: 4px; background: #333; border-radius: 2px; overflow: hidden; }
+.hand-card .dur > i { display: block; height: 100%; background: #6bff9e; }
+
+/* 选中操作浮层：场景左下丢弃、右下使用（仅选中手牌/装备时出现） */
+.card-actions {
+  position: absolute; left: 0; right: 0; bottom: 178px;
+  display: none; align-items: center; justify-content: space-between;
+  padding: 0 12px; pointer-events: none; z-index: 30;
+}
+.card-actions.show { display: flex; }
+.card-actions button {
+  pointer-events: auto; padding: 10px 24px; border: none; border-radius: 10px;
+  font-size: 13px; font-weight: 700; cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+}
+.card-actions .act-drop { background: rgba(220,70,70,0.9); color: #fff; }
+.card-actions .act-use { background: rgba(107,255,158,0.92); color: #102018; }
+.card-actions button:active { transform: scale(0.95); }
+
+/* 楼层环境横幅 */
+.hud-banner {
+  position: absolute; left: 50%; top: 78px; transform: translateX(-50%);
+  background: rgba(40,20,60,0.85); border: 1px solid rgba(180,120,220,0.4);
+  color: #e8d4ff; border-radius: 6px; padding: 6px 18px; font-size: 12px; font-weight: 600;
+  opacity: 0; transition: opacity 0.4s; pointer-events: none; z-index: 25;
+}
+.hud-banner.show { opacity: 1; }
+
+/* 疯狂横幅 */
+.hud-madness {
+  position: absolute; left: 50%; top: 100px; transform: translateX(-50%);
+  background: rgba(120,10,20,0.9); color: #ffd0d0; border: 1px solid #ff5566;
+  border-radius: 6px; padding: 5px 16px; font-size: 12px; font-weight: 700;
+  display: none; pointer-events: none; z-index: 25;
+  animation: madnessPulse 1.1s infinite;
+}
+.hud-madness.show { display: block; }
+@keyframes madnessPulse { 0%,100% { box-shadow: 0 0 6px rgba(255,80,90,0.4); } 50% { box-shadow: 0 0 16px rgba(255,80,90,0.9); } }
+
+/* 结算遮罩 */
+.hud-over {
+  position: absolute; inset: 0; display: none; flex-direction: column;
+  align-items: center; justify-content: center; gap: 18px;
+  background: rgba(0,0,0,0.7); pointer-events: auto;
+}
+.hud-over.show { display: flex; }
+.hud-over h1 { font-size: 30px; }
+.hud-over.win h1 { color: #8effc8; }
+.hud-over.lose h1 { color: #ff6b6b; }
+.hud-over p { font-size: 13px; padding: 0 16px; }
+.hud-over button { font-size: 14px; padding: 9px 22px; border: none; border-radius: 8px; cursor: pointer; background: #ffd56b; color: #1a1a2e; font-weight: 700; }
+
+/* 滚动条 */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+
+/* 交互元素需可点（父层设为 none，避免遮挡画布上的卡牌点击） */
+.equip-slot, .hand-card, .hand-card button,
+.hud-log, .hud-over, .hud-settings,
+.hud-rest button, .hud-rest .reward-card, .hud-rest .shop-cell { pointer-events: auto; }
+.hand-row { pointer-events: auto; touch-action: pan-x; }
+
+/* 设置面板（浮层，位于状态栏右侧下方） */
+.hud-settings {
+  position: absolute; right: 6px; top: 48px;
+  display: none; background: rgba(20,20,35,0.92); border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 10px; padding: 12px 14px; z-index: 35; min-width: 180px;
+}
+.hud-settings.show { display: block; }
+.settings-row { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #e8e8f0; cursor: pointer; }
+.settings-row input { width: 16px; height: 16px; accent-color: #6b9eff; cursor: pointer; }
+
+/* 超窄屏进一步压一下 */
+@media (max-width: 380px) {
+  .stat { min-width: 34px; }
+  .stat .value { font-size: 13px; }
+  .equip-slot .nm { font-size: 11px; }
+}
+
+/* ===== 道具目标选择（无文字列表）：备选武器绿色边框高亮 ===== */
+.hand-card.target {
+  border-color: #6bff9e; box-shadow: 0 0 10px rgba(107,255,158,0.5);
+}
+
+/* ===== 层间修整（占满场景区，无边框无背景，复用牌局背景；不滚动） =====
+   定位：状态栏 44px + 情绪栏 26px = 70px 起，到底部装备/手牌区(约 176px)之上 */
+.hud-rest {
+  position: absolute; left: 0; right: 0; top: 70px; bottom: 176px;
+  display: none; flex-direction: column; align-items: center;
+  padding: 10px 14px 4px;
+  background: transparent; border: none; overflow: hidden;
+  pointer-events: none; z-index: 40;
+}
+.hud-rest.show { display: flex; }
+
+/* 区域标题 */
+.rest-title {
+  font-size: 15px; font-weight: 700; color: #ffd56b;
+  letter-spacing: 2px; text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+  margin-bottom: 10px; flex-shrink: 0; text-align: center;
+}
+
+/* ---- 三选一奖励 ---- */
+.rest-reward { display: flex; flex-direction: column; align-items: center; width: 100%; }
+.rest-reward-row {
+  display: flex; gap: 10px; width: 100%; justify-content: center; flex: 1; min-height: 0;
+}
+.reward-card {
+  flex: 1 1 0; max-width: 220px; min-width: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  padding: 10px 8px; border-radius: 12px; cursor: pointer;
+  background: rgba(20,24,42,0.72); border: 1.5px solid rgba(255,255,255,0.22);
+  color: #e8e8f0; transition: transform 0.12s, box-shadow 0.12s;
+}
+.reward-card:active { transform: scale(0.97); }
+.reward-card:hover { box-shadow: 0 0 16px rgba(255,213,107,0.35); }
+.reward-card .tag {
+  font-size: 10px; font-weight: 700; letter-spacing: 2px;
+  padding: 2px 10px; border-radius: 10px; background: rgba(255,255,255,0.12); color: #cfe0ff;
+}
+.reward-card .nm { font-size: 15px; font-weight: 700; text-align: center; }
+.reward-card .desc { font-size: 11px; opacity: 0.75; text-align: center; }
+.reward-card.disabled { opacity: 0.45; cursor: default; }
+.reward-card.disabled:hover { box-shadow: none; }
+/* 奖励按类型着色 */
+.reward-card.gold    .tag { background: rgba(255,213,107,0.22); color: #ffd56b; }
+.reward-card.gold    { border-color: rgba(255,213,107,0.5); }
+.reward-card.weapon  .tag { background: rgba(107,158,255,0.22); color: #8fc0ff; }
+.reward-card.weapon  { border-color: rgba(107,158,255,0.5); }
+.reward-card.potion  .tag { background: rgba(107,255,158,0.18); color: #8fe6ad; }
+.reward-card.potion  { border-color: rgba(107,255,158,0.45); }
+.reward-card.item    .tag { background: rgba(120,220,255,0.18); color: #9fdcec; }
+.reward-card.item    { border-color: rgba(120,220,255,0.45); }
+.reward-card.buff    .tag { background: rgba(200,155,255,0.22); color: #d0a9ff; }
+.reward-card.buff    { border-color: rgba(200,155,255,0.5); }
+.reward-card.repair  .tag { background: rgba(255,170,90,0.22); color: #ffb37a; }
+.reward-card.repair  { border-color: rgba(255,170,90,0.5); }
+.reward-card.san     .tag { background: rgba(107,158,255,0.22); color: #9fbfff; }
+.reward-card.san     { border-color: rgba(107,158,255,0.5); }
+.reward-card.hp      .tag { background: rgba(255,107,107,0.2); color: #ff9a9a; }
+.reward-card.hp      { border-color: rgba(255,107,107,0.5); }
+
+/* ---- 商店：8 格 4×2 货架 ---- */
+.rest-shop {
+  display: none; flex-direction: column; width: 100%; flex: 1; min-height: 0;
+}
+.rest-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+  flex: 1; min-height: 0; align-content: center;
+}
+.shop-cell {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  min-height: 0; padding: 6px 4px; border-radius: 10px; cursor: pointer;
+  background: rgba(20,24,42,0.72); border: 1.5px solid rgba(255,255,255,0.22);
+  color: #e8e8f0; transition: transform 0.12s, box-shadow 0.12s;
+}
+.shop-cell:active { transform: scale(0.96); }
+.shop-cell:hover { box-shadow: 0 0 12px rgba(255,213,107,0.35); }
+.shop-cell .nm { font-size: 12px; font-weight: 600; text-align: center; line-height: 1.2; }
+.shop-cell .price { font-size: 11px; font-weight: 700; color: #ffd56b; }
+.shop-cell.sold { opacity: 0.4; cursor: default; }
+.shop-cell.sold:hover { box-shadow: none; }
+.shop-cell.sold .price { color: #999; }
+/* 商品按类型着色 */
+.shop-cell.weapon { border-color: rgba(107,158,255,0.5); }
+.shop-cell.potion { border-color: rgba(107,255,158,0.45); }
+.shop-cell.item   { border-color: rgba(120,220,255,0.45); }
+.shop-cell.buff   { border-color: rgba(200,155,255,0.5); }
+
+/* ---- 操作行：修理 / 出售（居左）+ 提示 + 金币（居右） ---- */
+.rest-ops {
+  display: flex; align-items: center; gap: 8px; margin-top: 10px; flex-shrink: 0;
+}
+.rest-ops button {
+  padding: 7px 18px; border-radius: 8px; cursor: pointer;
+  border: 1.5px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1);
+  color: #e8e8f0; font-size: 13px; font-weight: 600;
+}
+.rest-ops button.active {
+  border-color: #ffd56b; background: rgba(255,213,107,0.22); color: #ffd56b;
+  box-shadow: 0 0 10px rgba(255,213,107,0.35);
+}
+.rest-ops .rest-hint { font-size: 11px; opacity: 0.8; flex: 1; }
+.rest-ops .rest-gold { font-size: 12px; opacity: 0.9; }
+.rest-ops .rest-gold b { color: #ffd56b; font-size: 14px; }
+
+/* ---- 确认栏（文字居左，按钮居右） ---- */
+.rest-confirm {
+  display: none; align-items: center; gap: 10px;
+  margin-top: 8px; padding: 8px 12px; border-radius: 8px;
+  background: rgba(20,24,42,0.8); border: 1px solid rgba(255,213,107,0.4);
+  flex-shrink: 0;
+}
+.rest-confirm.show { display: flex; }
+.confirm-text { flex: 1; font-size: 12px; text-align: left; line-height: 1.4; }
+.confirm-btns { display: flex; gap: 8px; flex-shrink: 0; }
+.confirm-btns button {
+  padding: 6px 16px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600;
+}
+.confirm-btns .ghost { border: 1px solid rgba(255,255,255,0.25); background: transparent; color: #ccc; }
+.confirm-btns .primary { border: none; background: #ffd56b; color: #1a1a2e; }
+
+/* ---- 进入下一层 ---- */
+.rest-next { margin-top: auto; flex-shrink: 0; padding-top: 8px; }
+.rest-next button {
+  padding: 10px 34px; border: none; border-radius: 10px; cursor: pointer;
+  background: #8effc8; color: #102018; font-size: 14px; font-weight: 700;
+}
+.rest-next button:disabled { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.35); cursor: default; }
+
