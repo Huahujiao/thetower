@@ -1,6 +1,7 @@
 // Three.js 3D 场景 —— 卡牌网格、翻牌动画、点击交互
 import * as THREE from 'three'
 import { T } from '../data/cards.js'
+import { getMonsterSkillDef } from '../data/monster-skills.js'
 
 // 牌面比例不再沿用扑克牌（1:1.4），压短为 1.5 : 1.7，信息仍完整显示
 const CARD_W = 1.5
@@ -16,13 +17,13 @@ const GRID_MAX = 6  // 最大棋盘边长（用于拖动边界与桌面尺寸）
 // 牌面配色
 const TYPE_COLOR = {
   monster: '#5b1a1a', weapon: '#1a2b4a', potion: '#1a3b2a',
-  gold: '#4a3a0a', key: '#3a1a4a', exit: '#4a2a0a', entry: '#2a2a2a',
+  gold: '#4a3a0a', key: '#3a1a4a', exit: '#4a2a0a', entry: '#2a2a2a', trap: '#4a2414',
   item: '#2a3b4a',
 }
 // 牌背类型提示文案（调试"显示牌内容"开关启用时才绘制）
 const TYPE_LABEL = {
   monster: '怪物', weapon: '武器', potion: '药水', item: '道具',
-  gold: '金币', key: '钥匙', exit: '出口', entry: '入口',
+  gold: '金币', key: '钥匙', exit: '出口', entry: '入口', trap: '陷阱',
 }
 
 export class GameScene {
@@ -96,39 +97,41 @@ export class GameScene {
     return { x: (c - (GRID - 1) / 2) * GAP_X, z: (r - (GRID - 1) / 2) * GAP_Z }
   }
 
-  _buildBoard() {
-    for (const card of this.state.board) {
-      const { x, z } = this._gridPos(card.c, card.r)
-      const group = new THREE.Group()
-      group.position.set(x, 0, z)
-      group.rotation.x = card.flipped ? 0 : Math.PI
-      // 正面
-      const frontTex = this._makeFrontTexture(card)
-      const frontMat = new THREE.MeshStandardMaterial({ map: frontTex, roughness: 0.7 })
-      const frontMesh = new THREE.Mesh(new THREE.PlaneGeometry(CARD_W, CARD_H), frontMat)
-      frontMesh.rotation.x = -Math.PI / 2
-      frontMesh.position.y = 0.02
-      frontMesh.receiveShadow = true
-      // 背面（带浅显类型提示）
-      const backTex = this._makeBackTexture(card)
-      const backMat = new THREE.MeshStandardMaterial({ map: backTex, roughness: 0.7 })
-      const backMesh = new THREE.Mesh(new THREE.PlaneGeometry(CARD_W, CARD_H), backMat)
-      backMesh.rotation.x = Math.PI / 2
-      backMesh.position.y = -0.02
-      backMesh.userData.uid = card.uid
-      frontMesh.userData.uid = card.uid
-      group.add(frontMesh)
-      group.add(backMesh)
-      group.userData.uid = card.uid
-      this.cardsGroup.add(group)
-      this.cards3d.set(card.uid, {
-        group, frontMesh, backMesh, frontTex, backTex,
-        flipCurrent: card.flipped ? 0 : Math.PI,
-        liftCurrent: 0, hidden: false, glow: false,
-      })
-      // 读档场景：已生效的牌一开始就不显示
-      this._updateVisibility(card)
+  _createCard3d(card) {
+    if (!card || this.cards3d.has(card.uid)) return this.cards3d.get(card.uid)
+    const { x, z } = this._gridPos(card.c, card.r)
+    const group = new THREE.Group()
+    group.position.set(x, 0, z)
+    group.rotation.x = card.flipped ? 0 : Math.PI
+    const frontTex = this._makeFrontTexture(card)
+    const frontMat = new THREE.MeshStandardMaterial({ map: frontTex, roughness: 0.7 })
+    const frontMesh = new THREE.Mesh(new THREE.PlaneGeometry(CARD_W, CARD_H), frontMat)
+    frontMesh.rotation.x = -Math.PI / 2
+    frontMesh.position.y = 0.02
+    frontMesh.receiveShadow = true
+    const backTex = this._makeBackTexture(card)
+    const backMat = new THREE.MeshStandardMaterial({ map: backTex, roughness: 0.7 })
+    const backMesh = new THREE.Mesh(new THREE.PlaneGeometry(CARD_W, CARD_H), backMat)
+    backMesh.rotation.x = Math.PI / 2
+    backMesh.position.y = -0.02
+    backMesh.userData.uid = card.uid
+    frontMesh.userData.uid = card.uid
+    group.add(frontMesh)
+    group.add(backMesh)
+    group.userData.uid = card.uid
+    this.cardsGroup.add(group)
+    const c3 = {
+      group, frontMesh, backMesh, frontTex, backTex,
+      flipCurrent: card.flipped ? 0 : Math.PI,
+      liftCurrent: 0, hidden: false, glow: false,
     }
+    this.cards3d.set(card.uid, c3)
+    this._updateVisibility(card)
+    return c3
+  }
+
+  _buildBoard() {
+    for (const card of this.state.board) this._createCard3d(card)
   }
 
   // ---------- 牌面绘制 ----------
@@ -186,6 +189,27 @@ export class GameScene {
       ctx.textAlign = 'center'
       ctx.fillText(TYPE_LABEL[card.type] || '', 75, 146)
     }
+    if (card.peeked && !card.flipped) {
+      ctx.fillStyle = 'rgba(220,235,255,0.16)'
+      ctx.fillRect(8, 18, 134, 126)
+      ctx.strokeStyle = 'rgba(180,220,255,0.7)'
+      ctx.lineWidth = 2
+      ctx.strokeRect(10, 20, 130, 122)
+      ctx.fillStyle = 'rgba(220,235,255,0.9)'
+      ctx.font = 'bold 14px sans-serif'
+      ctx.fillText('窥见', 75, 42)
+      ctx.font = 'bold 13px sans-serif'
+      ctx.fillText(card.def?.name || '', 75, 72)
+      ctx.font = '11px sans-serif'
+      if (card.type === T.MONSTER) {
+        ctx.fillText(`血 ${card.monsterHp}/${card.def.hp}  攻 ${card.def.atk}`, 75, 98)
+      } else {
+        ctx.fillText(TYPE_LABEL[card.type] || '未知牌', 75, 98)
+      }
+      ctx.font = '10px sans-serif'
+      ctx.fillStyle = 'rgba(220,235,255,0.65)'
+      ctx.fillText('未翻开', 75, 124)
+    }
     const tex = new THREE.CanvasTexture(c)
     tex.anisotropy = 4
     return tex
@@ -203,7 +227,7 @@ export class GameScene {
 
   _makeFrontTexture(card) {
     const { c, ctx } = this._newCanvasCtx()
-    const bg = TYPE_COLOR[card.type] || '#333'
+    const bg = card.faction === 'ally' ? '#17424a' : (TYPE_COLOR[card.type] || '#333')
     const g = ctx.createLinearGradient(0, 0, 0, TEX_H)
     g.addColorStop(0, bg); g.addColorStop(1, '#0a0a12')
     ctx.fillStyle = g; ctx.fillRect(0, 0, TEX_W, TEX_H)
@@ -215,18 +239,25 @@ export class GameScene {
     switch (card.type) {
       case T.MONSTER: {
         const dead = card.dead || card.monsterHp <= 0
+        const isAlly = card.faction === 'ally'
         const isBoss = def.tier === 'B'
         if (isBoss) { ctx.fillStyle = 'rgba(120,10,20,0.5)'; ctx.fillRect(0, 0, TEX_W, TEX_H) }
-        ctx.font = 'bold 16px sans-serif'; ctx.fillStyle = isBoss ? '#fbb' : '#fff'; ctx.fillText(def.name, 75, 26)
+        if (isAlly) { ctx.fillStyle = 'rgba(40,150,170,0.28)'; ctx.fillRect(0, 0, TEX_W, TEX_H) }
+        ctx.font = 'bold 16px sans-serif'; ctx.fillStyle = isAlly ? '#bff' : (isBoss ? '#fbb' : '#fff'); ctx.fillText(def.name, 75, 26)
         ctx.font = '12px sans-serif'; ctx.fillStyle = '#ffa'
-        ctx.fillText(isBoss ? `弱点:${card.bossWeakType || '随机'}` : `弱点: ${def.weak}`, 75, 46)
-        ctx.font = 'bold 30px sans-serif'; ctx.fillStyle = dead ? '#666' : (isBoss ? '#f66' : '#f55')
+        ctx.fillText(isAlly ? '友方召唤物' : (isBoss ? `弱点:${card.bossWeakType || '随机'}` : `弱点: ${def.weak}`), 75, 46)
+        ctx.font = 'bold 30px sans-serif'; ctx.fillStyle = dead ? '#666' : (isAlly ? '#6ee' : (isBoss ? '#f66' : '#f55'))
         ctx.fillText(dead ? '✕' : `${card.monsterHp}`, 75, 88)
-        ctx.font = '12px sans-serif'; ctx.fillStyle = '#fcc'
+        ctx.font = '12px sans-serif'; ctx.fillStyle = isAlly ? '#cff' : '#fcc'
         let atkLine = `血 ${dead ? 0 : card.monsterHp}/${def.hp}  攻 ${def.atk}`
         if (card.pollut) atkLine += ' ☣'
         ctx.fillText(atkLine, 75, 112)
-        if (isBoss) { ctx.fillStyle = '#fbb'; ctx.font = 'bold 12px sans-serif'; ctx.fillText('★ BOSS ★', 75, 134) }
+        const skills = (card.skills || []).map(getMonsterSkillDef).filter(Boolean)
+        if (skills.length) {
+          ctx.fillStyle = '#ffd56b'; ctx.font = 'bold 10px sans-serif'
+          ctx.fillText(skills.map((skill) => skill.name).join(' · ').slice(0, 22), 75, 132)
+        }
+        if (isBoss) { ctx.fillStyle = '#fbb'; ctx.font = 'bold 12px sans-serif'; ctx.fillText('★ BOSS ★', 75, 145) }
         if (dead) { ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(0, 0, TEX_W, TEX_H) }
         break
       }
@@ -249,10 +280,14 @@ export class GameScene {
       case T.POTION: {
         ctx.font = 'bold 15px sans-serif'; ctx.fillText(def.name, 75, 30)
         ctx.font = 'bold 24px sans-serif'; ctx.fillStyle = '#6f6'
-        const txt = def.healHp ? `+${def.healHp}HP` : `+${def.healSan}SAN`
+        const potionParts = []
+        if (def.healHp) potionParts.push(`+${def.healHp}HP`)
+        if (def.healSan) potionParts.push(`+${def.healSan}SAN`)
+        if (def.armor) potionParts.push(`+${def.armor}护甲`)
+        const txt = potionParts.join(' ') || '消耗品'
         ctx.fillText(txt, 75, 78)
         ctx.font = '11px sans-serif'; ctx.fillStyle = '#9fc'
-        ctx.fillText(def.healHp ? '恢复生命' : '恢复理智', 75, 102)
+        ctx.fillText(def.armor && !def.healHp && !def.healSan ? '获得护甲' : '使用后生效', 75, 102)
         break
       }
       case T.ITEM: {
@@ -274,6 +309,15 @@ export class GameScene {
         ctx.font = '11px sans-serif'; ctx.fillStyle = '#9fc'
         ctx.fillText('下次攻击生效', 75, 62)
         ctx.fillStyle = '#fc6'; ctx.fillText('Buff', 75, 122)
+        break
+      }
+      case T.TRAP: {
+        ctx.font = 'bold 16px sans-serif'; ctx.fillStyle = '#ffd18a'
+        ctx.fillText(def.name, 75, 32)
+        ctx.font = 'bold 28px sans-serif'; ctx.fillStyle = '#ff8a5b'
+        ctx.fillText(def.trap === 'explosion' ? '✹' : '☊', 75, 84)
+        ctx.font = '11px sans-serif'; ctx.fillStyle = '#ffd0b8'
+        ctx.fillText(def.trap === 'explosion' ? '翻开：周围 8 格受到 2 伤害' : '翻开：范围内敌人被揭示', 75, 122)
         break
       }
       case T.GOLD:
@@ -330,6 +374,7 @@ export class GameScene {
     c3.frontTex = this._makeFrontTexture(card)
     c3.frontMesh.material.map = c3.frontTex
     c3.frontMesh.material.needsUpdate = true
+    this._updateBackTexture(card)
   }
 
   // 已生效的牌（怪物已击败 / 物品已拾取 / 金币钥匙已收）直接从场上隐藏，牌局更清晰
@@ -346,9 +391,28 @@ export class GameScene {
 
   refreshAll() {
     if (this._disposed) return
+    const live = new Set()
     for (const card of this.state.board) {
+      live.add(card.uid)
+      const c3 = this._createCard3d(card)
+      const { x, z } = this._gridPos(card.c, card.r)
+      c3.group.position.x = x
+      c3.group.position.z = z
       const hidden = this._updateVisibility(card)
       if (!hidden) this.refreshCard(card)
+    }
+    // Consumed cards may be removed from the state when a unit enters their
+    // square. New summons are created lazily above; remove stale meshes here.
+    for (const [uid, c3] of this.cards3d) {
+      if (live.has(uid)) continue
+      this.cardsGroup.remove(c3.group)
+      c3.frontTex?.dispose()
+      c3.backTex?.dispose()
+      c3.frontMesh?.geometry?.dispose()
+      c3.backMesh?.geometry?.dispose()
+      c3.frontMesh?.material?.dispose()
+      c3.backMesh?.material?.dispose()
+      this.cards3d.delete(uid)
     }
   }
 
@@ -484,8 +548,8 @@ export class GameScene {
     } else if (this.state.isLoot(card)) {
       this.state.pickUp(uid)                  // 再点一次才拾取，不消耗回合
     } else if (card.type === T.MONSTER && card.monsterHp > 0) {
-      if (this.state.armedSlot !== null) this.state.attack(uid)
-      else this.state.log.push('先在装备栏选一把武器再攻击怪物。'), this.state.bus.emit('change')
+      if (this.state.canAttack()) this.state.attack(uid)
+      else this.state.log.push('先装备至少一把耐久大于 0 的武器。'), this.state.bus.emit('change')
     } else if (card.type === T.EXIT) {
       this.state.enterExit(uid)
     }
@@ -499,12 +563,13 @@ export class GameScene {
     this.renderer.setSize(w, h)
   }
 
-  // 统一取景（仅竖屏设计）：fov 45（畸变小）+ 更俯视 66° + 距离 8.8（贴近牌阵，边缘靠拖动平移看全）
+  // 统一取景（仅竖屏设计）：fov 45（畸变小）+ 更俯视 66° + 距离 8.8。
+  // 视线略下移，让牌阵在画布中下移，给底部牌行留出完整空间。
   _updateCamera() {
     if (this.camera.clearViewOffset) this.camera.clearViewOffset()
     this.camera.fov = 45
     this.camera.position.set(0, 8, 3.6)
-    this.camera.lookAt(0, 0, 0)
+    this.camera.lookAt(0, -0.7, 0)
     this.camera.updateProjectionMatrix()
   }
 

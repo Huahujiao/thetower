@@ -4,6 +4,8 @@
   position: fixed; inset: 0;
   display: flex; flex-direction: column;
   pointer-events: none; z-index: 20;
+  --hud-bag-cell: min(calc((100vw - 40px) / 10), 38px);
+  --hud-bottom-height: calc(112px + var(--hud-bag-cell) * 5);
   font-family: 'Segoe UI', system-ui, sans-serif; color: #e8e8f0;
 }
 
@@ -23,8 +25,8 @@
   background: linear-gradient(180deg, rgba(10,10,20,0.85), rgba(10,10,20,0.35));
   pointer-events: none;
 }
-.hud-stats { display: flex; gap: 4px; align-items: center; }
-.hud-btns { display: flex; gap: 8px; align-items: center; pointer-events: auto; }
+.hud-stats { display: flex; gap: 2px; align-items: center; }
+.hud-btns { position: relative; z-index: 100; display: flex; gap: 8px; align-items: center; pointer-events: auto; }
 .hud-icon {
   width: 32px; height: 32px; border: 1px solid rgba(255,255,255,0.18); border-radius: 8px;
   background: rgba(20,20,35,0.85); color: #e8e8f0; font-size: 15px;
@@ -35,6 +37,7 @@
 .stat .label { font-size: 9px; opacity: 0.6; letter-spacing: 1px; }
 .stat .value { font-size: 15px; font-weight: 700; }
 .stat.hp .value { color: #ff6b6b; }
+.stat.armor .value { color: #f6c86b; }
 .stat.san .value { color: #6b9eff; }
 .stat.gold .value { color: #ffd56b; }
 .stat.key .value { color: #c89bff; }
@@ -67,13 +70,112 @@
 .hud-emotion.show.mixed { background: rgba(220,170,70,0.20);  color: #f2cf72; border: 1px solid rgba(240,200,110,0.4); }
 .hud-emotion.show.bad   { background: rgba(220,80,80,0.20);   color: #ff9a9a; border: 1px solid rgba(255,130,130,0.45); }
 
+.hud-relics {
+  display: flex;
+  position: static; flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+  min-height: 30px;
+  padding: 1px 0;
+  transform: translateY(-3px);
+}
+.hud-relics.show { pointer-events: auto; }
+.relic-slots { display: flex; gap: 4px; flex-wrap: nowrap; }
+.relic-slot {
+  flex: 0 0 28px;
+  width: 28px; height: 28px;
+  padding: 0;
+  border: 1px solid rgba(210,170,255,0.35);
+  border-radius: 6px;
+  background: rgba(210,170,255,0.10);
+  color: #e5d5ff;
+  display: grid; place-items: center;
+  cursor: default;
+}
+.relic-slot.active { border-color: rgba(255,213,107,0.8); background: rgba(255,213,107,0.13); }
+.relic-slot.inactive { opacity: 0.55; }
+.relic-slot.empty { opacity: 0.35; border-style: dashed; }
+.relic-glyph { font-size: 15px; line-height: 1; font-weight: 700; text-shadow: 0 1px 3px rgba(0,0,0,0.55); }
+.relic-book {
+  flex: 0 0 28px; width: 28px; height: 28px; padding: 0;
+  border: 1px solid rgba(210,170,255,0.55); border-radius: 6px;
+  background: rgba(100,70,150,0.32); color: #e5d5ff;
+  margin-right: 4px; font-size: 18px; line-height: 1; cursor: pointer;
+}
+.relic-book:hover { border-color: #ffd56b; color: #ffd56b; }
+.relic-collection-modal {
+  position: fixed; inset: 0; z-index: 55; display: none;
+  align-items: center; justify-content: center; padding: 18px;
+  pointer-events: auto;
+}
+.relic-collection-modal.show { display: flex; }
+.relic-modal-backdrop { position: absolute; inset: 0; background: rgba(5,5,12,0.66); }
+.relic-modal-panel {
+  position: relative; width: min(92vw, 440px); max-height: 74vh;
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 14px; border: 1px solid rgba(210,170,255,0.48); border-radius: 12px;
+  background: rgba(28,22,46,0.97); box-shadow: 0 16px 42px rgba(0,0,0,0.55);
+}
+.relic-modal-head { display: flex; align-items: center; gap: 8px; color: #e5d5ff; font-size: 15px; font-weight: 700; }
+.relic-modal-count { font-size: 10px; font-weight: 400; opacity: 0.65; }
+.relic-modal-close { margin-left: auto; border: 0; background: transparent; color: #ccc; font-size: 22px; line-height: 1; cursor: pointer; }
+.relic-modal-close:hover { color: #ffd56b; }
+.relic-collection { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; overflow-y: auto; padding: 2px; }
+.relic-collection-item {
+  min-width: 0; padding: 8px;
+  border: 1px solid rgba(210,170,255,0.28);
+  border-radius: 7px;
+  background: rgba(210,170,255,0.06);
+  color: #e5d5ff;
+  text-align: left; font-size: 11px;
+  cursor: default;
+}
+.relic-collection-item.active { border-color: rgba(255,213,107,0.65); }
+.relic-collection-item.inactive { opacity: 0.55; }
+.relic-collection-item.changeable { cursor: pointer; }
+.relic-collection-item.changeable:hover { border-color: #ffd56b; background: rgba(255,213,107,0.12); }
+.relic-collection-item small { display: block; margin-top: 3px; opacity: 0.68; font-size: 9px; }
+.relic-item-name { display: block; font-weight: 700; }
+.relic-item-desc { display: block; margin-top: 5px; color: rgba(255,255,255,0.68); font-size: 10px; line-height: 1.35; }
+.relic-modal-hint { font-size: 10px; color: rgba(255,255,255,0.55); }
+
+.relic-choice {
+  display: none;
+  position: absolute;
+  pointer-events: auto;
+  z-index: 20;
+  inset: 18% 8% auto;
+  padding: 14px;
+  border: 1px solid rgba(210,170,255,0.5);
+  border-radius: 12px;
+  background: rgba(30, 22, 48, 0.96);
+  box-shadow: 0 12px 34px rgba(0,0,0,0.35);
+}
+.relic-choice.show { display: block; }
+.relic-choice-title { margin-bottom: 10px; color: #e5d5ff; font-size: 15px; font-weight: 700; text-align: center; }
+.relic-choice-row { display: flex; justify-content: center; gap: 8px; }
+.relic-choice-card {
+  flex: 1;
+  min-height: 84px;
+  padding: 9px;
+  border: 1px solid rgba(210,170,255,0.45);
+  border-radius: 8px;
+  background: rgba(210,170,255,0.10);
+  color: #fff;
+  cursor: pointer;
+}
+.relic-choice-card:hover { border-color: #ffd56b; background: rgba(255,213,107,0.13); }
+.relic-choice-card .relic-name, .relic-choice-card .relic-desc { display: block; }
+.relic-choice-card .relic-name { font-size: 13px; font-weight: 700; }
+.relic-choice-card .relic-desc { margin-top: 6px; color: rgba(255,255,255,0.72); font-size: 11px; line-height: 1.35; }
+
 /* 日志（浮层，默认隐藏，由顶栏按钮切换） */
 .hud-log {
   position: absolute; left: 8px; right: 8px; top: 48px; bottom: auto;
   max-height: 32vh; display: none;
   background: rgba(10,10,20,0.7); border: 1px solid rgba(255,255,255,0.08);
   border-radius: 8px; padding: 10px; overflow-y: auto;
-  font-size: 12px; line-height: 1.6; pointer-events: auto;
+  font-size: 12px; line-height: 1.6; pointer-events: auto; z-index: 100;
 }
 .hud-log.show { display: block; }
 .hud-log .log-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
@@ -89,7 +191,7 @@
 .hud-log .line { padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
 .hud-log .line:last-child { border: none; }
 
-/* 底部装备栏 + 手牌区：固定高度（由内容撑起），flex-shrink 0 */
+/* 底部装备栏 + 10×5 行囊：固定高度（由网格撑起），flex-shrink 0 */
 .hud-bottom {
   position: static; flex-shrink: 0;
   display: flex; flex-direction: column; gap: 6px; padding: 8px 10px 10px;
@@ -97,15 +199,16 @@
   pointer-events: none;
 }
 .equip-row { display: flex; gap: 10px; align-items: center; pointer-events: none; }
-.equip-row .label { font-size: 11px; opacity: 0.5; width: auto; }
 .equip-slot {
   flex: 1 1 0; width: auto; height: 50px; min-width: 0;
   border: 2px dashed rgba(255,255,255,0.2);
   border-radius: 8px; display: flex; flex-direction: column; justify-content: center;
   align-items: center; padding: 4px 6px; cursor: pointer; background: rgba(0,0,0,0.3);
-  transition: all 0.15s;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.08) inset;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
 }
 .equip-slot.filled { border-style: solid; border-color: rgba(255,255,255,0.35); background: rgba(40,50,80,0.6); }
+.equip-slot.unavailable { opacity: 0.42; border-style: dashed; border-color: rgba(150,160,180,0.35); background: rgba(25,30,45,0.35); cursor: not-allowed; }
 .equip-slot.armed { border-color: #ffd56b; box-shadow: 0 0 14px rgba(255,213,107,0.5); background: rgba(80,60,20,0.6); }
 .equip-slot.target { border-color: #6bff9e; box-shadow: 0 0 14px rgba(107,255,158,0.4); }
 .equip-slot .nm { font-size: 12px; font-weight: 600; }
@@ -113,8 +216,34 @@
 .equip-slot .dur { width: 80%; height: 4px; background: #333; border-radius: 2px; margin-top: 4px; overflow: hidden; }
 .equip-slot .dur > i { display: block; height: 100%; background: #6bff9e; }
 
-.hand-row { position: relative; display: flex; gap: 6px; align-items: flex-end; overflow-x: auto; padding-bottom: 4px; max-width: 100%; min-height: 88px; }
-.hand-row .label { display: none; }
+.backpack-panel { position: relative; width: 100%; }
+.backpack-head { height: 30px; display: flex; justify-content: flex-start; align-items: center; gap: 6px; pointer-events: none; overflow: visible; }
+.bag-rotate { display: none; flex: 0 0 28px; width: 28px; height: 28px; margin-left: auto; padding: 0; pointer-events: auto; transform: translateY(-3px); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; background: rgba(40,45,70,0.9); color: #e8e8f0; font-size: 18px; line-height: 1; cursor: pointer; }
+.bag-rotate.show { display: block; }
+.bag-rotate:disabled { opacity: 0.35; cursor: default; }
+.backpack-grid {
+  --bag-cell: var(--hud-bag-cell);
+  position: relative; display: grid; grid-template-columns: repeat(10, var(--bag-cell)); justify-content: center;
+  grid-template-rows: repeat(5, var(--bag-cell)); gap: 2px;
+  width: 100%; height: calc(var(--bag-cell) * 5 + 8px); pointer-events: auto;
+}
+.bag-cell { min-width: 0; min-height: 0; border: 1px solid rgba(255,255,255,0.12); border-radius: 3px; background: rgba(0,0,0,0.28); cursor: crosshair; }
+.bag-item { position: relative; min-width: 0; min-height: 0; z-index: 2; padding: 2px; border: 1px solid rgba(255,255,255,0.24); border-radius: 5px; overflow: hidden; cursor: pointer; transition: box-shadow 0.12s, transform 0.12s; }
+.bag-item.selected { border-color: #ffd56b; box-shadow: 0 0 12px rgba(255,213,107,0.65); z-index: 4; }
+.bag-item.target { border-color: #6bff9e; box-shadow: 0 0 10px rgba(107,255,158,0.5); }
+.bag-item.weapon { background: rgba(25,40,70,0.92); }
+.bag-item.potion { background: rgba(25,55,40,0.92); }
+.bag-item.item { background: rgba(60,45,25,0.92); }
+.bag-item.buff { background: rgba(55,35,70,0.92); }
+.bag-shape { position: absolute; inset: 1px; display: grid; gap: 1px; pointer-events: none; }
+.bag-shape span { min-width: 0; min-height: 0; border-radius: 2px; }
+.bag-shape .occupied { background: rgba(255,255,255,0.08); display: flex; align-items: flex-start; justify-content: center; overflow: hidden; }
+.bag-shape .occupied b { max-width: 100%; padding: 1px; font-size: 8px; line-height: 1.05; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bag-shape .void { background: transparent; }
+.bag-details { position: absolute; left: 3px; right: 3px; bottom: 2px; pointer-events: none; overflow: hidden; }
+.bag-meta { font-size: 8px; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0.78; }
+.bag-dur { width: 100%; height: 3px; margin-top: 1px; background: #333; border-radius: 2px; overflow: hidden; }
+.bag-dur > i { display: block; height: 100%; background: #6bff9e; }
 .hand-count {
   position: absolute; top: 0; right: 2px; z-index: 2;
   font-size: 10px; opacity: 0.55; pointer-events: none;
@@ -139,21 +268,80 @@
 .hand-card .dur { width: 100%; height: 4px; background: #333; border-radius: 2px; overflow: hidden; }
 .hand-card .dur > i { display: block; height: 100%; background: #6bff9e; }
 
-/* 选中操作浮层：场景左下丢弃、右下使用（仅选中手牌/装备时出现） */
+/* 场景操作行：丢弃 / 等待 / 主动技能 / 使用四等分；不适用按钮保留格位 */
 .card-actions {
-  position: absolute; left: 0; right: 0; bottom: 178px;
-  display: none; align-items: center; justify-content: space-between;
-  padding: 0 12px; pointer-events: none; z-index: 30;
+  position: absolute; left: 0; right: 0; bottom: calc(var(--hud-bottom-height) + 10px);
+  display: none; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px;
+  align-items: center; min-height: 42px; padding: 0 12px; pointer-events: none; z-index: 30;
 }
-.card-actions.show { display: flex; }
+.card-actions.show { display: grid; }
 .card-actions button {
-  pointer-events: auto; padding: 10px 24px; border: none; border-radius: 10px;
+  width: 100%; min-width: 0; pointer-events: auto; padding: 10px 8px; border: none; border-radius: 10px;
   font-size: 13px; font-weight: 700; cursor: pointer;
   box-shadow: 0 2px 10px rgba(0,0,0,0.5);
 }
 .card-actions .act-drop { background: rgba(220,70,70,0.9); color: #fff; }
+.card-actions .act-wait { background: rgba(188,188,210,0.92); color: #171827; font-size: 19px; line-height: 1; }
+.card-actions .act-skill {
+  position: static; transform: none;
+  background: rgba(111,154,255,0.94); color: #10182e; min-width: 0;
+  max-width: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  touch-action: manipulation; -webkit-user-select: none; user-select: none;
+}
 .card-actions .act-use { background: rgba(107,255,158,0.92); color: #102018; }
-.card-actions button:active { transform: scale(0.95); }
+.card-actions button:disabled { cursor: default; opacity: 0; pointer-events: none; }
+.card-actions .act-drop:active, .card-actions .act-wait:active, .card-actions .act-skill:active, .card-actions .act-use:active { transform: scale(0.95); }
+
+/* 主动技能选择与说明：固定浮层，不改变牌局和底部 UI 的布局。 */
+.skill-picker, .skill-detail {
+  position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
+  padding: 18px; pointer-events: auto;
+}
+.skill-picker { z-index: 58; }
+.skill-detail { z-index: 62; }
+.skill-picker.show, .skill-detail.show { display: flex; }
+.skill-picker-backdrop, .skill-detail-backdrop {
+  position: absolute; inset: 0; background: rgba(5,5,12,0.68);
+}
+.skill-picker-panel, .skill-detail-panel {
+  position: relative; width: min(86vw, 320px); padding: 14px;
+  border: 1px solid rgba(130,170,255,0.48); border-radius: 12px;
+  background: rgba(22,25,48,0.98); box-shadow: 0 16px 42px rgba(0,0,0,0.58);
+}
+.skill-picker-head, .skill-detail-head {
+  display: flex; align-items: center; gap: 8px; color: #dce6ff; font-size: 15px; font-weight: 700;
+}
+.skill-picker-close, .skill-detail-close {
+  margin-left: auto; border: 0; background: transparent; color: #ccc;
+  font-size: 22px; line-height: 1; cursor: pointer;
+}
+.skill-picker-list {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 12px;
+  margin: 18px 4px 10px;
+}
+.skill-picker-item {
+  position: relative; width: 52px; height: 52px; padding: 0;
+  border: 1px solid rgba(130,170,255,0.45); border-radius: 10px;
+  background: rgba(130,170,255,0.12); color: #fff; cursor: pointer;
+  touch-action: manipulation; -webkit-user-select: none; user-select: none;
+}
+.skill-picker-item.selected {
+  border-color: #ffd56b; background: rgba(255,213,107,0.2);
+  box-shadow: 0 0 12px rgba(255,213,107,0.36);
+}
+.skill-picker-item:active { transform: scale(0.94); }
+.skill-picker-icon { display: block; font-size: 25px; line-height: 50px; }
+.skill-picker-cooldown {
+  position: absolute; right: -5px; bottom: -5px; min-width: 19px; height: 19px;
+  padding: 0 4px; border-radius: 10px; background: #ff8a75; color: #2b1010;
+  font-size: 10px; line-height: 19px; font-weight: 800;
+}
+.skill-picker-hint { color: rgba(255,255,255,0.58); font-size: 10px; text-align: center; }
+.skill-detail-panel { width: min(86vw, 360px); }
+.skill-detail-icon { font-size: 28px; line-height: 1; }
+.skill-detail-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.skill-detail-meta { margin-top: 12px; color: #ffd56b; font-size: 11px; }
+.skill-detail-desc { margin: 8px 0 2px; color: rgba(255,255,255,0.78); font-size: 12px; line-height: 1.55; }
 
 /* 楼层环境横幅 */
 .hud-banner {
@@ -179,7 +367,7 @@
 .hud-over {
   position: absolute; inset: 0; display: none; flex-direction: column;
   align-items: center; justify-content: center; gap: 18px;
-  background: rgba(0,0,0,0.7); pointer-events: auto;
+  background: rgba(0,0,0,0.7); pointer-events: auto; z-index: 80;
 }
 .hud-over.show { display: flex; }
 .hud-over h1 { font-size: 30px; }
@@ -193,10 +381,10 @@
 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
 
 /* 交互元素需可点（父层设为 none，避免遮挡画布上的卡牌点击） */
-.equip-slot, .hand-card, .hand-card button,
+.equip-slot, .bag-item, .bag-rotate, .hand-card, .hand-card button,
 .hud-log, .hud-over, .hud-settings,
 .hud-rest button, .hud-rest .reward-card, .hud-rest .shop-cell { pointer-events: auto; }
-.hand-row { pointer-events: auto; touch-action: pan-x; }
+.backpack-grid { pointer-events: auto; touch-action: manipulation; }
 
 /* 设置面板（浮层，位于状态栏右侧下方） */
 .hud-settings {
@@ -212,6 +400,7 @@
 @media (max-width: 380px) {
   .stat { min-width: 34px; }
   .stat .value { font-size: 13px; }
+  .hud-icon { width: 28px; }
   .equip-slot .nm { font-size: 11px; }
 }
 
@@ -221,9 +410,9 @@
 }
 
 /* ===== 层间修整（占满场景区，无边框无背景，复用牌局背景；不滚动） =====
-   定位：状态栏 44px + 情绪栏 26px = 70px 起，到底部装备/手牌区(约 176px)之上 */
+   定位：状态栏 44px + 情绪栏 26px = 70px 起，到底部装备/行囊区(约 280px)之上 */
 .hud-rest {
-  position: absolute; left: 0; right: 0; top: 70px; bottom: 176px;
+  position: absolute; left: 0; right: 0; top: 70px; bottom: var(--hud-bottom-height);
   display: none; flex-direction: column; align-items: center;
   padding: 10px 14px 4px;
   background: transparent; border: none; overflow: hidden;
@@ -271,6 +460,8 @@
 .reward-card.item    { border-color: rgba(120,220,255,0.45); }
 .reward-card.buff    .tag { background: rgba(200,155,255,0.22); color: #d0a9ff; }
 .reward-card.buff    { border-color: rgba(200,155,255,0.5); }
+.reward-card.relic   .tag { background: rgba(255,213,107,0.22); color: #ffd56b; }
+.reward-card.relic   { border-color: rgba(255,213,107,0.65); }
 .reward-card.repair  .tag { background: rgba(255,170,90,0.22); color: #ffb37a; }
 .reward-card.repair  { border-color: rgba(255,170,90,0.5); }
 .reward-card.san     .tag { background: rgba(107,158,255,0.22); color: #9fbfff; }
@@ -304,6 +495,7 @@
 .shop-cell.potion { border-color: rgba(107,255,158,0.45); }
 .shop-cell.item   { border-color: rgba(120,220,255,0.45); }
 .shop-cell.buff   { border-color: rgba(200,155,255,0.5); }
+.shop-cell.relic  { border-color: rgba(255,213,107,0.65); }
 
 /* ---- 操作行：修理 / 出售（居左）+ 提示 + 金币（居右） ---- */
 .rest-ops {

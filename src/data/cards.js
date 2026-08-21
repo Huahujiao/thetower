@@ -1,5 +1,7 @@
 // 卡牌数据层 —— 数值来源：docs/ 怪物.md 武器.md 药水.md 道具.md 功能牌.md buff.md 统计.md
-// M2/M3：新增 Buff 卡、每层牌堆生成器、环境与路线修饰。
+// M2/M3: Buff cards, floor deck generation, environment and route modifiers.
+import { random, randomInt, pick as randomPick, weightedPick as randomWeightedPick, shuffle as randomShuffle } from '../game/core/rng.js'
+import { buildRelicChoices } from './relics.js'
 
 // ---------- 怪物 ----------
 // category: blood(腐化血肉) / shell(岩石甲壳) / spirit(灵体)
@@ -12,14 +14,14 @@ export const MONSTERS = [
   { id: 'm_beast',     name: '血肉巨兽',   tier: 3, category: 'blood',  weak: '劈砍', hp: 18, atk: 4, drop: { gold: [3, 4] } },
   // 岩石甲壳系（弱点：穿刺）
   { id: 'm_stone_crab',name: '石壳蟹',     tier: 1, category: 'shell',  weak: '穿刺', hp: 6,  atk: 1, drop: { gold: [1, 1] } },
-  { id: 'm_stone',     name: '岩石甲壳',   tier: 2, category: 'shell',  weak: '穿刺', hp: 12, atk: 3, drop: { gold: [2, 3] } },
-  { id: 'm_beetle',    name: '裂地甲虫',   tier: 3, category: 'shell',  weak: '穿刺', hp: 16, atk: 4, drop: { gold: [3, 3] } },
+  { id: 'm_stone',     name: '岩石甲壳',   tier: 2, category: 'shell',  weak: '穿刺', hp: 12, atk: 3, drop: { gold: [2, 3] }, skills: ['ms_stone_skin'] },
+  { id: 'm_beetle',    name: '裂地甲虫',   tier: 3, category: 'shell',  weak: '穿刺', hp: 16, atk: 4, drop: { gold: [3, 3] }, skills: ['ms_skitter'] },
   { id: 'm_basalt',    name: '玄武守卫',   tier: 3, category: 'shell',  weak: '穿刺', hp: 22, atk: 5, drop: { gold: [4, 4] } },
   // 灵体系（弱点：钝击 或 元素）
-  { id: 'm_wraith',    name: '游魂',       tier: 1, category: 'spirit', weak: '钝击', hp: 3,  atk: 2, drop: { potion: 0.2 } },
+  { id: 'm_wraith',    name: '游魂',       tier: 1, category: 'spirit', weak: '钝击', hp: 3,  atk: 2, drop: { potion: 0.2 }, skills: ['ms_ambush'] },
   { id: 'm_ice',       name: '冰封怨灵',   tier: 2, category: 'spirit', weak: '元素', hp: 6,  atk: 2, drop: { gold: [1, 2], potion: 0.5 } },
   { id: 'm_ancient',   name: '古老者残影', tier: 3, category: 'spirit', weak: '钝击', hp: 10, atk: 4, drop: { key: 0.3 } },
-  { id: 'm_banshee',   name: '哀嚎女妖',   tier: 3, category: 'spirit', weak: '钝击', hp: 14, atk: 4, drop: { gold: [3, 3], potion: 0.3 } },
+  { id: 'm_banshee',   name: '哀嚎女妖',   tier: 3, category: 'spirit', weak: '钝击', hp: 14, atk: 4, drop: { gold: [3, 3], potion: 0.3 }, skills: ['ms_wail'] },
   // 精英
   { id: 'm_abyss',     name: '深渊爬行者', tier: 'E', category: 'blood',  weak: '劈砍', hp: 24, atk: 5, drop: { gold: [5, 5], rareWeapon: 0.15 } },
   { id: 'm_tower',     name: '塔灵',       tier: 'E', category: 'shell',  weak: '穿刺', hp: 26, atk: 6, drop: { gold: [5, 5], key: 0.3 } },
@@ -28,60 +30,85 @@ export const MONSTERS = [
 ]
 
 // ---------- 武器 ----------
+// ONE occupies one hand; TWO occupies both hands in the weapon loadout.
+export const BAG_SHAPES = Object.freeze({
+  CELL: [[1]],
+  LONG2: [[1], [1]],
+  LONG3: [[1], [1], [1]],
+  LONG4: [[1], [1], [1], [1]],
+})
+export const GRIP = Object.freeze({ ONE: 'one', TWO: 'two' })
 export const WEAPONS = [
   // 普通（8）
-  { id: 'w_rust_cleaver', name: '锈蚀柴刀', type: '劈砍', atk: 3, dur: 10, rarity: '普通', tags: [] },
-  { id: 'w_old_axe',      name: '古老石斧', type: '劈砍', atk: 4, dur: 10, rarity: '普通', tags: [] },
-  { id: 'w_bone_awl',     name: '骨锥',     type: '穿刺', atk: 2, dur: 12, rarity: '普通', tags: [] },
-  { id: 'w_rust_knife',   name: '锈蚀短刀', type: '穿刺', atk: 3, dur: 10, rarity: '普通', tags: [] },
-  { id: 'w_cracked_club', name: '开裂木棒', type: '钝击', atk: 2, dur: 12, rarity: '普通', tags: [] },
-  { id: 'w_iron_hammer',  name: '铁头锤',   type: '钝击', atk: 4, dur: 10, rarity: '普通', tags: [] },
-  { id: 'w_torch',        name: '残火火把', type: '元素', atk: 2, dur: 8,  rarity: '普通', tags: [] },
-  { id: 'w_ice_shard',    name: '冻结碎片', type: '元素', atk: 3, dur: 8,  rarity: '普通', tags: [] },
+  { id: 'w_rust_cleaver', name: '锈蚀柴刀', type: '劈砍', grip: GRIP.ONE, shape: BAG_SHAPES.LONG2, atk: 3, dur: 10, rarity: '普通', tags: [] },
+  { id: 'w_old_axe',      name: '古老石斧', type: '劈砍', grip: GRIP.TWO, shape: BAG_SHAPES.LONG3, atk: 4, dur: 10, rarity: '普通', tags: [] },
+  { id: 'w_bone_awl',     name: '骨锥',     type: '穿刺', grip: GRIP.ONE, shape: BAG_SHAPES.LONG2, atk: 2, dur: 12, rarity: '普通', tags: [] },
+  { id: 'w_rust_knife',   name: '锈蚀短刀', type: '穿刺', grip: GRIP.ONE, shape: BAG_SHAPES.LONG2, atk: 3, dur: 10, rarity: '普通', tags: [] },
+  { id: 'w_cracked_club', name: '开裂木棒', type: '钝击', grip: GRIP.ONE, shape: BAG_SHAPES.LONG2, atk: 2, dur: 12, rarity: '普通', tags: [] },
+  { id: 'w_iron_hammer',  name: '铁头锤',   type: '钝击', grip: GRIP.TWO, shape: BAG_SHAPES.LONG3, atk: 4, dur: 10, rarity: '普通', tags: [] },
+  { id: 'w_torch',        name: '残火火把', type: '元素', grip: GRIP.ONE, shape: BAG_SHAPES.LONG2, atk: 2, dur: 8,  rarity: '普通', tags: [] },
+  { id: 'w_ice_shard',    name: '冻结碎片', type: '元素', grip: GRIP.ONE, shape: BAG_SHAPES.LONG2, atk: 3, dur: 8,  rarity: '普通', tags: [] },
   // 精良（6）
-  { id: 'w_hunter_blade', name: '猎人弯刀', type: '劈砍', atk: 5, dur: 10, rarity: '精良', tags: ['屠魔'] },
-  { id: 'w_steel_sword',  name: '精钢长剑', type: '穿刺', atk: 5, dur: 10, rarity: '精良', tags: ['锋锐'] },
-  { id: 'w_ritual_hammer',name: '仪式锤',   type: '钝击', atk: 5, dur: 10, rarity: '精良', tags: ['锋锐+1'] },
-  { id: 'w_ember',        name: '星火余烬', type: '元素', atk: 3, dur: 10, rarity: '精良', tags: ['火焰溅射'] },
-  { id: 'w_shadow_blade', name: '影袭短刃', type: '穿刺', atk: 4, dur: 10, rarity: '精良', tags: ['致命'] },
-  { id: 'w_ice_staff',    name: '寒冰法杖', type: '元素', atk: 4, dur: 10, rarity: '精良', tags: ['驱灵'] },
+  { id: 'w_hunter_blade', name: '猎人弯刀', type: '劈砍', grip: GRIP.ONE, shape: BAG_SHAPES.LONG2, atk: 5, dur: 10, rarity: '精良', tags: ['屠魔'] },
+  { id: 'w_steel_sword',  name: '精钢长剑', type: '穿刺', grip: GRIP.ONE, shape: BAG_SHAPES.LONG2, atk: 5, dur: 10, rarity: '精良', tags: ['锋锐'] },
+  { id: 'w_ritual_hammer',name: '仪式锤',   type: '钝击', grip: GRIP.ONE, shape: BAG_SHAPES.LONG2, atk: 5, dur: 10, rarity: '精良', tags: ['锋锐+1'] },
+  { id: 'w_ember',        name: '星火余烬', type: '元素', grip: GRIP.ONE, shape: BAG_SHAPES.LONG2, atk: 3, dur: 10, rarity: '精良', tags: ['火焰溅射'] },
+  { id: 'w_shadow_blade', name: '影袭短刃', type: '穿刺', grip: GRIP.ONE, shape: BAG_SHAPES.LONG2, atk: 4, dur: 10, rarity: '精良', tags: ['致命'] },
+  { id: 'w_ice_staff',    name: '寒冰法杖', type: '元素', grip: GRIP.TWO, shape: BAG_SHAPES.LONG3, atk: 4, dur: 10, rarity: '精良', tags: ['驱灵'] },
   // 稀有（6）
-  { id: 'w_greatsword',   name: '双手巨剑', type: '劈砍', atk: 7, dur: 10, rarity: '稀有', tags: ['锋锐', '吸血'] },
-  { id: 'w_siege_spear',  name: '破城长枪', type: '穿刺', atk: 7, dur: 10, rarity: '稀有', tags: ['破甲'] },
-  { id: 'w_warhammer',    name: '战锤',     type: '钝击', atk: 7, dur: 10, rarity: '稀有', tags: ['驱灵', '噬魂'] },
-  { id: 'w_dragon_dagger',name: '龙牙匕首', type: '穿刺', atk: 6, dur: 10, rarity: '稀有', tags: ['致命', '锋锐'] },
-  { id: 'w_thunder_core', name: '雷暴之核', type: '元素', atk: 6, dur: 8,  rarity: '稀有', tags: ['连锁闪电'] },
-  { id: 'w_flame_staff',  name: '烈焰之杖', type: '元素', atk: 6, dur: 10, rarity: '稀有', tags: ['火焰溅射', '元素亲和'] },
+  { id: 'w_greatsword',   name: '双手巨剑', type: '劈砍', grip: GRIP.TWO, shape: BAG_SHAPES.LONG3, atk: 7, dur: 10, rarity: '稀有', tags: ['锋锐', '吸血'] },
+  { id: 'w_siege_spear',  name: '破城长枪', type: '穿刺', grip: GRIP.TWO, shape: BAG_SHAPES.LONG3, atk: 7, dur: 10, rarity: '稀有', tags: ['破甲'] },
+  { id: 'w_warhammer',    name: '战锤',     type: '钝击', grip: GRIP.TWO, shape: BAG_SHAPES.LONG3, atk: 7, dur: 10, rarity: '稀有', tags: ['驱灵', '噬魂'] },
+  { id: 'w_dragon_dagger',name: '龙牙匕首', type: '穿刺', grip: GRIP.ONE, shape: BAG_SHAPES.LONG2, atk: 6, dur: 10, rarity: '稀有', tags: ['致命', '锋锐'] },
+  { id: 'w_thunder_core', name: '雷暴之核', type: '元素', grip: GRIP.TWO, shape: BAG_SHAPES.LONG3, atk: 6, dur: 8,  rarity: '稀有', tags: ['连锁闪电'] },
+  { id: 'w_flame_staff',  name: '烈焰之杖', type: '元素', grip: GRIP.TWO, shape: BAG_SHAPES.LONG3, atk: 6, dur: 10, rarity: '稀有', tags: ['火焰溅射', '元素亲和'] },
   // 传说（4）
-  { id: 'w_kingslayer',   name: '弑君巨刃', type: '劈砍', atk: 9, dur: 10, rarity: '传说', tags: ['锋锐', '致命', '吸血'] },
-  { id: 'w_thousand_sting',name:'千刺',     type: '穿刺', atk: 8, dur: 10, rarity: '传说', tags: ['致命', '连锁闪电', '噬魂'] },
-  { id: 'w_judge_hammer', name: '审判之锤', type: '钝击', atk: 8, dur: 12, rarity: '传说', tags: ['破甲', '驱灵', '噬魂'] },
-  { id: 'w_tower_flame',  name: '塔顶之焰', type: '元素', atk: 8, dur: 10, rarity: '传说', tags: ['元素亲和', '火焰溅射', '贪婪'] },
+  { id: 'w_kingslayer',   name: '弑君巨刃', type: '劈砍', grip: GRIP.TWO, shape: BAG_SHAPES.LONG4, atk: 9, dur: 10, rarity: '传说', tags: ['锋锐', '致命', '吸血'] },
+  { id: 'w_thousand_sting',name:'千刺',     type: '穿刺', grip: GRIP.TWO, shape: BAG_SHAPES.LONG4, atk: 8, dur: 10, rarity: '传说', tags: ['致命', '连锁闪电', '噬魂'] },
+  { id: 'w_judge_hammer', name: '审判之锤', type: '钝击', grip: GRIP.TWO, shape: BAG_SHAPES.LONG4, atk: 8, dur: 12, rarity: '传说', tags: ['破甲', '驱灵', '噬魂'] },
+  { id: 'w_tower_flame',  name: '塔顶之焰', type: '元素', grip: GRIP.TWO, shape: BAG_SHAPES.LONG4, atk: 8, dur: 10, rarity: '传说', tags: ['元素亲和', '火焰溅射', '贪婪'] },
 ]
 
 // ---------- 药水 ----------
 export const POTIONS = [
-  { id: 'p_herb',    name: '止血草膏',   rarity: '普通', healHp: 4,  healSan: 0, floorMin: 1 },
-  { id: 'p_small_hp',name: '小生命药水', rarity: '普通', healHp: 6,  healSan: 0, floorMin: 1 },
-  { id: 'p_hp',      name: '生命药水',   rarity: '精良', healHp: 10, healSan: 0, floorMin: 3 },
-  { id: 'p_strong_hp',name:'强效生命药剂',rarity: '稀有', healHp: 15, healSan: 0, floorMin: 5 },
-  { id: 'p_calm',    name: '安神茶',     rarity: '普通', healHp: 0,  healSan: 6, floorMin: 1 },
-  { id: 'p_san',     name: '理智药剂',   rarity: '普通', healHp: 0,  healSan: 9, floorMin: 1 },
-  { id: 'p_san_g',   name: '理智药水',   rarity: '精良', healHp: 0,  healSan: 12, floorMin: 2 },
-  { id: 'p_echo',    name: '回响药剂',   rarity: '稀有', healHp: 0,  healSan: 20, floorMin: 4 },
+  { id: 'p_herb',    name: '止血草膏',   shape: BAG_SHAPES.CELL,  rarity: '普通', healHp: 4,  healSan: 0, floorMin: 1 },
+  { id: 'p_small_hp',name: '小生命药水', shape: BAG_SHAPES.CELL,  rarity: '普通', healHp: 6,  healSan: 0, floorMin: 1 },
+  { id: 'p_armor',   name: '铁甲药剂',   shape: BAG_SHAPES.CELL,  rarity: '普通', armor: 5, floorMin: 1 },
+  { id: 'p_bandage_armor', name: '护甲绷带', shape: BAG_SHAPES.LONG2, rarity: '精良', healHp: 6, healSan: 0, armor: 3, floorMin: 2 },
+  { id: 'p_hp',      name: '生命药水',   shape: BAG_SHAPES.LONG2, rarity: '精良', healHp: 10, healSan: 0, floorMin: 3 },
+  { id: 'p_strong_hp',name:'强效生命药剂',shape: BAG_SHAPES.LONG2, rarity: '稀有', healHp: 15, healSan: 0, floorMin: 5 },
+  { id: 'p_guard',   name: '坚盾药剂',   shape: BAG_SHAPES.LONG2, rarity: '稀有', armor: 10, floorMin: 4 },
+  { id: 'p_calm',    name: '安神茶',     shape: BAG_SHAPES.CELL,  rarity: '普通', healHp: 0,  healSan: 6, floorMin: 1 },
+  { id: 'p_san',     name: '理智药剂',   shape: BAG_SHAPES.CELL,  rarity: '普通', healHp: 0,  healSan: 9, floorMin: 1 },
+  { id: 'p_san_g',   name: '理智药水',   shape: BAG_SHAPES.LONG2, rarity: '精良', healHp: 0,  healSan: 12, floorMin: 2 },
+  { id: 'p_echo',    name: '回响药剂',   shape: BAG_SHAPES.LONG2, rarity: '稀有', healHp: 0,  healSan: 20, floorMin: 4 },
 ]
+
+// ---------- 召唤物 ----------
+// 召唤物仍使用 monster 卡面和生命结算，只通过 faction/entityKind
+// 区分阵营与棋盘行为；这样不会再出现第二套“单位实体”数据结构。
+export const SUMMONS = [
+  { id: 's_slime', name: '史莱姆', tier: 'S', category: 'blood', weak: '劈砍', hp: 6, atk: 0, drop: {}, summon: true, ai: 'none' },
+]
+
+// Traps are board cards: they trigger on reveal and become an empty space.
+export const TRAPS = [
+  { id: 't_explosion', name: '爆炸陷阱', trap: 'explosion', damage: 2, radius: 1 },
+  { id: 't_sound', name: '声响陷阱', trap: 'sound', radius: 2 },
+]
+export const TRAP_RATE = 0.04
 
 // ---------- 道具 ----------
 export const ITEMS = [
-  { id: 'i_whetstone',  name: '磨刀石',     rarity: '普通', repair: 5,  costTurn: true,  fixBroken: false, floorMin: 1 },
-  { id: 'i_whet_great', name: '精制磨刀石', rarity: '精良', repair: 10, costTurn: true,  fixBroken: true,  floorMin: 3 },
-  { id: 'i_oil',        name: '保养油',     rarity: '普通', costTurn: false, buff: 'maintain3', floorMin: 2 },
-  { id: 'i_spare_blade',name: '备用刀刃',   rarity: '精良', costTurn: false, fixBroken: true, repair: 5, floorMin: 4 },
+  { id: 'i_whetstone',  name: '磨刀石',     shape: BAG_SHAPES.CELL, rarity: '普通', repair: 5,  costTurn: true,  fixBroken: false, floorMin: 1 },
+  { id: 'i_whet_great', name: '精制磨刀石', shape: BAG_SHAPES.CELL, rarity: '精良', repair: 10, costTurn: true,  fixBroken: true,  floorMin: 3 },
+  { id: 'i_oil',        name: '保养油',     shape: BAG_SHAPES.CELL, rarity: '普通', costTurn: false, buff: 'maintain3', floorMin: 2 },
+  { id: 'i_spare_blade',name: '备用刀刃',   shape: BAG_SHAPES.CELL, rarity: '精良', costTurn: false, fixBroken: true, repair: 5, floorMin: 4 },
 ]
 
 // ---------- 统一价格表（层间商店 / 出售折价共用） ----------
 export const POTION_PRICE = {
-  p_herb: 3, p_small_hp: 4, p_hp: 7, p_strong_hp: 11,
+  p_herb: 3, p_small_hp: 4, p_armor: 4, p_bandage_armor: 7, p_hp: 7, p_strong_hp: 11, p_guard: 12,
   p_calm: 4, p_san: 6, p_san_g: 8, p_echo: 14,
 }
 export const ITEM_PRICE = { i_whetstone: 3, i_whet_great: 6, i_oil: 4, i_spare_blade: 6 }
@@ -96,8 +123,9 @@ export function weaponPrice(def) {
 // 任意牌定义的参考售价（买入价）
 export function priceOf(def) {
   if (!def) return 1
+  if (def.relic) return def.price || 20
   if (def.atk !== undefined) return weaponPrice(def)
-  if (def.healHp !== undefined || def.healSan !== undefined) return POTION_PRICE[def.id] || 4
+  if (def.healHp !== undefined || def.healSan !== undefined || def.armor !== undefined) return POTION_PRICE[def.id] || 4
   if (def.repair !== undefined || def.buff) return ITEM_PRICE[def.id] || 4
   if (def.effect) return BUFF_PRICE[def.id] || 3
   return 1
@@ -115,16 +143,16 @@ export function priceOf(def) {
 //   noDurLoss 本次攻击不消耗耐久
 // 即时效果（使用时立即结算）：sanNow +N 理智，hpCost N 生命
 export const BUFFS = [
-  { id: 'b_power',  name: '力量增幅', rarity: '普通', effect: { atk: 3 } },
-  { id: 'b_vamp',   name: '吸血符文', rarity: '普通', effect: { lifesteal: 0.5 } },
-  { id: 'b_sunder', name: '破甲打击', rarity: '普通', effect: { ignoreCounter: true, bonus: 2 } },
-  { id: 'b_slow',   name: '减速',     rarity: '普通', effect: { slowTarget: 1 } },
-  { id: 'b_purify', name: '净化',     rarity: '普通', effect: { purify: true } },
-  { id: 'b_calme',  name: '清醒',     rarity: '精良', effect: { sanNow: 6, atk: 1 } },
-  { id: 'b_oil',    name: '磨刀油',   rarity: '普通', effect: { noDurLoss: true } },
-  { id: 'b_crit',   name: '暴击符文', rarity: '精良', effect: { forceCrit: true } },
-  { id: 'b_sac',    name: '献祭',     rarity: '精良', effect: { hpCost: 2, atk: 5 } },
-  { id: 'b_thorn',  name: '荆棘守护', rarity: '稀有', effect: { thorns: 2 } },
+  { id: 'b_power',  name: '力量增幅', shape: BAG_SHAPES.CELL, rarity: '普通', effect: { atk: 3 } },
+  { id: 'b_vamp',   name: '吸血符文', shape: BAG_SHAPES.CELL, rarity: '普通', effect: { lifesteal: 0.5 } },
+  { id: 'b_sunder', name: '破甲打击', shape: BAG_SHAPES.CELL, rarity: '普通', effect: { ignoreCounter: true, bonus: 2 } },
+  { id: 'b_slow',   name: '减速',     shape: BAG_SHAPES.CELL, rarity: '普通', effect: { slowTarget: 1 } },
+  { id: 'b_purify', name: '净化',     shape: BAG_SHAPES.CELL, rarity: '普通', effect: { purify: true } },
+  { id: 'b_calme',  name: '清醒',     shape: BAG_SHAPES.CELL, rarity: '精良', effect: { sanNow: 6, atk: 1 } },
+  { id: 'b_oil',    name: '磨刀油',   shape: BAG_SHAPES.CELL, rarity: '普通', effect: { noDurLoss: true } },
+  { id: 'b_crit',   name: '暴击符文', shape: BAG_SHAPES.CELL, rarity: '精良', effect: { forceCrit: true } },
+  { id: 'b_sac',    name: '献祭',     shape: BAG_SHAPES.CELL, rarity: '精良', effect: { hpCost: 2, atk: 5 } },
+  { id: 'b_thorn',  name: '荆棘守护', shape: BAG_SHAPES.CELL, rarity: '稀有', effect: { thorns: 2 } },
 ]
 
 // ---------- 功能牌 ----------
@@ -145,12 +173,12 @@ export const ENTRY_CARD = { id: 'entry', name: '入口牌' }
 // ---------- 牌类型枚举 ----------
 export const T = {
   MONSTER: 'monster', WEAPON: 'weapon', POTION: 'potion', ITEM: 'item',
-  GOLD: 'gold', KEY: 'key', EXIT: 'exit', ENTRY: 'entry', BUFF: 'buff',
+  GOLD: 'gold', KEY: 'key', EXIT: 'exit', ENTRY: 'entry', BUFF: 'buff', TRAP: 'trap',
 }
 
 // ---------- 全量查表（存读档用） ----------
-const ALL = { monster: MONSTERS, weapon: WEAPONS, potion: POTIONS, item: ITEMS,
-  buff: BUFFS, gold: GOLD_CARDS, key: [KEY_CARD], exit: EXIT_CARDS, entry: [ENTRY_CARD] }
+const ALL = { monster: MONSTERS, summon: SUMMONS, weapon: WEAPONS, potion: POTIONS, item: ITEMS,
+  buff: BUFFS, trap: TRAPS, gold: GOLD_CARDS, key: [KEY_CARD], exit: EXIT_CARDS, entry: [ENTRY_CARD] }
 export const DEFS_BY_ID = {}
 for (const type in ALL) for (const def of ALL[type]) DEFS_BY_ID[def.id] = { type, def }
 export function getDef(type, id) { return DEFS_BY_ID[id]?.def || null }
@@ -206,19 +234,9 @@ function weaponTier(floor) {
 const MON_T1 = ['m_rot_rat', 'm_stone_crab', 'm_wraith']
 const MON_T2 = ['m_rot_flesh', 'm_stone', 'm_ice']
 const MON_T3 = ['m_ripper', 'm_beast', 'm_beetle', 'm_basalt', 'm_ancient', 'm_banshee']
-function pick(arr) { return arr[Math.floor(Math.random() * arr.length)] }
-function pickWeighted(map) {
-  const entries = Object.entries(map).filter(([, w]) => w > 0)
-  const total = entries.reduce((s, [, w]) => s + w, 0)
-  let r = Math.random() * total
-  for (const [k, w] of entries) { if ((r -= w) <= 0) return k }
-  return entries[0][0]
-}
-function shuffled(arr) {
-  const a = arr.slice()
-  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]] }
-  return a
-}
+const pick = randomPick
+const pickWeighted = randomWeightedPick
+const shuffled = randomShuffle
 
 // 生成下一层牌堆原始描述（不含网格坐标），mod 为上一层出口/环境带来的修饰
 export function buildFloorDeck(floor, mod = {}) {
@@ -272,7 +290,7 @@ export function buildFloorDeck(floor, mod = {}) {
     let pool = floor <= 1 ? MON_T1 : floor <= 2 ? [...MON_T1, ...MON_T2] : floor <= 4 ? [...MON_T2, ...MON_T3] : MON_T3
     for (let i = 0; i < req.monster; i++) monIds.push(pick(pool))
     if (cfg.elite) { // 把其中一只替换为精英
-      const ei = Math.floor(Math.random() * monIds.length)
+      const ei = randomInt(monIds.length)
       monIds[ei] = pick(['m_abyss', 'm_tower'])
     }
   }
@@ -298,7 +316,7 @@ export function buildFloorDeck(floor, mod = {}) {
   // 金币（按功能牌.md 权重 50/35/15 抽取 1/2/3 金）
   const goldTotal = GOLD_CARDS.reduce((s, g) => s + (g.weight || 1), 0)
   for (let i = 0; i < req.gold; i++) {
-    let r = Math.random() * goldTotal
+    let r = random() * goldTotal
     let gdef = GOLD_CARDS[0]
     for (const g of GOLD_CARDS) { if ((r -= (g.weight || 1)) <= 0) { gdef = g; break } }
     deck.push({ type: T.GOLD, def: gdef, pollut: false })
@@ -312,11 +330,23 @@ export function buildFloorDeck(floor, mod = {}) {
   const buffPool = buffPoolForFloor(floor)
   for (let i = 0; i < req.buff; i++) deck.push({ type: T.BUFF, def: pick(buffPool), pollut: false })
 
+  // Replace ordinary board cards with traps so traps keep the configured board size.
+  // Boss cards and fixed navigation cards are never replaced.
+  const trapCandidates = shuffled(deck.filter((card) =>
+    card.type !== T.KEY && card.type !== T.EXIT && card.type !== T.ENTRY &&
+    !(card.type === T.MONSTER && card.def.tier === 'B')))
+  for (const card of trapCandidates) {
+    if (random() >= TRAP_RATE) continue
+    card.type = T.TRAP
+    card.def = pick(TRAPS)
+    card.pollut = false
+  }
+
   // 污染标记（20%~30% + 修饰），排除 key/exit/entry
-  const pollRate = Math.min(0.6, 0.20 + Math.random() * 0.10 + (m.pollutionBonus || 0))
-  const pollCandidates = deck.filter(c => c.type !== T.KEY && c.type !== T.EXIT && c.type !== T.ENTRY)
+  const pollRate = Math.min(0.6, 0.20 + random() * 0.10 + (m.pollutionBonus || 0))
+  const pollCandidates = deck.filter(c => c.type !== T.KEY && c.type !== T.EXIT && c.type !== T.ENTRY && c.type !== T.TRAP)
   for (const c of shuffled(pollCandidates)) {
-    if (Math.random() < pollRate) c.pollut = true
+    if (random() < pollRate) c.pollut = true
   }
 
   return { deck, mod: m }
@@ -360,7 +390,7 @@ export function pickWeaponByFloor(floor, rareMul = 1) {
 
 // 生成 8 格商店库存：固定 1 张小号回理智药 + 2 把武器 + 5 件随机消耗品
 // （消耗品池含全部理智药水，故其余格子也可能再刷出回理智的药）
-export function buildShopStock(floor) {
+export function buildShopStock(floor, { relicDefs = [], collected = [] } = {}) {
   const stock = []
   const sanDef = POTIONS.find(p => p.id === SHOP_SAN_POTION_ID)
   stock.push({ type: T.POTION, def: sanDef, price: priceOf(sanDef), sold: false })
@@ -368,22 +398,28 @@ export function buildShopStock(floor) {
     const def = pickWeaponByFloor(floor)
     stock.push({ type: T.WEAPON, def, price: priceOf(def), sold: false })
   }
+  const relic = buildRelicChoices({ count: 1, defs: relicDefs, collected })[0]
+  if (relic) stock.push({ type: 'relic', def: relic, price: priceOf(relic), sold: false })
   const pool = []
   POTIONS.filter(p => floor >= (p.floorMin || 1)).forEach(def => pool.push({ type: T.POTION, def }))
   ITEMS.filter(it => floor >= (it.floorMin || 1)).forEach(def => pool.push({ type: T.ITEM, def }))
   buffPoolForFloor(floor).forEach(def => pool.push({ type: T.BUFF, def }))
   const bag = shuffled(pool)
   while (stock.length < SHOP_SLOTS) {
-    const e = bag.length ? bag.pop() : pool[Math.floor(Math.random() * pool.length)]
+    const e = bag.length ? bag.pop() : pick(pool)
     stock.push({ type: e.type, def: e.def, price: priceOf(e.def), sold: false })
   }
   return shuffled(stock)
 }
 
-// 三选一奖励：仅卡牌奖励（武器/药水/道具/buff），从 4 种中取 3 种互不相同的
+// 层间奖励：默认包含一个尚未获得的圣遗物机会；未选择的圣遗物不会消耗。
 const REWARD_KINDS = ['weapon', 'potion', 'item', 'buff']
-export function buildRewardChoices(floor) {
-  return shuffled(REWARD_KINDS).slice(0, 3).map(kind => makeReward(kind, floor))
+export function buildRewardChoices(floor, { count = 3, relicDefs = [], collected = [] } = {}) {
+  const relic = buildRelicChoices({ count: 1, defs: relicDefs, collected })[0]
+  const kinds = shuffled(REWARD_KINDS).slice(0, Math.max(0, count - (relic ? 1 : 0)))
+  const rewards = kinds.map(kind => makeReward(kind, floor))
+  if (relic) rewards.unshift({ kind: 'relic', amount: 0, def: relic })
+  return rewards
 }
 function makeReward(kind, floor) {
   switch (kind) {
@@ -400,9 +436,16 @@ export function rewardText(rw) {
   const d = rw.def
   switch (rw.kind) {
     case 'weapon': return { name: d.name, desc: `${d.type} 攻${d.atk} 耐${d.dur}`, tag: d.rarity }
-    case 'potion': return { name: d.name, desc: d.healHp ? `生命 +${d.healHp}` : `理智 +${d.healSan}`, tag: '药水' }
+    case 'potion': {
+      const parts = []
+      if (d.healHp) parts.push(`生命 +${d.healHp}`)
+      if (d.healSan) parts.push(`理智 +${d.healSan}`)
+      if (d.armor) parts.push(`护甲 +${d.armor}`)
+      return { name: d.name, desc: parts.join(' ') || '消耗品', tag: '药水' }
+    }
     case 'item':   return { name: d.name, desc: itemText(d) || '道具', tag: '道具' }
     case 'buff':   return { name: d.name, desc: buffText(d) || '下次攻击生效', tag: 'Buff' }
+    case 'relic':  return { name: d.name, desc: d.desc || '加入本局图鉴', tag: '圣遗物' }
     default:       return { name: '奖励', desc: '', tag: '' }
   }
 }
