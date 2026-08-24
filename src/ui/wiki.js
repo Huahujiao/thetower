@@ -1,0 +1,268 @@
+import catalog from '../game/data/catalog.json' with { type: 'json' }
+import { RELIC_DEFS } from '../game/data/relics.js'
+import '../wiki.css'
+
+const COPY = Object.freeze({
+  title: '\u5730\u7262\u56fe\u9274',
+  subtitle: '\u5df2\u5b9e\u88c5\u4e0e\u5f85\u786e\u8ba4\u5185\u5bb9',
+  implemented: '\u5df2\u5b9e\u88c5',
+  proposed: '\u5f85\u786e\u8ba4\uff0f\u672a\u5b9e\u88c5',
+  back: '\u8fd4\u56de\u5730\u7262',
+  enemies: '\u654c\u4eba',
+  weapons: '\u6b66\u5668',
+  relics: '\u5723\u9057\u7269',
+  items: '\u7269\u54c1',
+  enemy: '\u654c\u4eba',
+  boss: '\u9996\u9886',
+  weapon: '\u6b66\u5668',
+  relic: '\u5723\u9057\u7269',
+  potion: '\u751f\u547d\u836f\u6c34',
+  armor: '\u62a4\u7532\u836f\u5242',
+  buff: '\u589e\u76ca\u7269\u54c1',
+  whetstone: '\u78e8\u5200\u77f3',
+  attack: '\u653b\u51fb',
+  health: '\u751f\u547d',
+  range: '\u5c04\u7a0b',
+  durability: '\u8010\u4e45',
+  footprint: '\u5360\u683c',
+  grip: '\u63e1\u6301',
+  damageType: '\u4f24\u5bb3\u7c7b\u578b',
+  floor: '\u51fa\u73b0\u697c\u5c42',
+  delay: '\u521d\u6b21\u884c\u52a8\u5ef6\u8fdf',
+  interval: '\u884c\u52a8\u95f4\u9694',
+  category: '\u7c7b\u578b',
+  active: '\u4e3b\u52a8\u6280\u80fd',
+  cooldown: '\u51b7\u5374',
+  healing: '\u6062\u590d\u751f\u547d',
+  armorValue: '\u589e\u52a0\u62a4\u7532',
+  nextAttack: '\u4e0b\u6b21\u653b\u51fb',
+  repair: '\u4fee\u590d\u8010\u4e45',
+  futureRule: '\u9884\u8ba1\u89c4\u5219',
+  oneHanded: '\u5355\u624b',
+  twoHanded: '\u53cc\u624b',
+  slash: '\u5288\u780d',
+  pierce: '\u7a7f\u523a',
+  blunt: '\u949d\u51fb',
+  blood: '\u8840\u8089',
+  shell: '\u786c\u58f3',
+  spirit: '\u7075\u4f53',
+  stationary: '\u9a7b\u5b88',
+  manhattan: '\u66fc\u54c8\u987f\u8ddd\u79bb',
+  cell: '\u683c',
+  turn: '\u56de\u5408',
+})
+
+const TABS = Object.freeze([
+  { id: 'enemies', label: COPY.enemies },
+  { id: 'weapons', label: COPY.weapons },
+  { id: 'relics', label: COPY.relics },
+  { id: 'items', label: COPY.items },
+])
+
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[character]))
+}
+
+function label(value) { return COPY[value] || value || '' }
+
+function shapeCells(shape) { return (shape || [[1]]).flat().filter(Boolean).length }
+
+function shapeText(shape) {
+  const rows = shape?.length || 1
+  const columns = shape?.[0]?.length || 1
+  return `${rows}\u00d7${columns} \u00b7 ${shapeCells(shape)}${COPY.cell}`
+}
+
+function stat(labelText, value) {
+  return `<div class="wiki-stat"><dt>${escapeHtml(labelText)}</dt><dd>${escapeHtml(value)}</dd></div>`
+}
+
+const PROPOSALS = Object.freeze({
+  enemies: [
+    {
+      tone: 'tone-enemy', tag: COPY.enemy, title: '\u8ffd\u730e\u8005', accent: '\u2020',
+      description: '\u7ffb\u5f00\u540e\u4f1a\u6cbf\u6700\u77ed\u8def\u5f84\u671d\u73a9\u5bb6\u9760\u8fd1\uff0c\u76f4\u5230\u8fdb\u5165\u8fd1\u6218\u8303\u56f4\u3002',
+      stats: [[COPY.health, '6+2\u00b7(F-2)'], [COPY.attack, '3+1\u00b7(F-2)'], [COPY.range, `1 ${COPY.cell}`], [COPY.delay, `1 ${COPY.turn}`], [COPY.interval, `1 ${COPY.turn}`], [COPY.futureRule, '\u8840\u8089 \u00b7 \u8ffd\u51fb']],
+    },
+    {
+      tone: 'tone-enemy', tag: COPY.enemy, title: '\u89c2\u671b\u8005', accent: '\u25ce',
+      description: '\u4e0d\u79fb\u52a8\uff0c\u4f46\u5728\u5c04\u7a0b\u5185\u4f1a\u538b\u7f29\u73a9\u5bb6\u7684\u8def\u7ebf\u9009\u62e9\u3002',
+      stats: [[COPY.health, '5+1\u00b7(F-3)'], [COPY.attack, '2+1\u00b7(F-3)'], [COPY.range, `3 ${COPY.cell}`], [COPY.delay, `1 ${COPY.turn}`], [COPY.interval, `2 ${COPY.turn}`], [COPY.futureRule, '\u7075\u4f53 \u00b7 \u8fdc\u7a0b\u76d1\u89c6']],
+    },
+  ],
+  weapons: [
+    {
+      tone: 'tone-weapon', tag: COPY.weapon, title: '\u94a9\u5203', accent: '\u2020',
+      description: '\u9002\u5408\u5f00\u8def\u7684\u8f7b\u578b\u6b66\u5668\uff0c\u7528\u4f4e\u4f24\u5bb3\u6362\u53d6\u66f4\u597d\u7684\u8d70\u4f4d\u3002',
+      stats: [[COPY.attack, '3'], [COPY.range, `2 ${COPY.cell}`], [COPY.durability, '4'], [COPY.grip, COPY.oneHanded], [COPY.footprint, '3\u00d71 \u00b7 3\u683c'], [COPY.futureRule, '\u51fb\u8d25\u540e\u53ef\u5411\u76ee\u6807\u9760\u8fd1 1 \u683c']],
+    },
+    {
+      tone: 'tone-weapon', tag: COPY.weapon, title: '\u6298\u53e0\u5f29', accent: '\u2694',
+      description: '\u4ee5\u6709\u9650\u8010\u4e45\u6362\u53d6\u975e\u5e38\u7a33\u5b9a\u7684\u8fdc\u7a0b\u5f00\u8def\u80fd\u529b\u3002',
+      stats: [[COPY.attack, '4'], [COPY.range, `4 ${COPY.cell}`], [COPY.durability, '2'], [COPY.grip, COPY.twoHanded], [COPY.footprint, '2\u00d71 \u00b7 2\u683c'], [COPY.futureRule, '\u7b2c\u4e00\u6b21\u8fdc\u7a0b\u653b\u51fb\u65e0\u89c6\u969c\u788d\u60e9\u7f5a']],
+    },
+  ],
+  relics: [
+    {
+      tone: 'tone-relic', tag: COPY.relic, title: '\u56de\u58f0\u7f57\u76d8', accent: '\u2726',
+      description: '\u6bcf\u4e2a\u623f\u95f4\u7684\u7b2c\u4e00\u6b21\u7ffb\u724c\u540e\uff0c\u6307\u51fa\u6700\u8fd1\u7684\u672a\u7ffb\u724c\u7269\u54c1\u65b9\u5411\u3002',
+      stats: [[COPY.futureRule, '\u63d0\u4f9b\u65b9\u5411\u63d0\u793a\uff0c\u4e0d\u900f\u9732\u5177\u4f53\u7269\u54c1']],
+    },
+    {
+      tone: 'tone-relic', tag: COPY.relic, title: '\u95e8\u94ed\u4f59\u6e29', accent: '\u2726',
+      description: '\u7a7f\u8fc7\u623f\u95f4\u95e8\u540e\uff0c\u4f7f\u65b0\u623f\u95f4\u7684\u7b2c\u4e00\u4e2a\u654c\u4eba\u591a\u5ef6\u8fdf 1 \u56de\u5408\u3002',
+      stats: [[COPY.futureRule, '\u65e0\u6cd5\u9632\u6b62\u6781\u901f\u654c\u4eba\u7ffb\u724c\u65f6\u7684\u7b2c\u4e00\u51fb']],
+    },
+  ],
+  items: [
+    {
+      tone: 'tone-buff', tag: COPY.buff, title: '\u70df\u5e55\u74f6', accent: '\u2727',
+      description: '\u5c0f\u578b\u4e00\u6b21\u6027\u9053\u5177\uff0c\u4e3a\u9003\u8dd1\u63d0\u4f9b\u4e00\u56de\u5408\u7f13\u51b2\u3002',
+      stats: [[COPY.footprint, '1\u00d71 \u00b7 1\u683c'], [COPY.floor, '2'], [COPY.futureRule, '\u4f7f\u5df2\u7ffb\u5f00\u654c\u4eba\u672c\u56de\u5408\u4e0d\u884c\u52a8']],
+    },
+    {
+      tone: 'tone-whetstone', tag: COPY.buff, title: '\u63a2\u8def\u7c89', accent: '\u25c6',
+      description: '\u4e0d\u76f4\u63a5\u63ed\u793a\u5185\u5bb9\uff0c\u4f46\u5e2e\u52a9\u5728\u5371\u9669\u623f\u95f4\u4e2d\u4fdd\u7559\u9009\u8def\u4fe1\u606f\u3002',
+      stats: [[COPY.footprint, '1\u00d71 \u00b7 1\u683c'], [COPY.floor, '2'], [COPY.futureRule, '\u9ad8\u4eae\u672c\u56de\u5408\u53ef\u7ffb\u5f00\u7684\u5168\u90e8\u724c']],
+    },
+  ],
+})
+
+function card({ tone, tag, title, description = '', stats = [], accent = '', status = 'implemented' }) {
+  const proposed = status === 'proposed'
+  return `<article class="wiki-card ${tone}${proposed ? ' is-proposed' : ''}">
+    <div class="wiki-card-accent">${escapeHtml(accent)}</div>
+    <div class="wiki-card-head"><span class="wiki-tag">${escapeHtml(tag)}</span><span class="wiki-status">${proposed ? COPY.proposed : COPY.implemented}</span></div>
+    <h2>${escapeHtml(title)}</h2>
+    ${description ? `<p>${escapeHtml(description)}</p>` : ''}
+    <dl class="wiki-stats">${stats.join('')}</dl>
+  </article>`
+}
+
+function proposalCards(group) {
+  return PROPOSALS[group].map((proposal) => card({
+    ...proposal,
+    status: 'proposed',
+    stats: proposal.stats.map(([labelText, value]) => stat(labelText, value)),
+  })).join('')
+}
+
+function enemyCards() {
+  const enemies = [...catalog.enemies, { ...catalog.boss, boss: true, minFloor: 5, hpBase: catalog.boss.hp, attackBase: catalog.boss.attack, hpPerFloor: 0, attackPerFloor: 0 }]
+  return enemies.map((enemy) => card({
+    tone: enemy.boss ? 'tone-boss' : 'tone-enemy',
+    tag: enemy.boss ? COPY.boss : COPY.enemy,
+    title: enemy.name,
+    accent: enemy.boss ? '\u2620' : '\u2020',
+    stats: [
+      stat(COPY.health, `${enemy.hpBase}+${enemy.hpPerFloor}\u00b7(${COPY.floor}-${enemy.minFloor})`),
+      stat(COPY.attack, `${enemy.attackBase}+${enemy.attackPerFloor}\u00b7(${COPY.floor}-${enemy.minFloor})`),
+      stat(COPY.range, `${enemy.range} ${COPY.cell}\uff08${COPY.manhattan}\uff09`),
+      stat(COPY.delay, `${enemy.initialActionDelay} ${COPY.turn}`),
+      stat(COPY.interval, `${enemy.cooldownMax} ${COPY.turn}`),
+      stat(COPY.category, `${label(enemy.category)} \u00b7 ${label(enemy.behavior)}`),
+    ],
+  })).join('') + proposalCards('enemies')
+}
+
+function weaponCards() {
+  return catalog.weapons.map((weapon) => card({
+    tone: 'tone-weapon',
+    tag: COPY.weapon,
+    title: weapon.name,
+    accent: weapon.grip === 'two' ? '\u2694' : '\u2020',
+    stats: [
+      stat(COPY.attack, weapon.attack),
+      stat(COPY.range, `${weapon.range} ${COPY.cell}\uff08${COPY.manhattan}\uff09`),
+      stat(COPY.durability, weapon.durability),
+      stat(COPY.grip, weapon.grip === 'two' ? COPY.twoHanded : COPY.oneHanded),
+      stat(COPY.damageType, label(weapon.damageType)),
+      stat(COPY.footprint, shapeText(weapon.shape)),
+    ],
+  })).join('') + proposalCards('weapons')
+}
+
+function relicCards() {
+  return RELIC_DEFS.map((relic) => card({
+    tone: 'tone-relic',
+    tag: COPY.relic,
+    title: relic.name,
+    description: relic.description,
+    accent: '\u2726',
+    stats: relic.activeSkill
+      ? [stat(COPY.active, relic.activeSkill.name), stat(COPY.cooldown, `${relic.activeSkill.cooldown} ${COPY.turn}`)]
+      : [],
+  })).join('') + proposalCards('relics')
+}
+
+function itemEffect(item) {
+  if (item.type === 'potion') return stat(COPY.healing, `+${item.heal}`)
+  if (item.type === 'armor') return stat(COPY.armorValue, `+${item.armor}`)
+  if (item.type === 'buff') return stat(COPY.nextAttack, `+${item.attackBonus}`)
+  if (item.type === 'whetstone') return stat(COPY.repair, `+${item.repair}`)
+  return ''
+}
+
+function itemCards() {
+  return catalog.consumables.map((item) => card({
+    tone: `tone-${item.type}`,
+    tag: label(item.type),
+    title: item.name,
+    accent: item.type === 'whetstone' ? '\u25c6' : item.type === 'buff' ? '\u2727' : '\u25cf',
+    stats: [
+      itemEffect(item),
+      stat(COPY.footprint, shapeText(item.shape)),
+      stat(COPY.floor, item.minFloor || 1),
+    ],
+  })).join('') + proposalCards('items')
+}
+
+const BUILDERS = Object.freeze({ enemies: enemyCards, weapons: weaponCards, relics: relicCards, items: itemCards })
+
+export class WikiPage {
+  constructor(root = document.getElementById('hud')) {
+    if (!root) throw new Error('Missing #hud container')
+    this.root = root
+    this.activeTab = TABS.some((tab) => tab.id === window.location.hash.slice(1)) ? window.location.hash.slice(1) : 'enemies'
+    document.body.classList.add('wiki-page')
+    document.title = COPY.title
+    this._build()
+    this._onClick = (event) => this._handleClick(event)
+    this.root.addEventListener('click', this._onClick)
+    this.render()
+  }
+
+  _build() {
+    this.root.innerHTML = `<main class="wiki-shell">
+      <header class="wiki-header">
+        <a class="wiki-back" href="/" aria-label="${COPY.back}">\u2190</a>
+        <div><div class="wiki-kicker">${COPY.subtitle}</div><h1>${COPY.title}</h1></div>
+      </header>
+      <nav class="wiki-tabs" role="tablist">${TABS.map((tab) => `<button data-wiki-tab="${tab.id}" role="tab">${tab.label}</button>`).join('')}</nav>
+      <section class="wiki-content" data-wiki-content></section>
+    </main>`
+    this.content = this.root.querySelector('[data-wiki-content]')
+  }
+
+  render() {
+    this.root.querySelectorAll('[data-wiki-tab]').forEach((button) => {
+      const selected = button.dataset.wikiTab === this.activeTab
+      button.classList.toggle('active', selected)
+      button.setAttribute('aria-selected', selected ? 'true' : 'false')
+    })
+    this.content.innerHTML = BUILDERS[this.activeTab]?.() || ''
+  }
+
+  _handleClick(event) {
+    const tab = event.target.closest('[data-wiki-tab]')
+    if (!tab || tab.dataset.wikiTab === this.activeTab) return
+    this.activeTab = tab.dataset.wikiTab
+    window.history.replaceState(null, '', `/wiki#${this.activeTab}`)
+    this.render()
+  }
+
+  dispose() {
+    this.root.removeEventListener('click', this._onClick)
+    document.body.classList.remove('wiki-page')
+  }
+}

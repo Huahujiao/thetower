@@ -128,6 +128,19 @@ fallbackRotationGrid.placements.push(
 assert(fallbackRotationGrid.rotate(fallbackRotationItem.uid), 'rotation should search for an alternative backpack position')
 const fallbackPlacement = fallbackRotationGrid.placementOf(fallbackRotationItem.uid)
 assert(fallbackPlacement.rotation === 1 && fallbackPlacement.x === 2 && fallbackPlacement.y === 0, 'rotation did not relocate when the original position was blocked')
+const preferredMoveGrid = new BackpackGrid(3, 2)
+const preferredMoveItem = { uid: 'preferred-move', shape: [[1], [1]] }
+preferredMoveGrid.placements.push({ item: preferredMoveItem, x: 0, y: 0, rotation: 0 })
+assert(preferredMoveGrid.movePreferred(preferredMoveItem.uid, 1, 0), 'backpack move was rejected')
+assert(preferredMoveGrid.placementOf(preferredMoveItem.uid).rotation === 0, 'backpack move must prefer the vertical placement')
+const horizontalFallbackGrid = new BackpackGrid(3, 2)
+const horizontalFallbackItem = { uid: 'horizontal-fallback', shape: [[1], [1]] }
+horizontalFallbackGrid.placements.push(
+  { item: horizontalFallbackItem, x: 0, y: 0, rotation: 0 },
+  { item: { uid: 'horizontal-block', shape: [[1]] }, x: 1, y: 1, rotation: 0 },
+)
+assert(horizontalFallbackGrid.movePreferred(horizontalFallbackItem.uid, 1, 0), 'horizontal fallback move was rejected')
+assert(horizontalFallbackGrid.placementOf(horizontalFallbackItem.uid).rotation === 1, 'backpack move did not fall back to horizontal placement')
 const serializedShapeGrid = shapeGrid.serialize((item) => ({ ...item }))
 const restoredShapeGrid = BackpackGrid.hydrate(serializedShapeGrid)
 assert(restoredShapeGrid.usedCells === 3 && restoredShapeGrid.placementOf(spear.uid)?.rotation === 1, 'shape backpack placement or rotation did not persist')

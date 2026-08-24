@@ -382,7 +382,7 @@ export class GameRun {
     if (!Number.isInteger(index) || index < 0 || index >= INVENTORY_CAPACITY) return false
     const item = this.backpack.placementOf(itemUid)?.item
     if (!item) return false
-    const moved = this.backpack.move(item.uid, index % INVENTORY_COLUMNS, Math.floor(index / INVENTORY_COLUMNS))
+    const moved = this.backpack.movePreferred(item.uid, index % INVENTORY_COLUMNS, Math.floor(index / INVENTORY_COLUMNS))
     if (!moved) return false
     this.selectedInventoryIndex = this.backpack.originIndex(this.backpack.placementOf(item.uid))
     this.selectedEquipmentSlot = null

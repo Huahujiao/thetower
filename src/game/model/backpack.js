@@ -131,6 +131,26 @@ export class BackpackGrid {
     return true
   }
 
+  movePreferred(itemOrUid, x, y) {
+    const placement = this.placementOf(itemOrUid)
+    if (!placement) return false
+    const rotations = placement.item?.rotatable === false ? [placement.rotation] : [0, 1, 2, 3]
+    const uniqueRotations = rotations.filter((rotation, index, all) => {
+      const signature = shapeSignature(this.shapeFor(placement.item, rotation))
+      return all.findIndex((candidate) => shapeSignature(this.shapeFor(placement.item, candidate)) === signature) === index
+    })
+    uniqueRotations.sort((left, right) => {
+      const rank = (rotation) => {
+        const shape = this.shapeFor(placement.item, rotation)
+        if (shape.length > shape[0].length) return 0
+        if (shape.length === shape[0].length) return 1
+        return 2
+      }
+      return rank(left) - rank(right)
+    })
+    return uniqueRotations.some((rotation) => this.move(placement.item.uid, x, y, rotation))
+  }
+
   rotate(itemOrUid) {
     const placement = this.placementOf(itemOrUid)
     if (!placement || placement.item?.rotatable === false) return false

@@ -417,20 +417,6 @@ export class HUD {
 
   _handlePointerDown(event) {
     if (event.button !== undefined && event.button !== 0) return
-    const bagItem = event.target.closest('[data-slot]')
-    if (bagItem && !this.run.itemTargeting) {
-      const item = this.run.backpack.placementForCellIndex(Number(bagItem.dataset.slot))?.item
-      if (item) {
-        this.bagDrag = {
-          pointerId: event.pointerId,
-          itemUid: item.uid,
-          x: event.clientX,
-          y: event.clientY,
-          moved: false,
-        }
-        this.root.setPointerCapture?.(event.pointerId)
-      }
-    }
     const openDetail = this._detailActionFor(event.target)
     if (!openDetail) return
     const hold = {
@@ -449,39 +435,19 @@ export class HUD {
 
   _handlePointerMove(event) {
     const hold = this.hold
-    if (hold && hold.pointerId === event.pointerId && !hold.opened
-      && Math.abs(event.clientX - hold.x) + Math.abs(event.clientY - hold.y) > 8) {
-      window.clearTimeout(hold.timer)
-      this.hold = null
-    }
-    const drag = this.bagDrag
-    if (!drag || drag.pointerId !== event.pointerId || drag.moved || hold?.opened) return
-    if (Math.abs(event.clientX - drag.x) + Math.abs(event.clientY - drag.y) <= 8) return
-    drag.moved = true
-    if (this.hold?.pointerId === event.pointerId) {
-      window.clearTimeout(this.hold.timer)
-      this.hold = null
-    }
+    if (!hold || hold.pointerId !== event.pointerId || hold.opened) return
+    if (Math.abs(event.clientX - hold.x) + Math.abs(event.clientY - hold.y) <= 8) return
+    window.clearTimeout(hold.timer)
+    this.hold = null
   }
 
   _handlePointerUp(event) {
     const hold = this.hold
-    if (hold && hold.pointerId === event.pointerId) {
-      window.clearTimeout(hold.timer)
-      this.hold = null
-      if (hold.opened) {
-        this.run.closeDetail()
-        this.ignoreClicksUntil = Date.now() + 120
-      }
-    }
-    const drag = this.bagDrag
-    if (!drag || drag.pointerId !== event.pointerId) return
-    this.root.releasePointerCapture?.(event.pointerId)
-    this.bagDrag = null
-    if (!drag.moved || event.type === 'pointercancel') return
-    const target = document.elementFromPoint(event.clientX, event.clientY)
-    const cell = target?.closest?.('[data-bag-cell]')
-    if (cell) this.run.moveInventory(drag.itemUid, Number(cell.dataset.bagCell))
+    if (!hold || hold.pointerId !== event.pointerId) return
+    window.clearTimeout(hold.timer)
+    this.hold = null
+    if (!hold.opened) return
+    this.run.closeDetail()
     this.ignoreClicksUntil = Date.now() + 120
   }
 
@@ -521,7 +487,7 @@ export class HUD {
     }
     const bagCell = event.target.closest('[data-bag-cell]')
     if (bagCell) {
-      this.run.clearSelection()
+      this.run.moveSelectedInventory(Number(bagCell.dataset.bagCell))
       return
     }
     const slot = event.target.closest('[data-slot]')
@@ -573,7 +539,6 @@ export class HUD {
     this.unsubscribe?.()
     this.detailUnsubscribe?.()
     if (this.hold?.timer) window.clearTimeout(this.hold.timer)
-    this.root.releasePointerCapture?.(this.bagDrag?.pointerId)
     this.root.removeEventListener('click', this._onClick)
     this.root.removeEventListener('pointerdown', this._onPointerDown)
     this.root.removeEventListener('pointermove', this._onPointerMove)
