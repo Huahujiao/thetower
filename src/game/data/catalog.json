@@ -1,0 +1,74 @@
+{
+  "enemies": [
+    {
+      "id": "gnawer",
+      "name": "\u7329\u9b3c",
+      "minFloor": 1,
+      "category": "blood",
+      "behavior": "stationary",
+      "range": 1,
+      "hpBase": 4,
+      "hpPerFloor": 2,
+      "attackBase": 4,
+      "attackPerFloor": 1,
+      "cooldownMax": 1,
+      "initialActionDelay": 1
+    },
+    {
+      "id": "shellguard",
+      "name": "\u91cd\u7532\u536b\u58eb",
+      "minFloor": 2,
+      "category": "shell",
+      "behavior": "stationary",
+      "range": 1,
+      "hpBase": 9,
+      "hpPerFloor": 2,
+      "attackBase": 5,
+      "attackPerFloor": 1,
+      "cooldownMax": 2,
+      "initialActionDelay": 1
+    },
+    {
+      "id": "wisp",
+      "name": "\u5e7d\u5149\u6295\u77db\u8005",
+      "minFloor": 2,
+      "category": "spirit",
+      "behavior": "stationary",
+      "range": 3,
+      "hpBase": 5,
+      "hpPerFloor": 1,
+      "attackBase": 3,
+      "attackPerFloor": 1,
+      "cooldownMax": 1,
+      "initialActionDelay": 1
+    }
+  ],
+  "boss": {
+    "id": "overseer",
+    "name": "\u76d1\u89c6\u8005",
+    "category": "spirit",
+    "behavior": "stationary",
+    "hp": 34,
+    "attack": 10,
+    "range": 2,
+    "cooldownMax": 2,
+    "initialActionDelay": 1
+  },
+  "weapons": [
+    { "id": "rust-sword", "name": "\u9508\u5251", "type": "weapon", "grip": "one", "damageType": "slash", "attack": 4, "range": 1, "durability": 3, "shape": [[1], [1]] },
+    { "id": "short-sword", "name": "\u77ed\u5251", "type": "weapon", "grip": "one", "damageType": "slash", "attack": 5, "range": 1, "durability": 3, "shape": [[1], [1]] },
+    { "id": "spear", "name": "\u957f\u67aa", "type": "weapon", "grip": "two", "damageType": "pierce", "attack": 4, "range": 2, "durability": 3, "shape": [[1], [1], [1]] },
+    { "id": "bow", "name": "\u77ed\u5f13", "type": "weapon", "grip": "two", "damageType": "pierce", "attack": 5, "range": 3, "durability": 2, "shape": [[1], [1]] },
+    { "id": "war-hammer", "name": "\u6218\u9524", "type": "weapon", "grip": "two", "damageType": "blunt", "attack": 6, "range": 1, "durability": 3, "shape": [[1], [1], [1]] },
+    { "id": "executioner", "name": "\u5904\u51b3\u4e4b\u5203", "type": "weapon", "grip": "two", "damageType": "slash", "attack": 8, "range": 1, "durability": 2, "shape": [[1], [1], [1], [1]] }
+  ],
+  "consumables": [
+    { "id": "armor-potion", "name": "\u5c0f\u94c1\u7532\u836f\u5242", "type": "armor", "armor": 5, "shape": [[1]] },
+    { "id": "large-armor-potion", "name": "\u5927\u94c1\u7532\u836f\u5242", "type": "armor", "armor": 10, "minFloor": 3, "shape": [[1], [1]] },
+    { "id": "small-potion", "name": "\u5c0f\u751f\u547d\u836f\u6c34", "type": "potion", "heal": 6, "shape": [[1]] },
+    { "id": "large-potion", "name": "\u5927\u751f\u547d\u836f\u6c34", "type": "potion", "heal": 12, "minFloor": 3, "shape": [[1], [1]] },
+    { "id": "battle-charm", "name": "\u70c8\u7130\u7b26\u54d2", "type": "buff", "attackBonus": 4, "shape": [[1]] },
+    { "id": "whetstone", "name": "\u5c0f\u53f7\u78e8\u5200\u77f3", "type": "whetstone", "repair": 2, "shape": [[1]] },
+    { "id": "large-whetstone", "name": "\u5927\u53f7\u78e8\u5200\u77f3", "type": "whetstone", "repair": 3, "minFloor": 3, "shape": [[1]] }
+  ]
+}

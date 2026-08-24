@@ -1,0 +1,114 @@
+import catalog from './catalog.json' with { type: 'json' }
+import { nextEntityId } from './content.js'
+
+const ITEM_DEFS = Object.freeze([...catalog.weapons, ...catalog.consumables])
+const ITEM_BY_ID = new Map(ITEM_DEFS.map((definition) => [definition.id, definition]))
+export const MERCHANT_STOCK_SIZE = 4
+
+export const MERCHANT_DEFS = Object.freeze([
+  {
+    id: 'peddler',
+    name: '\u8d27\u90ce',
+    services: ['stock', 'relic-management', 'sell'],
+    stockPool: 'supplies',
+    restockPrice: 5,
+  },
+  {
+    id: 'smith',
+    name: '\u94c1\u5320',
+    services: ['stock', 'relic-management', 'sell'],
+    stockPool: 'arms',
+    restockPrice: 7,
+  },
+  {
+    id: 'curator',
+    name: '\u6536\u85cf\u5bb6',
+    services: ['relic-management', 'relic-choice', 'sell'],
+    stockPool: null,
+    restockPrice: 0,
+  },
+])
+
+const BY_ID = new Map(MERCHANT_DEFS.map((definition) => [definition.id, definition]))
+
+function availableItems(floor) {
+  return ITEM_DEFS.filter((definition) => floor >= (definition.minFloor || 1))
+}
+
+function stockCandidates(definition, floor) {
+  const items = availableItems(floor)
+  if (definition?.stockPool === 'arms') {
+    return items.filter((item) => item.type === 'weapon' || item.type === 'whetstone')
+  }
+  if (definition?.stockPool === 'supplies') {
+    return items.filter((item) => item.type !== 'weapon')
+  }
+  return []
+}
+
+export function merchantItemPrice(itemOrId) {
+  const item = typeof itemOrId === 'string' ? ITEM_BY_ID.get(itemOrId) : itemOrId
+  if (!item) return 0
+  if (item.type === 'weapon') return 4 + item.attack + item.durability + item.range
+  if (item.type === 'potion') return 3 + Math.ceil(item.heal / 2)
+  if (item.type === 'armor') return 3 + Math.ceil(item.armor / 2)
+  if (item.type === 'whetstone') return 3 + item.repair
+  if (item.type === 'buff') return 4 + item.attackBonus
+  return 4
+}
+
+export function merchantSellPrice(item) { return Math.max(1, Math.floor(merchantItemPrice(item) / 2)) }
+
+function makeStockEntry(definition) { return { itemId: definition.id, price: merchantItemPrice(definition) } }
+
+function pickStockEntry(merchantId, floor, random = Math.random) {
+  const definition = getMerchantDefinition(merchantId)
+  const candidates = stockCandidates(definition, floor)
+  const item = candidates[Math.floor(random() * candidates.length)] || null
+  return item ? makeStockEntry(item) : null
+}
+
+export function buildMerchantStock(merchantId, floor, random = Math.random) {
+  const entries = []
+  for (let index = 0; index < MERCHANT_STOCK_SIZE; index++) {
+    const entry = pickStockEntry(merchantId, floor, random)
+    if (entry) entries.push(entry)
+  }
+  return entries
+}
+
+export function refreshMerchantSlot(merchant, floor, index, random = Math.random) {
+  if (!merchant?.merchantId || !Number.isInteger(index) || index < 0 || index >= merchant.stock.length) return false
+  const entry = pickStockEntry(merchant.merchantId, floor, random)
+  if (!entry) return false
+  merchant.stock[index] = entry
+  return true
+}
+
+export function refreshMerchantStock(merchant, floor, random = Math.random) {
+  if (!merchant?.merchantId) return false
+  const stock = buildMerchantStock(merchant.merchantId, floor, random)
+  if (stock.length === 0) return false
+  merchant.stock = stock
+  return true
+}
+
+export function getMerchantDefinition(id) { return BY_ID.get(id) || null }
+
+export function createMerchantEntity(merchantId, position, { floor = 1, random = Math.random } = {}) {
+  const definition = getMerchantDefinition(merchantId)
+  if (!definition) throw new Error(`Unknown merchant: ${merchantId}`)
+  return {
+    id: nextEntityId('merchant'),
+    kind: 'merchant',
+    merchantId: definition.id,
+    name: definition.name,
+    services: [...definition.services],
+    stock: buildMerchantStock(definition.id, floor, random),
+    restockPrice: definition.restockPrice,
+    relicChoices: [],
+    relicOfferResolved: false,
+    pos: { ...position },
+    revealOrder: null,
+  }
+}

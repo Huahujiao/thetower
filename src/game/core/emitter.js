@@ -1,25 +1,19 @@
-// Small synchronous emitter used by the UI and the rules layer.
-export function makeEmitter() {
+export function createEmitter() {
   const listeners = new Map()
-  return {
-    on(event, callback) {
-      const list = listeners.get(event) || []
-      list.push(callback)
-      listeners.set(event, list)
-      return () => this.off(event, callback)
-    },
-    off(event, callback) {
-      const list = listeners.get(event)
-      if (!list) return
-      listeners.set(event, list.filter((item) => item !== callback))
-    },
-    emit(event, payload) {
-      const list = listeners.get(event)
-      if (!list) return
-      for (const callback of list.slice()) callback(payload)
-    },
-    clear() {
-      listeners.clear()
-    },
+
+  function on(event, listener) {
+    if (!listeners.has(event)) listeners.set(event, new Set())
+    listeners.get(event).add(listener)
+    return () => off(event, listener)
   }
+
+  function off(event, listener) {
+    listeners.get(event)?.delete(listener)
+  }
+
+  function emit(event, payload = undefined) {
+    for (const listener of listeners.get(event) || []) listener(payload)
+  }
+
+  return { on, off, emit }
 }

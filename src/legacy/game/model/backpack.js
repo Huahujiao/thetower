@@ -1,5 +1,5 @@
-export const BACKPACK_COLUMNS = 6
-export const BACKPACK_ROWS = 4
+export const BAG_COLUMNS = 10
+export const BAG_ROWS = 5
 
 function cloneShape(shape) {
   const source = Array.isArray(shape) && shape.length ? shape : [[1]]
@@ -19,12 +19,26 @@ export function rotateShape(shape, turns = 0) {
   return result
 }
 
-function itemShape(item) { return item?.shape || [[1]] }
+function itemKey(item) {
+  return item?.uid || item
+}
 
-function shapeSignature(shape) { return shape.map((row) => row.join('')).join('/') }
+function itemShape(item) {
+  return item?.def?.shape || item?.shape || [[1]]
+}
 
+function shapeSignature(shape) {
+  return shape.map((row) => row.join('')).join('/')
+}
+
+/**
+ * A fixed 10×5 item grid. Placement coordinates are zero-based and refer to
+ * the top-left cell of the item's rotated footprint. Item effects do not
+ * depend on coordinates; the coordinates only answer fit/occupancy queries
+ * and provide future relics with stable placement data.
+ */
 export class BackpackGrid {
-  constructor(columns = BACKPACK_COLUMNS, rows = BACKPACK_ROWS) {
+  constructor(columns = BAG_COLUMNS, rows = BAG_ROWS) {
     if (!Number.isInteger(columns) || columns < 1) throw new TypeError('Backpack columns must be a positive integer')
     if (!Number.isInteger(rows) || rows < 1) throw new TypeError('Backpack rows must be a positive integer')
     this.columns = columns
@@ -35,9 +49,14 @@ export class BackpackGrid {
   get capacity() { return this.columns * this.rows }
   get items() { return this.placements.map((placement) => placement.item) }
   get length() { return this.placements.length }
-  get usedCells() { return this.placements.reduce((total, placement) => total + this.cellsForPlacement(placement).length, 0) }
+  get usedCells() {
+    return this.placements.reduce((total, placement) => total + this.cellsForPlacement(placement).length, 0)
+  }
+  get isFull() { return this.usedCells >= this.capacity }
 
-  shapeFor(item, rotation = 0) { return rotateShape(itemShape(item), rotation) }
+  shapeFor(item, rotation = 0) {
+    return rotateShape(itemShape(item), rotation)
+  }
 
   cellsFor(item, x, y, rotation = 0) {
     const shape = this.shapeFor(item, rotation)
@@ -56,27 +75,15 @@ export class BackpackGrid {
 
   placementOf(itemOrUid) {
     const uid = typeof itemOrUid === 'object' ? itemOrUid?.uid : itemOrUid
-    return this.placements.find((placement) => placement.item?.uid === uid) || null
+    return this.placements.find((placement) => placement.item?.uid === uid || itemKey(placement.item) === uid) || null
   }
-
-  placementAt(x, y) {
-    if (!Number.isInteger(x) || !Number.isInteger(y)) return null
-    return this.placements.find((placement) => this.cellsForPlacement(placement)
-      .some((cell) => cell.x === x && cell.y === y)) || null
-  }
-
-  placementForCellIndex(index) {
-    if (!Number.isInteger(index) || index < 0 || index >= this.capacity) return null
-    return this.placementAt(index % this.columns, Math.floor(index / this.columns))
-  }
-
-  originIndex(placement) { return placement ? placement.y * this.columns + placement.x : null }
 
   canPlace(item, x, y, rotation = 0, ignoreUid = item?.uid) {
     if (!item || !Number.isInteger(x) || !Number.isInteger(y)) return false
     const shape = this.shapeFor(item, rotation)
     const cells = this.cellsFor(item, x, y, rotation)
-    if (!cells.length || x < 0 || y < 0 || shape.length + y > this.rows || shape[0].length + x > this.columns) return false
+    if (!cells.length) return false
+    if (shape.length + y > this.rows || shape[0].length + x > this.columns || x < 0 || y < 0) return false
     const occupied = new Set()
     for (const placement of this.placements) {
       if (placement.item?.uid === ignoreUid) continue
@@ -87,7 +94,7 @@ export class BackpackGrid {
 
   _rotationOptions(item, preferredRotation = 0) {
     const rotations = [((preferredRotation % 4) + 4) % 4]
-    if (item?.rotatable === false) return rotations
+    if (item?.def?.rotatable === false) return rotations
     for (const rotation of [0, 1, 2, 3]) {
       if (!rotations.includes(rotation)) rotations.push(rotation)
     }
@@ -97,7 +104,7 @@ export class BackpackGrid {
     })
   }
 
-  firstFit(item, preferredRotation = item?.bagRotation || 0) {
+  firstFit(item, preferredRotation = 0) {
     for (const rotation of this._rotationOptions(item, preferredRotation)) {
       const shape = this.shapeFor(item, rotation)
       for (let y = 0; y <= this.rows - shape.length; y++) {
@@ -109,7 +116,7 @@ export class BackpackGrid {
     return null
   }
 
-  canFit(item) { return !!this.firstFit(item) }
+  canFit(item) { return !!this.firstFit(item, item?.bagRotation || 0) }
 
   add(item, preferredRotation = item?.bagRotation || 0) {
     const placement = this.firstFit(item, preferredRotation)
@@ -133,7 +140,7 @@ export class BackpackGrid {
 
   rotate(itemOrUid) {
     const placement = this.placementOf(itemOrUid)
-    if (!placement || placement.item?.rotatable === false) return false
+    if (!placement || placement.item?.def?.rotatable === false) return false
     const nextRotation = (placement.rotation + 1) % 4
     if (!this.canPlace(placement.item, placement.x, placement.y, nextRotation, placement.item.uid)) return false
     placement.rotation = nextRotation
@@ -143,10 +150,24 @@ export class BackpackGrid {
 
   removeByUid(uid) {
     const index = this.placements.findIndex((placement) => placement.item?.uid === uid)
-    return index < 0 ? null : this.placements.splice(index, 1)[0].item
+    if (index < 0) return null
+    return this.placements.splice(index, 1)[0].item
   }
 
-  serialize(serializeItem = (item) => item) {
+  removeAt(index) {
+    if (!Number.isInteger(index) || index < 0 || index >= this.placements.length) return null
+    return this.placements.splice(index, 1)[0].item
+  }
+
+  replace(items) {
+    if (!Array.isArray(items)) throw new TypeError('Backpack items must be an array')
+    this.placements = []
+    const failed = []
+    for (const item of items) if (!this.add(item)) failed.push(item)
+    return failed
+  }
+
+  serialize(serializeItem) {
     return {
       columns: this.columns,
       rows: this.rows,
@@ -159,7 +180,7 @@ export class BackpackGrid {
     }
   }
 
-  restore(payload, deserializeItem = (item) => item) {
+  restore(payload, deserializeItem) {
     this.placements = []
     if (!payload || !Array.isArray(payload.placements)) return
     for (const saved of payload.placements) {
@@ -167,18 +188,11 @@ export class BackpackGrid {
       if (!item) continue
       const rotation = Number.isInteger(saved.rotation) ? saved.rotation : 0
       if (this.canPlace(item, saved.x, saved.y, rotation)) {
-        const normalized = ((rotation % 4) + 4) % 4
-        this.placements.push({ item, x: saved.x, y: saved.y, rotation: normalized })
-        item.bagRotation = normalized
+        this.placements.push({ item, x: saved.x, y: saved.y, rotation: ((rotation % 4) + 4) % 4 })
+        item.bagRotation = rotation
       } else {
         this.add(item, rotation)
       }
     }
-  }
-
-  static hydrate(payload) {
-    const backpack = new BackpackGrid(BACKPACK_COLUMNS, BACKPACK_ROWS)
-    backpack.restore(payload)
-    return backpack
   }
 }

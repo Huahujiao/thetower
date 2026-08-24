@@ -1,72 +1,60 @@
-// Numeric modifier pipeline. Modifiers are ordered by priority and acquisition
-// order. Percent additions in the same phase are grouped, so +5% and +5%
-// produce +10% rather than compounding to 10.25%.
-export const MODIFIER_OPERATIONS = Object.freeze({
-  ADD: 'add',
-  PERCENT_ADD: 'percentAdd',
+export const DAMAGE_STAGES = Object.freeze({
+  FLAT: 'flat',
   MULTIPLY: 'multiply',
-  SET: 'set',
-  MIN: 'min',
-  MAX: 'max',
 })
 
-function ordered(modifiers) {
-  return modifiers
-    .map((modifier, index) => ({ ...modifier, _order: modifier.order ?? index }))
-    .sort((a, b) => (a.priority || 0) - (b.priority || 0) || a._order - b._order)
+export function damageModifier(stage, value, source = 'unknown') {
+  return { stage, value: Number(value) || 0, source }
 }
 
-export class ModifierPipeline {
-  constructor(baseValue) {
-    this.baseValue = baseValue
-    this.modifiers = []
-  }
-
-  add(modifier) {
-    if (!modifier || modifier.value === undefined) return this
-    this.modifiers.push({ ...modifier, order: modifier.order ?? this.modifiers.length })
-    return this
-  }
-
-  addAll(modifiers = []) {
-    for (const modifier of modifiers) this.add(modifier)
-    return this
-  }
-
-  resolve() {
-    let value = this.baseValue
-    let percentPhase = null
-    let percentTotal = 0
-
-    const flushPercent = () => {
-      if (percentPhase !== null) value *= 1 + percentTotal
-      percentPhase = null
-      percentTotal = 0
-    }
-
-    for (const modifier of ordered(this.modifiers)) {
-      const operation = modifier.operation || MODIFIER_OPERATIONS.ADD
-      if (operation === MODIFIER_OPERATIONS.PERCENT_ADD) {
-        const phase = modifier.phase || 'default'
-        if (percentPhase !== null && percentPhase !== phase) flushPercent()
-        percentPhase = phase
-        percentTotal += modifier.value
-        continue
-      }
-
-      flushPercent()
-      if (operation === MODIFIER_OPERATIONS.ADD) value += modifier.value
-      else if (operation === MODIFIER_OPERATIONS.MULTIPLY) value *= modifier.value
-      else if (operation === MODIFIER_OPERATIONS.SET) value = modifier.value
-      else if (operation === MODIFIER_OPERATIONS.MIN) value = Math.min(value, modifier.value)
-      else if (operation === MODIFIER_OPERATIONS.MAX) value = Math.max(value, modifier.value)
-      else throw new Error(`Unknown modifier operation: ${operation}`)
-    }
-    flushPercent()
-    return value
+export function resolveDamage(baseDamage, modifiers = []) {
+  const base = Math.max(0, Number(baseDamage) || 0)
+  const flat = modifiers
+    .filter((modifier) => modifier.stage === DAMAGE_STAGES.FLAT)
+    .reduce((total, modifier) => total + modifier.value, 0)
+  const multiplier = modifiers
+    .filter((modifier) => modifier.stage === DAMAGE_STAGES.MULTIPLY)
+    .reduce((total, modifier) => total * modifier.value, 1)
+  return {
+    base,
+    flat,
+    multiplier,
+    total: Math.max(1, Math.floor((base + flat) * multiplier)),
+    modifiers: modifiers.map((modifier) => ({ ...modifier })),
   }
 }
 
-export function resolveNumber(baseValue, modifiers = []) {
-  return new ModifierPipeline(baseValue).addAll(modifiers).resolve()
+const COUNTERED_CATEGORY = Object.freeze({
+  slash: 'blood',
+  pierce: 'shell',
+  blunt: 'spirit',
+})
+
+const RESISTED_CATEGORY = Object.freeze({
+  slash: 'shell',
+  pierce: 'spirit',
+  blunt: 'blood',
+})
+
+export function attackTypeModifier(weapon, target) {
+  const damageType = weapon?.damageType
+  const category = target?.category
+  if (!damageType || !category) return { multiplier: 1, countered: false, resisted: false }
+  if (COUNTERED_CATEGORY[damageType] === category) return { multiplier: 1.6, countered: true, resisted: false }
+  if (RESISTED_CATEGORY[damageType] === category) return { multiplier: 0.65, countered: false, resisted: true }
+  return { multiplier: 1, countered: false, resisted: false }
+}
+
+export function computeAttackDamage({ weapon, target, pendingAttackBonus = 0, relicModifiers = [], terrainModifiers = [] } = {}) {
+  if (!weapon) return { damage: 0, countered: false, resisted: false, resolution: resolveDamage(0) }
+  const type = attackTypeModifier(weapon, target)
+  const modifiers = [
+    ...(pendingAttackBonus ? [damageModifier(DAMAGE_STAGES.FLAT, pendingAttackBonus, 'pending-buff')] : []),
+    ...(weapon.durability === 1 ? [damageModifier(DAMAGE_STAGES.MULTIPLY, 0.5, 'last-durability')] : []),
+    ...(type.multiplier !== 1 ? [damageModifier(DAMAGE_STAGES.MULTIPLY, type.multiplier, type.countered ? 'counter' : 'resisted')] : []),
+    ...relicModifiers,
+    ...terrainModifiers,
+  ]
+  const resolution = resolveDamage(weapon.attack, modifiers)
+  return { damage: resolution.total, countered: type.countered, resisted: type.resisted, resolution }
 }

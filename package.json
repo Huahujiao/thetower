@@ -5,11 +5,12 @@
   "type": "module",
   "scripts": {
     "predev": "node scripts/open-firewall.mjs",
-    "dev": "vite --host --port 3000",
+    "dev": "vite",
     "firewall:setup": "scripts\\firewall-setup.bat",
     "build": "vite build",
+    "lint": "eslint.cmd src scripts/v2-check.mjs",
     "preview": "vite preview",
-    "check:rules": "node scripts/phase1-check.mjs && node scripts/phase2-check.mjs && node scripts/phase3-check.mjs && node scripts/phase4-check.mjs && node scripts/phase5-check.mjs"
+    "check:rules": "node scripts/v2-check.mjs"
   },
   "dependencies": {
     "three": "^0.185.1"

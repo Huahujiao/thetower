@@ -1,648 +1,626 @@
-// Three.js 3D 场景 —— 卡牌网格、翻牌动画、点击交互
 import * as THREE from 'three'
-import { T } from '../data/cards.js'
-import { getMonsterSkillDef } from '../data/monster-skills.js'
 
-// 牌面比例不再沿用扑克牌（1:1.4），压短为 1.5 : 1.7，信息仍完整显示
-const CARD_W = 1.5
-const CARD_H = 1.7
-const TEX_W = 150           // 纹理逻辑宽（实际像素 ×TEX_S）
-const TEX_H = 170           // 纹理逻辑高，与 CARD_W/CARD_H 同比
-const TEX_S = 2             // 超采样倍率，保证小字清晰
-const GAP_X = 1.65  // 列距（1.5 + 0.15 缝隙）
-const GAP_Z = 1.85  // 行距（1.7 + 0.15 缝隙）
-const GRID = 4
-const GRID_MAX = 6  // 最大棋盘边长（用于拖动边界与桌面尺寸）
+const TILE_SIZE = 1.14
+const CARD_SIZE = TILE_SIZE
+const CARD_THICKNESS = 0.08
+const DEFAULT_ZOOM = 1
+const MIN_ZOOM = 0.66
+const MAX_ZOOM = 3.2
+const DRAG_THRESHOLD = 8
+const CAMERA_FOV = 45
+const CAMERA_NEAR = 0.1
+const CAMERA_FAR = 80
+const CAMERA_HEIGHT_RATIO = 0.91
+const CAMERA_DEPTH_RATIO = 0.41
 
-// 牌面配色
-const TYPE_COLOR = {
-  monster: '#5b1a1a', weapon: '#1a2b4a', potion: '#1a3b2a',
-  gold: '#4a3a0a', key: '#3a1a4a', exit: '#4a2a0a', entry: '#2a2a2a', trap: '#4a2414',
+const CARD_COLORS = Object.freeze({
+  monster: '#5b1a1a',
+  weapon: '#1a2b4a',
+  potion: '#1a3b2a',
+  buff: '#21402e',
   item: '#2a3b4a',
+  gold: '#4a3a0a',
+  key: '#3a1a4a',
+  door: '#4a2a0a',
+  merchant: '#3c2a16',
+  trap: '#4a2338',
+  entry: '#2a2a2a',
+  empty: '#20242d',
+})
+
+const DAMAGE_TYPE_LABELS = Object.freeze({
+  slash: '劈砍',
+  pierce: '穿刺',
+  blunt: '钝击',
+})
+
+const ENEMY_WEAKNESS = Object.freeze({
+  blood: '劈砍',
+  shell: '穿刺',
+  spirit: '钝击',
+})
+
+function makeCanvasTexture(draw) {
+  const canvas = document.createElement('canvas')
+  canvas.width = 480
+  canvas.height = 480
+  const context = canvas.getContext('2d')
+  context.scale(3, 3)
+  draw(context)
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.colorSpace = THREE.SRGBColorSpace
+  texture.anisotropy = 4
+  return texture
 }
-// 牌背类型提示文案（调试"显示牌内容"开关启用时才绘制）
-const TYPE_LABEL = {
-  monster: '怪物', weapon: '武器', potion: '药水', item: '道具',
-  gold: '金币', key: '钥匙', exit: '出口', entry: '入口', trap: '陷阱',
+
+function drawCenteredText(context, text, y, { color = '#fff', size = 12, weight = 'normal' } = {}) {
+  let actualSize = size
+  do {
+    context.font = `${weight} ${actualSize}px sans-serif`
+    actualSize -= 1
+  } while (actualSize > 9 && context.measureText(text).width > 142)
+  context.fillStyle = color
+  context.textAlign = 'center'
+  context.fillText(text, 80, y)
+}
+
+function drawStickFigure(context) {
+  context.strokeStyle = '#f4dca7'
+  context.fillStyle = '#f4dca7'
+  context.lineWidth = 8
+  context.lineCap = 'round'
+  context.beginPath()
+  context.arc(80, 47, 14, 0, Math.PI * 2)
+  context.fill()
+  context.beginPath()
+  context.moveTo(80, 65)
+  context.lineTo(80, 104)
+  context.moveTo(80, 76)
+  context.lineTo(52, 94)
+  context.moveTo(80, 76)
+  context.lineTo(108, 94)
+  context.moveTo(80, 104)
+  context.lineTo(57, 132)
+  context.moveTo(80, 104)
+  context.lineTo(103, 132)
+  context.stroke()
+}
+
+function tileKey(position) { return `${position.c}:${position.r}` }
+
+function disposeObject(object) {
+  object.traverse((child) => {
+    child.geometry?.dispose?.()
+    const materials = Array.isArray(child.material) ? child.material : [child.material]
+    for (const material of materials) {
+      material?.map?.dispose?.()
+      material?.dispose?.()
+    }
+  })
 }
 
 export class GameScene {
-  constructor(state, container) {
-    this.state = state
+  constructor(run, container) {
+    this.run = run
     this.container = container
-    this.cards3d = new Map()   // uid -> { group, frontMesh, backMesh, tex, flipTarget, lift }
-    this.animating = []        // 翻牌动画队列
-    this.hoveredUid = null
     this.raycaster = new THREE.Raycaster()
     this.pointer = new THREE.Vector2()
-    this.boardGroup = new THREE.Group()
-    this.cardsGroup = new THREE.Group()
-    this.boardGroup.add(this.cardsGroup)
-    this.scene = null
-    this.reveal = (typeof localStorage !== 'undefined' && localStorage.getItem('heita_opt_reveal')) === '1'
-    this._drag = null      // 拖动状态
-    this._lastDragMoved = false
-    this._initThree()
-    this._buildBoard()
-    this._bindEvents()
-    this._applyFloorVisual(this.state.floor || 1)
-    this._applyPhase(this.state.phase)
-    this._loop = this._loop.bind(this)
-    this._loop()
-  }
-
-  _initThree() {
-    const w = this.container.clientWidth
-    const h = this.container.clientHeight
+    this.groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0)
+    this.tileMeshes = []
+    this.tileMeshByKey = new Map()
+    this.flipAnimations = []
+    this.pendingRebuild = false
+    this.hoveredTileKey = null
+    this.zoom = DEFAULT_ZOOM
+    this.framedRoomId = null
+    this.viewportWidth = 0
+    this.viewportHeight = 0
+    this.activePointers = new Map()
+    this.drag = null
+    this.pinch = null
+    this.lastDragMoved = false
     this.scene = new THREE.Scene()
-    this.scene.background = new THREE.Color(0x14141f)
-    this.scene.fog = new THREE.Fog(0x14141f, 14, 28)
-
-    this.camera = new THREE.PerspectiveCamera(50, w / h, 0.1, 100)
-    this._updateCamera()
-
+    this.scene.background = new THREE.Color(0x111722)
+    this.baseCameraDistance = 12
+    this.camera = new THREE.PerspectiveCamera(CAMERA_FOV, 1, CAMERA_NEAR, CAMERA_FAR)
     this.renderer = new THREE.WebGLRenderer({ antialias: true })
-    this.renderer.setSize(w, h)
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
     this.renderer.shadowMap.enabled = true
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap
+    Object.assign(this.renderer.domElement.style, { position: 'absolute', inset: '0', zIndex: '0' })
     this.container.appendChild(this.renderer.domElement)
-
-    // 灯光（保留基准强度，供阶段明暗切换）
-    const amb = new THREE.AmbientLight(0xffffff, 0.55)
-    this.scene.add(amb); this._amb = amb; this._ambBase = 0.55
-    const dir = new THREE.DirectionalLight(0xfff0e0, 1.1)
-    dir.position.set(6, 12, 6)
-    dir.castShadow = true
-    dir.shadow.mapSize.set(1024, 1024)
-    Object.assign(dir.shadow.camera, { near: 1, far: 40, left: -8, right: 8, top: 8, bottom: -8 })
-    this.scene.add(dir); this._dir = dir; this._dirBase = 1.1
-    const pt = new THREE.PointLight(0x6c5ce7, 0.8, 20)
-    pt.position.set(-4, 5, -3)
-    this.scene.add(pt); this._pt = pt; this._ptBase = 0.8
-
-    // 地面：仅网格线（无圆形桌面，避免圆形"光圈"观感）
-    const grid = new THREE.GridHelper(20, 20, 0x3a3a5a, 0x2a2a44)
-    grid.position.y = -0.04
-    grid.material.opacity = 0.35
-    grid.material.transparent = true
-    this.boardGroup.add(grid)
-
-    this.scene.add(this.boardGroup)
-
-    window.addEventListener('resize', () => this._onResize())
+    this.roomGroup = new THREE.Group()
+    this.scene.add(this.roomGroup)
+    this._addLights()
+    this._onResize = () => this._resize()
+    this._onPointerDown = (event) => this._handlePointerDown(event)
+    this._onPointerMove = (event) => this._handlePointerMove(event)
+    this._onPointerUp = (event) => this._handlePointerUp(event)
+    this._onClick = (event) => this._handleClick(event)
+    this._onWheel = (event) => this._handleWheel(event)
+    this._onPointerLeave = () => this._setHoveredTile(null)
+    this._onFlip = (payload) => this._startFlip(payload)
+    window.addEventListener('resize', this._onResize)
+    this.renderer.domElement.addEventListener('pointerdown', this._onPointerDown)
+    this.renderer.domElement.addEventListener('pointermove', this._onPointerMove)
+    this.renderer.domElement.addEventListener('pointerup', this._onPointerUp)
+    this.renderer.domElement.addEventListener('pointercancel', this._onPointerUp)
+    this.renderer.domElement.addEventListener('pointerleave', this._onPointerLeave)
+    this.renderer.domElement.addEventListener('click', this._onClick)
+    this.renderer.domElement.addEventListener('wheel', this._onWheel, { passive: false })
+    this.unsubscribe = this.run.on('change', () => this.rebuild())
+    this.flipUnsubscribe = this.run.on('animate:flip', this._onFlip)
+    this.rebuild()
+    this._resize(true)
+    this._animate = this._animate.bind(this)
+    this._frame = requestAnimationFrame(this._animate)
   }
 
-  _gridPos(c, r) {
-    return { x: (c - (GRID - 1) / 2) * GAP_X, z: (r - (GRID - 1) / 2) * GAP_Z }
+  _addLights() {
+    this.scene.add(new THREE.HemisphereLight(0xd5e8ff, 0x162133, 1.3))
+    const key = new THREE.DirectionalLight(0xfff0dc, 1.5)
+    key.position.set(5, 10, 6)
+    key.castShadow = true
+    key.shadow.mapSize.set(1024, 1024)
+    this.scene.add(key)
+    const fill = new THREE.PointLight(0x7b72d8, 2.0, 20)
+    fill.position.set(-4, 5, -3)
+    this.scene.add(fill)
   }
 
-  _createCard3d(card) {
-    if (!card || this.cards3d.has(card.uid)) return this.cards3d.get(card.uid)
-    const { x, z } = this._gridPos(card.c, card.r)
+  _gridPosition(room, position) {
+    return {
+      x: (position.c - (room.width - 1) / 2) * TILE_SIZE,
+      z: (position.r - (room.height - 1) / 2) * TILE_SIZE,
+    }
+  }
+
+  rebuild() {
+    const room = this.run.currentRoom
+    if (this.flipAnimations.length && room?.id === this.framedRoomId) {
+      this.pendingRebuild = true
+      return
+    }
+    disposeObject(this.roomGroup)
+    this.roomGroup.clear()
+    this.tileMeshes = []
+    this.tileMeshByKey.clear()
+    if (!room) return
+    const floorTint = [0x111722, 0x111722, 0x151522, 0x1b1625, 0x221628, 0x29172a][room.floor] || 0x111722
+    this.scene.background.setHex(floorTint)
+
+    for (let r = 0; r < room.height; r++) {
+      for (let c = 0; c < room.width; c++) this._addTile(room, { c, r })
+    }
+    this._frameRoom(room, { resetView: room.id !== this.framedRoomId })
+    this.framedRoomId = room.id
+  }
+
+  _addTile(room, position) {
+    const tile = room.tile(position)
+    const revealed = this.run.debugReveal || tile.revealed
+    const geometry = new THREE.BoxGeometry(CARD_SIZE, CARD_THICKNESS, CARD_SIZE)
+    const material = new THREE.MeshStandardMaterial({ color: revealed ? 0x262a36 : 0x17172b, roughness: 0.72 })
+    const mesh = new THREE.Mesh(geometry, material)
+    const point = this._gridPosition(room, position)
+    mesh.position.set(point.x, 0, point.z)
+    mesh.receiveShadow = true
+    this.roomGroup.add(mesh)
+    const texture = revealed ? this._makeFrontTexture(this._cardFaceData(room, position)) : this._makeBackTexture()
+    const face = new THREE.Mesh(
+      new THREE.PlaneGeometry(CARD_SIZE, CARD_SIZE),
+      new THREE.MeshBasicMaterial({ map: texture }),
+    )
+    face.rotation.x = -Math.PI / 2
+    face.position.set(point.x, CARD_THICKNESS / 2 + 0.002, point.z)
+    face.userData.position = { ...position }
+    face.userData.baseY = CARD_THICKNESS / 2 + 0.002
+    face.userData.lift = 0
+    face.userData.body = mesh
+    this.roomGroup.add(face)
+    this.tileMeshes.push(face)
+    this.tileMeshByKey.set(tileKey(position), face)
+  }
+
+  _startFlip({ roomId, position } = {}) {
+    const room = this.run.currentRoom
+    if (!room || room.id !== roomId || room.id !== this.framedRoomId || !position) return
+    const key = tileKey(position)
+    const face = this.tileMeshByKey.get(key)
+    if (!face || !face.visible || this.flipAnimations.some((animation) => animation.key === key)) return
+    const point = this._gridPosition(room, position)
     const group = new THREE.Group()
-    group.position.set(x, 0, z)
-    group.rotation.x = card.flipped ? 0 : Math.PI
-    const frontTex = this._makeFrontTexture(card)
-    const frontMat = new THREE.MeshStandardMaterial({ map: frontTex, roughness: 0.7 })
-    const frontMesh = new THREE.Mesh(new THREE.PlaneGeometry(CARD_W, CARD_H), frontMat)
-    frontMesh.rotation.x = -Math.PI / 2
-    frontMesh.position.y = 0.02
-    frontMesh.receiveShadow = true
-    const backTex = this._makeBackTexture(card)
-    const backMat = new THREE.MeshStandardMaterial({ map: backTex, roughness: 0.7 })
-    const backMesh = new THREE.Mesh(new THREE.PlaneGeometry(CARD_W, CARD_H), backMat)
-    backMesh.rotation.x = Math.PI / 2
-    backMesh.position.y = -0.02
-    backMesh.userData.uid = card.uid
-    frontMesh.userData.uid = card.uid
-    group.add(frontMesh)
-    group.add(backMesh)
-    group.userData.uid = card.uid
-    this.cardsGroup.add(group)
-    const c3 = {
-      group, frontMesh, backMesh, frontTex, backTex,
-      flipCurrent: card.flipped ? 0 : Math.PI,
-      liftCurrent: 0, hidden: false, glow: false,
+    group.position.set(point.x, CARD_THICKNESS / 2 + 0.004, point.z)
+    group.rotation.x = Math.PI
+    const frontTexture = this._makeFrontTexture(this._cardFaceData(room, position))
+    const backTexture = this._makeBackTexture()
+    const front = new THREE.Mesh(
+      new THREE.PlaneGeometry(CARD_SIZE, CARD_SIZE),
+      new THREE.MeshBasicMaterial({ map: frontTexture, side: THREE.DoubleSide }),
+    )
+    front.rotation.x = -Math.PI / 2
+    front.position.y = 0.002
+    const back = new THREE.Mesh(
+      new THREE.PlaneGeometry(CARD_SIZE, CARD_SIZE),
+      new THREE.MeshBasicMaterial({ map: backTexture, side: THREE.DoubleSide }),
+    )
+    back.rotation.x = Math.PI / 2
+    back.position.y = -0.002
+    group.add(front, back)
+    face.visible = false
+    this.roomGroup.add(group)
+    this.flipAnimations.push({ key, group, frontTexture, backTexture, elapsed: 0, duration: 0.34 })
+  }
+
+  _setHoveredTile(key) {
+    this.hoveredTileKey = key
+    this.renderer.domElement.style.cursor = key ? 'pointer' : 'grab'
+  }
+
+  _pickTile(event) {
+    const rect = this.renderer.domElement.getBoundingClientRect()
+    this.pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
+    this.pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
+    this.roomGroup.updateMatrixWorld(true)
+    this.raycaster.setFromCamera(this.pointer, this.camera)
+    return this.raycaster.intersectObjects(this.tileMeshes.filter((mesh) => mesh.visible), false)[0]?.object || null
+  }
+
+  _updateHover(event) {
+    const face = this._pickTile(event)
+    const position = face?.userData?.position
+    const key = this.run.phase === 'explore' && position && this.run.tileCanBeFlipped(position) ? tileKey(position) : null
+    this._setHoveredTile(key)
+  }
+
+  _updateHoverLift() {
+    for (const [key, face] of this.tileMeshByKey) {
+      const position = face.userData.position
+      const canLift = face.visible && key === this.hoveredTileKey && this.run.tileCanBeFlipped(position)
+      const target = canLift ? 0.16 : 0
+      face.userData.lift += (target - face.userData.lift) * 0.22
+      face.position.y = face.userData.baseY + face.userData.lift
+      face.userData.body.position.y = face.userData.lift
     }
-    this.cards3d.set(card.uid, c3)
-    this._updateVisibility(card)
-    return c3
   }
 
-  _buildBoard() {
-    for (const card of this.state.board) this._createCard3d(card)
-  }
-
-  // ---------- 牌面绘制 ----------
-  // 把 #rrggbb + alpha 转 rgba
-  _hexA(hex, a) {
-    const n = parseInt(hex.slice(1), 16)
-    return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`
-  }
-
-  // 建立与 TEX_W×TEX_H 对应的画布上下文（统一超采样）
-  _newCanvasCtx() {
-    const c = document.createElement('canvas')
-    c.width = TEX_W * TEX_S; c.height = TEX_H * TEX_S
-    const ctx = c.getContext('2d')
-    ctx.scale(TEX_S, TEX_S)
-    return { c, ctx }
-  }
-
-  // 卡背：深色底 + 简单菱形纹样；调试"显示牌内容"开启时叠加类型提示（顶部色条 + 底部类型名）
-  _makeBackTexture(card) {
-    const { c, ctx } = this._newCanvasCtx()
-    const base = TYPE_COLOR[card.type] || '#333'
-    const g = ctx.createLinearGradient(0, 0, 0, TEX_H)
-    g.addColorStop(0, '#2a2a4e'); g.addColorStop(1, '#15152a')
-    ctx.fillStyle = g; ctx.fillRect(0, 0, TEX_W, TEX_H)
-    // 边框
-    ctx.strokeStyle = '#4a4a7a'; ctx.lineWidth = 6
-    ctx.strokeRect(6, 6, 138, 158)
-    // 中央菱形纹样（双层），中心 (75, 85)
-    ctx.strokeStyle = 'rgba(130,130,190,0.35)'; ctx.lineWidth = 3
-    ctx.beginPath(); ctx.moveTo(75, 28); ctx.lineTo(112, 85); ctx.lineTo(75, 142); ctx.lineTo(38, 85); ctx.closePath(); ctx.stroke()
-    ctx.strokeStyle = 'rgba(130,130,190,0.20)'; ctx.lineWidth = 2
-    ctx.beginPath(); ctx.moveTo(75, 48); ctx.lineTo(97, 85); ctx.lineTo(75, 122); ctx.lineTo(53, 85); ctx.closePath(); ctx.stroke()
-    // 四角装饰点
-    ctx.fillStyle = 'rgba(150,150,210,0.30)'
-    ;[[22, 22], [128, 22], [22, 148], [128, 148]].forEach(([x, y]) => {
-      ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2); ctx.fill()
-    })
-    // 污染纹路（可见但克制）：紫色裂纹 + 角标
-    if (card.pollut) {
-      ctx.strokeStyle = 'rgba(190,90,210,0.55)'; ctx.lineWidth = 2
-      ctx.beginPath()
-      ctx.moveTo(18, 18); ctx.lineTo(44, 46); ctx.lineTo(30, 74); ctx.lineTo(58, 100); ctx.lineTo(40, 132)
-      ctx.stroke()
-      ctx.fillStyle = 'rgba(210,130,230,0.65)'; ctx.font = 'bold 15px sans-serif'; ctx.textAlign = 'left'
-      ctx.fillText('☣', 8, 20)
-      ctx.textAlign = 'center'
+  _updateFlipAnimations(delta) {
+    for (let index = this.flipAnimations.length - 1; index >= 0; index--) {
+      const animation = this.flipAnimations[index]
+      animation.elapsed += delta
+      const progress = Math.min(1, animation.elapsed / animation.duration)
+      const eased = 1 - Math.pow(1 - progress, 3)
+      animation.group.rotation.x = Math.PI * (1 - eased)
+      animation.group.position.y = CARD_THICKNESS / 2 + 0.004 + Math.sin(eased * Math.PI) * 0.28
+      if (progress < 1) continue
+      this.roomGroup.remove(animation.group)
+      disposeObject(animation.group)
+      this.flipAnimations.splice(index, 1)
     }
-    // 调试开关：浅显类型提示
-    if (this.reveal) {
-      ctx.fillStyle = this._hexA(base, 0.6)
-      ctx.fillRect(0, 0, TEX_W, 9)
-      ctx.font = 'bold 22px sans-serif'
-      ctx.fillStyle = 'rgba(255,255,255,0.35)'
-      ctx.textAlign = 'center'
-      ctx.fillText(TYPE_LABEL[card.type] || '', 75, 146)
+    if (this.flipAnimations.length === 0 && this.pendingRebuild) {
+      this.pendingRebuild = false
+      this.rebuild()
     }
-    if (card.peeked && !card.flipped) {
-      ctx.fillStyle = 'rgba(220,235,255,0.16)'
-      ctx.fillRect(8, 18, 134, 126)
-      ctx.strokeStyle = 'rgba(180,220,255,0.7)'
-      ctx.lineWidth = 2
-      ctx.strokeRect(10, 20, 130, 122)
-      ctx.fillStyle = 'rgba(220,235,255,0.9)'
-      ctx.font = 'bold 14px sans-serif'
-      ctx.fillText('窥见', 75, 42)
-      ctx.font = 'bold 13px sans-serif'
-      ctx.fillText(card.def?.name || '', 75, 72)
-      ctx.font = '11px sans-serif'
-      if (card.type === T.MONSTER) {
-        ctx.fillText(`血 ${card.monsterHp}/${card.def.hp}  攻 ${card.def.atk}`, 75, 98)
-      } else {
-        ctx.fillText(TYPE_LABEL[card.type] || '未知牌', 75, 98)
+  }
+
+  _makeBackTexture() {
+    return makeCanvasTexture((context) => {
+      const gradient = context.createLinearGradient(0, 0, 0, 160)
+      gradient.addColorStop(0, '#2a2a4e')
+      gradient.addColorStop(1, '#15152a')
+      context.fillStyle = gradient
+      context.fillRect(0, 0, 160, 160)
+      context.strokeStyle = '#4a4a7a'
+      context.lineWidth = 6
+      context.strokeRect(6, 6, 148, 148)
+      context.strokeStyle = 'rgba(130,130,190,0.35)'
+      context.lineWidth = 3
+      context.beginPath()
+      context.moveTo(80, 22)
+      context.lineTo(132, 80)
+      context.lineTo(80, 138)
+      context.lineTo(28, 80)
+      context.closePath()
+      context.stroke()
+      context.strokeStyle = 'rgba(130,130,190,0.20)'
+      context.lineWidth = 2
+      context.beginPath()
+      context.moveTo(80, 44)
+      context.lineTo(110, 80)
+      context.lineTo(80, 116)
+      context.lineTo(50, 80)
+      context.closePath()
+      context.stroke()
+      context.fillStyle = 'rgba(150,150,210,0.30)'
+      for (const [x, y] of [[22, 22], [138, 22], [22, 138], [138, 138]]) {
+        context.beginPath()
+        context.arc(x, y, 4, 0, Math.PI * 2)
+        context.fill()
       }
-      ctx.font = '10px sans-serif'
-      ctx.fillStyle = 'rgba(220,235,255,0.65)'
-      ctx.fillText('未翻开', 75, 124)
-    }
-    const tex = new THREE.CanvasTexture(c)
-    tex.anisotropy = 4
-    return tex
-  }
-
-  // 单独重绘一张牌的卡背（设置开关切换后调用）
-  _updateBackTexture(card) {
-    const c3 = this.cards3d.get(card.uid)
-    if (!c3) return
-    c3.backTex.dispose()
-    c3.backTex = this._makeBackTexture(card)
-    c3.backMesh.material.map = c3.backTex
-    c3.backMesh.material.needsUpdate = true
+    })
   }
 
   _makeFrontTexture(card) {
-    const { c, ctx } = this._newCanvasCtx()
-    const bg = card.faction === 'ally' ? '#17424a' : (TYPE_COLOR[card.type] || '#333')
-    const g = ctx.createLinearGradient(0, 0, 0, TEX_H)
-    g.addColorStop(0, bg); g.addColorStop(1, '#0a0a12')
-    ctx.fillStyle = g; ctx.fillRect(0, 0, TEX_W, TEX_H)
-    ctx.strokeStyle = '#888'; ctx.lineWidth = 3
-    ctx.strokeRect(4, 4, 142, 162)
-    ctx.textAlign = 'center'
-    ctx.fillStyle = '#fff'
-    const def = card.def
-    switch (card.type) {
-      case T.MONSTER: {
-        const dead = card.dead || card.monsterHp <= 0
-        const isAlly = card.faction === 'ally'
-        const isBoss = def.tier === 'B'
-        if (isBoss) { ctx.fillStyle = 'rgba(120,10,20,0.5)'; ctx.fillRect(0, 0, TEX_W, TEX_H) }
-        if (isAlly) { ctx.fillStyle = 'rgba(40,150,170,0.28)'; ctx.fillRect(0, 0, TEX_W, TEX_H) }
-        ctx.font = 'bold 16px sans-serif'; ctx.fillStyle = isAlly ? '#bff' : (isBoss ? '#fbb' : '#fff'); ctx.fillText(def.name, 75, 26)
-        ctx.font = '12px sans-serif'; ctx.fillStyle = '#ffa'
-        ctx.fillText(isAlly ? '友方召唤物' : (isBoss ? `弱点:${card.bossWeakType || '随机'}` : `弱点: ${def.weak}`), 75, 46)
-        ctx.font = 'bold 30px sans-serif'; ctx.fillStyle = dead ? '#666' : (isAlly ? '#6ee' : (isBoss ? '#f66' : '#f55'))
-        ctx.fillText(dead ? '✕' : `${card.monsterHp}`, 75, 88)
-        ctx.font = '12px sans-serif'; ctx.fillStyle = isAlly ? '#cff' : '#fcc'
-        let atkLine = `血 ${dead ? 0 : card.monsterHp}/${def.hp}  攻 ${def.atk}`
-        if (card.pollut) atkLine += ' ☣'
-        ctx.fillText(atkLine, 75, 112)
-        const skills = (card.skills || []).map(getMonsterSkillDef).filter(Boolean)
-        if (skills.length) {
-          ctx.fillStyle = '#ffd56b'; ctx.font = 'bold 10px sans-serif'
-          ctx.fillText(skills.map((skill) => skill.name).join(' · ').slice(0, 22), 75, 132)
-        }
-        if (isBoss) { ctx.fillStyle = '#fbb'; ctx.font = 'bold 12px sans-serif'; ctx.fillText('★ BOSS ★', 75, 145) }
-        if (dead) { ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(0, 0, TEX_W, TEX_H) }
-        break
+    return makeCanvasTexture((context) => {
+      const base = CARD_COLORS[card.type] || CARD_COLORS.empty
+      const gradient = context.createLinearGradient(0, 0, 0, 160)
+      gradient.addColorStop(0, base)
+      gradient.addColorStop(1, '#0a0a12')
+      context.fillStyle = gradient
+      context.fillRect(0, 0, 160, 160)
+      if (card.type === 'empty') {
+        context.strokeStyle = '#888'
+        context.lineWidth = 3
+        context.strokeRect(4, 4, 152, 152)
+        return
       }
-      case T.WEAPON: {
-        const inst = card.inst || {}
-        const effAtk = def.atk + (inst.pollutAtk || 0)
-        ctx.font = 'bold 15px sans-serif'; ctx.fillText(def.name, 75, 24)
-        ctx.font = '12px sans-serif'; ctx.fillStyle = '#aef'
-        ctx.fillText(def.type, 75, 42)
-        ctx.font = 'bold 26px sans-serif'; ctx.fillStyle = '#9cf'
-        ctx.fillText(`${effAtk}`, 75, 74)
-        ctx.font = '11px sans-serif'; ctx.fillStyle = '#cce'
-        ctx.fillText(`攻 ${effAtk}${inst.pollutAtk ? '(污)' : ''}  耐 ${inst.curDur ?? def.dur}/${inst.maxDur ?? def.dur}`, 75, 96)
-        ctx.fillStyle = '#fc6'; ctx.font = '11px sans-serif'
-        if (def.tags && def.tags.length) {
-          def.tags.slice(0, 3).forEach((t, i) => ctx.fillText(t, 75, 114 + i * 13))
-        } else { ctx.fillText('—', 75, 116) }
-        break
+      if (card.type === 'entry') {
+        context.strokeStyle = '#d9bc76'
+        context.lineWidth = 3
+        context.strokeRect(4, 4, 152, 152)
+        drawStickFigure(context)
+        return
       }
-      case T.POTION: {
-        ctx.font = 'bold 15px sans-serif'; ctx.fillText(def.name, 75, 30)
-        ctx.font = 'bold 24px sans-serif'; ctx.fillStyle = '#6f6'
-        const potionParts = []
-        if (def.healHp) potionParts.push(`+${def.healHp}HP`)
-        if (def.healSan) potionParts.push(`+${def.healSan}SAN`)
-        if (def.armor) potionParts.push(`+${def.armor}护甲`)
-        const txt = potionParts.join(' ') || '消耗品'
-        ctx.fillText(txt, 75, 78)
-        ctx.font = '11px sans-serif'; ctx.fillStyle = '#9fc'
-        ctx.fillText(def.armor && !def.healHp && !def.healSan ? '获得护甲' : '使用后生效', 75, 102)
-        break
-      }
-      case T.ITEM: {
-        ctx.font = 'bold 14px sans-serif'; ctx.fillText(def.name, 75, 26)
-        ctx.font = '11px sans-serif'; ctx.fillStyle = '#9cf'
-        if (def.repair !== undefined) {
-          ctx.fillText(`修理 +${def.repair} 耐久`, 75, 56)
-          ctx.fillText(def.costTurn ? '消耗回合' : '不耗回合', 75, 76)
-          if (def.fixBroken) ctx.fillText('可修破损武器', 75, 96)
-        } else if (def.buff === 'maintain3') {
-          ctx.fillText('3 次攻击', 75, 56)
-          ctx.fillText('不耗耐久', 75, 76)
-        }
-        ctx.fillStyle = '#fc6'; ctx.fillText('道具', 75, 122)
-        break
-      }
-      case T.BUFF: {
-        ctx.font = 'bold 14px sans-serif'; ctx.fillText(def.name, 75, 30)
-        ctx.font = '11px sans-serif'; ctx.fillStyle = '#9fc'
-        ctx.fillText('下次攻击生效', 75, 62)
-        ctx.fillStyle = '#fc6'; ctx.fillText('Buff', 75, 122)
-        break
-      }
-      case T.TRAP: {
-        ctx.font = 'bold 16px sans-serif'; ctx.fillStyle = '#ffd18a'
-        ctx.fillText(def.name, 75, 32)
-        ctx.font = 'bold 28px sans-serif'; ctx.fillStyle = '#ff8a5b'
-        ctx.fillText(def.trap === 'explosion' ? '✹' : '☊', 75, 84)
-        ctx.font = '11px sans-serif'; ctx.fillStyle = '#ffd0b8'
-        ctx.fillText(def.trap === 'explosion' ? '翻开：周围 8 格受到 2 伤害' : '翻开：范围内敌人被揭示', 75, 122)
-        break
-      }
-      case T.GOLD:
-        ctx.font = 'bold 30px sans-serif'; ctx.fillStyle = '#fd5'
-        ctx.fillText(`+${def.gold}`, 75, 84)
-        ctx.font = '12px sans-serif'; ctx.fillStyle = '#fc9'
-        ctx.fillText('金币', 75, 112)
-        break
-      case T.KEY:
-        ctx.font = 'bold 38px sans-serif'; ctx.fillText('🔑', 75, 84)
-        ctx.font = '13px sans-serif'; ctx.fillStyle = '#daf'
-        ctx.fillText('钥匙碎片', 75, 118)
-        break
-      case T.EXIT: {
-        const active = this.state.exitsActivated()
-        if (active) { ctx.fillStyle = 'rgba(40,220,140,0.18)'; ctx.fillRect(0, 0, TEX_W, TEX_H) }
-        ctx.font = 'bold 18px sans-serif'
-        ctx.fillStyle = active ? '#7fffb0' : '#888'
-        ctx.fillText('出口', 75, 74)
-        ctx.font = 'bold 12px sans-serif'; ctx.fillStyle = active ? '#bfffd8' : '#666'
-        ctx.fillText(active ? '已激活' : '未激活', 75, 100)
-        if (active) {
-          ctx.font = '11px sans-serif'; ctx.fillStyle = '#8effc8'
-          ctx.fillText('点击进入 ▶', 75, 124)
-          // 激活描边，配合场景脉冲发光
-          ctx.strokeStyle = '#5fffa8'; ctx.lineWidth = 5
-          ctx.strokeRect(5, 5, 140, 160)
-        }
-        break
-      }
-      case T.ENTRY:
-        ctx.font = 'bold 16px sans-serif'; ctx.fillStyle = '#aaa'
-        ctx.fillText('入口', 75, 90)
-        break
-    }
-    // 未拾取的战利品：底部「点击拾取」提示条
-    if (this.state.isLoot && this.state.isLoot(card)) {
-      ctx.fillStyle = 'rgba(255,213,107,0.85)'
-      ctx.fillRect(4, 148, 142, 18)
-      ctx.font = 'bold 11px sans-serif'; ctx.fillStyle = '#241d05'
-      ctx.textAlign = 'center'
-      ctx.fillText('点击拾取', 75, 161)
-    }
-    const tex = new THREE.CanvasTexture(c)
-    tex.anisotropy = 4
-    return tex
+      context.strokeStyle = card.boss ? '#d98080' : '#888'
+      context.lineWidth = card.boss ? 5 : 3
+      context.strokeRect(4, 4, 152, 152)
+      const isBuff = card.type === 'buff'
+      const isMonster = card.type === 'monster'
+      const isWeapon = card.type === 'weapon'
+      const value = isMonster && Number.isFinite(card.maxValue) ? `${card.value}/${card.maxValue}` : card.value
+      const subtitle = isMonster || isWeapon ? card.subtitle : ''
+      const detail = isMonster ? `ATK ${card.attack}` : isWeapon ? `\u8010 ${card.durability}` : card.type === 'door' ? card.detail : ''
+      const footer = isMonster || isWeapon ? card.footer : ''
+      drawCenteredText(context, card.title, 26, { color: card.boss ? '#fbb' : '#fff', size: 22, weight: 'bold' })
+      if (!isBuff && subtitle) drawCenteredText(context, subtitle, 50, { color: '#ffa', size: 14 })
+      if (value) drawCenteredText(context, value, 90, { color: card.valueColor || '#fff', size: 36, weight: 'bold' })
+      if (!isBuff && detail) drawCenteredText(context, detail, 116, { color: '#d8e4ff', size: 14 })
+      if (!isBuff && footer) drawCenteredText(context, footer, 136, { color: card.footerColor || '#ffd56b', size: 13, weight: 'bold' })
+    })
   }
 
-  refreshCard(card) {
-    if (this._disposed) return
-    const c3 = this.cards3d.get(card.uid)
-    if (!c3) return
-    c3.frontTex.dispose()
-    c3.frontTex = this._makeFrontTexture(card)
-    c3.frontMesh.material.map = c3.frontTex
-    c3.frontMesh.material.needsUpdate = true
-    this._updateBackTexture(card)
-  }
-
-  // 已生效的牌（怪物已击败 / 物品已拾取 / 金币钥匙已收）直接从场上隐藏，牌局更清晰
-  _updateVisibility(card) {
-    const c3 = this.cards3d.get(card.uid)
-    if (!c3) return false
-    const hidden = this.state.isConsumed(card)
-    if (c3.hidden !== hidden) {
-      c3.hidden = hidden
-      c3.group.visible = !hidden
-    }
-    return hidden
-  }
-
-  refreshAll() {
-    if (this._disposed) return
-    const live = new Set()
-    for (const card of this.state.board) {
-      live.add(card.uid)
-      const c3 = this._createCard3d(card)
-      const { x, z } = this._gridPos(card.c, card.r)
-      c3.group.position.x = x
-      c3.group.position.z = z
-      const hidden = this._updateVisibility(card)
-      if (!hidden) this.refreshCard(card)
-    }
-    // Consumed cards may be removed from the state when a unit enters their
-    // square. New summons are created lazily above; remove stale meshes here.
-    for (const [uid, c3] of this.cards3d) {
-      if (live.has(uid)) continue
-      this.cardsGroup.remove(c3.group)
-      c3.frontTex?.dispose()
-      c3.backTex?.dispose()
-      c3.frontMesh?.geometry?.dispose()
-      c3.backMesh?.geometry?.dispose()
-      c3.frontMesh?.material?.dispose()
-      c3.backMesh?.material?.dispose()
-      this.cards3d.delete(uid)
-    }
-  }
-
-  // ---------- 翻牌动画 ----------
-  animateFlip(uid) {
-    if (this._disposed) return
-    const c3 = this.cards3d.get(uid)
-    if (!c3) return
-    const card = this.state.getCard(uid)
-    const target = card.flipped ? 0 : Math.PI
-    this.animating.push({ c3, from: c3.flipCurrent, to: target, t: 0, duration: 0.45 })
-  }
-
-  // ---------- 交互 ----------
-  _bindEvents() {
-    const dom = this.renderer.domElement
-    this._onPointerDown = (e) => {
-      this._drag = { sx: this.boardGroup.position.x, sz: this.boardGroup.position.z, px: e.clientX, py: e.clientY, moved: false }
-    }
-    this._onPointerMove = (e) => {
-      const rect = dom.getBoundingClientRect()
-      this.pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1
-      this.pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1
-      // 拖动平移牌桌
-      if (this._drag) {
-        const dx = e.clientX - this._drag.px
-        const dy = e.clientY - this._drag.py
-        if (Math.abs(dx) + Math.abs(dy) > 8) this._drag.moved = true
-        if (this._drag.moved) {
-          // 屏幕像素 → 世界坐标（按相机高度估算比例）
-          const h = this.container.clientHeight
-          const vFov = this.camera.fov * Math.PI / 180
-          const dist = this.camera.position.length()
-          const scale = (2 * Math.tan(vFov / 2) * dist) / h
-          const limX = ((GRID_MAX - 1) / 2) * GAP_X + 1.6
-          const limZ = ((GRID_MAX - 1) / 2) * GAP_Z + 1.6
-          const nx = Math.max(-limX, Math.min(limX, this._drag.sx + dx * scale))
-          const nz = Math.max(-limZ, Math.min(limZ, this._drag.sz + dy * scale))
-          this.boardGroup.position.set(nx, 0, nz)
-        }
-      } else {
-        this._updateHover()
+  _cardFaceData(room, position) {
+    if (position.c === this.run.player.pos.c && position.r === this.run.player.pos.r) {
+      return {
+        type: 'entry',
+        title: '你',
+        subtitle: '当前位置',
+        value: `HP ${this.run.player.hp}/${this.run.player.maxHp}`,
+        valueColor: '#f4dca7',
+        detail: `护甲 ${this.run.player.armor}`,
       }
     }
-    this._onPointerUp = () => {
-      if (this._drag) { this._lastDragMoved = this._drag.moved; this._drag = null }
+    const entity = room.entityAt(position)
+    if (!entity) return { type: 'empty', title: '空地', value: '·', valueColor: '#9aa4b5' }
+    if (entity.kind === 'enemy') {
+      return {
+        type: 'monster',
+        title: entity.name,
+        subtitle: entity.boss ? '★ BOSS ★' : `弱点：${ENEMY_WEAKNESS[entity.category] || '未知'}`,
+        value: String(Math.max(0, entity.hp)),
+        valueColor: entity.boss ? '#ff7777' : '#ff7777',
+        maxValue: entity.maxHp,
+        attack: entity.attack,
+        detail: `血 ${Math.max(0, entity.hp)}/${entity.maxHp}  攻 ${entity.attack}`,
+        footer: `射程 ${entity.range}`,
+        boss: !!entity.boss,
+      }
     }
-    this._onClick = (e) => {
-      if (this._lastDragMoved) { this._lastDragMoved = false; return }
-      const rect = dom.getBoundingClientRect()
-      this.pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1
-      this.pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1
-      this._handleClick()
+    if (entity.kind === 'item') return this._itemCardFaceData(entity.item)
+    if (entity.kind === 'trap') return { type: 'trap', title: entity.name, value: '!', valueColor: '#ffabb7' }
+    if (entity.kind === 'gold') {
+      return { type: 'gold', title: '金币', value: `+${entity.amount}`, valueColor: '#ffd56b', detail: '点击拾取', clickHint: '点击拾取' }
     }
-    dom.addEventListener('pointerdown', this._onPointerDown)
-    dom.addEventListener('pointermove', this._onPointerMove)
-    dom.addEventListener('pointerup', this._onPointerUp)
-    dom.addEventListener('click', this._onClick)
-
-    // 状态事件（持有引用，dispose 时移除，避免每层/重开泄漏监听器）
-    this._onFlip = (uid) => this.animateFlip(uid)
-    this._onChange = () => this.refreshAll()
-    this._onFloor = (e) => this._applyFloorVisual(e.floor)
-    this.state.on('animate:flip', this._onFlip)
-    this.state.on('change', this._onChange)
-    this.state.on('floor:start', this._onFloor)
-    this._onPhase = (e) => this._applyPhase(e.phase)
-    this.state.on('phase:change', this._onPhase)
-
-    // 设置开关：显示牌内容 → 重绘所有卡背
-    this._onReveal = (e) => {
-      this.reveal = !!(e && e.detail && e.detail.reveal)
-      for (const card of this.state.board) this._updateBackTexture(card)
+    if (entity.kind === 'key') {
+      return { type: 'key', title: '开门机关', value: '锁', valueColor: '#d8b7ff', detail: '解锁对应的门', clickHint: '点击拾取' }
     }
-    window.addEventListener('settings:reveal', this._onReveal)
+    if (entity.kind === 'door') {
+      const locked = this.run.isDoorLocked(entity)
+      return {
+        type: 'door',
+        title: '门',
+        value: locked ? '锁' : '→',
+        valueColor: locked ? '#ffb86e' : '#86d7ff',
+        detail: locked ? '机关锁住' : '连接下一个房间',
+        footer: locked ? '找到开门机关' : '点击进入',
+      }
+    }
+    if (entity.kind === 'merchant') {
+      return { type: 'merchant', title: entity.name, value: '商人', valueColor: '#ffd56b', detail: '点击交谈' }
+    }
+    return { type: 'empty', title: '未知牌', value: '?' }
   }
 
-  // 每层环境视觉：越深越暗红，Boss 层暗红
-  _applyFloorVisual(floor) {
-    if (this._disposed) return
-    const palette = [
-      null,
-      0x14141f, 0x161320, 0x1a1322, 0x1d1426, 0x221428, 0x26122a, 0x2a0f1a,
-    ]
-    const col = (palette[floor] !== undefined ? palette[floor] : 0x14141f)
-    this.scene.background = new THREE.Color(col)
-    if (this.scene.fog) this.scene.fog.color = new THREE.Color(col)
-    // 点光随层数偏红
-    const tint = floor >= 7 ? 0xff5555 : floor >= 4 ? 0xb070c0 : 0x6c5ce7
-    if (this._pt) this._pt.color = new THREE.Color(tint)
-  }
-
-  // 阶段明暗：休整时隐藏牌阵、压暗灯光，只留网格背景
-  _applyPhase(phase) {
-    if (this._disposed) return
-    const rest = phase === 'rest'
-    if (this.cardsGroup) this.cardsGroup.visible = !rest
-    const k = rest ? 0.5 : 1
-    if (this._amb) this._amb.intensity = this._ambBase * k
-    if (this._dir) this._dir.intensity = this._dirBase * k
-    if (this._pt) this._pt.intensity = this._ptBase * k
-  }
-
-  _pickCard() {
-    this.raycaster.setFromCamera(this.pointer, this.camera)
-    const meshes = []
-    for (const c3 of this.cards3d.values()) {
-      const card = this.state.getCard(c3.group.userData.uid)
-      if (!card) continue
-      if (this.state.isConsumed(card)) continue   // 已隐藏的牌不参与拾取
-      meshes.push(card.flipped ? c3.frontMesh : c3.backMesh)
+  _itemCardFaceData(item) {
+    if (item.type === 'weapon') {
+      return {
+        type: 'weapon',
+        title: item.name,
+        subtitle: DAMAGE_TYPE_LABELS[item.damageType] || '武器',
+        value: `ATK ${item.attack}`,
+        valueColor: '#a9d8ff',
+        durability: item.durability,
+        detail: `攻 ${item.attack}  耐 ${item.durability}`,
+        footer: `射程 ${item.range}`,
+        clickHint: '点击拾取',
+      }
     }
-    const hits = this.raycaster.intersectObjects(meshes, false)
-    if (hits.length) return hits[0].object.userData.uid
-    return null
-  }
-
-  _updateHover() {
-    const uid = this._pickCard()
-    if (uid !== this.hoveredUid) {
-      this.hoveredUid = uid
+    if (item.type === 'potion') {
+      return { type: 'potion', title: item.name, value: `+${item.heal} HP`, valueColor: '#8eff9f', detail: '使用后生效', footer: '不耗回合', clickHint: '点击拾取' }
     }
-  }
-
-  _handleClick() {
-    if (this.state.phase === 'rest') return   // 修整阶段场上无牌可点
-    const uid = this._pickCard()
-    if (uid == null) return
-    const card = this.state.getCard(uid)
-    if (!card) return
-    if (!card.flipped) {
-      this.state.flip(uid)
-    } else if (this.state.isLoot(card)) {
-      this.state.pickUp(uid)                  // 再点一次才拾取，不消耗回合
-    } else if (card.type === T.MONSTER && card.monsterHp > 0) {
-      if (this.state.canAttack()) this.state.attack(uid)
-      else this.state.log.push('先装备至少一把耐久大于 0 的武器。'), this.state.bus.emit('change')
-    } else if (card.type === T.EXIT) {
-      this.state.enterExit(uid)
+    if (item.type === 'armor') {
+      return { type: 'potion', title: item.name, value: `ARMOR +${item.armor}`, valueColor: '#8ed7ff', detail: 'Use to gain armor', footer: 'No turn cost', clickHint: 'Click to pick up' }
     }
+    if (item.type === 'buff') {
+      return { type: 'buff', title: item.name, value: `攻击 +${item.attackBonus}`, valueColor: '#8effc8', detail: '下次攻击生效', footer: '不耗回合', clickHint: '点击拾取' }
+    }
+    if (item.type === 'whetstone') {
+      return { type: 'item', title: item.name, value: `修理 +${item.repair}`, valueColor: '#b8d6ff', detail: '耐久度恢复', footer: '消耗回合', clickHint: '点击拾取' }
+    }
+    return { type: 'item', title: item.name || '道具', value: '道具', clickHint: '点击拾取' }
   }
 
-  _onResize() {
-    const w = this.container.clientWidth
-    const h = this.container.clientHeight
-    this.camera.aspect = w / h
+  _frameRoom(room, { resetView = false } = {}) {
+    const width = Math.max(1, this.container.clientWidth)
+    const height = Math.max(1, this.container.clientHeight)
+    const aspect = width / height
+    const verticalFov = THREE.MathUtils.degToRad(CAMERA_FOV)
+    const horizontalFov = 2 * Math.atan(Math.tan(verticalFov / 2) * aspect)
+    const halfWidth = room.width * TILE_SIZE / 2 + 0.75
+    const halfDepth = room.height * TILE_SIZE / 2 + 0.75
+    const widthDistance = halfWidth / Math.tan(horizontalFov / 2)
+    const depthDistance = halfDepth / Math.tan(verticalFov / 2)
+    this.baseCameraDistance = Math.max(widthDistance, depthDistance) * 1.28
+    if (resetView) {
+      this.zoom = DEFAULT_ZOOM
+      this.roomGroup.position.set(0, 0, 0)
+    }
+    this.camera.aspect = aspect
     this._updateCamera()
-    this.renderer.setSize(w, h)
+    this._clampPan(room)
   }
 
-  // 统一取景（仅竖屏设计）：fov 45（畸变小）+ 更俯视 66° + 距离 8.8。
-  // 视线略下移，让牌阵在画布中下移，给底部牌行留出完整空间。
   _updateCamera() {
-    if (this.camera.clearViewOffset) this.camera.clearViewOffset()
-    this.camera.fov = 45
-    this.camera.position.set(0, 8, 3.6)
-    this.camera.lookAt(0, -0.7, 0)
+    const distance = this.baseCameraDistance / this.zoom
+    this.camera.position.set(0, distance * CAMERA_HEIGHT_RATIO, distance * CAMERA_DEPTH_RATIO)
+    this.camera.lookAt(0, -0.35, 0)
     this.camera.updateProjectionMatrix()
   }
 
-  dispose() {
-    this._disposed = true
-    for (const c3 of this.cards3d.values()) {
-      if (c3.frontTex) c3.frontTex.dispose()
-      if (c3.backTex) c3.backTex.dispose()
-      if (c3.frontMesh.material) c3.frontMesh.material.dispose()
-      if (c3.backMesh.material) c3.backMesh.material.dispose()
-    }
-    const dom = this.renderer.domElement
-    dom.removeEventListener('pointerdown', this._onPointerDown)
-    dom.removeEventListener('pointermove', this._onPointerMove)
-    dom.removeEventListener('pointerup', this._onPointerUp)
-    dom.removeEventListener('click', this._onClick)
-    this.state.off('animate:flip', this._onFlip)
-    this.state.off('change', this._onChange)
-    this.state.off('floor:start', this._onFloor)
-    this.state.off('phase:change', this._onPhase)
-    window.removeEventListener('settings:reveal', this._onReveal)
-    this.renderer.dispose()
-    if (dom.parentNode) dom.parentNode.removeChild(dom)
+  _resize(force = false) {
+    const width = Math.max(1, this.container.clientWidth)
+    const height = Math.max(1, this.container.clientHeight)
+    if (!force && width === this.viewportWidth && height === this.viewportHeight) return
+    this.viewportWidth = width
+    this.viewportHeight = height
+    this.renderer.setSize(width, height)
+    if (this.run.currentRoom) this._frameRoom(this.run.currentRoom)
   }
 
-  _loop() {
-    if (this._disposed) return
-    requestAnimationFrame(this._loop)
-    const dt = 1 / 60
-    // 翻牌动画
-    for (let i = this.animating.length - 1; i >= 0; i--) {
-      const a = this.animating[i]
-      a.t += dt / a.duration
-      const k = a.t >= 1 ? 1 : 1 - Math.pow(1 - a.t, 3)
-      a.c3.flipCurrent = a.from + (a.to - a.from) * k
-      a.c3.group.rotation.x = a.c3.flipCurrent
-      // 翻牌时轻微抬升
-      a.c3.group.position.y = Math.sin(k * Math.PI) * 0.6
-      if (a.t >= 1) { a.c3.group.position.y = 0; this.animating.splice(i, 1) }
+  _setZoom(value) {
+    this.zoom = THREE.MathUtils.clamp(value, MIN_ZOOM, MAX_ZOOM)
+    this._updateCamera()
+    this._clampPan(this.run.currentRoom)
+  }
+
+  _clampPan(room) {
+    if (!room) return
+    const limitX = room.width * TILE_SIZE / 2 + 1.2
+    const limitZ = room.height * TILE_SIZE / 2 + 1.2
+    this.roomGroup.position.x = THREE.MathUtils.clamp(this.roomGroup.position.x, -limitX, limitX)
+    this.roomGroup.position.z = THREE.MathUtils.clamp(this.roomGroup.position.z, -limitZ, limitZ)
+  }
+
+  _pointerPosition(event) {
+    return { x: event.clientX, y: event.clientY }
+  }
+
+  _groundPoint(event) {
+    const rect = this.renderer.domElement.getBoundingClientRect()
+    this.pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
+    this.pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
+    this.raycaster.setFromCamera(this.pointer, this.camera)
+    return this.raycaster.ray.intersectPlane(this.groundPlane, new THREE.Vector3())
+  }
+
+  _pinchDistance() {
+    const [first, second] = [...this.activePointers.values()]
+    return first && second ? Math.hypot(first.x - second.x, first.y - second.y) : 0
+  }
+
+  _handlePointerDown(event) {
+    this.renderer.domElement.setPointerCapture?.(event.pointerId)
+    this.activePointers.set(event.pointerId, this._pointerPosition(event))
+    if (this.activePointers.size === 1) {
+      this.lastDragMoved = false
+      this.drag = {
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        boardX: this.roomGroup.position.x,
+        boardZ: this.roomGroup.position.z,
+        startWorld: this._groundPoint(event),
+        moved: false,
+      }
+    } else if (this.activePointers.size === 2) {
+      this.pinch = { distance: this._pinchDistance(), zoom: this.zoom, moved: false }
+      this.drag = null
     }
-    // hover 抬升（仅未翻开且可翻的牌）+ 出口激活脉冲高亮 + 战利品微微上浮
-    const now = performance.now() / 1000
-    const pulse = 0.5 + 0.5 * Math.sin(now * 3.2)
-    const exitReady = this.state.exitsActivated() && this.state.phase === 'explore'
-    for (const card of this.state.board) {
-      const c3 = this.cards3d.get(card.uid)
-      if (!c3 || c3.hidden) continue
-      let target = 0
-      if (!card.flipped && card.uid === this.hoveredUid && this.state.isAdjacentToFlipped(card) && !this.state.gameOver) {
-        target = 0.4
-      }
-      // 出口牌：钥匙集齐后脉冲发光并抬起，一眼可见
-      const mat = c3.frontMesh.material
-      if (card.type === T.EXIT && card.flipped && exitReady) {
-        mat.emissive.setHex(0x2fd98a)
-        mat.emissiveIntensity = 0.25 + 0.55 * pulse
-        c3.glow = true
-        target = Math.max(target, 0.16 + 0.10 * pulse)
-      } else if (this.state.isLoot(card)) {
-        // 待拾取战利品：淡淡的暖色呼吸，提示可点
-        mat.emissive.setHex(0xffd56b)
-        mat.emissiveIntensity = 0.06 + 0.10 * pulse
-        c3.glow = true
-      } else if (c3.glow) {
-        mat.emissive.setHex(0x000000)
-        mat.emissiveIntensity = 0
-        c3.glow = false
-      }
-      c3.liftCurrent += (target - c3.liftCurrent) * 0.2
-      if (this.animating.findIndex(x => x.c3 === c3) === -1) {
-        c3.group.position.y = c3.liftCurrent
-      }
+  }
+
+  _handlePointerMove(event) {
+    this._updateHover(event)
+    if (!this.activePointers.has(event.pointerId)) return
+    this.activePointers.set(event.pointerId, this._pointerPosition(event))
+    if (this.pinch && this.activePointers.size >= 2) {
+      const distance = this._pinchDistance()
+      if (Math.abs(distance - this.pinch.distance) >= 2) this.pinch.moved = true
+      if (this.pinch.distance > 0) this._setZoom(this.pinch.zoom * distance / this.pinch.distance)
+      return
     }
+    if (!this.drag || this.drag.pointerId !== event.pointerId) return
+    const deltaX = event.clientX - this.drag.startX
+    const deltaY = event.clientY - this.drag.startY
+    if (Math.abs(deltaX) + Math.abs(deltaY) > DRAG_THRESHOLD) this.drag.moved = true
+    if (!this.drag.moved) return
+    const currentWorld = this._groundPoint(event)
+    if (!this.drag.startWorld || !currentWorld) return
+    this.roomGroup.position.x = this.drag.boardX + currentWorld.x - this.drag.startWorld.x
+    this.roomGroup.position.z = this.drag.boardZ + currentWorld.z - this.drag.startWorld.z
+    this._clampPan(this.run.currentRoom)
+  }
+
+  _handlePointerUp(event) {
+    if (!this.activePointers.has(event.pointerId)) return
+    const wasPinching = !!this.pinch
+    const pinchMoved = this.pinch?.moved
+    const dragMoved = this.drag?.moved
+    this.activePointers.delete(event.pointerId)
+    this.renderer.domElement.releasePointerCapture?.(event.pointerId)
+    if (wasPinching) this.pinch = null
+    this.drag = null
+    this.lastDragMoved = this.lastDragMoved || !!pinchMoved || !!dragMoved
+  }
+
+  _handleWheel(event) {
+    event.preventDefault()
+    this._setZoom(this.zoom * Math.exp(-event.deltaY * 0.0015))
+  }
+
+  _handleClick(event) {
+    if (this.lastDragMoved) {
+      this.lastDragMoved = false
+      return
+    }
+    const position = this._pickTile(event)?.userData?.position
+    if (position) this.run.clickTile(position.c, position.r)
+  }
+
+  _animate() {
+    this._resize()
+    const now = Date.now()
+    const delta = Math.min(0.05, Math.max(0, (now - (this.lastFrameTime || now)) / 1000))
+    this.lastFrameTime = now
+    this._updateFlipAnimations(delta)
+    this._updateHoverLift()
     this.renderer.render(this.scene, this.camera)
+    this._frame = requestAnimationFrame(this._animate)
+  }
+
+  dispose() {
+    cancelAnimationFrame(this._frame)
+    this.unsubscribe?.()
+    window.removeEventListener('resize', this._onResize)
+    this.renderer.domElement.removeEventListener('pointerdown', this._onPointerDown)
+    this.renderer.domElement.removeEventListener('pointermove', this._onPointerMove)
+    this.renderer.domElement.removeEventListener('pointerup', this._onPointerUp)
+    this.renderer.domElement.removeEventListener('pointercancel', this._onPointerUp)
+    this.renderer.domElement.removeEventListener('pointerleave', this._onPointerLeave)
+    this.renderer.domElement.removeEventListener('click', this._onClick)
+    this.renderer.domElement.removeEventListener('wheel', this._onWheel)
+    this.flipUnsubscribe?.()
+    disposeObject(this.roomGroup)
+    this.renderer.dispose()
+    this.renderer.domElement.remove()
   }
 }
