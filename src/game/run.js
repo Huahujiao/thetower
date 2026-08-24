@@ -37,6 +37,65 @@ function uniqueWeapons(weapons) {
   })
 }
 
+const DETAIL_LABELS = Object.freeze({
+  weapon: '\u6b66\u5668',
+  potion: '\u836f\u5242',
+  armor: '\u62a4\u7532',
+  buff: '\u589e\u76ca',
+  whetstone: '\u78e8\u5200\u77f3',
+  relic: '\u5723\u9057\u7269',
+  enemy: '\u654c\u4eba',
+  trap: '\u9677\u9631',
+  resource: '\u8d44\u6e90',
+  key: '\u5f00\u95e8\u673a\u5173',
+  merchant: '\u5546\u4eba',
+  attack: '\u653b\u51fb',
+  range: '\u5c04\u7a0b',
+  durability: '\u8010\u4e45',
+  grip: '\u63e1\u6301',
+  twoHanded: '\u53cc\u624b',
+  oneHanded: '\u5355\u624b',
+  health: '\u751f\u547d',
+  armorValue: '\u62a4\u7532',
+  nextAttack: '\u4e0b\u6b21\u653b\u51fb',
+  repair: '\u4fee\u590d\u8010\u4e45',
+  active: '\u5df2\u6fc0\u6d3b',
+  inactive: '\u672a\u6fc0\u6d3b',
+  actionDelay: '\u521d\u6b21\u884c\u52a8\u5ef6\u8fdf',
+  cooldown: '\u51b7\u5374',
+  manhattan: '\u66fc\u54c8\u987f\u8ddd\u79bb',
+  explosion: '\u89e6\u53d1\u540e\u5bf9\u516b\u90bb\u57df\u9020\u6210\u4f24\u5bb3\u3002',
+  alarm: '\u89e6\u53d1\u540e\u7ffb\u5f00\u9644\u8fd1\u7684\u724c\u3002',
+  keyHint: '\u62fe\u53d6\u540e\u4f1a\u6c38\u4e45\u5f00\u542f\u5bf9\u5e94\u7684\u623f\u95f4\u95e8\u3002',
+})
+
+const MERCHANT_SERVICE_LABELS = Object.freeze({
+  stock: '\u8d2d\u4e70\u5546\u54c1',
+  sell: '\u51fa\u552e\u7269\u54c1',
+  'relic-management': '\u6fc0\u6d3b\u5723\u9057\u7269',
+  'relic-choice': '\u83b7\u53d6\u5723\u9057\u7269',
+})
+
+function detailForItem(item) {
+  const type = DETAIL_LABELS[item?.type] || '\u7269\u54c1'
+  const lines = []
+  if (item?.type === 'weapon') {
+    lines.push(`${DETAIL_LABELS.attack} ${item.attack || 0}`)
+    lines.push(`${DETAIL_LABELS.range} ${item.range || 1}\uff08${DETAIL_LABELS.manhattan}\uff09`)
+    lines.push(`${DETAIL_LABELS.durability} ${item.durability || 0}`)
+    lines.push(`${DETAIL_LABELS.grip}\uff1a${isTwoHanded(item) ? DETAIL_LABELS.twoHanded : DETAIL_LABELS.oneHanded}`)
+  } else if (item?.type === 'potion') {
+    lines.push(`${DETAIL_LABELS.health} +${item.heal || 0}`)
+  } else if (item?.type === 'armor') {
+    lines.push(`${DETAIL_LABELS.armorValue} +${item.armor || 0}`)
+  } else if (item?.type === 'buff') {
+    lines.push(`${DETAIL_LABELS.nextAttack} +${item.attackBonus || 0}`)
+  } else if (item?.type === 'whetstone') {
+    lines.push(`${DETAIL_LABELS.repair} +${item.repair || 0}`)
+  }
+  return { title: item?.name || type, type, lines }
+}
+
 export class GameRun {
   constructor({ autoLoad = true, random = Math.random } = {}) {
     this.bus = createEmitter()
@@ -86,6 +145,7 @@ export class GameRun {
     this.relicEventQueue = []
     this.relicRuntime = {}
     this.stealthTurns = 0
+    this.detailPanel = null
     this.log = []
     this._log('\u8fdb\u5165\u7b2c 1 \u5c42\u7684\u7b2c 1 \u4e2a\u623f\u95f4\u3002')
     this._log(`\u521d\u59cb\u88c5\u5907\uff1a${this.player.equipment[0].name}\u3002`)
@@ -108,6 +168,76 @@ export class GameRun {
   canManageRelics() { return this.phase === 'merchant' && this.merchantDefinition?.services.includes('relic-management') }
 
   canSellAtMerchant() { return this.phase === 'merchant' && this.merchantDefinition?.services.includes('sell') }
+
+  showItemDetail(item) {
+    if (!item) return false
+    return this._showDetail({ position: 'top', ...detailForItem(item) })
+  }
+
+  showRelicDetail(id) {
+    const definition = getRelicDefinition(id)
+    if (!definition) return false
+    const entry = this.relics.entries.find((candidate) => candidate.id === id)
+    const lines = [definition.description, entry?.active ? DETAIL_LABELS.active : DETAIL_LABELS.inactive]
+    if (definition.activeSkill) {
+      const cooldown = this.relicRuntime[id]?.cooldown || 0
+      lines.push(`${definition.activeSkill.name} \u00b7 ${DETAIL_LABELS.cooldown} ${cooldown}/${definition.activeSkill.cooldown}`)
+    }
+    return this._showDetail({ position: 'top', title: definition.name, type: DETAIL_LABELS.relic, lines })
+  }
+
+  showBoardDetail(position) {
+    const room = this.currentRoom
+    if (!room?.contains(position) || !room.isRevealed(position)) return false
+    if (this.player.pos.c === position.c && this.player.pos.r === position.r) return false
+    const entity = room.entityAt(position)
+    if (!entity || entity.kind === 'door' || entity.kind === 'stairs') return false
+    if (entity.kind === 'item') return this._showDetail({ position: 'bottom', ...detailForItem(entity.item) })
+    if (entity.kind === 'enemy') {
+      return this._showDetail({
+        position: 'bottom',
+        title: entity.name,
+        type: DETAIL_LABELS.enemy,
+        lines: [
+          `${DETAIL_LABELS.health} ${entity.hp}/${entity.maxHp}`,
+          `${DETAIL_LABELS.attack} ${entity.attack} \u00b7 ${DETAIL_LABELS.range} ${entity.range || 1}\uff08${DETAIL_LABELS.manhattan}\uff09`,
+          `${DETAIL_LABELS.actionDelay} ${entity.initialActionDelay || 0} \u00b7 ${DETAIL_LABELS.cooldown} ${entity.cooldown || 0}/${entity.cooldownMax || 0}`,
+        ],
+      })
+    }
+    if (entity.kind === 'trap') {
+      const trap = getTrapDefinition(entity.trapId)
+      if (!trap) return false
+      const effect = trap.effect === 'explosion'
+        ? `${DETAIL_LABELS.explosion} ${DETAIL_LABELS.attack} ${trap.damage || 0}`
+        : DETAIL_LABELS.alarm
+      return this._showDetail({ position: 'bottom', title: trap.name, type: DETAIL_LABELS.trap, lines: [effect] })
+    }
+    if (entity.kind === 'gold') {
+      return this._showDetail({ position: 'bottom', title: '\u91d1\u5e01', type: DETAIL_LABELS.resource, lines: [`+${entity.amount || 0} \u91d1\u5e01`] })
+    }
+    if (entity.kind === 'key') {
+      return this._showDetail({ position: 'bottom', title: DETAIL_LABELS.key, type: DETAIL_LABELS.resource, lines: [DETAIL_LABELS.keyHint] })
+    }
+    if (entity.kind === 'merchant') {
+      const services = (entity.services || []).map((service) => MERCHANT_SERVICE_LABELS[service]).filter(Boolean)
+      return this._showDetail({ position: 'bottom', title: entity.name, type: DETAIL_LABELS.merchant, lines: services })
+    }
+    return false
+  }
+
+  closeDetail() {
+    if (!this.detailPanel) return false
+    this.detailPanel = null
+    this.bus.emit('detail')
+    return true
+  }
+
+  _showDetail(detail) {
+    this.detailPanel = { ...detail, lines: [...(detail.lines || [])] }
+    this.bus.emit('detail')
+    return true
+  }
 
   activeRelicSkills() {
     return this.activeRelics()
@@ -229,7 +359,32 @@ export class GameRun {
   selectInventory(index) {
     if (!Number.isInteger(index) || index < 0 || index >= INVENTORY_CAPACITY) return false
     const placement = this.backpack.placementForCellIndex(index)
-    this.selectedInventoryIndex = this.backpack.originIndex(placement)
+    if (!placement) return this.clearSelection()
+    const origin = this.backpack.originIndex(placement)
+    if (this.selectedInventoryIndex === origin && !this.itemTargeting) return this.clearSelection()
+    this.selectedInventoryIndex = origin
+    this.selectedEquipmentSlot = null
+    this.itemTargeting = false
+    this._changed()
+    return true
+  }
+
+  clearSelection() {
+    if (this.selectedInventoryIndex == null && this.selectedEquipmentSlot == null && !this.itemTargeting) return false
+    this.selectedInventoryIndex = null
+    this.selectedEquipmentSlot = null
+    this.itemTargeting = false
+    this._changed()
+    return true
+  }
+
+  moveInventory(itemUid, index) {
+    if (!Number.isInteger(index) || index < 0 || index >= INVENTORY_CAPACITY) return false
+    const item = this.backpack.placementOf(itemUid)?.item
+    if (!item) return false
+    const moved = this.backpack.move(item.uid, index % INVENTORY_COLUMNS, Math.floor(index / INVENTORY_COLUMNS))
+    if (!moved) return false
+    this.selectedInventoryIndex = this.backpack.originIndex(this.backpack.placementOf(item.uid))
     this.selectedEquipmentSlot = null
     this.itemTargeting = false
     this._changed()
@@ -238,12 +393,7 @@ export class GameRun {
 
   moveSelectedInventory(index) {
     const item = this.selectedItem
-    if (!Number.isInteger(index) || index < 0 || index >= INVENTORY_CAPACITY || !item) return false
-    const moved = this.backpack.move(item.uid, index % INVENTORY_COLUMNS, Math.floor(index / INVENTORY_COLUMNS))
-    if (!moved) return false
-    this.selectedInventoryIndex = this.backpack.originIndex(this.backpack.placementOf(item.uid))
-    this._changed()
-    return true
+    return item ? this.moveInventory(item.uid, index) : false
   }
 
   rotateSelectedInventory() {
@@ -265,8 +415,19 @@ export class GameRun {
 
   applySelectedItemToEquipment(slot) {
     if (!this._canAct() || !this.itemTargeting || !Number.isInteger(slot) || slot < 0 || slot >= EQUIPMENT_SLOTS) return false
-    const item = this.selectedItem
     const weapon = this.player.equipment[slot]
+    return this._applySelectedWhetstone(weapon)
+  }
+
+  applySelectedItemToBackpackWeapon(index) {
+    if (!this._canAct() || !this.itemTargeting || !Number.isInteger(index) || index < 0 || index >= INVENTORY_CAPACITY) return false
+    const weapon = this.backpack.placementForCellIndex(index)?.item
+    if (weapon?.type !== 'weapon') return false
+    return this._applySelectedWhetstone(weapon)
+  }
+
+  _applySelectedWhetstone(weapon) {
+    const item = this.selectedItem
     if (!item || item.type !== 'whetstone' || !weapon) return false
     weapon.durability += item.repair
     this.backpack.removeByUid(item.uid)
@@ -372,7 +533,9 @@ export class GameRun {
       return true
     }
     if (item.type === 'whetstone') {
-      if (this.equippedWeapons.length === 0) return this._reject('\u6ca1\u6709\u5df2\u88c5\u5907\u6b66\u5668\u3002')
+      const hasTarget = this.equippedWeapons.some((weapon) => weapon.type === 'weapon')
+        || this.backpack.items.some((candidate) => candidate.type === 'weapon')
+      if (!hasTarget) return this._reject('\u6ca1\u6709\u53ef\u4fee\u590d\u7684\u6b66\u5668\u3002')
       this.itemTargeting = true
       this._changed()
       return true
@@ -514,9 +677,11 @@ export class GameRun {
   _flipAt(position) {
     const route = findRevealPath(this.currentRoom, this.player.pos, position)
     if (!route) return this._reject('\u65e0\u6cd5\u8d70\u5230\u8fd9\u5f20\u724c\u7684\u65c1\u8fb9\u3002')
+    const start = { ...this.player.pos }
     const movement = this._walk(route.path)
     let flipOutcome = { skipEnemyIds: new Set() }
     if (!movement.stopped) {
+      if (this.player.pos.c !== start.c || this.player.pos.r !== start.r) this.bus.emit('change')
       flipOutcome = this._revealTile(position)
       const entity = this.currentRoom.entityAt(position)
       this._log(entity ? `\u7ffb\u5f00\uff1a${entity.name || this._entityName(entity)}\u3002` : '\u7ffb\u5f00\u4e86\u4e00\u4e2a\u7a7a\u683c\u3002')
@@ -636,6 +801,7 @@ export class GameRun {
     const targetDoor = this.dungeon.otherDoor(door)
     const targetRoom = this.dungeon.room(edge.fromDoorId === door.id ? edge.toRoomId : edge.fromRoomId)
     const firstVisit = !targetRoom.visited
+    targetRoom.reveal(targetDoor.pos)
     targetRoom.reveal(targetDoor.arrival)
     targetRoom.visited = true
     this.player.roomId = targetRoom.id
@@ -882,6 +1048,7 @@ export class GameRun {
       this.relicEventQueue = []
       this.relicRuntime = data.relicRuntime && typeof data.relicRuntime === 'object' ? clone(data.relicRuntime) : {}
       this.stealthTurns = Math.max(0, Number(data.stealthTurns) || 0)
+      this.detailPanel = null
       this.log = Array.isArray(data.log) ? data.log : []
       synchronizeEntityIds([...this.backpack.items, ...this.player.equipment].map((item) => item?.uid))
       if (!this.currentRoom?.contains(this.player.pos) || !this.currentRoom.isRevealed(this.player.pos)) return false

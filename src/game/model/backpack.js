@@ -135,10 +135,22 @@ export class BackpackGrid {
     const placement = this.placementOf(itemOrUid)
     if (!placement || placement.item?.rotatable === false) return false
     const nextRotation = (placement.rotation + 1) % 4
-    if (!this.canPlace(placement.item, placement.x, placement.y, nextRotation, placement.item.uid)) return false
-    placement.rotation = nextRotation
-    placement.item.bagRotation = nextRotation
-    return true
+    const place = (x, y) => {
+      if (!this.canPlace(placement.item, x, y, nextRotation, placement.item.uid)) return false
+      placement.x = x
+      placement.y = y
+      placement.rotation = nextRotation
+      placement.item.bagRotation = nextRotation
+      return true
+    }
+    if (place(placement.x, placement.y)) return true
+    const shape = this.shapeFor(placement.item, nextRotation)
+    for (let y = 0; y <= this.rows - shape.length; y++) {
+      for (let x = 0; x <= this.columns - shape[0].length; x++) {
+        if (place(x, y)) return true
+      }
+    }
+    return false
   }
 
   removeByUid(uid) {

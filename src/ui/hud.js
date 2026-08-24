@@ -61,8 +61,16 @@ export class HUD {
     if (!this.root) throw new Error('Missing #hud container')
     this._build()
     this._onClick = (event) => this._handleClick(event)
+    this._onPointerDown = (event) => this._handlePointerDown(event)
+    this._onPointerMove = (event) => this._handlePointerMove(event)
+    this._onPointerUp = (event) => this._handlePointerUp(event)
     this.root.addEventListener('click', this._onClick)
+    this.root.addEventListener('pointerdown', this._onPointerDown)
+    this.root.addEventListener('pointermove', this._onPointerMove)
+    this.root.addEventListener('pointerup', this._onPointerUp)
+    this.root.addEventListener('pointercancel', this._onPointerUp)
     this.unsubscribe = this.run.on('change', () => this.render())
+    this.detailUnsubscribe = this.run.on('detail', () => this.render())
     this.render()
   }
 
@@ -86,13 +94,13 @@ export class HUD {
 
       <div id="app" aria-label="game board"></div>
 
-      <div class="card-actions" data=actions>
-        <button class="act-drop" data-action="discard">${LABELS.discard}</button>
-        <button class="act-wait" data-action="wait" title="${LABELS.wait}" aria-label="${LABELS.wait}">\u231b</button>
-        <button class="act-skill" data-action="equip">${LABELS.equip}</button>
-        <button class="act-use" data-action="use">${LABELS.use}</button>
-      </div>
-      <div class="relic-skills" data=relicskills></div>
+      <section class="detail-panel" data=detailpanel aria-hidden="true">
+        <div class="detail-card">
+          <div class="detail-type" data=detailtype></div>
+          <div class="detail-title" data=detailtitle></div>
+          <div class="detail-lines" data=detaillines></div>
+        </div>
+      </section>
 
       <div class="hud-settings" data=settings>
         <label class="settings-row"><input type="checkbox" data=revealtoggle> ${LABELS.reveal}</label>
@@ -135,19 +143,23 @@ export class HUD {
       </div>
 
       <div class="hud-bottom">
+        <div class="card-actions" data=actions>
+          <button class="act-drop" data-action="discard">${LABELS.discard}</button>
+          <button class="act-use" data-action="use">${LABELS.use}</button>
+          <button class="act-wait" data-action="wait" title="${LABELS.wait}" aria-label="${LABELS.wait}">\u231b</button>
+          <div class="relic-skills" data=relicskills></div>
+        </div>
         <div class="equip-row">
           <button class="equip-slot" data-equip-slot="0"></button>
           <button class="equip-slot" data-equip-slot="1"></button>
         </div>
         <div class="backpack-panel">
-          <div class="backpack-head">
-            <div class="hud-relics">
-              <button class="relic-book" data-action="relics" title="${LABELS.relicBook}" aria-label="${LABELS.relicBook}">\u25a6</button>
-              <div class="relic-slots" data=relicslots></div>
-            </div>
-            <button class="bag-rotate" data-action="rotate-bag" title="${LABELS.rotate}" aria-label="${LABELS.rotate}">\u21bb</button>
+          <div class="hud-relics">
+            <button class="relic-book" data-action="relics" title="${LABELS.relicBook}" aria-label="${LABELS.relicBook}">\u25a6</button>
+            <div class="relic-slots" data=relicslots></div>
           </div>
           <div class="backpack-grid" data=backpack></div>
+          <button class="bag-rotate" data-action="rotate-bag" title="${LABELS.rotate}" aria-label="${LABELS.rotate}" hidden>\u21bb</button>
         </div>
       </div>
 
@@ -207,6 +219,7 @@ export class HUD {
     this._renderBackpack()
     this._renderActions()
     this._renderRelicSkills()
+    this._renderDetailPanel()
     const logBody = this.q('logbody')
     logBody.innerHTML = this.run.log.slice(0, 40).map((line) => `<div class="line">${escapeHtml(line)}</div>`).join('')
 
@@ -229,6 +242,7 @@ export class HUD {
       slot.className = `relic-slot ${definition ? 'active' : 'empty'}`
       slot.title = definition ? `${definition.name}\uff1a${definition.description}` : LABELS.empty
       slot.textContent = definition ? definition.name.slice(0, 1) : '\u00b7'
+      if (definition) slot.dataset.relicDetail = definition.id
       slots.appendChild(slot)
     }
     this.q('reliccount').textContent = `${LABELS.collected} ${entries.length}`
@@ -340,17 +354,22 @@ export class HUD {
       return `<button class="bag-item ${item.type}${selected ? ' selected' : ''}" data-slot="${index}" style="grid-column:${placement.x + 1} / span ${shape[0].length};grid-row:${placement.y + 1} / span ${shape.length}"><span class="bag-shape" style="grid-template-columns:repeat(${shape[0].length},1fr);grid-template-rows:repeat(${shape.length},1fr)">${shapeCells}</span><span class="bag-details"><small>${detail}</small></span></button>`
     }).join('')
     backpack.innerHTML = `${cells}${items}`
+    const rotate = this.root.querySelector('[data-action="rotate-bag"]')
+    const selected = this.run.selectedItem
+    const placement = selected ? this.run.backpack.placementOf(selected.uid) : null
+    const selectedShape = placement && selected ? this.run.backpack.shapeFor(selected, placement.rotation) : null
+    const rotatable = !!selectedShape && (selectedShape.length > 1 || selectedShape[0].length > 1)
+    rotate.hidden = !rotatable
+    rotate.disabled = !rotatable
   }
 
   _renderActions() {
     const selected = this.run.selectedItem
     const actions = this.q('actions')
     const discard = this.root.querySelector('[data-action="discard"]')
-    const equip = this.root.querySelector('[data-action="equip"]')
     const use = this.root.querySelector('[data-action="use"]')
     actions.classList.toggle('show', this.run.phase === 'explore' && !this.run.gameOver)
     discard.disabled = !selected && !this.run.selectedEquipment
-    equip.disabled = !this.selectedIsWeapon()
     use.disabled = !selected || selected.type === 'weapon'
   }
 
@@ -366,7 +385,108 @@ export class HUD {
 
   selectedIsWeapon() { return this.run.selectedItem?.type === 'weapon' }
 
+  _renderDetailPanel() {
+    const detail = this.run.detailPanel
+    const panel = this.q('detailpanel')
+    const open = !!detail
+    panel.classList.toggle('show', open)
+    panel.classList.toggle('top', detail?.position === 'top')
+    panel.classList.toggle('bottom', detail?.position === 'bottom')
+    panel.setAttribute('aria-hidden', open ? 'false' : 'true')
+    if (!open) return
+    this.q('detailtype').textContent = detail.type || ''
+    this.q('detailtitle').textContent = detail.title || ''
+    this.q('detaillines').innerHTML = (detail.lines || []).map((line) => `<div>${escapeHtml(line)}</div>`).join('')
+  }
+
+  _detailActionFor(target) {
+    const relic = target.closest('[data-relic-detail]')
+    if (relic) return () => this.run.showRelicDetail(relic.dataset.relicDetail)
+    const inventory = target.closest('[data-slot]')
+    if (inventory) {
+      const item = this.run.backpack.placementForCellIndex(Number(inventory.dataset.slot))?.item
+      return item ? () => this.run.showItemDetail(item) : null
+    }
+    const equipment = target.closest('[data-equip-slot]')
+    if (equipment) {
+      const item = this.run.player.equipment[Number(equipment.dataset.equipSlot)]
+      return item ? () => this.run.showItemDetail(item) : null
+    }
+    return null
+  }
+
+  _handlePointerDown(event) {
+    if (event.button !== undefined && event.button !== 0) return
+    const bagItem = event.target.closest('[data-slot]')
+    if (bagItem && !this.run.itemTargeting) {
+      const item = this.run.backpack.placementForCellIndex(Number(bagItem.dataset.slot))?.item
+      if (item) {
+        this.bagDrag = {
+          pointerId: event.pointerId,
+          itemUid: item.uid,
+          x: event.clientX,
+          y: event.clientY,
+          moved: false,
+        }
+        this.root.setPointerCapture?.(event.pointerId)
+      }
+    }
+    const openDetail = this._detailActionFor(event.target)
+    if (!openDetail) return
+    const hold = {
+      pointerId: event.pointerId,
+      x: event.clientX,
+      y: event.clientY,
+      opened: false,
+      timer: null,
+    }
+    hold.timer = window.setTimeout(() => {
+      if (this.hold !== hold) return
+      hold.opened = openDetail()
+    }, 420)
+    this.hold = hold
+  }
+
+  _handlePointerMove(event) {
+    const hold = this.hold
+    if (hold && hold.pointerId === event.pointerId && !hold.opened
+      && Math.abs(event.clientX - hold.x) + Math.abs(event.clientY - hold.y) > 8) {
+      window.clearTimeout(hold.timer)
+      this.hold = null
+    }
+    const drag = this.bagDrag
+    if (!drag || drag.pointerId !== event.pointerId || drag.moved || hold?.opened) return
+    if (Math.abs(event.clientX - drag.x) + Math.abs(event.clientY - drag.y) <= 8) return
+    drag.moved = true
+    if (this.hold?.pointerId === event.pointerId) {
+      window.clearTimeout(this.hold.timer)
+      this.hold = null
+    }
+  }
+
+  _handlePointerUp(event) {
+    const hold = this.hold
+    if (hold && hold.pointerId === event.pointerId) {
+      window.clearTimeout(hold.timer)
+      this.hold = null
+      if (hold.opened) {
+        this.run.closeDetail()
+        this.ignoreClicksUntil = Date.now() + 120
+      }
+    }
+    const drag = this.bagDrag
+    if (!drag || drag.pointerId !== event.pointerId) return
+    this.root.releasePointerCapture?.(event.pointerId)
+    this.bagDrag = null
+    if (!drag.moved || event.type === 'pointercancel') return
+    const target = document.elementFromPoint(event.clientX, event.clientY)
+    const cell = target?.closest?.('[data-bag-cell]')
+    if (cell) this.run.moveInventory(drag.itemUid, Number(cell.dataset.bagCell))
+    this.ignoreClicksUntil = Date.now() + 120
+  }
+
   _handleClick(event) {
+    if (Date.now() < (this.ignoreClicksUntil || 0)) return
     const relicSkill = event.target.closest('[data-relic-skill]')
     if (relicSkill) {
       this.run.useRelicSkill(relicSkill.dataset.relicSkill)
@@ -401,11 +521,17 @@ export class HUD {
     }
     const bagCell = event.target.closest('[data-bag-cell]')
     if (bagCell) {
-      this.run.moveSelectedInventory(Number(bagCell.dataset.bagCell))
+      this.run.clearSelection()
       return
     }
     const slot = event.target.closest('[data-slot]')
     if (slot) {
+      if (this.run.itemTargeting) {
+        const item = this.run.backpack.placementForCellIndex(Number(slot.dataset.slot))?.item
+        if (item?.type === 'weapon') this.run.applySelectedItemToBackpackWeapon(Number(slot.dataset.slot))
+        else this.run.clearSelection()
+        return
+      }
       this.run.selectInventory(Number(slot.dataset.slot))
       return
     }
@@ -420,7 +546,6 @@ export class HUD {
     const action = event.target.closest('[data-action]')?.dataset.action
     if (!action) return
     if (action === 'wait') this.run.wait()
-    if (action === 'equip') this.run.equipSelected()
     if (action === 'use') this.run.useSelected()
     if (action === 'discard') this.run.discardSelected()
     if (action === 'rotate-bag') this.run.rotateSelectedInventory()
@@ -446,6 +571,13 @@ export class HUD {
 
   dispose() {
     this.unsubscribe?.()
+    this.detailUnsubscribe?.()
+    if (this.hold?.timer) window.clearTimeout(this.hold.timer)
+    this.root.releasePointerCapture?.(this.bagDrag?.pointerId)
     this.root.removeEventListener('click', this._onClick)
+    this.root.removeEventListener('pointerdown', this._onPointerDown)
+    this.root.removeEventListener('pointermove', this._onPointerMove)
+    this.root.removeEventListener('pointerup', this._onPointerUp)
+    this.root.removeEventListener('pointercancel', this._onPointerUp)
   }
 }

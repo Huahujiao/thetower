@@ -91,6 +91,14 @@ for (const edge of run.dungeon.edges.values()) {
 }
 assert(run.initialRelicChoices.length === 3, 'new run must offer three initial relic choices')
 assert(run.chooseInitialRelic(run.initialRelicChoices[0])?.active, 'initial relic choice must activate immediately')
+const detailItem = makeItemById('spear')
+assert(run.showItemDetail(detailItem) && run.detailPanel?.position === 'top' && run.detailPanel.lines.length >= 3, 'inventory item detail panel was not generated')
+assert(run.closeDetail() && !run.detailPanel, 'detail panel did not close')
+const detailEnemy = [...run.currentRoom.entities.values()].find((entity) => entity.kind === 'enemy')
+run.currentRoom.reveal(detailEnemy.pos)
+assert(run.showBoardDetail(detailEnemy.pos) && run.detailPanel?.position === 'bottom', 'board enemy detail panel was not generated')
+assert(run.closeDetail(), 'board detail panel did not close')
+assert(!run.showBoardDetail(run.player.pos), 'the player must not expose a detail panel')
 
 const shapeGrid = new BackpackGrid()
 const shortSword = makeItemById('short-sword')
@@ -110,6 +118,16 @@ assert(randomItem(3, () => 0.99).id === 'large-whetstone', 'large consumables mu
 const spearPlacement = shapeGrid.add(spear)
 assert(spearPlacement && shapeGrid.usedCells === 3, 'shape backpack did not occupy the weapon footprint')
 assert(shapeGrid.rotate(spear.uid) && shapeGrid.shapeFor(spear, shapeGrid.placementOf(spear.uid).rotation)[0].length === 3, 'shape backpack did not rotate the selected weapon')
+const fallbackRotationGrid = new BackpackGrid(3, 2)
+const fallbackRotationItem = { uid: 'rotation-fallback', shape: [[1, 1]] }
+fallbackRotationGrid.placements.push(
+  { item: fallbackRotationItem, x: 0, y: 0, rotation: 0 },
+  { item: { uid: 'rotation-block-a', shape: [[1]] }, x: 0, y: 1, rotation: 0 },
+  { item: { uid: 'rotation-block-b', shape: [[1]] }, x: 1, y: 1, rotation: 0 },
+)
+assert(fallbackRotationGrid.rotate(fallbackRotationItem.uid), 'rotation should search for an alternative backpack position')
+const fallbackPlacement = fallbackRotationGrid.placementOf(fallbackRotationItem.uid)
+assert(fallbackPlacement.rotation === 1 && fallbackPlacement.x === 2 && fallbackPlacement.y === 0, 'rotation did not relocate when the original position was blocked')
 const serializedShapeGrid = shapeGrid.serialize((item) => ({ ...item }))
 const restoredShapeGrid = BackpackGrid.hydrate(serializedShapeGrid)
 assert(restoredShapeGrid.usedCells === 3 && restoredShapeGrid.placementOf(spear.uid)?.rotation === 1, 'shape backpack placement or rotation did not persist')
@@ -121,6 +139,29 @@ organizeRun.selectInventory(organizeIndex)
 const organizeTurn = organizeRun.turn
 assert(organizeRun.rotateSelectedInventory() && organizeRun.turn === organizeTurn, 'rotating a backpack item must not consume a turn')
 assert(organizeRun.moveSelectedInventory(INVENTORY_COLUMNS) && organizeRun.turn === organizeTurn, 'moving a backpack item must not consume a turn')
+assert(organizeRun.selectInventory(organizeRun.selectedInventoryIndex) && !organizeRun.selectedItem, 'selecting an already selected backpack item must cancel selection')
+assert(organizeRun.selectInventory(INVENTORY_COLUMNS) && organizeRun.selectedItem, 'backpack item could not be selected after cancellation')
+assert(organizeRun.clearSelection() && !organizeRun.selectedItem, 'backpack selection could not be cleared')
+
+const orderedFlipRun = new GameRun({ autoLoad: false, random: () => 0.5 })
+orderedFlipRun.chooseInitialRelic(orderedFlipRun.initialRelicChoices[0])
+const orderedRoom = orderedFlipRun.currentRoom
+const orderedStart = { ...orderedFlipRun.player.pos }
+const orderedDirection = [[1, 0], [-1, 0], [0, 1], [0, -1]].find(([dc, dr]) => orderedRoom.contains({ c: orderedStart.c + dc * 3, r: orderedStart.r + dr * 3 }))
+assert(orderedDirection, 'could not create a remote flip route')
+const [orderedDc, orderedDr] = orderedDirection
+const orderedRoute = [1, 2].map((step) => ({ c: orderedStart.c + orderedDc * step, r: orderedStart.r + orderedDr * step }))
+const orderedTarget = { c: orderedStart.c + orderedDc * 3, r: orderedStart.r + orderedDr * 3 }
+for (const position of [...orderedRoute, orderedTarget]) {
+  const entity = orderedRoom.entityAt(position)
+  if (entity) orderedRoom.removeEntity(entity.id)
+}
+for (const position of orderedRoute) orderedRoom.reveal(position)
+const orderedEvents = []
+orderedFlipRun.on('change', () => orderedEvents.push('change'))
+orderedFlipRun.on('animate:flip', () => orderedEvents.push('flip'))
+assert(orderedFlipRun.clickTile(orderedTarget.c, orderedTarget.r), 'remote flip was rejected')
+assert(orderedEvents.indexOf('change') >= 0 && orderedEvents.indexOf('change') < orderedEvents.indexOf('flip'), 'remote flip animation must run after the player movement render')
 
 const flipTarget = firstFlippable(run)
 assert(flipTarget, 'the initial room has no legal flip')
@@ -158,6 +199,7 @@ assert(sourceEnemy.cooldown === 0, 'frozen source room advanced during door tran
 assert(doorRun.turn === 1, 'door transfer must advance the action clock')
 const arrivalDoor = doorRun.dungeon.otherDoor(door)
 assert(doorRun.currentRoom.isRevealed(arrivalDoor.arrival), 'arrival tile did not auto-reveal')
+assert(doorRun.currentRoom.isRevealed(arrivalDoor.pos), 'the entered door must reveal in the destination room')
 assert(doorRun.phase === 'reward' && doorRun.roomReward?.choices.length === 3, 'first arrival in a room did not open a room reward')
 const roomItemRewardIndex = doorRun.roomReward.choices.findIndex((choice) => choice.kind === 'item')
 assert(roomItemRewardIndex >= 0 && doorRun.chooseRoomReward(roomItemRewardIndex), 'room item reward could not be claimed')
@@ -246,6 +288,18 @@ assert(dualWeaponRun.useSelected() && dualWeaponRun.itemTargeting, 'whetstone di
 const repairedDurability = dualWeaponRun.player.equipment[0].durability
 assert(dualWeaponRun.applySelectedItemToEquipment(0), 'whetstone could not target the left-hand weapon')
 assert(dualWeaponRun.player.equipment[0].durability === repairedDurability + 2, 'whetstone did not repair its selected hand')
+
+const backpackRepairRun = new GameRun({ autoLoad: false, random: () => 0.5 })
+backpackRepairRun.chooseInitialRelic(backpackRepairRun.initialRelicChoices[0])
+const backpackWeapon = makeItemById('short-sword')
+backpackWeapon.durability = 1
+const backpackWeaponIndex = addToBackpack(backpackRepairRun, backpackWeapon)
+const backpackStoneIndex = addToBackpack(backpackRepairRun, makeItemById('whetstone'))
+backpackRepairRun.selectInventory(backpackStoneIndex)
+const backpackRepairTurn = backpackRepairRun.turn
+assert(backpackRepairRun.useSelected() && backpackRepairRun.itemTargeting, 'whetstone did not enter weapon target mode')
+assert(backpackRepairRun.applySelectedItemToBackpackWeapon(backpackWeaponIndex), 'whetstone could not target a backpack weapon')
+assert(backpackWeapon.durability === 3 && backpackRepairRun.turn === backpackRepairTurn + 1, 'backpack weapon was not repaired with the normal whetstone turn cost')
 
 const dualAttackRun = new GameRun({ autoLoad: false, random: () => 0.5 })
 dualAttackRun.chooseInitialRelic(dualAttackRun.initialRelicChoices[0])

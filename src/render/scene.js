@@ -7,6 +7,7 @@ const DEFAULT_ZOOM = 1
 const MIN_ZOOM = 0.66
 const MAX_ZOOM = 3.2
 const DRAG_THRESHOLD = 8
+const LONG_PRESS_MS = 420
 const CAMERA_FOV = 45
 const CAMERA_NEAR = 0.1
 const CAMERA_FAR = 80
@@ -119,6 +120,7 @@ export class GameScene {
     this.drag = null
     this.pinch = null
     this.lastDragMoved = false
+    this.boardHold = null
     this.scene = new THREE.Scene()
     this.scene.background = new THREE.Color(0x111722)
     this.baseCameraDistance = 12
@@ -528,6 +530,33 @@ export class GameScene {
     return first && second ? Math.hypot(first.x - second.x, first.y - second.y) : 0
   }
 
+  _startBoardHold(event) {
+    const position = this._pickTile(event)?.userData?.position
+    if (!position) return
+    const hold = {
+      pointerId: event.pointerId,
+      position: { ...position },
+      opened: false,
+      triggered: false,
+      timer: null,
+    }
+    hold.timer = window.setTimeout(() => {
+      if (this.boardHold !== hold || this.drag?.moved || this.pinch) return
+      hold.triggered = true
+      hold.opened = this.run.showBoardDetail(hold.position)
+    }, LONG_PRESS_MS)
+    this.boardHold = hold
+  }
+
+  _cancelBoardHold({ close = false } = {}) {
+    const hold = this.boardHold
+    if (!hold) return false
+    window.clearTimeout(hold.timer)
+    this.boardHold = null
+    if (close && hold.opened) this.run.closeDetail()
+    return hold.triggered
+  }
+
   _handlePointerDown(event) {
     this.renderer.domElement.setPointerCapture?.(event.pointerId)
     this.activePointers.set(event.pointerId, this._pointerPosition(event))
@@ -542,7 +571,9 @@ export class GameScene {
         startWorld: this._groundPoint(event),
         moved: false,
       }
+      this._startBoardHold(event)
     } else if (this.activePointers.size === 2) {
+      this._cancelBoardHold({ close: true })
       this.pinch = { distance: this._pinchDistance(), zoom: this.zoom, moved: false }
       this.drag = null
     }
@@ -561,7 +592,10 @@ export class GameScene {
     if (!this.drag || this.drag.pointerId !== event.pointerId) return
     const deltaX = event.clientX - this.drag.startX
     const deltaY = event.clientY - this.drag.startY
-    if (Math.abs(deltaX) + Math.abs(deltaY) > DRAG_THRESHOLD) this.drag.moved = true
+    if (Math.abs(deltaX) + Math.abs(deltaY) > DRAG_THRESHOLD) {
+      this.drag.moved = true
+      this._cancelBoardHold({ close: true })
+    }
     if (!this.drag.moved) return
     const currentWorld = this._groundPoint(event)
     if (!this.drag.startWorld || !currentWorld) return
@@ -575,11 +609,14 @@ export class GameScene {
     const wasPinching = !!this.pinch
     const pinchMoved = this.pinch?.moved
     const dragMoved = this.drag?.moved
+    const longPressTriggered = this.boardHold?.pointerId === event.pointerId
+      ? this._cancelBoardHold({ close: true })
+      : false
     this.activePointers.delete(event.pointerId)
     this.renderer.domElement.releasePointerCapture?.(event.pointerId)
     if (wasPinching) this.pinch = null
     this.drag = null
-    this.lastDragMoved = this.lastDragMoved || !!pinchMoved || !!dragMoved
+    this.lastDragMoved = this.lastDragMoved || !!pinchMoved || !!dragMoved || longPressTriggered
   }
 
   _handleWheel(event) {
@@ -609,6 +646,7 @@ export class GameScene {
 
   dispose() {
     cancelAnimationFrame(this._frame)
+    this._cancelBoardHold({ close: true })
     this.unsubscribe?.()
     window.removeEventListener('resize', this._onResize)
     this.renderer.domElement.removeEventListener('pointerdown', this._onPointerDown)
