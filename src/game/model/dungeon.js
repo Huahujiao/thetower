@@ -119,6 +119,13 @@ function addMonster(room, reserved, random, index) {
   const monster = createMonster(room.floor, index)
   monster.pos = position
   room.addEntity(monster)
+  if (monster.behavior === 'patrol') {
+    const next = shuffled(neighbors8(position, room.width, room.height)
+      .filter((candidate) => !reserved.has(posKey(candidate)) && room.isEmpty(candidate)), random)[0]
+    monster.patrolPath = next ? [{ ...position }, { ...next }] : [{ ...position }]
+    monster.patrolIndex = 0
+    if (next) reserved.add(posKey(next))
+  }
   return true
 }
 
@@ -223,7 +230,7 @@ export function createLinearDungeon({ config = DUNGEON_CONFIG, random = Math.ran
       const width = floor === 1
         ? config.firstRoomWidth
         : config.otherRoomMinWidth + Math.floor(random() * (config.otherRoomMaxWidth - config.otherRoomMinWidth + 1))
-      const room = new Room({ id: `room-${sequence + 1}`, floor, width, height: config.roomHeight })
+      const room = new Room({ id: `room-${sequence + 1}`, floor, width, height: config.roomHeight, random })
       dungeon.addRoom(room)
       reservations.set(room.id, new Set())
       openAnchors.set(room.id, [])

@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { getAttributeDefinition } from '../game/data/attributes.js'
 
 const TILE_SIZE = 1.14
 const CARD_SIZE = TILE_SIZE
@@ -29,18 +30,6 @@ const CARD_COLORS = Object.freeze({
   empty: '#20242d',
 })
 
-const DAMAGE_TYPE_LABELS = Object.freeze({
-  slash: '劈砍',
-  pierce: '穿刺',
-  blunt: '钝击',
-})
-
-const ENEMY_WEAKNESS = Object.freeze({
-  blood: '劈砍',
-  shell: '穿刺',
-  spirit: '钝击',
-})
-
 function makeCanvasTexture(draw) {
   const canvas = document.createElement('canvas')
   canvas.width = 480
@@ -63,6 +52,18 @@ function drawCenteredText(context, text, y, { color = '#fff', size = 12, weight 
   context.fillStyle = color
   context.textAlign = 'center'
   context.fillText(text, 80, y)
+}
+
+function drawAttributeLabel(context, attribute) {
+  const definition = getAttributeDefinition(attribute)
+  if (!definition) return
+  context.font = 'bold 12px sans-serif'
+  context.textAlign = 'right'
+  context.fillStyle = definition.color
+  context.shadowColor = 'rgba(0,0,0,.9)'
+  context.shadowBlur = 3
+  context.fillText(definition.name, 148, 18)
+  context.shadowBlur = 0
 }
 
 function drawStickFigure(context) {
@@ -208,7 +209,7 @@ export class GameScene {
     mesh.position.set(point.x, 0, point.z)
     mesh.receiveShadow = true
     this.roomGroup.add(mesh)
-    const texture = revealed ? this._makeFrontTexture(this._cardFaceData(room, position)) : this._makeBackTexture()
+    const texture = revealed ? this._makeFrontTexture(this._cardFaceData(room, position)) : this._makeBackTexture(this._backAttributeFor(room, position))
     const face = new THREE.Mesh(
       new THREE.PlaneGeometry(CARD_SIZE, CARD_SIZE),
       new THREE.MeshBasicMaterial({ map: texture }),
@@ -235,7 +236,7 @@ export class GameScene {
     group.position.set(point.x, CARD_THICKNESS / 2 + 0.004, point.z)
     group.rotation.x = Math.PI
     const frontTexture = this._makeFrontTexture(this._cardFaceData(room, position))
-    const backTexture = this._makeBackTexture()
+    const backTexture = this._makeBackTexture(this._backAttributeFor(room, position))
     const front = new THREE.Mesh(
       new THREE.PlaneGeometry(CARD_SIZE, CARD_SIZE),
       new THREE.MeshBasicMaterial({ map: frontTexture, side: THREE.DoubleSide }),
@@ -305,17 +306,24 @@ export class GameScene {
     }
   }
 
-  _makeBackTexture() {
+  _backAttributeFor(room, position) {
+    const entity = room.entityAt(position)
+    return entity?.attribute || entity?.item?.attribute || room.tile(position)?.backAttribute || 'scorch'
+  }
+
+  _makeBackTexture(attribute) {
     return makeCanvasTexture((context) => {
+      const definition = getAttributeDefinition(attribute) || getAttributeDefinition('scorch')
       const gradient = context.createLinearGradient(0, 0, 0, 160)
-      gradient.addColorStop(0, '#2a2a4e')
-      gradient.addColorStop(1, '#15152a')
+      gradient.addColorStop(0, definition.backTop)
+      gradient.addColorStop(1, definition.backBottom)
       context.fillStyle = gradient
       context.fillRect(0, 0, 160, 160)
-      context.strokeStyle = '#4a4a7a'
+      context.strokeStyle = definition.color
       context.lineWidth = 6
       context.strokeRect(6, 6, 148, 148)
-      context.strokeStyle = 'rgba(130,130,190,0.35)'
+      context.strokeStyle = definition.color
+      context.globalAlpha = 0.4
       context.lineWidth = 3
       context.beginPath()
       context.moveTo(80, 22)
@@ -324,7 +332,7 @@ export class GameScene {
       context.lineTo(28, 80)
       context.closePath()
       context.stroke()
-      context.strokeStyle = 'rgba(130,130,190,0.20)'
+      context.globalAlpha = 0.24
       context.lineWidth = 2
       context.beginPath()
       context.moveTo(80, 44)
@@ -333,12 +341,15 @@ export class GameScene {
       context.lineTo(50, 80)
       context.closePath()
       context.stroke()
-      context.fillStyle = 'rgba(150,150,210,0.30)'
+      context.globalAlpha = 0.42
+      context.fillStyle = definition.color
       for (const [x, y] of [[22, 22], [138, 22], [22, 138], [138, 138]]) {
         context.beginPath()
         context.arc(x, y, 4, 0, Math.PI * 2)
         context.fill()
       }
+      context.globalAlpha = 1
+      drawCenteredText(context, definition.name, 37, { color: definition.color, size: 16, weight: 'bold' })
     })
   }
 
@@ -366,6 +377,7 @@ export class GameScene {
       context.strokeStyle = card.boss ? '#d98080' : '#888'
       context.lineWidth = card.boss ? 5 : 3
       context.strokeRect(4, 4, 152, 152)
+      drawAttributeLabel(context, card.attribute)
       const isBuff = card.type === 'buff'
       const isMonster = card.type === 'monster'
       const isWeapon = card.type === 'weapon'
@@ -373,7 +385,7 @@ export class GameScene {
       const subtitle = isMonster || isWeapon ? card.subtitle : ''
       const detail = isMonster ? `ATK ${card.attack}` : isWeapon ? `\u8010 ${card.durability}` : card.type === 'door' ? card.detail : ''
       const footer = isMonster || isWeapon ? card.footer : ''
-      drawCenteredText(context, card.title, 26, { color: card.boss ? '#fbb' : '#fff', size: 22, weight: 'bold' })
+      drawCenteredText(context, card.title, 32, { color: card.boss ? '#fbb' : '#fff', size: 22, weight: 'bold' })
       if (!isBuff && subtitle) drawCenteredText(context, subtitle, 50, { color: '#ffa', size: 14 })
       if (value) drawCenteredText(context, value, 90, { color: card.valueColor || '#fff', size: 36, weight: 'bold' })
       if (!isBuff && detail) drawCenteredText(context, detail, 116, { color: '#d8e4ff', size: 14 })
@@ -398,17 +410,18 @@ export class GameScene {
       return {
         type: 'monster',
         title: entity.name,
-        subtitle: entity.boss ? '★ BOSS ★' : `弱点：${ENEMY_WEAKNESS[entity.category] || '未知'}`,
+        subtitle: entity.boss ? '★ BOSS ★' : '',
         value: String(Math.max(0, entity.hp)),
         valueColor: entity.boss ? '#ff7777' : '#ff7777',
         maxValue: entity.maxHp,
         attack: entity.attack,
         detail: `血 ${Math.max(0, entity.hp)}/${entity.maxHp}  攻 ${entity.attack}`,
         footer: `射程 ${entity.range}`,
+        attribute: entity.attribute,
         boss: !!entity.boss,
       }
     }
-    if (entity.kind === 'item') return this._itemCardFaceData(entity.item)
+    if (entity.kind === 'item') return { ...this._itemCardFaceData(entity.item), attribute: entity.item.attribute }
     if (entity.kind === 'trap') return { type: 'trap', title: entity.name, value: '!', valueColor: '#ffabb7' }
     if (entity.kind === 'gold') {
       return { type: 'gold', title: '金币', value: `+${entity.amount}`, valueColor: '#ffd56b', detail: '点击拾取', clickHint: '点击拾取' }
@@ -438,7 +451,7 @@ export class GameScene {
       return {
         type: 'weapon',
         title: item.name,
-        subtitle: DAMAGE_TYPE_LABELS[item.damageType] || '武器',
+        subtitle: '',
         value: `ATK ${item.attack}`,
         valueColor: '#a9d8ff',
         durability: item.durability,

@@ -1,4 +1,5 @@
 import catalog from '../game/data/catalog.json' with { type: 'json' }
+import { attributeLabel } from '../game/data/attributes.js'
 import { RELIC_DEFS } from '../game/data/relics.js'
 import '../wiki.css'
 
@@ -26,27 +27,39 @@ const COPY = Object.freeze({
   durability: '\u8010\u4e45',
   footprint: '\u5360\u683c',
   grip: '\u63e1\u6301',
-  damageType: '\u4f24\u5bb3\u7c7b\u578b',
-  floor: '\u51fa\u73b0\u697c\u5c42',
+  attribute: '\u5c5e\u6027',
+  floor: '\u6700\u65e9\u51fa\u73b0\u697c\u5c42',
   delay: '\u521d\u6b21\u884c\u52a8\u5ef6\u8fdf',
   interval: '\u884c\u52a8\u95f4\u9694',
-  category: '\u7c7b\u578b',
+  behaviorTraits: '\u884c\u4e3a\u4e0e\u7279\u6027',
   active: '\u4e3b\u52a8\u6280\u80fd',
   cooldown: '\u51b7\u5374',
   healing: '\u6062\u590d\u751f\u547d',
   armorValue: '\u589e\u52a0\u62a4\u7532',
   nextAttack: '\u4e0b\u6b21\u653b\u51fb',
+  nextMeleeAttack: '\u4e0b\u6b21\u8fd1\u6218\u653b\u51fb',
   repair: '\u4fee\u590d\u8010\u4e45',
+  loot: '\u6389\u843d',
+  enemyDrop: '\u654c\u4eba\u6389\u843d',
   futureRule: '\u9884\u8ba1\u89c4\u5219',
   oneHanded: '\u5355\u624b',
   twoHanded: '\u53cc\u624b',
-  slash: '\u5288\u780d',
-  pierce: '\u7a7f\u523a',
-  blunt: '\u949d\u51fb',
-  blood: '\u8840\u8089',
-  shell: '\u786c\u58f3',
-  spirit: '\u7075\u4f53',
+  scorch: '\u707c\u70ed',
+  slime: '\u9ecf\u6db2',
+  crystal: '\u7ed3\u6676',
+  tide: '\u6e4d\u6d41',
   stationary: '\u9a7b\u5b88',
+  chaser: '\u8ffd\u730e',
+  patrol: '\u5de1\u903b',
+  ambush: '\u4f0f\u51fb',
+  summoner: '\u53ec\u5524',
+  selfDestruct: '\u81ea\u7206',
+  shield: '\u76fe\u5175',
+  heavyArmor: '\u91cd\u7532',
+  regen: '\u518d\u751f',
+  split: '\u5206\u88c2',
+  revive: '\u590d\u6d3b',
+  spawn: '\u53ec\u5524\u7269',
   manhattan: '\u66fc\u54c8\u987f\u8ddd\u79bb',
   cell: '\u683c',
   turn: '\u56de\u5408',
@@ -63,7 +76,10 @@ function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[character]))
 }
 
-function label(value) { return COPY[value] || value || '' }
+function label(value) {
+  const aliases = { 'heavy-armor': 'heavyArmor', 'self-destruct': 'selfDestruct' }
+  return COPY[aliases[value] || value] || value || ''
+}
 
 function shapeCells(shape) { return (shape || [[1]]).flat().filter(Boolean).length }
 
@@ -82,12 +98,17 @@ const PROPOSALS = Object.freeze({
     {
       tone: 'tone-enemy', tag: COPY.enemy, title: '\u8ffd\u730e\u8005', accent: '\u2020',
       description: '\u7ffb\u5f00\u540e\u4f1a\u6cbf\u6700\u77ed\u8def\u5f84\u671d\u73a9\u5bb6\u9760\u8fd1\uff0c\u76f4\u5230\u8fdb\u5165\u8fd1\u6218\u8303\u56f4\u3002',
-      stats: [[COPY.health, '6+2\u00b7(F-2)'], [COPY.attack, '3+1\u00b7(F-2)'], [COPY.range, `1 ${COPY.cell}`], [COPY.delay, `1 ${COPY.turn}`], [COPY.interval, `1 ${COPY.turn}`], [COPY.futureRule, '\u8840\u8089 \u00b7 \u8ffd\u51fb']],
+      stats: [[COPY.health, '6+2\u00b7(F-2)'], [COPY.attack, '3+1\u00b7(F-2)'], [COPY.range, `1 ${COPY.cell}`], [COPY.delay, `1 ${COPY.turn}`], [COPY.interval, `1 ${COPY.turn}`], [COPY.futureRule, '\u707c\u70ed \u00b7 \u8ffd\u51fb']],
     },
     {
       tone: 'tone-enemy', tag: COPY.enemy, title: '\u89c2\u671b\u8005', accent: '\u25ce',
       description: '\u4e0d\u79fb\u52a8\uff0c\u4f46\u5728\u5c04\u7a0b\u5185\u4f1a\u538b\u7f29\u73a9\u5bb6\u7684\u8def\u7ebf\u9009\u62e9\u3002',
-      stats: [[COPY.health, '5+1\u00b7(F-3)'], [COPY.attack, '2+1\u00b7(F-3)'], [COPY.range, `3 ${COPY.cell}`], [COPY.delay, `1 ${COPY.turn}`], [COPY.interval, `2 ${COPY.turn}`], [COPY.futureRule, '\u7075\u4f53 \u00b7 \u8fdc\u7a0b\u76d1\u89c6']],
+      stats: [[COPY.health, '5+1\u00b7(F-3)'], [COPY.attack, '2+1\u00b7(F-3)'], [COPY.range, `3 ${COPY.cell}`], [COPY.delay, `1 ${COPY.turn}`], [COPY.interval, `2 ${COPY.turn}`], [COPY.futureRule, '\u6e4d\u6d41 \u00b7 \u8fdc\u7a0b\u76d1\u89c6']],
+    },
+    {
+      tone: 'tone-boss', tag: COPY.boss, title: '\u4e0d\u706d\u76d1\u89c6\u8005', accent: '\u2620',
+      description: '\u5f3a\u5316\u9996\u9886\u5019\u9009\uff1a\u53ef\u5728\u9996\u6b21\u6b7b\u4ea1\u540e\u8fd4\u56de\u6218\u573a\u3002',
+      stats: [[COPY.health, '30'], [COPY.attack, '9'], [COPY.range, `2 ${COPY.cell}`], [COPY.delay, `1 ${COPY.turn}`], [COPY.interval, `2 ${COPY.turn}`], [COPY.futureRule, '\u7ed3\u6676 \u00b7 \u9a7b\u5b88 \u00b7 \u590d\u6d3b']],
     },
   ],
   weapons: [
@@ -148,25 +169,30 @@ function proposalCards(group) {
 }
 
 function enemyCards() {
-  const enemies = [...catalog.enemies, { ...catalog.boss, boss: true, minFloor: 5, hpBase: catalog.boss.hp, attackBase: catalog.boss.attack, hpPerFloor: 0, attackPerFloor: 0 }]
+  const enemies = [...catalog.enemies, { ...catalog.boss, boss: true, minFloor: 5 }]
+  const lootById = new Map((catalog.enemyLoot || []).map((item) => [item.id, item]))
   return enemies.map((enemy) => card({
     tone: enemy.boss ? 'tone-boss' : 'tone-enemy',
-    tag: enemy.boss ? COPY.boss : COPY.enemy,
+    tag: enemy.boss ? COPY.boss : enemy.spawnOnly ? COPY.spawn : COPY.enemy,
     title: enemy.name,
     accent: enemy.boss ? '\u2620' : '\u2020',
     stats: [
-      stat(COPY.health, `${enemy.hpBase}+${enemy.hpPerFloor}\u00b7(${COPY.floor}-${enemy.minFloor})`),
-      stat(COPY.attack, `${enemy.attackBase}+${enemy.attackPerFloor}\u00b7(${COPY.floor}-${enemy.minFloor})`),
+      stat(COPY.health, enemy.hp),
+      stat(COPY.attack, enemy.attack),
       stat(COPY.range, `${enemy.range} ${COPY.cell}\uff08${COPY.manhattan}\uff09`),
       stat(COPY.delay, `${enemy.initialActionDelay} ${COPY.turn}`),
       stat(COPY.interval, `${enemy.cooldownMax} ${COPY.turn}`),
-      stat(COPY.category, `${label(enemy.category)} \u00b7 ${label(enemy.behavior)}`),
+      stat(COPY.attribute, attributeLabel(enemy.attribute)),
+      stat(COPY.behaviorTraits, [label(enemy.behavior), ...(enemy.traits || []).map(label), enemy.deathRule ? label(enemy.deathRule) : ''].filter(Boolean).join(' \u00b7 ')),
+      stat(COPY.floor, enemy.spawnOnly ? COPY.spawn : enemy.minFloor),
+      enemy.drop ? stat(COPY.loot, `${Math.round(enemy.drop.chance * 100)}% \u00b7 ${lootById.get(enemy.drop.itemId)?.name || enemy.drop.itemId}`) : '',
     ],
   })).join('') + proposalCards('enemies')
 }
 
 function weaponCards() {
-  return catalog.weapons.map((weapon) => card({
+  const weapons = [...catalog.weapons, ...(catalog.enemyLoot || []).filter((item) => item.type === 'weapon')]
+  return weapons.map((weapon) => card({
     tone: 'tone-weapon',
     tag: COPY.weapon,
     title: weapon.name,
@@ -174,9 +200,9 @@ function weaponCards() {
     stats: [
       stat(COPY.attack, weapon.attack),
       stat(COPY.range, `${weapon.range} ${COPY.cell}\uff08${COPY.manhattan}\uff09`),
-      stat(COPY.durability, weapon.durability),
+      stat(COPY.durability, weapon.durabilityRange ? weapon.durabilityRange.join('\u2013') : weapon.durability),
       stat(COPY.grip, weapon.grip === 'two' ? COPY.twoHanded : COPY.oneHanded),
-      stat(COPY.damageType, label(weapon.damageType)),
+      stat(COPY.attribute, attributeLabel(weapon.attribute)),
       stat(COPY.footprint, shapeText(weapon.shape)),
     ],
   })).join('') + proposalCards('weapons')
@@ -198,21 +224,23 @@ function relicCards() {
 function itemEffect(item) {
   if (item.type === 'potion') return stat(COPY.healing, `+${item.heal}`)
   if (item.type === 'armor') return stat(COPY.armorValue, `+${item.armor}`)
-  if (item.type === 'buff') return stat(COPY.nextAttack, `+${item.attackBonus}`)
+  if (item.type === 'buff') return stat(item.attackTarget === 'melee' ? COPY.nextMeleeAttack : COPY.nextAttack, `+${item.attackBonus}`)
   if (item.type === 'whetstone') return stat(COPY.repair, `+${item.repair}`)
   return ''
 }
 
 function itemCards() {
-  return catalog.consumables.map((item) => card({
+  const items = [...catalog.consumables, ...(catalog.enemyLoot || []).filter((item) => item.type !== 'weapon')]
+  return items.map((item) => card({
     tone: `tone-${item.type}`,
     tag: label(item.type),
     title: item.name,
     accent: item.type === 'whetstone' ? '\u25c6' : item.type === 'buff' ? '\u2727' : '\u25cf',
     stats: [
       itemEffect(item),
+      stat(COPY.attribute, attributeLabel(item.attribute)),
       stat(COPY.footprint, shapeText(item.shape)),
-      stat(COPY.floor, item.minFloor || 1),
+      stat(COPY.floor, item.dropOnly ? COPY.enemyDrop : item.minFloor || 1),
     ],
   })).join('') + proposalCards('items')
 }

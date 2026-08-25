@@ -24,30 +24,13 @@ export function resolveDamage(baseDamage, modifiers = []) {
   }
 }
 
-const COUNTERED_CATEGORY = Object.freeze({
-  slash: 'blood',
-  pierce: 'shell',
-  blunt: 'spirit',
-})
-
-const RESISTED_CATEGORY = Object.freeze({
-  slash: 'shell',
-  pierce: 'spirit',
-  blunt: 'blood',
-})
-
-export function attackTypeModifier(weapon, target) {
-  const damageType = weapon?.damageType
-  const category = target?.category
-  if (!damageType || !category) return { multiplier: 1, countered: false, resisted: false }
-  if (COUNTERED_CATEGORY[damageType] === category) return { multiplier: 1.6, countered: true, resisted: false }
-  if (RESISTED_CATEGORY[damageType] === category) return { multiplier: 0.65, countered: false, resisted: true }
-  return { multiplier: 1, countered: false, resisted: false }
+export function attackAttributeModifier(weapon, target) {
+  return attributeModifier(weapon?.attribute, target?.attribute)
 }
 
 export function computeAttackDamage({ weapon, target, pendingAttackBonus = 0, relicModifiers = [], terrainModifiers = [] } = {}) {
   if (!weapon) return { damage: 0, countered: false, resisted: false, resolution: resolveDamage(0) }
-  const type = attackTypeModifier(weapon, target)
+  const type = attackAttributeModifier(weapon, target)
   const modifiers = [
     ...(pendingAttackBonus ? [damageModifier(DAMAGE_STAGES.FLAT, pendingAttackBonus, 'pending-buff')] : []),
     ...(weapon.durability === 1 ? [damageModifier(DAMAGE_STAGES.MULTIPLY, 0.5, 'last-durability')] : []),
@@ -58,3 +41,4 @@ export function computeAttackDamage({ weapon, target, pendingAttackBonus = 0, re
   const resolution = resolveDamage(weapon.attack, modifiers)
   return { damage: resolution.total, countered: type.countered, resisted: type.resisted, resolution }
 }
+import { attributeModifier } from '../data/attributes.js'

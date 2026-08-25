@@ -12,7 +12,7 @@ export const RELIC_DEFS = Object.freeze([
   {
     id: 'r-hunter-mark',
     name: '\u730e\u624b\u5370\u8bb0',
-    description: '\u89e6\u53d1\u6b66\u5668\u514b\u5236\u65f6\uff0c\u6700\u7ec8\u4f24\u5bb3\u00d71.25\u3002',
+    description: '\u89e6\u53d1\u5c5e\u6027\u514b\u5236\u65f6\uff0c\u6700\u7ec8\u4f24\u5bb3\u00d71.25\u3002',
     damageModifiers: ({ countered }) => countered
       ? [damageModifier(DAMAGE_STAGES.MULTIPLY, 1.25, 'relic:hunter-mark')]
       : [],
@@ -68,8 +68,8 @@ export const RELIC_DEFS = Object.freeze([
   {
     id: 'r-blood-hunger',
     name: '\u8840\u9965\u5370\u8bb0',
-    description: '\u76ee\u6807\u4e3a\u8840\u8089\u65f6\uff0c\u653b\u51fb +1\u3002',
-    damageModifiers: ({ target }) => target?.category === 'blood'
+    description: '\u76ee\u6807\u4e3a\u9ecf\u6db2\u5c5e\u6027\u65f6\uff0c\u653b\u51fb +1\u3002',
+    damageModifiers: ({ target }) => target?.attribute === 'slime'
       ? [damageModifier(DAMAGE_STAGES.FLAT, 1, 'relic:blood-hunger')]
       : [],
   },

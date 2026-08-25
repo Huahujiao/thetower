@@ -15,6 +15,8 @@
 | [01-overview.md](./01-overview.md) | 一局游戏的目标、流程与状态 |
 | [02-dungeon.md](./02-dungeon.md) | 楼层、房间、卡牌、翻牌与门 |
 | [03-turn-and-combat.md](./03-turn-and-combat.md) | 回合、移动、敌人、伤害与胜负 |
+| [12-attributes.md](./12-attributes.md) | 四属性循环、卡背提示与属性显示 |
+| [敌人.md](./敌人.md) | 敌人行为、特性、死亡规则与首批敌人 |
 | [04-inventory.md](./04-inventory.md) | 背包、装备、物品与操作规则 |
 | [05-encounters-relics.md](./05-encounters-relics.md) | 房间奖励、商人、陷阱与圣遗物 |
 | [06-content.md](./06-content.md) | 已实装敌人、武器、物品与圣遗物数值 |
@@ -27,4 +29,4 @@
 
 设计文档规定体验和规则。运行时的静态数值来自 `src/game/data/`；图鉴的已实装卡片直接读取这些数据。任何数值调整都应同时更新 [06-content.md](./06-content.md) 与图鉴。
 
-当前规则与未来计划必须分开阅读：前九页描述当前可游玩的正式规则，[10-roadmap.md](./10-roadmap.md) 记录尚未进入运行时的已确认方向和待确认内容。
+当前规则与未来计划必须分开阅读：除 [10-roadmap.md](./10-roadmap.md) 外的设计页描述当前可游玩的正式规则；路线图记录尚未进入运行时的已确认方向和待确认内容。

@@ -1,10 +1,11 @@
-import { enemyDefinitionFor } from './enemies.js'
+import { enemyDefinitionFor, getEnemyDefinition } from './enemies.js'
 import catalog from './catalog.json' with { type: 'json' }
 
 const WEAPONS = Object.freeze(catalog.weapons)
 const CONSUMABLES = Object.freeze(catalog.consumables)
+const ENEMY_LOOT = Object.freeze(catalog.enemyLoot || [])
 const BOSS = Object.freeze(catalog.boss)
-const ALL_ITEM_DEFS = Object.freeze([...WEAPONS, ...CONSUMABLES])
+const ALL_ITEM_DEFS = Object.freeze([...WEAPONS, ...CONSUMABLES, ...ENEMY_LOOT])
 const ITEM_BY_ID = new Map(ALL_ITEM_DEFS.map((definition) => [definition.id, definition]))
 
 let serial = 0
@@ -29,28 +30,22 @@ export function synchronizeEntityIds(identifiers) {
 
 export function starterWeapon() { return makeItem(WEAPONS[0]) }
 
-export function makeItem(definition) {
+export function makeItem(definition, random = Math.random) {
   const item = { ...definition, shape: cloneShape(definition.shape), uid: nextEntityId('item') }
-  if (item.type === 'weapon') item.durability = item.durability || definition.durability
+  if (item.type === 'weapon') {
+    const [minimum, maximum] = definition.durabilityRange || [definition.durability, definition.durability]
+    item.durability = Number.isInteger(minimum) && Number.isInteger(maximum)
+      ? minimum + Math.floor(random() * (maximum - minimum + 1))
+      : definition.durability || 1
+  }
   return item
 }
 
 export function getItemDefinition(id) { return ITEM_BY_ID.get(id) || null }
 
-export function makeItemById(id) {
+export function makeItemById(id, random = Math.random) {
   const definition = getItemDefinition(id)
-  return definition ? makeItem(definition) : null
-}
-
-export function makeTemporaryWeapon(floor, random = Math.random) {
-  const candidates = WEAPONS.filter((weapon) => weapon.id !== 'rust-sword' || floor === 1)
-  const definition = candidates[Math.floor(random() * candidates.length)] || WEAPONS[0]
-  const item = makeItem(definition)
-  item.name = `${item.name}\u00b7\u4e34\u65f6`
-  item.attack += 2 + Math.floor(floor / 2)
-  item.durability = 1
-  item.temporary = true
-  return item
+  return definition ? makeItem(definition, random) : null
 }
 
 export function randomItem(floor, random = Math.random) {
@@ -60,21 +55,29 @@ export function randomItem(floor, random = Math.random) {
   return makeItem(consumablePool[Math.floor(random() * consumablePool.length)])
 }
 
-export function createMonster(floor, index = 0) {
-  const definition = enemyDefinitionFor(floor, index)
-  const level = floor - 1
-  const hp = definition.hpBase + definition.hpPerFloor * level
+function createEnemy(definition, { position = null, boss = false } = {}) {
+  if (!definition) return null
   return {
-    id: nextEntityId('enemy'),
+    id: nextEntityId(boss ? 'boss' : 'enemy'),
     kind: 'enemy',
     enemyId: definition.id,
     name: definition.name,
-    category: definition.category,
+    attribute: definition.attribute,
     behavior: definition.behavior,
-    pos: null,
-    hp,
-    maxHp: hp,
-    attack: definition.attackBase + definition.attackPerFloor * level,
+    traits: [...(definition.traits || [])],
+    deathRule: definition.deathRule || null,
+    splitMinionId: definition.splitMinionId || null,
+    summon: definition.summon ? { ...definition.summon } : null,
+    drop: definition.drop ? { ...definition.drop } : null,
+    regen: definition.regen || 0,
+    explosionRadius: definition.explosionRadius || 0,
+    earlyExplosionDamage: definition.earlyExplosionDamage || 0,
+    noLoot: definition.noLoot === true,
+    boss,
+    pos: position ? { ...position } : null,
+    hp: definition.hp,
+    maxHp: definition.hp,
+    attack: definition.attack,
     range: definition.range,
     cooldownMax: definition.cooldownMax,
     initialActionDelay: definition.initialActionDelay,
@@ -83,24 +86,21 @@ export function createMonster(floor, index = 0) {
   }
 }
 
+export function createMonster(floor, index = 0) {
+  return createEnemy(enemyDefinitionFor(floor, index))
+}
+
+export function createEnemyById(enemyId, position = null) {
+  return createEnemy(getEnemyDefinition(enemyId), { position })
+}
+
+export function createMinion(enemyId, position) {
+  const definition = getEnemyDefinition(enemyId)
+  return definition?.spawnOnly ? createEnemyById(enemyId, position) : null
+}
+
 export function createBoss(position) {
-  return {
-    id: nextEntityId('boss'),
-    kind: 'enemy',
-    boss: true,
-    name: BOSS.name,
-    category: BOSS.category,
-    behavior: BOSS.behavior,
-    pos: { ...position },
-    hp: BOSS.hp,
-    maxHp: BOSS.hp,
-    attack: BOSS.attack,
-    range: BOSS.range,
-    cooldownMax: BOSS.cooldownMax,
-    initialActionDelay: BOSS.initialActionDelay,
-    cooldown: BOSS.initialActionDelay,
-    revealOrder: null,
-  }
+  return createEnemy(BOSS, { position, boss: true })
 }
 
 export function createLootEntity(item, position) {

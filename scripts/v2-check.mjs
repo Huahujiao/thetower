@@ -2,11 +2,13 @@ import { EQUIPMENT_SLOTS, GameRun, INVENTORY_COLUMNS, INVENTORY_ROWS, SAVE_KEY }
 import { neighbors8, pos } from '../src/game/core/geometry.js'
 import { Room } from '../src/game/model/room.js'
 import { BackpackGrid } from '../src/game/model/backpack.js'
-import { makeItemById, randomItem, resetEntityIds } from '../src/game/data/content.js'
+import { createEnemyById, createMonster, makeItemById, randomItem, resetEntityIds } from '../src/game/data/content.js'
+import { ATTRIBUTE_ORDER, attributeModifier } from '../src/game/data/attributes.js'
+import { enemyDefinitionFor } from '../src/game/data/enemies.js'
 import catalog from '../src/game/data/catalog.json' with { type: 'json' }
 import { RelicCollection } from '../src/game/model/relics.js'
 import { buildRelicChoices, RELIC_DEFS } from '../src/game/data/relics.js'
-import { attackTypeModifier, computeAttackDamage } from '../src/game/rules/modifiers.js'
+import { attackAttributeModifier, computeAttackDamage } from '../src/game/rules/modifiers.js'
 import { ENEMY_BEHAVIORS, stepEnemy } from '../src/game/rules/enemies.js'
 import { findAttackPath, findPath, findRevealPath } from '../src/game/rules/pathfinding.js'
 import { createTrapEntity } from '../src/game/data/traps.js'
@@ -62,8 +64,19 @@ function openMerchant(run, merchantId) {
 const run = new GameRun({ autoLoad: false, random: () => 0.5 })
 assert(run.dungeon.rooms.size === 12, 'expected 12 configured rooms')
 assert(Array.isArray(catalog.enemies) && Array.isArray(catalog.weapons) && Array.isArray(catalog.consumables), 'static game data must be stored in the catalog JSON')
+const attributeContent = [...catalog.enemies, catalog.boss, ...catalog.weapons, ...catalog.consumables, ...catalog.enemyLoot]
+assert(attributeContent.every((entry) => ATTRIBUTE_ORDER.includes(entry.attribute)), 'every authored enemy, weapon, and item must have one valid attribute')
+assert(attributeContent.every((entry) => !('category' in entry) && !('damageType' in entry)), 'legacy weapon types and enemy categories must not remain in authored content')
 assert(catalog.enemies.find((enemy) => enemy.id === 'gnawer')?.initialActionDelay === 1, 'gnawer must have a one-turn initial action delay')
 assert(catalog.enemies.every((enemy) => Number.isInteger(enemy.initialActionDelay) && enemy.initialActionDelay >= 0), 'every enemy must define its own initial action delay')
+assert(catalog.enemies.every((enemy) => Number.isInteger(enemy.hp) && Number.isInteger(enemy.attack) && !('hpBase' in enemy) && !('attackBase' in enemy)), 'enemy attributes must be fixed static values rather than floor-scaled values')
+const floorFourGnawer = createMonster(4, 0)
+assert(floorFourGnawer?.enemyId === 'gnawer' && floorFourGnawer.hp === 4 && floorFourGnawer.attack === 4, 'a gnawer on a later floor must retain its fixed 4 HP and 4 attack')
+for (let floor = 1; floor <= 4; floor += 1) {
+  const available = catalog.enemies.filter((enemy) => !enemy.spawnOnly && enemy.minFloor <= floor)
+  const generated = new Set(available.map((_, index) => enemyDefinitionFor(floor, index)?.id))
+  assert(available.every((enemy) => generated.has(enemy.id)), `floor ${floor} did not retain every enemy unlocked on or before that floor`)
+}
 assert(INVENTORY_ROWS === 4 && INVENTORY_COLUMNS === 6 && run.backpack.capacity === 24 && run.backpack.length === 0, 'inventory must be a six-column by four-row shape grid')
 assert(run.player.equipment.length === EQUIPMENT_SLOTS && run.player.equipment[0] && !run.player.equipment[1], 'new run must have left and right equipment slots')
 assert(!('sanity' in run.player), 'sanity must not exist in V2 player state')
@@ -274,18 +287,6 @@ assert(merchantRun.activateRelic(inactiveRelic.id), 'curator could not activate 
 assert(merchantRun.relics.isActive(inactiveRelic.id), 'curator activation did not persist')
 assert(merchantRun.deactivateRelic(inactiveRelic.id), 'curator could not deactivate active relic')
 
-const dropRun = new GameRun({ autoLoad: false, random: () => 0 })
-dropRun.chooseInitialRelic(dropRun.initialRelicChoices[0])
-const dropRoom = dropRun.currentRoom
-const dropEnemy = [...dropRoom.entities.values()].find((entity) => entity.kind === 'enemy')
-const dropApproach = adjacentEmpty(dropRoom, dropEnemy)
-dropRoom.reveal(dropEnemy.pos)
-dropRoom.reveal(dropApproach)
-dropRun.player.pos = { ...dropApproach }
-assert(dropRun.clickTile(dropEnemy.pos.c, dropEnemy.pos.r), 'enemy kill for temporary weapon drop was rejected')
-const temporaryDrop = dropRoom.entityAt(dropEnemy.pos)
-assert(temporaryDrop?.kind === 'item' && temporaryDrop.item.temporary && temporaryDrop.item.durability === 1, 'enemy did not leave a one-durability temporary weapon')
-
 const dualWeaponRun = new GameRun({ autoLoad: false, random: () => 0.5 })
 dualWeaponRun.chooseInitialRelic(dualWeaponRun.initialRelicChoices[0])
 const secondWeaponIndex = addToBackpack(dualWeaponRun, { ...dualWeaponRun.player.equipment[0], uid: 'dual-weapon-test' })
@@ -410,6 +411,10 @@ pathRoom.reveal(diagonalGoal)
 assert(findPath(pathRoom, diagonalStart, diagonalGoal)?.length === 1, 'eight-direction pathfinding is not active')
 assert(findAttackPath(pathRoom, diagonalStart, { pos: diagonalGoal }, [{ range: 1 }])?.path.length === 0, 'melee must attack a diagonal target without moving')
 
+const scorchBackRoom = new Room({ id: 'attribute-back-test', floor: 1, width: 1, height: 1, random: () => 0 })
+const tideBackRoom = new Room({ id: 'attribute-back-test-two', floor: 1, width: 1, height: 1, random: () => 0.999 })
+assert(scorchBackRoom.tile(pos(0, 0)).backAttribute === 'scorch' && tideBackRoom.tile(pos(0, 0)).backAttribute === 'tide', 'neutral cards did not retain generated random attribute backs')
+
 const revealPathRoom = new Room({ id: 'weighted-reveal-test', floor: 1, width: 3, height: 4 })
 const revealStart = pos(1, 3)
 const revealTarget = pos(1, 1)
@@ -426,32 +431,135 @@ assert(stepEnemy(enemyBehaviorTest, { player: { pos: pos(3, 0) }, attack: () => 
 assert(enemyBehaviorAttacks === 0, 'out-of-range enemy attacked')
 assert(stepEnemy({ ...enemyBehaviorTest, behavior: 'future-behavior' }, { player: { pos: pos(1, 0) }, attack: () => { enemyBehaviorAttacks += 1 } }).reason === 'attack', 'unknown enemy behavior did not safely fall back')
 assert(enemyBehaviorAttacks === 1, 'in-range enemy did not attack exactly once')
+assert(typeof ENEMY_BEHAVIORS.chaser === 'function' && typeof ENEMY_BEHAVIORS.patrol === 'function' && typeof ENEMY_BEHAVIORS.ambush === 'function' && typeof ENEMY_BEHAVIORS.summoner === 'function' && typeof ENEMY_BEHAVIORS['self-destruct'] === 'function', 'authored enemy behaviors are not registered')
+
+const behaviorRoom = new Room({ id: 'new-enemy-behavior-test', floor: 4, width: 6, height: 2 })
+for (let r = 0; r < behaviorRoom.height; r++) for (let c = 0; c < behaviorRoom.width; c++) behaviorRoom.reveal(pos(c, r))
+const chaser = createEnemyById('rot-walker', pos(5, 0))
+behaviorRoom.addEntity(chaser)
+chaser.cooldown = 0
+assert(stepEnemy(chaser, { room: behaviorRoom, player: { pos: pos(0, 0) }, move: (actor, position) => behaviorRoom.moveEntity(actor.id, position), attack: () => { throw new Error('chaser attacked while out of range') } }).reason === 'move' && chaser.pos.c === 4, 'chaser did not advance one cell toward the player')
+const patrol = createEnemyById('patrol-hound', pos(2, 1))
+patrol.cooldown = 0
+patrol.patrolPath = [pos(2, 1), pos(3, 1)]
+patrol.patrolIndex = 0
+behaviorRoom.addEntity(patrol)
+assert(stepEnemy(patrol, { room: behaviorRoom, player: { pos: pos(0, 0) }, move: (actor, position) => behaviorRoom.moveEntity(actor.id, position), attack: () => { throw new Error('patrol attacked while out of range') } }).reason === 'patrol' && patrol.pos.c === 3, 'patrol enemy did not follow its fixed route')
+
+function clearedEnemyRun(random = () => 0.5) {
+  const testRun = new GameRun({ autoLoad: false, random })
+  testRun.initialRelicChoices = []
+  const room = testRun.currentRoom
+  for (const id of [...room.entities.keys()]) room.removeEntity(id)
+  for (let r = 0; r < room.height; r++) for (let c = 0; c < room.width; c++) room.reveal(pos(c, r))
+  testRun.player.pos = pos(0, 0)
+  return { testRun, room }
+}
+
+const authoredDrops = {
+  gnawer: [0.25, 'rough-bone-club'], 'nest-spider': [0.35, 'venom-sac'], 'beetle-guard': [0.35, 'shell-fragment'], 'rot-walker': [0.2, 'rusty-dagger'],
+  wisp: [0.6, 'spectral-short-spear'], shellguard: [0.6, 'notched-war-hammer'], 'patrol-hound': [0.25, 'beast-fang'], broodmother: [0.4, 'worm-glue'],
+  'moss-colossus': [0.45, 'moss-ointment'], 'sentry-crossbow': [0.6, 'worn-shortbow'], 'revenant-guard': [0.5, 'tombguard-shortsword'],
+  'bone-priest': [0.5, 'bone-grinding-powder'], 'cracked-hunter': [0.5, 'cracked-armor-hookblade'],
+}
+for (const [enemyId, [chance, itemId]] of Object.entries(authoredDrops)) {
+  const drop = catalog.enemies.find((enemy) => enemy.id === enemyId)?.drop
+  assert(drop?.itemId === itemId && drop.chance === chance, `${enemyId} drop is not the authored static rule`)
+}
+assert(!catalog.enemies.find((enemy) => enemy.id === 'bomb-wisp')?.drop && !catalog.boss.drop, 'enemies without authored drops must not use a generic drop table')
+assert(catalog.enemyLoot.every((item) => item.dropOnly), 'enemy loot must not enter generic item generation')
+
+const { testRun: guaranteedDropRun, room: guaranteedDropRoom } = clearedEnemyRun(() => 0)
+const guaranteedDropEnemy = createEnemyById('gnawer', pos(3, 0))
+guaranteedDropRoom.addEntity(guaranteedDropEnemy)
+assert(guaranteedDropRun._defeatEnemy(guaranteedDropEnemy), 'authored enemy drop kill was rejected')
+const guaranteedDrop = guaranteedDropRoom.entityAt(pos(3, 0))
+assert(guaranteedDrop?.kind === 'item' && guaranteedDrop.item.id === 'rough-bone-club' && guaranteedDrop.item.durability === 1 && !guaranteedDrop.item.temporary, 'gnawer did not leave its authored rough bone club')
+
+const { testRun: missedDropRun, room: missedDropRoom } = clearedEnemyRun(() => 0.999)
+const missedDropEnemy = createEnemyById('gnawer', pos(3, 0))
+missedDropRoom.addEntity(missedDropEnemy)
+missedDropRun._defeatEnemy(missedDropEnemy)
+assert(!missedDropRoom.entityAt(pos(3, 0)), 'enemy drop chance was ignored')
+
+const lowHammer = makeItemById('notched-war-hammer', () => 0)
+const highHammer = makeItemById('notched-war-hammer', () => 0.999)
+assert(lowHammer?.durability === 1 && highHammer?.durability === 2, 'variable weapon durability did not stay within its authored range')
+
+const { testRun: ambushRun, room: ambushRoom } = clearedEnemyRun()
+const spider = createEnemyById('nest-spider', pos(2, 0))
+ambushRoom.addEntity(spider)
+ambushRoom.tile(spider.pos).revealed = false
+assert(!ambushRun._walk([pos(1, 0)]).stopped && ambushRoom.isRevealed(spider.pos) && ambushRun.player.hp === 15 && spider.cooldown === 2, 'ambush enemy did not reveal and attack immediately when the player entered nearby')
+
+const { testRun: shieldRun, room: shieldRoom } = clearedEnemyRun()
+const shielded = createEnemyById('beetle-guard', pos(3, 0))
+shieldRoom.addEntity(shielded)
+assert(shieldRun._damageEnemy(shielded, 99).damage === 3 && shielded.hp === 3 && shielded.shieldConsumed, 'shield trait did not cap the first hit at half maximum health')
+assert(shieldRun._damageEnemy(shielded, 99).defeated && !shieldRoom.entity(shielded.id), 'shield trait incorrectly prevented a later lethal hit')
+
+const { testRun: splitRun, room: splitRoom } = clearedEnemyRun()
+const splitter = createEnemyById('broodmother', pos(3, 0))
+splitRoom.addEntity(splitter)
+splitRun._enemyAttack(splitter)
+const broodling = [...splitRoom.entities.values()].find((entity) => entity.enemyId === 'broodling')
+assert(broodling?.noLoot && splitRun.player.hp === 15, 'split trait did not create a no-loot minion after the first attack')
+splitRun.random = () => 0
+splitRun._defeatEnemy(broodling)
+assert(!splitRoom.entityAt(broodling.pos), 'summoned or split minions must not leave loot')
+
+const { testRun: summonRun, room: summonRoom } = clearedEnemyRun()
+const priest = createEnemyById('bone-priest', pos(3, 0))
+summonRoom.addEntity(priest)
+summonRun._advanceSummoner(priest)
+summonRun._advanceSummoner(priest)
+assert(![...summonRoom.entities.values()].some((entity) => entity.enemyId === 'skeleton-minion'), 'summoner spawned before its third turn')
+summonRun._advanceSummoner(priest)
+assert([...summonRoom.entities.values()].some((entity) => entity.enemyId === 'skeleton-minion'), 'summoner did not create its authored minion on the third turn')
+
+const { testRun: reviveRun, room: reviveRoom } = clearedEnemyRun()
+const revenant = createEnemyById('revenant-guard', pos(5, 0))
+reviveRoom.addEntity(revenant)
+assert(!reviveRun._damageEnemy(revenant, 99).defeated && revenant.downed && revenant.hp === 0, 'revive enemy did not enter its fake-death state')
+reviveRun._endTurn()
+reviveRun._endTurn()
+assert(!revenant.downed && revenant.hp === revenant.maxHp, 'revive enemy did not return at full health after two turns')
+
+const { testRun: detonationRun, room: detonationRoom } = clearedEnemyRun()
+const bombWisp = createEnemyById('bomb-wisp', pos(2, 0))
+detonationRoom.addEntity(bombWisp)
+detonationRun._chargeSelfDestruct(bombWisp)
+detonationRun._chargeSelfDestruct(bombWisp)
+assert(detonationRun.player.hp === 20 && detonationRoom.entity(bombWisp.id), 'self-destruct enemy exploded before its third in-range turn')
+detonationRun._chargeSelfDestruct(bombWisp)
+assert(detonationRun.player.hp === 8 && !detonationRoom.entity(bombWisp.id), 'self-destruct enemy did not detonate for its full authored damage on turn three')
 
 const relicCapacity = new RelicCollection()
 for (const definition of RELIC_DEFS.slice(0, 6)) relicCapacity.acquire(definition.id)
 for (const definition of RELIC_DEFS.slice(0, 5)) assert(relicCapacity.activate(definition.id), 'relic activation before capacity was rejected')
 assert(!relicCapacity.activate(RELIC_DEFS[5].id) && relicCapacity.active.length === 5, 'relic activation exceeded the five-slot limit')
 
-const slashWeapon = { name: 'test', attack: 5, damageType: 'slash', durability: 3 }
-const bloodTarget = { category: 'blood' }
-assert(computeAttackDamage({ weapon: slashWeapon, target: bloodTarget }).damage === 8, 'counter damage multiplier is invalid')
-assert(computeAttackDamage({ weapon: { ...slashWeapon, durability: 1 }, target: bloodTarget }).damage === 4, 'last durability penalty is invalid')
-assert(computeAttackDamage({ weapon: slashWeapon, target: { category: 'shell' } }).damage === 3, 'resisted damage multiplier is invalid')
+const scorchWeapon = { name: 'test', attack: 5, attribute: 'scorch', durability: 3 }
+const slimeTarget = { attribute: 'slime' }
+assert(attributeModifier('scorch', 'slime').countered && attributeModifier('slime', 'crystal').countered && attributeModifier('crystal', 'tide').countered && attributeModifier('tide', 'scorch').countered, 'attribute counter cycle is invalid')
+assert(computeAttackDamage({ weapon: scorchWeapon, target: slimeTarget }).damage === 8, 'attribute counter damage multiplier is invalid')
+assert(computeAttackDamage({ weapon: { ...scorchWeapon, durability: 1 }, target: slimeTarget }).damage === 4, 'last durability penalty is invalid')
+assert(computeAttackDamage({ weapon: scorchWeapon, target: { attribute: 'tide' } }).damage === 3, 'attribute resistance multiplier is invalid')
 
 const relicRun = new GameRun({ autoLoad: false, random: () => 0.5 })
 relicRun.initialRelicChoices = ['r-last-edge']
 assert(relicRun.chooseInitialRelic('r-last-edge')?.active, 'initial relic acquisition did not activate')
 assert(!relicRun.acquireRelic('r-hunter-mark')?.active, 'later relic acquisition must remain inactive')
-const damagedWeapon = { ...slashWeapon, durability: 1 }
-const type = attackTypeModifier(damagedWeapon, bloodTarget)
+const damagedWeapon = { ...scorchWeapon, durability: 1 }
+const type = attackAttributeModifier(damagedWeapon, slimeTarget)
 const relicModifiers = relicRun.relicEngine.damageModifiers({
   weapon: damagedWeapon,
-  target: bloodTarget,
+  target: slimeTarget,
   player: relicRun.player,
   countered: type.countered,
   resisted: type.resisted,
 })
-assert(computeAttackDamage({ weapon: damagedWeapon, target: bloodTarget, relicModifiers }).damage === 6, 'relic damage modifier is not applied')
+assert(computeAttackDamage({ weapon: damagedWeapon, target: slimeTarget, relicModifiers }).damage === 6, 'relic damage modifier is not applied')
 assert(buildRelicChoices(relicRun.relics, { random: () => 0 }).every((relic) => relic.id !== 'r-last-edge'), 'owned relic returned as a choice')
 
 const previousLocalStorage = Object.getOwnPropertyDescriptor(globalThis, 'localStorage')

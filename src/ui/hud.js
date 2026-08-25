@@ -23,6 +23,7 @@ const LABELS = Object.freeze({
   rightHand: '\u53f3\u624b',
   durability: '\u8010\u4e45',
   nextAttack: '\u4e0b\u6b21\u653b\u51fb',
+  nextMeleeAttack: '\u4e0b\u6b21\u8fd1\u6218\u653b\u51fb',
   relicBook: '\u6253\u5f00\u5723\u9057\u7269\u56fe\u9274',
   relics: '\u5723\u9057\u7269\u56fe\u9274',
   collected: '\u5df2\u6536\u96c6',
@@ -191,7 +192,9 @@ export class HUD {
     this.q('armor').textContent = String(player.armor)
     this.q('gold').textContent = String(player.gold)
     this.q('turn').textContent = String(this.run.turn)
-    this.q('hint').textContent = player.pendingAttackBonus ? `${LABELS.nextAttack} +${player.pendingAttackBonus}` : ''
+    const pendingBuffs = player.pendingAttackBuffs || []
+    const isMeleeOnly = pendingBuffs.length > 0 && pendingBuffs.every((buff) => buff.target === 'melee')
+    this.q('hint').textContent = player.pendingAttackBonus ? `${isMeleeOnly ? LABELS.nextMeleeAttack : LABELS.nextAttack} +${player.pendingAttackBonus}` : ''
 
     const equipSlots = this.root.querySelectorAll('[data-equip-slot]')
     for (let slot = 0; slot < EQUIPMENT_SLOTS; slot++) {

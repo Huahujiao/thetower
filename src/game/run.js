@@ -1,6 +1,7 @@
 import { createEmitter } from './core/emitter.js'
 import { combatDistance, neighbors8 } from './core/geometry.js'
-import { createLootEntity, getItemDefinition, makeItemById, makeTemporaryWeapon, starterWeapon, synchronizeEntityIds } from './data/content.js'
+import { attributeLabel } from './data/attributes.js'
+import { createLootEntity, createMinion, getItemDefinition, makeItemById, starterWeapon, synchronizeEntityIds } from './data/content.js'
 import { getMerchantDefinition, merchantSellPrice, refreshMerchantSlot, refreshMerchantStock } from './data/merchants.js'
 import { buildRelicChoices, getRelicDefinition } from './data/relics.js'
 import { buildRoomRewardChoices } from './data/rewards.js'
@@ -8,7 +9,7 @@ import { getTrapDefinition } from './data/traps.js'
 import { createLinearDungeon, Dungeon } from './model/dungeon.js'
 import { BackpackGrid } from './model/backpack.js'
 import { RelicCollection } from './model/relics.js'
-import { attackTypeModifier, computeAttackDamage } from './rules/modifiers.js'
+import { attackAttributeModifier, computeAttackDamage } from './rules/modifiers.js'
 import { RelicEngine } from './rules/relics.js'
 import { stepEnemy } from './rules/enemies.js'
 import { findAttackPath, findDoorPath, findPath, findRevealPath } from './rules/pathfinding.js'
@@ -20,7 +21,7 @@ export const INVENTORY_ROWS = 4
 export const INVENTORY_CAPACITY = INVENTORY_COLUMNS * INVENTORY_ROWS
 export const EQUIPMENT_SLOTS = 2
 export const SAVE_KEY = 'grid_flip_adventure_v2'
-export const SAVE_VERSION = 6
+export const SAVE_VERSION = 8
 
 function clone(value) { return JSON.parse(JSON.stringify(value)) }
 
@@ -59,6 +60,7 @@ const DETAIL_LABELS = Object.freeze({
   armorValue: '\u62a4\u7532',
   nextAttack: '\u4e0b\u6b21\u653b\u51fb',
   repair: '\u4fee\u590d\u8010\u4e45',
+  attribute: '\u5c5e\u6027',
   active: '\u5df2\u6fc0\u6d3b',
   inactive: '\u672a\u6fc0\u6d3b',
   actionDelay: '\u521d\u6b21\u884c\u52a8\u5ef6\u8fdf',
@@ -79,6 +81,7 @@ const MERCHANT_SERVICE_LABELS = Object.freeze({
 function detailForItem(item) {
   const type = DETAIL_LABELS[item?.type] || '\u7269\u54c1'
   const lines = []
+  if (item?.attribute) lines.push(`${DETAIL_LABELS.attribute} ${attributeLabel(item.attribute)}`)
   if (item?.type === 'weapon') {
     lines.push(`${DETAIL_LABELS.attack} ${item.attack || 0}`)
     lines.push(`${DETAIL_LABELS.range} ${item.range || 1}\uff08${DETAIL_LABELS.manhattan}\uff09`)
@@ -89,7 +92,8 @@ function detailForItem(item) {
   } else if (item?.type === 'armor') {
     lines.push(`${DETAIL_LABELS.armorValue} +${item.armor || 0}`)
   } else if (item?.type === 'buff') {
-    lines.push(`${DETAIL_LABELS.nextAttack} +${item.attackBonus || 0}`)
+    const target = item.attackTarget === 'melee' ? '\u4e0b\u6b21\u8fd1\u6218\u653b\u51fb' : DETAIL_LABELS.nextAttack
+    lines.push(`${target} +${item.attackBonus || 0}`)
   } else if (item?.type === 'whetstone') {
     lines.push(`${DETAIL_LABELS.repair} +${item.repair || 0}`)
   }
@@ -128,6 +132,7 @@ export class GameRun {
       pos: { ...generated.start },
       equipment: [starterWeapon(), null],
       pendingAttackBonus: 0,
+      pendingAttackBuffs: [],
     }
     this.backpack = new BackpackGrid(INVENTORY_COLUMNS, INVENTORY_ROWS)
     this.relics = new RelicCollection()
@@ -199,6 +204,7 @@ export class GameRun {
         title: entity.name,
         type: DETAIL_LABELS.enemy,
         lines: [
+          `${DETAIL_LABELS.attribute} ${attributeLabel(entity.attribute)}`,
           `${DETAIL_LABELS.health} ${entity.hp}/${entity.maxHp}`,
           `${DETAIL_LABELS.attack} ${entity.attack} \u00b7 ${DETAIL_LABELS.range} ${entity.range || 1}\uff08${DETAIL_LABELS.manhattan}\uff09`,
           `${DETAIL_LABELS.actionDelay} ${entity.initialActionDelay || 0} \u00b7 ${DETAIL_LABELS.cooldown} ${entity.cooldown || 0}/${entity.cooldownMax || 0}`,
@@ -524,11 +530,13 @@ export class GameRun {
       return true
     }
     if (item.type === 'buff') {
-      this.player.pendingAttackBonus += item.attackBonus
+      this.player.pendingAttackBuffs.push({ amount: item.attackBonus, target: item.attackTarget || 'any' })
+      this.player.pendingAttackBonus = this.player.pendingAttackBuffs.reduce((total, buff) => total + buff.amount, 0)
       this.backpack.removeByUid(item.uid)
       this.selectedInventoryIndex = null
       this.itemTargeting = false
-      this._log(`\u4f7f\u7528 ${item.name}\uff0c\u4e0b\u6b21\u653b\u51fb +${item.attackBonus}\u3002`)
+      const target = item.attackTarget === 'melee' ? '\u4e0b\u6b21\u8fd1\u6218\u653b\u51fb' : '\u4e0b\u6b21\u653b\u51fb'
+      this._log(`\u4f7f\u7528 ${item.name}\uff0c${target} +${item.attackBonus}\u3002`)
       this._changed()
       return true
     }
@@ -714,9 +722,8 @@ export class GameRun {
         .filter((entity) => entity.kind === 'enemy' && room.isRevealed(entity.pos))
         .filter((entity) => combatDistance(trap.pos, entity.pos, definition.radius) <= definition.radius)
       for (const enemy of victims) {
-        enemy.hp -= definition.damage
-        this._log(`${enemy.name}\u53d7\u5230\u7206\u70b8\u4f24\u5bb3 ${definition.damage}\u3002`)
-        if (enemy.hp <= 0) this._defeatEnemy(enemy, { source: 'trap:explosion' })
+        const hit = this._damageEnemy(enemy, definition.damage, { source: 'trap:explosion' })
+        this._log(`${enemy.name}\u53d7\u5230\u7206\u70b8\u4f24\u5bb3 ${hit.damage}\u3002`)
       }
     } else if (definition.effect === 'alarm') {
       const targets = [...room.entities.values()]
@@ -829,9 +836,9 @@ export class GameRun {
     const movement = this._walk(route.path)
     if (!movement.stopped) {
       for (const weapon of weapons) {
-        if (enemy.hp <= 0) break
+        if (!this.currentRoom?.entity(enemy.id)) break
         if (!weapon || weapon.durability <= 0 || combatDistance(this.player.pos, enemy.pos, weapon.range) > weapon.range) continue
-        const type = attackTypeModifier(weapon, enemy)
+        const type = attackAttributeModifier(weapon, enemy)
         const relicModifiers = this.relicEngine.damageModifiers({
           weapon,
           target: enemy,
@@ -840,27 +847,30 @@ export class GameRun {
           countered: type.countered,
           resisted: type.resisted,
         })
+        const matchingBuffs = (this.player.pendingAttackBuffs || [])
+          .filter((buff) => buff.target !== 'melee' || weapon.range === 1)
         const outcome = computeAttackDamage({
           weapon,
           target: enemy,
-          pendingAttackBonus: this.player.pendingAttackBonus,
+          pendingAttackBonus: matchingBuffs.reduce((total, buff) => total + buff.amount, 0),
           relicModifiers,
           terrainModifiers: terrainDamageModifiers(this.currentRoom, this.player.pos),
         })
-        const damage = outcome.damage
-        this.player.pendingAttackBonus = 0
-        enemy.hp -= damage
+        const hit = this._damageEnemy(enemy, outcome.damage)
+        if (matchingBuffs.length > 0) {
+          this.player.pendingAttackBuffs = this.player.pendingAttackBuffs.filter((buff) => !matchingBuffs.includes(buff))
+          this.player.pendingAttackBonus = this.player.pendingAttackBuffs.reduce((total, buff) => total + buff.amount, 0)
+        }
         weapon.durability -= 1
         const relation = outcome.countered ? '\u514b\u5236\u00b7' : outcome.resisted ? '\u53d7\u5236\u00b7' : ''
-        this._log(`${relation}${weapon.name} \u5bf9 ${enemy.name} \u9020\u6210 ${damage} \u4f24\u5bb3\u3002`)
+        const action = hit.finishedDowned ? '\u7ec8\u7ed3\u4e86' : '\u9020\u6210'
+        this._log(`${relation}${weapon.name} \u5bf9 ${enemy.name}${action} ${hit.damage} \u4f24\u5bb3\u3002`)
         if (weapon.durability <= 0) {
           this._log(`${weapon.name} \u635f\u6bc1\u4e86\u3002`)
           this.player.equipment = this.player.equipment.map((equipped) => equipped?.uid === weapon.uid ? null : equipped)
           this._emitRelicEvent('weapon:broken', { weapon })
         }
-      }
-      if (enemy.hp <= 0) {
-        this._defeatEnemy(enemy)
+        if (hit.defeated) break
       }
     }
     if (!this.gameOver) this._endTurn({ interceptorId: movement.interceptorId })
@@ -874,6 +884,8 @@ export class GameRun {
     for (const step of path) {
       const previous = { ...this.player.pos }
       this.player.pos = { ...step }
+      this._triggerAmbushes(step)
+      if (this.gameOver) return { interceptorId, stopped: true }
       const interceptor = this._findInterceptor(previous, step, finalPosition)
       if (!interceptor) continue
       interceptorId = interceptor.id
@@ -904,6 +916,8 @@ export class GameRun {
       this._log(`\u85cf\u533f\u751f\u6548\uff0c\u654c\u4eba\u672c\u56de\u5408\u4e0d\u884c\u52a8\uff08\u5269\u4f59 ${this.stealthTurns} \u56de\u5408\uff09\u3002`)
     }
     if (skipEnemyPhase || this.gameOver) return
+    this._tickEnemyStates()
+    if (this.gameOver) return
     const enemies = this._activeEnemies()
     if (interceptorId) {
       const interceptor = enemies.find((enemy) => enemy.id === interceptorId)
@@ -911,7 +925,19 @@ export class GameRun {
     }
     for (const enemy of enemies) {
       if (this.gameOver || enemy.id === interceptorId || skipEnemyIds.has(enemy.id) || !this.currentRoom.entity(enemy.id)) continue
-      stepEnemy(enemy, { player: this.player, attack: (actor) => this._enemyAttack(actor) })
+      this._applyEnemyTraits(enemy)
+      if (!this.currentRoom.entity(enemy.id) || this.gameOver) continue
+      stepEnemy(enemy, {
+        room: this.currentRoom,
+        player: this.player,
+        attack: (actor) => this._enemyAttack(actor),
+        move: (actor, position) => this._moveEnemy(actor, position),
+        summon: (actor) => this._advanceSummoner(actor),
+        charge: (actor) => this._chargeSelfDestruct(actor),
+      })
+      if (enemy.traits?.includes('summoner') && enemy.behavior !== 'summoner' && this.currentRoom.entity(enemy.id) && !this.gameOver) {
+        this._advanceSummoner(enemy)
+      }
     }
   }
 
@@ -920,6 +946,10 @@ export class GameRun {
     const result = this._damagePlayer(rawDamage, { source: 'enemy:attack', enemy })
     enemy.cooldown = enemy.cooldownMax
     this._log(`${enemy.name} \u653b\u51fb\u4f60\uff0c\u9020\u6210 ${result.healthDamage} \u4f24\u5bb3\u3002`)
+    if (enemy.traits?.includes('split') && !enemy.splitTriggered) {
+      enemy.splitTriggered = true
+      this._spawnMinion(enemy, enemy.splitMinionId)
+    }
   }
 
   _damagePlayer(rawDamage, context = {}) {
@@ -938,15 +968,46 @@ export class GameRun {
     return { rawDamage: damage, absorbed, healthDamage }
   }
 
-  _defeatEnemy(enemy, { source = 'attack' } = {}) {
+  _damageEnemy(enemy, damage, { source = 'attack' } = {}) {
+    if (!enemy || !this.currentRoom?.entity(enemy.id)) return { damage: 0, defeated: false, finishedDowned: false }
+    if (enemy.downed) {
+      this._defeatEnemy(enemy, { source })
+      return { damage: 0, defeated: true, finishedDowned: true }
+    }
+    let applied = Math.max(0, Math.floor(damage || 0))
+    if (enemy.traits?.includes('shield') && !enemy.shieldConsumed) {
+      enemy.shieldConsumed = true
+      applied = Math.min(applied, Math.floor(enemy.maxHp / 2))
+    }
+    enemy.hp -= applied
+    if (enemy.hp > 0) return { damage: applied, defeated: false, finishedDowned: false }
+    enemy.hp = 0
+    if (enemy.deathRule === 'revive' && !enemy.reviveUsed) {
+      enemy.reviveUsed = true
+      enemy.downed = true
+      enemy.reviveTurns = 2
+      this._log(`${enemy.name}\u5047\u6b7b\u4e86\uff0c\u4e24\u56de\u5408\u540e\u5c06\u6ee1\u8840\u590d\u6d3b\u3002`)
+      return { damage: applied, defeated: false, finishedDowned: false }
+    }
+    this._defeatEnemy(enemy, { source })
+    return { damage: applied, defeated: true, finishedDowned: false }
+  }
+
+  _defeatEnemy(enemy, { source = 'attack', suppressDeathExplosion = false, suppressLoot = false } = {}) {
     if (!enemy || !this.currentRoom?.entity(enemy.id)) return false
+    if (enemy.behavior === 'self-destruct' && !suppressDeathExplosion) {
+      this._explodeEnemy(enemy, enemy.earlyExplosionDamage || Math.ceil(enemy.attack / 2), 'small')
+    }
     this.currentRoom.removeEntity(enemy.id)
     this._log(`${enemy.name} \u88ab\u51fb\u8d25\u3002`)
     this._emitRelicEvent('enemy:killed', { enemy, source })
-    if (!enemy.boss && this.random() < 0.3) {
-      const drop = makeTemporaryWeapon(this.currentRoom.floor, this.random)
-      this.currentRoom.addEntity(createLootEntity(drop, enemy.pos))
-      this._log(`${enemy.name} \u6389\u843d\u4e86 ${drop.name}\u3002`)
+    const dropRule = enemy.drop
+    if (!enemy.boss && !enemy.noLoot && !suppressLoot && dropRule && this.random() < dropRule.chance) {
+      const drop = makeItemById(dropRule.itemId, this.random)
+      if (drop) {
+        this.currentRoom.addEntity(createLootEntity(drop, enemy.pos))
+        this._log(`${enemy.name} \u6389\u843d\u4e86 ${drop.name}\u3002`)
+      }
     }
     if (enemy.boss) {
       this.win = true
@@ -961,8 +1022,107 @@ export class GameRun {
     const room = this.currentRoom
     if (!room) return []
     return [...room.entities.values()]
-      .filter((entity) => entity.kind === 'enemy' && room.isRevealed(entity.pos))
+      .filter((entity) => entity.kind === 'enemy' && !entity.downed && room.isRevealed(entity.pos))
       .sort((a, b) => (a.revealOrder || Infinity) - (b.revealOrder || Infinity))
+  }
+
+  _moveEnemy(enemy, position) {
+    const room = this.currentRoom
+    if (!room?.isRevealed(position) || !room.isEmpty(position)) return false
+    return room.moveEntity(enemy.id, position)
+  }
+
+  _applyEnemyTraits(enemy) {
+    if (enemy.traits?.includes('regen') && enemy.hp > 0 && enemy.hp < enemy.maxHp) {
+      const amount = Math.max(1, enemy.regen || 1)
+      enemy.hp = Math.min(enemy.maxHp, enemy.hp + amount)
+      this._log(`${enemy.name}\u518d\u751f\u4e86 ${amount} \u70b9\u751f\u547d\u3002`)
+    }
+  }
+
+  _tickEnemyStates() {
+    const room = this.currentRoom
+    if (!room) return
+    for (const enemy of [...room.entities.values()].filter((entity) => entity.kind === 'enemy' && entity.downed)) {
+      enemy.reviveTurns = Math.max(0, (enemy.reviveTurns || 0) - 1)
+      if (enemy.reviveTurns > 0) continue
+      enemy.downed = false
+      enemy.hp = enemy.maxHp
+      enemy.cooldown = enemy.initialActionDelay
+      this._log(`${enemy.name}\u6ee1\u8840\u590d\u6d3b\u4e86\u3002`)
+    }
+  }
+
+  _nearestEmptyPosition(origin) {
+    const room = this.currentRoom
+    if (!room || !origin) return null
+    const candidates = []
+    for (let r = 0; r < room.height; r++) {
+      for (let c = 0; c < room.width; c++) {
+        const position = { c, r }
+        if (position.c === this.player.pos.c && position.r === this.player.pos.r) continue
+        if (!room.isRevealed(position) || !room.isEmpty(position)) continue
+        candidates.push(position)
+      }
+    }
+    candidates.sort((left, right) => {
+      const leftDistance = Math.abs(left.c - origin.c) + Math.abs(left.r - origin.r)
+      const rightDistance = Math.abs(right.c - origin.c) + Math.abs(right.r - origin.r)
+      return leftDistance - rightDistance || left.r - right.r || left.c - right.c
+    })
+    return candidates[0] || null
+  }
+
+  _spawnMinion(source, minionId) {
+    const room = this.currentRoom
+    const position = this._nearestEmptyPosition(source?.pos)
+    const minion = position ? createMinion(minionId, position) : null
+    if (!room || !minion) return false
+    room.addEntity(minion)
+    room.reveal(position)
+    this.bus.emit('animate:flip', { roomId: room.id, position: { ...position } })
+    this._log(`${source.name}\u53ec\u5524\u4e86 ${minion.name}\u3002`)
+    return true
+  }
+
+  _advanceSummoner(enemy) {
+    const interval = enemy.summon?.interval || 3
+    enemy.summonTurns = (enemy.summonTurns || 0) + 1
+    if (enemy.summonTurns < interval) return { acted: false, reason: 'summon-charge' }
+    enemy.summonTurns = 0
+    return { acted: this._spawnMinion(enemy, enemy.summon?.minionId), reason: 'summon' }
+  }
+
+  _chargeSelfDestruct(enemy) {
+    enemy.chargeTurns = (enemy.chargeTurns || 0) + 1
+    if (enemy.chargeTurns < 3) return { acted: false, reason: 'charge' }
+    this._explodeEnemy(enemy, enemy.attack, 'large')
+    this._defeatEnemy(enemy, { source: 'self-destruct', suppressDeathExplosion: true, suppressLoot: true })
+    return { acted: true, reason: 'explode' }
+  }
+
+  _explodeEnemy(enemy, damage, size) {
+    const radius = enemy.explosionRadius || enemy.range || 1
+    if (combatDistance(enemy.pos, this.player.pos, radius) > radius) return false
+    const result = this._damagePlayer(damage, { source: `enemy:${size}-explosion`, enemy })
+    this._log(`${enemy.name}\u53d1\u751f\u4e86${size === 'large' ? '\u5927' : '\u5c0f'}\u81ea\u7206\uff0c\u9020\u6210 ${result.healthDamage} \u4f24\u5bb3\u3002`)
+    return true
+  }
+
+  _triggerAmbushes(position) {
+    const room = this.currentRoom
+    if (!room) return false
+    const ambushers = [...room.entities.values()]
+      .filter((entity) => entity.kind === 'enemy' && entity.behavior === 'ambush' && !room.isRevealed(entity.pos))
+      .filter((entity) => combatDistance(entity.pos, position, entity.range) <= entity.range)
+    for (const enemy of ambushers) {
+      room.reveal(enemy.pos)
+      this.bus.emit('animate:flip', { roomId: room.id, position: { ...enemy.pos } })
+      this._log(`${enemy.name}\u4ece\u4f0f\u51fb\u4e2d\u73b0\u8eab\u3002`)
+      this._enemyAttack(enemy)
+      if (this.gameOver) break
+    }
+    return ambushers.length > 0
   }
 
   _putInInventory(item) { return !!this.backpack.add(item) }
@@ -1029,6 +1189,10 @@ export class GameRun {
       this.backpack = BackpackGrid.hydrate(data.backpack)
       this.player.equipment = Array.isArray(this.player.equipment) ? this.player.equipment.slice(0, EQUIPMENT_SLOTS) : [this.player.equipment || null]
       while (this.player.equipment.length < EQUIPMENT_SLOTS) this.player.equipment.push(null)
+      this.player.pendingAttackBuffs = Array.isArray(this.player.pendingAttackBuffs)
+        ? this.player.pendingAttackBuffs.filter((buff) => Number.isFinite(buff?.amount) && (buff.target === 'melee' || buff.target === 'any'))
+        : []
+      this.player.pendingAttackBonus = this.player.pendingAttackBuffs.reduce((total, buff) => total + buff.amount, 0)
       this.relics = RelicCollection.hydrate(data.relics)
       this.relics.entries = this.relics.entries.filter((entry) => !!getRelicDefinition(entry.id))
       this.relicEngine = new RelicEngine(this.relics)
