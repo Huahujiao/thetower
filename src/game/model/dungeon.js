@@ -158,8 +158,8 @@ function populateRoom(room, reserved, random, { bossRoom = false, minimumOccupie
     if (!position) throw new Error(`Could not place boss in ${room.id}`)
     room.addEntity(createBoss(position))
   }
-  const minimumMonsterCount = bossRoom ? 3 : Math.max(8, room.floor + 5)
-  while (monsterIndex < minimumMonsterCount && addMonster(room, reserved, random, monsterIndex)) {
+  const targetMonsterCount = bossRoom ? 3 : Math.round(room.width * room.height * 0.25)
+  while (monsterIndex < targetMonsterCount && addMonster(room, reserved, random, monsterIndex)) {
     monsterIndex += 1
   }
   for (const itemId of ['small-potion', 'armor-potion', 'battle-charm', 'whetstone', 'short-sword']) {
@@ -168,12 +168,8 @@ function populateRoom(room, reserved, random, { bossRoom = false, minimumOccupie
   addGold(room, reserved, random)
   while (room.entities.size < targetCount) {
     const roll = random()
-    if (roll < 0.04 && addTrap(room, reserved, random)) continue
-    if (roll < 0.48 && addMonster(room, reserved, random, monsterIndex)) {
-      monsterIndex += 1
-      continue
-    }
-    if (roll < 0.9 && addLoot(room, reserved, random, randomItem(room.floor, random))) continue
+    if (roll < 0.03 && addTrap(room, reserved, random)) continue
+    if (roll < 0.86 && addLoot(room, reserved, random, randomItem(room.floor, random))) continue
     if (addGold(room, reserved, random)) continue
     break
   }
@@ -272,6 +268,14 @@ export function createLinearDungeon({ config = DUNGEON_CONFIG, random = Math.ran
     openAnchors.get(room.id).push(approach)
   })
 
+  for (const edge of dungeon.edges.values()) {
+    if (!edge.locked) continue
+    const source = dungeon.room(edge.fromRoomId)
+    const position = randomOpenPosition(source, reservations.get(source.id), random)
+    if (!position) throw new Error(`Could not place key for ${edge.id}`)
+    source.addEntity(createKeyEntity(edge.id, position))
+  }
+
   const lastRoomId = dungeon.roomOrder[dungeon.roomOrder.length - 1]
   for (const room of dungeon.rooms.values()) {
     const anchors = openAnchors.get(room.id)
@@ -282,14 +286,6 @@ export function createLinearDungeon({ config = DUNGEON_CONFIG, random = Math.ran
       bossRoom: room.id === lastRoomId,
       minimumOccupiedRatio: config.minimumOccupiedRatio,
     })
-  }
-
-  for (const edge of dungeon.edges.values()) {
-    if (!edge.locked) continue
-    const source = dungeon.room(edge.fromRoomId)
-    const position = randomOpenPosition(source, reservations.get(source.id), random)
-    if (!position) throw new Error(`Could not place key for ${edge.id}`)
-    source.addEntity(createKeyEntity(edge.id, position))
   }
 
   return { dungeon, startRoomId: firstRoom.id, start }

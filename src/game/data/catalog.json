@@ -16,7 +16,7 @@
     {
       "id": "nest-spider",
       "name": "\u4f0f\u5de2\u8718\u86db",
-      "minFloor": 1,
+      "minFloor": 3,
       "attribute": "slime",
       "behavior": "ambush",
       "range": 1,

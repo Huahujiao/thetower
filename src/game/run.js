@@ -362,6 +362,51 @@ export class GameRun {
     return !!room && !room.isRevealed(position) && !!findRevealPath(room, this.player.pos, position)
   }
 
+  previewTileAction(c, r) {
+    if (!this._canAct()) return null
+    const room = this.currentRoom
+    const target = { c, r }
+    if (!room?.contains(target)) return null
+    if (!room.isRevealed(target)) {
+      const route = findRevealPath(room, this.player.pos, target)
+      return route ? this._pathPreview('flip', target, route.path) : null
+    }
+    const entity = room.entityAt(target)
+    if (!entity) {
+      const path = findPath(room, this.player.pos, target)
+      return path ? this._pathPreview('move', target, path) : null
+    }
+    if (entity.kind === 'enemy') {
+      const weapons = this.equippedWeapons.filter((weapon) => weapon.durability > 0)
+      const route = weapons.length ? findAttackPath(room, this.player.pos, entity, weapons) : null
+      return route ? this._pathPreview('attack', target, route.path) : null
+    }
+    if (entity.kind === 'door') {
+      if (this.isDoorLocked(entity)) return null
+      const route = findDoorPath(room, this.player.pos, entity)
+      return route ? this._pathPreview('door', target, route.path) : null
+    }
+    if (entity.kind === 'merchant') {
+      const route = findDoorPath(room, this.player.pos, entity)
+      return route ? this._pathPreview('merchant', target, route.path) : null
+    }
+    if (entity.kind === 'item' && !this.backpack.canFit(entity.item)) return null
+    const path = findPath(room, this.player.pos, target, { allowGoalOccupied: true })
+    return path ? this._pathPreview('pickup', target, path) : null
+  }
+
+  _pathPreview(kind, target, path) {
+    const dangerSteps = path.filter((step) => this._activeEnemies()
+      .some((enemy) => combatDistance(step, enemy.pos, enemy.range) <= enemy.range))
+    return {
+      kind,
+      target: { ...target },
+      path: path.map((step) => ({ ...step })),
+      danger: dangerSteps.length > 0,
+      dangerSteps: dangerSteps.map((step) => ({ ...step })),
+    }
+  }
+
   selectInventory(index) {
     if (!Number.isInteger(index) || index < 0 || index >= INVENTORY_CAPACITY) return false
     const placement = this.backpack.placementForCellIndex(index)
@@ -879,10 +924,18 @@ export class GameRun {
   }
 
   _walk(path) {
+    const roomId = this.currentRoom?.id
     const finalPosition = path[path.length - 1] || this.player.pos
     let interceptorId = null
     for (const step of path) {
       const previous = { ...this.player.pos }
+      if (roomId) {
+        this.bus.emit('animate:move', {
+          roomId,
+          from: previous,
+          path: [{ ...step }],
+        })
+      }
       this.player.pos = { ...step }
       this._triggerAmbushes(step)
       if (this.gameOver) return { interceptorId, stopped: true }

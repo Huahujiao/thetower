@@ -68,6 +68,7 @@ const attributeContent = [...catalog.enemies, catalog.boss, ...catalog.weapons, 
 assert(attributeContent.every((entry) => ATTRIBUTE_ORDER.includes(entry.attribute)), 'every authored enemy, weapon, and item must have one valid attribute')
 assert(attributeContent.every((entry) => !('category' in entry) && !('damageType' in entry)), 'legacy weapon types and enemy categories must not remain in authored content')
 assert(catalog.enemies.find((enemy) => enemy.id === 'gnawer')?.initialActionDelay === 1, 'gnawer must have a one-turn initial action delay')
+assert(catalog.enemies.find((enemy) => enemy.id === 'nest-spider')?.minFloor === 3, 'nest spider must first appear on floor three')
 assert(catalog.enemies.every((enemy) => Number.isInteger(enemy.initialActionDelay) && enemy.initialActionDelay >= 0), 'every enemy must define its own initial action delay')
 assert(catalog.enemies.every((enemy) => Number.isInteger(enemy.hp) && Number.isInteger(enemy.attack) && !('hpBase' in enemy) && !('attackBase' in enemy)), 'enemy attributes must be fixed static values rather than floor-scaled values')
 const floorFourGnawer = createMonster(4, 0)
@@ -81,6 +82,9 @@ assert(INVENTORY_ROWS === 4 && INVENTORY_COLUMNS === 6 && run.backpack.capacity 
 assert(run.player.equipment.length === EQUIPMENT_SLOTS && run.player.equipment[0] && !run.player.equipment[1], 'new run must have left and right equipment slots')
 assert(!('sanity' in run.player), 'sanity must not exist in V2 player state')
 assert(run.currentRoom.width === 8 && run.currentRoom.height === 8, 'first room must be 8x8')
+const openingRoomEnemies = [...run.currentRoom.entities.values()].filter((entity) => entity.kind === 'enemy')
+assert(openingRoomEnemies.length === 16 && openingRoomEnemies.every((entity) => entity.enemyId !== 'nest-spider'), 'the opening room must use the legacy-equivalent twenty-five percent non-ambush enemy ratio')
+assert([...run.currentRoom.entities.values()].some((entity) => entity.kind === 'item' && entity.item.id === 'short-sword'), 'the opening room must guarantee an accessible weapon card')
 for (const room of [...run.dungeon.rooms.values()].slice(1)) {
   assert(room.height === 8 && room.width >= 8 && room.width <= 12, 'later room dimensions are invalid')
 }
@@ -183,11 +187,16 @@ for (const position of [...orderedRoute, orderedTarget]) {
   if (entity) orderedRoom.removeEntity(entity.id)
 }
 for (const position of orderedRoute) orderedRoom.reveal(position)
+const orderedPreview = orderedFlipRun.previewTileAction(orderedTarget.c, orderedTarget.r)
+assert(orderedPreview?.kind === 'flip' && orderedPreview.path.length === orderedRoute.length, 'remote flip did not expose its exact movement preview')
+assert(!orderedRoom.isRevealed(orderedTarget) && orderedFlipRun.turn === 0, 'path preview must not reveal a card or consume a turn')
 const orderedEvents = []
 orderedFlipRun.on('change', () => orderedEvents.push('change'))
+orderedFlipRun.on('animate:move', () => orderedEvents.push('move'))
 orderedFlipRun.on('animate:flip', () => orderedEvents.push('flip'))
 assert(orderedFlipRun.clickTile(orderedTarget.c, orderedTarget.r), 'remote flip was rejected')
 assert(orderedEvents.indexOf('change') >= 0 && orderedEvents.indexOf('change') < orderedEvents.indexOf('flip'), 'remote flip animation must run after the player movement render')
+assert(orderedEvents.indexOf('move') >= 0 && orderedEvents.indexOf('move') < orderedEvents.indexOf('flip'), 'remote flip must queue after the player movement animation')
 
 const flipTarget = firstFlippable(run)
 assert(flipTarget, 'the initial room has no legal flip')

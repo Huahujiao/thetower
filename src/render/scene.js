@@ -30,6 +30,23 @@ const CARD_COLORS = Object.freeze({
   empty: '#20242d',
 })
 
+const ENEMY_BEHAVIOR_LABELS = Object.freeze({
+  stationary: '\u9a7b\u5b88',
+  ambush: '\u4f0f\u51fb',
+  chaser: '\u8ffd\u51fb',
+  patrol: '\u5de1\u903b',
+  'self-destruct': '\u81ea\u7206',
+  summoner: '\u53ec\u5524',
+})
+
+const ENEMY_TRAIT_LABELS = Object.freeze({
+  shield: '\u62a4\u76fe',
+  'heavy-armor': '\u91cd\u7532',
+  split: '\u5206\u88c2',
+  regen: '\u518d\u751f',
+  revive: '\u590d\u751f',
+})
+
 function makeCanvasTexture(draw) {
   const canvas = document.createElement('canvas')
   canvas.width = 480
@@ -88,7 +105,20 @@ function drawStickFigure(context) {
   context.stroke()
 }
 
+function enemyFeatureLabel(entity) {
+  return [
+    entity.boss ? '\u9996\u9886' : '',
+    ENEMY_BEHAVIOR_LABELS[entity.behavior] || '',
+    ...(entity.traits || []).map((trait) => ENEMY_TRAIT_LABELS[trait] || trait),
+    entity.deathRule ? ENEMY_TRAIT_LABELS[entity.deathRule] || entity.deathRule : '',
+  ].filter(Boolean).join('\u00b7')
+}
+
 function tileKey(position) { return `${position.c}:${position.r}` }
+
+function samePosition(left, right) {
+  return !!left && !!right && left.c === right.c && left.r === right.r
+}
 
 function disposeObject(object) {
   object.traverse((child) => {
@@ -111,6 +141,10 @@ export class GameScene {
     this.tileMeshes = []
     this.tileMeshByKey = new Map()
     this.flipAnimations = []
+    this.animationQueue = []
+    this.movementAnimation = null
+    this.playerMarker = null
+    this.pathPreview = null
     this.pendingRebuild = false
     this.hoveredTileKey = null
     this.zoom = DEFAULT_ZOOM
@@ -142,7 +176,8 @@ export class GameScene {
     this._onClick = (event) => this._handleClick(event)
     this._onWheel = (event) => this._handleWheel(event)
     this._onPointerLeave = () => this._setHoveredTile(null)
-    this._onFlip = (payload) => this._startFlip(payload)
+    this._onFlip = (payload) => this._queueAnimation('flip', payload)
+    this._onMove = (payload) => this._queueAnimation('move', payload)
     window.addEventListener('resize', this._onResize)
     this.renderer.domElement.addEventListener('pointerdown', this._onPointerDown)
     this.renderer.domElement.addEventListener('pointermove', this._onPointerMove)
@@ -151,8 +186,12 @@ export class GameScene {
     this.renderer.domElement.addEventListener('pointerleave', this._onPointerLeave)
     this.renderer.domElement.addEventListener('click', this._onClick)
     this.renderer.domElement.addEventListener('wheel', this._onWheel, { passive: false })
-    this.unsubscribe = this.run.on('change', () => this.rebuild())
+    this.unsubscribe = this.run.on('change', () => {
+      this._clearPathPreview()
+      this.rebuild()
+    })
     this.flipUnsubscribe = this.run.on('animate:flip', this._onFlip)
+    this.moveUnsubscribe = this.run.on('animate:move', this._onMove)
     this.rebuild()
     this._resize(true)
     this._animate = this._animate.bind(this)
@@ -180,10 +219,17 @@ export class GameScene {
 
   rebuild() {
     const room = this.run.currentRoom
-    if (this.flipAnimations.length && room?.id === this.framedRoomId) {
+    if ((this.movementAnimation || this.flipAnimations.length || this.animationQueue.length) && room?.id === this.framedRoomId) {
       this.pendingRebuild = true
       return
     }
+    if (room?.id !== this.framedRoomId) {
+      this.animationQueue = []
+      this.pendingRebuild = false
+    }
+    this._clearPathPreview()
+    this._clearMovementAnimation()
+    this._clearPlayerMarker()
     disposeObject(this.roomGroup)
     this.roomGroup.clear()
     this.tileMeshes = []
@@ -225,12 +271,35 @@ export class GameScene {
     this.tileMeshByKey.set(tileKey(position), face)
   }
 
+  _queueAnimation(type, payload) {
+    this.animationQueue.push({ type, payload })
+    this._drainAnimationQueue()
+  }
+
+  _drainAnimationQueue() {
+    if (this.movementAnimation || this.flipAnimations.length) return
+    while (this.animationQueue.length) {
+      const animation = this.animationQueue.shift()
+      const started = animation.type === 'move'
+        ? this._startMove(animation.payload)
+        : this._startFlip(animation.payload)
+      if (started) return
+    }
+    this._flushPendingRebuild()
+  }
+
+  _flushPendingRebuild() {
+    if (!this.pendingRebuild || this.movementAnimation || this.flipAnimations.length || this.animationQueue.length) return
+    this.pendingRebuild = false
+    this.rebuild()
+  }
+
   _startFlip({ roomId, position } = {}) {
     const room = this.run.currentRoom
-    if (!room || room.id !== roomId || room.id !== this.framedRoomId || !position) return
+    if (!room || room.id !== roomId || room.id !== this.framedRoomId || !position) return false
     const key = tileKey(position)
     const face = this.tileMeshByKey.get(key)
-    if (!face || !face.visible || this.flipAnimations.some((animation) => animation.key === key)) return
+    if (!face || !face.visible || this.flipAnimations.some((animation) => animation.key === key)) return false
     const point = this._gridPosition(room, position)
     const group = new THREE.Group()
     group.position.set(point.x, CARD_THICKNESS / 2 + 0.004, point.z)
@@ -253,6 +322,136 @@ export class GameScene {
     face.visible = false
     this.roomGroup.add(group)
     this.flipAnimations.push({ key, group, frontTexture, backTexture, elapsed: 0, duration: 0.34 })
+    return true
+  }
+
+  _startMove({ roomId, from, path } = {}) {
+    const room = this.run.currentRoom
+    if (!room || room.id !== roomId || room.id !== this.framedRoomId || !from || !Array.isArray(path) || path.length === 0) return false
+    this._clearPlayerMarker()
+    const startFace = this.tileMeshByKey.get(tileKey(from))
+    if (startFace?.visible) {
+      const oldTexture = startFace.material.map
+      startFace.material.map = this._makeFrontTexture({ type: 'empty' })
+      startFace.material.needsUpdate = true
+      oldTexture?.dispose()
+    }
+    const startPoint = this._gridPosition(room, from)
+    const group = new THREE.Group()
+    group.position.set(startPoint.x, CARD_THICKNESS / 2 + 0.006, startPoint.z)
+    const marker = new THREE.Mesh(
+      new THREE.PlaneGeometry(CARD_SIZE, CARD_SIZE),
+      new THREE.MeshBasicMaterial({ map: this._makeFrontTexture({ type: 'entry' }) }),
+    )
+    marker.rotation.x = -Math.PI / 2
+    group.add(marker)
+    this.roomGroup.add(group)
+    const route = [{ ...from }, ...path.map((step) => ({ ...step }))]
+    const distances = route.slice(1).map((step, index) => Math.hypot(step.c - route[index].c, step.r - route[index].r))
+    const totalDistance = distances.reduce((sum, distance) => sum + distance, 0)
+    this.movementAnimation = {
+      group,
+      route,
+      distances,
+      totalDistance,
+      elapsed: 0,
+      duration: Math.max(0.18, totalDistance * 0.16),
+    }
+    return true
+  }
+
+  _clearMovementAnimation() {
+    const animation = this.movementAnimation
+    if (!animation) return
+    this.roomGroup.remove(animation.group)
+    disposeObject(animation.group)
+    this.movementAnimation = null
+  }
+
+  _clearPlayerMarker() {
+    if (!this.playerMarker) return
+    this.roomGroup.remove(this.playerMarker)
+    disposeObject(this.playerMarker)
+    this.playerMarker = null
+  }
+
+  _updateMovementAnimation(delta) {
+    const animation = this.movementAnimation
+    if (!animation) return
+    animation.elapsed += delta
+    const progress = Math.min(1, animation.elapsed / animation.duration)
+    const travelled = animation.totalDistance * progress
+    let accumulated = 0
+    let segmentIndex = animation.distances.length - 1
+    for (let index = 0; index < animation.distances.length; index += 1) {
+      if (travelled <= accumulated + animation.distances[index]) {
+        segmentIndex = index
+        break
+      }
+      accumulated += animation.distances[index]
+    }
+    const from = animation.route[segmentIndex]
+    const to = animation.route[segmentIndex + 1]
+    const segmentDistance = animation.distances[segmentIndex] || 1
+    const ratio = Math.min(1, Math.max(0, (travelled - accumulated) / segmentDistance))
+    const room = this.run.currentRoom
+    if (room && to) {
+      const start = this._gridPosition(room, from)
+      const end = this._gridPosition(room, to)
+      animation.group.position.set(
+        THREE.MathUtils.lerp(start.x, end.x, ratio),
+        CARD_THICKNESS / 2 + 0.006 + Math.sin(progress * Math.PI) * 0.13,
+        THREE.MathUtils.lerp(start.z, end.z, ratio),
+      )
+    }
+    if (progress < 1) return
+    this.movementAnimation = null
+    this.playerMarker = animation.group
+    this._drainAnimationQueue()
+  }
+
+  _showPathPreview(preview) {
+    const room = this.run.currentRoom
+    if (!room || !preview?.target) return
+    this._clearPathPreview()
+    const group = new THREE.Group()
+    const color = preview.danger ? 0xff786f : 0x76dcff
+    const linePositions = [{ ...this.run.player.pos }, ...(preview.path || [])]
+    if (linePositions.length > 1) {
+      const points = linePositions.map((position) => {
+        const point = this._gridPosition(room, position)
+        return new THREE.Vector3(point.x, CARD_THICKNESS / 2 + 0.05, point.z)
+      })
+      const geometry = new THREE.BufferGeometry().setFromPoints(points)
+      const material = new THREE.LineDashedMaterial({
+        color,
+        dashSize: 0.16,
+        gapSize: 0.1,
+        transparent: true,
+        opacity: 0.96,
+        depthTest: false,
+      })
+      const line = new THREE.Line(geometry, material)
+      line.computeLineDistances()
+      group.add(line)
+    }
+    const targetPoint = this._gridPosition(room, preview.target)
+    const marker = new THREE.Mesh(
+      new THREE.RingGeometry(0.28, 0.35, 32),
+      new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.95, depthTest: false }),
+    )
+    marker.rotation.x = -Math.PI / 2
+    marker.position.set(targetPoint.x, CARD_THICKNESS / 2 + 0.055, targetPoint.z)
+    group.add(marker)
+    this.roomGroup.add(group)
+    this.pathPreview = { target: { ...preview.target }, group }
+  }
+
+  _clearPathPreview() {
+    if (!this.pathPreview) return
+    this.roomGroup.remove(this.pathPreview.group)
+    disposeObject(this.pathPreview.group)
+    this.pathPreview = null
   }
 
   _setHoveredTile(key) {
@@ -300,10 +499,7 @@ export class GameScene {
       disposeObject(animation.group)
       this.flipAnimations.splice(index, 1)
     }
-    if (this.flipAnimations.length === 0 && this.pendingRebuild) {
-      this.pendingRebuild = false
-      this.rebuild()
-    }
+    if (this.flipAnimations.length === 0) this._drainAnimationQueue()
   }
 
   _backAttributeFor(room, position) {
@@ -315,15 +511,15 @@ export class GameScene {
     return makeCanvasTexture((context) => {
       const definition = getAttributeDefinition(attribute) || getAttributeDefinition('scorch')
       const gradient = context.createLinearGradient(0, 0, 0, 160)
-      gradient.addColorStop(0, definition.backTop)
-      gradient.addColorStop(1, definition.backBottom)
+      gradient.addColorStop(0, '#293247')
+      gradient.addColorStop(1, '#141a28')
       context.fillStyle = gradient
       context.fillRect(0, 0, 160, 160)
-      context.strokeStyle = definition.color
-      context.lineWidth = 6
+      context.strokeStyle = '#46536c'
+      context.lineWidth = 4
       context.strokeRect(6, 6, 148, 148)
       context.strokeStyle = definition.color
-      context.globalAlpha = 0.4
+      context.globalAlpha = 0.3
       context.lineWidth = 3
       context.beginPath()
       context.moveTo(80, 22)
@@ -332,7 +528,7 @@ export class GameScene {
       context.lineTo(28, 80)
       context.closePath()
       context.stroke()
-      context.globalAlpha = 0.24
+      context.globalAlpha = 0.17
       context.lineWidth = 2
       context.beginPath()
       context.moveTo(80, 44)
@@ -341,7 +537,7 @@ export class GameScene {
       context.lineTo(50, 80)
       context.closePath()
       context.stroke()
-      context.globalAlpha = 0.42
+      context.globalAlpha = 0.28
       context.fillStyle = definition.color
       for (const [x, y] of [[22, 22], [138, 22], [22, 138], [138, 138]]) {
         context.beginPath()
@@ -349,7 +545,6 @@ export class GameScene {
         context.fill()
       }
       context.globalAlpha = 1
-      drawCenteredText(context, definition.name, 37, { color: definition.color, size: 16, weight: 'bold' })
     })
   }
 
@@ -362,7 +557,7 @@ export class GameScene {
       context.fillStyle = gradient
       context.fillRect(0, 0, 160, 160)
       if (card.type === 'empty') {
-        context.strokeStyle = '#888'
+        context.strokeStyle = '#30384a'
         context.lineWidth = 3
         context.strokeRect(4, 4, 152, 152)
         return
@@ -410,7 +605,7 @@ export class GameScene {
       return {
         type: 'monster',
         title: entity.name,
-        subtitle: entity.boss ? '★ BOSS ★' : '',
+        subtitle: enemyFeatureLabel(entity),
         value: String(Math.max(0, entity.hp)),
         valueColor: entity.boss ? '#ff7777' : '#ff7777',
         maxValue: entity.maxHp,
@@ -642,8 +837,17 @@ export class GameScene {
       this.lastDragMoved = false
       return
     }
+    if (this.movementAnimation || this.flipAnimations.length || this.animationQueue.length) return
     const position = this._pickTile(event)?.userData?.position
-    if (position) this.run.clickTile(position.c, position.r)
+    if (!position) return
+    const preview = this.run.previewTileAction(position.c, position.r)
+    if (samePosition(this.pathPreview?.target, position)) {
+      this._clearPathPreview()
+      if (preview) this.run.clickTile(position.c, position.r)
+      return
+    }
+    if (preview) this._showPathPreview(preview)
+    else this._clearPathPreview()
   }
 
   _animate() {
@@ -651,6 +855,7 @@ export class GameScene {
     const now = Date.now()
     const delta = Math.min(0.05, Math.max(0, (now - (this.lastFrameTime || now)) / 1000))
     this.lastFrameTime = now
+    this._updateMovementAnimation(delta)
     this._updateFlipAnimations(delta)
     this._updateHoverLift()
     this.renderer.render(this.scene, this.camera)
@@ -661,6 +866,7 @@ export class GameScene {
     cancelAnimationFrame(this._frame)
     this._cancelBoardHold({ close: true })
     this.unsubscribe?.()
+    this.moveUnsubscribe?.()
     window.removeEventListener('resize', this._onResize)
     this.renderer.domElement.removeEventListener('pointerdown', this._onPointerDown)
     this.renderer.domElement.removeEventListener('pointermove', this._onPointerMove)
@@ -670,6 +876,9 @@ export class GameScene {
     this.renderer.domElement.removeEventListener('click', this._onClick)
     this.renderer.domElement.removeEventListener('wheel', this._onWheel)
     this.flipUnsubscribe?.()
+    this._clearPathPreview()
+    this._clearMovementAnimation()
+    this._clearPlayerMarker()
     disposeObject(this.roomGroup)
     this.renderer.dispose()
     this.renderer.domElement.remove()
