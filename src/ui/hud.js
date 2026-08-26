@@ -9,6 +9,8 @@ const LABELS = Object.freeze({
   armor: '\u62a4\u7532',
   gold: '\u91d1\u5e01',
   turn: '\u56de\u5408',
+  level: '\u7b49\u7ea7',
+  experience: '\u7ecf\u9a8c',
   settings: '\u8bbe\u7f6e',
   log: '\u65e5\u5fd7',
   reveal: '\u8c03\u8bd5\uff1a\u663e\u793a\u724c\u5185\u5bb9',
@@ -36,9 +38,13 @@ const LABELS = Object.freeze({
   relicManagement: '\u5723\u9057\u7269\u6fc0\u6d3b',
   relicChoice: '\u9009\u62e9\u4e00\u4ef6\u5723\u9057\u7269',
   roomReward: '\u65b0\u623f\u95f4\u5956\u52b1',
+  growthChoice: '\u9009\u62e9\u6210\u957f',
+  adaptationChoice: '\u9009\u62e9\u5c5e\u6027\u9002\u5e94',
   skipReward: '\u8df3\u8fc7',
   sellSelected: '\u51fa\u552e\u6240\u9009',
   refreshStock: '\u5237\u65b0\u8d27\u67b6',
+  confirmRelics: '\u786e\u8ba4\u5723\u9057\u7269\u914d\u7f6e',
+  relicsLocked: '\u5723\u9057\u7269\u914d\u7f6e\u5df2\u786e\u8ba4',
   twoHanded: '\u53cc\u624b',
   occupied: '\u5df2\u5360\u7528',
   activeSkill: '\u4e3b\u52a8\u6280\u80fd',
@@ -91,7 +97,7 @@ export class HUD {
         </div>
       </div>
 
-      <div class="hud-emotion" data=hintrow><span class="emotion-text" data=hint></span></div>
+      <div class="hud-emotion" data=hintrow><span class="progress-text" data=progress></span><span class="emotion-text" data=hint></span></div>
 
       <div id="app" aria-label="game board"></div>
 
@@ -132,6 +138,11 @@ export class HUD {
         <div class="relic-choice-title">${LABELS.roomReward}</div>
         <div class="relic-choice-row" data=roomrewardrow></div>
         <button class="reward-skip" data-action="skip-room-reward">${LABELS.skipReward}</button>
+      </div>
+
+      <div class="relic-choice level-up" data=levelup>
+        <div class="relic-choice-title" data=leveluptitle></div>
+        <div class="relic-choice-row" data=leveluprow></div>
       </div>
 
       <div class="hud-rest" data=merchantpanel>
@@ -192,6 +203,7 @@ export class HUD {
     this.q('armor').textContent = String(player.armor)
     this.q('gold').textContent = String(player.gold)
     this.q('turn').textContent = String(this.run.turn)
+    this.q('progress').textContent = `${LABELS.level} ${player.level} \u00b7 ${LABELS.experience} ${player.experience}/${player.experienceToNext}`
     const pendingBuffs = player.pendingAttackBuffs || []
     const isMeleeOnly = pendingBuffs.length > 0 && pendingBuffs.every((buff) => buff.target === 'melee')
     this.q('hint').textContent = player.pendingAttackBonus ? `${isMeleeOnly ? LABELS.nextMeleeAttack : LABELS.nextAttack} +${player.pendingAttackBonus}` : ''
@@ -201,6 +213,7 @@ export class HUD {
       const equipSlot = equipSlots[slot]
       if (!equipSlot) continue
       const weapon = player.equipment[slot]
+      const growth = weapon ? this.run.weaponGrowth(weapon) : null
       const side = slot === 0 ? LABELS.leftHand : LABELS.rightHand
       const occupiedByTwoHanded = slot === 0 && weapon && player.equipment[1] === weapon && weapon.grip === 'two'
       equipSlot.classList.toggle('filled', !!weapon && !occupiedByTwoHanded)
@@ -211,13 +224,14 @@ export class HUD {
       equipSlot.innerHTML = occupiedByTwoHanded
         ? `<div class="sub">${side} \u00b7 ${LABELS.occupied}</div>`
         : weapon
-          ? `<div class="nm">${escapeHtml(weapon.name)}</div><div class="sub">${weapon.grip === 'two' ? LABELS.twoHanded : side} \u00b7 ATK ${weapon.attack} \u00b7 R ${weapon.range}</div><div class="sub">${LABELS.durability} ${weapon.durability}</div>`
+          ? `<div class="nm">${escapeHtml(weapon.name)}</div><div class="sub">${weapon.grip === 'two' ? LABELS.twoHanded : side} \u00b7 ATK ${weapon.attack}${growth?.strength ? `+${growth.strength}` : ''} \u00b7 R ${weapon.range}</div><div class="sub">${LABELS.durability} ${weapon.durability}${growth?.mastery ? ` \u00b7 M ${growth.mastery}` : ''}</div>`
         : `<div class="sub">${side} \u00b7 ${LABELS.empty}</div>`
     }
 
     this._renderRelics()
     this._renderInitialRelicChoice()
     this._renderRoomReward()
+    this._renderLevelUp()
     this._renderMerchant()
     this._renderBackpack()
     this._renderActions()
@@ -296,6 +310,18 @@ export class HUD {
     }).join('')
   }
 
+  _renderLevelUp() {
+    const panel = this.q('levelup')
+    const open = this.run.phase === 'level-up' && !!this.run.levelUp
+    panel.classList.toggle('show', open)
+    if (!open) return
+    const selectingAdaptation = this.run.levelUp.adaptationHand != null
+    this.q('leveluptitle').textContent = selectingAdaptation ? LABELS.adaptationChoice : LABELS.growthChoice
+    this.q('leveluprow').innerHTML = this.run.levelUpChoices().map((choice) => (
+      `<button class="relic-choice-card" ${selectingAdaptation ? `data-adaptation-choice="${choice.id}"` : `data-level-up-choice="${choice.id}"`}><span class="relic-name">${escapeHtml(choice.name)}</span><span class="relic-desc">${escapeHtml(choice.description)}</span></button>`
+    )).join('')
+  }
+
   _renderMerchant() {
     const panel = this.q('merchantpanel')
     const merchant = this.run.merchantEntity
@@ -313,20 +339,21 @@ export class HUD {
     const refreshPrice = merchant.restockPrice || 0
     this.q('merchanttrade').innerHTML = `<button data-action="merchant-sell"${selected ? '' : ' disabled'}>${LABELS.sellSelected}${selected ? ` ${merchantSellText(selected)}` : ''}</button>${refreshPrice > 0 ? `<button data-action="merchant-refresh"${this.run.player.gold < refreshPrice ? ' disabled' : ''}>${LABELS.refreshStock} ${refreshPrice}</button>` : ''}`
     const relics = this.q('merchantrelics')
+    const offer = merchant.relicOfferResolved ? [] : (merchant.relicChoices || []).map((id) => getRelicDefinition(id)).filter(Boolean)
+    const offerPrice = merchant.relicOfferPrice || 0
+    const offerHtml = offer.length ? `<div class="merchant-relic-title">${LABELS.relicChoice}</div>${offer.map((definition) => (
+      `<button class="merchant-relic-item" data-merchant-relic-choice="${definition.id}"${this.run.player.gold < offerPrice ? ' disabled' : ''}><b>${escapeHtml(definition.name)}</b><small>${escapeHtml(definition.description)} \u00b7 ${LABELS.buy} ${offerPrice}</small></button>`
+    )).join('')}` : ''
     if (!this.run.canManageRelics()) {
-      relics.innerHTML = ''
+      relics.innerHTML = `<div class="merchant-relic-title">${LABELS.relicsLocked}</div>`
       return
     }
-    const offer = merchant.relicOfferResolved ? [] : (merchant.relicChoices || []).map((id) => getRelicDefinition(id)).filter(Boolean)
-    const offerHtml = offer.length ? `<div class="merchant-relic-title">${LABELS.relicChoice}</div>${offer.map((definition) => (
-      `<button class="merchant-relic-item" data-merchant-relic-choice="${definition.id}"><b>${escapeHtml(definition.name)}</b><small>${escapeHtml(definition.description)}</small></button>`
-    )).join('')}` : ''
     relics.innerHTML = `${offerHtml}<div class="merchant-relic-title">${LABELS.relicManagement}</div>${this.run.relics.entries.map((entry) => {
       const definition = getRelicDefinition(entry.id)
       if (!definition) return ''
       const state = entry.active ? LABELS.active : LABELS.inactive
       return `<button class="merchant-relic-item ${entry.active ? 'active' : 'inactive'}" data-merchant-relic="${entry.id}"><b>${escapeHtml(definition.name)}</b><small>${state}</small></button>`
-    }).join('')}`
+    }).join('')}<button class="merchant-relic-item merchant-relic-confirm" data-action="confirm-relic-loadout"><b>${LABELS.confirmRelics}</b></button>`
   }
 
   _renderBackpack() {
@@ -461,6 +488,16 @@ export class HUD {
       this.run.useRelicSkill(relicSkill.dataset.relicSkill)
       return
     }
+    const levelChoice = event.target.closest('[data-level-up-choice]')
+    if (levelChoice) {
+      this.run.chooseLevelUpOption(levelChoice.dataset.levelUpChoice)
+      return
+    }
+    const adaptationChoice = event.target.closest('[data-adaptation-choice]')
+    if (adaptationChoice) {
+      this.run.chooseAdaptation(adaptationChoice.dataset.adaptationChoice)
+      return
+    }
     const roomReward = event.target.closest('[data-room-reward]')
     if (roomReward) {
       this.run.chooseRoomReward(Number(roomReward.dataset.roomReward))
@@ -525,6 +562,7 @@ export class HUD {
     if (action === 'close-merchant') this.run.closeMerchant()
     if (action === 'merchant-sell') this.run.sellSelectedMerchantItem()
     if (action === 'merchant-refresh') this.run.refreshMerchantInventory()
+    if (action === 'confirm-relic-loadout') this.run.confirmRelicLoadout()
     if (action === 'skip-room-reward') this.run.skipRoomReward()
     if (action === 'log') this.q('log').classList.toggle('show')
     if (action === 'settings') this.q('settings').classList.toggle('show')

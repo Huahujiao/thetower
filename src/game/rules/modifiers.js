@@ -24,21 +24,21 @@ export function resolveDamage(baseDamage, modifiers = []) {
   }
 }
 
-export function attackAttributeModifier(weapon, target) {
-  return attributeModifier(weapon?.attribute, target?.attribute)
+export function attackAttributeModifier(weapon, target, { adapted = false } = {}) {
+  return attributeModifier(weapon?.attribute, target?.attribute, { adapted })
 }
 
-export function computeAttackDamage({ weapon, target, pendingAttackBonus = 0, relicModifiers = [], terrainModifiers = [] } = {}) {
+export function computeAttackDamage({ weapon, target, strengthBonus = 0, pendingAttackBonus = 0, ignoreLastDurability = false, relicModifiers = [], terrainModifiers = [] } = {}) {
   if (!weapon) return { damage: 0, countered: false, resisted: false, resolution: resolveDamage(0) }
   const type = attackAttributeModifier(weapon, target)
   const modifiers = [
     ...(pendingAttackBonus ? [damageModifier(DAMAGE_STAGES.FLAT, pendingAttackBonus, 'pending-buff')] : []),
-    ...(weapon.durability === 1 ? [damageModifier(DAMAGE_STAGES.MULTIPLY, 0.5, 'last-durability')] : []),
+    ...(weapon.durability === 1 && !ignoreLastDurability ? [damageModifier(DAMAGE_STAGES.MULTIPLY, 0.5, 'last-durability')] : []),
     ...(type.multiplier !== 1 ? [damageModifier(DAMAGE_STAGES.MULTIPLY, type.multiplier, type.countered ? 'counter' : 'resisted')] : []),
     ...relicModifiers,
     ...terrainModifiers,
   ]
-  const resolution = resolveDamage(weapon.attack, modifiers)
+  const resolution = resolveDamage((weapon.attack || 0) + Math.max(0, Number(strengthBonus) || 0), modifiers)
   return { damage: resolution.total, countered: type.countered, resisted: type.resisted, resolution }
 }
 import { attributeModifier } from '../data/attributes.js'

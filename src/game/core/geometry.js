@@ -7,6 +7,7 @@ export const DIRECTIONS_8 = Object.freeze([
 export function pos(c, r) { return { c, r } }
 export function posKey({ c, r }) { return `${c},${r}` }
 export function samePos(a, b) { return !!a && !!b && a.c === b.c && a.r === b.r }
+export function isAdjacent8(a, b) { return !!a && !!b && !samePos(a, b) && chebyshev(a, b) === 1 }
 export function manhattan(a, b) { return Math.abs(a.c - b.c) + Math.abs(a.r - b.r) }
 export function chebyshev(a, b) { return Math.max(Math.abs(a.c - b.c), Math.abs(a.r - b.r)) }
 export function combatDistance(a, b, range) { return range <= 1 ? chebyshev(a, b) : manhattan(a, b) }

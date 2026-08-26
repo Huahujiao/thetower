@@ -9,6 +9,8 @@
       "range": 1,
       "hp": 4,
       "attack": 4,
+      "experience": 2,
+      "relicDropChance": 0.015,
       "drop": { "chance": 0.25, "itemId": "rough-bone-club" },
       "cooldownMax": 1,
       "initialActionDelay": 1
@@ -22,6 +24,8 @@
       "range": 1,
       "hp": 3,
       "attack": 5,
+      "experience": 3,
+      "relicDropChance": 0.04,
       "drop": { "chance": 0.35, "itemId": "venom-sac" },
       "cooldownMax": 2,
       "initialActionDelay": 0
@@ -36,6 +40,8 @@
       "range": 1,
       "hp": 6,
       "attack": 3,
+      "experience": 2,
+      "relicDropChance": 0.02,
       "drop": { "chance": 0.35, "itemId": "shell-fragment" },
       "cooldownMax": 2,
       "initialActionDelay": 1
@@ -49,6 +55,8 @@
       "range": 1,
       "hp": 7,
       "attack": 4,
+      "experience": 2,
+      "relicDropChance": 0.02,
       "drop": { "chance": 0.2, "itemId": "rusty-dagger" },
       "cooldownMax": 1,
       "initialActionDelay": 1
@@ -63,6 +71,9 @@
       "traits": ["heavy-armor"],
       "hp": 10,
       "attack": 7,
+      "elite": true,
+      "experience": 4,
+      "relicDropChance": 0.06,
       "drop": { "chance": 0.6, "itemId": "notched-war-hammer" },
       "cooldownMax": 3,
       "initialActionDelay": 1
@@ -76,6 +87,8 @@
       "range": 3,
       "hp": 5,
       "attack": 3,
+      "experience": 3,
+      "relicDropChance": 0.03,
       "drop": { "chance": 0.6, "itemId": "spectral-short-spear" },
       "cooldownMax": 1,
       "initialActionDelay": 1
@@ -89,6 +102,8 @@
       "range": 1,
       "hp": 6,
       "attack": 4,
+      "experience": 3,
+      "relicDropChance": 0.03,
       "drop": { "chance": 0.25, "itemId": "beast-fang" },
       "cooldownMax": 1,
       "initialActionDelay": 1
@@ -104,6 +119,9 @@
       "range": 1,
       "hp": 11,
       "attack": 5,
+      "elite": true,
+      "experience": 4,
+      "relicDropChance": 0.06,
       "drop": { "chance": 0.4, "itemId": "worm-glue" },
       "cooldownMax": 2,
       "initialActionDelay": 1
@@ -119,6 +137,9 @@
       "range": 1,
       "hp": 14,
       "attack": 6,
+      "elite": true,
+      "experience": 4,
+      "relicDropChance": 0.06,
       "drop": { "chance": 0.45, "itemId": "moss-ointment" },
       "cooldownMax": 2,
       "initialActionDelay": 1
@@ -132,6 +153,9 @@
       "range": 3,
       "hp": 8,
       "attack": 6,
+      "elite": true,
+      "experience": 4,
+      "relicDropChance": 0.06,
       "drop": { "chance": 0.6, "itemId": "worn-shortbow" },
       "cooldownMax": 2,
       "initialActionDelay": 1
@@ -146,6 +170,9 @@
       "range": 1,
       "hp": 12,
       "attack": 7,
+      "elite": true,
+      "experience": 4,
+      "relicDropChance": 0.06,
       "drop": { "chance": 0.5, "itemId": "tombguard-shortsword" },
       "cooldownMax": 2,
       "initialActionDelay": 1
@@ -161,6 +188,9 @@
       "range": 2,
       "hp": 6,
       "attack": 12,
+      "elite": true,
+      "experience": 4,
+      "relicDropChance": 0.06,
       "cooldownMax": 1,
       "initialActionDelay": 1
     },
@@ -174,6 +204,9 @@
       "range": 0,
       "hp": 10,
       "attack": 0,
+      "elite": true,
+      "experience": 4,
+      "relicDropChance": 0.06,
       "drop": { "chance": 0.5, "itemId": "bone-grinding-powder" },
       "cooldownMax": 1,
       "initialActionDelay": 1
@@ -188,6 +221,9 @@
       "range": 1,
       "hp": 14,
       "attack": 7,
+      "elite": true,
+      "experience": 4,
+      "relicDropChance": 0.06,
       "drop": { "chance": 0.5, "itemId": "cracked-armor-hookblade" },
       "cooldownMax": 2,
       "initialActionDelay": 1

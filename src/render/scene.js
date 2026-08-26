@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { getAttributeDefinition } from '../game/data/attributes.js'
+import { isAdjacent8 } from '../game/core/geometry.js'
 
 const TILE_SIZE = 1.14
 const CARD_SIZE = TILE_SIZE
@@ -223,6 +224,13 @@ export class GameScene {
       this.pendingRebuild = true
       return
     }
+    const sameRoom = room?.id === this.framedRoomId && this.tileMeshes.length === room.width * room.height
+    if (sameRoom) {
+      this._clearPathPreview()
+      this._clearMovementAnimation()
+      this._clearPlayerMarker()
+      if (this._refreshRoom(room)) return
+    }
     if (room?.id !== this.framedRoomId) {
       this.animationQueue = []
       this.pendingRebuild = false
@@ -269,6 +277,31 @@ export class GameScene {
     this.roomGroup.add(face)
     this.tileMeshes.push(face)
     this.tileMeshByKey.set(tileKey(position), face)
+  }
+
+  _refreshRoom(room) {
+    for (let r = 0; r < room.height; r += 1) {
+      for (let c = 0; c < room.width; c += 1) {
+        const position = { c, r }
+        const face = this.tileMeshByKey.get(tileKey(position))
+        const body = face?.userData?.body
+        if (!face || !body) return false
+        const revealed = this.run.debugReveal || room.tile(position).revealed
+        const oldTexture = face.material.map
+        face.material.map = revealed
+          ? this._makeFrontTexture(this._cardFaceData(room, position))
+          : this._makeBackTexture(this._backAttributeFor(room, position))
+        face.material.needsUpdate = true
+        oldTexture?.dispose()
+        face.visible = true
+        face.userData.lift = 0
+        face.position.y = face.userData.baseY
+        body.visible = true
+        body.position.y = 0
+        body.material.color.setHex(revealed ? 0x262a36 : 0x17172b)
+      }
+    }
+    return true
   }
 
   _queueAnimation(type, payload) {
@@ -841,6 +874,11 @@ export class GameScene {
     const position = this._pickTile(event)?.userData?.position
     if (!position) return
     const preview = this.run.previewTileAction(position.c, position.r)
+    if (preview && isAdjacent8(this.run.player.pos, position)) {
+      this._clearPathPreview()
+      this.run.clickTile(position.c, position.r)
+      return
+    }
     if (samePosition(this.pathPreview?.target, position)) {
       this._clearPathPreview()
       if (preview) this.run.clickTile(position.c, position.r)

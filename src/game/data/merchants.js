@@ -7,25 +7,19 @@ export const MERCHANT_STOCK_SIZE = 4
 
 export const MERCHANT_DEFS = Object.freeze([
   {
-    id: 'peddler',
-    name: '\u8d27\u90ce',
+    id: 'merchant',
+    name: '\u5546\u4eba',
     services: ['stock', 'relic-management', 'sell'],
-    stockPool: 'supplies',
-    restockPrice: 5,
+    stockPool: 'all',
+    restockPrice: 6,
   },
   {
-    id: 'smith',
-    name: '\u94c1\u5320',
-    services: ['stock', 'relic-management', 'sell'],
-    stockPool: 'arms',
-    restockPrice: 7,
-  },
-  {
-    id: 'curator',
+    id: 'collector',
     name: '\u6536\u85cf\u5bb6',
     services: ['relic-management', 'relic-choice', 'sell'],
     stockPool: null,
     restockPrice: 0,
+    relicPrice: 9,
   },
 ])
 
@@ -37,12 +31,7 @@ function availableItems(floor) {
 
 function stockCandidates(definition, floor) {
   const items = availableItems(floor)
-  if (definition?.stockPool === 'arms') {
-    return items.filter((item) => item.type === 'weapon' || item.type === 'whetstone')
-  }
-  if (definition?.stockPool === 'supplies') {
-    return items.filter((item) => item.type !== 'weapon')
-  }
+  if (definition?.stockPool === 'all') return items
   return []
 }
 
@@ -108,6 +97,8 @@ export function createMerchantEntity(merchantId, position, { floor = 1, random =
     restockPrice: definition.restockPrice,
     relicChoices: [],
     relicOfferResolved: false,
+    relicOfferPrice: definition.relicPrice || 0,
+    relicManagementConfirmed: false,
     pos: { ...position },
     revealOrder: null,
   }

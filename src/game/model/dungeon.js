@@ -12,7 +12,7 @@ export const DUNGEON_CONFIG = Object.freeze({
   roomHeight: 8,
   lockedEdgeIndexes: [2, 7],
   merchantRoomIndexes: [2, 6, 9],
-  merchantIds: ['peddler', 'smith', 'curator'],
+  merchantIds: ['merchant', 'merchant', 'collector'],
   minimumOccupiedRatio: 0.8,
 })
 

@@ -1,10 +1,11 @@
 import { createEmitter } from './core/emitter.js'
 import { combatDistance, neighbors8 } from './core/geometry.js'
-import { attributeLabel } from './data/attributes.js'
+import { ATTRIBUTE_ORDER, attributeLabel } from './data/attributes.js'
 import { createLootEntity, createMinion, getItemDefinition, makeItemById, starterWeapon, synchronizeEntityIds } from './data/content.js'
 import { getMerchantDefinition, merchantSellPrice, refreshMerchantSlot, refreshMerchantStock } from './data/merchants.js'
 import { buildRelicChoices, getRelicDefinition } from './data/relics.js'
 import { buildRoomRewardChoices } from './data/rewards.js'
+import { PROGRESSION, adaptationChoices, buildLevelUpChoices, experienceToNextLevel, getLevelUpOption, masteryPreservationChance } from './data/progression.js'
 import { getTrapDefinition } from './data/traps.js'
 import { createLinearDungeon, Dungeon } from './model/dungeon.js'
 import { BackpackGrid } from './model/backpack.js'
@@ -21,7 +22,7 @@ export const INVENTORY_ROWS = 4
 export const INVENTORY_CAPACITY = INVENTORY_COLUMNS * INVENTORY_ROWS
 export const EQUIPMENT_SLOTS = 2
 export const SAVE_KEY = 'grid_flip_adventure_v2'
-export const SAVE_VERSION = 8
+export const SAVE_VERSION = 9
 
 function clone(value) { return JSON.parse(JSON.stringify(value)) }
 
@@ -36,6 +37,36 @@ function uniqueWeapons(weapons) {
     known.add(key)
     return true
   })
+}
+
+function weaponHands(player, weapon) {
+  if (!player || !weapon) return []
+  const hands = []
+  for (let index = 0; index < EQUIPMENT_SLOTS; index++) {
+    if (player.equipment[index]?.uid === weapon.uid) hands.push(index)
+  }
+  return hands
+}
+
+function weaponStrength(player, weapon) {
+  return weaponHands(player, weapon).reduce((total, hand) => total + Math.max(0, Number(player.strength?.[hand]) || 0), 0)
+}
+
+function weaponMastery(player, weapon) {
+  return weaponHands(player, weapon).reduce((total, hand) => total + Math.max(0, Number(player.mastery?.[hand]) || 0), 0)
+}
+
+function weaponIsAdapted(player, weapon) {
+  return weaponHands(player, weapon).some((hand) => player.adaptations?.[hand] === weapon.attribute)
+}
+
+function shuffled(values, random) {
+  const copy = [...values]
+  for (let index = copy.length - 1; index > 0; index--) {
+    const swapIndex = Math.floor(random() * (index + 1))
+    ;[copy[index], copy[swapIndex]] = [copy[swapIndex], copy[index]]
+  }
+  return copy
 }
 
 const DETAIL_LABELS = Object.freeze({
@@ -65,6 +96,9 @@ const DETAIL_LABELS = Object.freeze({
   inactive: '\u672a\u6fc0\u6d3b',
   actionDelay: '\u521d\u6b21\u884c\u52a8\u5ef6\u8fdf',
   cooldown: '\u51b7\u5374',
+  strength: '\u529b\u91cf',
+  mastery: '\u638c\u63a7',
+  adaptation: '\u5c5e\u6027\u9002\u5e94',
   manhattan: '\u66fc\u54c8\u987f\u8ddd\u79bb',
   explosion: '\u89e6\u53d1\u540e\u5bf9\u516b\u90bb\u57df\u9020\u6210\u4f24\u5bb3\u3002',
   alarm: '\u89e6\u53d1\u540e\u7ffb\u5f00\u9644\u8fd1\u7684\u724c\u3002',
@@ -131,6 +165,12 @@ export class GameRun {
       roomId: generated.startRoomId,
       pos: { ...generated.start },
       equipment: [starterWeapon(), null],
+      level: PROGRESSION.startingLevel,
+      experience: 0,
+      experienceToNext: experienceToNextLevel(PROGRESSION.startingLevel),
+      strength: [0, 0],
+      mastery: [0, 0],
+      adaptations: [null, null],
       pendingAttackBonus: 0,
       pendingAttackBuffs: [],
     }
@@ -147,6 +187,8 @@ export class GameRun {
     this.itemTargeting = false
     this.merchant = null
     this.roomReward = null
+    this.roomRewardBag = shuffled(['supply', 'supply', 'supply', 'relic'], this.random)
+    this.levelUp = null
     this.relicEventQueue = []
     this.relicRuntime = {}
     this.stealthTurns = 0
@@ -170,13 +212,117 @@ export class GameRun {
   activeRelics() { return this.relicEngine.activeDefinitions() }
   get merchantEntity() { return this.merchant ? this.currentRoom?.entity(this.merchant.entityId) || null : null }
   get merchantDefinition() { return getMerchantDefinition(this.merchantEntity?.merchantId) }
-  canManageRelics() { return this.phase === 'merchant' && this.merchantDefinition?.services.includes('relic-management') }
+  canManageRelics() {
+    return this.phase === 'merchant'
+      && this.merchantDefinition?.services.includes('relic-management')
+      && !this.merchantEntity?.relicManagementConfirmed
+  }
 
   canSellAtMerchant() { return this.phase === 'merchant' && this.merchantDefinition?.services.includes('sell') }
 
+  _drawRoomRewardType() {
+    if (!this.roomRewardBag.length) this.roomRewardBag = shuffled(['supply', 'supply', 'supply', 'relic'], this.random)
+    return this.roomRewardBag.shift() || 'supply'
+  }
+
+  _queueLevelUp() {
+    if (this.levelUp || this.gameOver || this.player.experience < this.player.experienceToNext) return false
+    const choices = buildLevelUpChoices(this.player, { random: this.random })
+    if (!choices.length) return false
+    this.levelUp = { choices, adaptationHand: null }
+    this.phase = 'level-up'
+    this._log(`\u5347\u81f3 ${this.player.level + 1} \u7ea7\uff0c\u8bf7\u9009\u62e9\u6210\u957f\u3002`)
+    return true
+  }
+
+  _gainExperience(enemy) {
+    const amount = Math.max(0, Number(enemy?.experience) || 0)
+    if (!amount || enemy?.noExperience || enemy?.boss) return false
+    this.player.experience += amount
+    this._log(`\u83b7\u5f97 ${amount} \u7ecf\u9a8c\u3002`)
+    return this._queueLevelUp()
+  }
+
+  chooseLevelUpOption(id) {
+    if (this.phase !== 'level-up' || this.levelUp?.adaptationHand != null || !this.levelUp.choices.includes(id)) return false
+    const option = getLevelUpOption(id)
+    if (!option) return false
+    if (id === 'left-adaptation' || id === 'right-adaptation') {
+      this.levelUp.adaptationHand = id.startsWith('left') ? 0 : 1
+      this._changed()
+      return true
+    }
+    this._applyLevelUpOption(id)
+    return true
+  }
+
+  chooseAdaptation(attribute) {
+    const hand = this.levelUp?.adaptationHand
+    if (this.phase !== 'level-up' || !Number.isInteger(hand) || !ATTRIBUTE_ORDER.includes(attribute) || this.player.adaptations[hand]) return false
+    this.player.adaptations[hand] = attribute
+    this._log(`\u83b7\u5f97${hand === 0 ? '\u5de6\u624b' : '\u53f3\u624b'}${attributeLabel(attribute)}\u9002\u5e94\u3002`)
+    this._finishLevelUp()
+    return true
+  }
+
+  _applyLevelUpOption(id) {
+    if (id === 'vitality') {
+      this.player.maxHp += 2
+      this.player.hp = Math.min(this.player.maxHp, this.player.hp + 2)
+    } else if (id === 'left-strength' || id === 'right-strength') {
+      const hand = id.startsWith('left') ? 0 : 1
+      this.player.strength[hand] += 1
+    } else if (id === 'left-mastery' || id === 'right-mastery') {
+      const hand = id.startsWith('left') ? 0 : 1
+      this.player.mastery[hand] += 1
+    } else if (id === 'emergency-supply') {
+      this.player.gold += PROGRESSION.emergencySupply.gold
+      this.player.hp = Math.min(this.player.maxHp, this.player.hp + PROGRESSION.emergencySupply.heal)
+    } else {
+      return false
+    }
+    const option = getLevelUpOption(id)
+    if (option) this._log(`\u6210\u957f\u9009\u62e9\uff1a${option.name}\u3002`)
+    this._finishLevelUp()
+    return true
+  }
+
+  _finishLevelUp() {
+    this.player.experience = Math.max(0, this.player.experience - this.player.experienceToNext)
+    this.player.level += 1
+    this.player.experienceToNext = experienceToNextLevel(this.player.level)
+    this.levelUp = null
+    this.phase = 'explore'
+    this._queueLevelUp()
+    this._changed()
+  }
+
+  levelUpChoices() {
+    if (this.levelUp?.adaptationHand != null) return adaptationChoices()
+    return (this.levelUp?.choices || []).map((id) => getLevelUpOption(id)).filter(Boolean)
+  }
+
   showItemDetail(item) {
     if (!item) return false
-    return this._showDetail({ position: 'top', ...detailForItem(item) })
+    const detail = detailForItem(item)
+    if (item.type === 'weapon') {
+      const hands = weaponHands(this.player, item)
+      if (hands.length) {
+        const adaptations = hands.map((hand) => this.player.adaptations[hand]).filter(Boolean).map(attributeLabel)
+        detail.lines.push(`${DETAIL_LABELS.strength} +${weaponStrength(this.player, item)}`)
+        detail.lines.push(`${DETAIL_LABELS.mastery} ${weaponMastery(this.player, item)}`)
+        if (adaptations.length) detail.lines.push(`${DETAIL_LABELS.adaptation} ${adaptations.join('/')}`)
+      }
+    }
+    return this._showDetail({ position: 'top', ...detail })
+  }
+
+  weaponGrowth(weapon) {
+    return {
+      strength: weaponStrength(this.player, weapon),
+      mastery: weaponMastery(this.player, weapon),
+      adaptations: weaponHands(this.player, weapon).map((hand) => this.player.adaptations[hand]).filter(Boolean),
+    }
   }
 
   showRelicDetail(id) {
@@ -323,10 +469,11 @@ export class GameRun {
     this.bus.emit('change')
   }
 
-  acquireRelic(id, { activate = false } = {}) {
+  acquireRelic(id, { activate = null } = {}) {
     const definition = getRelicDefinition(id)
     if (!definition) return this._reject('\u672a\u77e5\u5723\u9057\u7269\u3002')
-    const entry = this.relics.acquire(id, { activate })
+    const shouldActivate = activate == null ? this.relics.active.length < this.relics.maxActive : activate
+    const entry = this.relics.acquire(id, { activate: shouldActivate })
     if (!entry) return this._reject('\u6b64\u5723\u9057\u7269\u5df2\u62e5\u6709\u3002')
     this._log(`\u83b7\u5f97\u5723\u9057\u7269\uff1a${definition.name}${entry.active ? '' : '\uff08\u672a\u6fc0\u6d3b\uff09'}\u3002`)
     this._changed()
@@ -357,6 +504,15 @@ export class GameRun {
     return changed
   }
 
+  confirmRelicLoadout() {
+    const merchant = this.merchantEntity
+    if (!this.canManageRelics() || !merchant) return false
+    merchant.relicManagementConfirmed = true
+    this._log(`${merchant.name}\u7684\u5723\u9057\u7269\u914d\u7f6e\u5df2\u786e\u8ba4\u3002`)
+    this._changed()
+    return true
+  }
+
   tileCanBeFlipped(position) {
     const room = this.currentRoom
     return !!room && !room.isRevealed(position) && !!findRevealPath(room, this.player.pos, position)
@@ -378,7 +534,7 @@ export class GameRun {
     }
     if (entity.kind === 'enemy') {
       const weapons = this.equippedWeapons.filter((weapon) => weapon.durability > 0)
-      const route = weapons.length ? findAttackPath(room, this.player.pos, entity, weapons) : null
+      const route = findAttackPath(room, this.player.pos, entity, weapons.length ? weapons : [{ range: 1 }])
       return route ? this._pathPreview('attack', target, route.path) : null
     }
     if (entity.kind === 'door') {
@@ -689,10 +845,14 @@ export class GameRun {
   chooseMerchantRelic(id) {
     const merchant = this.merchantEntity
     if (!this.canManageRelics() || !merchant || merchant.relicOfferResolved || !merchant.relicChoices?.includes(id)) return false
+    const price = Math.max(0, merchant.relicOfferPrice || 0)
+    if (this.player.gold < price) return this._reject('\u91d1\u5e01\u4e0d\u8db3\u3002')
     const entry = this.acquireRelic(id)
     if (!entry) return false
+    this.player.gold -= price
     merchant.relicOfferResolved = true
     merchant.relicChoices = []
+    this._log(`\u8d2d\u4e70 ${getRelicDefinition(id)?.name || '\u5723\u9057\u7269'}\uff0c\u82b1\u8d39 ${price} \u91d1\u5e01\u3002`)
     this._changed()
     return entry
   }
@@ -862,9 +1022,15 @@ export class GameRun {
     this._endTurn({ skipEnemyPhase: true })
     this._emitRelicEvent('room:entered', { room: targetRoom, firstVisit })
     if (firstVisit && !this.gameOver) {
+      const reward = buildRoomRewardChoices(this.relics, {
+        floor: targetRoom.floor,
+        type: this._drawRoomRewardType(),
+        random: this.random,
+      })
       this.roomReward = {
         roomId: targetRoom.id,
-        choices: buildRoomRewardChoices(this.relics, { floor: targetRoom.floor, random: this.random }),
+        type: reward.type,
+        choices: reward.choices,
       }
       this.phase = 'reward'
       this._log('\u9996\u6b21\u8fdb\u5165\u65b0\u623f\u95f4\uff0c\u8bf7\u9009\u62e9\u4e00\u9879\u5956\u52b1\u3002')
@@ -875,15 +1041,26 @@ export class GameRun {
 
   _attack(enemy) {
     const weapons = this.equippedWeapons.filter((weapon) => weapon.durability > 0)
-    if (weapons.length === 0) return this._reject('\u9700\u8981\u4e00\u628a\u53ef\u7528\u6b66\u5668\u3002')
-    const route = findAttackPath(this.currentRoom, this.player.pos, enemy, weapons)
+    const attackers = weapons.length
+      ? weapons.map((weapon) => ({ weapon, unarmed: false }))
+      : [{ weapon: { name: '\u5f92\u624b', range: 1 }, unarmed: true }]
+    const route = findAttackPath(this.currentRoom, this.player.pos, enemy, attackers.map((attacker) => attacker.weapon))
     if (!route) return this._reject('\u6ca1\u6709\u53ef\u8fbe\u7684\u653b\u51fb\u4f4d\u7f6e\u3002')
     const movement = this._walk(route.path)
     if (!movement.stopped) {
-      for (const weapon of weapons) {
+      for (const { weapon, unarmed } of attackers) {
         if (!this.currentRoom?.entity(enemy.id)) break
-        if (!weapon || weapon.durability <= 0 || combatDistance(this.player.pos, enemy.pos, weapon.range) > weapon.range) continue
-        const type = attackAttributeModifier(weapon, enemy)
+        if (combatDistance(this.player.pos, enemy.pos, weapon.range) > weapon.range) continue
+        if (unarmed) {
+          const hit = this._damageEnemy(enemy, 1)
+          this._log(`${weapon.name}\u5bf9 ${enemy.name}${hit.finishedDowned ? '\u7ec8\u7ed3\u4e86' : '\u9020\u6210'} ${hit.damage} \u4f24\u5bb3\u3002`)
+          if (hit.defeated) break
+          continue
+        }
+        if (weapon.durability <= 0) continue
+        const mastery = weaponMastery(this.player, weapon)
+        const durabilityPreserved = this.random() < masteryPreservationChance(mastery)
+        const type = attackAttributeModifier(weapon, enemy, { adapted: weaponIsAdapted(this.player, weapon) })
         const relicModifiers = this.relicEngine.damageModifiers({
           weapon,
           target: enemy,
@@ -897,7 +1074,9 @@ export class GameRun {
         const outcome = computeAttackDamage({
           weapon,
           target: enemy,
+          strengthBonus: weaponStrength(this.player, weapon),
           pendingAttackBonus: matchingBuffs.reduce((total, buff) => total + buff.amount, 0),
+          ignoreLastDurability: durabilityPreserved,
           relicModifiers,
           terrainModifiers: terrainDamageModifiers(this.currentRoom, this.player.pos),
         })
@@ -906,10 +1085,11 @@ export class GameRun {
           this.player.pendingAttackBuffs = this.player.pendingAttackBuffs.filter((buff) => !matchingBuffs.includes(buff))
           this.player.pendingAttackBonus = this.player.pendingAttackBuffs.reduce((total, buff) => total + buff.amount, 0)
         }
-        weapon.durability -= 1
+        if (!durabilityPreserved) weapon.durability -= 1
         const relation = outcome.countered ? '\u514b\u5236\u00b7' : outcome.resisted ? '\u53d7\u5236\u00b7' : ''
         const action = hit.finishedDowned ? '\u7ec8\u7ed3\u4e86' : '\u9020\u6210'
         this._log(`${relation}${weapon.name} \u5bf9 ${enemy.name}${action} ${hit.damage} \u4f24\u5bb3\u3002`)
+        if (durabilityPreserved) this._log(`${weapon.name}\u7684\u638c\u63a7\u4fdd\u7559\u4e86\u8010\u4e45\u3002`)
         if (weapon.durability <= 0) {
           this._log(`${weapon.name} \u635f\u6bc1\u4e86\u3002`)
           this.player.equipment = this.player.equipment.map((equipped) => equipped?.uid === weapon.uid ? null : equipped)
@@ -1054,6 +1234,7 @@ export class GameRun {
     this.currentRoom.removeEntity(enemy.id)
     this._log(`${enemy.name} \u88ab\u51fb\u8d25\u3002`)
     this._emitRelicEvent('enemy:killed', { enemy, source })
+    this._gainExperience(enemy)
     const dropRule = enemy.drop
     if (!enemy.boss && !enemy.noLoot && !suppressLoot && dropRule && this.random() < dropRule.chance) {
       const drop = makeItemById(dropRule.itemId, this.random)
@@ -1061,6 +1242,10 @@ export class GameRun {
         this.currentRoom.addEntity(createLootEntity(drop, enemy.pos))
         this._log(`${enemy.name} \u6389\u843d\u4e86 ${drop.name}\u3002`)
       }
+    }
+    if (!enemy.boss && !enemy.noExperience && this.random() < enemy.relicDropChance) {
+      const relic = buildRelicChoices(this.relics, { count: 1, random: this.random })[0]
+      if (relic && this.acquireRelic(relic.id)) this._log(`${enemy.name} \u6389\u843d\u4e86\u5723\u9057\u7269\uff1a${relic.name}\u3002`)
     }
     if (enemy.boss) {
       this.win = true
@@ -1223,6 +1408,8 @@ export class GameRun {
       itemTargeting: this.itemTargeting,
       merchant: this.merchant ? { ...this.merchant } : null,
       roomReward: this.roomReward ? clone(this.roomReward) : null,
+      roomRewardBag: [...this.roomRewardBag],
+      levelUp: this.levelUp ? clone(this.levelUp) : null,
       relicRuntime: clone(this.relicRuntime),
       stealthTurns: this.stealthTurns,
       log: [...this.log],
@@ -1242,6 +1429,12 @@ export class GameRun {
       this.backpack = BackpackGrid.hydrate(data.backpack)
       this.player.equipment = Array.isArray(this.player.equipment) ? this.player.equipment.slice(0, EQUIPMENT_SLOTS) : [this.player.equipment || null]
       while (this.player.equipment.length < EQUIPMENT_SLOTS) this.player.equipment.push(null)
+      this.player.level = Math.max(PROGRESSION.startingLevel, Number(this.player.level) || PROGRESSION.startingLevel)
+      this.player.experience = Math.max(0, Number(this.player.experience) || 0)
+      this.player.experienceToNext = Math.max(1, Number(this.player.experienceToNext) || experienceToNextLevel(this.player.level))
+      this.player.strength = Array.from({ length: EQUIPMENT_SLOTS }, (_, index) => Math.max(0, Number(this.player.strength?.[index]) || 0))
+      this.player.mastery = Array.from({ length: EQUIPMENT_SLOTS }, (_, index) => Math.max(0, Number(this.player.mastery?.[index]) || 0))
+      this.player.adaptations = Array.from({ length: EQUIPMENT_SLOTS }, (_, index) => ATTRIBUTE_ORDER.includes(this.player.adaptations?.[index]) ? this.player.adaptations[index] : null)
       this.player.pendingAttackBuffs = Array.isArray(this.player.pendingAttackBuffs)
         ? this.player.pendingAttackBuffs.filter((buff) => Number.isFinite(buff?.amount) && (buff.target === 'melee' || buff.target === 'any'))
         : []
@@ -1252,7 +1445,7 @@ export class GameRun {
       this.initialRelicChoices = (Array.isArray(data.initialRelicChoices) ? data.initialRelicChoices : buildRelicChoices(this.relics, { random: this.random }).map((relic) => relic.id))
         .filter((id) => !!getRelicDefinition(id) && !this.relics.has(id))
       this.turn = Number.isInteger(data.turn) && data.turn >= 0 ? data.turn : 0
-      this.phase = ['explore', 'merchant', 'reward', 'over'].includes(data.phase) ? data.phase : 'explore'
+      this.phase = ['explore', 'merchant', 'reward', 'level-up', 'over'].includes(data.phase) ? data.phase : 'explore'
       this.gameOver = !!data.gameOver
       this.win = !!data.win
       this.selectedInventoryIndex = Number.isInteger(data.selectedInventoryIndex) && this.backpack.placementForCellIndex(data.selectedInventoryIndex)
@@ -1262,6 +1455,15 @@ export class GameRun {
       this.itemTargeting = !!data.itemTargeting
       this.merchant = data.merchant && typeof data.merchant.entityId === 'string' ? { entityId: data.merchant.entityId } : null
       this.roomReward = data.roomReward?.roomId && Array.isArray(data.roomReward.choices) ? clone(data.roomReward) : null
+      this.roomRewardBag = Array.isArray(data.roomRewardBag) && data.roomRewardBag.every((type) => type === 'supply' || type === 'relic')
+        ? [...data.roomRewardBag]
+        : shuffled(['supply', 'supply', 'supply', 'relic'], this.random)
+      this.levelUp = Array.isArray(data.levelUp?.choices)
+        ? {
+            choices: data.levelUp.choices.filter((id) => !!getLevelUpOption(id)),
+            adaptationHand: [0, 1].includes(data.levelUp.adaptationHand) ? data.levelUp.adaptationHand : null,
+          }
+        : null
       this.relicEventQueue = []
       this.relicRuntime = data.relicRuntime && typeof data.relicRuntime === 'object' ? clone(data.relicRuntime) : {}
       this.stealthTurns = Math.max(0, Number(data.stealthTurns) || 0)
@@ -1281,7 +1483,12 @@ export class GameRun {
       }
       if (this.phase === 'reward' && (!this.roomReward || this.roomReward.roomId !== this.currentRoom?.id)) this.phase = 'explore'
       if (this.phase !== 'reward') this.roomReward = null
-      if (this.initialRelicChoices.length > 0) this.phase = 'explore'
+      if (this.phase === 'level-up' && !this.levelUp?.choices.length) this.phase = 'explore'
+      if (this.phase !== 'level-up') this.levelUp = null
+      if (this.initialRelicChoices.length > 0) {
+        this.phase = 'explore'
+        this.levelUp = null
+      } else if (this.phase === 'explore') this._queueLevelUp()
       return true
     } catch {
       return false

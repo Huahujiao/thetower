@@ -6,7 +6,7 @@ import '../wiki.css'
 const COPY = Object.freeze({
   title: '\u5730\u7262\u56fe\u9274',
   subtitle: '\u5730\u7262\u5185\u5bb9\u56fe\u9274',
-  summary: '\u56db\u5c5e\u6027\u5faa\u73af\u3001\u56fa\u5b9a\u654c\u4eba\u6570\u503c\u4e0e\u5f62\u72b6\u80cc\u5305\u5171\u540c\u6784\u6210\u5730\u7262\u7684\u8def\u7ebf\u9009\u62e9\u3002',
+  summary: '\u56db\u5c5e\u6027\u3001\u89d2\u8272\u6210\u957f\u3001\u5723\u9057\u7269\u6784\u7b51\u4e0e\u5f62\u72b6\u80cc\u5305\u5171\u540c\u6784\u6210\u5730\u7262\u7684\u8def\u7ebf\u9009\u62e9\u3002',
   implemented: '\u5df2\u5b9e\u88c5',
   proposed: '\u5f85\u786e\u8ba4\uff0f\u672a\u5b9e\u88c5',
   back: '\u8fd4\u56de\u5730\u7262',
@@ -41,6 +41,11 @@ const COPY = Object.freeze({
   nextMeleeAttack: '\u4e0b\u6b21\u8fd1\u6218\u653b\u51fb',
   repair: '\u4fee\u590d\u8010\u4e45',
   loot: '\u6389\u843d',
+  experience: '\u7ecf\u9a8c',
+  relicChance: '\u5723\u9057\u7269\u6389\u843d',
+  relicSources: '\u83b7\u53d6\u6765\u6e90',
+  activeLimit: '\u540c\u65f6\u6fc0\u6d3b\u4e0a\u9650',
+  autoActivate: '\u83b7\u5f97\u89c4\u5219',
   enemyDrop: '\u654c\u4eba\u6389\u843d',
   futureRule: '\u9884\u8ba1\u89c4\u5219',
   oneHanded: '\u5355\u624b',
@@ -186,7 +191,9 @@ function enemyCards() {
       stat(COPY.attribute, attributeLabel(enemy.attribute)),
       stat(COPY.behaviorTraits, [label(enemy.behavior), ...(enemy.traits || []).map(label), enemy.deathRule ? label(enemy.deathRule) : ''].filter(Boolean).join(' \u00b7 ')),
       stat(COPY.floor, enemy.spawnOnly ? COPY.spawn : enemy.minFloor),
+      !enemy.spawnOnly && !enemy.boss ? stat(COPY.experience, enemy.experience || 0) : '',
       enemy.drop ? stat(COPY.loot, `${Math.round(enemy.drop.chance * 100)}% \u00b7 ${lootById.get(enemy.drop.itemId)?.name || enemy.drop.itemId}`) : '',
+      !enemy.spawnOnly && !enemy.boss && enemy.relicDropChance ? stat(COPY.relicChance, `${Math.round(enemy.relicDropChance * 100)}%`) : '',
     ],
   })).join('') + proposalCards('enemies')
 }
@@ -210,7 +217,19 @@ function weaponCards() {
 }
 
 function relicCards() {
-  return RELIC_DEFS.map((relic) => card({
+  const system = card({
+    tone: 'tone-relic',
+    tag: COPY.relic,
+    title: '\u5723\u9057\u7269\u83b7\u53d6\u4e0e\u6fc0\u6d3b',
+    description: '\u623f\u95f4\u5956\u52b1\u3001\u6536\u85cf\u5bb6\u4e0e\u602a\u7269\u6389\u843d\u5747\u53ef\u83b7\u5f97\u5723\u9057\u7269\u3002\u672a\u8fbe\u4e0a\u9650\u65f6\u65b0\u83b7\u5f97\u7684\u5723\u9057\u7269\u4f1a\u7acb\u5373\u6fc0\u6d3b\uff1b\u53ef\u5728\u5546\u4eba\u6216\u6536\u85cf\u5bb6\u5904\u8c03\u6574\u3002',
+    accent: '\u2726',
+    stats: [
+      stat(COPY.relicSources, '\u623f\u95f4\u5956\u52b1 \u00b7 \u6536\u85cf\u5bb6 \u00b7 \u602a\u7269\u6389\u843d'),
+      stat(COPY.activeLimit, '5'),
+      stat(COPY.autoActivate, '\u672a\u6ee1 5 \u4ef6\u65f6\u7acb\u5373\u6fc0\u6d3b'),
+    ],
+  })
+  return system + RELIC_DEFS.map((relic) => card({
     tone: 'tone-relic',
     tag: COPY.relic,
     title: relic.name,

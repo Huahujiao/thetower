@@ -1,5 +1,5 @@
 import { EQUIPMENT_SLOTS, GameRun, INVENTORY_COLUMNS, INVENTORY_ROWS, SAVE_KEY } from '../src/game/run.js'
-import { neighbors8, pos } from '../src/game/core/geometry.js'
+import { isAdjacent8, neighbors8, pos } from '../src/game/core/geometry.js'
 import { Room } from '../src/game/model/room.js'
 import { BackpackGrid } from '../src/game/model/backpack.js'
 import { createEnemyById, createMonster, makeItemById, randomItem, resetEntityIds } from '../src/game/data/content.js'
@@ -12,6 +12,7 @@ import { attackAttributeModifier, computeAttackDamage } from '../src/game/rules/
 import { ENEMY_BEHAVIORS, stepEnemy } from '../src/game/rules/enemies.js'
 import { findAttackPath, findPath, findRevealPath } from '../src/game/rules/pathfinding.js'
 import { createTrapEntity } from '../src/game/data/traps.js'
+import { experienceToNextLevel, masteryPreservationChance } from '../src/game/data/progression.js'
 
 function assert(condition, message) {
   if (!condition) throw new Error(message)
@@ -71,6 +72,7 @@ assert(catalog.enemies.find((enemy) => enemy.id === 'gnawer')?.initialActionDela
 assert(catalog.enemies.find((enemy) => enemy.id === 'nest-spider')?.minFloor === 3, 'nest spider must first appear on floor three')
 assert(catalog.enemies.every((enemy) => Number.isInteger(enemy.initialActionDelay) && enemy.initialActionDelay >= 0), 'every enemy must define its own initial action delay')
 assert(catalog.enemies.every((enemy) => Number.isInteger(enemy.hp) && Number.isInteger(enemy.attack) && !('hpBase' in enemy) && !('attackBase' in enemy)), 'enemy attributes must be fixed static values rather than floor-scaled values')
+assert(catalog.enemies.filter((enemy) => !enemy.spawnOnly).every((enemy) => Number.isInteger(enemy.experience) && enemy.experience > 0 && enemy.relicDropChance > 0), 'every natural enemy must author its experience and relic-drop probability')
 const floorFourGnawer = createMonster(4, 0)
 assert(floorFourGnawer?.enemyId === 'gnawer' && floorFourGnawer.hp === 4 && floorFourGnawer.attack === 4, 'a gnawer on a later floor must retain its fixed 4 HP and 4 attack')
 for (let floor = 1; floor <= 4; floor += 1) {
@@ -100,7 +102,7 @@ for (const type of ['weapon', 'potion', 'armor', 'buff', 'whetstone']) {
 }
 assert([...run.dungeon.edges.values()].filter((edge) => edge.locked).length === 2, 'expected configured locked doors')
 const merchants = [...run.dungeon.rooms.values()].flatMap((room) => [...room.entities.values()].filter((entity) => entity.kind === 'merchant'))
-assert(merchants.length === 3 && new Set(merchants.map((merchant) => merchant.merchantId)).size === 3, 'expected three distinct room merchants')
+assert(merchants.length === 3 && merchants.filter((merchant) => merchant.merchantId === 'merchant').length === 2 && merchants.filter((merchant) => merchant.merchantId === 'collector').length === 1, 'expected two merchants and one collector')
 for (const edge of run.dungeon.edges.values()) {
   if (!edge.locked) continue
   const source = run.dungeon.room(edge.fromRoomId)
@@ -236,9 +238,14 @@ const arrivalDoor = doorRun.dungeon.otherDoor(door)
 assert(doorRun.currentRoom.isRevealed(arrivalDoor.arrival), 'arrival tile did not auto-reveal')
 assert(doorRun.currentRoom.isRevealed(arrivalDoor.pos), 'the entered door must reveal in the destination room')
 assert(doorRun.phase === 'reward' && doorRun.roomReward?.choices.length === 3, 'first arrival in a room did not open a room reward')
+assert(doorRun.roomReward.type === 'supply' && doorRun.roomReward.choices.filter((choice) => choice.kind === 'item').length >= 2, 'supply reward did not create its authored three-way choice')
 const roomItemRewardIndex = doorRun.roomReward.choices.findIndex((choice) => choice.kind === 'item')
 assert(roomItemRewardIndex >= 0 && doorRun.chooseRoomReward(roomItemRewardIndex), 'room item reward could not be claimed')
 assert(doorRun.phase === 'explore' && !doorRun.roomReward, 'claiming a room reward did not return to exploration')
+
+const rewardBagRun = new GameRun({ autoLoad: false, random: () => 0.5 })
+rewardBagRun.roomRewardBag = ['supply', 'supply', 'supply', 'relic']
+assert(['supply', 'supply', 'supply', 'relic'].every((type) => rewardBagRun._drawRoomRewardType() === type), 'room reward bag must contain three supplies and one relic reward')
 
 const keyRun = new GameRun({ autoLoad: false, random: () => 0.5 })
 keyRun.chooseInitialRelic(keyRun.initialRelicChoices[0])
@@ -267,7 +274,7 @@ assert(combatRun.player.hp < hpBefore, 'ready enemy did not act on the turn step
 
 const merchantRun = new GameRun({ autoLoad: false, random: () => 0.5 })
 merchantRun.chooseInitialRelic(merchantRun.initialRelicChoices[0])
-openMerchant(merchantRun, 'peddler')
+openMerchant(merchantRun, 'merchant')
 merchantRun.player.gold = 20
 const merchantItemsBefore = merchantRun.backpack.items.length
 assert(merchantRun.buyMerchantItem(0), 'merchant item purchase was rejected')
@@ -281,20 +288,20 @@ assert(merchantRun.sellSelectedMerchantItem() && merchantRun.player.gold > goldB
 const refreshPrice = merchantRun.merchantEntity.restockPrice
 merchantRun.player.gold = Math.max(merchantRun.player.gold, refreshPrice)
 assert(merchantRun.refreshMerchantInventory(), 'merchant could not refresh all stock for gold')
-const inactiveRelic = RELIC_DEFS.find((definition) => !merchantRun.relics.has(definition.id))
-assert(inactiveRelic && merchantRun.acquireRelic(inactiveRelic.id), 'could not acquire an inactive relic for merchant test')
-assert(merchantRun.activateRelic(inactiveRelic.id), 'merchant did not enable relic activation')
-assert(merchantRun.deactivateRelic(inactiveRelic.id), 'merchant did not enable relic deactivation')
+const ownedRelic = RELIC_DEFS.find((definition) => !merchantRun.relics.has(definition.id))
+assert(ownedRelic && merchantRun.acquireRelic(ownedRelic.id)?.active, 'new relics must activate while capacity remains')
+assert(merchantRun.deactivateRelic(ownedRelic.id), 'merchant did not enable relic deactivation')
+assert(merchantRun.activateRelic(ownedRelic.id), 'merchant did not enable relic activation')
 merchantRun.closeMerchant()
-openMerchant(merchantRun, 'curator')
-assert(merchantRun.canManageRelics(), 'curator did not enable relic management')
-assert(merchantRun.merchantEntity.relicChoices.length === 3, 'curator did not offer three relic choices')
+openMerchant(merchantRun, 'collector')
+merchantRun.player.gold = 20
+assert(merchantRun.canManageRelics(), 'collector did not enable relic management')
+assert(merchantRun.merchantEntity.relicChoices.length === 3, 'collector did not offer three relic choices')
 const offeredRelic = merchantRun.merchantEntity.relicChoices[0]
-assert(merchantRun.chooseMerchantRelic(offeredRelic), 'curator relic choice was rejected')
-assert(merchantRun.relics.has(offeredRelic) && !merchantRun.relics.isActive(offeredRelic), 'curator relic choice should enter inactive collection')
-assert(merchantRun.activateRelic(inactiveRelic.id), 'curator could not activate owned relic')
-assert(merchantRun.relics.isActive(inactiveRelic.id), 'curator activation did not persist')
-assert(merchantRun.deactivateRelic(inactiveRelic.id), 'curator could not deactivate active relic')
+assert(merchantRun.chooseMerchantRelic(offeredRelic), 'collector relic choice was rejected')
+assert(merchantRun.relics.has(offeredRelic) && merchantRun.relics.isActive(offeredRelic), 'collector relic choice should auto-activate below capacity')
+assert(merchantRun.confirmRelicLoadout(), 'collector relic configuration could not be confirmed')
+assert(!merchantRun.canManageRelics() && merchantRun.canSellAtMerchant(), 'confirmation did not lock only relic management')
 
 const dualWeaponRun = new GameRun({ autoLoad: false, random: () => 0.5 })
 dualWeaponRun.chooseInitialRelic(dualWeaponRun.initialRelicChoices[0])
@@ -418,6 +425,8 @@ const diagonalGoal = pos(1, 1)
 pathRoom.reveal(diagonalStart)
 pathRoom.reveal(diagonalGoal)
 assert(findPath(pathRoom, diagonalStart, diagonalGoal)?.length === 1, 'eight-direction pathfinding is not active')
+assert(isAdjacent8(diagonalStart, diagonalGoal) && isAdjacent8(diagonalStart, pos(1, 0)), 'adjacent card targets were not recognized')
+assert(!isAdjacent8(diagonalStart, diagonalStart) && !isAdjacent8(diagonalStart, pos(2, 0)), 'only eight-neighbor card targets may skip confirmation')
 assert(findAttackPath(pathRoom, diagonalStart, { pos: diagonalGoal }, [{ range: 1 }])?.path.length === 0, 'melee must attack a diagonal target without moving')
 
 const scorchBackRoom = new Room({ id: 'attribute-back-test', floor: 1, width: 1, height: 1, random: () => 0 })
@@ -465,6 +474,34 @@ function clearedEnemyRun(random = () => 0.5) {
   return { testRun, room }
 }
 
+const { testRun: progressionRun, room: progressionRoom } = clearedEnemyRun(() => 0.5)
+progressionRun.player.experience = progressionRun.player.experienceToNext - 2
+const progressionEnemy = createEnemyById('gnawer', pos(3, 0))
+progressionRoom.addEntity(progressionEnemy)
+assert(progressionRun._defeatEnemy(progressionEnemy) && progressionRun.phase === 'level-up' && progressionRun.levelUp?.choices.length === 3, 'natural enemy experience did not create a three-choice level-up')
+const growthChoice = progressionRun.levelUp.choices[0]
+assert(progressionRun.chooseLevelUpOption(growthChoice), 'level-up choice was rejected')
+if (progressionRun.levelUp?.adaptationHand != null) assert(progressionRun.chooseAdaptation('scorch'), 'attribute adaptation follow-up was rejected')
+assert(progressionRun.player.level === 2 && progressionRun.player.experience === 0 && progressionRun.player.experienceToNext === experienceToNextLevel(2), 'level-up did not advance the progression state')
+
+const { testRun: bareHandRun, room: bareHandRoom } = clearedEnemyRun()
+bareHandRun.player.equipment = [null, null]
+const bareHandEnemy = createEnemyById('gnawer', pos(1, 0))
+bareHandRoom.addEntity(bareHandEnemy)
+const bareHandHp = bareHandEnemy.hp
+assert(bareHandRun.clickTile(1, 0) && bareHandEnemy.hp === bareHandHp - 1, 'unarmed attack must deal exactly one damage')
+
+const { testRun: masteryRun, room: masteryRoom } = clearedEnemyRun(() => 0.4)
+masteryRun.player.mastery[0] = 10
+masteryRun.player.strength[0] = 2
+masteryRun.player.equipment[0].durability = 1
+const masteryEnemy = createEnemyById('gnawer', pos(1, 0))
+masteryEnemy.hp = 99
+masteryEnemy.maxHp = 99
+masteryRoom.addEntity(masteryEnemy)
+const masteryHp = masteryEnemy.hp
+assert(masteryRun.clickTile(1, 0) && masteryRun.player.equipment[0].durability === 1 && masteryEnemy.hp === masteryHp - 6, 'mastery did not preserve durability and cancel the last-durability penalty')
+
 const authoredDrops = {
   gnawer: [0.25, 'rough-bone-club'], 'nest-spider': [0.35, 'venom-sac'], 'beetle-guard': [0.35, 'shell-fragment'], 'rot-walker': [0.2, 'rusty-dagger'],
   wisp: [0.6, 'spectral-short-spear'], shellguard: [0.6, 'notched-war-hammer'], 'patrol-hound': [0.25, 'beast-fang'], broodmother: [0.4, 'worm-glue'],
@@ -484,6 +521,7 @@ guaranteedDropRoom.addEntity(guaranteedDropEnemy)
 assert(guaranteedDropRun._defeatEnemy(guaranteedDropEnemy), 'authored enemy drop kill was rejected')
 const guaranteedDrop = guaranteedDropRoom.entityAt(pos(3, 0))
 assert(guaranteedDrop?.kind === 'item' && guaranteedDrop.item.id === 'rough-bone-club' && guaranteedDrop.item.durability === 1 && !guaranteedDrop.item.temporary, 'gnawer did not leave its authored rough bone club')
+assert(guaranteedDropRun.relics.entries.length === 1, 'relic drops must resolve independently from normal enemy loot')
 
 const { testRun: missedDropRun, room: missedDropRoom } = clearedEnemyRun(() => 0.999)
 const missedDropEnemy = createEnemyById('gnawer', pos(3, 0))
@@ -551,14 +589,18 @@ assert(!relicCapacity.activate(RELIC_DEFS[5].id) && relicCapacity.active.length 
 const scorchWeapon = { name: 'test', attack: 5, attribute: 'scorch', durability: 3 }
 const slimeTarget = { attribute: 'slime' }
 assert(attributeModifier('scorch', 'slime').countered && attributeModifier('slime', 'crystal').countered && attributeModifier('crystal', 'tide').countered && attributeModifier('tide', 'scorch').countered, 'attribute counter cycle is invalid')
+assert(attributeModifier('scorch', 'slime', { adapted: true }).multiplier === 1.8 && attributeModifier('scorch', 'tide', { adapted: true }).multiplier === 0.8, 'attribute adaptation did not replace the normal multipliers')
 assert(computeAttackDamage({ weapon: scorchWeapon, target: slimeTarget }).damage === 8, 'attribute counter damage multiplier is invalid')
 assert(computeAttackDamage({ weapon: { ...scorchWeapon, durability: 1 }, target: slimeTarget }).damage === 4, 'last durability penalty is invalid')
+assert(computeAttackDamage({ weapon: { ...scorchWeapon, durability: 1 }, target: slimeTarget, strengthBonus: 2, ignoreLastDurability: true }).damage === 11, 'strength or preserved durability did not apply before attribute resolution')
 assert(computeAttackDamage({ weapon: scorchWeapon, target: { attribute: 'tide' } }).damage === 3, 'attribute resistance multiplier is invalid')
+assert(masteryPreservationChance(0) === 0 && masteryPreservationChance(10) === 0.5, 'weapon mastery probability does not follow its authored formula')
 
 const relicRun = new GameRun({ autoLoad: false, random: () => 0.5 })
 relicRun.initialRelicChoices = ['r-last-edge']
 assert(relicRun.chooseInitialRelic('r-last-edge')?.active, 'initial relic acquisition did not activate')
-assert(!relicRun.acquireRelic('r-hunter-mark')?.active, 'later relic acquisition must remain inactive')
+assert(relicRun.acquireRelic('r-hunter-mark')?.active, 'later relic acquisition must auto-activate below capacity')
+assert(relicRun.relics.deactivate('r-hunter-mark'), 'test setup could not isolate the last-durability relic')
 const damagedWeapon = { ...scorchWeapon, durability: 1 }
 const type = attackAttributeModifier(damagedWeapon, slimeTarget)
 const relicModifiers = relicRun.relicEngine.damageModifiers({
@@ -584,9 +626,16 @@ Object.defineProperty(globalThis, 'localStorage', {
 try {
   const persistenceRun = new GameRun({ autoLoad: false, random: () => 0.5 })
   persistenceRun.chooseInitialRelic(persistenceRun.initialRelicChoices[0])
+  persistenceRun.player.level = 3
+  persistenceRun.player.experience = 4
+  persistenceRun.player.experienceToNext = experienceToNextLevel(3)
+  persistenceRun.player.strength = [2, 1]
+  persistenceRun.player.mastery = [3, 0]
+  persistenceRun.player.adaptations = ['scorch', null]
+  persistenceRun.roomRewardBag = ['relic', 'supply']
   const persistedEdge = [...persistenceRun.dungeon.edges.values()].find((edge) => edge.locked)
   persistedEdge.unlocked = true
-  openMerchant(persistenceRun, 'smith')
+  openMerchant(persistenceRun, 'merchant')
   persistenceRun.player.gold = 20
   assert(persistenceRun.buyMerchantItem(0), 'could not prepare merchant persistence state')
   const persistedGold = persistenceRun.player.gold
@@ -598,7 +647,8 @@ try {
   resetEntityIds()
   const restoredRun = new GameRun({ autoLoad: true, random: () => 0.5 })
   assert(restoredRun.player.gold === persistedGold && restoredRun.dungeon.edge(persistedEdge.id).unlocked, 'player or locked-door state did not persist')
-  assert(restoredRun.phase === 'merchant' && restoredRun.merchantEntity?.merchantId === 'smith', 'open merchant state did not restore')
+  assert(restoredRun.player.level === 3 && restoredRun.player.strength[0] === 2 && restoredRun.player.mastery[0] === 3 && restoredRun.player.adaptations[0] === 'scorch' && restoredRun.roomRewardBag.join(',') === 'relic,supply', 'progression or reward-bag state did not persist')
+  assert(restoredRun.phase === 'merchant' && restoredRun.merchantEntity?.merchantId === 'merchant', 'open merchant state did not restore')
   assert(restoredRun.merchantEntity.stock[0]?.itemId && !restoredRun.merchantEntity.stock[0].sold, 'merchant stock refresh did not persist')
   const generatedAfterLoad = makeItemById('small-potion')
   assert(!savedIdentifiers.has(generatedAfterLoad.uid), 'loaded save reused an existing item identifier')
