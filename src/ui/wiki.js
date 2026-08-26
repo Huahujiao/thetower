@@ -5,7 +5,8 @@ import '../wiki.css'
 
 const COPY = Object.freeze({
   title: '\u5730\u7262\u56fe\u9274',
-  subtitle: '\u5df2\u5b9e\u88c5\u4e0e\u5f85\u786e\u8ba4\u5185\u5bb9',
+  subtitle: '\u5730\u7262\u5185\u5bb9\u56fe\u9274',
+  summary: '\u56db\u5c5e\u6027\u5faa\u73af\u3001\u56fa\u5b9a\u654c\u4eba\u6570\u503c\u4e0e\u5f62\u72b6\u80cc\u5305\u5171\u540c\u6784\u6210\u5730\u7262\u7684\u8def\u7ebf\u9009\u62e9\u3002',
   implemented: '\u5df2\u5b9e\u88c5',
   proposed: '\u5f85\u786e\u8ba4\uff0f\u672a\u5b9e\u88c5',
   back: '\u8fd4\u56de\u5730\u7262',
@@ -98,12 +99,12 @@ const PROPOSALS = Object.freeze({
     {
       tone: 'tone-enemy', tag: COPY.enemy, title: '\u8ffd\u730e\u8005', accent: '\u2020',
       description: '\u7ffb\u5f00\u540e\u4f1a\u6cbf\u6700\u77ed\u8def\u5f84\u671d\u73a9\u5bb6\u9760\u8fd1\uff0c\u76f4\u5230\u8fdb\u5165\u8fd1\u6218\u8303\u56f4\u3002',
-      stats: [[COPY.health, '6+2\u00b7(F-2)'], [COPY.attack, '3+1\u00b7(F-2)'], [COPY.range, `1 ${COPY.cell}`], [COPY.delay, `1 ${COPY.turn}`], [COPY.interval, `1 ${COPY.turn}`], [COPY.futureRule, '\u707c\u70ed \u00b7 \u8ffd\u51fb']],
+      stats: [[COPY.health, '8'], [COPY.attack, '4'], [COPY.range, `1 ${COPY.cell}`], [COPY.delay, `1 ${COPY.turn}`], [COPY.interval, `1 ${COPY.turn}`], [COPY.futureRule, '\u707c\u70ed \u00b7 \u8ffd\u51fb']],
     },
     {
       tone: 'tone-enemy', tag: COPY.enemy, title: '\u89c2\u671b\u8005', accent: '\u25ce',
       description: '\u4e0d\u79fb\u52a8\uff0c\u4f46\u5728\u5c04\u7a0b\u5185\u4f1a\u538b\u7f29\u73a9\u5bb6\u7684\u8def\u7ebf\u9009\u62e9\u3002',
-      stats: [[COPY.health, '5+1\u00b7(F-3)'], [COPY.attack, '2+1\u00b7(F-3)'], [COPY.range, `3 ${COPY.cell}`], [COPY.delay, `1 ${COPY.turn}`], [COPY.interval, `2 ${COPY.turn}`], [COPY.futureRule, '\u6e4d\u6d41 \u00b7 \u8fdc\u7a0b\u76d1\u89c6']],
+      stats: [[COPY.health, '7'], [COPY.attack, '3'], [COPY.range, `3 ${COPY.cell}`], [COPY.delay, `1 ${COPY.turn}`], [COPY.interval, `2 ${COPY.turn}`], [COPY.futureRule, '\u6e4d\u6d41 \u00b7 \u8fdc\u7a0b\u76d1\u89c6']],
     },
     {
       tone: 'tone-boss', tag: COPY.boss, title: '\u4e0d\u706d\u76d1\u89c6\u8005', accent: '\u2620',
@@ -264,7 +265,7 @@ export class WikiPage {
     this.root.innerHTML = `<main class="wiki-shell">
       <header class="wiki-header">
         <a class="wiki-back" href="/" aria-label="${COPY.back}">\u2190</a>
-        <div><div class="wiki-kicker">${COPY.subtitle}</div><h1>${COPY.title}</h1></div>
+        <div><div class="wiki-kicker">${COPY.subtitle}</div><h1>${COPY.title}</h1><p class="wiki-summary">${COPY.summary}</p></div>
       </header>
       <nav class="wiki-tabs" role="tablist">${TABS.map((tab) => `<button data-wiki-tab="${tab.id}" role="tab">${tab.label}</button>`).join('')}</nav>
       <section class="wiki-content" data-wiki-content></section>

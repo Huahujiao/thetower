@@ -23,7 +23,7 @@ src/
 └─ wiki.css       图鉴页面样式
 ```
 
-静态内容在 `src/game/data/catalog.json`、`relics.js`、`merchants.js` 与 `traps.js` 中维护。游戏运行时只从这些定义生成实体；敌人、武器和物品不按序号或临时规则随机编造属性。
+静态内容在 `src/game/data/catalog.json`、`relics.js`、`merchants.js` 与 `traps.js` 中维护。游戏运行时从这些定义生成敌人、武器、物品、商人、陷阱与圣遗物效果。
 
 ## 存档
 
@@ -44,4 +44,3 @@ npm.cmd run build
 - `build` 确认生产构建可完成。
 
 视觉验收不作为日常自动检查的一部分；本项目的交付前基础验证以以上三项命令为准。
-
