@@ -1,5 +1,6 @@
 import catalog from '../game/data/catalog.json' with { type: 'json' }
 import { attributeLabel } from '../game/data/attributes.js'
+import { enemyActiveSkillLabel, enemyBehaviorLabel, enemyFeatureLabel } from '../game/data/enemy-features.js'
 import { RELIC_DEFS } from '../game/data/relics.js'
 import '../wiki.css'
 
@@ -30,9 +31,12 @@ const COPY = Object.freeze({
   grip: '\u63e1\u6301',
   attribute: '\u5c5e\u6027',
   floor: '\u6700\u65e9\u51fa\u73b0\u697c\u5c42',
-  delay: '\u521d\u6b21\u884c\u52a8\u5ef6\u8fdf',
-  interval: '\u884c\u52a8\u95f4\u9694',
-  behaviorTraits: '\u884c\u4e3a\u4e0e\u7279\u6027',
+  delay: '\u884c\u52a8\u5ef6\u8fdf',
+  interval: '\u666e\u901a\u653b\u51fb\u51b7\u5374',
+  normalAttackCooldown: '\u666e\u901a\u653b\u51fb\u51b7\u5374',
+  activeSkillCooldown: '\u4e3b\u52a8\u6280\u80fd\u51b7\u5374',
+  behavior: '\u884c\u4e3a',
+  features: '\u7279\u6027',
   active: '\u4e3b\u52a8\u6280\u80fd',
   cooldown: '\u51b7\u5374',
   healing: '\u6062\u590d\u751f\u547d',
@@ -56,7 +60,6 @@ const COPY = Object.freeze({
   tide: '\u6e4d\u6d41',
   stationary: '\u9a7b\u5b88',
   chaser: '\u8ffd\u730e',
-  patrol: '\u5de1\u903b',
   ambush: '\u4f0f\u51fb',
   summoner: '\u53ec\u5524',
   selfDestruct: '\u81ea\u7206',
@@ -140,6 +143,16 @@ const PROPOSALS = Object.freeze({
       description: '\u7a7f\u8fc7\u623f\u95f4\u95e8\u540e\uff0c\u4f7f\u65b0\u623f\u95f4\u7684\u7b2c\u4e00\u4e2a\u654c\u4eba\u591a\u5ef6\u8fdf 1 \u56de\u5408\u3002',
       stats: [[COPY.futureRule, '\u65e0\u6cd5\u9632\u6b62\u6781\u901f\u654c\u4eba\u7ffb\u724c\u65f6\u7684\u7b2c\u4e00\u51fb']],
     },
+    {
+      tone: 'tone-relic', tag: COPY.relic, title: '\u90bb\u57df\u6362\u4f4d', accent: '\u2726',
+      description: '\u4ea4\u6362\u89d2\u8272\u5468\u56f4 8 \u90bb\u57df\u5361\u724c\u4e0e\u968f\u673a\u5c0f\u533a\u57df\u3002',
+      stats: [[COPY.futureRule, '\u5df2\u786e\u8ba4\u6548\u679c\uff0c\u6682\u7f13\u5b9e\u73b0\uff1b\u9700\u8981\u5b9a\u4e49\u6362\u724c\u4e0e\u5173\u952e\u5b9e\u4f53\u4fdd\u62a4\u89c4\u5219']],
+    },
+    {
+      tone: 'tone-relic', tag: COPY.relic, title: '\u654c\u4f4d\u6362\u4f4d', accent: '\u2726',
+      description: '\u653b\u51fb\u540e\u5c06\u654c\u4eba\u4ea4\u6362\u81f3\u968f\u673a\u4f4d\u7f6e\u3002',
+      stats: [[COPY.futureRule, '\u5df2\u786e\u8ba4\u6548\u679c\uff0c\u6682\u7f13\u5b9e\u73b0\uff1b\u9700\u8981\u5b9a\u4e49\u76ee\u6807\u5361\u3001\u7ffb\u5f00\u72b6\u6001\u4e0e\u5b9e\u4f53\u4ea4\u6362\u8bed\u4e49']],
+    },
   ],
   items: [
     {
@@ -187,9 +200,12 @@ function enemyCards() {
       stat(COPY.attack, enemy.attack),
       stat(COPY.range, `${enemy.range} ${COPY.cell}\uff08${COPY.manhattan}\uff09`),
       stat(COPY.delay, `${enemy.initialActionDelay} ${COPY.turn}`),
-      stat(COPY.interval, `${enemy.cooldownMax} ${COPY.turn}`),
+      stat(COPY.normalAttackCooldown, `${enemy.attackCooldownMax || 0} ${COPY.turn}`),
+      enemy.activeSkill ? stat(COPY.active, enemyActiveSkillLabel(enemy.activeSkill)) : '',
+      enemy.activeSkill ? stat(COPY.activeSkillCooldown, `${enemy.activeSkill.cooldown || 0} ${COPY.turn}`) : '',
       stat(COPY.attribute, attributeLabel(enemy.attribute)),
-      stat(COPY.behaviorTraits, [label(enemy.behavior), ...(enemy.traits || []).map(label), enemy.deathRule ? label(enemy.deathRule) : ''].filter(Boolean).join(' \u00b7 ')),
+      stat(COPY.behavior, enemyBehaviorLabel(enemy.behavior)),
+      enemyFeatureLabel(enemy) ? stat(COPY.features, enemyFeatureLabel(enemy)) : '',
       stat(COPY.floor, enemy.spawnOnly ? COPY.spawn : enemy.minFloor),
       !enemy.spawnOnly && !enemy.boss ? stat(COPY.experience, enemy.experience || 0) : '',
       enemy.drop ? stat(COPY.loot, `${Math.round(enemy.drop.chance * 100)}% \u00b7 ${lootById.get(enemy.drop.itemId)?.name || enemy.drop.itemId}`) : '',

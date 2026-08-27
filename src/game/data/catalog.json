@@ -12,7 +12,7 @@
       "experience": 2,
       "relicDropChance": 0.015,
       "drop": { "chance": 0.25, "itemId": "rough-bone-club" },
-      "cooldownMax": 1,
+      "attackCooldownMax": 1,
       "initialActionDelay": 1
     },
     {
@@ -27,7 +27,7 @@
       "experience": 3,
       "relicDropChance": 0.04,
       "drop": { "chance": 0.35, "itemId": "venom-sac" },
-      "cooldownMax": 2,
+      "attackCooldownMax": 2,
       "initialActionDelay": 0
     },
     {
@@ -43,7 +43,7 @@
       "experience": 2,
       "relicDropChance": 0.02,
       "drop": { "chance": 0.35, "itemId": "shell-fragment" },
-      "cooldownMax": 2,
+      "attackCooldownMax": 2,
       "initialActionDelay": 1
     },
     {
@@ -58,7 +58,7 @@
       "experience": 2,
       "relicDropChance": 0.02,
       "drop": { "chance": 0.2, "itemId": "rusty-dagger" },
-      "cooldownMax": 1,
+      "attackCooldownMax": 1,
       "initialActionDelay": 1
     },
     {
@@ -75,7 +75,7 @@
       "experience": 4,
       "relicDropChance": 0.06,
       "drop": { "chance": 0.6, "itemId": "notched-war-hammer" },
-      "cooldownMax": 3,
+      "attackCooldownMax": 3,
       "initialActionDelay": 1
     },
     {
@@ -90,7 +90,7 @@
       "experience": 3,
       "relicDropChance": 0.03,
       "drop": { "chance": 0.6, "itemId": "spectral-short-spear" },
-      "cooldownMax": 1,
+      "attackCooldownMax": 1,
       "initialActionDelay": 1
     },
     {
@@ -98,14 +98,14 @@
       "name": "\u5de1\u8def\u72ac",
       "minFloor": 2,
       "attribute": "scorch",
-      "behavior": "patrol",
+      "behavior": "chaser",
       "range": 1,
       "hp": 6,
       "attack": 4,
       "experience": 3,
       "relicDropChance": 0.03,
       "drop": { "chance": 0.25, "itemId": "beast-fang" },
-      "cooldownMax": 1,
+      "attackCooldownMax": 1,
       "initialActionDelay": 1
     },
     {
@@ -123,7 +123,7 @@
       "experience": 4,
       "relicDropChance": 0.06,
       "drop": { "chance": 0.4, "itemId": "worm-glue" },
-      "cooldownMax": 2,
+      "attackCooldownMax": 2,
       "initialActionDelay": 1
     },
     {
@@ -141,7 +141,7 @@
       "experience": 4,
       "relicDropChance": 0.06,
       "drop": { "chance": 0.45, "itemId": "moss-ointment" },
-      "cooldownMax": 2,
+      "attackCooldownMax": 2,
       "initialActionDelay": 1
     },
     {
@@ -149,7 +149,7 @@
       "name": "\u54e8\u6212\u5f29\u624b",
       "minFloor": 3,
       "attribute": "crystal",
-      "behavior": "patrol",
+      "behavior": "chaser",
       "range": 3,
       "hp": 8,
       "attack": 6,
@@ -157,7 +157,7 @@
       "experience": 4,
       "relicDropChance": 0.06,
       "drop": { "chance": 0.6, "itemId": "worn-shortbow" },
-      "cooldownMax": 2,
+      "attackCooldownMax": 2,
       "initialActionDelay": 1
     },
     {
@@ -174,7 +174,7 @@
       "experience": 4,
       "relicDropChance": 0.06,
       "drop": { "chance": 0.5, "itemId": "tombguard-shortsword" },
-      "cooldownMax": 2,
+      "attackCooldownMax": 2,
       "initialActionDelay": 1
     },
     {
@@ -182,7 +182,8 @@
       "name": "\u81ea\u7206\u706f\u7075",
       "minFloor": 4,
       "attribute": "scorch",
-      "behavior": "self-destruct",
+      "behavior": "stationary",
+      "activeSkill": { "id": "self-destruct", "cooldown": 3 },
       "explosionRadius": 2,
       "earlyExplosionDamage": 6,
       "range": 2,
@@ -191,16 +192,16 @@
       "elite": true,
       "experience": 4,
       "relicDropChance": 0.06,
-      "cooldownMax": 1,
-      "initialActionDelay": 1
+      "attackCooldownMax": 1,
+      "initialActionDelay": 3
     },
     {
       "id": "bone-priest",
       "name": "\u5524\u9aa8\u796d\u53f8",
       "minFloor": 4,
       "attribute": "tide",
-      "behavior": "summoner",
-      "summon": { "minionId": "skeleton-minion", "interval": 3 },
+      "behavior": "stationary",
+      "activeSkill": { "id": "summon", "minionId": "skeleton-minion", "cooldown": 3 },
       "range": 0,
       "hp": 10,
       "attack": 0,
@@ -208,7 +209,7 @@
       "experience": 4,
       "relicDropChance": 0.06,
       "drop": { "chance": 0.5, "itemId": "bone-grinding-powder" },
-      "cooldownMax": 1,
+      "attackCooldownMax": 1,
       "initialActionDelay": 1
     },
     {
@@ -225,7 +226,7 @@
       "experience": 4,
       "relicDropChance": 0.06,
       "drop": { "chance": 0.5, "itemId": "cracked-armor-hookblade" },
-      "cooldownMax": 2,
+      "attackCooldownMax": 2,
       "initialActionDelay": 1
     },
     {
@@ -239,7 +240,7 @@
       "range": 1,
       "hp": 3,
       "attack": 2,
-      "cooldownMax": 1,
+      "attackCooldownMax": 1,
       "initialActionDelay": 1
     },
     {
@@ -253,7 +254,7 @@
       "range": 1,
       "hp": 3,
       "attack": 2,
-      "cooldownMax": 1,
+      "attackCooldownMax": 1,
       "initialActionDelay": 1
     },
     {
@@ -267,7 +268,7 @@
       "range": 2,
       "hp": 3,
       "attack": 2,
-      "cooldownMax": 1,
+      "attackCooldownMax": 1,
       "initialActionDelay": 1
     }
   ],
@@ -276,12 +277,11 @@
     "name": "\u76d1\u89c6\u8005",
     "attribute": "crystal",
     "behavior": "stationary",
-    "traits": ["summoner"],
-    "summon": { "minionId": "wisp-minion", "interval": 3 },
+    "activeSkill": { "id": "summon", "minionId": "wisp-minion", "cooldown": 3 },
     "hp": 36,
     "attack": 10,
     "range": 2,
-    "cooldownMax": 2,
+    "attackCooldownMax": 2,
     "initialActionDelay": 1
   },
   "weapons": [

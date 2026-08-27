@@ -12,6 +12,7 @@ import { attackAttributeModifier, computeAttackDamage } from '../src/game/rules/
 import { ENEMY_BEHAVIORS, stepEnemy } from '../src/game/rules/enemies.js'
 import { findAttackPath, findPath, findRevealPath } from '../src/game/rules/pathfinding.js'
 import { createTrapEntity } from '../src/game/data/traps.js'
+import { enemyFeatureLabel } from '../src/game/data/enemy-features.js'
 import { experienceToNextLevel, masteryPreservationChance } from '../src/game/data/progression.js'
 
 function assert(condition, message) {
@@ -83,13 +84,15 @@ for (let floor = 1; floor <= 4; floor += 1) {
 assert(INVENTORY_ROWS === 4 && INVENTORY_COLUMNS === 6 && run.backpack.capacity === 24 && run.backpack.length === 0, 'inventory must be a six-column by four-row shape grid')
 assert(run.player.equipment.length === EQUIPMENT_SLOTS && run.player.equipment[0] && !run.player.equipment[1], 'new run must have left and right equipment slots')
 assert(!('sanity' in run.player), 'sanity must not exist in V2 player state')
-assert(run.currentRoom.width === 8 && run.currentRoom.height === 8, 'first room must be 8x8')
-const openingRoomEnemies = [...run.currentRoom.entities.values()].filter((entity) => entity.kind === 'enemy')
-assert(openingRoomEnemies.length === 16 && openingRoomEnemies.every((entity) => entity.enemyId !== 'nest-spider'), 'the opening room must use the legacy-equivalent twenty-five percent non-ambush enemy ratio')
-assert([...run.currentRoom.entities.values()].some((entity) => entity.kind === 'item' && entity.item.id === 'short-sword'), 'the opening room must guarantee an accessible weapon card')
-for (const room of [...run.dungeon.rooms.values()].slice(1)) {
-  assert(room.height === 8 && room.width >= 8 && room.width <= 12, 'later room dimensions are invalid')
+const floorLayouts = [[1, 1, 7], [2, 3, 8], [3, 4, 9], [4, 3, 9], [5, 1, 10]]
+for (const [floor, expectedRoomCount, expectedSize] of floorLayouts) {
+  const rooms = [...run.dungeon.rooms.values()].filter((room) => room.floor === floor)
+  assert(rooms.length === expectedRoomCount, `floor ${floor} must have ${expectedRoomCount} rooms`)
+  assert(rooms.every((room) => room.width === expectedSize && room.height === expectedSize), `floor ${floor} rooms must be ${expectedSize}x${expectedSize}`)
 }
+const openingRoomEnemies = [...run.currentRoom.entities.values()].filter((entity) => entity.kind === 'enemy')
+assert(openingRoomEnemies.length === 12 && openingRoomEnemies.every((entity) => entity.enemyId !== 'nest-spider'), 'the opening room must use the legacy-equivalent twenty-five percent non-ambush enemy ratio')
+assert([...run.currentRoom.entities.values()].some((entity) => entity.kind === 'item' && entity.item.id === 'short-sword'), 'the opening room must guarantee an accessible weapon card')
 for (const room of run.dungeon.rooms.values()) {
   assert(room.entities.size >= Math.ceil(room.width * room.height * 0.8), 'room occupancy must keep empty cards at or below twenty percent')
 }
@@ -116,6 +119,11 @@ assert(run.closeDetail() && !run.detailPanel, 'detail panel did not close')
 const detailEnemy = [...run.currentRoom.entities.values()].find((entity) => entity.kind === 'enemy')
 run.currentRoom.reveal(detailEnemy.pos)
 assert(run.showBoardDetail(detailEnemy.pos) && run.detailPanel?.position === 'bottom', 'board enemy detail panel was not generated')
+const detailFeatures = enemyFeatureLabel(detailEnemy)
+assert(
+  detailFeatures ? run.detailPanel.lines.includes(`\u7279\u6027 ${detailFeatures}`) : !run.detailPanel.lines.some((line) => line.startsWith('\u7279\u6027')),
+  'board enemy detail panel did not represent the card features correctly',
+)
 assert(run.closeDetail(), 'board detail panel did not close')
 assert(!run.showBoardDetail(run.player.pos), 'the player must not expose a detail panel')
 
@@ -191,7 +199,23 @@ for (const position of [...orderedRoute, orderedTarget]) {
 for (const position of orderedRoute) orderedRoom.reveal(position)
 const orderedPreview = orderedFlipRun.previewTileAction(orderedTarget.c, orderedTarget.r)
 assert(orderedPreview?.kind === 'flip' && orderedPreview.path.length === orderedRoute.length, 'remote flip did not expose its exact movement preview')
+assert(orderedPreview.targeted && orderedPreview.arrival.c === orderedRoute.at(-1).c && orderedPreview.arrival.r === orderedRoute.at(-1).r, 'remote flip preview did not distinguish its arrival cell from its target cell')
 assert(!orderedRoom.isRevealed(orderedTarget) && orderedFlipRun.turn === 0, 'path preview must not reveal a card or consume a turn')
+
+const rangedPreviewRun = new GameRun({ autoLoad: false, random: () => 0.5 })
+rangedPreviewRun.chooseInitialRelic(rangedPreviewRun.initialRelicChoices[0])
+const rangedPreviewRoom = rangedPreviewRun.currentRoom
+for (const entity of [...rangedPreviewRoom.entities.values()]) rangedPreviewRoom.removeEntity(entity.id)
+for (let r = 0; r < rangedPreviewRoom.height; r += 1) {
+  for (let c = 0; c < rangedPreviewRoom.width; c += 1) rangedPreviewRoom.reveal(pos(c, r))
+}
+rangedPreviewRun.player.pos = pos(0, 0)
+rangedPreviewRun.player.equipment = [{ uid: 'preview-bow', type: 'weapon', range: 2, durability: 1 }, null]
+const rangedPreviewEnemy = createEnemyById('gnawer', pos(4, 0))
+rangedPreviewRoom.addEntity(rangedPreviewEnemy)
+const rangedPreview = rangedPreviewRun.previewTileAction(rangedPreviewEnemy.pos.c, rangedPreviewEnemy.pos.r)
+assert(rangedPreview?.kind === 'attack' && rangedPreview.targeted && rangedPreview.arrival.c === 2 && rangedPreview.arrival.r === 0, 'ranged attack preview did not stop at a legal firing position')
+
 const orderedEvents = []
 orderedFlipRun.on('change', () => orderedEvents.push('change'))
 orderedFlipRun.on('animate:move', () => orderedEvents.push('move'))
@@ -205,7 +229,7 @@ assert(flipTarget, 'the initial room has no legal flip')
 assert(run.clickTile(flipTarget.c, flipTarget.r), 'legal flip was rejected')
 assert(run.currentRoom.isRevealed(flipTarget), 'flipped tile did not reveal')
 assert(run.turn === 1, 'flip must consume one turn')
-assert([...run.currentRoom.entities.values()].filter((entity) => entity.kind === 'door').every((door) => !run.currentRoom.isRevealed(door.pos)), 'doors must begin hidden')
+assert(run.dungeon.doorsForRoom(run.currentRoom.id).every((door) => !run.currentRoom.isRevealed(door.arrival)), 'door arrival tiles must begin hidden')
 
 const flipGraceRun = new GameRun({ autoLoad: false, random: () => 0.5 })
 flipGraceRun.chooseInitialRelic(flipGraceRun.initialRelicChoices[0])
@@ -216,32 +240,49 @@ assert(flipGraceApproach, 'test enemy has no adjacent flip position')
 flipGraceRun.player.pos = { ...flipGraceApproach }
 flipGraceRoom.reveal(flipGraceApproach)
 flipGraceRun.player.hp = 4
-assert(flipGraceEnemy.cooldown === 1, 'gnawer instance did not receive its static initial action delay')
+assert(flipGraceEnemy.actionDelay === 1, 'gnawer instance did not receive its static initial action delay')
 assert(flipGraceRun.clickTile(flipGraceEnemy.pos.c, flipGraceEnemy.pos.r), 'enemy flip was rejected')
-assert(flipGraceRun.player.hp === 4 && flipGraceEnemy.cooldown === 0, 'a newly flipped delayed enemy attacked immediately')
+assert(flipGraceRun.player.hp === 4 && flipGraceEnemy.actionDelay === 0, 'a newly flipped delayed enemy attacked immediately')
 
 const doorRun = new GameRun({ autoLoad: false, random: () => 0.5 })
 doorRun.chooseInitialRelic(doorRun.initialRelicChoices[0])
 const beforeRoom = doorRun.currentRoom
-const door = [...beforeRoom.entities.values()].find((entity) => entity.kind === 'door')
+const door = doorRun.dungeon.doorsForRoom(beforeRoom.id)[0]
 const sourceEnemy = [...beforeRoom.entities.values()].find((entity) => entity.kind === 'enemy')
-beforeRoom.reveal(door.pos)
+const doorApproach = adjacentEmpty(beforeRoom, { pos: door.arrival }, { cardinalOnly: false })
+assert(doorApproach, 'door has no adjacent approach tile')
 beforeRoom.reveal(door.arrival)
+beforeRoom.reveal(doorApproach)
 beforeRoom.reveal(sourceEnemy.pos)
-sourceEnemy.cooldown = 0
-doorRun.player.pos = { ...door.arrival }
-assert(doorRun.clickTile(door.pos.c, door.pos.r), 'unlocked door was rejected')
+sourceEnemy.actionDelay = 1
+doorRun.player.pos = { ...doorApproach }
+assert(![...beforeRoom.entities.values()].some((entity) => entity.kind === 'door'), 'doors must not occupy card tiles')
+assert(doorRun.clickTile(door.arrival.c, door.arrival.r), 'arrival tile move was rejected')
+assert(doorRun.currentRoom.id === beforeRoom.id && doorRun.player.pos.c === door.arrival.c && doorRun.player.pos.r === door.arrival.r, 'clicking an arrival tile must move without entering the door')
+assert(doorRun.clickDoor(door.id), 'unlocked door was rejected')
 assert(doorRun.currentRoom.id !== beforeRoom.id, 'door did not change rooms')
-assert(sourceEnemy.cooldown === 0, 'frozen source room advanced during door transfer')
-assert(doorRun.turn === 1, 'door transfer must advance the action clock')
+assert(sourceEnemy.actionDelay === 0, 'frozen source room advanced during door transfer')
+assert(doorRun.turn === 2, 'arrival movement and door transfer must each advance the action clock')
 const arrivalDoor = doorRun.dungeon.otherDoor(door)
 assert(doorRun.currentRoom.isRevealed(arrivalDoor.arrival), 'arrival tile did not auto-reveal')
-assert(doorRun.currentRoom.isRevealed(arrivalDoor.pos), 'the entered door must reveal in the destination room')
 assert(doorRun.phase === 'reward' && doorRun.roomReward?.choices.length === 3, 'first arrival in a room did not open a room reward')
 assert(doorRun.roomReward.type === 'supply' && doorRun.roomReward.choices.filter((choice) => choice.kind === 'item').length >= 2, 'supply reward did not create its authored three-way choice')
 const roomItemRewardIndex = doorRun.roomReward.choices.findIndex((choice) => choice.kind === 'item')
 assert(roomItemRewardIndex >= 0 && doorRun.chooseRoomReward(roomItemRewardIndex), 'room item reward could not be claimed')
 assert(doorRun.phase === 'explore' && !doorRun.roomReward, 'claiming a room reward did not return to exploration')
+
+const remoteDoorRun = new GameRun({ autoLoad: false, random: () => 0.5 })
+remoteDoorRun.chooseInitialRelic(remoteDoorRun.initialRelicChoices[0])
+const remoteDoorRoom = remoteDoorRun.currentRoom
+const remoteDoor = remoteDoorRun.dungeon.doorsForRoom(remoteDoorRoom.id)[0]
+for (const entity of [...remoteDoorRoom.entities.values()]) remoteDoorRoom.removeEntity(entity.id)
+for (let r = 0; r < remoteDoorRoom.height; r += 1) {
+  for (let c = 0; c < remoteDoorRoom.width; c += 1) remoteDoorRoom.reveal({ c, r })
+}
+remoteDoorRun.player.pos = { c: 0, r: 0 }
+assert(remoteDoorRun.previewDoorAction(remoteDoor.id)?.path.length > 0, 'remote door did not preview a route to its arrival tile')
+assert(remoteDoorRun.clickDoor(remoteDoor.id), 'remote door click was rejected')
+assert(remoteDoorRun.currentRoom.id !== remoteDoorRoom.id, 'clicking a remote door must walk to its arrival tile and enter')
 
 const rewardBagRun = new GameRun({ autoLoad: false, random: () => 0.5 })
 rewardBagRun.roomRewardBag = ['supply', 'supply', 'supply', 'relic']
@@ -267,7 +308,8 @@ assert(approach, 'enemy has no adjacent empty test cell')
 combatRoom.reveal(enemy.pos)
 combatRoom.reveal(approach)
 combatRun.player.pos = { ...approach }
-enemy.cooldown = 0
+enemy.actionDelay = 0
+enemy.attackCooldown = 0
 const hpBefore = combatRun.player.hp
 combatRun.wait()
 assert(combatRun.player.hp < hpBefore, 'ready enemy did not act on the turn step')
@@ -381,20 +423,18 @@ assert(trapRoom.isRevealed(hiddenEnemy.pos), 'alarm trap did not reveal nearby h
 
 const eventRun = new GameRun({ autoLoad: false, random: () => 0.5 })
 eventRun.initialRelicChoices = []
-eventRun.relics.acquire('r-coin-salve', { activate: true })
+eventRun.relics.acquire('r-tide-heart', { activate: true })
 eventRun.player.hp = 10
-eventRun._emitRelicEvent('gold:collected', { amount: 3 })
-assert(eventRun.player.hp === 11 && eventRun.relicEventQueue.length === 0, 'relic event queue did not execute the gold pickup event')
+eventRun._emitRelicEvent('turn:started', { turn: 2 })
+assert(eventRun.player.hp === 12 && eventRun.relicEventQueue.length === 0, 'relic event queue did not execute the turn-start event')
 
-const shadowRun = new GameRun({ autoLoad: false, random: () => 0.5 })
-shadowRun.initialRelicChoices = []
-shadowRun.relics.acquire('r-shadow-hide', { activate: true })
-assert(shadowRun.useRelicSkill('r-shadow-hide') && shadowRun.stealthTurns === 2 && shadowRun.relicRuntime['r-shadow-hide']?.cooldown === 5, 'shadow active skill did not enter its cooldown and stealth state')
-const commandRun = new GameRun({ autoLoad: false, random: () => 0.5 })
-commandRun.initialRelicChoices = []
-commandRun.relics.acquire('r-command-shout', { activate: true })
-assert(commandRun.useRelicSkill('r-command-shout'), 'command active skill was rejected')
-assert([...commandRun.currentRoom.entities.values()].filter((entity) => entity.kind === 'enemy').every((enemy) => commandRun.currentRoom.isRevealed(enemy.pos)), 'command active skill did not reveal every enemy in the room')
+const delayRun = new GameRun({ autoLoad: false, random: () => 0.5 })
+delayRun.initialRelicChoices = []
+delayRun.relics.acquire('r-delay-spark', { activate: true })
+const delayedEnemy = [...delayRun.currentRoom.entities.values()].find((entity) => entity.kind === 'enemy')
+const delayBeforeReveal = delayedEnemy.actionDelay
+delayRun._revealTile(delayedEnemy.pos)
+assert(delayedEnemy.actionDelay === delayBeforeReveal + 1, 'enemy reveal delay relic did not extend the enemy action delay')
 
 const actionCostRun = new GameRun({ autoLoad: false, random: () => 0.5 })
 actionCostRun.chooseInitialRelic(actionCostRun.initialRelicChoices[0])
@@ -441,28 +481,48 @@ const weightedRevealPath = findRevealPath(revealPathRoom, revealStart, revealTar
 assert(weightedRevealPath?.path.length === 1 && weightedRevealPath.path[0].c === 1 && weightedRevealPath.path[0].r === 2, 'straight approach must beat a diagonal approach by movement cost')
 
 assert(typeof ENEMY_BEHAVIORS.stationary === 'function', 'stationary enemy behavior is not registered')
-const enemyBehaviorTest = { behavior: 'stationary', cooldown: 1, range: 2, pos: pos(0, 0) }
+const enemyBehaviorTest = {
+  behavior: 'stationary', actionDelay: 1, attack: 3, range: 2, pos: pos(0, 0),
+  attackCooldown: 0, attackCooldownMax: 2,
+  activeSkill: { id: 'test-skill', cooldown: 3 }, activeSkillCooldown: 0,
+}
 let enemyBehaviorAttacks = 0
-assert(stepEnemy(enemyBehaviorTest, { player: { pos: pos(1, 1) }, attack: () => { enemyBehaviorAttacks += 1 } }).reason === 'cooldown', 'enemy cooldown did not take priority')
-assert(enemyBehaviorTest.cooldown === 0 && enemyBehaviorAttacks === 0, 'enemy cooldown advanced incorrectly')
-assert(stepEnemy(enemyBehaviorTest, { player: { pos: pos(3, 0) }, attack: () => { enemyBehaviorAttacks += 1 } }).reason === 'out-of-range', 'enemy range check is invalid')
-assert(enemyBehaviorAttacks === 0, 'out-of-range enemy attacked')
-assert(stepEnemy({ ...enemyBehaviorTest, behavior: 'future-behavior' }, { player: { pos: pos(1, 0) }, attack: () => { enemyBehaviorAttacks += 1 } }).reason === 'attack', 'unknown enemy behavior did not safely fall back')
-assert(enemyBehaviorAttacks === 1, 'in-range enemy did not attack exactly once')
-assert(typeof ENEMY_BEHAVIORS.chaser === 'function' && typeof ENEMY_BEHAVIORS.patrol === 'function' && typeof ENEMY_BEHAVIORS.ambush === 'function' && typeof ENEMY_BEHAVIORS.summoner === 'function' && typeof ENEMY_BEHAVIORS['self-destruct'] === 'function', 'authored enemy behaviors are not registered')
+let enemyBehaviorSkills = 0
+const enemyBehaviorContext = {
+  player: { pos: pos(1, 1) },
+  attack: () => { enemyBehaviorAttacks += 1 },
+  activeSkill: () => { enemyBehaviorSkills += 1; return { acted: true, reason: 'active-skill' } },
+}
+assert(stepEnemy(enemyBehaviorTest, enemyBehaviorContext).reason === 'action-delay', 'enemy action delay did not block its first turn')
+assert(enemyBehaviorTest.actionDelay === 0 && enemyBehaviorAttacks === 0 && enemyBehaviorSkills === 0, 'enemy action delay advanced incorrectly')
+assert(stepEnemy(enemyBehaviorTest, enemyBehaviorContext).reason === 'active-skill', 'ready active skill did not take priority over normal attack')
+assert(enemyBehaviorSkills === 1 && enemyBehaviorAttacks === 0 && enemyBehaviorTest.activeSkillCooldown === 3, 'active skill cooldown was not initialized independently')
+assert(stepEnemy(enemyBehaviorTest, enemyBehaviorContext).reason === 'attack', 'normal attack did not act while the active skill was cooling down')
+assert(enemyBehaviorAttacks === 1 && enemyBehaviorTest.attackCooldown === 2 && enemyBehaviorTest.activeSkillCooldown === 2, 'normal attack and active skill cooldowns did not tick independently')
+const outOfRangeEnemy = { behavior: 'stationary', actionDelay: 0, attack: 3, range: 2, attackCooldown: 0, pos: pos(0, 0) }
+assert(stepEnemy(outOfRangeEnemy, { player: { pos: pos(3, 0) }, attack: () => { enemyBehaviorAttacks += 1 } }).reason === 'idle', 'enemy range check is invalid')
+assert(enemyBehaviorAttacks === 1, 'out-of-range enemy attacked')
+assert(stepEnemy({ ...outOfRangeEnemy, behavior: 'future-behavior', attackCooldown: 0 }, { player: { pos: pos(1, 0) }, attack: () => { enemyBehaviorAttacks += 1 } }).reason === 'attack', 'unknown enemy behavior did not safely fall back')
+assert(enemyBehaviorAttacks === 2, 'in-range enemy did not attack exactly once')
+assert(typeof ENEMY_BEHAVIORS.chaser === 'function' && typeof ENEMY_BEHAVIORS.ambush === 'function' && !ENEMY_BEHAVIORS.patrol && !ENEMY_BEHAVIORS.summoner && !ENEMY_BEHAVIORS['self-destruct'], 'enemy movement behaviors were not normalized')
 
 const behaviorRoom = new Room({ id: 'new-enemy-behavior-test', floor: 4, width: 6, height: 2 })
 for (let r = 0; r < behaviorRoom.height; r++) for (let c = 0; c < behaviorRoom.width; c++) behaviorRoom.reveal(pos(c, r))
 const chaser = createEnemyById('rot-walker', pos(5, 0))
 behaviorRoom.addEntity(chaser)
-chaser.cooldown = 0
+chaser.actionDelay = 0
 assert(stepEnemy(chaser, { room: behaviorRoom, player: { pos: pos(0, 0) }, move: (actor, position) => behaviorRoom.moveEntity(actor.id, position), attack: () => { throw new Error('chaser attacked while out of range') } }).reason === 'move' && chaser.pos.c === 4, 'chaser did not advance one cell toward the player')
-const patrol = createEnemyById('patrol-hound', pos(2, 1))
-patrol.cooldown = 0
-patrol.patrolPath = [pos(2, 1), pos(3, 1)]
-patrol.patrolIndex = 0
-behaviorRoom.addEntity(patrol)
-assert(stepEnemy(patrol, { room: behaviorRoom, player: { pos: pos(0, 0) }, move: (actor, position) => behaviorRoom.moveEntity(actor.id, position), attack: () => { throw new Error('patrol attacked while out of range') } }).reason === 'patrol' && patrol.pos.c === 3, 'patrol enemy did not follow its fixed route')
+const pursuingEnemy = createEnemyById('rot-walker', pos(2, 1))
+pursuingEnemy.actionDelay = 0
+behaviorRoom.addEntity(pursuingEnemy)
+let pursuitAttacks = 0
+const pursuitResult = stepEnemy(pursuingEnemy, {
+  room: behaviorRoom,
+  player: { pos: pos(0, 1) },
+  move: (actor, position) => behaviorRoom.moveEntity(actor.id, position),
+  attack: () => { pursuitAttacks += 1 },
+})
+assert(pursuitResult.reason === 'attack' && pursuitResult.moved && pursuingEnemy.pos.c === 1 && pursuitAttacks === 1, 'chaser did not move into range and attack in the same turn')
 
 function clearedEnemyRun(random = () => 0.5) {
   const testRun = new GameRun({ autoLoad: false, random })
@@ -537,7 +597,7 @@ const { testRun: ambushRun, room: ambushRoom } = clearedEnemyRun()
 const spider = createEnemyById('nest-spider', pos(2, 0))
 ambushRoom.addEntity(spider)
 ambushRoom.tile(spider.pos).revealed = false
-assert(!ambushRun._walk([pos(1, 0)]).stopped && ambushRoom.isRevealed(spider.pos) && ambushRun.player.hp === 15 && spider.cooldown === 2, 'ambush enemy did not reveal and attack immediately when the player entered nearby')
+assert(!ambushRun._walk([pos(1, 0)]).stopped && ambushRoom.isRevealed(spider.pos) && ambushRun.player.hp === 15 && spider.attackCooldown === 2, 'ambush enemy did not reveal and attack immediately when the player entered nearby')
 
 const { testRun: shieldRun, room: shieldRoom } = clearedEnemyRun()
 const shielded = createEnemyById('beetle-guard', pos(3, 0))
@@ -558,11 +618,17 @@ assert(!splitRoom.entityAt(broodling.pos), 'summoned or split minions must not l
 const { testRun: summonRun, room: summonRoom } = clearedEnemyRun()
 const priest = createEnemyById('bone-priest', pos(3, 0))
 summonRoom.addEntity(priest)
-summonRun._advanceSummoner(priest)
-summonRun._advanceSummoner(priest)
-assert(![...summonRoom.entities.values()].some((entity) => entity.enemyId === 'skeleton-minion'), 'summoner spawned before its third turn')
-summonRun._advanceSummoner(priest)
-assert([...summonRoom.entities.values()].some((entity) => entity.enemyId === 'skeleton-minion'), 'summoner did not create its authored minion on the third turn')
+const enemyActionContext = (testRun, room) => ({
+  room,
+  player: testRun.player,
+  attack: (actor) => testRun._enemyAttack(actor),
+  move: (actor, position) => testRun._moveEnemy(actor, position),
+  activeSkill: (actor, skill) => testRun._useEnemyActiveSkill(actor, skill),
+})
+assert(stepEnemy(priest, enemyActionContext(summonRun, summonRoom)).reason === 'action-delay', 'summoner active skill ignored its action delay')
+assert(![...summonRoom.entities.values()].some((entity) => entity.enemyId === 'skeleton-minion'), 'summoner acted on its reveal turn')
+assert(stepEnemy(priest, enemyActionContext(summonRun, summonRoom)).reason === 'summon', 'summoner did not use its active skill after the action delay')
+assert([...summonRoom.entities.values()].some((entity) => entity.enemyId === 'skeleton-minion') && priest.activeSkillCooldown === 3, 'summoner active skill did not create its authored minion or enter cooldown')
 
 const { testRun: reviveRun, room: reviveRoom } = clearedEnemyRun()
 const revenant = createEnemyById('revenant-guard', pos(5, 0))
@@ -575,11 +641,17 @@ assert(!revenant.downed && revenant.hp === revenant.maxHp, 'revive enemy did not
 const { testRun: detonationRun, room: detonationRoom } = clearedEnemyRun()
 const bombWisp = createEnemyById('bomb-wisp', pos(2, 0))
 detonationRoom.addEntity(bombWisp)
-detonationRun._chargeSelfDestruct(bombWisp)
-detonationRun._chargeSelfDestruct(bombWisp)
-assert(detonationRun.player.hp === 20 && detonationRoom.entity(bombWisp.id), 'self-destruct enemy exploded before its third in-range turn')
-detonationRun._chargeSelfDestruct(bombWisp)
-assert(detonationRun.player.hp === 8 && !detonationRoom.entity(bombWisp.id), 'self-destruct enemy did not detonate for its full authored damage on turn three')
+assert(stepEnemy(bombWisp, enemyActionContext(detonationRun, detonationRoom)).reason === 'action-delay', 'self-destruct enemy ignored its first delay turn')
+assert(stepEnemy(bombWisp, enemyActionContext(detonationRun, detonationRoom)).reason === 'action-delay', 'self-destruct enemy ignored its second delay turn')
+assert(stepEnemy(bombWisp, enemyActionContext(detonationRun, detonationRoom)).reason === 'action-delay', 'self-destruct enemy ignored its third delay turn')
+assert(detonationRun.player.hp === 20 && detonationRoom.entity(bombWisp.id), 'self-destruct enemy acted before its configured delay elapsed')
+assert(stepEnemy(bombWisp, enemyActionContext(detonationRun, detonationRoom)).reason === 'self-destruct' && detonationRun.player.hp === 8 && !detonationRoom.entity(bombWisp.id), 'self-destruct enemy did not use its active skill after its delay')
+
+const { testRun: distantDetonationRun, room: distantDetonationRoom } = clearedEnemyRun()
+const distantBombWisp = createEnemyById('bomb-wisp', pos(4, 0))
+distantBombWisp.actionDelay = 0
+distantDetonationRoom.addEntity(distantBombWisp)
+assert(stepEnemy(distantBombWisp, enemyActionContext(distantDetonationRun, distantDetonationRoom)).reason === 'idle' && distantDetonationRun.player.hp === 20 && distantDetonationRoom.entity(distantBombWisp.id), 'self-destruct active skill detonated outside its explosion range')
 
 const relicCapacity = new RelicCollection()
 for (const definition of RELIC_DEFS.slice(0, 6)) relicCapacity.acquire(definition.id)
@@ -597,21 +669,75 @@ assert(computeAttackDamage({ weapon: scorchWeapon, target: { attribute: 'tide' }
 assert(masteryPreservationChance(0) === 0 && masteryPreservationChance(10) === 0.5, 'weapon mastery probability does not follow its authored formula')
 
 const relicRun = new GameRun({ autoLoad: false, random: () => 0.5 })
-relicRun.initialRelicChoices = ['r-last-edge']
-assert(relicRun.chooseInitialRelic('r-last-edge')?.active, 'initial relic acquisition did not activate')
-assert(relicRun.acquireRelic('r-hunter-mark')?.active, 'later relic acquisition must auto-activate below capacity')
-assert(relicRun.relics.deactivate('r-hunter-mark'), 'test setup could not isolate the last-durability relic')
-const damagedWeapon = { ...scorchWeapon, durability: 1 }
-const type = attackAttributeModifier(damagedWeapon, slimeTarget)
+relicRun.initialRelicChoices = ['r-opportunity-strike']
+assert(relicRun.chooseInitialRelic('r-opportunity-strike')?.active, 'initial relic acquisition did not activate')
+assert(relicRun.acquireRelic('r-empty-core')?.active, 'later relic acquisition must auto-activate below capacity')
+assert(relicRun.relics.deactivate('r-empty-core'), 'test setup could not isolate the cooldown relic')
+const damagedWeapon = { ...scorchWeapon, durability: 3 }
+const cooldownTarget = { ...slimeTarget, id: 'cooldown-target', attackCooldown: 1, activeSkill: { id: 'test', cooldown: 3 }, activeSkillCooldown: 1 }
+const type = attackAttributeModifier(damagedWeapon, cooldownTarget)
 const relicModifiers = relicRun.relicEngine.damageModifiers({
+  run: relicRun,
   weapon: damagedWeapon,
-  target: slimeTarget,
+  target: cooldownTarget,
   player: relicRun.player,
   countered: type.countered,
   resisted: type.resisted,
 })
-assert(computeAttackDamage({ weapon: damagedWeapon, target: slimeTarget, relicModifiers }).damage === 6, 'relic damage modifier is not applied')
-assert(buildRelicChoices(relicRun.relics, { random: () => 0 }).every((relic) => relic.id !== 'r-last-edge'), 'owned relic returned as a choice')
+assert(computeAttackDamage({ weapon: damagedWeapon, target: cooldownTarget, relicModifiers }).damage === 16, 'relic damage modifier is not applied')
+assert(buildRelicChoices(relicRun.relics, { random: () => 0 }).every((relic) => relic.id !== 'r-opportunity-strike'), 'owned relic returned as a choice')
+
+const relicDamageWeapon = { name: 'test', attack: 4, attribute: 'slime', durability: 2 }
+const neutralRelicTarget = { attribute: 'slime', hp: 10, maxHp: 10 }
+const berserkerRun = new GameRun({ autoLoad: false, random: () => 0.5 })
+berserkerRun.initialRelicChoices = []
+assert(berserkerRun.acquireRelic('r-berserker-oath')?.active, 'berserker relic could not activate')
+berserkerRun.player.maxHp = 50
+berserkerRun.player.hp = 45
+assert(computeAttackDamage({ weapon: relicDamageWeapon, target: neutralRelicTarget, relicModifiers: berserkerRun.relicEngine.damageModifiers({ player: berserkerRun.player }) }).damage === 6, 'berserker relic did not gain 0.5 multiplier per five missing health')
+berserkerRun.player.hp = 10
+assert(computeAttackDamage({ weapon: relicDamageWeapon, target: neutralRelicTarget, relicModifiers: berserkerRun.relicEngine.damageModifiers({ player: berserkerRun.player }) }).damage === 20, 'berserker relic did not cap at five times damage')
+
+const noMercyRun = new GameRun({ autoLoad: false, random: () => 0.5 })
+noMercyRun.initialRelicChoices = []
+assert(noMercyRun.acquireRelic('r-no-mercy')?.active, 'no-mercy relic could not activate')
+const woundedRelicTarget = { ...neutralRelicTarget, hp: 5 }
+assert(computeAttackDamage({ weapon: relicDamageWeapon, target: woundedRelicTarget, relicModifiers: noMercyRun.relicEngine.damageModifiers({ target: woundedRelicTarget }) }).damage === 6, 'no-mercy relic did not apply at half health')
+const healthyRelicTarget = { ...neutralRelicTarget, hp: 6 }
+assert(computeAttackDamage({ weapon: relicDamageWeapon, target: healthyRelicTarget, relicModifiers: noMercyRun.relicEngine.damageModifiers({ target: healthyRelicTarget }) }).damage === 4, 'no-mercy relic applied above half health')
+
+const { testRun: remoteFlipRun, room: remoteFlipRoom } = clearedEnemyRun()
+const remoteTarget = pos(2, 0)
+for (const hidden of [pos(1, 0), pos(1, 1), pos(2, 1), pos(3, 0), pos(3, 1), remoteTarget]) remoteFlipRoom.tile(hidden).revealed = false
+assert(remoteFlipRun.acquireRelic('r-long-flip')?.active, 'remote-flip relic could not activate')
+assert(remoteFlipRun.previewTileAction(remoteTarget.c, remoteTarget.r)?.kind === 'flip', 'two-cell remote flip did not produce a preview')
+assert(remoteFlipRun.clickTile(remoteTarget.c, remoteTarget.r) && remoteFlipRoom.isRevealed(remoteTarget) && remoteFlipRun.player.pos.c === 0, 'two-cell remote flip did not reveal without movement')
+
+const { testRun: ricochetRun, room: ricochetRoom } = clearedEnemyRun()
+const ricochetPrimary = createEnemyById('gnawer', pos(1, 0))
+const ricochetBackline = createEnemyById('gnawer', pos(3, 0))
+ricochetPrimary.hp = ricochetPrimary.maxHp = 99
+ricochetBackline.hp = ricochetBackline.maxHp = 99
+ricochetRoom.addEntity(ricochetPrimary)
+ricochetRoom.addEntity(ricochetBackline)
+const backlineHp = ricochetBackline.hp
+assert(ricochetRun.acquireRelic('r-backline-ricochet')?.active, 'ricochet relic could not activate')
+assert(ricochetRun.clickTile(ricochetPrimary.pos.c, ricochetPrimary.pos.r) && ricochetBackline.hp < backlineHp, 'backline ricochet did not damage the card two cells behind the target')
+
+const { testRun: sideGlanceRun, room: sideGlanceRoom } = clearedEnemyRun(() => 0)
+const glanceTarget = pos(1, 1)
+const glanceNeighbor = pos(2, 1)
+sideGlanceRoom.tile(glanceTarget).revealed = false
+sideGlanceRoom.tile(glanceNeighbor).revealed = false
+assert(sideGlanceRun.acquireRelic('r-side-glance')?.active, 'side-glance relic could not activate')
+assert(sideGlanceRun.clickTile(glanceTarget.c, glanceTarget.r) && sideGlanceRoom.tile(glanceNeighbor).peeked, 'side glance did not mark one adjacent hidden card as peeked')
+
+const { testRun: healerForgeRun } = clearedEnemyRun(() => 0)
+const forgeWeapon = healerForgeRun.equippedWeapons[0]
+healerForgeRun.player.hp = healerForgeRun.player.maxHp - 2
+const forgeAttack = forgeWeapon.attack
+assert(healerForgeRun.acquireRelic('r-healer-forge')?.active, 'healer-forge relic could not activate')
+assert(healerForgeRun._healPlayer(1) === 1 && forgeWeapon.attack === forgeAttack + 1, 'healing did not improve a random equipped weapon')
 
 const previousLocalStorage = Object.getOwnPropertyDescriptor(globalThis, 'localStorage')
 const saveStorage = new Map()

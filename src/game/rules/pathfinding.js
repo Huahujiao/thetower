@@ -75,7 +75,12 @@ export function findRevealPath(room, start, target) {
 }
 
 export function findDoorPath(room, start, door) {
-  const approaches = neighbors8(door.pos, room.width, room.height)
+  if (!door?.arrival || !room.isRevealed(door.arrival) || !room.isEmpty(door.arrival)) return null
+  return findPath(room, start, door.arrival)
+}
+
+export function findInteractionPath(room, start, target) {
+  const approaches = neighbors8(target.pos, room.width, room.height)
     .filter((candidate) => room.isRevealed(candidate) && room.isEmpty(candidate))
   return findShortestPathToAny(room, start, approaches)
 }

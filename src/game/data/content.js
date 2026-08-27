@@ -37,6 +37,7 @@ export function makeItem(definition, random = Math.random) {
     item.durability = Number.isInteger(minimum) && Number.isInteger(maximum)
       ? minimum + Math.floor(random() * (maximum - minimum + 1))
       : definition.durability || 1
+    item.maxDurability = item.durability
   }
   return item
 }
@@ -55,6 +56,11 @@ export function randomItem(floor, random = Math.random) {
   return makeItem(consumablePool[Math.floor(random() * consumablePool.length)])
 }
 
+export function randomWeapon(floor, random = Math.random) {
+  const weaponPool = WEAPONS.filter((weapon) => floor <= 2 || weapon.id !== 'rust-sword')
+  return makeItem(weaponPool[Math.floor(random() * weaponPool.length)], random)
+}
+
 function createEnemy(definition, { position = null, boss = false } = {}) {
   if (!definition) return null
   return {
@@ -67,7 +73,7 @@ function createEnemy(definition, { position = null, boss = false } = {}) {
     traits: [...(definition.traits || [])],
     deathRule: definition.deathRule || null,
     splitMinionId: definition.splitMinionId || null,
-    summon: definition.summon ? { ...definition.summon } : null,
+    activeSkill: definition.activeSkill ? { ...definition.activeSkill } : null,
     drop: definition.drop ? { ...definition.drop } : null,
     experience: Math.max(0, Number(definition.experience) || 0),
     relicDropChance: Math.max(0, Number(definition.relicDropChance) || 0),
@@ -83,9 +89,12 @@ function createEnemy(definition, { position = null, boss = false } = {}) {
     maxHp: definition.hp,
     attack: definition.attack,
     range: definition.range,
-    cooldownMax: definition.cooldownMax,
+    attackCooldownMax: Math.max(0, Number(definition.attackCooldownMax ?? definition.cooldownMax) || 0),
     initialActionDelay: definition.initialActionDelay,
-    cooldown: definition.initialActionDelay,
+    actionDelay: Math.max(0, Number(definition.initialActionDelay) || 0),
+    attackCooldown: 0,
+    activeSkillCooldown: 0,
+    hasActed: false,
     revealOrder: null,
   }
 }

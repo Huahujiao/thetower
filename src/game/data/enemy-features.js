@@ -1,0 +1,41 @@
+export const ENEMY_BEHAVIOR_LABELS = Object.freeze({
+  stationary: '\u9a7b\u5b88',
+  ambush: '\u4f0f\u51fb',
+  chaser: '\u8ffd\u51fb',
+})
+
+export const ENEMY_TRAIT_LABELS = Object.freeze({
+  shield: '\u62a4\u76fe',
+  'heavy-armor': '\u91cd\u7532',
+  split: '\u5206\u88c2',
+  regen: '\u518d\u751f',
+  revive: '\u590d\u751f',
+})
+
+export const ENEMY_ACTIVE_SKILL_LABELS = Object.freeze({
+  summon: '\u53ec\u5524',
+  'self-destruct': '\u81ea\u7206',
+})
+
+export const ENEMY_STATUS_LABELS = Object.freeze({
+  marked: '\u6807\u8bb0',
+})
+
+export function enemyBehaviorLabel(behavior) { return ENEMY_BEHAVIOR_LABELS[behavior] || behavior || '' }
+
+export function enemyActiveSkillLabel(activeSkill) {
+  return ENEMY_ACTIVE_SKILL_LABELS[activeSkill?.id] || activeSkill?.name || activeSkill?.id || ''
+}
+
+export function enemyFeatureLabel(entity) {
+  return [
+    entity?.boss ? '\u9996\u9886' : '',
+    ...(entity?.traits || []).map((trait) => ENEMY_TRAIT_LABELS[trait] || trait),
+    entity?.deathRule ? ENEMY_TRAIT_LABELS[entity.deathRule] || entity.deathRule : '',
+    entity?.marked ? ENEMY_STATUS_LABELS.marked : '',
+  ].filter(Boolean).join('\u00b7')
+}
+
+export function enemyCardSubtitle(entity) {
+  return [enemyBehaviorLabel(entity?.behavior), enemyActiveSkillLabel(entity?.activeSkill), enemyFeatureLabel(entity)].filter(Boolean).join('\u00b7')
+}

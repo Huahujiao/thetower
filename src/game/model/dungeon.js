@@ -6,10 +6,7 @@ import { Room } from './room.js'
 
 export const DUNGEON_CONFIG = Object.freeze({
   roomsPerFloor: [1, 3, 4, 3, 1],
-  firstRoomWidth: 8,
-  otherRoomMinWidth: 8,
-  otherRoomMaxWidth: 12,
-  roomHeight: 8,
+  roomSizes: [7, 8, 9, 9, 10],
   lockedEdgeIndexes: [2, 7],
   merchantRoomIndexes: [2, 6, 9],
   merchantIds: ['merchant', 'merchant', 'collector'],
@@ -32,8 +29,7 @@ export class Dungeon {
 
   addEdge(edge) {
     this.edges.set(edge.id, edge)
-    this.doorIndex.set(edge.fromDoorId, edge.id)
-    this.doorIndex.set(edge.toDoorId, edge.id)
+    for (const door of [edge.fromDoor, edge.toDoor]) this.doorIndex.set(door.id, edge.id)
     return edge
   }
 
@@ -41,18 +37,35 @@ export class Dungeon {
   edge(id) { return this.edges.get(id) || null }
   edgeForDoor(doorId) { return this.edge(this.doorIndex.get(doorId)) }
 
+  door(doorId) {
+    const edge = this.edgeForDoor(doorId)
+    if (!edge) return null
+    return edge.fromDoor.id === doorId ? edge.fromDoor : edge.toDoor.id === doorId ? edge.toDoor : null
+  }
+
+  doorsForRoom(roomId) {
+    const doors = []
+    for (const edge of this.edges.values()) {
+      if (edge.fromDoor.roomId === roomId) doors.push(edge.fromDoor)
+      if (edge.toDoor.roomId === roomId) doors.push(edge.toDoor)
+    }
+    return doors
+  }
+
   otherDoor(door) {
     const edge = this.edgeForDoor(door.id)
     if (!edge) return null
-    const otherId = edge.fromDoorId === door.id ? edge.toDoorId : edge.fromDoorId
-    const otherRoomId = edge.fromDoorId === door.id ? edge.toRoomId : edge.fromRoomId
-    return this.room(otherRoomId)?.entity(otherId) || null
+    return edge.fromDoor.id === door.id ? edge.toDoor : edge.toDoor.id === door.id ? edge.fromDoor : null
   }
 
   serialize() {
     return {
       rooms: [...this.rooms.values()].map((room) => room.serialize()),
-      edges: [...this.edges.values()].map((edge) => ({ ...edge })),
+      edges: [...this.edges.values()].map((edge) => ({
+        ...edge,
+        fromDoor: { ...edge.fromDoor, arrival: { ...edge.fromDoor.arrival } },
+        toDoor: { ...edge.toDoor, arrival: { ...edge.toDoor.arrival } },
+      })),
       roomOrder: [...this.roomOrder],
     }
   }
@@ -62,9 +75,42 @@ export class Dungeon {
     const dungeon = new Dungeon()
     for (const roomData of data.rooms || []) dungeon.addRoom(Room.hydrate(roomData))
     dungeon.roomOrder = [...(data.roomOrder || dungeon.roomOrder)]
-    for (const edge of data.edges || []) dungeon.addEdge({ ...edge })
-    synchronizeEntityIds([...dungeon.rooms.values()].flatMap((room) => [...room.entities.values()]
-      .flatMap((entity) => [entity.id, entity.item?.uid])))
+    for (const edgeData of data.edges || []) {
+      const edge = { ...edgeData }
+      const fromRoom = dungeon.room(edge.fromRoomId)
+      const toRoom = dungeon.room(edge.toRoomId)
+      if (!edge.fromDoor || !edge.toDoor) {
+        const legacyFromDoor = fromRoom?.entity(edge.fromDoorId)
+        const legacyToDoor = toRoom?.entity(edge.toDoorId)
+        if (!legacyFromDoor || !legacyToDoor) throw new Error(`Invalid door data for ${edge.id}`)
+        edge.fromDoor = {
+          id: legacyFromDoor.id,
+          edgeId: edge.id,
+          roomId: edge.fromRoomId,
+          side: legacyFromDoor.pos.c === 0 ? 'left' : 'right',
+          offset: legacyFromDoor.pos.r,
+          arrival: { ...legacyFromDoor.pos },
+        }
+        edge.toDoor = {
+          id: legacyToDoor.id,
+          edgeId: edge.id,
+          roomId: edge.toRoomId,
+          side: legacyToDoor.pos.c === 0 ? 'left' : 'right',
+          offset: legacyToDoor.pos.r,
+          arrival: { ...legacyToDoor.pos },
+        }
+        fromRoom.removeEntity(legacyFromDoor.id)
+        toRoom.removeEntity(legacyToDoor.id)
+      }
+      edge.fromDoor = { ...edge.fromDoor, edgeId: edge.id, roomId: edge.fromRoomId, arrival: { ...edge.fromDoor.arrival } }
+      edge.toDoor = { ...edge.toDoor, edgeId: edge.id, roomId: edge.toRoomId, arrival: { ...edge.toDoor.arrival } }
+      edge.fromDoorId = edge.fromDoor.id
+      edge.toDoorId = edge.toDoor.id
+      dungeon.addEdge(edge)
+    }
+    synchronizeEntityIds([
+      ...dungeon.rooms.values()].flatMap((room) => [...room.entities.values()].flatMap((entity) => [entity.id, entity.item?.uid]))
+      .concat([...dungeon.edges.values()].flatMap((edge) => [edge.fromDoor.id, edge.toDoor.id])))
     return dungeon
   }
 }
@@ -91,24 +137,20 @@ function randomOpenPosition(room, reserved, random, { requiresEmptyNeighbor = fa
   return shuffled(positions, random)[0] || null
 }
 
-function addDoor(room, edgeId, direction, reserved, random) {
+function addDoor(room, edgeId, side, reserved, random) {
   const rows = shuffled(Array.from({ length: Math.max(1, room.height - 2) }, (_, index) => index + 1), random)
   for (const r of rows) {
-    const doorPos = direction.c < 0 ? pos(0, r) : pos(room.width - 1, r)
-    const arrival = pos(doorPos.c - direction.c, doorPos.r - direction.r)
-    if (reserved.has(posKey(doorPos)) || reserved.has(posKey(arrival))) continue
-    reserved.add(posKey(doorPos))
+    const arrival = side === 'left' ? pos(0, r) : pos(room.width - 1, r)
+    if (reserved.has(posKey(arrival))) continue
     reserved.add(posKey(arrival))
-    const door = {
+    return {
       id: nextEntityId('door'),
-      kind: 'door',
       edgeId,
-      pos: doorPos,
+      roomId: room.id,
+      side,
+      offset: r,
       arrival,
-      revealOrder: null,
     }
-    room.addEntity(door)
-    return door
   }
   throw new Error(`Could not place a door in ${room.id}`)
 }
@@ -119,13 +161,6 @@ function addMonster(room, reserved, random, index) {
   const monster = createMonster(room.floor, index)
   monster.pos = position
   room.addEntity(monster)
-  if (monster.behavior === 'patrol') {
-    const next = shuffled(neighbors8(position, room.width, room.height)
-      .filter((candidate) => !reserved.has(posKey(candidate)) && room.isEmpty(candidate)), random)[0]
-    monster.patrolPath = next ? [{ ...position }, { ...next }] : [{ ...position }]
-    monster.patrolIndex = 0
-    if (next) reserved.add(posKey(next))
-  }
   return true
 }
 
@@ -223,10 +258,8 @@ export function createLinearDungeon({ config = DUNGEON_CONFIG, random = Math.ran
   config.roomsPerFloor.forEach((count, floorIndex) => {
     const floor = floorIndex + 1
     for (let roomIndex = 0; roomIndex < count; roomIndex++) {
-      const width = floor === 1
-        ? config.firstRoomWidth
-        : config.otherRoomMinWidth + Math.floor(random() * (config.otherRoomMaxWidth - config.otherRoomMinWidth + 1))
-      const room = new Room({ id: `room-${sequence + 1}`, floor, width, height: config.roomHeight, random })
+      const size = config.roomSizes[floorIndex]
+      const room = new Room({ id: `room-${sequence + 1}`, floor, width: size, height: size, random })
       dungeon.addRoom(room)
       reservations.set(room.id, new Set())
       openAnchors.set(room.id, [])
@@ -246,14 +279,16 @@ export function createLinearDungeon({ config = DUNGEON_CONFIG, random = Math.ran
     const fromRoom = dungeon.room(dungeon.roomOrder[index])
     const toRoom = dungeon.room(dungeon.roomOrder[index + 1])
     const edgeId = `edge-${index + 1}`
-    const fromDoor = addDoor(fromRoom, edgeId, pos(1, 0), reservations.get(fromRoom.id), random)
-    const toDoor = addDoor(toRoom, edgeId, pos(-1, 0), reservations.get(toRoom.id), random)
+    const fromDoor = addDoor(fromRoom, edgeId, 'right', reservations.get(fromRoom.id), random)
+    const toDoor = addDoor(toRoom, edgeId, 'left', reservations.get(toRoom.id), random)
     openAnchors.get(fromRoom.id).push(fromDoor.arrival)
     openAnchors.get(toRoom.id).push(toDoor.arrival)
     dungeon.addEdge({
       id: edgeId,
       fromRoomId: fromRoom.id,
       toRoomId: toRoom.id,
+      fromDoor,
+      toDoor,
       fromDoorId: fromDoor.id,
       toDoorId: toDoor.id,
       locked: config.lockedEdgeIndexes.includes(index),

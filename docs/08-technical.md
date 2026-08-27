@@ -23,7 +23,7 @@ src/
 └─ wiki.css       图鉴页面样式
 ```
 
-静态内容在 `src/game/data/catalog.json`、`progression.js`、`relics.js`、`merchants.js` 与 `traps.js` 中维护。游戏运行时从这些定义生成敌人、武器、物品、商人、房间奖励、角色成长、陷阱与圣遗物效果。
+静态内容在 `src/game/data/catalog.json`、`progression.js`、`relics.js`、`merchants.js` 与 `traps.js` 中维护。游戏运行时从这些定义生成敌人、武器、物品、商人、房间奖励、角色成长、陷阱与圣遗物效果。文档中以 [敌人清单](./敌人.md)、[物品清单](./物品清单.md) 和 [圣遗物清单](./圣遗物清单.md) 分别镜像对象数据，避免在规则页重复维护具体对象。
 
 ## 存档
 

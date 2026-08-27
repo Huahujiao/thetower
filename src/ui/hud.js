@@ -1,7 +1,9 @@
 import { EQUIPMENT_SLOTS, INVENTORY_COLUMNS, INVENTORY_ROWS } from '../game/run.js'
 import { getItemDefinition } from '../game/data/content.js'
+import { attributeLabel } from '../game/data/attributes.js'
 import { getRelicDefinition } from '../game/data/relics.js'
 import { merchantSellPrice } from '../game/data/merchants.js'
+import { masteryPreservationChance } from '../game/data/progression.js'
 
 const LABELS = Object.freeze({
   floor: '\u697c\u5c42',
@@ -11,6 +13,17 @@ const LABELS = Object.freeze({
   turn: '\u56de\u5408',
   level: '\u7b49\u7ea7',
   experience: '\u7ecf\u9a8c',
+  character: '\u89d2\u8272',
+  characterGrowth: '\u89d2\u8272\u6210\u957f',
+  maxHealth: '\u751f\u547d\u4e0a\u9650',
+  strength: '\u529b\u91cf',
+  mastery: '\u638c\u63a7',
+  adaptation: '\u5c5e\u6027\u9002\u5e94',
+  durabilityPreserve: '\u8010\u4e45\u4fdd\u7559',
+  notAdapted: '\u672a\u9002\u5e94',
+  help: '\u5e2e\u52a9',
+  basicGameplay: '\u57fa\u672c\u73a9\u6cd5',
+  close: '\u5173\u95ed',
   settings: '\u8bbe\u7f6e',
   log: '\u65e5\u5fd7',
   reveal: '\u8c03\u8bd5\uff1a\u663e\u793a\u724c\u5185\u5bb9',
@@ -55,8 +68,21 @@ const LABELS = Object.freeze({
   loseMessage: '\u751f\u547d\u5f52\u96f6\u3002\u53ef\u4ee5\u91cd\u65b0\u5f00\u59cb\u6311\u6218\u3002',
 })
 
+const HELP_SECTIONS = Object.freeze([
+  { title: '\u76ee\u6807\u4e0e\u80dc\u5229', items: ['\u7a7f\u8fc7\u4e94\u5c42\u623f\u95f4\uff0c\u51fb\u8d25\u7b2c\u4e94\u5c42\u7684\u76d1\u89c6\u8005\u5373\u53ef\u83b7\u80dc\u3002', '\u6bcf\u4e2a\u65b0\u623f\u95f4\u9996\u6b21\u8fdb\u5165\u4f1a\u63d0\u4f9b\u8865\u7ed9\u6216\u5723\u9057\u7269\u5956\u52b1\uff1b\u901a\u8fc7\u95e8\u7ee7\u7eed\u524d\u8fdb\u3002'] },
+  { title: '\u63a2\u7d22\u4e0e\u7ffb\u724c', items: ['\u5728\u5df2\u7ffb\u5f00\u7684\u724c\u4e2d\u53ef\u516b\u65b9\u5411\u79fb\u52a8\u3002\u70b9\u51fb\u89d2\u8272\u516b\u90bb\u57df\u76ee\u6807\u4f1a\u76f4\u63a5\u6267\u884c\uff1b\u8fdc\u5904\u76ee\u6807\u5148\u9884\u89c8\uff0c\u518d\u70b9\u51fb\u540c\u4e00\u683c\u786e\u8ba4\u3002', '\u7ffb\u672a\u77e5\u724c\u65f6\uff0c\u89d2\u8272\u4f1a\u5148\u8d70\u5230\u76ee\u6807\u516b\u90bb\u57df\u7684\u53ef\u8fbe\u7a7a\u683c\uff1b\u7ffb\u724c\u672c\u8eab\u4e0d\u8e0f\u5165\u8be5\u683c\u3002\u653b\u51fb\u3001\u7ffb\u724c\u548c\u4ea4\u4e92\u9884\u89c8\u4f1a\u663e\u793a\u5230\u8fbe\u4f4d\u7f6e\u4e0e\u76ee\u6807\u5f27\u7ebf\u3002'] },
+  { title: '\u6218\u6597\u4e0e\u654c\u4eba', items: ['\u653b\u51fb\u76ee\u6807\u65f6\uff0c\u89d2\u8272\u4f1a\u79fb\u52a8\u81f3\u5f53\u524d\u6b66\u5668\u80fd\u547d\u4e2d\u7684\u4f4d\u7f6e\uff0c\u518d\u6309\u88c5\u5907\u987a\u5e8f\u653b\u51fb\u3002\u6b66\u5668\u8010\u4e45\u964d\u4e3a\u96f6\u4f1a\u635f\u6bc1\u3002', '\u654c\u4eba\u7ffb\u5f00\u540e\u6309\u884c\u52a8\u5ef6\u8fdf\u3001\u666e\u901a\u653b\u51fb\u51b7\u5374\u548c\u4e3b\u52a8\u6280\u80fd\u51b7\u5374\u884c\u52a8\u3002\u4e3b\u52a8\u6280\u80fd\u4f18\u5148\u4e8e\u666e\u901a\u653b\u51fb\uff1b\u8ffd\u730e\u654c\u4eba\u53ef\u79fb\u52a8\u540e\u653b\u51fb\u3002'] },
+  { title: '\u88c5\u5907\u3001\u6210\u957f\u4e0e\u80cc\u5305', items: ['\u80cc\u5305\u4e3a\u56db\u884c\u516d\u5217\uff1b\u7269\u54c1\u6309\u5f62\u72b6\u5360\u683c\uff0c\u53ef\u65cb\u8f6c\u3002\u88c5\u5907\u6b66\u5668\u3001\u4f7f\u7528\u78e8\u5200\u77f3\u548c\u7269\u54c1\u4f1a\u5f71\u54cd\u63a5\u4e0b\u6765\u7684\u6218\u6597\u3002', '\u51fb\u6740\u81ea\u7136\u654c\u4eba\u83b7\u5f97\u7ecf\u9a8c\u3002\u53f3\u4e0a\u89d2\u8272\u6309\u94ae\u53ef\u67e5\u770b\u7b49\u7ea7\u3001\u5de6\u53f3\u624b\u529b\u91cf\u3001\u638c\u63a7\u4e0e\u5c5e\u6027\u9002\u5e94\u3002'] },
+  { title: '\u5723\u9057\u7269\u4e0e\u4fe1\u606f', items: ['\u5f00\u5c40\u3001\u623f\u95f4\u5956\u52b1\u3001\u6536\u85cf\u5bb6\u548c\u602a\u7269\u6389\u843d\u90fd\u53ef\u80fd\u83b7\u5f97\u5723\u9057\u7269\uff1b\u540c\u65f6\u6700\u591a\u6fc0\u6d3b\u4e94\u4ef6\u3002', '\u957f\u6309\u68cb\u76d8\u5bf9\u8c61\u53ef\u67e5\u770b\u8be6\u60c5\uff1b\u5de6\u4e0b\u5723\u9057\u7269\u56fe\u6807\u53ef\u67e5\u770b\u5df2\u83b7\u5f97\u7684\u5723\u9057\u7269\uff1b\u53f3\u4e0a\u65e5\u5fd7\u53ef\u56de\u770b\u4e8b\u4ef6\u3002'] },
+  { title: '\u5feb\u6377\u63d0\u793a', items: ['\u7ea2\u8272\u8def\u5f84\u8868\u793a\u4f1a\u7ecf\u8fc7\u5df2\u7ffb\u5f00\u654c\u4eba\u7684\u5a01\u80c1\u8303\u56f4\uff1b\u84dd\u8272\u8def\u5f84\u8868\u793a\u5f53\u524d\u5df2\u77e5\u5b89\u5168\u3002', '\u4e0d\u53ef\u7ffb\u724c\u6bd4\u53ef\u7ffb\u724c\u66f4\u6697\u3002\u534a\u900f\u660e\u5361\u724c\u53ea\u662f\u88ab\u7aa5\u89c6\uff0c\u5c1a\u672a\u7ffb\u5f00\u3002'] },
+])
+
 function escapeHtml(value) {
   return String(value || '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[character]))
+}
+
+function helpContentHtml() {
+  return HELP_SECTIONS.map((section) => `<section class="help-section"><h3>${escapeHtml(section.title)}</h3><ul>${section.items.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul></section>`).join('')
 }
 
 function merchantSellText(item) { return `+${merchantSellPrice(item)}` }
@@ -71,11 +97,17 @@ export class HUD {
     this._onPointerDown = (event) => this._handlePointerDown(event)
     this._onPointerMove = (event) => this._handlePointerMove(event)
     this._onPointerUp = (event) => this._handlePointerUp(event)
+    this._onKeyDown = (event) => {
+      if (event.key !== 'Escape' || !this.q('helpmodal')?.classList.contains('show')) return
+      event.preventDefault()
+      this._setHelpModal(false)
+    }
     this.root.addEventListener('click', this._onClick)
     this.root.addEventListener('pointerdown', this._onPointerDown)
     this.root.addEventListener('pointermove', this._onPointerMove)
     this.root.addEventListener('pointerup', this._onPointerUp)
     this.root.addEventListener('pointercancel', this._onPointerUp)
+    document.addEventListener('keydown', this._onKeyDown)
     this.unsubscribe = this.run.on('change', () => this.render())
     this.detailUnsubscribe = this.run.on('detail', () => this.render())
     this.render()
@@ -92,6 +124,8 @@ export class HUD {
           <div class="stat turn"><span class="label">${LABELS.turn}</span><span class="value" data=turn></span></div>
         </div>
         <div class="hud-btns">
+          <button class="hud-icon" data-action="character" title="${LABELS.character}" aria-label="${LABELS.character}">\ud83d\udc64</button>
+          <button class="hud-icon" data-action="help" title="${LABELS.help}" aria-label="${LABELS.help}">?</button>
           <button class="hud-icon" data-action="settings" title="${LABELS.settings}" aria-label="${LABELS.settings}">\u2699</button>
           <button class="hud-icon" data-action="log" title="${LABELS.log}" aria-label="${LABELS.log}">\ud83d\udcdc</button>
         </div>
@@ -113,6 +147,16 @@ export class HUD {
         <label class="settings-row"><input type="checkbox" data=revealtoggle> ${LABELS.reveal}</label>
       </div>
 
+      <section class="character-panel" data=characterpanel aria-hidden="true">
+        <div class="character-panel-head"><span>${LABELS.characterGrowth}</span><strong data=characterlevel></strong></div>
+        <div class="character-summary">
+          <div class="character-stat"><span>${LABELS.experience}</span><strong data=characterexperience></strong></div>
+          <div class="character-stat"><span>${LABELS.maxHealth}</span><strong data=characterhealth></strong></div>
+        </div>
+        <div class="character-expbar" aria-hidden="true"><span data=characterexperiencebar></span></div>
+        <div class="character-hands" data=characterhands></div>
+      </section>
+
       <div class="hud-log" data=log>
         <div class="log-head"><span class="log-title">${LABELS.log}</span></div>
         <div class="log-body" data=logbody></div>
@@ -126,6 +170,17 @@ export class HUD {
             <button class="relic-modal-close" data-action="close-relics" aria-label="close">\u00d7</button>
           </div>
           <div class="relic-collection" data=reliccollection></div>
+        </section>
+      </div>
+
+      <div class="help-modal" data=helpmodal aria-hidden="true">
+        <div class="help-modal-backdrop" data-action="close-help"></div>
+        <section class="help-modal-panel" role="dialog" aria-modal="true" aria-labelledby="help-title">
+          <header class="help-modal-head">
+            <div><span class="help-modal-kicker">${LABELS.help}</span><h2 id="help-title">${LABELS.basicGameplay}</h2></div>
+            <button class="help-modal-close" data=helpclose data-action="close-help" aria-label="${LABELS.close}" title="${LABELS.close}">\u00d7</button>
+          </header>
+          <div class="help-modal-body" data=helpcontent></div>
         </section>
       </div>
 
@@ -180,6 +235,7 @@ export class HUD {
         <button data-action="restart">${LABELS.restart}</button>
       </div>`
     this.q = (key) => this.root.querySelector(`[data="${key}"]`)
+    this.q('helpcontent').innerHTML = helpContentHtml()
     const revealToggle = this.q('revealtoggle')
     revealToggle.checked = typeof localStorage !== 'undefined' && localStorage.getItem('v2_opt_reveal') === '1'
     this.run.setDebugReveal(revealToggle.checked)
@@ -204,6 +260,7 @@ export class HUD {
     this.q('gold').textContent = String(player.gold)
     this.q('turn').textContent = String(this.run.turn)
     this.q('progress').textContent = `${LABELS.level} ${player.level} \u00b7 ${LABELS.experience} ${player.experience}/${player.experienceToNext}`
+    this._renderCharacterPanel(player)
     const pendingBuffs = player.pendingAttackBuffs || []
     const isMeleeOnly = pendingBuffs.length > 0 && pendingBuffs.every((buff) => buff.target === 'melee')
     this.q('hint').textContent = player.pendingAttackBonus ? `${isMeleeOnly ? LABELS.nextMeleeAttack : LABELS.nextAttack} +${player.pendingAttackBonus}` : ''
@@ -269,6 +326,22 @@ export class HUD {
       if (!definition) return ''
       const state = entry.active ? LABELS.active : LABELS.inactive
       return `<div class="relic-collection-item ${entry.active ? 'active' : 'inactive'}"><span class="relic-item-name">${escapeHtml(definition.name)}</span><small>${state}</small><span class="relic-item-desc">${escapeHtml(definition.description)}</span></div>`
+    }).join('')
+  }
+
+  _renderCharacterPanel(player) {
+    this.q('characterlevel').textContent = `Lv. ${player.level}`
+    this.q('characterexperience').textContent = `${player.experience} / ${player.experienceToNext}`
+    this.q('characterhealth').textContent = `${player.hp} / ${player.maxHp}`
+    const progress = player.experienceToNext > 0 ? Math.min(100, Math.max(0, player.experience / player.experienceToNext * 100)) : 0
+    this.q('characterexperiencebar').style.width = `${progress}%`
+    this.q('characterhands').innerHTML = [0, 1].map((hand) => {
+      const strength = Math.max(0, Number(player.strength?.[hand]) || 0)
+      const mastery = Math.max(0, Number(player.mastery?.[hand]) || 0)
+      const adaptation = player.adaptations?.[hand] ? attributeLabel(player.adaptations[hand]) : LABELS.notAdapted
+      const preservation = Math.round(masteryPreservationChance(mastery) * 100)
+      const handLabel = hand === 0 ? LABELS.leftHand : LABELS.rightHand
+      return `<section class="character-hand"><div class="character-hand-title">${handLabel}</div><div class="character-row"><span>${LABELS.strength}</span><strong>+${strength}</strong></div><div class="character-row"><span>${LABELS.mastery}</span><strong>${mastery}</strong></div><div class="character-row sub"><span>${LABELS.durabilityPreserve}</span><strong>${preservation}%</strong></div><div class="character-adaptation"><span>${LABELS.adaptation}</span><strong>${escapeHtml(adaptation)}</strong></div></section>`
     }).join('')
   }
 
@@ -564,8 +637,11 @@ export class HUD {
     if (action === 'merchant-refresh') this.run.refreshMerchantInventory()
     if (action === 'confirm-relic-loadout') this.run.confirmRelicLoadout()
     if (action === 'skip-room-reward') this.run.skipRoomReward()
-    if (action === 'log') this.q('log').classList.toggle('show')
-    if (action === 'settings') this.q('settings').classList.toggle('show')
+    if (action === 'log') this._toggleTopPanel('log')
+    if (action === 'settings') this._toggleTopPanel('settings')
+    if (action === 'character') this._toggleTopPanel('characterpanel')
+    if (action === 'help') this._setHelpModal(true)
+    if (action === 'close-help') this._setHelpModal(false)
     if (action === 'relics') this._setRelicModal(true)
     if (action === 'close-relics') this._setRelicModal(false)
   }
@@ -574,6 +650,34 @@ export class HUD {
     const modal = this.q('relicmodal')
     modal.classList.toggle('show', show)
     modal.setAttribute('aria-hidden', show ? 'false' : 'true')
+  }
+
+  _setHelpModal(show) {
+    const modal = this.q('helpmodal')
+    if (!modal) return
+    if (show) {
+      this.helpReturnFocus = document.activeElement?.focus ? document.activeElement : null
+      this._setRelicModal(false)
+      for (const key of ['settings', 'log', 'characterpanel']) this.q(key).classList.remove('show')
+      this.q('characterpanel').setAttribute('aria-hidden', 'true')
+    }
+    modal.classList.toggle('show', show)
+    modal.setAttribute('aria-hidden', show ? 'false' : 'true')
+    if (show) {
+      window.requestAnimationFrame(() => this.q('helpclose')?.focus())
+      return
+    }
+    const focusTarget = this.helpReturnFocus
+    this.helpReturnFocus = null
+    if (focusTarget?.isConnected) focusTarget.focus()
+  }
+
+  _toggleTopPanel(panelKey) {
+    const panel = this.q(panelKey)
+    const open = !panel.classList.contains('show')
+    for (const key of ['settings', 'log', 'characterpanel']) this.q(key).classList.remove('show')
+    panel.classList.toggle('show', open)
+    this.q('characterpanel').setAttribute('aria-hidden', panelKey === 'characterpanel' && open ? 'false' : 'true')
   }
 
   dispose() {
@@ -585,5 +689,6 @@ export class HUD {
     this.root.removeEventListener('pointermove', this._onPointerMove)
     this.root.removeEventListener('pointerup', this._onPointerUp)
     this.root.removeEventListener('pointercancel', this._onPointerUp)
+    document.removeEventListener('keydown', this._onKeyDown)
   }
 }

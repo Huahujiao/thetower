@@ -2,7 +2,7 @@ import { inBounds, posKey } from '../core/geometry.js'
 import { randomCardBackAttribute } from '../data/attributes.js'
 
 function makeTile(random) {
-  return { revealed: false, entityId: null, terrain: 'plain', backAttribute: randomCardBackAttribute(random) }
+  return { revealed: false, peeked: false, entityId: null, terrain: 'plain', backAttribute: randomCardBackAttribute(random) }
 }
 
 export class Room {
@@ -29,6 +29,7 @@ export class Room {
     const tile = this.tile(position)
     if (!tile || tile.revealed) return false
     tile.revealed = true
+    tile.peeked = false
     const entity = this.entityAt(position)
     if (entity && entity.revealOrder == null) entity.revealOrder = ++this.revealCounter
     return true
