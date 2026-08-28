@@ -62,10 +62,26 @@ const LABELS = Object.freeze({
   occupied: '\u5df2\u5360\u7528',
   activeSkill: '\u4e3b\u52a8\u6280\u80fd',
   restart: '\u91cd\u65b0\u5f00\u59cb',
+  restartConfirm: '\u786e\u5b9a\u8981\u91cd\u65b0\u5f00\u59cb\u5417\uff1f\u5f53\u524d\u8fdb\u5ea6\u5c06\u88ab\u6e05\u9664\u3002',
   win: '\u9003\u51fa\u5730\u7262',
   lose: '\u4f60\u5df2\u9668\u843d',
   winMessage: '\u4f60\u51fb\u8d25\u4e86\u76d1\u89c6\u8005\u3002',
   loseMessage: '\u751f\u547d\u5f52\u96f6\u3002\u53ef\u4ee5\u91cd\u65b0\u5f00\u59cb\u6311\u6218\u3002',
+})
+
+const DETAIL_ICONS = Object.freeze({
+  enemy: '\u2694',
+  weapon: '\u2694',
+  potion: '\u271a',
+  armor: '\u26e8',
+  buff: '\u2726',
+  whetstone: '\u25c8',
+  relic: '\u25c6',
+  trap: '!',
+  gold: '\u25cf',
+  key: '\ud83d\udd11',
+  merchant: '\u25c9',
+  item: '\u25a0',
 })
 
 const HELP_SECTIONS = Object.freeze([
@@ -136,15 +152,19 @@ export class HUD {
       <div id="app" aria-label="game board"></div>
 
       <section class="detail-panel" data=detailpanel aria-hidden="true">
-        <div class="detail-card">
-          <div class="detail-type" data=detailtype></div>
-          <div class="detail-title" data=detailtitle></div>
-          <div class="detail-lines" data=detaillines></div>
+        <div class="detail-card" data-action="close-detail">
+          <div class="detail-icon" data=detailicon aria-hidden="true"></div>
+          <div class="detail-content">
+            <div class="detail-head"><div class="detail-title" data=detailtitle></div><div class="detail-badges" data=detailbadges></div></div>
+            <div class="detail-lines" data=detaillines></div>
+            <div class="detail-description" data=detaildescription></div>
+          </div>
         </div>
       </section>
 
       <div class="hud-settings" data=settings>
         <label class="settings-row"><input type="checkbox" data=revealtoggle> ${LABELS.reveal}</label>
+        <button class="settings-restart" data-action="restart-settings">${LABELS.restart}</button>
       </div>
 
       <section class="character-panel" data=characterpanel aria-hidden="true">
@@ -433,34 +453,45 @@ export class HUD {
     const backpack = this.q('backpack')
     backpack.style.setProperty('--bag-columns', INVENTORY_COLUMNS)
     backpack.style.setProperty('--bag-rows', INVENTORY_ROWS)
-    const cells = Array.from({ length: INVENTORY_COLUMNS * INVENTORY_ROWS }, (_, index) => (
-      `<button class="bag-cell" data-bag-cell="${index}" aria-label="${LABELS.empty}"></button>`
-    )).join('')
+    const selectedItem = this.run.selectedItem
+    const cells = Array.from({ length: INVENTORY_COLUMNS * INVENTORY_ROWS }, (_, index) => {
+      const placement = this.run.backpack.placementForCellIndex(index)
+      const action = this.run.previewInventoryCellAction(index)
+      const column = index % INVENTORY_COLUMNS + 1
+      const row = Math.floor(index / INVENTORY_COLUMNS) + 1
+      const classes = ['bag-cell']
+      if (action === 'move') classes.push('drop-valid')
+      if (placement?.item?.uid === selectedItem?.uid) classes.push('selected-cell')
+      const label = placement?.item?.name || LABELS.empty
+      return `<button class="${classes.join(' ')}" data-bag-cell="${index}" aria-label="${escapeHtml(label)}" style="grid-column:${column};grid-row:${row}"></button>`
+    }).join('')
     const items = this.run.backpack.placements.map((placement) => {
       const item = placement.item
       const shape = this.run.backpack.shapeFor(item, placement.rotation)
-      const selected = this.run.selectedInventoryIndex === this.run.backpack.originIndex(placement)
+      const originIndex = this.run.backpack.originIndex(placement)
+      const selected = this.run.selectedInventoryIndex === originIndex
       const detail = item.type === 'weapon'
         ? `ATK ${item.attack} \u00b7 R ${item.range} \u00b7 ${LABELS.durability} ${item.durability}`
         : item.type === 'potion' ? `HP +${item.heal}`
           : item.type === 'armor' ? `${LABELS.armor} +${item.armor}`
             : item.type === 'buff' ? `ATK +${item.attackBonus}`
               : item.type === 'whetstone' ? `${LABELS.durability} +${item.repair}` : ''
-      const index = this.run.backpack.originIndex(placement)
       let firstFilled = true
-      const shapeCells = shape.flat().map((filled) => {
+      const shapeCells = shape.flat().map((filled, shapeIndex) => {
         if (!filled) return '<span class="void"></span>'
+        const cellColumn = shapeIndex % shape[0].length
+        const cellRow = Math.floor(shapeIndex / shape[0].length)
+        const cellIndex = (placement.y + cellRow) * INVENTORY_COLUMNS + placement.x + cellColumn
         const name = firstFilled ? `<b>${escapeHtml(item.name)}</b>` : ''
         firstFilled = false
-        return `<span class="occupied">${name}</span>`
+        return `<span class="occupied" data-bag-item="${cellIndex}">${name}</span>`
       }).join('')
-      return `<button class="bag-item ${item.type}${selected ? ' selected' : ''}" data-slot="${index}" style="grid-column:${placement.x + 1} / span ${shape[0].length};grid-row:${placement.y + 1} / span ${shape.length}"><span class="bag-shape" style="grid-template-columns:repeat(${shape[0].length},1fr);grid-template-rows:repeat(${shape.length},1fr)">${shapeCells}</span><span class="bag-details"><small>${detail}</small></span></button>`
+      return `<div class="bag-item ${item.type}${selected ? ' selected' : ''}" style="grid-column:${placement.x + 1} / span ${shape[0].length};grid-row:${placement.y + 1} / span ${shape.length}"><span class="bag-shape" style="grid-template-columns:repeat(${shape[0].length},1fr);grid-template-rows:repeat(${shape.length},1fr)">${shapeCells}</span><span class="bag-details"><small>${detail}</small></span></div>`
     }).join('')
     backpack.innerHTML = `${cells}${items}`
     const rotate = this.root.querySelector('[data-action="rotate-bag"]')
-    const selected = this.run.selectedItem
-    const placement = selected ? this.run.backpack.placementOf(selected.uid) : null
-    const selectedShape = placement && selected ? this.run.backpack.shapeFor(selected, placement.rotation) : null
+    const placement = selectedItem ? this.run.backpack.placementOf(selectedItem.uid) : null
+    const selectedShape = placement && selectedItem ? this.run.backpack.shapeFor(selectedItem, placement.rotation) : null
     const rotatable = !!selectedShape && (selectedShape.length > 1 || selectedShape[0].length > 1)
     rotate.hidden = !rotatable
     rotate.disabled = !rotatable
@@ -493,18 +524,31 @@ export class HUD {
     const panel = this.q('detailpanel')
     const open = !!detail
     panel.classList.toggle('show', open)
-    panel.classList.toggle('top', detail?.position === 'top')
-    panel.classList.toggle('bottom', detail?.position === 'bottom')
     panel.setAttribute('aria-hidden', open ? 'false' : 'true')
     if (!open) return
-    this.q('detailtype').textContent = detail.type || ''
+    this.q('detailicon').textContent = DETAIL_ICONS[detail.icon] || DETAIL_ICONS.item
     this.q('detailtitle').textContent = detail.title || ''
+    const badges = [detail.type, ...(detail.badges || [])].filter(Boolean)
+    this.q('detailbadges').innerHTML = badges.map((badge) => `<span>${escapeHtml(badge)}</span>`).join('')
     this.q('detaillines').innerHTML = (detail.lines || []).map((line) => `<div>${escapeHtml(line)}</div>`).join('')
+    const description = this.q('detaildescription')
+    description.textContent = detail.description || ''
+    description.hidden = !detail.description
   }
 
   _detailActionFor(target) {
     const relic = target.closest('[data-relic-detail]')
     if (relic) return () => this.run.showRelicDetail(relic.dataset.relicDetail)
+    const bagItem = target.closest('[data-bag-item]')
+    if (bagItem) {
+      const item = this.run.backpack.placementForCellIndex(Number(bagItem.dataset.bagItem))?.item
+      return item ? () => this.run.showItemDetail(item) : null
+    }
+    const bagCell = target.closest('[data-bag-cell]')
+    if (bagCell) {
+      const item = this.run.backpack.placementForCellIndex(Number(bagCell.dataset.bagCell))?.item
+      return item ? () => this.run.showItemDetail(item) : null
+    }
     const inventory = target.closest('[data-slot]')
     if (inventory) {
       const item = this.run.backpack.placementForCellIndex(Number(inventory.dataset.slot))?.item
@@ -598,20 +642,28 @@ export class HUD {
       this.run.chooseMerchantRelic(merchantRelicChoice.dataset.merchantRelicChoice)
       return
     }
-    const bagCell = event.target.closest('[data-bag-cell]')
-    if (bagCell) {
-      this.run.moveSelectedInventory(Number(bagCell.dataset.bagCell))
+    const bagItem = event.target.closest('[data-bag-item]')
+    if (bagItem) {
+      const index = Number(bagItem.dataset.bagItem)
+      if (this.run.itemTargeting) {
+        const item = this.run.backpack.placementForCellIndex(index)?.item
+        if (item?.type === 'weapon') this.run.applySelectedItemToBackpackWeapon(index)
+        else this.run.clearSelection()
+      } else {
+        this.run.clickInventoryCell(index)
+      }
       return
     }
-    const slot = event.target.closest('[data-slot]')
-    if (slot) {
+    const bagCell = event.target.closest('[data-bag-cell]')
+    if (bagCell) {
+      const index = Number(bagCell.dataset.bagCell)
       if (this.run.itemTargeting) {
-        const item = this.run.backpack.placementForCellIndex(Number(slot.dataset.slot))?.item
-        if (item?.type === 'weapon') this.run.applySelectedItemToBackpackWeapon(Number(slot.dataset.slot))
+        const item = this.run.backpack.placementForCellIndex(index)?.item
+        if (item?.type === 'weapon') this.run.applySelectedItemToBackpackWeapon(index)
         else this.run.clearSelection()
-        return
+      } else {
+        this.run.clickInventoryCell(index)
       }
-      this.run.selectInventory(Number(slot.dataset.slot))
       return
     }
     const equipSlot = event.target.closest('[data-equip-slot]')
@@ -632,11 +684,18 @@ export class HUD {
       this.run.clearSave()
       this.run.reset()
     }
+    if (action === 'restart-settings') {
+      if (!window.confirm(LABELS.restartConfirm)) return
+      this.run.clearSave()
+      this.run.reset()
+      this.q('settings').classList.remove('show')
+    }
     if (action === 'close-merchant') this.run.closeMerchant()
     if (action === 'merchant-sell') this.run.sellSelectedMerchantItem()
     if (action === 'merchant-refresh') this.run.refreshMerchantInventory()
     if (action === 'confirm-relic-loadout') this.run.confirmRelicLoadout()
     if (action === 'skip-room-reward') this.run.skipRoomReward()
+    if (action === 'close-detail') this.run.closeDetail()
     if (action === 'log') this._toggleTopPanel('log')
     if (action === 'settings') this._toggleTopPanel('settings')
     if (action === 'character') this._toggleTopPanel('characterpanel')

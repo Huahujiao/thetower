@@ -38,7 +38,7 @@ export const RELIC_DEFS = Object.freeze([
   {
     id: 'r-backline-ricochet',
     name: '\u5f39\u9053\u6298\u5c04',
-    description: '\u6bcf\u6b21\u653b\u51fb\u540e\uff0c\u5bf9\u76ee\u6807\u8eab\u540e\u76f4\u7ebf 2 \u683c\u9020\u6210\u540c\u7b49\u4f24\u5bb3\uff0c\u82e5\u8be5\u683c\u672a\u7ffb\u5f00\u5219\u540c\u65f6\u7ffb\u5f00\u3002',
+    description: '\u6bcf\u6b21\u653b\u51fb\u540e\uff0c\u5bf9\u76ee\u6807\u8eab\u540e\u7b2c\u4e00\u683c\u9020\u6210\u540c\u7b49\u4f24\u5bb3\uff0c\u82e5\u8be5\u683c\u672a\u7ffb\u5f00\u5219\u540c\u65f6\u7ffb\u5f00\u3002',
     events: {
       'attack:hit': ({ run, enemy, damage }) => run?._ricochetBehind(enemy, damage)
         ? [{ log: '\u5f39\u9053\u6298\u5c04\uff1a\u653b\u51fb\u4e86\u76ee\u6807\u8eab\u540e\u7684\u5361\u724c\u3002' }]
@@ -435,7 +435,7 @@ export const RELIC_DEFS = Object.freeze([
     name: '\u80dc\u5229\u5728\u671b',
     description: '\u5df2\u53d1\u73b0\u51fa\u53e3\u65f6\uff0c\u654c\u4eba\u8ddd\u51fa\u53e3 1/2/3/4/5 \u683c\u5206\u522b\u53d7\u5230 +5/+4/+3/+2/+1 \u4f24\u5bb3\u3002',
     damageModifiers: ({ run, room, target }) => {
-      const exits = run?.dungeon.doorsForRoom(room?.id).filter((door) => room.isRevealed(door.arrival)) || []
+      const exits = run?.dungeon.doorsForRoom(room?.id).filter((door) => run.isExitDoor(door) && run.isDoorRevealed(door)) || []
       const distance = exits.length ? Math.min(...exits.map((door) => manhattan(target.pos, door.arrival))) : Infinity
       const bonus = distance >= 1 && distance <= 5 ? 6 - distance : 0
       return bonus ? [damageModifier(DAMAGE_STAGES.FLAT, bonus, 'relic:victory-near')] : []

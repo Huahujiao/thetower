@@ -2,8 +2,9 @@ import { EQUIPMENT_SLOTS, GameRun, INVENTORY_COLUMNS, INVENTORY_ROWS, SAVE_KEY }
 import { isAdjacent8, neighbors8, pos } from '../src/game/core/geometry.js'
 import { Room } from '../src/game/model/room.js'
 import { BackpackGrid } from '../src/game/model/backpack.js'
+import { Dungeon, createLinearDungeon, validateDungeonLayout } from '../src/game/model/dungeon.js'
 import { createEnemyById, createMonster, makeItemById, randomItem, resetEntityIds } from '../src/game/data/content.js'
-import { ATTRIBUTE_ORDER, attributeModifier } from '../src/game/data/attributes.js'
+import { ATTRIBUTE_ORDER, attributeLabel, attributeModifier } from '../src/game/data/attributes.js'
 import { enemyDefinitionFor } from '../src/game/data/enemies.js'
 import catalog from '../src/game/data/catalog.json' with { type: 'json' }
 import { RelicCollection } from '../src/game/model/relics.js'
@@ -90,8 +91,49 @@ for (const [floor, expectedRoomCount, expectedSize] of floorLayouts) {
   assert(rooms.length === expectedRoomCount, `floor ${floor} must have ${expectedRoomCount} rooms`)
   assert(rooms.every((room) => room.width === expectedSize && room.height === expectedSize), `floor ${floor} rooms must be ${expectedSize}x${expectedSize}`)
 }
+const floorThreeLayouts = run.dungeon.floorRooms(3).map((room) => run.dungeon.roomLayout(room.id))
+assert(JSON.stringify(floorThreeLayouts) === JSON.stringify([{ c: 1, r: 0 }, { c: 0, r: 0 }, { c: 0, r: 1 }, { c: 1, r: 1 }]), 'floor three must use the C-shaped room layout')
+assert(validateDungeonLayout(run.dungeon), 'generated dungeon layout did not pass structural validation')
+for (let seed = 1; seed <= 12; seed += 1) {
+  let value = seed
+  const random = () => {
+    value = (value * 1664525 + 1013904223) >>> 0
+    return value / 4294967296
+  }
+  const generated = createLinearDungeon({ random })
+  assert(validateDungeonLayout(generated.dungeon), `seed ${seed} generated an invalid dungeon layout`)
+}
+const doorSides = [...run.dungeon.edges.values()].flatMap((edge) => [edge.fromDoor.side, edge.toDoor.side])
+assert(doorSides.includes('top') && doorSides.includes('bottom'), 'room connections must use vertical doors as well as left and right doors')
+for (const room of run.dungeon.rooms.values()) {
+  const sides = run.dungeon.doorsForRoom(room.id).map((door) => door.side)
+  assert(new Set(sides).size === sides.length, `room ${room.id} must not place its entry and exit on the same wall`)
+}
+const rehydratedDungeon = Dungeon.hydrate(run.dungeon.serialize())
+assert(JSON.stringify(rehydratedDungeon.roomLayout(rehydratedDungeon.floorRooms(3)[0].id)) === JSON.stringify({ c: 1, r: 0 }), 'saved room layouts must preserve the floor topology')
+const overlappingLayout = Dungeon.hydrate(run.dungeon.serialize())
+const floorTwoRooms = overlappingLayout.floorRooms(2)
+overlappingLayout.setRoomLayout(floorTwoRooms[1].id, overlappingLayout.roomLayout(floorTwoRooms[0].id))
+let overlapRejected = false
+try {
+  validateDungeonLayout(overlappingLayout)
+} catch {
+  overlapRejected = true
+}
+assert(overlapRejected, 'layout validation accepted overlapping room coordinates')
+const misdirectedDoorLayout = Dungeon.hydrate(run.dungeon.serialize())
+misdirectedDoorLayout.edge('edge-2').fromDoor.side = 'top'
+let doorDirectionRejected = false
+try {
+  validateDungeonLayout(misdirectedDoorLayout)
+} catch {
+  doorDirectionRejected = true
+}
+assert(doorDirectionRejected, 'layout validation accepted a door facing away from its neighboring room')
 const openingRoomEnemies = [...run.currentRoom.entities.values()].filter((entity) => entity.kind === 'enemy')
-assert(openingRoomEnemies.length === 12 && openingRoomEnemies.every((entity) => entity.enemyId !== 'nest-spider'), 'the opening room must use the legacy-equivalent twenty-five percent non-ambush enemy ratio')
+const openingAlarmTraps = [...run.currentRoom.entities.values()].filter((entity) => entity.kind === 'trap' && entity.trapId === 'alarm')
+assert(openingRoomEnemies.length === 15 && openingRoomEnemies.filter((entity) => entity.enemyId === 'nest-spider').length === 3, 'the first-floor visual test content must add three ambush enemies')
+assert(openingAlarmTraps.length === 3, 'the first-floor visual test content must add three alarm traps')
 assert([...run.currentRoom.entities.values()].some((entity) => entity.kind === 'item' && entity.item.id === 'short-sword'), 'the opening room must guarantee an accessible weapon card')
 for (const room of run.dungeon.rooms.values()) {
   assert(room.entities.size >= Math.ceil(room.width * room.height * 0.8), 'room occupancy must keep empty cards at or below twenty percent')
@@ -121,9 +163,11 @@ run.currentRoom.reveal(detailEnemy.pos)
 assert(run.showBoardDetail(detailEnemy.pos) && run.detailPanel?.position === 'bottom', 'board enemy detail panel was not generated')
 const detailFeatures = enemyFeatureLabel(detailEnemy)
 assert(
-  detailFeatures ? run.detailPanel.lines.includes(`\u7279\u6027 ${detailFeatures}`) : !run.detailPanel.lines.some((line) => line.startsWith('\u7279\u6027')),
-  'board enemy detail panel did not represent the card features correctly',
+  detailFeatures ? run.detailPanel.badges.includes(detailFeatures) : !run.detailPanel.badges.some((badge) => badge === detailFeatures),
+  'board enemy detail panel did not represent the card features as a name-row badge',
 )
+assert(run.detailPanel.badges.includes(attributeLabel(detailEnemy.attribute)), 'board enemy detail panel did not represent the attribute as a name-row badge')
+assert(!run.detailPanel.lines.some((line) => line.startsWith('\u5c5e\u6027 ')), 'board enemy detail panel must not duplicate the attribute as a label/value row')
 assert(run.closeDetail(), 'board detail panel did not close')
 assert(!run.showBoardDetail(run.player.pos), 'the player must not expose a detail panel')
 
@@ -152,9 +196,9 @@ fallbackRotationGrid.placements.push(
   { item: { uid: 'rotation-block-a', shape: [[1]] }, x: 0, y: 1, rotation: 0 },
   { item: { uid: 'rotation-block-b', shape: [[1]] }, x: 1, y: 1, rotation: 0 },
 )
-assert(fallbackRotationGrid.rotate(fallbackRotationItem.uid), 'rotation should search for an alternative backpack position')
+assert(!fallbackRotationGrid.rotate(fallbackRotationItem.uid), 'rotation should remain in place when the rotated footprint is blocked')
 const fallbackPlacement = fallbackRotationGrid.placementOf(fallbackRotationItem.uid)
-assert(fallbackPlacement.rotation === 1 && fallbackPlacement.x === 2 && fallbackPlacement.y === 0, 'rotation did not relocate when the original position was blocked')
+assert(fallbackPlacement.rotation === 0 && fallbackPlacement.x === 0 && fallbackPlacement.y === 0, 'blocked rotation must not move the item')
 const preferredMoveGrid = new BackpackGrid(3, 2)
 const preferredMoveItem = { uid: 'preferred-move', shape: [[1], [1]] }
 preferredMoveGrid.placements.push({ item: preferredMoveItem, x: 0, y: 0, rotation: 0 })
@@ -182,6 +226,22 @@ assert(organizeRun.moveSelectedInventory(INVENTORY_COLUMNS) && organizeRun.turn 
 assert(organizeRun.selectInventory(organizeRun.selectedInventoryIndex) && !organizeRun.selectedItem, 'selecting an already selected backpack item must cancel selection')
 assert(organizeRun.selectInventory(INVENTORY_COLUMNS) && organizeRun.selectedItem, 'backpack item could not be selected after cancellation')
 assert(organizeRun.clearSelection() && !organizeRun.selectedItem, 'backpack selection could not be cleared')
+
+const clickInventoryRun = new GameRun({ autoLoad: false, random: () => 0.5 })
+clickInventoryRun.chooseInitialRelic(clickInventoryRun.initialRelicChoices[0])
+const clickMoveItem = makeItemById('short-sword')
+const clickSelectItem = makeItemById('small-potion')
+const clickMoveOrigin = addToBackpack(clickInventoryRun, clickMoveItem)
+const clickSelectOrigin = addToBackpack(clickInventoryRun, clickSelectItem)
+assert(clickInventoryRun.clickInventoryCell(clickMoveOrigin) && clickInventoryRun.selectedItem?.uid === clickMoveItem.uid, 'clicking a backpack item did not select it')
+assert(clickInventoryRun.clickInventoryCell(clickSelectOrigin) && clickInventoryRun.selectedItem?.uid === clickSelectItem.uid, 'clicking another backpack item did not select the new item')
+assert(clickInventoryRun.clickInventoryCell(clickSelectOrigin) && !clickInventoryRun.selectedItem, 'clicking the selected backpack item did not cancel selection')
+assert(clickInventoryRun.clickInventoryCell(clickMoveOrigin), 'backpack item could not be selected for a direct move')
+const clickMoveDestination = INVENTORY_COLUMNS * 2 + 3
+const clickMoveRotation = clickInventoryRun.backpack.placementOf(clickMoveItem.uid).rotation
+assert(clickInventoryRun.clickInventoryCell(clickMoveDestination), 'clicking an empty backpack cell did not move the selected item')
+const clickMovePlacement = clickInventoryRun.backpack.placementOf(clickMoveItem.uid)
+assert(clickInventoryRun.selectedItem?.uid === clickMoveItem.uid && clickInventoryRun.backpack.originIndex(clickMovePlacement) === clickMoveDestination && clickMovePlacement.rotation === clickMoveRotation, 'direct backpack move changed selection, origin, or rotation unexpectedly')
 
 const orderedFlipRun = new GameRun({ autoLoad: false, random: () => 0.5 })
 orderedFlipRun.chooseInitialRelic(orderedFlipRun.initialRelicChoices[0])
@@ -248,6 +308,8 @@ const doorRun = new GameRun({ autoLoad: false, random: () => 0.5 })
 doorRun.chooseInitialRelic(doorRun.initialRelicChoices[0])
 const beforeRoom = doorRun.currentRoom
 const door = doorRun.dungeon.doorsForRoom(beforeRoom.id)[0]
+assert(!doorRun.isDoorRevealed(door), 'an unexplored room exit must initially render as a wall')
+assert(!doorRun.clickDoor(door.id), 'an unexplored room exit must not be interactable')
 const sourceEnemy = [...beforeRoom.entities.values()].find((entity) => entity.kind === 'enemy')
 const doorApproach = adjacentEmpty(beforeRoom, { pos: door.arrival }, { cardinalOnly: false })
 assert(doorApproach, 'door has no adjacent approach tile')
@@ -259,6 +321,7 @@ doorRun.player.pos = { ...doorApproach }
 assert(![...beforeRoom.entities.values()].some((entity) => entity.kind === 'door'), 'doors must not occupy card tiles')
 assert(doorRun.clickTile(door.arrival.c, door.arrival.r), 'arrival tile move was rejected')
 assert(doorRun.currentRoom.id === beforeRoom.id && doorRun.player.pos.c === door.arrival.c && doorRun.player.pos.r === door.arrival.r, 'clicking an arrival tile must move without entering the door')
+assert(doorRun.isDoorRevealed(door), 'approaching an exit did not permanently reveal the door')
 assert(doorRun.clickDoor(door.id), 'unlocked door was rejected')
 assert(doorRun.currentRoom.id !== beforeRoom.id, 'door did not change rooms')
 assert(sourceEnemy.actionDelay === 0, 'frozen source room advanced during door transfer')
@@ -275,6 +338,7 @@ const remoteDoorRun = new GameRun({ autoLoad: false, random: () => 0.5 })
 remoteDoorRun.chooseInitialRelic(remoteDoorRun.initialRelicChoices[0])
 const remoteDoorRoom = remoteDoorRun.currentRoom
 const remoteDoor = remoteDoorRun.dungeon.doorsForRoom(remoteDoorRoom.id)[0]
+remoteDoor.discovered = true
 for (const entity of [...remoteDoorRoom.entities.values()]) remoteDoorRoom.removeEntity(entity.id)
 for (let r = 0; r < remoteDoorRoom.height; r += 1) {
   for (let c = 0; c < remoteDoorRoom.width; c += 1) remoteDoorRoom.reveal({ c, r })
@@ -418,8 +482,11 @@ if (trapRoom.entityAt(alarmPosition)) trapRoom.removeEntity(trapRoom.entityAt(al
 const alarmTrap = createTrapEntity('alarm', alarmPosition)
 trapRoom.addEntity(alarmTrap)
 trapRoom.reveal(alarmPosition)
+const alarmFlipBatches = []
+trapRun.on('animate:flip-batch', ({ flips }) => alarmFlipBatches.push(flips))
 trapRun._triggerTrap(alarmTrap)
 assert(trapRoom.isRevealed(hiddenEnemy.pos), 'alarm trap did not reveal nearby hidden enemies')
+assert(alarmFlipBatches.length === 1 && alarmFlipBatches[0].some((flip) => flip.position.c === hiddenEnemy.pos.c && flip.position.r === hiddenEnemy.pos.r), 'alarm trap did not reveal enemies through one flip batch')
 
 const eventRun = new GameRun({ autoLoad: false, random: () => 0.5 })
 eventRun.initialRelicChoices = []
@@ -595,9 +662,21 @@ assert(lowHammer?.durability === 1 && highHammer?.durability === 2, 'variable we
 
 const { testRun: ambushRun, room: ambushRoom } = clearedEnemyRun()
 const spider = createEnemyById('nest-spider', pos(2, 0))
+const secondSpider = createEnemyById('nest-spider', pos(2, 1))
 ambushRoom.addEntity(spider)
+ambushRoom.addEntity(secondSpider)
 ambushRoom.tile(spider.pos).revealed = false
-assert(!ambushRun._walk([pos(1, 0)]).stopped && ambushRoom.isRevealed(spider.pos) && ambushRun.player.hp === 15 && spider.attackCooldown === 2, 'ambush enemy did not reveal and attack immediately when the player entered nearby')
+ambushRoom.tile(secondSpider.pos).revealed = false
+const ambushFlipBatches = []
+ambushRun.on('animate:flip-batch', ({ flips }) => ambushFlipBatches.push(flips))
+assert(!ambushRun._walk([pos(1, 0)]).stopped && ambushRoom.isRevealed(spider.pos) && ambushRoom.isRevealed(secondSpider.pos) && ambushRun.player.hp === 10 && spider.attackCooldown === 2 && secondSpider.attackCooldown === 2, 'ambush enemies did not reveal and attack immediately when the player entered nearby')
+assert(ambushFlipBatches.length === 1 && ambushFlipBatches[0].length === 2, 'ambush enemies did not use one simultaneous flip batch')
+const { testRun: distantAmbushRun, room: distantAmbushRoom } = clearedEnemyRun()
+const distantSpider = createEnemyById('nest-spider', pos(3, 0))
+distantSpider.range = 2
+distantAmbushRoom.addEntity(distantSpider)
+distantAmbushRoom.tile(distantSpider.pos).revealed = false
+assert(!distantAmbushRun._walk([pos(1, 0)]).stopped && !distantAmbushRoom.isRevealed(distantSpider.pos), 'ambush must use the protagonist 8-neighborhood instead of enemy range')
 
 const { testRun: shieldRun, room: shieldRoom } = clearedEnemyRun()
 const shielded = createEnemyById('beetle-guard', pos(3, 0))
@@ -706,6 +785,15 @@ assert(computeAttackDamage({ weapon: relicDamageWeapon, target: woundedRelicTarg
 const healthyRelicTarget = { ...neutralRelicTarget, hp: 6 }
 assert(computeAttackDamage({ weapon: relicDamageWeapon, target: healthyRelicTarget, relicModifiers: noMercyRun.relicEngine.damageModifiers({ target: healthyRelicTarget }) }).damage === 4, 'no-mercy relic applied above half health')
 
+const { testRun: unarmedBuffRun, room: unarmedBuffRoom } = clearedEnemyRun()
+const unarmedBuffTarget = createEnemyById('gnawer', pos(1, 0))
+unarmedBuffTarget.hp = unarmedBuffTarget.maxHp = 20
+unarmedBuffRoom.addEntity(unarmedBuffTarget)
+unarmedBuffRun.player.equipment = [null, null]
+const unarmedCharmIndex = addToBackpack(unarmedBuffRun, makeItemById('battle-charm'))
+assert(unarmedBuffRun.selectInventory(unarmedCharmIndex) && unarmedBuffRun.useSelected(), 'battle charm could not be used for the unarmed attack test')
+assert(unarmedBuffRun.clickTile(unarmedBuffTarget.pos.c, unarmedBuffTarget.pos.r) && unarmedBuffTarget.hp === unarmedBuffTarget.maxHp - 5 && unarmedBuffRun.player.pendingAttackBuffs.length === 0, 'generic attack buff did not apply to and get consumed by an unarmed attack')
+
 const { testRun: remoteFlipRun, room: remoteFlipRoom } = clearedEnemyRun()
 const remoteTarget = pos(2, 0)
 for (const hidden of [pos(1, 0), pos(1, 1), pos(2, 1), pos(3, 0), pos(3, 1), remoteTarget]) remoteFlipRoom.tile(hidden).revealed = false
@@ -715,14 +803,27 @@ assert(remoteFlipRun.clickTile(remoteTarget.c, remoteTarget.r) && remoteFlipRoom
 
 const { testRun: ricochetRun, room: ricochetRoom } = clearedEnemyRun()
 const ricochetPrimary = createEnemyById('gnawer', pos(1, 0))
-const ricochetBackline = createEnemyById('gnawer', pos(3, 0))
+const ricochetNear = createEnemyById('gnawer', pos(2, 0))
 ricochetPrimary.hp = ricochetPrimary.maxHp = 99
-ricochetBackline.hp = ricochetBackline.maxHp = 99
+ricochetNear.hp = ricochetNear.maxHp = 99
 ricochetRoom.addEntity(ricochetPrimary)
-ricochetRoom.addEntity(ricochetBackline)
-const backlineHp = ricochetBackline.hp
+ricochetRoom.addEntity(ricochetNear)
 assert(ricochetRun.acquireRelic('r-backline-ricochet')?.active, 'ricochet relic could not activate')
-assert(ricochetRun.clickTile(ricochetPrimary.pos.c, ricochetPrimary.pos.r) && ricochetBackline.hp < backlineHp, 'backline ricochet did not damage the card two cells behind the target')
+ricochetRoom.tile(ricochetNear.pos).revealed = false
+const nearBacklineHp = ricochetNear.hp
+assert(ricochetRun.clickTile(ricochetPrimary.pos.c, ricochetPrimary.pos.r) && ricochetRoom.isRevealed(ricochetNear.pos) && ricochetNear.hp === nearBacklineHp, 'ricochet damaged a hidden card instead of revealing it first')
+assert(ricochetRun.clickTile(ricochetPrimary.pos.c, ricochetPrimary.pos.r) && ricochetNear.hp < nearBacklineHp, 'ricochet did not damage the revealed enemy one card behind the target')
+
+const { testRun: diagonalRicochetRun, room: diagonalRicochetRoom } = clearedEnemyRun()
+const diagonalPrimary = createEnemyById('gnawer', pos(1, 1))
+const diagonalBackline = createEnemyById('gnawer', pos(2, 2))
+diagonalPrimary.hp = diagonalPrimary.maxHp = 99
+diagonalBackline.hp = diagonalBackline.maxHp = 99
+diagonalRicochetRoom.addEntity(diagonalPrimary)
+diagonalRicochetRoom.addEntity(diagonalBackline)
+assert(diagonalRicochetRun.acquireRelic('r-backline-ricochet')?.active, 'diagonal ricochet relic could not activate')
+const diagonalBacklineHp = diagonalBackline.hp
+assert(diagonalRicochetRun.clickTile(diagonalPrimary.pos.c, diagonalPrimary.pos.r) && diagonalBackline.hp < diagonalBacklineHp, 'ricochet did not follow the diagonal direction behind the target')
 
 const { testRun: sideGlanceRun, room: sideGlanceRoom } = clearedEnemyRun(() => 0)
 const glanceTarget = pos(1, 1)

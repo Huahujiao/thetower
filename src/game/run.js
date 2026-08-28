@@ -1,5 +1,5 @@
 import { createEmitter } from './core/emitter.js'
-import { combatDistance, manhattan, neighbors8 } from './core/geometry.js'
+import { chebyshev, combatDistance, manhattan, neighbors8 } from './core/geometry.js'
 import { ATTRIBUTE_ORDER, attributeLabel } from './data/attributes.js'
 import { createGoldEntity, createLootEntity, createMinion, getItemDefinition, makeItemById, randomWeapon, starterWeapon, synchronizeEntityIds } from './data/content.js'
 import { enemyActiveSkillLabel, enemyBehaviorLabel, enemyFeatureLabel } from './data/enemy-features.js'
@@ -155,7 +155,7 @@ const MERCHANT_SERVICE_LABELS = Object.freeze({
 function detailForItem(item) {
   const type = DETAIL_LABELS[item?.type] || '\u7269\u54c1'
   const lines = []
-  if (item?.attribute) lines.push(`${DETAIL_LABELS.attribute} ${attributeLabel(item.attribute)}`)
+  const badges = item?.attribute ? [attributeLabel(item.attribute)] : []
   if (item?.type === 'weapon') {
     lines.push(`${DETAIL_LABELS.attack} ${item.attack || 0}`)
     lines.push(`${DETAIL_LABELS.range} ${item.range || 1}\uff08${DETAIL_LABELS.manhattan}\uff09`)
@@ -171,7 +171,7 @@ function detailForItem(item) {
   } else if (item?.type === 'whetstone') {
     lines.push(`${DETAIL_LABELS.repair} +${item.repair || 0}`)
   }
-  return { title: item?.name || type, type, lines }
+  return { title: item?.name || type, type, icon: item?.type || 'item', badges, lines }
 }
 
 export class GameRun {
@@ -248,6 +248,8 @@ export class GameRun {
 
   entityAt(position) { return this.currentRoom?.entityAt(position) || null }
   doorEdge(door) { return door ? this.dungeon.edgeForDoor(door.id) : null }
+  isExitDoor(door) { return !!door && this.doorEdge(door)?.fromDoor.id === door.id }
+  isDoorRevealed(door) { return !!door && (!this.isExitDoor(door) || door.discovered === true) }
   isDoorLocked(door) { return !!this.doorEdge(door)?.locked && !this.doorEdge(door)?.unlocked }
   activeRelics() { return this.relicEngine.activeDefinitions() }
 
@@ -287,13 +289,24 @@ export class GameRun {
     return count
   }
 
-  _revealEnemy(room, enemy, { cause = 'system' } = {}) {
+  _revealEnemy(room, enemy, { cause = 'system', animate = true } = {}) {
     if (!room || !enemy || room.isRevealed(enemy.pos)) return false
+    const wasFlippable = room.id === this.currentRoom?.id && this.tileCanBeFlipped(enemy.pos)
     room.reveal(enemy.pos)
-    if (room.id === this.currentRoom?.id) this.bus.emit('animate:flip', { roomId: room.id, position: { ...enemy.pos } })
+    if (animate && room.id === this.currentRoom?.id) {
+      this.bus.emit('animate:flip', { roomId: room.id, position: { ...enemy.pos }, backUnflippable: !wasFlippable })
+    }
     this._emitRelicEvent('card:revealed', { room, position: enemy.pos, cause })
     this._emitRelicEvent('enemy:revealed', { enemy, room, cause })
     return true
+  }
+
+  _animateEnemyRevealBatch(room, flips) {
+    if (!room || !Array.isArray(flips) || flips.length === 0) return
+    this.bus.emit('animate:flip-batch', {
+      roomId: room.id,
+      flips: flips.map((flip) => ({ position: { ...flip.position }, backUnflippable: !!flip.backUnflippable })),
+    })
   }
 
   _addRandomWeaponToBackpack() {
@@ -337,16 +350,20 @@ export class GameRun {
     const directionC = Math.sign(enemy.pos.c - this.player.pos.c)
     const directionR = Math.sign(enemy.pos.r - this.player.pos.r)
     if (directionC === 0 && directionR === 0) return false
-    const destination = {
-      c: enemy.pos.c + directionC * 2,
-      r: enemy.pos.r + directionR * 2,
+    let affected = false
+    for (const distance of [1]) {
+      const destination = {
+        c: enemy.pos.c + directionC * distance,
+        r: enemy.pos.r + directionR * distance,
+      }
+      if (!room.contains(destination)) continue
+      const wasHidden = !room.isRevealed(destination)
+      if (wasHidden) this._revealTile(destination, { cause: 'relic:backline-ricochet' })
+      const target = room.entityAt(destination)
+      if (!wasHidden && target?.kind === 'enemy') this._damageEnemy(target, damage, { source: 'relic:backline-ricochet' })
+      if (wasHidden || target?.kind === 'enemy') affected = true
     }
-    if (!room.contains(destination)) return false
-    const wasHidden = !room.isRevealed(destination)
-    if (wasHidden) this._revealTile(destination, { cause: 'relic:backline-ricochet' })
-    const target = room.entityAt(destination)
-    if (target?.kind === 'enemy') this._damageEnemy(target, damage, { source: 'relic:backline-ricochet' })
-    return wasHidden || target?.kind === 'enemy'
+    return affected
   }
 
   _tryTenthAttackTransmutation(enemy) {
@@ -481,12 +498,20 @@ export class GameRun {
     const definition = getRelicDefinition(id)
     if (!definition) return false
     const entry = this.relics.entries.find((candidate) => candidate.id === id)
-    const lines = [definition.description, entry?.active ? DETAIL_LABELS.active : DETAIL_LABELS.inactive]
+    const lines = []
     if (definition.activeSkill) {
       const cooldown = this.relicRuntime[id]?.cooldown || 0
       lines.push(`${definition.activeSkill.name} \u00b7 ${DETAIL_LABELS.cooldown} ${cooldown}/${definition.activeSkill.cooldown}`)
     }
-    return this._showDetail({ position: 'top', title: definition.name, type: DETAIL_LABELS.relic, lines })
+    return this._showDetail({
+      position: 'top',
+      title: definition.name,
+      type: DETAIL_LABELS.relic,
+      icon: 'relic',
+      badges: [entry?.active ? DETAIL_LABELS.active : DETAIL_LABELS.inactive],
+      description: definition.description,
+      lines,
+    })
   }
 
   showBoardDetail(position) {
@@ -500,7 +525,6 @@ export class GameRun {
       const features = enemyFeatureLabel(entity)
       const activeSkill = enemyActiveSkillLabel(entity.activeSkill)
       const lines = [
-        `${DETAIL_LABELS.attribute} ${attributeLabel(entity.attribute)}`,
         `${DETAIL_LABELS.health} ${entity.hp}/${entity.maxHp}`,
         `${DETAIL_LABELS.behavior} ${enemyBehaviorLabel(entity.behavior)}`,
         `${DETAIL_LABELS.normalAttack} ${entity.attack} \u00b7 ${DETAIL_LABELS.range} ${entity.range || 1}\uff08${DETAIL_LABELS.manhattan}\uff09`,
@@ -513,6 +537,8 @@ export class GameRun {
         position: 'bottom',
         title: entity.name,
         type: DETAIL_LABELS.enemy,
+        icon: 'enemy',
+        badges: [attributeLabel(entity.attribute), features].filter(Boolean),
         lines,
       })
     }
@@ -522,17 +548,17 @@ export class GameRun {
       const effect = trap.effect === 'explosion'
         ? `${DETAIL_LABELS.explosion} ${DETAIL_LABELS.attack} ${trap.damage || 0}`
         : DETAIL_LABELS.alarm
-      return this._showDetail({ position: 'bottom', title: trap.name, type: DETAIL_LABELS.trap, lines: [effect] })
+      return this._showDetail({ position: 'bottom', title: trap.name, type: DETAIL_LABELS.trap, icon: 'trap', description: effect })
     }
     if (entity.kind === 'gold') {
-      return this._showDetail({ position: 'bottom', title: '\u91d1\u5e01', type: DETAIL_LABELS.resource, lines: [`+${entity.amount || 0} \u91d1\u5e01`] })
+      return this._showDetail({ position: 'bottom', title: '\u91d1\u5e01', type: DETAIL_LABELS.resource, icon: 'gold', lines: [`+${entity.amount || 0} \u91d1\u5e01`] })
     }
     if (entity.kind === 'key') {
-      return this._showDetail({ position: 'bottom', title: DETAIL_LABELS.key, type: DETAIL_LABELS.resource, lines: [DETAIL_LABELS.keyHint] })
+      return this._showDetail({ position: 'bottom', title: DETAIL_LABELS.key, type: DETAIL_LABELS.resource, icon: 'key', description: DETAIL_LABELS.keyHint })
     }
     if (entity.kind === 'merchant') {
       const services = (entity.services || []).map((service) => MERCHANT_SERVICE_LABELS[service]).filter(Boolean)
-      return this._showDetail({ position: 'bottom', title: entity.name, type: DETAIL_LABELS.merchant, lines: services })
+      return this._showDetail({ position: 'bottom', title: entity.name, type: DETAIL_LABELS.merchant, icon: 'merchant', lines: services })
     }
     return false
   }
@@ -545,7 +571,7 @@ export class GameRun {
   }
 
   _showDetail(detail) {
-    this.detailPanel = { ...detail, lines: [...(detail.lines || [])] }
+    this.detailPanel = { ...detail, badges: [...(detail.badges || [])], lines: [...(detail.lines || [])] }
     this.bus.emit('detail')
     return true
   }
@@ -606,8 +632,9 @@ export class GameRun {
       const enemies = [...room.entities.values()].filter((entity) => entity.kind === 'enemy')
       for (const enemy of enemies) {
         if (!room.isRevealed(enemy.pos)) {
+          const wasFlippable = this.tileCanBeFlipped(enemy.pos)
           room.reveal(enemy.pos)
-          this.bus.emit('animate:flip', { roomId: room.id, position: { ...enemy.pos } })
+          this.bus.emit('animate:flip', { roomId: room.id, position: { ...enemy.pos }, backUnflippable: !wasFlippable })
           skipEnemyIds.add(enemy.id)
         }
       }
@@ -723,7 +750,7 @@ export class GameRun {
     if (!this._canAct()) return null
     const room = this.currentRoom
     const door = this.dungeon.door(doorId)
-    if (!room || !door || door.roomId !== room.id || this.isDoorLocked(door)) return null
+    if (!room || !door || door.roomId !== room.id || !this.isDoorRevealed(door) || this.isDoorLocked(door)) return null
     const path = findDoorPath(room, this.player.pos, door)
     if (!path) return null
     return { ...this._pathPreview('door', door.arrival, path), targeted: true, doorId: door.id }
@@ -744,6 +771,7 @@ export class GameRun {
   }
 
   selectInventory(index) {
+    if (!this._canOrganizeBackpack() || this.itemTargeting) return false
     if (!Number.isInteger(index) || index < 0 || index >= INVENTORY_CAPACITY) return false
     const placement = this.backpack.placementForCellIndex(index)
     if (!placement) return this.clearSelection()
@@ -766,10 +794,11 @@ export class GameRun {
   }
 
   moveInventory(itemUid, index) {
+    if (!this._canOrganizeBackpack() || this.itemTargeting) return false
     if (!Number.isInteger(index) || index < 0 || index >= INVENTORY_CAPACITY) return false
     const item = this.backpack.placementOf(itemUid)?.item
     if (!item) return false
-    const moved = this.backpack.movePreferred(item.uid, index % INVENTORY_COLUMNS, Math.floor(index / INVENTORY_COLUMNS))
+    const moved = this.backpack.move(item.uid, index % INVENTORY_COLUMNS, Math.floor(index / INVENTORY_COLUMNS))
     if (!moved) return false
     this.selectedInventoryIndex = this.backpack.originIndex(this.backpack.placementOf(item.uid))
     this.selectedEquipmentSlot = null
@@ -783,9 +812,32 @@ export class GameRun {
     return item ? this.moveInventory(item.uid, index) : false
   }
 
+  previewInventoryCellAction(index) {
+    if (!this._canOrganizeBackpack() || this.itemTargeting || !Number.isInteger(index) || index < 0 || index >= INVENTORY_CAPACITY) return null
+    const selected = this.selectedItem
+    if (!selected) return null
+    const selectedPlacement = this.backpack.placementOf(selected.uid)
+    const targetPlacement = this.backpack.placementForCellIndex(index)
+    if (!selectedPlacement) return null
+    if (targetPlacement) return targetPlacement.item.uid === selected.uid ? 'cancel' : 'select'
+    return this.backpack.canPlace(selected, index % INVENTORY_COLUMNS, Math.floor(index / INVENTORY_COLUMNS), selectedPlacement.rotation, selected.uid)
+      ? 'move'
+      : 'blocked'
+  }
+
+  clickInventoryCell(index) {
+    if (!this._canOrganizeBackpack() || this.itemTargeting || !Number.isInteger(index) || index < 0 || index >= INVENTORY_CAPACITY) return false
+    const selected = this.selectedItem
+    const targetPlacement = this.backpack.placementForCellIndex(index)
+    if (!selected) return targetPlacement ? this.selectInventory(index) : false
+    if (!targetPlacement) return this.moveInventory(selected.uid, index)
+    if (targetPlacement.item.uid === selected.uid) return this.clearSelection()
+    return this.selectInventory(index)
+  }
+
   rotateSelectedInventory() {
     const item = this.selectedItem
-    if (!item || !this.backpack.rotate(item.uid)) return false
+    if (!this._canOrganizeBackpack() || this.itemTargeting || !item || !this.backpack.rotate(item.uid)) return false
     this.selectedInventoryIndex = this.backpack.originIndex(this.backpack.placementOf(item.uid))
     this._changed()
     return true
@@ -947,7 +999,7 @@ export class GameRun {
   clickDoor(doorId) {
     if (!this._canAct()) return false
     const door = this.dungeon.door(doorId)
-    if (!door || door.roomId !== this.currentRoom?.id) return false
+    if (!door || door.roomId !== this.currentRoom?.id || !this.isDoorRevealed(door)) return false
     return this._useDoor(door)
   }
 
@@ -1092,8 +1144,9 @@ export class GameRun {
 
   _revealTile(position, { cause = 'player' } = {}) {
     const room = this.currentRoom
+    const wasFlippable = this.tileCanBeFlipped(position)
     if (!room?.reveal(position)) return { skipEnemyIds: new Set() }
-    this.bus.emit('animate:flip', { roomId: room.id, position: { ...position } })
+    this.bus.emit('animate:flip', { roomId: room.id, position: { ...position }, backUnflippable: !wasFlippable })
     this._emitRelicEvent('card:revealed', { room, position, cause })
     const entity = room.entityAt(position)
     if (entity?.kind === 'enemy') this._emitRelicEvent('enemy:revealed', { enemy: entity, room, cause })
@@ -1129,12 +1182,15 @@ export class GameRun {
       const targets = [...room.entities.values()]
         .filter((entity) => entity.kind === 'enemy' && !room.isRevealed(entity.pos))
         .filter((entity) => combatDistance(trap.pos, entity.pos, definition.radius) <= definition.radius)
+      const flips = []
       for (const enemy of targets) {
-        room.reveal(enemy.pos)
+        const wasFlippable = this.tileCanBeFlipped(enemy.pos)
+        this._revealEnemy(room, enemy, { cause: 'trap:alarm', animate: false })
+        flips.push({ position: enemy.pos, backUnflippable: !wasFlippable })
         enemy.actionDelay = Math.max(normalizedCounter(enemy.actionDelay), 1)
         skipEnemyIds.add(enemy.id)
-        this.bus.emit('animate:flip', { roomId: room.id, position: { ...enemy.pos } })
       }
+      this._animateEnemyRevealBatch(room, flips)
       this._log(`${definition.name}\u89e6\u53d1\uff0c\u7ffb\u5f00\u4e86 ${targets.length} \u4e2a\u9644\u8fd1\u654c\u4eba\u3002`)
     }
     this._emitRelicEvent('trap:triggered', { trap, definition, cause })
@@ -1253,10 +1309,17 @@ export class GameRun {
         if (combatDistance(this.player.pos, enemy.pos, weapon.range) > weapon.range) continue
         if (unarmed) {
           if (this._tryTenthAttackTransmutation(enemy)) break
+          const matchingBuffs = (this.player.pendingAttackBuffs || [])
+            .filter((buff) => (buff.target || 'any') === 'any' || buff.target === 'melee')
           const bonus = vanguardStrike && !enemy.hasActed ? 2 : 0
-          const hit = this._damageEnemy(enemy, 1 + bonus)
+          const pendingAttackBonus = matchingBuffs.reduce((total, buff) => total + buff.amount, 0)
+          const hit = this._damageEnemy(enemy, 1 + bonus + pendingAttackBonus)
           this._emitRelicEvent('attack:hit', { enemy, weapon: null, damage: hit.damage, countered: false, defeated: hit.defeated })
           this._log(`${weapon.name}\u5bf9 ${enemy.name}${hit.finishedDowned ? '\u7ec8\u7ed3\u4e86' : '\u9020\u6210'} ${hit.damage} \u4f24\u5bb3\u3002`)
+          if (matchingBuffs.length > 0) {
+            this.player.pendingAttackBuffs = this.player.pendingAttackBuffs.filter((buff) => !matchingBuffs.includes(buff))
+            this.player.pendingAttackBonus = this.player.pendingAttackBuffs.reduce((total, buff) => total + buff.amount, 0)
+          }
           if (hit.defeated) break
           continue
         }
@@ -1326,6 +1389,7 @@ export class GameRun {
         })
       }
       this.player.pos = { ...step }
+      this._discoverNearbyExitDoors()
       this._triggerAmbushes(step)
       if (this.gameOver) return { interceptorId, stopped: true }
       const interceptor = this._findInterceptor(previous, step, finalPosition)
@@ -1550,8 +1614,6 @@ export class GameRun {
     const minion = position ? createMinion(minionId, position) : null
     if (!room || !minion) return false
     room.addEntity(minion)
-    room.reveal(position)
-    this.bus.emit('animate:flip', { roomId: room.id, position: { ...position } })
     this._log(`${source.name}\u53ec\u5524\u4e86 ${minion.name}\u3002`)
     return true
   }
@@ -1585,12 +1647,15 @@ export class GameRun {
   _triggerAmbushes(position) {
     const room = this.currentRoom
     if (!room) return false
+    const playerNeighborhood = neighbors8(position, room.width, room.height)
     const ambushers = [...room.entities.values()]
       .filter((entity) => entity.kind === 'enemy' && entity.behavior === 'ambush' && !room.isRevealed(entity.pos))
-      .filter((entity) => combatDistance(entity.pos, position, entity.range) <= entity.range)
+      .filter((entity) => playerNeighborhood.some((candidate) => candidate.c === entity.pos.c && candidate.r === entity.pos.r))
+    const flips = []
     for (const enemy of ambushers) {
+      const wasFlippable = this.tileCanBeFlipped(enemy.pos)
       room.reveal(enemy.pos)
-      this.bus.emit('animate:flip', { roomId: room.id, position: { ...enemy.pos } })
+      flips.push({ position: enemy.pos, backUnflippable: !wasFlippable })
       this._log(`${enemy.name}\u4ece\u4f0f\u51fb\u4e2d\u73b0\u8eab\u3002`)
       if (normalizedCounter(enemy.actionDelay) === 0 && normalizedCounter(enemy.attackCooldown) === 0) {
         this._enemyAttack(enemy)
@@ -1598,7 +1663,20 @@ export class GameRun {
       }
       if (this.gameOver) break
     }
+    this._animateEnemyRevealBatch(room, flips)
     return ambushers.length > 0
+  }
+
+  _discoverNearbyExitDoors() {
+    const room = this.currentRoom
+    if (!room) return false
+    let discovered = false
+    for (const door of this.dungeon.doorsForRoom(room.id)) {
+      if (!this.isExitDoor(door) || door.discovered || chebyshev(this.player.pos, door.arrival) > 1) continue
+      door.discovered = true
+      discovered = true
+    }
+    return discovered
   }
 
   _putInInventory(item) { return !!this.backpack.add(item) }
@@ -1611,6 +1689,10 @@ export class GameRun {
   }
 
   _canAct() { return this.phase === 'explore' && !this.gameOver && this.initialRelicChoices.length === 0 }
+
+  _canOrganizeBackpack() {
+    return !this.gameOver && this.initialRelicChoices.length === 0 && ['explore', 'merchant'].includes(this.phase)
+  }
 
   _reject(message) {
     this._log(message)

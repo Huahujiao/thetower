@@ -21,6 +21,7 @@ const CAMERA_NEAR = 0.1
 const CAMERA_FAR = 80
 const CAMERA_HEIGHT_RATIO = 0.91
 const CAMERA_DEPTH_RATIO = 0.41
+const GHOST_ROOM_GAP = TILE_SIZE * 0.54
 
 const CARD_COLORS = Object.freeze({
   monster: '#5b1a1a',
@@ -149,6 +150,7 @@ export class GameScene {
     this.pathPreview = null
     this.pendingRebuild = false
     this.hoveredTileKey = null
+    this.visibleDoorKey = ''
     this.zoom = DEFAULT_ZOOM
     this.framedRoomId = null
     this.viewportWidth = 0
@@ -161,6 +163,7 @@ export class GameScene {
     this.scene = new THREE.Scene()
     this.scene.background = new THREE.Color(0x111722)
     this.baseCameraDistance = 12
+    this.sceneBounds = null
     this.camera = new THREE.PerspectiveCamera(CAMERA_FOV, 1, CAMERA_NEAR, CAMERA_FAR)
     this.renderer = new THREE.WebGLRenderer({ antialias: true })
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
@@ -179,6 +182,7 @@ export class GameScene {
     this._onWheel = (event) => this._handleWheel(event)
     this._onPointerLeave = () => this._setHoveredTile(null)
     this._onFlip = (payload) => this._queueAnimation('flip', payload)
+    this._onFlipBatch = (payload) => this._queueAnimation('flip-batch', payload)
     this._onMove = (payload) => this._queueAnimation('move', payload)
     window.addEventListener('resize', this._onResize)
     this.renderer.domElement.addEventListener('pointerdown', this._onPointerDown)
@@ -193,6 +197,7 @@ export class GameScene {
       this.rebuild()
     })
     this.flipUnsubscribe = this.run.on('animate:flip', this._onFlip)
+    this.flipBatchUnsubscribe = this.run.on('animate:flip-batch', this._onFlipBatch)
     this.moveUnsubscribe = this.run.on('animate:move', this._onMove)
     this.rebuild()
     this._resize(true)
@@ -219,13 +224,23 @@ export class GameScene {
     }
   }
 
+  _visibleDoorKey(room) {
+    if (!room) return ''
+    return this.run.dungeon.doorsForRoom(room.id)
+      .filter((door) => this.run.isDoorRevealed(door))
+      .map((door) => door.id)
+      .sort()
+      .join('|')
+  }
+
   rebuild() {
     const room = this.run.currentRoom
     if ((this.movementAnimation || this.flipAnimations.length || this.animationQueue.length) && room?.id === this.framedRoomId) {
       this.pendingRebuild = true
       return
     }
-    const sameRoom = room?.id === this.framedRoomId && this.tileMeshes.length === room.width * room.height
+    const visibleDoorKey = this._visibleDoorKey(room)
+    const sameRoom = room?.id === this.framedRoomId && this.tileMeshes.length === room.width * room.height && this.visibleDoorKey === visibleDoorKey
     if (sameRoom) {
       this._clearPathPreview()
       this._clearMovementAnimation()
@@ -238,6 +253,7 @@ export class GameScene {
     if (room?.id !== this.framedRoomId) {
       this.animationQueue = []
       this.pendingRebuild = false
+      this.visibleDoorKey = ''
     }
     this._clearPathPreview()
     this._clearMovementAnimation()
@@ -247,6 +263,7 @@ export class GameScene {
     this.tileMeshes = []
     this.tileMeshByKey.clear()
     this.doorMeshes = []
+    this.sceneBounds = null
     if (!room) return
     const floorTint = [0x111722, 0x111722, 0x151522, 0x1b1625, 0x221628, 0x29172a][room.floor] || 0x111722
     this.scene.background.setHex(floorTint)
@@ -255,15 +272,15 @@ export class GameScene {
       for (let c = 0; c < room.width; c++) this._addTile(room, { c, r })
     }
     this._addRoomBoundary(room)
+    this._addExploredRoomGhosts(room)
     this._frameRoom(room, { resetView: room.id !== this.framedRoomId })
+    this.visibleDoorKey = visibleDoorKey
     this.framedRoomId = room.id
   }
 
   _addTile(room, position) {
-    const tile = room.tile(position)
-    const revealed = this.run.debugReveal || tile.revealed
-    const peeked = !revealed && !!tile.peeked
-    const flippable = !revealed && this.run.tileCanBeFlipped(position)
+    const visual = this._tileVisualState(room, position)
+    const { revealed, peeked, flippable } = visual
     const geometry = new THREE.BoxGeometry(CARD_SIZE, CARD_THICKNESS, CARD_SIZE)
     const material = new THREE.MeshStandardMaterial({
       color: revealed ? 0x262a36 : flippable ? HIDDEN_CARD_BODY_COLOR : UNREACHABLE_HIDDEN_CARD_BODY_COLOR,
@@ -292,9 +309,36 @@ export class GameScene {
     face.userData.baseY = CARD_THICKNESS / 2 + 0.002
     face.userData.lift = 0
     face.userData.body = mesh
+    face.userData.visualKey = visual.key
     this.roomGroup.add(face)
     this.tileMeshes.push(face)
     this.tileMeshByKey.set(tileKey(position), face)
+  }
+
+  _tileVisualState(room, position) {
+    const tile = room.tile(position)
+    const revealed = this.run.debugReveal || tile.revealed
+    const peeked = !revealed && !!tile.peeked
+    const flippable = !revealed && this.run.tileCanBeFlipped(position)
+    const isPlayer = samePosition(this.run.player.pos, position)
+    const entity = room.entityAt(position)
+    return {
+      revealed,
+      peeked,
+      flippable,
+      key: JSON.stringify({
+        revealed,
+        peeked,
+        flippable,
+        backAttribute: tile.backAttribute,
+        entity,
+        player: isPlayer ? {
+          hp: this.run.player.hp,
+          maxHp: this.run.player.maxHp,
+          armor: this.run.player.armor,
+        } : null,
+      }),
+    }
   }
 
   _boundaryPosition(room, side, offset) {
@@ -353,7 +397,7 @@ export class GameScene {
   }
 
   _addRoomBoundary(room) {
-    const doors = this.run.dungeon.doorsForRoom(room.id)
+    const doors = this.run.dungeon.doorsForRoom(room.id).filter((door) => this.run.isDoorRevealed(door))
     const hasDoor = (side, offset) => doors.some((door) => door.side === side && door.offset === offset)
     for (const side of ['top', 'bottom']) {
       for (let c = 0; c < room.width; c++) if (!hasDoor(side, c)) this._addWallSegment(room, side, c)
@@ -364,44 +408,237 @@ export class GameScene {
     for (const door of doors) this._addDoorMesh(room, door)
   }
 
+  _resetSceneBounds(room) {
+    const halfWidth = room.width * TILE_SIZE / 2 + WALL_THICKNESS
+    const halfDepth = room.height * TILE_SIZE / 2 + WALL_THICKNESS
+    this.sceneBounds = { minX: -halfWidth, maxX: halfWidth, minZ: -halfDepth, maxZ: halfDepth }
+  }
+
+  _includeSceneBounds(center, room, margin = WALL_THICKNESS) {
+    const halfWidth = room.width * TILE_SIZE / 2 + margin
+    const halfDepth = room.height * TILE_SIZE / 2 + margin
+    this.sceneBounds.minX = Math.min(this.sceneBounds.minX, center.x - halfWidth)
+    this.sceneBounds.maxX = Math.max(this.sceneBounds.maxX, center.x + halfWidth)
+    this.sceneBounds.minZ = Math.min(this.sceneBounds.minZ, center.z - halfDepth)
+    this.sceneBounds.maxZ = Math.max(this.sceneBounds.maxZ, center.z + halfDepth)
+  }
+
+  _includeScenePoint(point, margin = 0) {
+    this.sceneBounds.minX = Math.min(this.sceneBounds.minX, point.x - margin)
+    this.sceneBounds.maxX = Math.max(this.sceneBounds.maxX, point.x + margin)
+    this.sceneBounds.minZ = Math.min(this.sceneBounds.minZ, point.z - margin)
+    this.sceneBounds.maxZ = Math.max(this.sceneBounds.maxZ, point.z + margin)
+  }
+
+  _doorOutward(side) {
+    if (side === 'left') return { x: -1, z: 0 }
+    if (side === 'right') return { x: 1, z: 0 }
+    if (side === 'top') return { x: 0, z: -1 }
+    return { x: 0, z: 1 }
+  }
+
+  _doorPoint(room, door, center) {
+    const local = this._boundaryPosition(room, door.side, door.offset)
+    return { x: center.x + local.x, z: center.z + local.z }
+  }
+
+  _exploredRoomLayout(currentRoom) {
+    const centers = new Map([[currentRoom.id, { x: 0, z: 0 }]])
+    const connectors = []
+    const queue = [currentRoom]
+    while (queue.length) {
+      const room = queue.shift()
+      const center = centers.get(room.id)
+      for (const edge of this.run.dungeon.edges.values()) {
+        const fromRoom = this.run.dungeon.room(edge.fromRoomId)
+        const toRoom = this.run.dungeon.room(edge.toRoomId)
+        const endpoint = fromRoom?.id === room.id
+          ? { door: edge.fromDoor, otherRoom: toRoom, otherDoor: edge.toDoor }
+          : toRoom?.id === room.id
+            ? { door: edge.toDoor, otherRoom: fromRoom, otherDoor: edge.fromDoor }
+            : null
+        if (!endpoint || endpoint.otherRoom?.floor !== currentRoom.floor || !endpoint.otherRoom.visited || centers.has(endpoint.otherRoom.id)) continue
+        const ownDoor = this._boundaryPosition(room, endpoint.door.side, endpoint.door.offset)
+        const otherDoor = this._boundaryPosition(endpoint.otherRoom, endpoint.otherDoor.side, endpoint.otherDoor.offset)
+        const outward = this._doorOutward(endpoint.door.side)
+        const otherCenter = {
+          x: center.x + ownDoor.x + outward.x * GHOST_ROOM_GAP - otherDoor.x,
+          z: center.z + ownDoor.z + outward.z * GHOST_ROOM_GAP - otherDoor.z,
+        }
+        centers.set(endpoint.otherRoom.id, otherCenter)
+        connectors.push({
+          from: this._doorPoint(room, endpoint.door, center),
+          to: this._doorPoint(endpoint.otherRoom, endpoint.otherDoor, otherCenter),
+        })
+        queue.push(endpoint.otherRoom)
+      }
+    }
+    return { centers, connectors }
+  }
+
+  _addGhostRoom(room, center) {
+    const group = new THREE.Group()
+    group.position.set(center.x, 0, center.z)
+    const width = room.width * TILE_SIZE
+    const depth = room.height * TILE_SIZE
+    const outline = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(-width / 2, CARD_THICKNESS / 2 + 0.012, -depth / 2),
+        new THREE.Vector3(width / 2, CARD_THICKNESS / 2 + 0.012, -depth / 2),
+        new THREE.Vector3(width / 2, CARD_THICKNESS / 2 + 0.012, depth / 2),
+        new THREE.Vector3(-width / 2, CARD_THICKNESS / 2 + 0.012, depth / 2),
+        new THREE.Vector3(-width / 2, CARD_THICKNESS / 2 + 0.012, -depth / 2),
+      ]),
+      new THREE.LineBasicMaterial({ color: 0x9ab8df, transparent: true, opacity: 0.4, depthWrite: false }),
+    )
+    group.add(outline)
+    for (const door of this.run.dungeon.doorsForRoom(room.id)) {
+      const horizontal = door.side === 'top' || door.side === 'bottom'
+      const point = this._boundaryPosition(room, door.side, door.offset)
+      const marker = new THREE.Mesh(
+        new THREE.BoxGeometry(horizontal ? TILE_SIZE * 0.62 : WALL_THICKNESS * 1.65, 0.035, horizontal ? WALL_THICKNESS * 1.65 : TILE_SIZE * 0.62),
+        new THREE.MeshBasicMaterial({ color: 0xbc8350, transparent: true, opacity: 0.58, depthWrite: false }),
+      )
+      marker.position.set(point.x, CARD_THICKNESS / 2 + 0.027, point.z)
+      group.add(marker)
+    }
+    this.roomGroup.add(group)
+  }
+
+  _addGhostRoomConnector(from, to) {
+    const connector = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(from.x, CARD_THICKNESS / 2 + 0.022, from.z),
+        new THREE.Vector3(to.x, CARD_THICKNESS / 2 + 0.022, to.z),
+      ]),
+      new THREE.LineBasicMaterial({ color: 0x9ab8df, transparent: true, opacity: 0.46, depthWrite: false }),
+    )
+    this.roomGroup.add(connector)
+  }
+
+  _addFloorTransitionGhost(room, door, direction, center = { x: 0, z: 0 }) {
+    const point = this._doorPoint(room, door, center)
+    const outward = this._doorOutward(door.side)
+    const length = TILE_SIZE * 1.16
+    const width = TILE_SIZE * 0.62
+    const baseHeight = CARD_THICKNESS / 2 + 0.08
+    const rise = direction === 'up' ? 1.02 : -0.72
+    const slope = Math.atan2(rise, length)
+    const end = { x: point.x + outward.x * length, z: point.z + outward.z * length }
+    const group = new THREE.Group()
+    group.position.set(point.x, 0, point.z)
+    group.rotation.y = { bottom: 0, right: Math.PI / 2, top: Math.PI, left: -Math.PI / 2 }[door.side] || 0
+    const color = direction === 'up' ? 0x563989 : 0x6b426d
+    const material = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.46, depthWrite: false })
+    const ramp = new THREE.Mesh(new THREE.BoxGeometry(width, 0.08, length), material)
+    ramp.rotation.x = -slope
+    ramp.position.set(0, baseHeight + rise / 2, length / 2)
+    group.add(ramp)
+    for (const side of [-1, 1]) {
+      const rail = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.045, length), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.72, depthWrite: false }))
+      rail.rotation.x = -slope
+      rail.position.set(side * width * 0.44, baseHeight + rise / 2 + 0.11, length / 2)
+      group.add(rail)
+    }
+    const endHeight = baseHeight + rise
+    for (const side of [-1, 1]) {
+      const post = new THREE.Mesh(new THREE.BoxGeometry(0.055, 0.48, 0.055), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.66, depthWrite: false }))
+      post.position.set(side * width * 0.34, endHeight + 0.24, length + 0.04)
+      group.add(post)
+    }
+    const top = new THREE.Mesh(new THREE.BoxGeometry(width * 0.72, 0.055, 0.055), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.66, depthWrite: false }))
+    top.position.set(0, endHeight + 0.46, length + 0.04)
+    group.add(top)
+    const arrowStart = new THREE.Vector3(0, direction === 'up' ? endHeight + 0.06 : endHeight + 0.36, length + 0.04)
+    const arrow = new THREE.ArrowHelper(new THREE.Vector3(0, direction === 'up' ? 1 : -1, 0), arrowStart, 0.28, color, 0.11, 0.065)
+    group.add(arrow)
+    this.roomGroup.add(group)
+    this._includeScenePoint(end, 0.44)
+  }
+
+  _addExploredRoomGhosts(currentRoom) {
+    this._resetSceneBounds(currentRoom)
+    const { centers, connectors } = this._exploredRoomLayout(currentRoom)
+    for (const room of this.run.dungeon.floorRooms(currentRoom.floor)) {
+      const center = centers.get(room.id)
+      if (!room.visited || room.id === currentRoom.id || !center) continue
+      this._addGhostRoom(room, center)
+      this._includeSceneBounds(center, room, WALL_THICKNESS + 0.04)
+    }
+    for (const connector of connectors) this._addGhostRoomConnector(connector.from, connector.to)
+    for (const edge of this.run.dungeon.edges.values()) {
+      const fromRoom = this.run.dungeon.room(edge.fromRoomId)
+      const toRoom = this.run.dungeon.room(edge.toRoomId)
+      const endpoint = fromRoom?.floor === currentRoom.floor
+        ? { room: fromRoom, door: edge.fromDoor, other: toRoom }
+        : toRoom?.floor === currentRoom.floor
+          ? { room: toRoom, door: edge.toDoor, other: fromRoom }
+          : null
+      const center = endpoint && centers.get(endpoint.room.id)
+      if (!endpoint || !center || endpoint.other?.floor === currentRoom.floor || !endpoint.room.visited || !endpoint.other?.visited) continue
+      this._addFloorTransitionGhost(endpoint.room, endpoint.door, endpoint.other.floor > currentRoom.floor ? 'up' : 'down', center)
+    }
+  }
+
   _refreshDoors() {
     for (const mesh of this.doorMeshes) this._setDoorAppearance(mesh)
+  }
+
+  _refreshTile(room, position, { force = false } = {}) {
+    const face = this.tileMeshByKey.get(tileKey(position))
+    const body = face?.userData?.body
+    if (!face || !body) return false
+    const visual = this._tileVisualState(room, position)
+    const { revealed, peeked, flippable } = visual
+    if (!force && face.visible && face.userData.visualKey === visual.key) return true
+    const oldTexture = face.material.map
+    face.material.map = revealed || peeked
+      ? this._makeFrontTexture(this._cardFaceData(room, position))
+      : this._makeBackTexture(this._backAttributeFor(room, position), { unflippable: !flippable })
+    face.material.needsUpdate = true
+    face.material.transparent = peeked
+    face.material.opacity = peeked ? 0.46 : 1
+    face.material.color.setHex(revealed || peeked || flippable ? 0xffffff : UNREACHABLE_HIDDEN_CARD_TINT)
+    oldTexture?.dispose()
+    face.visible = true
+    face.userData.lift = 0
+    face.position.y = face.userData.baseY
+    body.visible = true
+    body.position.y = 0
+    body.material.color.setHex(revealed ? 0x262a36 : flippable ? HIDDEN_CARD_BODY_COLOR : UNREACHABLE_HIDDEN_CARD_BODY_COLOR)
+    face.userData.visualKey = visual.key
+    return true
   }
 
   _refreshRoom(room) {
     for (let r = 0; r < room.height; r += 1) {
       for (let c = 0; c < room.width; c += 1) {
-        const position = { c, r }
-        const face = this.tileMeshByKey.get(tileKey(position))
-        const body = face?.userData?.body
-        if (!face || !body) return false
-        const tile = room.tile(position)
-        const revealed = this.run.debugReveal || tile.revealed
-        const peeked = !revealed && !!tile.peeked
-        const flippable = !revealed && this.run.tileCanBeFlipped(position)
-        const oldTexture = face.material.map
-        face.material.map = revealed || peeked
-          ? this._makeFrontTexture(this._cardFaceData(room, position))
-          : this._makeBackTexture(this._backAttributeFor(room, position), { unflippable: !flippable })
-        face.material.needsUpdate = true
-        face.material.transparent = peeked
-        face.material.opacity = peeked ? 0.46 : 1
-        face.material.color.setHex(revealed || peeked || flippable ? 0xffffff : UNREACHABLE_HIDDEN_CARD_TINT)
-        oldTexture?.dispose()
-        face.visible = true
-        face.userData.lift = 0
-        face.position.y = face.userData.baseY
-        body.visible = true
-        body.position.y = 0
-        body.material.color.setHex(revealed ? 0x262a36 : flippable ? HIDDEN_CARD_BODY_COLOR : UNREACHABLE_HIDDEN_CARD_BODY_COLOR)
+        if (!this._refreshTile(room, { c, r })) return false
       }
     }
     return true
   }
 
   _queueAnimation(type, payload) {
-    this.animationQueue.push({ type, payload })
+    const animation = { type, payload }
+    if (type === 'flip') animation.sourceBackTexture = this._snapshotFlipBack(payload)
+    if (type === 'flip-batch') {
+      animation.sourceBackTextures = (payload?.flips || [])
+        .map((flip) => this._snapshotFlipBack({ roomId: payload?.roomId, ...flip }))
+    }
+    this.animationQueue.push(animation)
     this._drainAnimationQueue()
+  }
+
+  _snapshotFlipBack({ roomId, position } = {}) {
+    const room = this.run.currentRoom
+    if (!room || room.id !== roomId || room.id !== this.framedRoomId || !position) return null
+    const face = this.tileMeshByKey.get(tileKey(position))
+    const texture = face?.visible ? face.material.map : null
+    if (!texture) return null
+    const snapshot = texture.clone()
+    snapshot.needsUpdate = true
+    return snapshot
   }
 
   _drainAnimationQueue() {
@@ -410,8 +647,12 @@ export class GameScene {
       const animation = this.animationQueue.shift()
       const started = animation.type === 'move'
         ? this._startMove(animation.payload)
-        : this._startFlip(animation.payload)
+        : animation.type === 'flip-batch'
+          ? this._startFlipBatch(animation.payload, animation.sourceBackTextures)
+          : this._startFlip(animation.payload, animation.sourceBackTexture)
       if (started) return
+      animation.sourceBackTexture?.dispose()
+      for (const texture of animation.sourceBackTextures || []) texture?.dispose()
     }
     this._flushPendingRebuild()
   }
@@ -422,7 +663,7 @@ export class GameScene {
     this.rebuild()
   }
 
-  _startFlip({ roomId, position } = {}) {
+  _startFlip({ roomId, position, backUnflippable = false } = {}, sourceBackTexture = null) {
     const room = this.run.currentRoom
     if (!room || room.id !== roomId || room.id !== this.framedRoomId || !position) return false
     const key = tileKey(position)
@@ -433,7 +674,7 @@ export class GameScene {
     group.position.set(point.x, CARD_THICKNESS / 2 + 0.004, point.z)
     group.rotation.x = Math.PI
     const frontTexture = this._makeFrontTexture(this._cardFaceData(room, position))
-    const backTexture = this._makeBackTexture(this._backAttributeFor(room, position))
+    const backTexture = sourceBackTexture || this._makeBackTexture(this._backAttributeFor(room, position), { unflippable: backUnflippable })
     const front = new THREE.Mesh(
       new THREE.PlaneGeometry(CARD_SIZE, CARD_SIZE),
       new THREE.MeshBasicMaterial({ map: frontTexture, side: THREE.DoubleSide }),
@@ -451,6 +692,18 @@ export class GameScene {
     this.roomGroup.add(group)
     this.flipAnimations.push({ key, group, frontTexture, backTexture, elapsed: 0, duration: 0.34 })
     return true
+  }
+
+  _startFlipBatch({ roomId, flips } = {}, sourceBackTextures = []) {
+    if (!Array.isArray(flips) || flips.length === 0) return false
+    let started = false
+    for (let index = 0; index < flips.length; index += 1) {
+      const flip = flips[index]
+      const didStart = this._startFlip({ roomId, ...flip }, sourceBackTextures[index])
+      if (didStart) started = true
+      else sourceBackTextures[index]?.dispose()
+    }
+    return started
   }
 
   _startMove({ roomId, from, path } = {}) {
@@ -674,6 +927,9 @@ export class GameScene {
       this.roomGroup.remove(animation.group)
       disposeObject(animation.group)
       this.flipAnimations.splice(index, 1)
+      const room = this.run.currentRoom
+      const face = this.tileMeshByKey.get(animation.key)
+      if (room?.id === this.framedRoomId && face?.userData?.position) this._refreshTile(room, face.userData.position, { force: true })
     }
     if (this.flipAnimations.length === 0) this._drainAnimationQueue()
   }
@@ -852,14 +1108,21 @@ export class GameScene {
     const aspect = width / height
     const verticalFov = THREE.MathUtils.degToRad(CAMERA_FOV)
     const horizontalFov = 2 * Math.atan(Math.tan(verticalFov / 2) * aspect)
-    const halfWidth = room.width * TILE_SIZE / 2 + 0.75
-    const halfDepth = room.height * TILE_SIZE / 2 + 0.75
+    const bounds = {
+      minX: -room.width * TILE_SIZE / 2,
+      maxX: room.width * TILE_SIZE / 2,
+      minZ: -room.height * TILE_SIZE / 2,
+      maxZ: room.height * TILE_SIZE / 2,
+    }
+    const halfWidth = Math.max(Math.abs(bounds.minX), Math.abs(bounds.maxX)) + 0.75
+    const halfDepth = Math.max(Math.abs(bounds.minZ), Math.abs(bounds.maxZ)) + 0.75
     const widthDistance = halfWidth / Math.tan(horizontalFov / 2)
     const depthDistance = halfDepth / Math.tan(verticalFov / 2)
-    this.baseCameraDistance = Math.max(widthDistance, depthDistance) * 1.28
+    this.baseCameraDistance = Math.max(widthDistance, depthDistance) * 0.64
     if (resetView) {
       this.zoom = DEFAULT_ZOOM
-      this.roomGroup.position.set(0, 0, 0)
+      const playerPoint = this._gridPosition(room, this.run.player.pos)
+      this.roomGroup.position.set(-playerPoint.x, 0, -playerPoint.z)
     }
     this.camera.aspect = aspect
     this._updateCamera()
@@ -891,8 +1154,14 @@ export class GameScene {
 
   _clampPan(room) {
     if (!room) return
-    const limitX = room.width * TILE_SIZE / 2 + 1.2
-    const limitZ = room.height * TILE_SIZE / 2 + 1.2
+    const bounds = this.sceneBounds || {
+      minX: -room.width * TILE_SIZE / 2,
+      maxX: room.width * TILE_SIZE / 2,
+      minZ: -room.height * TILE_SIZE / 2,
+      maxZ: room.height * TILE_SIZE / 2,
+    }
+    const limitX = Math.max(Math.abs(bounds.minX), Math.abs(bounds.maxX)) + 1.2
+    const limitZ = Math.max(Math.abs(bounds.minZ), Math.abs(bounds.maxZ)) + 1.2
     this.roomGroup.position.x = THREE.MathUtils.clamp(this.roomGroup.position.x, -limitX, limitX)
     this.roomGroup.position.z = THREE.MathUtils.clamp(this.roomGroup.position.z, -limitZ, limitZ)
   }
@@ -1074,6 +1343,7 @@ export class GameScene {
     this.renderer.domElement.removeEventListener('click', this._onClick)
     this.renderer.domElement.removeEventListener('wheel', this._onWheel)
     this.flipUnsubscribe?.()
+    this.flipBatchUnsubscribe?.()
     this._clearPathPreview()
     this._clearMovementAnimation()
     this._clearPlayerMarker()
