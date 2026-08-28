@@ -7,6 +7,8 @@ const TILE_SIZE = 1.14
 const CARD_SIZE = TILE_SIZE
 const CARD_THICKNESS = 0.08
 const WALL_THICKNESS = 0.14
+const DOOR_DEPTH = WALL_THICKNESS * 1.4
+const BOUNDARY_GAP = 0.012
 const WALL_HEIGHT = 0.44
 const HIDDEN_CARD_BODY_COLOR = 0x17172b
 const UNREACHABLE_HIDDEN_CARD_BODY_COLOR = HIDDEN_CARD_BODY_COLOR
@@ -19,8 +21,10 @@ const LONG_PRESS_MS = 420
 const CAMERA_FOV = 45
 const CAMERA_NEAR = 0.1
 const CAMERA_FAR = 80
-const CAMERA_HEIGHT_RATIO = 0.91
+const CAMERA_HEIGHT_RATIO = 0.74
 const CAMERA_DEPTH_RATIO = 0.41
+const CAMERA_AZIMUTH = 30 * Math.PI / 180
+const STANDING_BACK_LEAN = 30 * Math.PI / 180
 const GHOST_ROOM_GAP = TILE_SIZE * 0.54
 
 const CARD_COLORS = Object.freeze({
@@ -114,6 +118,34 @@ function drawStickFigure(context) {
   context.moveTo(80, 104)
   context.lineTo(103, 132)
   context.stroke()
+}
+
+function drawStandingToken(context, card) {
+  context.clearRect(0, 0, 160, 160)
+  const merchant = card.type === 'merchant'
+  const color = merchant ? '#d5a85d' : card.boss ? '#ff7777' : '#e36b6b'
+  context.fillStyle = color
+  context.strokeStyle = merchant ? '#ffe3a3' : '#ffc0c0'
+  context.lineWidth = 4
+  context.beginPath()
+  context.moveTo(34, 142)
+  context.lineTo(126, 142)
+  context.lineTo(80, 58)
+  context.closePath()
+  context.fill()
+  context.stroke()
+  context.beginPath()
+  context.arc(80, 42, 27, 0, Math.PI * 2)
+  context.fill()
+  context.stroke()
+  const glyph = Array.from(String(card.title || '?'))[0] || '?'
+  context.fillStyle = '#241c24'
+  context.font = 'bold 29px sans-serif'
+  context.textAlign = 'center'
+  context.textBaseline = 'middle'
+  context.fillText(glyph, 80, 42)
+  context.font = 'bold 23px sans-serif'
+  context.fillText(String(card.value ?? ''), 80, 112)
 }
 
 function tileKey(position) { return `${position.c}:${position.r}` }
@@ -281,9 +313,10 @@ export class GameScene {
   _addTile(room, position) {
     const visual = this._tileVisualState(room, position)
     const { revealed, peeked, flippable } = visual
+    const isPlayer = samePosition(this.run.player.pos, position)
     const geometry = new THREE.BoxGeometry(CARD_SIZE, CARD_THICKNESS, CARD_SIZE)
     const material = new THREE.MeshStandardMaterial({
-      color: revealed ? 0x262a36 : flippable ? HIDDEN_CARD_BODY_COLOR : UNREACHABLE_HIDDEN_CARD_BODY_COLOR,
+      color: revealed ? isPlayer ? 0x20242d : 0x262a36 : flippable ? HIDDEN_CARD_BODY_COLOR : UNREACHABLE_HIDDEN_CARD_BODY_COLOR,
       roughness: 0.72,
     })
     const mesh = new THREE.Mesh(geometry, material)
@@ -291,28 +324,39 @@ export class GameScene {
     mesh.position.set(point.x, 0, point.z)
     mesh.receiveShadow = true
     this.roomGroup.add(mesh)
-    const texture = revealed || peeked
-      ? this._makeFrontTexture(this._cardFaceData(room, position))
+    const card = revealed || peeked ? this._cardFaceData(room, position) : null
+    const standing = revealed && (card?.type === 'monster' || card?.type === 'merchant' || card?.type === 'entry')
+    const texture = card
+      ? this._makeFrontTexture(card)
       : this._makeBackTexture(this._backAttributeFor(room, position), { unflippable: !flippable })
     const face = new THREE.Mesh(
       new THREE.PlaneGeometry(CARD_SIZE, CARD_SIZE),
       new THREE.MeshBasicMaterial({
         map: texture,
         color: revealed || peeked || flippable ? 0xffffff : UNREACHABLE_HIDDEN_CARD_TINT,
-        transparent: peeked,
+        transparent: standing || peeked,
         opacity: peeked ? 0.46 : 1,
+        side: THREE.DoubleSide,
+        depthWrite: !standing,
       }),
     )
-    face.rotation.x = -Math.PI / 2
-    face.position.set(point.x, CARD_THICKNESS / 2 + 0.002, point.z)
+    this._setFacePose(face, point, standing)
     face.userData.position = { ...position }
-    face.userData.baseY = CARD_THICKNESS / 2 + 0.002
     face.userData.lift = 0
     face.userData.body = mesh
     face.userData.visualKey = visual.key
     this.roomGroup.add(face)
     this.tileMeshes.push(face)
     this.tileMeshByKey.set(tileKey(position), face)
+  }
+
+  _setFacePose(face, point, standing) {
+    const baseY = standing ? CARD_SIZE / 2 + CARD_THICKNESS / 2 : CARD_THICKNESS / 2 + 0.002
+    face.rotation.order = standing ? 'YXZ' : 'XYZ'
+    face.rotation.set(standing ? -STANDING_BACK_LEAN : -Math.PI / 2, standing ? CAMERA_AZIMUTH : 0, 0)
+    face.position.set(point.x, baseY, point.z)
+    face.userData.baseY = baseY
+    face.userData.standing = standing
   }
 
   _tileVisualState(room, position) {
@@ -342,16 +386,24 @@ export class GameScene {
   }
 
   _boundaryPosition(room, side, offset) {
+    const inset = WALL_THICKNESS / 2 + BOUNDARY_GAP
     if (side === 'top' || side === 'bottom') {
       return {
         x: (offset - (room.width - 1) / 2) * TILE_SIZE,
-        z: side === 'top' ? -room.height * TILE_SIZE / 2 : room.height * TILE_SIZE / 2,
+        z: side === 'top' ? -room.height * TILE_SIZE / 2 - inset : room.height * TILE_SIZE / 2 + inset,
       }
     }
     return {
-      x: side === 'left' ? -room.width * TILE_SIZE / 2 : room.width * TILE_SIZE / 2,
+      x: side === 'left' ? -room.width * TILE_SIZE / 2 - inset : room.width * TILE_SIZE / 2 + inset,
       z: (offset - (room.height - 1) / 2) * TILE_SIZE,
     }
+  }
+
+  _doorPosition(room, side, offset) {
+    const point = this._boundaryPosition(room, side, offset)
+    const outward = this._doorOutward(side)
+    const extra = (DOOR_DEPTH - WALL_THICKNESS) / 2
+    return { x: point.x + outward.x * extra, z: point.z + outward.z * extra }
   }
 
   _addWallSegment(room, side, offset) {
@@ -377,9 +429,9 @@ export class GameScene {
 
   _addDoorMesh(room, door) {
     const horizontal = door.side === 'top' || door.side === 'bottom'
-    const point = this._boundaryPosition(room, door.side, door.offset)
+    const point = this._doorPosition(room, door.side, door.offset)
     const mesh = new THREE.Mesh(
-      new THREE.BoxGeometry(horizontal ? TILE_SIZE * 0.72 : WALL_THICKNESS * 1.4, WALL_HEIGHT + 0.18, horizontal ? WALL_THICKNESS * 1.4 : TILE_SIZE * 0.72),
+      new THREE.BoxGeometry(horizontal ? TILE_SIZE * 0.72 : DOOR_DEPTH, WALL_HEIGHT + 0.18, horizontal ? DOOR_DEPTH : TILE_SIZE * 0.72),
       new THREE.MeshStandardMaterial({ roughness: 0.42, metalness: 0.46 }),
     )
     mesh.position.set(point.x, (WALL_HEIGHT + 0.18) / 2, point.z)
@@ -438,7 +490,7 @@ export class GameScene {
   }
 
   _doorPoint(room, door, center) {
-    const local = this._boundaryPosition(room, door.side, door.offset)
+    const local = this._doorPosition(room, door.side, door.offset)
     return { x: center.x + local.x, z: center.z + local.z }
   }
 
@@ -458,8 +510,8 @@ export class GameScene {
             ? { door: edge.toDoor, otherRoom: fromRoom, otherDoor: edge.fromDoor }
             : null
         if (!endpoint || endpoint.otherRoom?.floor !== currentRoom.floor || !endpoint.otherRoom.visited || centers.has(endpoint.otherRoom.id)) continue
-        const ownDoor = this._boundaryPosition(room, endpoint.door.side, endpoint.door.offset)
-        const otherDoor = this._boundaryPosition(endpoint.otherRoom, endpoint.otherDoor.side, endpoint.otherDoor.offset)
+        const ownDoor = this._doorPosition(room, endpoint.door.side, endpoint.door.offset)
+        const otherDoor = this._doorPosition(endpoint.otherRoom, endpoint.otherDoor.side, endpoint.otherDoor.offset)
         const outward = this._doorOutward(endpoint.door.side)
         const otherCenter = {
           x: center.x + ownDoor.x + outward.x * GHOST_ROOM_GAP - otherDoor.x,
@@ -494,7 +546,7 @@ export class GameScene {
     group.add(outline)
     for (const door of this.run.dungeon.doorsForRoom(room.id)) {
       const horizontal = door.side === 'top' || door.side === 'bottom'
-      const point = this._boundaryPosition(room, door.side, door.offset)
+      const point = this._doorPosition(room, door.side, door.offset)
       const marker = new THREE.Mesh(
         new THREE.BoxGeometry(horizontal ? TILE_SIZE * 0.62 : WALL_THICKNESS * 1.65, 0.035, horizontal ? WALL_THICKNESS * 1.65 : TILE_SIZE * 0.62),
         new THREE.MeshBasicMaterial({ color: 0xbc8350, transparent: true, opacity: 0.58, depthWrite: false }),
@@ -589,20 +641,24 @@ export class GameScene {
     const { revealed, peeked, flippable } = visual
     if (!force && face.visible && face.userData.visualKey === visual.key) return true
     const oldTexture = face.material.map
-    face.material.map = revealed || peeked
-      ? this._makeFrontTexture(this._cardFaceData(room, position))
+    const card = revealed || peeked ? this._cardFaceData(room, position) : null
+    const standing = revealed && (card?.type === 'monster' || card?.type === 'merchant' || card?.type === 'entry')
+    face.material.map = card
+      ? this._makeFrontTexture(card)
       : this._makeBackTexture(this._backAttributeFor(room, position), { unflippable: !flippable })
     face.material.needsUpdate = true
-    face.material.transparent = peeked
+    face.material.transparent = standing || peeked
     face.material.opacity = peeked ? 0.46 : 1
+    face.material.depthWrite = !standing
     face.material.color.setHex(revealed || peeked || flippable ? 0xffffff : UNREACHABLE_HIDDEN_CARD_TINT)
     oldTexture?.dispose()
     face.visible = true
     face.userData.lift = 0
-    face.position.y = face.userData.baseY
+    this._setFacePose(face, this._gridPosition(room, position), standing)
     body.visible = true
     body.position.y = 0
-    body.material.color.setHex(revealed ? 0x262a36 : flippable ? HIDDEN_CARD_BODY_COLOR : UNREACHABLE_HIDDEN_CARD_BODY_COLOR)
+    const isPlayer = samePosition(this.run.player.pos, position)
+    body.material.color.setHex(revealed ? isPlayer ? 0x20242d : 0x262a36 : flippable ? HIDDEN_CARD_BODY_COLOR : UNREACHABLE_HIDDEN_CARD_BODY_COLOR)
     face.userData.visualKey = visual.key
     return true
   }
@@ -674,7 +730,7 @@ export class GameScene {
     const backTexture = sourceBackTexture || this._makeBackTexture(this._backAttributeFor(room, position), { unflippable: backUnflippable })
     const front = new THREE.Mesh(
       new THREE.PlaneGeometry(CARD_SIZE, CARD_SIZE),
-      new THREE.MeshBasicMaterial({ map: frontTexture, side: THREE.DoubleSide }),
+      new THREE.MeshBasicMaterial({ map: frontTexture, side: THREE.DoubleSide, transparent: true }),
     )
     front.rotation.x = -Math.PI / 2
     front.position.y = 0.002
@@ -712,6 +768,9 @@ export class GameScene {
       const oldTexture = startFace.material.map
       startFace.material.map = this._makeFrontTexture({ type: 'empty' })
       startFace.material.needsUpdate = true
+      startFace.material.transparent = false
+      startFace.material.depthWrite = true
+      this._setFacePose(startFace, this._gridPosition(room, from), false)
       oldTexture?.dispose()
     }
     const startPoint = this._gridPosition(room, from)
@@ -719,9 +778,11 @@ export class GameScene {
     group.position.set(startPoint.x, CARD_THICKNESS / 2 + 0.006, startPoint.z)
     const marker = new THREE.Mesh(
       new THREE.PlaneGeometry(CARD_SIZE, CARD_SIZE),
-      new THREE.MeshBasicMaterial({ map: this._makeFrontTexture({ type: 'entry' }) }),
+      new THREE.MeshBasicMaterial({ map: this._makeFrontTexture({ type: 'entry' }), side: THREE.DoubleSide, transparent: true }),
     )
-    marker.rotation.x = -Math.PI / 2
+    marker.rotation.order = 'YXZ'
+    marker.rotation.set(-STANDING_BACK_LEAN, CAMERA_AZIMUTH, 0)
+    marker.position.y = CARD_SIZE / 2
     group.add(marker)
     this.roomGroup.add(group)
     const route = [{ ...from }, ...path.map((step) => ({ ...step }))]
@@ -815,7 +876,7 @@ export class GameScene {
     }
     const arrival = preview.arrival || preview.path?.at(-1) || this.run.player.pos
     const targetPoint = preview.doorId
-      ? this._boundaryPosition(room, this.run.dungeon.door(preview.doorId).side, this.run.dungeon.door(preview.doorId).offset)
+      ? this._doorPosition(room, this.run.dungeon.door(preview.doorId).side, this.run.dungeon.door(preview.doorId).offset)
       : this._gridPosition(room, preview.target)
     if (preview.targeted) {
       const arrivalPoint = this._gridPosition(room, arrival)
@@ -979,6 +1040,15 @@ export class GameScene {
 
   _makeFrontTexture(card) {
     return makeCanvasTexture((context) => {
+      if (card.type === 'monster' || card.type === 'merchant') {
+        drawStandingToken(context, card)
+        return
+      }
+      if (card.type === 'entry') {
+        context.clearRect(0, 0, 160, 160)
+        drawStickFigure(context)
+        return
+      }
       const base = CARD_COLORS[card.type] || CARD_COLORS.empty
       const gradient = context.createLinearGradient(0, 0, 0, 160)
       gradient.addColorStop(0, base)
@@ -1128,7 +1198,8 @@ export class GameScene {
 
   _updateCamera() {
     const distance = this.baseCameraDistance / this.zoom
-    this.camera.position.set(0, distance * CAMERA_HEIGHT_RATIO, distance * CAMERA_DEPTH_RATIO)
+    const horizontal = distance * CAMERA_DEPTH_RATIO
+    this.camera.position.set(Math.sin(CAMERA_AZIMUTH) * horizontal, distance * CAMERA_HEIGHT_RATIO, Math.cos(CAMERA_AZIMUTH) * horizontal)
     this.camera.lookAt(0, -0.35, 0)
     this.camera.updateProjectionMatrix()
   }
