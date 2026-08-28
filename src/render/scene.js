@@ -522,13 +522,13 @@ export class GameScene {
     const length = TILE_SIZE * 1.16
     const width = TILE_SIZE * 0.62
     const baseHeight = CARD_THICKNESS / 2 + 0.08
-    const rise = direction === 'up' ? 1.02 : -0.72
+    const rise = direction === 'up' ? 1.32 : -1.0
     const slope = Math.atan2(rise, length)
     const end = { x: point.x + outward.x * length, z: point.z + outward.z * length }
     const group = new THREE.Group()
     group.position.set(point.x, 0, point.z)
     group.rotation.y = { bottom: 0, right: Math.PI / 2, top: Math.PI, left: -Math.PI / 2 }[door.side] || 0
-    const color = direction === 'up' ? 0x563989 : 0x6b426d
+    const color = direction === 'up' ? 0x3d566d : 0x304456
     const material = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.46, depthWrite: false })
     const ramp = new THREE.Mesh(new THREE.BoxGeometry(width, 0.08, length), material)
     ramp.rotation.x = -slope
@@ -549,9 +549,6 @@ export class GameScene {
     const top = new THREE.Mesh(new THREE.BoxGeometry(width * 0.72, 0.055, 0.055), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.66, depthWrite: false }))
     top.position.set(0, endHeight + 0.46, length + 0.04)
     group.add(top)
-    const arrowStart = new THREE.Vector3(0, direction === 'up' ? endHeight + 0.06 : endHeight + 0.36, length + 0.04)
-    const arrow = new THREE.ArrowHelper(new THREE.Vector3(0, direction === 'up' ? 1 : -1, 0), arrowStart, 0.28, color, 0.11, 0.065)
-    group.add(arrow)
     this.roomGroup.add(group)
     this._includeScenePoint(end, 0.44)
   }

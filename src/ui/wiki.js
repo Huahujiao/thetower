@@ -69,7 +69,6 @@ const COPY = Object.freeze({
   split: '\u5206\u88c2',
   revive: '\u590d\u6d3b',
   spawn: '\u53ec\u5524\u7269',
-  manhattan: '\u66fc\u54c8\u987f\u8ddd\u79bb',
   cell: '\u683c',
   turn: '\u56de\u5408',
 })
@@ -198,7 +197,7 @@ function enemyCards() {
     stats: [
       stat(COPY.health, enemy.hp),
       stat(COPY.attack, enemy.attack),
-      stat(COPY.range, `${enemy.range} ${COPY.cell}\uff08${COPY.manhattan}\uff09`),
+      stat(COPY.range, `${enemy.range} ${COPY.cell}`),
       stat(COPY.delay, `${enemy.initialActionDelay} ${COPY.turn}`),
       stat(COPY.normalAttackCooldown, `${enemy.attackCooldownMax || 0} ${COPY.turn}`),
       enemy.activeSkill ? stat(COPY.active, enemyActiveSkillLabel(enemy.activeSkill)) : '',
@@ -223,7 +222,7 @@ function weaponCards() {
     accent: weapon.grip === 'two' ? '\u2694' : '\u2020',
     stats: [
       stat(COPY.attack, weapon.attack),
-      stat(COPY.range, `${weapon.range} ${COPY.cell}\uff08${COPY.manhattan}\uff09`),
+      stat(COPY.range, `${weapon.range} ${COPY.cell}`),
       stat(COPY.durability, weapon.durabilityRange ? weapon.durabilityRange.join('\u2013') : weapon.durability),
       stat(COPY.grip, weapon.grip === 'two' ? COPY.twoHanded : COPY.oneHanded),
       stat(COPY.attribute, attributeLabel(weapon.attribute)),

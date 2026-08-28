@@ -105,7 +105,6 @@ const DETAIL_LABELS = Object.freeze({
   mastery: '\u638c\u63a7',
   adaptation: '\u5c5e\u6027\u9002\u5e94',
   features: '\u7279\u6027',
-  manhattan: '\u66fc\u54c8\u987f\u8ddd\u79bb',
   explosion: '\u89e6\u53d1\u540e\u5bf9\u516b\u90bb\u57df\u9020\u6210\u4f24\u5bb3\u3002',
   alarm: '\u89e6\u53d1\u540e\u7ffb\u5f00\u9644\u8fd1\u7684\u724c\u3002',
   keyHint: '\u62fe\u53d6\u540e\u4f1a\u6c38\u4e45\u5f00\u542f\u5bf9\u5e94\u7684\u623f\u95f4\u95e8\u3002',
@@ -158,7 +157,7 @@ function detailForItem(item) {
   const badges = item?.attribute ? [attributeLabel(item.attribute)] : []
   if (item?.type === 'weapon') {
     lines.push(`${DETAIL_LABELS.attack} ${item.attack || 0}`)
-    lines.push(`${DETAIL_LABELS.range} ${item.range || 1}\uff08${DETAIL_LABELS.manhattan}\uff09`)
+    lines.push(`${DETAIL_LABELS.range} ${item.range || 1}`)
     lines.push(`${DETAIL_LABELS.durability} ${item.durability || 0}`)
     lines.push(`${DETAIL_LABELS.grip}\uff1a${isTwoHanded(item) ? DETAIL_LABELS.twoHanded : DETAIL_LABELS.oneHanded}`)
   } else if (item?.type === 'potion') {
@@ -527,7 +526,7 @@ export class GameRun {
       const lines = [
         `${DETAIL_LABELS.health} ${entity.hp}/${entity.maxHp}`,
         `${DETAIL_LABELS.behavior} ${enemyBehaviorLabel(entity.behavior)}`,
-        `${DETAIL_LABELS.normalAttack} ${entity.attack} \u00b7 ${DETAIL_LABELS.range} ${entity.range || 1}\uff08${DETAIL_LABELS.manhattan}\uff09`,
+        `${DETAIL_LABELS.normalAttack} ${entity.attack} \u00b7 ${DETAIL_LABELS.range} ${entity.range || 1}`,
         `${DETAIL_LABELS.actionDelay} ${normalizedCounter(entity.actionDelay)}/${normalizedCounter(entity.initialActionDelay)}`,
         `${DETAIL_LABELS.normalAttackCooldown} ${normalizedCounter(entity.attackCooldown)}/${normalizedCounter(entity.attackCooldownMax)}`,
       ]
