@@ -1193,7 +1193,7 @@ export class GameScene {
     }
     this.camera.aspect = aspect
     this._updateCamera()
-    this._clampPan(room)
+    if (!resetView) this._clampPan(room)
   }
 
   _updateCamera() {

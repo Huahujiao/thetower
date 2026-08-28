@@ -719,6 +719,7 @@ export class GameRun {
     const room = this.currentRoom
     const target = { c, r }
     if (!room?.contains(target)) return null
+    if (target.c === this.player.pos.c && target.r === this.player.pos.r && !room.entityAt(target)) return null
     if (!room.isRevealed(target)) {
       const route = findRevealPath(room, this.player.pos, target)
       if (route) return this._pathPreview('flip', target, route.path)
@@ -987,6 +988,7 @@ export class GameRun {
     const room = this.currentRoom
     const position = { c, r }
     if (!room?.contains(position)) return false
+    if (position.c === this.player.pos.c && position.r === this.player.pos.r && !room.entityAt(position)) return false
     if (!room.isRevealed(position)) return this._flipAt(position)
     const entity = room.entityAt(position)
     if (!entity) return this._moveTo(position)
