@@ -1,7 +1,7 @@
 import catalog from './catalog.json' with { type: 'json' }
 import { nextEntityId } from './content.js'
 
-const ITEM_DEFS = Object.freeze([...catalog.weapons, ...catalog.consumables])
+const ITEM_DEFS = Object.freeze([...catalog.weapons, ...catalog.consumables, ...(catalog.enemyLoot || [])])
 const ITEM_BY_ID = new Map(ITEM_DEFS.map((definition) => [definition.id, definition]))
 export const MERCHANT_STOCK_SIZE = 4
 
@@ -26,7 +26,10 @@ export const MERCHANT_DEFS = Object.freeze([
 const BY_ID = new Map(MERCHANT_DEFS.map((definition) => [definition.id, definition]))
 
 function availableItems(floor) {
-  return ITEM_DEFS.filter((definition) => floor >= (definition.minFloor || 1))
+  return ITEM_DEFS.filter((definition) => {
+    if (floor < (definition.minFloor || 1)) return false
+    return definition.dropOnly === true
+  })
 }
 
 function stockCandidates(definition, floor) {
@@ -38,7 +41,10 @@ function stockCandidates(definition, floor) {
 export function merchantItemPrice(itemOrId) {
   const item = typeof itemOrId === 'string' ? ITEM_BY_ID.get(itemOrId) : itemOrId
   if (!item) return 0
-  if (item.type === 'weapon') return 4 + item.attack + item.durability + item.range
+  if (item.type === 'weapon') {
+    const durability = Number(item.durability ?? item.durabilityRange?.[1] ?? 1) || 1
+    return 4 + (Number(item.attack) || 0) + durability + (Number(item.range) || 1)
+  }
   if (item.type === 'potion') return 3 + Math.ceil(item.heal / 2)
   if (item.type === 'armor') return 3 + Math.ceil(item.armor / 2)
   if (item.type === 'whetstone') return 3 + item.repair
@@ -50,25 +56,29 @@ export function merchantSellPrice(item) { return Math.max(1, Math.floor(merchant
 
 function makeStockEntry(definition) { return { itemId: definition.id, price: merchantItemPrice(definition) } }
 
-function pickStockEntry(merchantId, floor, random = Math.random) {
+function pickStockEntry(merchantId, floor, random = Math.random, excludedIds = new Set()) {
   const definition = getMerchantDefinition(merchantId)
-  const candidates = stockCandidates(definition, floor)
+  const candidates = stockCandidates(definition, floor).filter((item) => !excludedIds.has(item.id))
   const item = candidates[Math.floor(random() * candidates.length)] || null
   return item ? makeStockEntry(item) : null
 }
 
 export function buildMerchantStock(merchantId, floor, random = Math.random) {
   const entries = []
+  const usedIds = new Set()
   for (let index = 0; index < MERCHANT_STOCK_SIZE; index++) {
-    const entry = pickStockEntry(merchantId, floor, random)
-    if (entry) entries.push(entry)
+    const entry = pickStockEntry(merchantId, floor, random, usedIds)
+    if (!entry) break
+    entries.push(entry)
+    usedIds.add(entry.itemId)
   }
   return entries
 }
 
 export function refreshMerchantSlot(merchant, floor, index, random = Math.random) {
   if (!merchant?.merchantId || !Number.isInteger(index) || index < 0 || index >= merchant.stock.length) return false
-  const entry = pickStockEntry(merchant.merchantId, floor, random)
+  const excludedIds = new Set(merchant.stock.filter((_, slot) => slot !== index).map((stock) => stock.itemId))
+  const entry = pickStockEntry(merchant.merchantId, floor, random, excludedIds)
   if (!entry) return false
   merchant.stock[index] = entry
   return true

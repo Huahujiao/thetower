@@ -631,26 +631,6 @@ assert.equal(skillState.castActiveSkill().reason, 'cooldown')
 skillState._tickTurn()
 assert.equal(skillState.activeSkill.cooldownRemaining, 9)
 
-const multiSkillState = new GameState()
-assert.equal(multiSkillState.relics.acquire('r_calling_horn', { activate: true }).ok, true)
-assert.equal(multiSkillState.relics.acquire('r_stealth', { activate: true }).ok, true)
-multiSkillState.relicEngine.sync()
-multiSkillState._syncActiveSkillSelection()
-const firstSkillId = multiSkillState.activeSkill.id
-const secondSkillId = multiSkillState.activeSkills().find((skill) => skill.id !== firstSkillId).id
-assert.equal(multiSkillState.selectActiveSkill(secondSkillId).ok, true)
-assert.notEqual(multiSkillState.activeSkill.id, firstSkillId)
-assert.equal(multiSkillState.turn, 1)
-
-const stealthState = activeState('r_stealth')
-const stealthHp = stealthState.player.hp
-assert.equal(stealthState.castActiveSkill().ok, true)
-assert.equal(stealthState.stealthed, true)
-assert.equal(stealthState.player.hp, stealthHp)
-assert.equal(stealthState.waitTurn().ok, true)
-assert.equal(stealthState.turn, 2)
-assert.equal(stealthState.stealthed, true)
-
 // Waiting is a normal turn-consuming action: it advances turn-start effects
 // and lets revealed enemies attack, unlike backpack/free actions.
 const waitState = new GameState()

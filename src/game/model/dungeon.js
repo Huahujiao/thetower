@@ -1,4 +1,4 @@
-import { createBoss, createEnemyById, createGoldEntity, createKeyEntity, createLootEntity, createMonster, makeItemById, nextEntityId, randomItem, resetEntityIds, synchronizeEntityIds } from '../data/content.js'
+import { createBoss, createGoldEntity, createKeyEntity, createLootEntity, createMonster, makeItemById, nextEntityId, randomItem, resetEntityIds, synchronizeEntityIds } from '../data/content.js'
 import { createMerchantEntity } from '../data/merchants.js'
 import { createTrapEntity, randomTrapId } from '../data/traps.js'
 import { neighbors8, pos, posKey } from '../core/geometry.js'
@@ -10,16 +10,14 @@ const LAYOUT_EPSILON = 0.0001
 const MAX_LAYOUT_GENERATION_ATTEMPTS = 24
 
 export const DUNGEON_CONFIG = Object.freeze({
-  roomsPerFloor: [1, 3, 4, 3, 1],
+  roomsPerFloor: [1, 2, 2, 2, 1],
   roomSizes: [7, 8, 9, 9, 10],
-  lockedEdgeIndexes: [2, 7],
-  merchantRoomIndexes: [2, 6, 9],
+  lockedEdgeIndexes: [1, 4],
+  merchantRoomIndexes: [1, 3, 5],
   merchantIds: ['merchant', 'merchant', 'collector'],
   minimumOccupiedRatio: 0.8,
   firstFloorTestContent: Object.freeze({
-    alarmTraps: 3,
-    ambushEnemyId: 'nest-spider',
-    ambushEnemies: 3,
+    alarmTraps: 1,
   }),
 })
 
@@ -28,9 +26,9 @@ export const DUNGEON_CONFIG = Object.freeze({
 // a floor readable as a small route rather than a row of left-to-right rooms.
 const FLOOR_ROOM_LAYOUTS = Object.freeze([
   Object.freeze([{ c: 0, r: 0 }]),
-  Object.freeze([{ c: 1, r: 0 }, { c: 0, r: 0 }, { c: 0, r: 1 }]),
-  Object.freeze([{ c: 1, r: 0 }, { c: 0, r: 0 }, { c: 0, r: 1 }, { c: 1, r: 1 }]),
-  Object.freeze([{ c: 1, r: 1 }, { c: 0, r: 1 }, { c: 0, r: 0 }]),
+  Object.freeze([{ c: 0, r: 0 }, { c: 0, r: 1 }]),
+  Object.freeze([{ c: 1, r: 0 }, { c: 0, r: 0 }]),
+  Object.freeze([{ c: 0, r: 1 }, { c: 0, r: 0 }]),
   Object.freeze([{ c: 0, r: 0 }]),
 ])
 
@@ -441,21 +439,10 @@ function addNamedTrap(room, reserved, random, trapId) {
   return true
 }
 
-function addNamedMonster(room, reserved, random, enemyId) {
-  const position = randomOpenPosition(room, reserved, random)
-  const monster = position ? createEnemyById(enemyId, position) : null
-  if (!monster) return false
-  room.addEntity(monster)
-  return true
-}
-
 function addFirstFloorTestContent(room, reserved, random, content) {
   if (room.floor !== 1 || !content) return
   for (let index = 0; index < (content.alarmTraps || 0); index += 1) {
     if (!addNamedTrap(room, reserved, random, 'alarm')) break
-  }
-  for (let index = 0; index < (content.ambushEnemies || 0); index += 1) {
-    if (!addNamedMonster(room, reserved, random, content.ambushEnemyId)) break
   }
 }
 

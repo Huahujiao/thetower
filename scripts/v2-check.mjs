@@ -4,7 +4,7 @@ import { Room } from '../src/game/model/room.js'
 import { BackpackGrid } from '../src/game/model/backpack.js'
 import { Dungeon, createLinearDungeon, validateDungeonLayout } from '../src/game/model/dungeon.js'
 import { createEnemyById, createMonster, makeItemById, randomItem, resetEntityIds } from '../src/game/data/content.js'
-import { ATTRIBUTE_ORDER, attributeLabel, attributeModifier } from '../src/game/data/attributes.js'
+import { ATTRIBUTE_ORDER, attributeLabel, attributeModifier, migrateAttributeId } from '../src/game/data/attributes.js'
 import { enemyDefinitionFor } from '../src/game/data/enemies.js'
 import catalog from '../src/game/data/catalog.json' with { type: 'json' }
 import { RelicCollection } from '../src/game/model/relics.js'
@@ -65,9 +65,12 @@ function openMerchant(run, merchantId) {
 }
 
 const run = new GameRun({ autoLoad: false, random: () => 0.5 })
-assert(run.dungeon.rooms.size === 12, 'expected 12 configured rooms')
+assert(run.dungeon.rooms.size === 8, 'expected 8 configured rooms')
 assert(Array.isArray(catalog.enemies) && Array.isArray(catalog.weapons) && Array.isArray(catalog.consumables), 'static game data must be stored in the catalog JSON')
 const attributeContent = [...catalog.enemies, catalog.boss, ...catalog.weapons, ...catalog.consumables, ...catalog.enemyLoot]
+assert(JSON.stringify(ATTRIBUTE_ORDER) === JSON.stringify(['scorch', 'wither', 'drown']), 'attribute roster must contain only scorch, wither, and drown')
+assert(attributeLabel('scorch') === '\u707c\u70ed' && attributeLabel('wither') === '\u67af\u840e' && attributeLabel('drown') === '\u6c89\u6eba', 'attribute labels are invalid')
+assert(migrateAttributeId('slime') === 'wither' && migrateAttributeId('crystal') === 'wither' && migrateAttributeId('tide') === 'drown', 'legacy attributes did not migrate to the new roster')
 assert(attributeContent.every((entry) => ATTRIBUTE_ORDER.includes(entry.attribute)), 'every authored enemy, weapon, and item must have one valid attribute')
 assert(attributeContent.every((entry) => !('category' in entry) && !('damageType' in entry)), 'legacy weapon types and enemy categories must not remain in authored content')
 assert(catalog.enemies.find((enemy) => enemy.id === 'gnawer')?.initialActionDelay === 1, 'gnawer must have a one-turn initial action delay')
@@ -82,17 +85,17 @@ for (let floor = 1; floor <= 4; floor += 1) {
   const generated = new Set(available.map((_, index) => enemyDefinitionFor(floor, index)?.id))
   assert(available.every((enemy) => generated.has(enemy.id)), `floor ${floor} did not retain every enemy unlocked on or before that floor`)
 }
-assert(INVENTORY_ROWS === 4 && INVENTORY_COLUMNS === 6 && run.backpack.capacity === 24 && run.backpack.length === 0, 'inventory must be a six-column by four-row shape grid')
+assert(INVENTORY_ROWS === 5 && INVENTORY_COLUMNS === 5 && run.backpack.capacity === 25 && run.backpack.length === 0, 'inventory must be a five-column by five-row shape grid')
 assert(run.player.equipment.length === EQUIPMENT_SLOTS && run.player.equipment[0] && !run.player.equipment[1], 'new run must have left and right equipment slots')
 assert(!('sanity' in run.player), 'sanity must not exist in V2 player state')
-const floorLayouts = [[1, 1, 7], [2, 3, 8], [3, 4, 9], [4, 3, 9], [5, 1, 10]]
+const floorLayouts = [[1, 1, 7], [2, 2, 8], [3, 2, 9], [4, 2, 9], [5, 1, 10]]
 for (const [floor, expectedRoomCount, expectedSize] of floorLayouts) {
   const rooms = [...run.dungeon.rooms.values()].filter((room) => room.floor === floor)
   assert(rooms.length === expectedRoomCount, `floor ${floor} must have ${expectedRoomCount} rooms`)
   assert(rooms.every((room) => room.width === expectedSize && room.height === expectedSize), `floor ${floor} rooms must be ${expectedSize}x${expectedSize}`)
 }
 const floorThreeLayouts = run.dungeon.floorRooms(3).map((room) => run.dungeon.roomLayout(room.id))
-assert(JSON.stringify(floorThreeLayouts) === JSON.stringify([{ c: 1, r: 0 }, { c: 0, r: 0 }, { c: 0, r: 1 }, { c: 1, r: 1 }]), 'floor three must use the C-shaped room layout')
+assert(JSON.stringify(floorThreeLayouts) === JSON.stringify([{ c: 1, r: 0 }, { c: 0, r: 0 }]), 'floor three must use the planned two-room layout')
 assert(validateDungeonLayout(run.dungeon), 'generated dungeon layout did not pass structural validation')
 for (let seed = 1; seed <= 12; seed += 1) {
   let value = seed
@@ -132,8 +135,8 @@ try {
 assert(doorDirectionRejected, 'layout validation accepted a door facing away from its neighboring room')
 const openingRoomEnemies = [...run.currentRoom.entities.values()].filter((entity) => entity.kind === 'enemy')
 const openingAlarmTraps = [...run.currentRoom.entities.values()].filter((entity) => entity.kind === 'trap' && entity.trapId === 'alarm')
-assert(openingRoomEnemies.length === 15 && openingRoomEnemies.filter((entity) => entity.enemyId === 'nest-spider').length === 3, 'the first-floor visual test content must add three ambush enemies')
-assert(openingAlarmTraps.length === 3, 'the first-floor visual test content must add three alarm traps')
+assert(openingRoomEnemies.length === 12 && openingRoomEnemies.every((entity) => entity.behavior !== 'ambush'), 'the opening room must not contain ambush enemies')
+assert(openingAlarmTraps.length === 1, 'the opening room must retain one alarm trap')
 assert([...run.currentRoom.entities.values()].some((entity) => entity.kind === 'item' && entity.item.id === 'short-sword'), 'the opening room must guarantee an accessible weapon card')
 for (const room of run.dungeon.rooms.values()) {
   assert(room.entities.size >= Math.ceil(room.width * room.height * 0.8), 'room occupancy must keep empty cards at or below twenty percent')
@@ -161,6 +164,8 @@ assert(run.closeDetail() && !run.detailPanel, 'detail panel did not close')
 const detailEnemy = [...run.currentRoom.entities.values()].find((entity) => entity.kind === 'enemy')
 run.currentRoom.reveal(detailEnemy.pos)
 assert(run.showBoardDetail(detailEnemy.pos) && run.detailPanel?.position === 'bottom', 'board enemy detail panel was not generated')
+assert(run.detailPanel.lines.includes(`\u884c\u52a8\u5ef6\u8fdf ${detailEnemy.actionDelay}`), 'board enemy detail panel must show only the remaining action delay')
+assert(!run.detailPanel.lines.some((line) => line.startsWith('\u884c\u52a8\u5ef6\u8fdf ') && line.includes('/')), 'board enemy detail panel must not show the initial action delay')
 const detailFeatures = enemyFeatureLabel(detailEnemy)
 assert(
   detailFeatures ? run.detailPanel.badges.includes(detailFeatures) : !run.detailPanel.badges.some((badge) => badge === detailFeatures),
@@ -215,6 +220,8 @@ assert(horizontalFallbackGrid.placementOf(horizontalFallbackItem.uid).rotation =
 const serializedShapeGrid = shapeGrid.serialize((item) => ({ ...item }))
 const restoredShapeGrid = BackpackGrid.hydrate(serializedShapeGrid)
 assert(restoredShapeGrid.usedCells === 3 && restoredShapeGrid.placementOf(spear.uid)?.rotation === 1, 'shape backpack placement or rotation did not persist')
+const legacyBackpack = BackpackGrid.hydrate({ columns: 6, rows: 4, placements: [{ item: makeItemById('small-potion'), x: 5, y: 3, rotation: 0 }] })
+assert(legacyBackpack.columns === 5 && legacyBackpack.rows === 5 && legacyBackpack.length === 1, 'a legacy six-by-four backpack save did not reflow into the five-by-five grid')
 
 const organizeRun = new GameRun({ autoLoad: false, random: () => 0.5 })
 organizeRun.chooseInitialRelic(organizeRun.initialRelicChoices[0])
@@ -375,14 +382,27 @@ combatRun.player.pos = { ...approach }
 enemy.actionDelay = 0
 enemy.attackCooldown = 0
 const hpBefore = combatRun.player.hp
-combatRun.wait()
+combatRun._endTurn()
 assert(combatRun.player.hp < hpBefore, 'ready enemy did not act on the turn step')
+
+const armorLogRun = new GameRun({ autoLoad: false, random: () => 0.5 })
+armorLogRun.player.hp = 20
+armorLogRun.player.armor = 3
+armorLogRun._enemyAttack({ name: 'test enemy', attack: 2, attackCooldownMax: 0 })
+assert(armorLogRun.log[0].endsWith('\u51cf2\u7532\u3002'), 'fully absorbed damage must report the armor reduction')
+armorLogRun.player.armor = 3
+armorLogRun._enemyAttack({ name: 'test enemy', attack: 5, attackCooldownMax: 0 })
+assert(armorLogRun.log[0].endsWith('\u51cf2\u8840\uff0c\u51cf3\u7532\u3002'), 'partial armor absorption must report both health and armor reductions')
 
 const merchantRun = new GameRun({ autoLoad: false, random: () => 0.5 })
 merchantRun.chooseInitialRelic(merchantRun.initialRelicChoices[0])
 openMerchant(merchantRun, 'merchant')
 merchantRun.player.gold = 20
 const merchantItemsBefore = merchantRun.backpack.items.length
+const merchantStockDefs = merchantRun.merchantEntity.stock.map((entry) => catalog.enemyLoot.find((item) => item.id === entry.itemId))
+assert(merchantStockDefs.length === 4 && merchantStockDefs.every((item) => item?.dropOnly === true), 'merchant stock must contain only drop-only advanced items')
+assert(new Set(merchantRun.merchantEntity.stock.map((entry) => entry.itemId)).size === merchantRun.merchantEntity.stock.length, 'merchant stock should not repeat an item')
+assert(merchantRun.merchantEntity.stock.every((entry) => Number.isFinite(entry.price) && entry.price > 0), 'merchant stock prices must remain valid for enemy loot')
 assert(merchantRun.buyMerchantItem(0), 'merchant item purchase was rejected')
 assert(merchantRun.merchantEntity.stock[0]?.itemId && !merchantRun.merchantEntity.stock[0].sold, 'merchant purchase did not refresh its stock slot')
 assert(merchantRun.backpack.items.length === merchantItemsBefore + 1, 'merchant purchase did not enter the backpack')
@@ -396,8 +416,12 @@ merchantRun.player.gold = Math.max(merchantRun.player.gold, refreshPrice)
 assert(merchantRun.refreshMerchantInventory(), 'merchant could not refresh all stock for gold')
 const ownedRelic = RELIC_DEFS.find((definition) => !merchantRun.relics.has(definition.id))
 assert(ownedRelic && merchantRun.acquireRelic(ownedRelic.id)?.active, 'new relics must activate while capacity remains')
-assert(merchantRun.deactivateRelic(ownedRelic.id), 'merchant did not enable relic deactivation')
-assert(merchantRun.activateRelic(ownedRelic.id), 'merchant did not enable relic activation')
+assert(merchantRun.deactivateRelic(ownedRelic.id) && merchantRun.relics.isActive(ownedRelic.id) && !merchantRun.isRelicLoadoutDraftActive(ownedRelic.id), 'relic deactivation must only alter the unconfirmed draft')
+assert(merchantRun.activateRelic(ownedRelic.id) && merchantRun.relics.isActive(ownedRelic.id) && merchantRun.isRelicLoadoutDraftActive(ownedRelic.id), 'relic activation must only alter the unconfirmed draft')
+const stagedRelic = RELIC_DEFS.find((definition) => !merchantRun.relics.has(definition.id))
+assert(stagedRelic && merchantRun.acquireRelic(stagedRelic.id, { activate: false }), 'could not prepare an inactive relic for the loadout draft')
+assert(merchantRun.activateRelic(stagedRelic.id) && !merchantRun.relics.isActive(stagedRelic.id) && merchantRun.isRelicLoadoutDraftActive(stagedRelic.id), 'an unconfirmed relic activation changed active gameplay effects')
+assert(merchantRun.confirmRelicLoadout() && merchantRun.relics.isActive(stagedRelic.id), 'confirming the relic loadout did not commit the draft')
 merchantRun.closeMerchant()
 openMerchant(merchantRun, 'collector')
 merchantRun.player.gold = 20
@@ -418,6 +442,12 @@ assert(dualWeaponRun.player.equipment[0] && dualWeaponRun.player.equipment[1], '
 dualWeaponRun.selectEquipmentSlot(1)
 assert(dualWeaponRun.discardSelected(), 'selected equipped weapon could not be discarded')
 assert(!dualWeaponRun.player.equipment[1], 'discard did not clear the selected equipment slot')
+const unequipRun = new GameRun({ autoLoad: false, random: () => 0.5 })
+unequipRun.chooseInitialRelic(unequipRun.initialRelicChoices[0])
+const equippedWeapon = unequipRun.player.equipment[0]
+const unequipTurn = unequipRun.turn
+unequipRun.selectEquipmentSlot(0)
+assert(unequipRun.unequipSelected() && !unequipRun.player.equipment[0] && unequipRun.backpack.items.some((item) => item.uid === equippedWeapon.uid) && unequipRun.turn === unequipTurn + 1, 'unequipping must return the weapon to the backpack and consume a turn')
 const whetstoneIndex = addToBackpack(dualWeaponRun, makeItemById('whetstone'))
 dualWeaponRun.selectInventory(whetstoneIndex)
 assert(dualWeaponRun.useSelected() && dualWeaponRun.itemTargeting, 'whetstone did not enter equipment target mode')
@@ -439,6 +469,8 @@ assert(backpackWeapon.durability === 3 && backpackRepairRun.turn === backpackRep
 
 const dualAttackRun = new GameRun({ autoLoad: false, random: () => 0.5 })
 dualAttackRun.chooseInitialRelic(dualAttackRun.initialRelicChoices[0])
+dualAttackRun.relics.acquire('r-tide-heart', { activate: true })
+dualAttackRun.relics.acquire('r-weapon-foundry', { activate: true })
 dualAttackRun.player.equipment[1] = { ...dualAttackRun.player.equipment[0], uid: 'dual-attack-test', durability: 3 }
 const dualRoom = dualAttackRun.currentRoom
 const dualEnemy = [...dualRoom.entities.values()].find((entity) => entity.kind === 'enemy')
@@ -452,6 +484,7 @@ const rightDurability = dualAttackRun.player.equipment[1].durability
 assert(dualAttackRun.clickTile(dualEnemy.pos.c, dualEnemy.pos.r), 'dual weapon attack was rejected')
 assert(dualAttackRun.player.equipment[0].durability === leftDurability - 1, 'left-hand weapon did not attack')
 assert(dualAttackRun.player.equipment[1].durability === rightDurability - 1, 'right-hand weapon did not attack')
+assert(dualAttackRun.relicRuntime['r-tide-heart']?.attacks === 1 && dualAttackRun.relicRuntime['r-weapon-foundry']?.attacks === 1, 'a dual-wield attack action must count once for attack-count relics')
 
 const twoHandRun = new GameRun({ autoLoad: false, random: () => 0.5 })
 twoHandRun.chooseInitialRelic(twoHandRun.initialRelicChoices[0])
@@ -492,8 +525,20 @@ const eventRun = new GameRun({ autoLoad: false, random: () => 0.5 })
 eventRun.initialRelicChoices = []
 eventRun.relics.acquire('r-tide-heart', { activate: true })
 eventRun.player.hp = 10
-eventRun._emitRelicEvent('turn:started', { turn: 2 })
-assert(eventRun.player.hp === 12 && eventRun.relicEventQueue.length === 0, 'relic event queue did not execute the turn-start event')
+eventRun._emitRelicEvent('attack:started')
+assert(eventRun.player.hp === 10 && eventRun.relicRuntime['r-tide-heart']?.attacks === 1, 'tide-heart did not count the first attack action')
+eventRun._emitRelicEvent('attack:started')
+assert(eventRun.player.hp === 12 && eventRun.relicRuntime['r-tide-heart']?.attacks === 0 && eventRun.relicEventQueue.length === 0, 'tide-heart did not resolve after two attack actions')
+
+const foundryRun = new GameRun({ autoLoad: false, random: () => 0.5 })
+foundryRun.initialRelicChoices = []
+foundryRun.relics.acquire('r-weapon-foundry', { activate: true })
+const foundryItems = foundryRun.backpack.length
+foundryRun._emitRelicEvent('attack:started')
+foundryRun._emitRelicEvent('attack:started')
+assert(foundryRun.backpack.length === foundryItems && foundryRun.relicRuntime['r-weapon-foundry']?.attacks === 2, 'weapon-foundry resolved before three attack actions')
+foundryRun._emitRelicEvent('attack:started')
+assert(foundryRun.backpack.length === foundryItems + 1 && foundryRun.relicRuntime['r-weapon-foundry']?.attacks === 0, 'weapon-foundry did not resolve after three attack actions')
 
 const delayRun = new GameRun({ autoLoad: false, random: () => 0.5 })
 delayRun.initialRelicChoices = []
@@ -537,8 +582,8 @@ assert(!isAdjacent8(diagonalStart, diagonalStart) && !isAdjacent8(diagonalStart,
 assert(findAttackPath(pathRoom, diagonalStart, { pos: diagonalGoal }, [{ range: 1 }])?.path.length === 0, 'melee must attack a diagonal target without moving')
 
 const scorchBackRoom = new Room({ id: 'attribute-back-test', floor: 1, width: 1, height: 1, random: () => 0 })
-const tideBackRoom = new Room({ id: 'attribute-back-test-two', floor: 1, width: 1, height: 1, random: () => 0.999 })
-assert(scorchBackRoom.tile(pos(0, 0)).backAttribute === 'scorch' && tideBackRoom.tile(pos(0, 0)).backAttribute === 'tide', 'neutral cards did not retain generated random attribute backs')
+const drownBackRoom = new Room({ id: 'attribute-back-test-two', floor: 1, width: 1, height: 1, random: () => 0.999 })
+assert(scorchBackRoom.tile(pos(0, 0)).backAttribute === 'scorch' && drownBackRoom.tile(pos(0, 0)).backAttribute === 'drown', 'neutral cards did not retain generated random attribute backs')
 
 const revealPathRoom = new Room({ id: 'weighted-reveal-test', floor: 1, width: 3, height: 4 })
 const revealStart = pos(1, 3)
@@ -563,9 +608,25 @@ const enemyBehaviorContext = {
 assert(stepEnemy(enemyBehaviorTest, enemyBehaviorContext).reason === 'action-delay', 'enemy action delay did not block its first turn')
 assert(enemyBehaviorTest.actionDelay === 0 && enemyBehaviorAttacks === 0 && enemyBehaviorSkills === 0, 'enemy action delay advanced incorrectly')
 assert(stepEnemy(enemyBehaviorTest, enemyBehaviorContext).reason === 'active-skill', 'ready active skill did not take priority over normal attack')
-assert(enemyBehaviorSkills === 1 && enemyBehaviorAttacks === 0 && enemyBehaviorTest.activeSkillCooldown === 3, 'active skill cooldown was not initialized independently')
+assert(enemyBehaviorSkills === 1 && enemyBehaviorAttacks === 0 && enemyBehaviorTest.activeSkillCooldown === 2, 'active skill cooldown was not initialized independently')
 assert(stepEnemy(enemyBehaviorTest, enemyBehaviorContext).reason === 'attack', 'normal attack did not act while the active skill was cooling down')
-assert(enemyBehaviorAttacks === 1 && enemyBehaviorTest.attackCooldown === 2 && enemyBehaviorTest.activeSkillCooldown === 2, 'normal attack and active skill cooldowns did not tick independently')
+assert(enemyBehaviorAttacks === 1 && enemyBehaviorTest.attackCooldown === 1 && enemyBehaviorTest.activeSkillCooldown === 1, 'normal attack and active skill cooldowns did not tick independently')
+const everyTurnEnemy = { behavior: 'stationary', actionDelay: 0, attack: 3, range: 1, pos: pos(0, 0), attackCooldown: 0, attackCooldownMax: 1 }
+let everyTurnAttacks = 0
+const everyTurnContext = { player: { pos: pos(1, 0) }, attack: () => { everyTurnAttacks += 1 } }
+assert(stepEnemy(everyTurnEnemy, everyTurnContext).reason === 'attack' && everyTurnEnemy.attackCooldown === 0, 'cooldown 1 should leave no skipped enemy turns')
+assert(stepEnemy(everyTurnEnemy, everyTurnContext).reason === 'attack' && everyTurnAttacks === 2, 'cooldown 1 enemy did not attack every turn')
+const alternatingEnemy = { behavior: 'stationary', actionDelay: 0, attack: 3, range: 1, pos: pos(0, 0), attackCooldown: 0, attackCooldownMax: 2 }
+let alternatingAttacks = 0
+const alternatingContext = { player: { pos: pos(1, 0) }, attack: () => { alternatingAttacks += 1 } }
+assert(stepEnemy(alternatingEnemy, alternatingContext).reason === 'attack' && alternatingEnemy.attackCooldown === 1, 'cooldown 2 did not initialize one skipped enemy turn')
+assert(stepEnemy(alternatingEnemy, alternatingContext).reason === 'idle' && alternatingEnemy.attackCooldown === 0 && alternatingAttacks === 1, 'cooldown 2 did not skip exactly one enemy turn')
+assert(stepEnemy(alternatingEnemy, alternatingContext).reason === 'attack' && alternatingAttacks === 2, 'cooldown 2 enemy did not resume after one skipped turn')
+const everyTurnSkillEnemy = { behavior: 'stationary', actionDelay: 0, attack: 0, range: 0, pos: pos(0, 0), activeSkill: { id: 'test-skill', cooldown: 1 }, activeSkillCooldown: 0 }
+let everyTurnSkills = 0
+const everyTurnSkillContext = { player: { pos: pos(1, 0) }, activeSkill: () => { everyTurnSkills += 1; return { acted: true, reason: 'active-skill' } } }
+assert(stepEnemy(everyTurnSkillEnemy, everyTurnSkillContext).reason === 'active-skill' && everyTurnSkillEnemy.activeSkillCooldown === 0, 'active skill cooldown 1 should leave no skipped enemy turns')
+assert(stepEnemy(everyTurnSkillEnemy, everyTurnSkillContext).reason === 'active-skill' && everyTurnSkills === 2, 'active skill cooldown 1 did not act every turn')
 const outOfRangeEnemy = { behavior: 'stationary', actionDelay: 0, attack: 3, range: 2, attackCooldown: 0, pos: pos(0, 0) }
 assert(stepEnemy(outOfRangeEnemy, { player: { pos: pos(3, 0) }, attack: () => { enemyBehaviorAttacks += 1 } }).reason === 'idle', 'enemy range check is invalid')
 assert(enemyBehaviorAttacks === 1, 'out-of-range enemy attacked')
@@ -669,8 +730,20 @@ ambushRoom.tile(spider.pos).revealed = false
 ambushRoom.tile(secondSpider.pos).revealed = false
 const ambushFlipBatches = []
 ambushRun.on('animate:flip-batch', ({ flips }) => ambushFlipBatches.push(flips))
-assert(!ambushRun._walk([pos(1, 0)]).stopped && ambushRoom.isRevealed(spider.pos) && ambushRoom.isRevealed(secondSpider.pos) && ambushRun.player.hp === 10 && spider.attackCooldown === 2 && secondSpider.attackCooldown === 2, 'ambush enemies did not reveal and attack immediately when the player entered nearby')
+assert(!ambushRun._walk([pos(1, 0)]).stopped && ambushRoom.isRevealed(spider.pos) && ambushRoom.isRevealed(secondSpider.pos) && ambushRun.player.hp === 10 && spider.attackCooldown === 1 && secondSpider.attackCooldown === 1, 'ambush enemies did not reveal and attack immediately when the player entered nearby')
 assert(ambushFlipBatches.length === 1 && ambushFlipBatches[0].length === 2, 'ambush enemies did not use one simultaneous flip batch')
+
+const { testRun: alertRun, room: alertRoom } = clearedEnemyRun()
+const alertSource = createEnemyById('gnawer', pos(2, 2))
+const alertTarget = createEnemyById('rot-walker', pos(3, 2))
+const chainedAlertTarget = createEnemyById('wisp', pos(5, 5))
+alertRoom.addEntity(alertSource)
+alertRoom.addEntity(alertTarget)
+alertRoom.addEntity(chainedAlertTarget)
+for (const enemy of [alertSource, alertTarget, chainedAlertTarget]) alertRoom.tile(enemy.pos).revealed = false
+assert(alertRun._revealTile(alertSource.pos) && alertRoom.isRevealed(alertSource.pos) && alertRoom.isRevealed(alertTarget.pos), 'alert enemy did not reveal the nearest hidden enemy')
+assert(alertSource.alertTriggered && !alertTarget.alertTriggered && !alertRoom.isRevealed(chainedAlertTarget.pos), 'alert reveal incorrectly chained through the awakened enemy')
+
 const { testRun: distantAmbushRun, room: distantAmbushRoom } = clearedEnemyRun()
 const distantSpider = createEnemyById('nest-spider', pos(3, 0))
 distantSpider.range = 2
@@ -707,7 +780,7 @@ const enemyActionContext = (testRun, room) => ({
 assert(stepEnemy(priest, enemyActionContext(summonRun, summonRoom)).reason === 'action-delay', 'summoner active skill ignored its action delay')
 assert(![...summonRoom.entities.values()].some((entity) => entity.enemyId === 'skeleton-minion'), 'summoner acted on its reveal turn')
 assert(stepEnemy(priest, enemyActionContext(summonRun, summonRoom)).reason === 'summon', 'summoner did not use its active skill after the action delay')
-assert([...summonRoom.entities.values()].some((entity) => entity.enemyId === 'skeleton-minion') && priest.activeSkillCooldown === 3, 'summoner active skill did not create its authored minion or enter cooldown')
+assert([...summonRoom.entities.values()].some((entity) => entity.enemyId === 'skeleton-minion') && priest.activeSkillCooldown === 2, 'summoner active skill did not create its authored minion or enter cooldown')
 
 const { testRun: reviveRun, room: reviveRoom } = clearedEnemyRun()
 const revenant = createEnemyById('revenant-guard', pos(5, 0))
@@ -738,13 +811,13 @@ for (const definition of RELIC_DEFS.slice(0, 5)) assert(relicCapacity.activate(d
 assert(!relicCapacity.activate(RELIC_DEFS[5].id) && relicCapacity.active.length === 5, 'relic activation exceeded the five-slot limit')
 
 const scorchWeapon = { name: 'test', attack: 5, attribute: 'scorch', durability: 3 }
-const slimeTarget = { attribute: 'slime' }
-assert(attributeModifier('scorch', 'slime').countered && attributeModifier('slime', 'crystal').countered && attributeModifier('crystal', 'tide').countered && attributeModifier('tide', 'scorch').countered, 'attribute counter cycle is invalid')
-assert(attributeModifier('scorch', 'slime', { adapted: true }).multiplier === 1.8 && attributeModifier('scorch', 'tide', { adapted: true }).multiplier === 0.8, 'attribute adaptation did not replace the normal multipliers')
-assert(computeAttackDamage({ weapon: scorchWeapon, target: slimeTarget }).damage === 8, 'attribute counter damage multiplier is invalid')
-assert(computeAttackDamage({ weapon: { ...scorchWeapon, durability: 1 }, target: slimeTarget }).damage === 4, 'last durability penalty is invalid')
-assert(computeAttackDamage({ weapon: { ...scorchWeapon, durability: 1 }, target: slimeTarget, strengthBonus: 2, ignoreLastDurability: true }).damage === 11, 'strength or preserved durability did not apply before attribute resolution')
-assert(computeAttackDamage({ weapon: scorchWeapon, target: { attribute: 'tide' } }).damage === 3, 'attribute resistance multiplier is invalid')
+const witherTarget = { attribute: 'wither' }
+assert(attributeModifier('scorch', 'wither').countered && attributeModifier('wither', 'drown').countered && attributeModifier('drown', 'scorch').countered, 'attribute counter cycle is invalid')
+assert(attributeModifier('scorch', 'wither', { adapted: true }).multiplier === 1.8 && attributeModifier('scorch', 'drown', { adapted: true }).multiplier === 0.8, 'attribute adaptation did not replace the normal multipliers')
+assert(computeAttackDamage({ weapon: scorchWeapon, target: witherTarget }).damage === 8, 'attribute counter damage multiplier is invalid')
+assert(computeAttackDamage({ weapon: { ...scorchWeapon, durability: 1 }, target: witherTarget }).damage === 4, 'last durability penalty is invalid')
+assert(computeAttackDamage({ weapon: { ...scorchWeapon, durability: 1 }, target: witherTarget, strengthBonus: 2, ignoreLastDurability: true }).damage === 11, 'strength or preserved durability did not apply before attribute resolution')
+assert(computeAttackDamage({ weapon: scorchWeapon, target: { attribute: 'drown' } }).damage === 3, 'attribute resistance multiplier is invalid')
 assert(masteryPreservationChance(0) === 0 && masteryPreservationChance(10) === 0.5, 'weapon mastery probability does not follow its authored formula')
 
 const relicRun = new GameRun({ autoLoad: false, random: () => 0.5 })
@@ -753,7 +826,7 @@ assert(relicRun.chooseInitialRelic('r-opportunity-strike')?.active, 'initial rel
 assert(relicRun.acquireRelic('r-empty-core')?.active, 'later relic acquisition must auto-activate below capacity')
 assert(relicRun.relics.deactivate('r-empty-core'), 'test setup could not isolate the cooldown relic')
 const damagedWeapon = { ...scorchWeapon, durability: 3 }
-const cooldownTarget = { ...slimeTarget, id: 'cooldown-target', attackCooldown: 1, activeSkill: { id: 'test', cooldown: 3 }, activeSkillCooldown: 1 }
+const cooldownTarget = { ...witherTarget, id: 'cooldown-target', attackCooldown: 1, activeSkill: { id: 'test', cooldown: 3 }, activeSkillCooldown: 1 }
 const type = attackAttributeModifier(damagedWeapon, cooldownTarget)
 const relicModifiers = relicRun.relicEngine.damageModifiers({
   run: relicRun,
@@ -766,8 +839,8 @@ const relicModifiers = relicRun.relicEngine.damageModifiers({
 assert(computeAttackDamage({ weapon: damagedWeapon, target: cooldownTarget, relicModifiers }).damage === 16, 'relic damage modifier is not applied')
 assert(buildRelicChoices(relicRun.relics, { random: () => 0 }).every((relic) => relic.id !== 'r-opportunity-strike'), 'owned relic returned as a choice')
 
-const relicDamageWeapon = { name: 'test', attack: 4, attribute: 'slime', durability: 2 }
-const neutralRelicTarget = { attribute: 'slime', hp: 10, maxHp: 10 }
+const relicDamageWeapon = { name: 'test', attack: 4, attribute: 'wither', durability: 2 }
+const neutralRelicTarget = { attribute: 'wither', hp: 10, maxHp: 10 }
 const berserkerRun = new GameRun({ autoLoad: false, random: () => 0.5 })
 berserkerRun.initialRelicChoices = []
 assert(berserkerRun.acquireRelic('r-berserker-oath')?.active, 'berserker relic could not activate')
@@ -860,6 +933,8 @@ try {
   persistenceRun.player.mastery = [3, 0]
   persistenceRun.player.adaptations = ['scorch', null]
   persistenceRun.roomRewardBag = ['relic', 'supply']
+  const persistedTwoHanded = makeItemById('spear')
+  persistenceRun.player.equipment = [persistedTwoHanded, persistedTwoHanded]
   const persistedEdge = [...persistenceRun.dungeon.edges.values()].find((edge) => edge.locked)
   persistedEdge.unlocked = true
   openMerchant(persistenceRun, 'merchant')
@@ -875,6 +950,7 @@ try {
   const restoredRun = new GameRun({ autoLoad: true, random: () => 0.5 })
   assert(restoredRun.player.gold === persistedGold && restoredRun.dungeon.edge(persistedEdge.id).unlocked, 'player or locked-door state did not persist')
   assert(restoredRun.player.level === 3 && restoredRun.player.strength[0] === 2 && restoredRun.player.mastery[0] === 3 && restoredRun.player.adaptations[0] === 'scorch' && restoredRun.roomRewardBag.join(',') === 'relic,supply', 'progression or reward-bag state did not persist')
+  assert(restoredRun.player.equipment[0] === restoredRun.player.equipment[1] && restoredRun.equippedWeapons.length === 1, 'two-handed equipment did not restore as one shared weapon')
   assert(restoredRun.phase === 'merchant' && restoredRun.merchantEntity?.merchantId === 'merchant', 'open merchant state did not restore')
   assert(restoredRun.merchantEntity.stock[0]?.itemId && !restoredRun.merchantEntity.stock[0].sold, 'merchant stock refresh did not persist')
   const generatedAfterLoad = makeItemById('small-potion')

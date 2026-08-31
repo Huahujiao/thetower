@@ -1,5 +1,5 @@
-export const BACKPACK_COLUMNS = 6
-export const BACKPACK_ROWS = 4
+export const BACKPACK_COLUMNS = 5
+export const BACKPACK_ROWS = 5
 
 function cloneShape(shape) {
   const source = Array.isArray(shape) && shape.length ? shape : [[1]]

@@ -967,49 +967,6 @@ export const RELIC_DEFS = Object.freeze([
       }),
     },
   },
-  {
-    id: 'r_stealth',
-    name: '藏匿之影',
-    desc: '主动技能：藏匿 3 回合，期间敌人无法攻击你；每回合随机翻开一张牌。',
-    rarity: '稀有',
-    relic: true,
-    price: 26,
-    activeSkill: {
-      id: 'skill:stealth', name: '藏匿', icon: '◌',
-      description: '藏匿 3 回合，每回合随机翻开一张牌。', consumesTurn: true, retaliates: true, cooldown: 10,
-    },
-    actions: {
-      'active-skill': ({ state, relic }) => ({
-        id: 'skill:stealth:resolve',
-        phase: AFTER_ACTION,
-        apply: () => {
-          relic.runtime.stealthTurns = 3
-          state.setStealthTurns(3)
-          state.log.push('藏匿之影：接下来 3 回合敌人无法攻击你。')
-        },
-      }),
-    },
-    hooks: {
-      'turn:start': ({ state, relic }) => ({
-        id: `relic:stealth:reveal:${state.turn}`,
-        phase: TURN_START,
-        apply: () => {
-          if ((relic.runtime.stealthTurns || 0) <= 0) return
-          const result = state.revealRandomCard({ sanCost: 0, cause: 'relic:stealth' })
-          relic.runtime.stealthTurns--
-          if (result.card) state.log.push(`藏匿期间随机翻开：${result.card.def.name}。`)
-        },
-      }),
-      'floor:start': ({ state, relic }) => ({
-        id: 'relic:stealth:floor-reset',
-        phase: TURN_START,
-        apply: () => {
-          relic.runtime.stealthTurns = 0
-          state.setStealthTurns(0)
-        },
-      }),
-    },
-  },
 ])
 
 export const RELICS_BY_ID = Object.freeze(

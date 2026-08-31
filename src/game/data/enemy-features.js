@@ -10,6 +10,7 @@ export const ENEMY_TRAIT_LABELS = Object.freeze({
   split: '\u5206\u88c2',
   regen: '\u518d\u751f',
   revive: '\u590d\u751f',
+  alert: '\u8b66\u62a5',
 })
 
 export const ENEMY_ACTIVE_SKILL_LABELS = Object.freeze({

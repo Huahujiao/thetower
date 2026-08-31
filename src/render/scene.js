@@ -23,9 +23,13 @@ const CAMERA_NEAR = 0.1
 const CAMERA_FAR = 80
 const CAMERA_HEIGHT_RATIO = 0.74
 const CAMERA_DEPTH_RATIO = 0.41
-const CAMERA_AZIMUTH = 30 * Math.PI / 180
+const CAMERA_AZIMUTH = 25 * Math.PI / 180
 const STANDING_BACK_LEAN = 30 * Math.PI / 180
 const GHOST_ROOM_GAP = TILE_SIZE * 0.54
+const ENEMY_STATUS_LAYER_OFFSET = 0.012
+const ENEMY_STATUS_HEALTH_Y = CARD_SIZE * 0.43
+const ENEMY_STATUS_BOTTOM_Y = -CARD_SIZE * 0.43
+const ENEMY_STATUS_RIGHT_X = CARD_SIZE * 0.45
 
 const CARD_COLORS = Object.freeze({
   monster: '#5b1a1a',
@@ -41,6 +45,26 @@ const CARD_COLORS = Object.freeze({
   entry: '#2a2a2a',
   empty: '#20242d',
 })
+
+const CARD_BACK_THEMES = Object.freeze({
+  scorch: Object.freeze({
+    flippable: Object.freeze({ top: '#473039', bottom: '#20141a', border: '#754f59', accent: '#ef5b5b', primaryAlpha: 0.27, detailAlpha: 0.14, cornerAlpha: 0.22 }),
+    unflippable: Object.freeze({ top: '#24171e', bottom: '#0d090d', border: '#3f2a32', accent: '#ef5b5b', primaryAlpha: 0.13, detailAlpha: 0.07, cornerAlpha: 0.11 }),
+  }),
+  wither: Object.freeze({
+    flippable: Object.freeze({ top: '#413d28', bottom: '#1d1b11', border: '#756e4e', accent: '#f4d56d', primaryAlpha: 0.18, detailAlpha: 0.09, cornerAlpha: 0.15 }),
+    unflippable: Object.freeze({ top: '#242214', bottom: '#0e0d08', border: '#3d3a25', accent: '#f4d56d', primaryAlpha: 0.09, detailAlpha: 0.045, cornerAlpha: 0.075 }),
+  }),
+  drown: Object.freeze({
+    flippable: Object.freeze({ top: '#2d3a4d', bottom: '#141c29', border: '#526b8a', accent: '#69b7ee', primaryAlpha: 0.23, detailAlpha: 0.12, cornerAlpha: 0.19 }),
+    unflippable: Object.freeze({ top: '#18213d', bottom: '#090e20', border: '#202b50', accent: '#69b7ee', primaryAlpha: 0.11, detailAlpha: 0.055, cornerAlpha: 0.095 }),
+  }),
+  neutral: Object.freeze({
+    flippable: Object.freeze({ top: '#353b44', bottom: '#1a1f26', border: '#707985', accent: '#e5ebf4', primaryAlpha: 0.18, detailAlpha: 0.09, cornerAlpha: 0.15 }),
+    unflippable: Object.freeze({ top: '#1c2128', bottom: '#0b0e12', border: '#363d46', accent: '#e5ebf4', primaryAlpha: 0.09, detailAlpha: 0.045, cornerAlpha: 0.075 }),
+  }),
+})
+const NO_RAYCAST = () => {}
 
 function makeCanvasTexture(draw) {
   const canvas = document.createElement('canvas')
@@ -120,6 +144,17 @@ function drawStickFigure(context) {
   context.stroke()
 }
 
+function drawEmptyCardBase(context) {
+  const gradient = context.createLinearGradient(0, 0, 0, 160)
+  gradient.addColorStop(0, CARD_COLORS.empty)
+  gradient.addColorStop(1, '#0a0a12')
+  context.fillStyle = gradient
+  context.fillRect(0, 0, 160, 160)
+  context.strokeStyle = '#30384a'
+  context.lineWidth = 3
+  context.strokeRect(4, 4, 152, 152)
+}
+
 function drawStandingToken(context, card) {
   context.clearRect(0, 0, 160, 160)
   const merchant = card.type === 'merchant'
@@ -152,6 +187,10 @@ function tileKey(position) { return `${position.c}:${position.r}` }
 
 function samePosition(left, right) {
   return !!left && !!right && left.c === right.c && left.r === right.r
+}
+
+function turnCounter(value) {
+  return Math.max(0, Math.floor(Number(value) || 0))
 }
 
 function disposeObject(object) {
@@ -267,7 +306,7 @@ export class GameScene {
 
   rebuild() {
     const room = this.run.currentRoom
-    if ((this.movementAnimation || this.flipAnimations.length || this.animationQueue.length) && room?.id === this.framedRoomId) {
+    if (this.movementAnimation || this.animationQueue.length || (this.flipAnimations.length && room?.id === this.framedRoomId)) {
       this.pendingRebuild = true
       return
     }
@@ -313,10 +352,9 @@ export class GameScene {
   _addTile(room, position) {
     const visual = this._tileVisualState(room, position)
     const { revealed, peeked, flippable } = visual
-    const isPlayer = samePosition(this.run.player.pos, position)
     const geometry = new THREE.BoxGeometry(CARD_SIZE, CARD_THICKNESS, CARD_SIZE)
     const material = new THREE.MeshStandardMaterial({
-      color: revealed ? isPlayer ? 0x20242d : 0x262a36 : flippable ? HIDDEN_CARD_BODY_COLOR : UNREACHABLE_HIDDEN_CARD_BODY_COLOR,
+      color: revealed ? 0x262a36 : flippable ? HIDDEN_CARD_BODY_COLOR : UNREACHABLE_HIDDEN_CARD_BODY_COLOR,
       roughness: 0.72,
     })
     const mesh = new THREE.Mesh(geometry, material)
@@ -326,6 +364,7 @@ export class GameScene {
     this.roomGroup.add(mesh)
     const card = revealed || peeked ? this._cardFaceData(room, position) : null
     const standing = revealed && (card?.type === 'monster' || card?.type === 'merchant' || card?.type === 'entry')
+    const emptyGround = standing && (card?.type === 'monster' || card?.type === 'entry')
     const texture = card
       ? this._makeFrontTexture(card)
       : this._makeBackTexture(this._backAttributeFor(room, position), { unflippable: !flippable })
@@ -341,11 +380,16 @@ export class GameScene {
       }),
     )
     this._setFacePose(face, point, standing)
+    face.renderOrder = standing ? 2 : 0
+    face.raycast = card?.type === 'entry' ? NO_RAYCAST : THREE.Mesh.prototype.raycast
     face.userData.position = { ...position }
     face.userData.lift = 0
     face.userData.body = mesh
+    face.userData.groundFace = emptyGround ? this._makeEmptyGroundFace(point) : null
     face.userData.visualKey = visual.key
+    if (face.userData.groundFace) this.roomGroup.add(face.userData.groundFace)
     this.roomGroup.add(face)
+    this._setEnemyStatusOverlay(face, face.userData.groundFace, revealed && card?.type === 'monster' ? room.entityAt(position) : null)
     this.tileMeshes.push(face)
     this.tileMeshByKey.set(tileKey(position), face)
   }
@@ -357,6 +401,132 @@ export class GameScene {
     face.position.set(point.x, baseY, point.z)
     face.userData.baseY = baseY
     face.userData.standing = standing
+  }
+
+  _makeEmptyGroundFace(point) {
+    const groundFace = new THREE.Mesh(
+      new THREE.PlaneGeometry(CARD_SIZE, CARD_SIZE),
+      new THREE.MeshBasicMaterial({ map: this._makeFrontTexture({ type: 'empty' }), side: THREE.DoubleSide }),
+    )
+    groundFace.rotation.x = -Math.PI / 2
+    groundFace.position.set(point.x, CARD_THICKNESS / 2 + 0.003, point.z)
+    groundFace.raycast = () => {}
+    return groundFace
+  }
+
+  _setEnemyStatusOverlay(face, groundFace, enemy) {
+    for (const [owner, key] of [[face, 'enemyHealthOverlay'], [groundFace, 'enemyTurnOverlay']]) {
+      const previous = owner?.userData?.[key]
+      if (!previous) continue
+      owner.remove(previous)
+      disposeObject(previous)
+      owner.userData[key] = null
+    }
+    if (enemy?.kind !== 'enemy' || !groundFace) return
+
+    const healthOverlay = new THREE.Group()
+    healthOverlay.position.z = ENEMY_STATUS_LAYER_OFFSET
+    healthOverlay.raycast = NO_RAYCAST
+    this._addEnemyHealthMeter(healthOverlay, enemy)
+    face.add(healthOverlay)
+    face.userData.enemyHealthOverlay = healthOverlay
+
+    const turnOverlay = new THREE.Group()
+    turnOverlay.position.z = ENEMY_STATUS_LAYER_OFFSET
+    turnOverlay.raycast = NO_RAYCAST
+
+    const actionDelay = turnCounter(enemy.actionDelay)
+    if (actionDelay > 0) {
+      this._addEnemyTurnMeter(turnOverlay, {
+        axis: 'horizontal',
+        x: 0,
+        y: ENEMY_STATUS_BOTTOM_Y,
+        total: Math.max(actionDelay, turnCounter(enemy.initialActionDelay)),
+        remaining: actionDelay,
+        color: 0xf4d56d,
+      })
+    } else if (turnCounter(enemy.attackCooldown) > 0) {
+      this._addEnemyTurnMeter(turnOverlay, {
+        axis: 'horizontal',
+        x: 0,
+        y: ENEMY_STATUS_BOTTOM_Y,
+        total: Math.max(1, turnCounter(enemy.attackCooldownMax) - 1, turnCounter(enemy.attackCooldown)),
+        remaining: turnCounter(enemy.attackCooldown),
+        color: 0xff7777,
+      })
+    }
+
+    if (enemy.activeSkill && turnCounter(enemy.activeSkillCooldown) > 0) {
+      const skillCooldown = turnCounter(enemy.activeSkillCooldown)
+      this._addEnemyTurnMeter(turnOverlay, {
+        axis: 'vertical',
+        x: ENEMY_STATUS_RIGHT_X,
+        y: 0,
+        total: Math.max(1, turnCounter(enemy.activeSkill.cooldown) - 1, skillCooldown),
+        remaining: skillCooldown,
+        color: 0x69b7ee,
+      })
+    }
+
+    if (turnOverlay.children.length > 0) {
+      groundFace.add(turnOverlay)
+      groundFace.userData.enemyTurnOverlay = turnOverlay
+    }
+  }
+
+  _addEnemyHealthMeter(overlay, enemy) {
+    const width = CARD_SIZE * 0.7
+    const height = CARD_SIZE * 0.062
+    const maxHealth = Math.max(1, turnCounter(enemy.maxHp))
+    const healthRatio = Math.min(1, turnCounter(enemy.hp) / maxHealth)
+    this._addEnemyStatusPlane(overlay, width + CARD_SIZE * 0.018, height + CARD_SIZE * 0.018, 0, ENEMY_STATUS_HEALTH_Y, 0x1a1014, 0.92)
+    this._addEnemyStatusPlane(overlay, width, height, 0, ENEMY_STATUS_HEALTH_Y, 0x36191f, 0.96)
+    if (healthRatio <= 0) return
+    const fillWidth = width * healthRatio
+    this._addEnemyStatusPlane(
+      overlay,
+      fillWidth,
+      height * 0.62,
+      -width / 2 + fillWidth / 2,
+      ENEMY_STATUS_HEALTH_Y,
+      enemy.boss ? 0xff7777 : 0xe95b62,
+      1,
+    )
+  }
+
+  _addEnemyTurnMeter(overlay, { axis, x, y, total, remaining, color }) {
+    const segmentCount = Math.max(1, Math.min(8, turnCounter(total)))
+    const filledSegments = Math.min(segmentCount, Math.ceil(segmentCount * turnCounter(remaining) / Math.max(1, turnCounter(total))))
+    const length = axis === 'horizontal' ? CARD_SIZE * 0.74 : CARD_SIZE * 0.67
+    const thickness = CARD_SIZE * 0.058
+    const gap = CARD_SIZE * 0.014
+    const segmentLength = (length - gap * (segmentCount - 1)) / segmentCount
+    for (let index = 0; index < segmentCount; index += 1) {
+      const offset = -length / 2 + segmentLength / 2 + index * (segmentLength + gap)
+      const filled = index < filledSegments
+      const width = axis === 'horizontal' ? segmentLength : thickness
+      const height = axis === 'horizontal' ? thickness : segmentLength
+      this._addEnemyStatusPlane(
+        overlay,
+        width,
+        height,
+        axis === 'horizontal' ? x + offset : x,
+        axis === 'horizontal' ? y : y + offset,
+        filled ? color : 0x1d2634,
+        filled ? 0.98 : 0.8,
+      )
+    }
+  }
+
+  _addEnemyStatusPlane(overlay, width, height, x, y, color, opacity) {
+    const plane = new THREE.Mesh(
+      new THREE.PlaneGeometry(width, height),
+      new THREE.MeshBasicMaterial({ color, transparent: true, opacity, depthTest: true, depthWrite: false, side: THREE.DoubleSide }),
+    )
+    plane.position.set(x, y, overlay.children.length * 0.0002)
+    plane.raycast = NO_RAYCAST
+    plane.renderOrder = 1 + overlay.children.length * 0.001
+    overlay.add(plane)
   }
 
   _tileVisualState(room, position) {
@@ -643,6 +813,7 @@ export class GameScene {
     const oldTexture = face.material.map
     const card = revealed || peeked ? this._cardFaceData(room, position) : null
     const standing = revealed && (card?.type === 'monster' || card?.type === 'merchant' || card?.type === 'entry')
+    const emptyGround = standing && (card?.type === 'monster' || card?.type === 'entry')
     face.material.map = card
       ? this._makeFrontTexture(card)
       : this._makeBackTexture(this._backAttributeFor(room, position), { unflippable: !flippable })
@@ -655,10 +826,17 @@ export class GameScene {
     face.visible = true
     face.userData.lift = 0
     this._setFacePose(face, this._gridPosition(room, position), standing)
+    face.renderOrder = standing ? 2 : 0
+    face.raycast = card?.type === 'entry' ? NO_RAYCAST : THREE.Mesh.prototype.raycast
     body.visible = true
     body.position.y = 0
-    const isPlayer = samePosition(this.run.player.pos, position)
-    body.material.color.setHex(revealed ? isPlayer ? 0x20242d : 0x262a36 : flippable ? HIDDEN_CARD_BODY_COLOR : UNREACHABLE_HIDDEN_CARD_BODY_COLOR)
+    if (emptyGround && !face.userData.groundFace) {
+      face.userData.groundFace = this._makeEmptyGroundFace(this._gridPosition(room, position))
+      this.roomGroup.add(face.userData.groundFace)
+    }
+    if (face.userData.groundFace) face.userData.groundFace.visible = emptyGround
+    this._setEnemyStatusOverlay(face, face.userData.groundFace, revealed && card?.type === 'monster' ? room.entityAt(position) : null)
+    body.material.color.setHex(revealed ? 0x262a36 : flippable ? HIDDEN_CARD_BODY_COLOR : UNREACHABLE_HIDDEN_CARD_BODY_COLOR)
     face.userData.visualKey = visual.key
     return true
   }
@@ -760,7 +938,7 @@ export class GameScene {
   }
 
   _startMove({ roomId, from, path } = {}) {
-    const room = this.run.currentRoom
+    const room = this.run.dungeon?.room(roomId) || this.run.currentRoom
     if (!room || room.id !== roomId || room.id !== this.framedRoomId || !from || !Array.isArray(path) || path.length === 0) return false
     this._clearPlayerMarker()
     const startFace = this.tileMeshByKey.get(tileKey(from))
@@ -771,6 +949,7 @@ export class GameScene {
       startFace.material.transparent = false
       startFace.material.depthWrite = true
       this._setFacePose(startFace, this._gridPosition(room, from), false)
+      startFace.raycast = THREE.Mesh.prototype.raycast
       oldTexture?.dispose()
     }
     const startPoint = this._gridPosition(room, from)
@@ -778,11 +957,17 @@ export class GameScene {
     group.position.set(startPoint.x, CARD_THICKNESS / 2 + 0.006, startPoint.z)
     const marker = new THREE.Mesh(
       new THREE.PlaneGeometry(CARD_SIZE, CARD_SIZE),
-      new THREE.MeshBasicMaterial({ map: this._makeFrontTexture({ type: 'entry' }), side: THREE.DoubleSide, transparent: true }),
+      new THREE.MeshBasicMaterial({
+        map: this._makeFrontTexture({ type: 'entry' }),
+        side: THREE.DoubleSide,
+        transparent: true,
+      }),
     )
+    marker.raycast = NO_RAYCAST
     marker.rotation.order = 'YXZ'
     marker.rotation.set(-STANDING_BACK_LEAN, CAMERA_AZIMUTH, 0)
     marker.position.y = CARD_SIZE / 2
+    marker.renderOrder = 2
     group.add(marker)
     this.roomGroup.add(group)
     const route = [{ ...from }, ...path.map((step) => ({ ...step }))]
@@ -790,6 +975,7 @@ export class GameScene {
     const totalDistance = distances.reduce((sum, distance) => sum + distance, 0)
     this.movementAnimation = {
       group,
+      room,
       route,
       distances,
       totalDistance,
@@ -833,7 +1019,7 @@ export class GameScene {
     const to = animation.route[segmentIndex + 1]
     const segmentDistance = animation.distances[segmentIndex] || 1
     const ratio = Math.min(1, Math.max(0, (travelled - accumulated) / segmentDistance))
-    const room = this.run.currentRoom
+    const room = animation.room
     if (room && to) {
       const start = this._gridPosition(room, from)
       const end = this._gridPosition(room, to)
@@ -847,6 +1033,9 @@ export class GameScene {
     this.movementAnimation = null
     this.playerMarker = animation.group
     this._drainAnimationQueue()
+    if (!this.movementAnimation && !this.flipAnimations.length && !this.animationQueue.length) {
+      this.run.bus?.emit('animate:move-complete')
+    }
   }
 
   _showPathPreview(preview, { doorId = null } = {}) {
@@ -994,22 +1183,26 @@ export class GameScene {
 
   _backAttributeFor(room, position) {
     const entity = room.entityAt(position)
-    return entity?.attribute || entity?.item?.attribute || room.tile(position)?.backAttribute || 'scorch'
+    if (entity?.kind === 'enemy') return entity.attribute
+    if (entity?.kind === 'item' && entity.item?.type === 'weapon') return entity.item.attribute
+    return null
   }
 
   _makeBackTexture(attribute, { unflippable = false } = {}) {
     return makeCanvasTexture((context) => {
-      const definition = getAttributeDefinition(attribute) || getAttributeDefinition('scorch')
+      const definition = getAttributeDefinition(attribute)
+      const theme = CARD_BACK_THEMES[definition?.id] || CARD_BACK_THEMES.neutral
+      const state = theme[unflippable ? 'unflippable' : 'flippable']
       const gradient = context.createLinearGradient(0, 0, 0, 160)
-      gradient.addColorStop(0, unflippable ? '#18213d' : '#293247')
-      gradient.addColorStop(1, unflippable ? '#090e20' : '#141a28')
+      gradient.addColorStop(0, state.top)
+      gradient.addColorStop(1, state.bottom)
       context.fillStyle = gradient
       context.fillRect(0, 0, 160, 160)
-      context.strokeStyle = unflippable ? '#202b50' : '#46536c'
+      context.strokeStyle = state.border
       context.lineWidth = 4
       context.strokeRect(6, 6, 148, 148)
-      context.strokeStyle = definition.color
-      context.globalAlpha = unflippable ? 0.15 : 0.3
+      context.strokeStyle = state.accent
+      context.globalAlpha = state.primaryAlpha
       context.lineWidth = 3
       context.beginPath()
       context.moveTo(80, 22)
@@ -1018,7 +1211,7 @@ export class GameScene {
       context.lineTo(28, 80)
       context.closePath()
       context.stroke()
-      context.globalAlpha = unflippable ? 0.085 : 0.17
+      context.globalAlpha = state.detailAlpha
       context.lineWidth = 2
       context.beginPath()
       context.moveTo(80, 44)
@@ -1027,8 +1220,8 @@ export class GameScene {
       context.lineTo(50, 80)
       context.closePath()
       context.stroke()
-      context.globalAlpha = unflippable ? 0.14 : 0.28
-      context.fillStyle = definition.color
+      context.globalAlpha = state.cornerAlpha
+      context.fillStyle = state.accent
       for (const [x, y] of [[22, 22], [138, 22], [22, 138], [138, 138]]) {
         context.beginPath()
         context.arc(x, y, 4, 0, Math.PI * 2)
@@ -1040,7 +1233,11 @@ export class GameScene {
 
   _makeFrontTexture(card) {
     return makeCanvasTexture((context) => {
-      if (card.type === 'monster' || card.type === 'merchant') {
+      if (card.type === 'monster') {
+        drawStandingToken(context, card)
+        return
+      }
+      if (card.type === 'merchant') {
         drawStandingToken(context, card)
         return
       }
@@ -1056,16 +1253,7 @@ export class GameScene {
       context.fillStyle = gradient
       context.fillRect(0, 0, 160, 160)
       if (card.type === 'empty') {
-        context.strokeStyle = '#30384a'
-        context.lineWidth = 3
-        context.strokeRect(4, 4, 152, 152)
-        return
-      }
-      if (card.type === 'entry') {
-        context.strokeStyle = '#d9bc76'
-        context.lineWidth = 3
-        context.strokeRect(4, 4, 152, 152)
-        drawStickFigure(context)
+        drawEmptyCardBase(context)
         return
       }
       context.strokeStyle = card.boss ? '#d98080' : '#888'

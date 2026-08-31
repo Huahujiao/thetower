@@ -89,12 +89,13 @@ function createEnemy(definition, { position = null, boss = false } = {}) {
     maxHp: definition.hp,
     attack: definition.attack,
     range: definition.range,
-    attackCooldownMax: Math.max(0, Number(definition.attackCooldownMax ?? definition.cooldownMax) || 0),
+    attackCooldownMax: Math.max(1, Number(definition.attackCooldownMax ?? definition.cooldownMax) || 0),
     initialActionDelay: definition.initialActionDelay,
     actionDelay: Math.max(0, Number(definition.initialActionDelay) || 0),
     attackCooldown: 0,
     activeSkillCooldown: 0,
     hasActed: false,
+    alertTriggered: false,
     revealOrder: null,
   }
 }

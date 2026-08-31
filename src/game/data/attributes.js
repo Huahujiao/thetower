@@ -1,15 +1,17 @@
-export const ATTRIBUTE_ORDER = Object.freeze(['scorch', 'slime', 'crystal', 'tide'])
+export const ATTRIBUTE_ORDER = Object.freeze(['scorch', 'wither', 'drown'])
 
 export const ATTRIBUTE_DEFS = Object.freeze({
   scorch: Object.freeze({ id: 'scorch', name: '\u707c\u70ed', color: '#ef5b5b', backTop: '#8f2632', backBottom: '#260f1b' }),
-  slime: Object.freeze({ id: 'slime', name: '\u9ecf\u6db2', color: '#62ce7e', backTop: '#246a42', backBottom: '#10261d' }),
-  crystal: Object.freeze({ id: 'crystal', name: '\u7ed3\u6676', color: '#f4d56d', backTop: '#756024', backBottom: '#2d260e' }),
-  tide: Object.freeze({ id: 'tide', name: '\u6e4d\u6d41', color: '#69b7ee', backTop: '#245f8d', backBottom: '#10243b' }),
+  wither: Object.freeze({ id: 'wither', name: '\u67af\u840e', color: '#f4d56d', backTop: '#756024', backBottom: '#2d260e' }),
+  drown: Object.freeze({ id: 'drown', name: '\u6c89\u6eba', color: '#69b7ee', backTop: '#245f8d', backBottom: '#10243b' }),
 })
 
 const ATTRIBUTE_IDS = new Set(ATTRIBUTE_ORDER)
+const LEGACY_ATTRIBUTE_IDS = Object.freeze({ slime: 'wither', crystal: 'wither', tide: 'drown' })
 
 export function isAttribute(value) { return ATTRIBUTE_IDS.has(value) }
+
+export function migrateAttributeId(value) { return LEGACY_ATTRIBUTE_IDS[value] || (isAttribute(value) ? value : null) }
 
 export function getAttributeDefinition(attribute) { return ATTRIBUTE_DEFS[attribute] || null }
 

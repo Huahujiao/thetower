@@ -18,6 +18,15 @@ function relicState(run, id) {
   return run.relicRuntime[id]
 }
 
+function reachedAttackCount(run, id, threshold) {
+  if (!run) return false
+  const state = relicState(run, id)
+  state.attacks = (Math.max(0, Number(state.attacks) || 0) % threshold) + 1
+  if (state.attacks < threshold) return false
+  state.attacks = 0
+  return true
+}
+
 export const RELIC_DEFS = Object.freeze([
   {
     id: 'r-packed-core',
@@ -125,9 +134,9 @@ export const RELIC_DEFS = Object.freeze([
   {
     id: 'r-tide-heart',
     name: '\u6f6e\u6c50\u5fc3\u810f',
-    description: '\u6bcf 2 \u56de\u5408\u56de\u590d 2 \u70b9\u751f\u547d\u3002',
+    description: '\u6bcf\u53d1\u8d77 2 \u6b21\u653b\u51fb\uff0c\u6062\u590d 2 \u70b9\u751f\u547d\u3002',
     events: {
-      'turn:started': ({ turn }) => turn > 0 && turn % 2 === 0
+      'attack:started': ({ run }) => reachedAttackCount(run, 'r-tide-heart', 2)
         ? [{ type: 'heal', amount: 2, log: '\u6f6e\u6c50\u5fc3\u810f\uff1a\u56de\u590d 2 \u70b9\u751f\u547d\u3002' }]
         : [],
     },
@@ -213,7 +222,7 @@ export const RELIC_DEFS = Object.freeze([
   {
     id: 'r-timely-disposal',
     name: '\u53ca\u65f6\u5904\u7406',
-    description: '\u51fb\u6740\u201c\u4e3b\u52a8\u6280\u80fd\u51b7\u5374\u4e3a 0\u201d\u7684\u654c\u4eba\u65f6\uff0c\u56de\u590d 1 \u70b9\u751f\u547d\u5e76\u83b7\u5f97 1 \u91d1\u5e01\u3002',
+    description: '\u51fb\u6740\u201c\u4e3b\u52a8\u6280\u80fd\u53ef\u7acb\u5373\u65bd\u653e\u201d\u7684\u654c\u4eba\u65f6\uff0c\u56de\u590d 1 \u70b9\u751f\u547d\u5e76\u83b7\u5f97 1 \u91d1\u5e01\u3002',
     events: {
       'enemy:killed': ({ enemy }) => enemy?.activeSkill && (Number(enemy.activeSkillCooldown) || 0) === 0
         ? [
@@ -496,9 +505,9 @@ export const RELIC_DEFS = Object.freeze([
   {
     id: 'r-weapon-foundry',
     name: '\u6d41\u52a8\u5175\u5e93',
-    description: '\u6bcf 3 \u56de\u5408\u5c06 1 \u628a\u968f\u673a\u6b66\u5668\u653e\u5165\u80cc\u5305\uff08\u65e0\u7a7a\u4f4d\u65f6\u8df3\u8fc7\uff09\u3002',
+    description: '\u6bcf\u53d1\u8d77 3 \u6b21\u653b\u51fb\uff0c\u5c06 1 \u628a\u968f\u673a\u6b66\u5668\u653e\u5165\u80cc\u5305\uff08\u65e0\u7a7a\u4f4d\u65f6\u8df3\u8fc7\uff09\u3002',
     events: {
-      'turn:started': ({ run, turn }) => turn > 0 && turn % 3 === 0 && run?._addRandomWeaponToBackpack()
+      'attack:started': ({ run }) => reachedAttackCount(run, 'r-weapon-foundry', 3) && run?._addRandomWeaponToBackpack()
         ? [{ log: '\u6d41\u52a8\u5175\u5e93\uff1a\u968f\u673a\u6b66\u5668\u5df2\u5165\u5305\u3002' }]
         : [],
     },

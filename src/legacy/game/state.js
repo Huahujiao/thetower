@@ -57,7 +57,6 @@ let UID = 0
 const SAVE_KEY = 'heita_save_v1'
 // 存档版本号：任何破坏性数值/机制改动后 bump 此值，旧档自动作废（初期开发不保留旧档）
 // v8：护甲状态与陷阱牌加入；v15：原子翻牌/理智流程与战吼、放逐时序调整；
-// v16：棋盘实体（阵营、召唤物、移动状态）加入；v17：主动技能槽与藏匿状态加入
 const SAVE_VERSION = 17
 export const STARTER_WEAPON_ID = 'w_rust_cleaver'
 
@@ -98,7 +97,6 @@ export class GameState {
     this._sanCostExtra = 0
     this.emotion = null
     this._bossTowerCount = 0
-    this._stealthTurns = 0
     this.activeSkillId = null
     this.resolutionTrace = []
     this.resolutionHistory = []
@@ -408,11 +406,6 @@ export class GameState {
     return this.activeSkillEntries().find((entry) => entry.skill.id === this.activeSkillId)
       || this.activeSkillEntries()[0]
   }
-  setStealthTurns(turns) {
-    this._stealthTurns = Math.max(0, Math.floor(Number(turns) || 0))
-    return this._stealthTurns
-  }
-  get stealthed() { return this._stealthTurns > 0 }
   selectActiveSkill(skillId) {
     if (this.gameOver || this.phase !== 'explore') return { ok: false, reason: 'phase' }
     const entries = this.activeSkillEntries()
@@ -2195,11 +2188,6 @@ export class GameState {
 
   // ---------- 怪物威胁 ----------
   _monsterAttackAll(excludeUid = null) {
-    if (this._stealthTurns > 0) {
-      this.log.push(`藏匿生效：敌人本回合无法攻击（剩余 ${this._stealthTurns - 1} 回合）。`)
-      this._stealthTurns--
-      return
-    }
     const excluded = excludeUid instanceof Set ? excludeUid : new Set(excludeUid == null ? [] : [excludeUid])
     const mons = this.monstersOnBoard().filter(m => !excluded.has(m.uid))
     this._runResolution('monster:retaliation', mons.map((m) => ({
@@ -2298,7 +2286,6 @@ export class GameState {
         backpack: this.inventory.serialize((item) => this._serInst(item)),
         equip: this.equipment.serialize((e) => this._serInst(e)),
         armedSlot: this.armedSlot, selectedHand: this.selectedHand, activeSkillId: this.activeSkillId,
-        stealthTurns: this._stealthTurns,
         pendingBuff: this.pendingBuff, pendingBuffName: this.pendingBuffName, thorns: this.thorns,
         emotion: this.emotion,
         mod: this._mod, pendingNextMod: this._pendingNextMod,
@@ -2335,7 +2322,7 @@ export class GameState {
       if (d.equip && !Array.isArray(d.equip)) this.equipment.restore(d.equip, (e) => this._deserInst(e))
       else this.equip = (d.equip || []).map(e => this._deserInst(e))
       this.armedSlot = d.armedSlot; this.selectedHand = d.selectedHand
-      this.activeSkillId = d.activeSkillId || null; this._stealthTurns = Math.max(0, Number(d.stealthTurns) || 0)
+      this.activeSkillId = d.activeSkillId || null
       this.pendingBuff = d.pendingBuff; this.pendingBuffName = d.pendingBuffName || null; this.thorns = d.thorns || 0
       this.emotion = d.emotion || null
       this._mod = d.mod || { label: '' }; this._pendingNextMod = d.pendingNextMod || null

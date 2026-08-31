@@ -28,8 +28,8 @@ const LABELS = Object.freeze({
   log: '\u65e5\u5fd7',
   reveal: '\u8c03\u8bd5\uff1a\u663e\u793a\u724c\u5185\u5bb9',
   discard: '\u4e22\u5f03',
+  unequip: '\u5378\u4e0b',
   rotate: '\u65cb\u8f6c',
-  wait: '\u7b49\u5f85',
   equip: '\u88c5\u5907',
   use: '\u4f7f\u7528',
   empty: '\u7a7a',
@@ -49,6 +49,11 @@ const LABELS = Object.freeze({
   sold: '\u5df2\u552e\u7f44',
   buy: '\u8d2d\u4e70',
   relicManagement: '\u5723\u9057\u7269\u6fc0\u6d3b',
+  merchantRelicsTab: '\u5723\u9057\u7269\u914d\u7f6e',
+  relicLoadout: '\u914d\u7f6e\u8349\u6848',
+  relicLoadoutHint: '\u70b9\u51fb\u8c03\u6574\u914d\u7f6e\uff0c\u70b9\u51fb\u786e\u8ba4\u540e\u624d\u751f\u6548',
+  current: '\u5f53\u524d',
+  pending: '\u5f85\u786e\u8ba4',
   relicChoice: '\u9009\u62e9\u4e00\u4ef6\u5723\u9057\u7269',
   roomReward: '\u65b0\u623f\u95f4\u5956\u52b1',
   growthChoice: '\u9009\u62e9\u6210\u957f',
@@ -88,8 +93,8 @@ const HELP_SECTIONS = Object.freeze([
   { title: '\u76ee\u6807\u4e0e\u80dc\u5229', items: ['\u7a7f\u8fc7\u4e94\u5c42\u623f\u95f4\uff0c\u51fb\u8d25\u7b2c\u4e94\u5c42\u7684\u76d1\u89c6\u8005\u5373\u53ef\u83b7\u80dc\u3002', '\u6bcf\u4e2a\u65b0\u623f\u95f4\u9996\u6b21\u8fdb\u5165\u4f1a\u63d0\u4f9b\u8865\u7ed9\u6216\u5723\u9057\u7269\u5956\u52b1\uff1b\u901a\u8fc7\u95e8\u7ee7\u7eed\u524d\u8fdb\u3002'] },
   { title: '\u63a2\u7d22\u4e0e\u7ffb\u724c', items: ['\u5728\u5df2\u7ffb\u5f00\u7684\u724c\u4e2d\u53ef\u516b\u65b9\u5411\u79fb\u52a8\u3002\u70b9\u51fb\u89d2\u8272\u516b\u90bb\u57df\u76ee\u6807\u4f1a\u76f4\u63a5\u6267\u884c\uff1b\u8fdc\u5904\u76ee\u6807\u5148\u9884\u89c8\uff0c\u518d\u70b9\u51fb\u540c\u4e00\u683c\u786e\u8ba4\u3002', '\u7ffb\u672a\u77e5\u724c\u65f6\uff0c\u89d2\u8272\u4f1a\u5148\u8d70\u5230\u76ee\u6807\u516b\u90bb\u57df\u7684\u53ef\u8fbe\u7a7a\u683c\uff1b\u7ffb\u724c\u672c\u8eab\u4e0d\u8e0f\u5165\u8be5\u683c\u3002\u653b\u51fb\u3001\u7ffb\u724c\u548c\u4ea4\u4e92\u9884\u89c8\u4f1a\u663e\u793a\u5230\u8fbe\u4f4d\u7f6e\u4e0e\u76ee\u6807\u5f27\u7ebf\u3002'] },
   { title: '\u6218\u6597\u4e0e\u654c\u4eba', items: ['\u653b\u51fb\u76ee\u6807\u65f6\uff0c\u89d2\u8272\u4f1a\u79fb\u52a8\u81f3\u5f53\u524d\u6b66\u5668\u80fd\u547d\u4e2d\u7684\u4f4d\u7f6e\uff0c\u518d\u6309\u88c5\u5907\u987a\u5e8f\u653b\u51fb\u3002\u6b66\u5668\u8010\u4e45\u964d\u4e3a\u96f6\u4f1a\u635f\u6bc1\u3002', '\u654c\u4eba\u7ffb\u5f00\u540e\u6309\u884c\u52a8\u5ef6\u8fdf\u3001\u666e\u901a\u653b\u51fb\u51b7\u5374\u548c\u4e3b\u52a8\u6280\u80fd\u51b7\u5374\u884c\u52a8\u3002\u4e3b\u52a8\u6280\u80fd\u4f18\u5148\u4e8e\u666e\u901a\u653b\u51fb\uff1b\u8ffd\u730e\u654c\u4eba\u53ef\u79fb\u52a8\u540e\u653b\u51fb\u3002'] },
-  { title: '\u88c5\u5907\u3001\u6210\u957f\u4e0e\u80cc\u5305', items: ['\u80cc\u5305\u4e3a\u56db\u884c\u516d\u5217\uff1b\u7269\u54c1\u6309\u5f62\u72b6\u5360\u683c\uff0c\u53ef\u65cb\u8f6c\u3002\u88c5\u5907\u6b66\u5668\u3001\u4f7f\u7528\u78e8\u5200\u77f3\u548c\u7269\u54c1\u4f1a\u5f71\u54cd\u63a5\u4e0b\u6765\u7684\u6218\u6597\u3002', '\u51fb\u6740\u81ea\u7136\u654c\u4eba\u83b7\u5f97\u7ecf\u9a8c\u3002\u53f3\u4e0a\u89d2\u8272\u6309\u94ae\u53ef\u67e5\u770b\u7b49\u7ea7\u3001\u5de6\u53f3\u624b\u529b\u91cf\u3001\u638c\u63a7\u4e0e\u5c5e\u6027\u9002\u5e94\u3002'] },
-  { title: '\u5723\u9057\u7269\u4e0e\u4fe1\u606f', items: ['\u5f00\u5c40\u3001\u623f\u95f4\u5956\u52b1\u3001\u6536\u85cf\u5bb6\u548c\u602a\u7269\u6389\u843d\u90fd\u53ef\u80fd\u83b7\u5f97\u5723\u9057\u7269\uff1b\u540c\u65f6\u6700\u591a\u6fc0\u6d3b\u4e94\u4ef6\u3002', '\u957f\u6309\u68cb\u76d8\u5bf9\u8c61\u53ef\u67e5\u770b\u8be6\u60c5\uff1b\u5de6\u4e0b\u5723\u9057\u7269\u56fe\u6807\u53ef\u67e5\u770b\u5df2\u83b7\u5f97\u7684\u5723\u9057\u7269\uff1b\u53f3\u4e0a\u65e5\u5fd7\u53ef\u56de\u770b\u4e8b\u4ef6\u3002'] },
+  { title: '\u88c5\u5907\u3001\u6210\u957f\u4e0e\u80cc\u5305', items: ['\u80cc\u5305\u4e3a\u4e94\u884c\u4e94\u5217\uff1b\u7269\u54c1\u6309\u5f62\u72b6\u5360\u683c\uff0c\u53ef\u65cb\u8f6c\u3002\u88c5\u5907\u6b66\u5668\u3001\u4f7f\u7528\u78e8\u5200\u77f3\u548c\u7269\u54c1\u4f1a\u5f71\u54cd\u63a5\u4e0b\u6765\u7684\u6218\u6597\u3002', '\u51fb\u6740\u81ea\u7136\u654c\u4eba\u83b7\u5f97\u7ecf\u9a8c\u3002\u53f3\u4e0a\u89d2\u8272\u6309\u94ae\u53ef\u67e5\u770b\u7b49\u7ea7\u3001\u5de6\u53f3\u624b\u529b\u91cf\u3001\u638c\u63a7\u4e0e\u5c5e\u6027\u9002\u5e94\u3002'] },
+  { title: '\u5723\u9057\u7269\u4e0e\u4fe1\u606f', items: ['\u5f00\u5c40\u3001\u623f\u95f4\u5956\u52b1\u3001\u6536\u85cf\u5bb6\u548c\u602a\u7269\u6389\u843d\u90fd\u53ef\u80fd\u83b7\u5f97\u5723\u9057\u7269\uff1b\u540c\u65f6\u6700\u591a\u6fc0\u6d3b\u4e94\u4ef6\u3002', '\u957f\u6309\u68cb\u76d8\u5bf9\u8c61\u53ef\u67e5\u770b\u8be6\u60c5\uff1b\u7ecf\u9a8c\u884c\u53f3\u4fa7\u7684\u5723\u9057\u7269\u56fe\u6807\u53ef\u67e5\u770b\u5df2\u83b7\u5f97\u7684\u5723\u9057\u7269\uff1b\u53f3\u4e0a\u65e5\u5fd7\u53ef\u56de\u770b\u4e8b\u4ef6\u3002'] },
   { title: '\u5feb\u6377\u63d0\u793a', items: ['\u7ea2\u8272\u8def\u5f84\u8868\u793a\u4f1a\u7ecf\u8fc7\u5df2\u7ffb\u5f00\u654c\u4eba\u7684\u5a01\u80c1\u8303\u56f4\uff1b\u84dd\u8272\u8def\u5f84\u8868\u793a\u5f53\u524d\u5df2\u77e5\u5b89\u5168\u3002', '\u4e0d\u53ef\u7ffb\u724c\u6bd4\u53ef\u7ffb\u724c\u66f4\u6697\u3002\u534a\u900f\u660e\u5361\u724c\u53ea\u662f\u88ab\u7aa5\u89c6\uff0c\u5c1a\u672a\u7ffb\u5f00\u3002'] },
 ])
 
@@ -108,6 +113,7 @@ export class HUD {
     this.run = run
     this.root = document.getElementById('hud')
     if (!this.root) throw new Error('Missing #hud container')
+    this.merchantTab = 'stock'
     this._build()
     this._onClick = (event) => this._handleClick(event)
     this._onPointerDown = (event) => this._handlePointerDown(event)
@@ -134,12 +140,12 @@ export class HUD {
       <div class="hud-top">
         <div class="hud-stats">
           <div class="stat floor"><span class="label">${LABELS.floor}</span><span class="value" data=floor></span></div>
-          <div class="stat hp"><span class="label">${LABELS.health}</span><span class="value" data=hp></span></div>
-          <div class="stat armor"><span class="label">${LABELS.armor}</span><span class="value" data=armor></span></div>
-          <div class="stat gold"><span class="label">${LABELS.gold}</span><span class="value" data=gold></span></div>
           <div class="stat turn"><span class="label">${LABELS.turn}</span><span class="value" data=turn></span></div>
+          <div class="stat level"><span class="label">${LABELS.level}</span><span class="value" data=level></span></div>
+          <div class="stat gold"><span class="label">${LABELS.gold}</span><span class="value" data=gold></span></div>
         </div>
         <div class="hud-btns">
+          <button class="hud-icon relic-book-top" data-action="relics" title="${LABELS.relicBook}" aria-label="${LABELS.relicBook}">\u25a6</button>
           <button class="hud-icon" data-action="character" title="${LABELS.character}" aria-label="${LABELS.character}">\ud83d\udc64</button>
           <button class="hud-icon" data-action="help" title="${LABELS.help}" aria-label="${LABELS.help}">?</button>
           <button class="hud-icon" data-action="settings" title="${LABELS.settings}" aria-label="${LABELS.settings}">\u2699</button>
@@ -147,7 +153,16 @@ export class HUD {
         </div>
       </div>
 
-      <div class="hud-emotion" data=hintrow><span class="progress-text" data=progress></span><span class="emotion-text" data=hint></span></div>
+      <div class="hud-emotion" data=hintrow>
+        <span class="emotion-text" data=hint></span>
+      </div>
+
+      <div class="experience-bar-row" aria-label="${LABELS.experience}">
+        <div class="experience-bar" data=experiencebar>
+          <span class="experience-fill" data=experiencefill></span>
+          <span class="experience-value" data=experiencevalue></span>
+        </div>
+      </div>
 
       <div id="app" aria-label="game board"></div>
 
@@ -220,34 +235,40 @@ export class HUD {
         <div class="relic-choice-row" data=leveluprow></div>
       </div>
 
-      <div class="hud-rest" data=merchantpanel>
-        <section class="merchant-panel">
-          <div class="merchant-head"><span data=merchanttitle></span><button data-action="close-merchant">${LABELS.leaveMerchant}</button></div>
-          <div class="merchant-stock" data=merchantstock></div>
-          <div class="merchant-trade" data=merchanttrade></div>
-          <div class="merchant-relics" data=merchantrelics></div>
-        </section>
-      </div>
+        <div class="hud-rest" data=merchantpanel>
+          <section class="merchant-panel">
+            <div class="merchant-head"><span class="merchant-title" data=merchanttitle></span><div class="merchant-tabs" data=merchanttabs></div><button data-action="close-merchant">${LABELS.leaveMerchant}</button></div>
+            <div class="merchant-tab-page merchant-purchase-page" data=merchantpurchase>
+              <div class="merchant-stock" data=merchantstock></div>
+              <div class="merchant-trade" data=merchanttrade></div>
+            </div>
+            <div class="merchant-relics" data=merchantrelics></div>
+          </section>
+        </div>
+
+      <div class="hud-active-skills relic-skills" data=relicskills></div>
 
       <div class="hud-bottom">
-        <div class="card-actions" data=actions>
-          <button class="act-drop" data-action="discard">${LABELS.discard}</button>
-          <button class="act-use" data-action="use">${LABELS.use}</button>
-          <button class="act-wait" data-action="wait" title="${LABELS.wait}" aria-label="${LABELS.wait}">\u231b</button>
-          <div class="relic-skills" data=relicskills></div>
-        </div>
-        <div class="equip-row">
-          <button class="equip-slot" data-equip-slot="0"></button>
-          <button class="equip-slot" data-equip-slot="1"></button>
-        </div>
-        <div class="backpack-panel">
-          <div class="hud-relics">
-            <button class="relic-book" data-action="relics" title="${LABELS.relicBook}" aria-label="${LABELS.relicBook}">\u25a6</button>
-            <div class="relic-slots" data=relicslots></div>
-          </div>
+        <section class="backpack-panel">
+          <div class="relic-slots" data=relicslots></div>
           <div class="backpack-grid" data=backpack></div>
+        </section>
+        <aside class="vital-strip" aria-label="${LABELS.health} ${LABELS.armor}">
           <button class="bag-rotate" data-action="rotate-bag" title="${LABELS.rotate}" aria-label="${LABELS.rotate}" hidden>\u21bb</button>
-        </div>
+          <div class="vital-armor" title="${LABELS.armor}"><strong data=armorstrip></strong></div>
+          <div class="vital-health" title="${LABELS.health}"><span class="vital-health-fill" data=healthfill></span><strong data=hpstrip></strong></div>
+        </aside>
+        <section class="loadout-panel">
+          <div class="card-actions" data=actions>
+            <button class="act-use" data-action="use">${LABELS.use}</button>
+            <button class="act-unequip" data-action="unequip">${LABELS.unequip}</button>
+          </div>
+          <div class="equip-row">
+            <button class="equip-slot" data-equip-slot="0"></button>
+            <button class="equip-slot" data-equip-slot="1"></button>
+          </div>
+          <button class="act-drop loadout-discard" data-action="discard">${LABELS.discard}</button>
+        </section>
       </div>
 
       <div class="hud-over" data=over>
@@ -275,11 +296,15 @@ export class HUD {
     const { player } = this.run
     const room = this.run.currentRoom
     this.q('floor').textContent = room ? String(room.floor) : ''
-    this.q('hp').textContent = `${player.hp}/${player.maxHp}`
-    this.q('armor').textContent = String(player.armor)
+    this.q('hpstrip').textContent = `${player.hp}/${player.maxHp}`
+    this.q('armorstrip').textContent = String(player.armor)
+    this.q('healthfill').style.height = `${Math.max(0, Math.min(100, player.hp / Math.max(1, player.maxHp) * 100))}%`
     this.q('gold').textContent = String(player.gold)
     this.q('turn').textContent = String(this.run.turn)
-    this.q('progress').textContent = `${LABELS.level} ${player.level} \u00b7 ${LABELS.experience} ${player.experience}/${player.experienceToNext}`
+    this.q('level').textContent = String(player.level)
+    this.q('experiencevalue').textContent = `${player.experience}/${player.experienceToNext}`
+    const experienceProgress = player.experienceToNext > 0 ? Math.min(100, Math.max(0, player.experience / player.experienceToNext * 100)) : 0
+    this.q('experiencefill').style.width = `${experienceProgress}%`
     this._renderCharacterPanel(player)
     const pendingBuffs = player.pendingAttackBuffs || []
     const isMeleeOnly = pendingBuffs.length > 0 && pendingBuffs.every((buff) => buff.target === 'melee')
@@ -292,7 +317,7 @@ export class HUD {
       const weapon = player.equipment[slot]
       const growth = weapon ? this.run.weaponGrowth(weapon) : null
       const side = slot === 0 ? LABELS.leftHand : LABELS.rightHand
-      const occupiedByTwoHanded = slot === 0 && weapon && player.equipment[1] === weapon && weapon.grip === 'two'
+      const occupiedByTwoHanded = slot === 0 && weapon && player.equipment[1]?.uid === weapon.uid && weapon.grip === 'two'
       equipSlot.classList.toggle('filled', !!weapon && !occupiedByTwoHanded)
       equipSlot.classList.toggle('occupied', occupiedByTwoHanded)
       equipSlot.classList.toggle('armed', this.run.selectedEquipmentSlot === slot)
@@ -335,7 +360,7 @@ export class HUD {
       const slot = document.createElement('div')
       slot.className = `relic-slot ${definition ? 'active' : 'empty'}`
       slot.title = definition ? `${definition.name}\uff1a${definition.description}` : LABELS.empty
-      slot.textContent = definition ? definition.name.slice(0, 1) : '\u00b7'
+      slot.textContent = definition ? definition.name.slice(0, 4) : '\u00b7'
       if (definition) slot.dataset.relicDetail = definition.id
       slots.appendChild(slot)
     }
@@ -377,7 +402,7 @@ export class HUD {
   _renderRoomReward() {
     const reward = this.run.roomReward
     const panel = this.q('roomreward')
-    const open = this.run.phase === 'reward' && !!reward
+    const open = this.run.phase === 'reward' && !!reward && !this.run.roomEntering
     panel.classList.toggle('show', open)
     if (!open) return
     this.q('roomrewardrow').innerHTML = reward.choices.map((choice, index) => {
@@ -418,10 +443,20 @@ export class HUD {
   _renderMerchant() {
     const panel = this.q('merchantpanel')
     const merchant = this.run.merchantEntity
-    const open = this.run.phase === 'merchant' && !!merchant
+    const open = this.run.phase === 'merchant' && !!merchant && !this.run.merchantEntering
     panel.classList.toggle('show', open)
     if (!open) return
     this.q('merchanttitle').textContent = merchant.name
+    const services = merchant.services || this.run.merchantDefinition?.services || []
+    const canBuy = services.includes('stock')
+    const canRelics = services.includes('relic-management') || services.includes('relic-choice')
+    const availableTabs = [canBuy ? 'stock' : null, canRelics ? 'relics' : null].filter(Boolean)
+    if (!availableTabs.includes(this.merchantTab)) this.merchantTab = availableTabs[0] || null
+    const tabs = this.q('merchanttabs')
+    tabs.hidden = availableTabs.length < 2
+    tabs.innerHTML = availableTabs.map((tab) => `<button type="button" class="merchant-tab${this.merchantTab === tab ? ' active' : ''}" data-merchant-tab="${tab}" aria-selected="${this.merchantTab === tab}">${tab === 'stock' ? LABELS.buy : LABELS.merchantRelicsTab}</button>`).join('')
+    const purchase = this.q('merchantpurchase')
+    purchase.classList.toggle('show', this.merchantTab === 'stock')
     const stock = this.q('merchantstock')
     stock.innerHTML = (merchant.stock || []).map((entry, index) => {
       const definition = getItemDefinition(entry.itemId)
@@ -432,21 +467,29 @@ export class HUD {
     const refreshPrice = merchant.restockPrice || 0
     this.q('merchanttrade').innerHTML = `<button data-action="merchant-sell"${selected ? '' : ' disabled'}>${LABELS.sellSelected}${selected ? ` ${merchantSellText(selected)}` : ''}</button>${refreshPrice > 0 ? `<button data-action="merchant-refresh"${this.run.player.gold < refreshPrice ? ' disabled' : ''}>${LABELS.refreshStock} ${refreshPrice}</button>` : ''}`
     const relics = this.q('merchantrelics')
-    const offer = merchant.relicOfferResolved ? [] : (merchant.relicChoices || []).map((id) => getRelicDefinition(id)).filter(Boolean)
-    const offerPrice = merchant.relicOfferPrice || 0
-    const offerHtml = offer.length ? `<div class="merchant-relic-title">${LABELS.relicChoice}</div>${offer.map((definition) => (
-      `<button class="merchant-relic-item" data-merchant-relic-choice="${definition.id}"${this.run.player.gold < offerPrice ? ' disabled' : ''}><b>${escapeHtml(definition.name)}</b><small>${escapeHtml(definition.description)} \u00b7 ${LABELS.buy} ${offerPrice}</small></button>`
-    )).join('')}` : ''
-    if (!this.run.canManageRelics()) {
-      relics.innerHTML = `<div class="merchant-relic-title">${LABELS.relicsLocked}</div>`
+    relics.classList.toggle('show', this.merchantTab === 'relics')
+    if (!canRelics) {
+      relics.innerHTML = ''
       return
     }
-    relics.innerHTML = `${offerHtml}<div class="merchant-relic-title">${LABELS.relicManagement}</div>${this.run.relics.entries.map((entry) => {
+    const offer = merchant.relicOfferResolved ? [] : (merchant.relicChoices || []).map((id) => getRelicDefinition(id)).filter(Boolean)
+    const offerPrice = merchant.relicOfferPrice || 0
+    const offerHtml = offer.length ? `<section class="merchant-relic-section merchant-relic-offer"><div class="merchant-relic-section-head"><div class="merchant-relic-title">${LABELS.relicChoice}</div></div><div class="merchant-relic-grid">${offer.map((definition) => (
+      `<button class="merchant-relic-item${this.run.player.gold < offerPrice ? ' disabled' : ''}" data-merchant-relic-choice="${definition.id}" aria-disabled="${this.run.player.gold < offerPrice}"><b>${escapeHtml(definition.name)}</b><small>${escapeHtml(definition.description)} \u00b7 ${LABELS.buy} ${offerPrice}</small></button>`
+    )).join('')}</div></section>` : ''
+    if (!this.run.canManageRelics()) {
+      relics.innerHTML = `${offerHtml}<div class="merchant-relic-locked">${LABELS.relicsLocked}</div>`
+      return
+    }
+    const draftIds = new Set(this.run.relicLoadoutDraftIds())
+    relics.innerHTML = `${offerHtml}<section class="merchant-relic-section merchant-relic-loadout"><div class="merchant-relic-section-head"><div><div class="merchant-relic-title">${LABELS.relicLoadout}</div><small class="merchant-relic-hint">${LABELS.relicLoadoutHint}</small></div><strong class="merchant-relic-capacity">${draftIds.size}/${this.run.relics.maxActive}</strong></div><div class="merchant-relic-grid">${this.run.relics.entries.map((entry) => {
       const definition = getRelicDefinition(entry.id)
       if (!definition) return ''
-      const state = entry.active ? LABELS.active : LABELS.inactive
-      return `<button class="merchant-relic-item ${entry.active ? 'active' : 'inactive'}" data-merchant-relic="${entry.id}"><b>${escapeHtml(definition.name)}</b><small>${state}</small></button>`
-    }).join('')}<button class="merchant-relic-item merchant-relic-confirm" data-action="confirm-relic-loadout"><b>${LABELS.confirmRelics}</b></button>`
+      const draftActive = draftIds.has(entry.id)
+      const changed = draftActive !== entry.active
+      const state = draftActive ? LABELS.active : LABELS.inactive
+      return `<button class="merchant-relic-item ${draftActive ? 'draft-active' : 'draft-inactive'}${changed ? ' pending' : ''}" data-merchant-relic="${entry.id}" aria-pressed="${draftActive}"><b>${escapeHtml(definition.name)}</b><small>${state} \u00b7 ${changed ? LABELS.pending : LABELS.current}</small></button>`
+    }).join('')}</div><button class="merchant-relic-confirm" data-action="confirm-relic-loadout"><b>${LABELS.confirmRelics}</b><small>${LABELS.relicLoadoutHint}</small></button></section>`
   }
 
   _renderBackpack() {
@@ -502,9 +545,15 @@ export class HUD {
     const actions = this.q('actions')
     const discard = this.root.querySelector('[data-action="discard"]')
     const use = this.root.querySelector('[data-action="use"]')
+    const unequip = this.root.querySelector('[data-action="unequip"]')
+    const selectedEquipment = this.run.selectedEquipment
+    const usableItem = !!selected && selected.type !== 'weapon'
     actions.classList.toggle('show', this.run.phase === 'explore' && !this.run.gameOver)
-    discard.disabled = !selected && !this.run.selectedEquipment
-    use.disabled = !selected || selected.type === 'weapon'
+    actions.classList.toggle('item-selected', usableItem)
+    actions.classList.toggle('weapon-selected', !!selectedEquipment)
+    discard.disabled = !selected && !selectedEquipment
+    use.disabled = !usableItem
+    unequip.disabled = !selectedEquipment
   }
 
   _renderRelicSkills() {
@@ -559,6 +608,19 @@ export class HUD {
       const item = this.run.player.equipment[Number(equipment.dataset.equipSlot)]
       return item ? () => this.run.showItemDetail(item) : null
     }
+    const merchantStock = target.closest('[data-merchant-stock]')
+    if (merchantStock) {
+      const entry = this.run.merchantEntity?.stock?.[Number(merchantStock.dataset.merchantStock)]
+      const definition = getItemDefinition(entry?.itemId)
+      if (definition) {
+        const preview = { ...definition, uid: `merchant-preview-${definition.id}`, durability: definition.durability ?? definition.durabilityRange?.[1] ?? 0 }
+        return () => this.run.showItemDetail(preview)
+      }
+    }
+    const merchantRelicChoice = target.closest('[data-merchant-relic-choice]')
+    if (merchantRelicChoice) return () => this.run.showRelicDetail(merchantRelicChoice.dataset.merchantRelicChoice)
+    const merchantRelic = target.closest('[data-merchant-relic]')
+    if (merchantRelic) return () => this.run.showRelicDetail(merchantRelic.dataset.merchantRelic)
     return null
   }
 
@@ -600,6 +662,12 @@ export class HUD {
 
   _handleClick(event) {
     if (Date.now() < (this.ignoreClicksUntil || 0)) return
+    const merchantTab = event.target.closest('[data-merchant-tab]')
+    if (merchantTab) {
+      this.merchantTab = merchantTab.dataset.merchantTab
+      this.render()
+      return
+    }
     const relicSkill = event.target.closest('[data-relic-skill]')
     if (relicSkill) {
       this.run.useRelicSkill(relicSkill.dataset.relicSkill)
@@ -633,12 +701,13 @@ export class HUD {
     const merchantRelic = event.target.closest('[data-merchant-relic]')
     if (merchantRelic) {
       const id = merchantRelic.dataset.merchantRelic
-      if (this.run.relics.isActive(id)) this.run.deactivateRelic(id)
+      if (this.run.isRelicLoadoutDraftActive(id)) this.run.deactivateRelic(id)
       else this.run.activateRelic(id)
       return
     }
     const merchantRelicChoice = event.target.closest('[data-merchant-relic-choice]')
     if (merchantRelicChoice) {
+      if (merchantRelicChoice.getAttribute('aria-disabled') === 'true') return
       this.run.chooseMerchantRelic(merchantRelicChoice.dataset.merchantRelicChoice)
       return
     }
@@ -676,9 +745,9 @@ export class HUD {
     }
     const action = event.target.closest('[data-action]')?.dataset.action
     if (!action) return
-    if (action === 'wait') this.run.wait()
     if (action === 'use') this.run.useSelected()
     if (action === 'discard') this.run.discardSelected()
+    if (action === 'unequip') this.run.unequipSelected()
     if (action === 'rotate-bag') this.run.rotateSelectedInventory()
     if (action === 'restart') {
       this.run.clearSave()
