@@ -1,10 +1,10 @@
-import { EQUIPMENT_SLOTS, GameRun, INVENTORY_COLUMNS, INVENTORY_ROWS, SAVE_KEY } from '../src/game/run.js'
+import { EQUIPMENT_SLOTS, GameRun, INVENTORY_COLUMNS, INVENTORY_ROWS, SAVE_KEY, SAVE_VERSION } from '../src/game/run.js'
 import { isAdjacent8, neighbors8, pos } from '../src/game/core/geometry.js'
 import { Room } from '../src/game/model/room.js'
 import { BackpackGrid } from '../src/game/model/backpack.js'
 import { Dungeon, createLinearDungeon, validateDungeonLayout } from '../src/game/model/dungeon.js'
 import { createEnemyById, createMonster, makeItemById, randomItem, resetEntityIds } from '../src/game/data/content.js'
-import { ATTRIBUTE_ORDER, attributeLabel, attributeModifier, migrateAttributeId } from '../src/game/data/attributes.js'
+import { ATTRIBUTE_ORDER, attributeLabel, attributeModifier } from '../src/game/data/attributes.js'
 import { enemyDefinitionFor } from '../src/game/data/enemies.js'
 import catalog from '../src/game/data/catalog.json' with { type: 'json' }
 import { RelicCollection } from '../src/game/model/relics.js'
@@ -70,7 +70,7 @@ assert(Array.isArray(catalog.enemies) && Array.isArray(catalog.weapons) && Array
 const attributeContent = [...catalog.enemies, catalog.boss, ...catalog.weapons, ...catalog.consumables, ...catalog.enemyLoot]
 assert(JSON.stringify(ATTRIBUTE_ORDER) === JSON.stringify(['scorch', 'wither', 'drown']), 'attribute roster must contain only scorch, wither, and drown')
 assert(attributeLabel('scorch') === '\u707c\u70ed' && attributeLabel('wither') === '\u67af\u840e' && attributeLabel('drown') === '\u6c89\u6eba', 'attribute labels are invalid')
-assert(migrateAttributeId('slime') === 'wither' && migrateAttributeId('crystal') === 'wither' && migrateAttributeId('tide') === 'drown', 'legacy attributes did not migrate to the new roster')
+assert(!ATTRIBUTE_ORDER.includes('slime') && !ATTRIBUTE_ORDER.includes('crystal') && !ATTRIBUTE_ORDER.includes('tide'), 'legacy attributes must not remain in the active roster')
 assert(attributeContent.every((entry) => ATTRIBUTE_ORDER.includes(entry.attribute)), 'every authored enemy, weapon, and item must have one valid attribute')
 assert(attributeContent.every((entry) => !('category' in entry) && !('damageType' in entry)), 'legacy weapon types and enemy categories must not remain in authored content')
 assert(catalog.enemies.find((enemy) => enemy.id === 'gnawer')?.initialActionDelay === 1, 'gnawer must have a one-turn initial action delay')
@@ -158,7 +158,7 @@ for (const edge of run.dungeon.edges.values()) {
 }
 assert(run.initialRelicChoices.length === 3, 'new run must offer three initial relic choices')
 assert(run.chooseInitialRelic(run.initialRelicChoices[0])?.active, 'initial relic choice must activate immediately')
-const detailItem = makeItemById('spear')
+const detailItem = makeItemById('thorn-long-spear')
 assert(run.showItemDetail(detailItem) && run.detailPanel?.position === 'top' && run.detailPanel.lines.length >= 3, 'inventory item detail panel was not generated')
 assert(run.closeDetail() && !run.detailPanel, 'detail panel did not close')
 const detailEnemy = [...run.currentRoom.entities.values()].find((entity) => entity.kind === 'enemy')
@@ -178,14 +178,14 @@ assert(!run.showBoardDetail(run.player.pos), 'the player must not expose a detai
 
 const shapeGrid = new BackpackGrid()
 const shortSword = makeItemById('short-sword')
-const spear = makeItemById('spear')
-const executioner = makeItemById('executioner')
+const spear = makeItemById('charred-short-spear')
+const executioner = makeItemById('drowned-iron-hammer')
 const potion = makeItemById('small-potion')
 const armorPotion = makeItemById('armor-potion')
 const largePotion = makeItemById('large-potion')
 const largeArmorPotion = makeItemById('large-armor-potion')
 const largeWhetstone = makeItemById('large-whetstone')
-assert(shortSword.shape.flat().filter(Boolean).length === 2 && spear.shape.flat().filter(Boolean).length === 3 && executioner.shape.flat().filter(Boolean).length === 4, 'weapons must retain two-, three-, and four-cell footprints')
+assert(shortSword.shape.flat().filter(Boolean).length === 3 && spear.shape.flat().filter(Boolean).length === 3 && executioner.shape.flat().filter(Boolean).length === 4, 'weapons must expose the new category footprints')
 assert(potion.shape.flat().filter(Boolean).length === 1 && armorPotion.shape.flat().filter(Boolean).length === 1, 'small potions must retain one-cell footprints')
 assert(largePotion.heal === 12 && largeArmorPotion.armor === 10 && largePotion.shape.flat().filter(Boolean).length === 2 && largeArmorPotion.shape.flat().filter(Boolean).length === 2, 'large potions must be stronger and occupy two cells')
 assert(largeWhetstone.repair === 3 && largeWhetstone.shape.flat().filter(Boolean).length === 1, 'large whetstone must use the large repair value without changing its footprint')
@@ -220,12 +220,9 @@ assert(horizontalFallbackGrid.placementOf(horizontalFallbackItem.uid).rotation =
 const serializedShapeGrid = shapeGrid.serialize((item) => ({ ...item }))
 const restoredShapeGrid = BackpackGrid.hydrate(serializedShapeGrid)
 assert(restoredShapeGrid.usedCells === 3 && restoredShapeGrid.placementOf(spear.uid)?.rotation === 1, 'shape backpack placement or rotation did not persist')
-const legacyBackpack = BackpackGrid.hydrate({ columns: 6, rows: 4, placements: [{ item: makeItemById('small-potion'), x: 5, y: 3, rotation: 0 }] })
-assert(legacyBackpack.columns === 5 && legacyBackpack.rows === 5 && legacyBackpack.length === 1, 'a legacy six-by-four backpack save did not reflow into the five-by-five grid')
-
 const organizeRun = new GameRun({ autoLoad: false, random: () => 0.5 })
 organizeRun.chooseInitialRelic(organizeRun.initialRelicChoices[0])
-const organizeIndex = addToBackpack(organizeRun, makeItemById('spear'))
+const organizeIndex = addToBackpack(organizeRun, makeItemById('thorn-long-spear'))
 organizeRun.selectInventory(organizeIndex)
 const organizeTurn = organizeRun.turn
 assert(organizeRun.rotateSelectedInventory() && organizeRun.turn === organizeTurn, 'rotating a backpack item must not consume a turn')
@@ -277,7 +274,8 @@ for (let r = 0; r < rangedPreviewRoom.height; r += 1) {
   for (let c = 0; c < rangedPreviewRoom.width; c += 1) rangedPreviewRoom.reveal(pos(c, r))
 }
 rangedPreviewRun.player.pos = pos(0, 0)
-rangedPreviewRun.player.equipment = [{ uid: 'preview-bow', type: 'weapon', range: 2, durability: 1 }, null]
+rangedPreviewRun.player.equipment = [{ uid: 'preview-bow', type: 'weapon', weaponClass: 'bow', range: 2, durability: 2 }, null]
+rangedPreviewRun.selectedEquipmentSlot = 0
 const rangedPreviewEnemy = createEnemyById('gnawer', pos(4, 0))
 rangedPreviewRoom.addEntity(rangedPreviewEnemy)
 const rangedPreview = rangedPreviewRun.previewTileAction(rangedPreviewEnemy.pos.c, rangedPreviewEnemy.pos.r)
@@ -479,21 +477,22 @@ dualRoom.reveal(dualEnemy.pos)
 dualRoom.reveal(dualApproach)
 dualEnemy.hp = 99
 dualAttackRun.player.pos = { ...dualApproach }
+dualAttackRun.selectedEquipmentSlot = 0
 const leftDurability = dualAttackRun.player.equipment[0].durability
 const rightDurability = dualAttackRun.player.equipment[1].durability
 assert(dualAttackRun.clickTile(dualEnemy.pos.c, dualEnemy.pos.r), 'dual weapon attack was rejected')
 assert(dualAttackRun.player.equipment[0].durability === leftDurability - 1, 'left-hand weapon did not attack')
-assert(dualAttackRun.player.equipment[1].durability === rightDurability - 1, 'right-hand weapon did not attack')
+assert(dualAttackRun.player.equipment[1].durability === rightDurability, 'unselected right-hand weapon must not attack')
 assert(dualAttackRun.relicRuntime['r-tide-heart']?.attacks === 1 && dualAttackRun.relicRuntime['r-weapon-foundry']?.attacks === 1, 'a dual-wield attack action must count once for attack-count relics')
 
-const twoHandRun = new GameRun({ autoLoad: false, random: () => 0.5 })
-twoHandRun.chooseInitialRelic(twoHandRun.initialRelicChoices[0])
-const twoHandIndex = addToBackpack(twoHandRun, makeItemById('spear'))
-twoHandRun.selectInventory(twoHandIndex)
-assert(twoHandRun.equipSelected(1), 'two-handed weapon could not be equipped')
-assert(twoHandRun.player.equipment[0] === twoHandRun.player.equipment[1] && twoHandRun.equippedWeapons.length === 1, 'two-handed weapon did not occupy both hands as one weapon')
-twoHandRun.selectEquipmentSlot(1)
-assert(twoHandRun.discardSelected() && !twoHandRun.player.equipment[0] && !twoHandRun.player.equipment[1], 'discarding a two-handed weapon did not free both hands')
+const oneHandRun = new GameRun({ autoLoad: false, random: () => 0.5 })
+oneHandRun.chooseInitialRelic(oneHandRun.initialRelicChoices[0])
+const oneHandIndex = addToBackpack(oneHandRun, makeItemById('charred-short-spear'))
+oneHandRun.selectInventory(oneHandIndex)
+assert(oneHandRun.equipSelected(1), 'single-handed weapon could not be equipped')
+assert(oneHandRun.player.equipment[0] !== oneHandRun.player.equipment[1] && oneHandRun.equippedWeapons.length === 2, 'all weapons should occupy only one hand')
+oneHandRun.selectEquipmentSlot(1)
+assert(oneHandRun.discardSelected() && !oneHandRun.player.equipment[1], 'discarding a single-handed weapon did not clear its slot')
 
 const trapRun = new GameRun({ autoLoad: false, random: () => 0.5 })
 trapRun.chooseInitialRelic(trapRun.initialRelicChoices[0])
@@ -659,6 +658,7 @@ function clearedEnemyRun(random = () => 0.5) {
   for (const id of [...room.entities.keys()]) room.removeEntity(id)
   for (let r = 0; r < room.height; r++) for (let c = 0; c < room.width; c++) room.reveal(pos(c, r))
   testRun.player.pos = pos(0, 0)
+  testRun.selectedEquipmentSlot = 0
   return { testRun, room }
 }
 
@@ -677,24 +677,25 @@ bareHandRun.player.equipment = [null, null]
 const bareHandEnemy = createEnemyById('gnawer', pos(1, 0))
 bareHandRoom.addEntity(bareHandEnemy)
 const bareHandHp = bareHandEnemy.hp
-assert(bareHandRun.clickTile(1, 0) && bareHandEnemy.hp === bareHandHp - 1, 'unarmed attack must deal exactly one damage')
+assert(!bareHandRun.clickTile(1, 0) && bareHandEnemy.hp === bareHandHp, 'an attack without a selected weapon must not act')
 
 const { testRun: masteryRun, room: masteryRoom } = clearedEnemyRun(() => 0.4)
 masteryRun.player.mastery[0] = 10
 masteryRun.player.strength[0] = 2
-masteryRun.player.equipment[0].durability = 1
+masteryRun.player.equipment[0].durability = 2
 const masteryEnemy = createEnemyById('gnawer', pos(1, 0))
 masteryEnemy.hp = 99
 masteryEnemy.maxHp = 99
 masteryRoom.addEntity(masteryEnemy)
+masteryRun.selectedEquipmentSlot = 0
 const masteryHp = masteryEnemy.hp
-assert(masteryRun.clickTile(1, 0) && masteryRun.player.equipment[0].durability === 1 && masteryEnemy.hp === masteryHp - 6, 'mastery did not preserve durability and cancel the last-durability penalty')
+assert(masteryRun.clickTile(1, 0) && masteryRun.player.equipment[0].durability === 2 && masteryEnemy.hp === masteryHp - 5, 'mastery did not preserve durability on a normal attack')
 
 const authoredDrops = {
-  gnawer: [0.25, 'rough-bone-club'], 'nest-spider': [0.35, 'venom-sac'], 'beetle-guard': [0.35, 'shell-fragment'], 'rot-walker': [0.2, 'rusty-dagger'],
-  wisp: [0.6, 'spectral-short-spear'], shellguard: [0.6, 'notched-war-hammer'], 'patrol-hound': [0.25, 'beast-fang'], broodmother: [0.4, 'worm-glue'],
-  'moss-colossus': [0.45, 'moss-ointment'], 'sentry-crossbow': [0.6, 'worn-shortbow'], 'revenant-guard': [0.5, 'tombguard-shortsword'],
-  'bone-priest': [0.5, 'bone-grinding-powder'], 'cracked-hunter': [0.5, 'cracked-armor-hookblade'],
+  gnawer: [0.25, 'ghoul-bone-stinger'], 'nest-spider': [0.35, 'venom-sac'], 'beetle-guard': [0.35, 'shell-fragment'], 'rot-walker': [0.2, 'venom-sac'],
+  wisp: [0.6, 'ghost-bone-spear'], shellguard: [0.6, 'shell-shatter-maul'], 'patrol-hound': [0.25, 'beast-fang'], broodmother: [0.4, 'worm-glue'],
+  'moss-colossus': [0.45, 'moss-ointment'], 'sentry-crossbow': [0.6, 'moss-ointment'], 'revenant-guard': [0.5, 'tombguard-remnant-sword'],
+  'bone-priest': [0.5, 'bone-grinding-powder'], 'cracked-hunter': [0.5, 'shell-fragment'],
 }
 for (const [enemyId, [chance, itemId]] of Object.entries(authoredDrops)) {
   const drop = catalog.enemies.find((enemy) => enemy.id === enemyId)?.drop
@@ -703,13 +704,20 @@ for (const [enemyId, [chance, itemId]] of Object.entries(authoredDrops)) {
 assert(!catalog.enemies.find((enemy) => enemy.id === 'bomb-wisp')?.drop && !catalog.boss.drop, 'enemies without authored drops must not use a generic drop table')
 assert(catalog.enemyLoot.every((item) => item.dropOnly), 'enemy loot must not enter generic item generation')
 
-const { testRun: guaranteedDropRun, room: guaranteedDropRoom } = clearedEnemyRun(() => 0)
+const { testRun: guaranteedDropRun, room: guaranteedDropRoom } = clearedEnemyRun(() => 0.1)
 const guaranteedDropEnemy = createEnemyById('gnawer', pos(3, 0))
 guaranteedDropRoom.addEntity(guaranteedDropEnemy)
 assert(guaranteedDropRun._defeatEnemy(guaranteedDropEnemy), 'authored enemy drop kill was rejected')
 const guaranteedDrop = guaranteedDropRoom.entityAt(pos(3, 0))
-assert(guaranteedDrop?.kind === 'item' && guaranteedDrop.item.id === 'rough-bone-club' && guaranteedDrop.item.durability === 1 && !guaranteedDrop.item.temporary, 'gnawer did not leave its authored rough bone club')
-assert(guaranteedDropRun.relics.entries.length === 1, 'relic drops must resolve independently from normal enemy loot')
+assert(guaranteedDrop?.kind === 'item' && guaranteedDrop.item.id === 'ghoul-bone-stinger' && guaranteedDrop.item.durability === 2 && !guaranteedDrop.item.temporary, 'gnawer did not leave its authored bone stinger')
+assert(![...guaranteedDropRoom.entities.values()].some((entity) => entity.kind === 'relic') && guaranteedDropRun.relics.entries.length === 0, 'normal loot and relic loot must not drop together')
+const { testRun: guaranteedRelicRun, room: guaranteedRelicRoom } = clearedEnemyRun(() => 0)
+const guaranteedRelicEnemy = createEnemyById('gnawer', pos(3, 0))
+guaranteedRelicRoom.addEntity(guaranteedRelicEnemy)
+assert(guaranteedRelicRun._defeatEnemy(guaranteedRelicEnemy), 'relic drop kill was rejected')
+const guaranteedRelic = guaranteedRelicRoom.entityAt(pos(3, 0))
+assert(guaranteedRelic?.kind === 'relic' && guaranteedRelic.relicId && guaranteedRelicRun.relics.entries.length === 0, 'relic drops must remain on the ground until picked up')
+assert(guaranteedRelicRun.clickTile(guaranteedRelic.pos.c, guaranteedRelic.pos.r) && guaranteedRelicRun.relics.entries.length === 1, 'ground relic could not be picked up')
 
 const { testRun: missedDropRun, room: missedDropRoom } = clearedEnemyRun(() => 0.999)
 const missedDropEnemy = createEnemyById('gnawer', pos(3, 0))
@@ -717,9 +725,9 @@ missedDropRoom.addEntity(missedDropEnemy)
 missedDropRun._defeatEnemy(missedDropEnemy)
 assert(!missedDropRoom.entityAt(pos(3, 0)), 'enemy drop chance was ignored')
 
-const lowHammer = makeItemById('notched-war-hammer', () => 0)
-const highHammer = makeItemById('notched-war-hammer', () => 0.999)
-assert(lowHammer?.durability === 1 && highHammer?.durability === 2, 'variable weapon durability did not stay within its authored range')
+const lowHammer = makeItemById('shell-shatter-maul', () => 0)
+const highHammer = makeItemById('shell-shatter-maul', () => 0.999)
+assert(lowHammer?.durability === 1 && highHammer?.durability === 1, 'fixed weapon durability did not stay at its authored value')
 
 const { testRun: ambushRun, room: ambushRoom } = clearedEnemyRun()
 const spider = createEnemyById('nest-spider', pos(2, 0))
@@ -815,7 +823,7 @@ const witherTarget = { attribute: 'wither' }
 assert(attributeModifier('scorch', 'wither').countered && attributeModifier('wither', 'drown').countered && attributeModifier('drown', 'scorch').countered, 'attribute counter cycle is invalid')
 assert(attributeModifier('scorch', 'wither', { adapted: true }).multiplier === 1.8 && attributeModifier('scorch', 'drown', { adapted: true }).multiplier === 0.8, 'attribute adaptation did not replace the normal multipliers')
 assert(computeAttackDamage({ weapon: scorchWeapon, target: witherTarget }).damage === 8, 'attribute counter damage multiplier is invalid')
-assert(computeAttackDamage({ weapon: { ...scorchWeapon, durability: 1 }, target: witherTarget }).damage === 4, 'last durability penalty is invalid')
+assert(computeAttackDamage({ weapon: { ...scorchWeapon, durability: 1 }, target: witherTarget }).damage === 8, 'last durability attacks must not be penalized')
 assert(computeAttackDamage({ weapon: { ...scorchWeapon, durability: 1 }, target: witherTarget, strengthBonus: 2, ignoreLastDurability: true }).damage === 11, 'strength or preserved durability did not apply before attribute resolution')
 assert(computeAttackDamage({ weapon: scorchWeapon, target: { attribute: 'drown' } }).damage === 3, 'attribute resistance multiplier is invalid')
 assert(masteryPreservationChance(0) === 0 && masteryPreservationChance(10) === 0.5, 'weapon mastery probability does not follow its authored formula')
@@ -862,10 +870,10 @@ const { testRun: unarmedBuffRun, room: unarmedBuffRoom } = clearedEnemyRun()
 const unarmedBuffTarget = createEnemyById('gnawer', pos(1, 0))
 unarmedBuffTarget.hp = unarmedBuffTarget.maxHp = 20
 unarmedBuffRoom.addEntity(unarmedBuffTarget)
-unarmedBuffRun.player.equipment = [null, null]
 const unarmedCharmIndex = addToBackpack(unarmedBuffRun, makeItemById('battle-charm'))
 assert(unarmedBuffRun.selectInventory(unarmedCharmIndex) && unarmedBuffRun.useSelected(), 'battle charm could not be used for the unarmed attack test')
-assert(unarmedBuffRun.clickTile(unarmedBuffTarget.pos.c, unarmedBuffTarget.pos.r) && unarmedBuffTarget.hp === unarmedBuffTarget.maxHp - 5 && unarmedBuffRun.player.pendingAttackBuffs.length === 0, 'generic attack buff did not apply to and get consumed by an unarmed attack')
+unarmedBuffRun.selectedEquipmentSlot = 0
+assert(unarmedBuffRun.clickTile(unarmedBuffTarget.pos.c, unarmedBuffTarget.pos.r) && unarmedBuffTarget.hp === unarmedBuffTarget.maxHp - 7 && unarmedBuffRun.player.pendingAttackBuffs.length === 0, 'generic attack buff did not apply to and get consumed by the selected weapon attack')
 
 const { testRun: remoteFlipRun, room: remoteFlipRoom } = clearedEnemyRun()
 const remoteTarget = pos(2, 0)
@@ -933,8 +941,8 @@ try {
   persistenceRun.player.mastery = [3, 0]
   persistenceRun.player.adaptations = ['scorch', null]
   persistenceRun.roomRewardBag = ['relic', 'supply']
-  const persistedTwoHanded = makeItemById('spear')
-  persistenceRun.player.equipment = [persistedTwoHanded, persistedTwoHanded]
+  const persistedWeapon = makeItemById('thorn-long-spear')
+  persistenceRun.player.equipment = [persistedWeapon, null]
   const persistedEdge = [...persistenceRun.dungeon.edges.values()].find((edge) => edge.locked)
   persistedEdge.unlocked = true
   openMerchant(persistenceRun, 'merchant')
@@ -950,20 +958,53 @@ try {
   const restoredRun = new GameRun({ autoLoad: true, random: () => 0.5 })
   assert(restoredRun.player.gold === persistedGold && restoredRun.dungeon.edge(persistedEdge.id).unlocked, 'player or locked-door state did not persist')
   assert(restoredRun.player.level === 3 && restoredRun.player.strength[0] === 2 && restoredRun.player.mastery[0] === 3 && restoredRun.player.adaptations[0] === 'scorch' && restoredRun.roomRewardBag.join(',') === 'relic,supply', 'progression or reward-bag state did not persist')
-  assert(restoredRun.player.equipment[0] === restoredRun.player.equipment[1] && restoredRun.equippedWeapons.length === 1, 'two-handed equipment did not restore as one shared weapon')
+  assert(restoredRun.player.equipment[0]?.uid === persistedWeapon.uid && !restoredRun.player.equipment[1] && restoredRun.equippedWeapons.length === 1, 'current equipment state did not persist exactly')
   assert(restoredRun.phase === 'merchant' && restoredRun.merchantEntity?.merchantId === 'merchant', 'open merchant state did not restore')
   assert(restoredRun.merchantEntity.stock[0]?.itemId && !restoredRun.merchantEntity.stock[0].sold, 'merchant stock refresh did not persist')
   const generatedAfterLoad = makeItemById('small-potion')
   assert(!savedIdentifiers.has(generatedAfterLoad.uid), 'loaded save reused an existing item identifier')
-  const invalidMerchantSave = restoredRun.serialize()
-  invalidMerchantSave.phase = 'merchant'
-  invalidMerchantSave.merchant = { entityId: 'missing-merchant' }
-  saveStorage.set(SAVE_KEY, JSON.stringify(invalidMerchantSave))
-  const recoveredRun = new GameRun({ autoLoad: true, random: () => 0.5 })
-  assert(recoveredRun.phase === 'explore' && !recoveredRun.merchant, 'invalid merchant save was not recovered to exploration')
+  const staleSave = restoredRun.serialize()
+  staleSave.version = SAVE_VERSION - 1
+  saveStorage.set(SAVE_KEY, JSON.stringify(staleSave))
+  const replacedRun = new GameRun({ autoLoad: true, random: () => 0.5 })
+  assert(!replacedRun._loaded && replacedRun.phase === 'explore' && replacedRun.turn === 0 && replacedRun.player.level === 1, 'a mismatched save version was not discarded in favor of a new run')
+  const rewrittenSave = JSON.parse(saveStorage.get(SAVE_KEY))
+  assert(rewrittenSave.version === SAVE_VERSION && rewrittenSave.turn === 0 && rewrittenSave.player.level === 1, 'discarding a stale save did not write a fresh current-version save')
 } finally {
   if (previousLocalStorage) Object.defineProperty(globalThis, 'localStorage', previousLocalStorage)
   else delete globalThis.localStorage
 }
+
+const weaponClasses = new Set(catalog.weapons.map((weapon) => weapon.weaponClass))
+assert(JSON.stringify([...weaponClasses].sort()) === JSON.stringify(['axe', 'bow', 'dagger', 'heavy', 'polearm', 'sword']), 'the weapon catalog must contain all six weapon classes')
+
+const { testRun: swordRun, room: swordRoom } = clearedEnemyRun(() => 0.99)
+swordRun.player.equipment[0] = { uid: 'test-sword', type: 'weapon', weaponClass: 'sword', attribute: 'scorch', attack: 3, range: 1, durability: 2, maxDurability: 2, shape: [[1]] }
+const swordEnemy = createEnemyById('gnawer', pos(1, 0)); swordEnemy.hp = swordEnemy.maxHp = 99; swordRoom.addEntity(swordEnemy)
+swordEnemy.actionDelay = 99
+assert(swordRun.clickTile(1, 0) && swordRun.player.nextMeleeDamageMultiplier === 0.6 && swordRun.player.equipment[0].durability === 1, 'sword normal effect or durability was not applied')
+const swordFinalEnemy = createEnemyById('gnawer', pos(2, 0)); swordFinalEnemy.hp = swordFinalEnemy.maxHp = 99; swordRoom.addEntity(swordFinalEnemy)
+swordFinalEnemy.actionDelay = 99
+assert(swordRun.clickTile(2, 0) && !swordRun.player.equipment[0] && swordRun.player.nextDamageMultiplier === 0.2 && swordRun.player.nextMeleeDamageMultiplier === 1, 'sword final guard did not trigger and destroy the weapon')
+
+const { testRun: daggerRun, room: daggerRoom } = clearedEnemyRun(() => 0.99)
+daggerRun.player.equipment[0] = { uid: 'test-dagger', type: 'weapon', weaponClass: 'dagger', attribute: 'scorch', attack: 6, range: 1, durability: 2, maxDurability: 2, shape: [[1]] }
+const daggerEnemy = createEnemyById('gnawer', pos(1, 0)); daggerEnemy.hp = 1; daggerRoom.addEntity(daggerEnemy)
+assert(daggerRun.clickTile(1, 0) && daggerRun.player.equipment[0].durability === 2, 'dagger did not preserve durability on a kill')
+
+const { testRun: polearmRun, room: polearmRoom } = clearedEnemyRun(() => 0.99)
+polearmRun.player.equipment[0] = { uid: 'test-polearm', type: 'weapon', weaponClass: 'polearm', attribute: 'scorch', attack: 3, range: 2, durability: 2, maxDurability: 2, shape: [[1]] }
+const polearmEnemy = createEnemyById('gnawer', pos(2, 0)); polearmEnemy.hp = polearmEnemy.maxHp = 99; polearmRoom.addEntity(polearmEnemy)
+assert(polearmRun.clickTile(2, 0) && polearmEnemy.pos.c === 3, 'polearm distance-two attack did not knock back one cell')
+
+const { testRun: heavyRun, room: heavyRoom } = clearedEnemyRun(() => 0.99)
+heavyRun.player.equipment[0] = { uid: 'test-heavy', type: 'weapon', weaponClass: 'heavy', attribute: 'wither', attack: 4, range: 1, durability: 1, maxDurability: 1, shape: [[1]] }
+const heavyEnemy = createEnemyById('beetle-guard', pos(1, 0)); heavyEnemy.hp = heavyEnemy.maxHp = 99; heavyRoom.addEntity(heavyEnemy)
+assert(heavyRun.clickTile(1, 0) && heavyEnemy.hp === 93 && heavyEnemy.shieldConsumed === true && !heavyEnemy.traits.includes('shield'), 'heavy weapon did not ignore and break a shield on its final attack')
+
+const { testRun: bowRun, room: bowRoom } = clearedEnemyRun(() => 0.99)
+bowRun.player.equipment[0] = { uid: 'test-bow', type: 'weapon', weaponClass: 'bow', attribute: 'scorch', attack: 3, range: 3, durability: 1, maxDurability: 1, shape: [[1]] }
+const bowTargets = [1, 2, 3].map((column) => { const target = createEnemyById('gnawer', pos(column, 0)); target.hp = target.maxHp = 99; bowRoom.addEntity(target); return target })
+assert(bowRun.clickTile(1, 0) && bowTargets.every((target) => target.hp < 99) && !bowRun.player.equipment[0], 'bow final piercing attack did not hit the straight-line targets')
 
 console.log('v2-check passed')

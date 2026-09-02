@@ -123,31 +123,7 @@ export class Dungeon {
     for (const layout of data.roomLayouts || []) dungeon.setRoomLayout(layout.roomId, layout)
     for (const edgeData of data.edges || []) {
       const edge = { ...edgeData }
-      const fromRoom = dungeon.room(edge.fromRoomId)
-      const toRoom = dungeon.room(edge.toRoomId)
-      if (!edge.fromDoor || !edge.toDoor) {
-        const legacyFromDoor = fromRoom?.entity(edge.fromDoorId)
-        const legacyToDoor = toRoom?.entity(edge.toDoorId)
-        if (!legacyFromDoor || !legacyToDoor) throw new Error(`Invalid door data for ${edge.id}`)
-        edge.fromDoor = {
-          id: legacyFromDoor.id,
-          edgeId: edge.id,
-          roomId: edge.fromRoomId,
-          side: legacyFromDoor.pos.c === 0 ? 'left' : 'right',
-          offset: legacyFromDoor.pos.r,
-          arrival: { ...legacyFromDoor.pos },
-        }
-        edge.toDoor = {
-          id: legacyToDoor.id,
-          edgeId: edge.id,
-          roomId: edge.toRoomId,
-          side: legacyToDoor.pos.c === 0 ? 'left' : 'right',
-          offset: legacyToDoor.pos.r,
-          arrival: { ...legacyToDoor.pos },
-        }
-        fromRoom.removeEntity(legacyFromDoor.id)
-        toRoom.removeEntity(legacyToDoor.id)
-      }
+      if (!edge.fromDoor || !edge.toDoor) throw new Error(`Invalid door data for ${edge.id}`)
       edge.fromDoor = { ...edge.fromDoor, edgeId: edge.id, roomId: edge.fromRoomId, arrival: { ...edge.fromDoor.arrival }, discovered: edge.fromDoor.discovered === true }
       edge.toDoor = { ...edge.toDoor, edgeId: edge.id, roomId: edge.toRoomId, arrival: { ...edge.toDoor.arrival }, discovered: edge.toDoor.discovered === true }
       edge.fromDoorId = edge.fromDoor.id
@@ -446,7 +422,7 @@ function addFirstFloorTestContent(room, reserved, random, content) {
   }
 }
 
-function populateRoom(room, reserved, random, { bossRoom = false, minimumOccupiedRatio = 0.8 } = {}) {
+function populateRoom(room, reserved, random, { bossRoom = false, firstRoom = false, minimumOccupiedRatio = 0.8 } = {}) {
   const targetCount = Math.ceil(room.width * room.height * minimumOccupiedRatio)
   let monsterIndex = 0
   if (bossRoom) {
@@ -464,7 +440,7 @@ function populateRoom(room, reserved, random, { bossRoom = false, minimumOccupie
   addGold(room, reserved, random)
   while (room.entities.size < targetCount) {
     const roll = random()
-    if (roll < 0.03 && addTrap(room, reserved, random)) continue
+    if (!firstRoom && roll < 0.03 && addTrap(room, reserved, random)) continue
     if (roll < 0.86 && addLoot(room, reserved, random, randomItem(room.floor, random))) continue
     if (addGold(room, reserved, random)) continue
     break
@@ -622,6 +598,7 @@ function createLinearDungeonAttempt({ config, random }) {
     addFirstFloorTestContent(room, reservations.get(room.id), random, config.firstFloorTestContent)
     populateRoom(room, reservations.get(room.id), random, {
       bossRoom: room.id === lastRoomId,
+      firstRoom: room.id === dungeon.roomOrder[0],
       minimumOccupiedRatio: config.minimumOccupiedRatio,
     })
   }

@@ -4,8 +4,9 @@ import catalog from './catalog.json' with { type: 'json' }
 const WEAPONS = Object.freeze(catalog.weapons)
 const CONSUMABLES = Object.freeze(catalog.consumables)
 const ENEMY_LOOT = Object.freeze(catalog.enemyLoot || [])
+const MERCHANT_WEAPONS = Object.freeze(catalog.merchantWeapons || [])
 const BOSS = Object.freeze(catalog.boss)
-const ALL_ITEM_DEFS = Object.freeze([...WEAPONS, ...CONSUMABLES, ...ENEMY_LOOT])
+const ALL_ITEM_DEFS = Object.freeze([...WEAPONS, ...CONSUMABLES, ...ENEMY_LOOT, ...MERCHANT_WEAPONS])
 const ITEM_BY_ID = new Map(ALL_ITEM_DEFS.map((definition) => [definition.id, definition]))
 
 let serial = 0
@@ -119,6 +120,18 @@ export function createBoss(position) {
 
 export function createLootEntity(item, position) {
   return { id: nextEntityId(item.type), kind: 'item', pos: { ...position }, item }
+}
+
+export function createRelicEntity(relic, position) {
+  const relicId = typeof relic === 'string' ? relic : relic?.id
+  if (!relicId) return null
+  return {
+    id: nextEntityId('relic'),
+    kind: 'relic',
+    relicId,
+    name: typeof relic === 'object' ? relic.name : null,
+    pos: { ...position },
+  }
 }
 
 export function createGoldEntity(amount, position) {

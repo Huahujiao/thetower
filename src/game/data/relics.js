@@ -237,7 +237,7 @@ export const RELIC_DEFS = Object.freeze([
     name: '\u540c\u8c03\u4f59\u54cd',
     description: '\u4ee5\u5c5e\u6027\u514b\u5236\u51fb\u6740\u654c\u4eba\u65f6\uff0c\u5f53\u524d\u6b66\u5668\u6062\u590d 1 \u70b9\u8010\u4e45\u3002',
     events: {
-      'attack:enemy-defeated': ({ weapon, countered }) => countered && weapon?.type === 'weapon'
+      'attack:enemy-defeated': ({ weapon, countered, finalStrike }) => countered && !finalStrike && weapon?.type === 'weapon'
         ? [{ type: 'repair', weapon, amount: 1, log: '\u540c\u8c03\u4f59\u54cd\uff1a\u6b66\u5668\u8010\u4e45 +1\u3002' }]
         : [],
     },
@@ -245,7 +245,7 @@ export const RELIC_DEFS = Object.freeze([
   {
     id: 'r-apprentice-mark',
     name: '\u5b66\u5f92\u523b\u5370',
-    description: '\u6bcf\u5c42\u9996\u6b21\u4ee5\u6b66\u5668\u51fb\u6740\u4e00\u79cd\u654c\u4eba\u65f6\uff0c\u51fb\u6740\u624b\u7684\u638c\u63a7 +1\uff1b\u53cc\u624b\u6b66\u5668\u89c6\u4e3a\u5de6\u624b\u3002',
+    description: '\u6bcf\u5c42\u9996\u6b21\u4ee5\u6b66\u5668\u51fb\u6740\u4e00\u79cd\u654c\u4eba\u65f6\uff0c\u51fb\u6740\u624b\u7684\u638c\u63a7 +1\u3002',
     events: {
       'attack:enemy-defeated': ({ run, enemy, hand }) => {
         if (!run || !enemy?.enemyId || !Number.isInteger(hand)) return []
@@ -306,14 +306,14 @@ export const RELIC_DEFS = Object.freeze([
     name: '\u5148\u950b\u8d4f\u91d1',
     description: '\u6bcf\u4e2a\u623f\u95f4\u9996\u6740\u65f6\uff0c\u83b7\u5f97 2 \u91d1\u5e01\u5e76\u4fee\u590d\u5f53\u524d\u6b66\u5668 1 \u70b9\u8010\u4e45\u3002',
     events: {
-      'attack:enemy-defeated': ({ run, weapon }) => {
+      'attack:enemy-defeated': ({ run, weapon, finalStrike }) => {
         if (!run || !weapon) return []
         const state = run._relicRoomRuntime('r-vanguard-bounty')
         if (state.claimed) return []
         state.claimed = true
         return [
           { type: 'gold', amount: 2, log: '\u5148\u950b\u8d4f\u91d1\uff1a\u83b7\u5f97 2 \u91d1\u5e01\u3002' },
-          { type: 'repair', weapon, amount: 1, log: '\u5148\u950b\u8d4f\u91d1\uff1a\u6b66\u5668\u8010\u4e45 +1\u3002' },
+          ...(!finalStrike ? [{ type: 'repair', weapon, amount: 1, log: '\u5148\u950b\u8d4f\u91d1\uff1a\u6b66\u5668\u8010\u4e45 +1\u3002' }] : []),
         ]
       },
     },
@@ -478,19 +478,6 @@ export const RELIC_DEFS = Object.freeze([
           { type: 'armor', amount: 5, log: '\u62c6\u5f39\u4e13\u5bb6\uff1a\u62a4\u7532 +5\u3002' },
           { type: 'heal', amount: 5, log: '\u62c6\u5f39\u4e13\u5bb6\uff1a\u56de\u590d 5 \u70b9\u751f\u547d\u3002' },
         ]
-      },
-    },
-  },
-  {
-    id: 'r-frayed-splash',
-    name: '\u78e8\u635f\u6e85\u6d41',
-    description: '\u5f53\u524d\u6b66\u5668\u8010\u4e45\u4f4e\u4e8e\u4e00\u534a\u65f6\uff0c\u653b\u51fb\u989d\u5916\u6e85\u5c04\u76ee\u6807\u7684 8 \u90bb\u57df\u654c\u4eba\u3002',
-    events: {
-      'attack:hit': ({ run, weapon, enemy, damage }) => {
-        const maxDurability = Math.max(1, Number(weapon?.maxDurability) || Number(weapon?.durability) || 1)
-        if (!run || !weapon || weapon.durability >= maxDurability / 2 || damage <= 0) return []
-        const hits = run._splashEnemies(enemy.pos, damage)
-        return hits ? [{ log: `\u78e8\u635f\u6e85\u6d41\uff1a\u6e85\u5c04 ${hits} \u540d\u90bb\u8fd1\u654c\u4eba\u3002` }] : []
       },
     },
   },

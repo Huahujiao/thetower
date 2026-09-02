@@ -63,8 +63,7 @@ const LABELS = Object.freeze({
   refreshStock: '\u5237\u65b0\u8d27\u67b6',
   confirmRelics: '\u786e\u8ba4\u5723\u9057\u7269\u914d\u7f6e',
   relicsLocked: '\u5723\u9057\u7269\u914d\u7f6e\u5df2\u786e\u8ba4',
-  twoHanded: '\u53cc\u624b',
-  occupied: '\u5df2\u5360\u7528',
+  weaponClass: '\u7c7b\u522b',
   activeSkill: '\u4e3b\u52a8\u6280\u80fd',
   restart: '\u91cd\u65b0\u5f00\u59cb',
   restartConfirm: '\u786e\u5b9a\u8981\u91cd\u65b0\u5f00\u59cb\u5417\uff1f\u5f53\u524d\u8fdb\u5ea6\u5c06\u88ab\u6e05\u9664\u3002',
@@ -89,10 +88,12 @@ const DETAIL_ICONS = Object.freeze({
   item: '\u25a0',
 })
 
+const WEAPON_CLASS_LABELS = Object.freeze({ sword: '\u5251', axe: '\u65a7', dagger: '\u5315\u9996', polearm: '\u957f\u67c4', heavy: '\u91cd\u6b66\u5668', bow: '\u5f13' })
+
 const HELP_SECTIONS = Object.freeze([
   { title: '\u76ee\u6807\u4e0e\u80dc\u5229', items: ['\u7a7f\u8fc7\u4e94\u5c42\u623f\u95f4\uff0c\u51fb\u8d25\u7b2c\u4e94\u5c42\u7684\u76d1\u89c6\u8005\u5373\u53ef\u83b7\u80dc\u3002', '\u6bcf\u4e2a\u65b0\u623f\u95f4\u9996\u6b21\u8fdb\u5165\u4f1a\u63d0\u4f9b\u8865\u7ed9\u6216\u5723\u9057\u7269\u5956\u52b1\uff1b\u901a\u8fc7\u95e8\u7ee7\u7eed\u524d\u8fdb\u3002'] },
   { title: '\u63a2\u7d22\u4e0e\u7ffb\u724c', items: ['\u5728\u5df2\u7ffb\u5f00\u7684\u724c\u4e2d\u53ef\u516b\u65b9\u5411\u79fb\u52a8\u3002\u70b9\u51fb\u89d2\u8272\u516b\u90bb\u57df\u76ee\u6807\u4f1a\u76f4\u63a5\u6267\u884c\uff1b\u8fdc\u5904\u76ee\u6807\u5148\u9884\u89c8\uff0c\u518d\u70b9\u51fb\u540c\u4e00\u683c\u786e\u8ba4\u3002', '\u7ffb\u672a\u77e5\u724c\u65f6\uff0c\u89d2\u8272\u4f1a\u5148\u8d70\u5230\u76ee\u6807\u516b\u90bb\u57df\u7684\u53ef\u8fbe\u7a7a\u683c\uff1b\u7ffb\u724c\u672c\u8eab\u4e0d\u8e0f\u5165\u8be5\u683c\u3002\u653b\u51fb\u3001\u7ffb\u724c\u548c\u4ea4\u4e92\u9884\u89c8\u4f1a\u663e\u793a\u5230\u8fbe\u4f4d\u7f6e\u4e0e\u76ee\u6807\u5f27\u7ebf\u3002'] },
-  { title: '\u6218\u6597\u4e0e\u654c\u4eba', items: ['\u653b\u51fb\u76ee\u6807\u65f6\uff0c\u89d2\u8272\u4f1a\u79fb\u52a8\u81f3\u5f53\u524d\u6b66\u5668\u80fd\u547d\u4e2d\u7684\u4f4d\u7f6e\uff0c\u518d\u6309\u88c5\u5907\u987a\u5e8f\u653b\u51fb\u3002\u6b66\u5668\u8010\u4e45\u964d\u4e3a\u96f6\u4f1a\u635f\u6bc1\u3002', '\u654c\u4eba\u7ffb\u5f00\u540e\u6309\u884c\u52a8\u5ef6\u8fdf\u3001\u666e\u901a\u653b\u51fb\u51b7\u5374\u548c\u4e3b\u52a8\u6280\u80fd\u51b7\u5374\u884c\u52a8\u3002\u4e3b\u52a8\u6280\u80fd\u4f18\u5148\u4e8e\u666e\u901a\u653b\u51fb\uff1b\u8ffd\u730e\u654c\u4eba\u53ef\u79fb\u52a8\u540e\u653b\u51fb\u3002'] },
+  { title: '\u6218\u6597\u4e0e\u654c\u4eba', items: ['\u5148\u70b9\u51fb\u5de6\u624b\u6216\u53f3\u624b\u7684\u6b66\u5668\uff0c\u518d\u70b9\u51fb\u654c\u4eba\u53d1\u8d77\u653b\u51fb\uff1b\u6bcf\u6b21\u53ea\u4f7f\u7528\u88ab\u9009\u4e2d\u7684\u4e00\u628a\u6b66\u5668\u3002\u6b66\u5668\u8010\u4e45\u964d\u4e3a\u96f6\u65f6\u635f\u6bc1\uff0c\u8010\u4e45 1 \u65f6\u4f1a\u89e6\u53d1\u6700\u540e\u4e00\u51fb\u7279\u6548\u3002', '\u654c\u4eba\u7ffb\u5f00\u540e\u6309\u884c\u52a8\u5ef6\u8fdf\u3001\u666e\u901a\u653b\u51fb\u51b7\u5374\u548c\u4e3b\u52a8\u6280\u80fd\u51b7\u5374\u884c\u52a8\u3002\u4e3b\u52a8\u6280\u80fd\u4f18\u5148\u4e8e\u666e\u901a\u653b\u51fb\uff1b\u8ffd\u730e\u654c\u4eba\u53ef\u79fb\u52a8\u540e\u653b\u51fb\u3002'] },
   { title: '\u88c5\u5907\u3001\u6210\u957f\u4e0e\u80cc\u5305', items: ['\u80cc\u5305\u4e3a\u4e94\u884c\u4e94\u5217\uff1b\u7269\u54c1\u6309\u5f62\u72b6\u5360\u683c\uff0c\u53ef\u65cb\u8f6c\u3002\u88c5\u5907\u6b66\u5668\u3001\u4f7f\u7528\u78e8\u5200\u77f3\u548c\u7269\u54c1\u4f1a\u5f71\u54cd\u63a5\u4e0b\u6765\u7684\u6218\u6597\u3002', '\u51fb\u6740\u81ea\u7136\u654c\u4eba\u83b7\u5f97\u7ecf\u9a8c\u3002\u53f3\u4e0a\u89d2\u8272\u6309\u94ae\u53ef\u67e5\u770b\u7b49\u7ea7\u3001\u5de6\u53f3\u624b\u529b\u91cf\u3001\u638c\u63a7\u4e0e\u5c5e\u6027\u9002\u5e94\u3002'] },
   { title: '\u5723\u9057\u7269\u4e0e\u4fe1\u606f', items: ['\u5f00\u5c40\u3001\u623f\u95f4\u5956\u52b1\u3001\u6536\u85cf\u5bb6\u548c\u602a\u7269\u6389\u843d\u90fd\u53ef\u80fd\u83b7\u5f97\u5723\u9057\u7269\uff1b\u540c\u65f6\u6700\u591a\u6fc0\u6d3b\u4e94\u4ef6\u3002', '\u957f\u6309\u68cb\u76d8\u5bf9\u8c61\u53ef\u67e5\u770b\u8be6\u60c5\uff1b\u7ecf\u9a8c\u884c\u53f3\u4fa7\u7684\u5723\u9057\u7269\u56fe\u6807\u53ef\u67e5\u770b\u5df2\u83b7\u5f97\u7684\u5723\u9057\u7269\uff1b\u53f3\u4e0a\u65e5\u5fd7\u53ef\u56de\u770b\u4e8b\u4ef6\u3002'] },
   { title: '\u5feb\u6377\u63d0\u793a', items: ['\u7ea2\u8272\u8def\u5f84\u8868\u793a\u4f1a\u7ecf\u8fc7\u5df2\u7ffb\u5f00\u654c\u4eba\u7684\u5a01\u80c1\u8303\u56f4\uff1b\u84dd\u8272\u8def\u5f84\u8868\u793a\u5f53\u524d\u5df2\u77e5\u5b89\u5168\u3002', '\u4e0d\u53ef\u7ffb\u724c\u6bd4\u53ef\u7ffb\u724c\u66f4\u6697\u3002\u534a\u900f\u660e\u5361\u724c\u53ea\u662f\u88ab\u7aa5\u89c6\uff0c\u5c1a\u672a\u7ffb\u5f00\u3002'] },
@@ -317,17 +318,14 @@ export class HUD {
       const weapon = player.equipment[slot]
       const growth = weapon ? this.run.weaponGrowth(weapon) : null
       const side = slot === 0 ? LABELS.leftHand : LABELS.rightHand
-      const occupiedByTwoHanded = slot === 0 && weapon && player.equipment[1]?.uid === weapon.uid && weapon.grip === 'two'
-      equipSlot.classList.toggle('filled', !!weapon && !occupiedByTwoHanded)
-      equipSlot.classList.toggle('occupied', occupiedByTwoHanded)
+      equipSlot.classList.toggle('filled', !!weapon)
+      equipSlot.classList.remove('occupied')
       equipSlot.classList.toggle('armed', this.run.selectedEquipmentSlot === slot)
       equipSlot.classList.toggle('target', this.run.itemTargeting && !!weapon)
-      equipSlot.disabled = occupiedByTwoHanded
-      equipSlot.innerHTML = occupiedByTwoHanded
-        ? `<div class="sub">${side} \u00b7 ${LABELS.occupied}</div>`
-        : weapon
-          ? `<div class="nm">${escapeHtml(weapon.name)}</div><div class="sub">${weapon.grip === 'two' ? LABELS.twoHanded : side} \u00b7 ATK ${weapon.attack}${growth?.strength ? `+${growth.strength}` : ''} \u00b7 R ${weapon.range}</div><div class="sub">${LABELS.durability} ${weapon.durability}${growth?.mastery ? ` \u00b7 M ${growth.mastery}` : ''}</div>`
-        : `<div class="sub">${side} \u00b7 ${LABELS.empty}</div>`
+      equipSlot.disabled = false
+      equipSlot.innerHTML = weapon
+        ? `<div class="nm">${escapeHtml(weapon.name)}</div><div class="sub">${side} · ${WEAPON_CLASS_LABELS[weapon.weaponClass] || LABELS.weaponClass} · ATK ${weapon.attack}${growth?.strength ? `+${growth.strength}` : ''} · R ${weapon.range}</div><div class="sub">${LABELS.durability} ${weapon.durability}${growth?.mastery ? ` · M ${growth.mastery}` : ''}</div>`
+        : `<div class="sub">${side} · ${LABELS.empty}</div>`
     }
 
     this._renderRelics()
@@ -415,7 +413,7 @@ export class HUD {
         const definition = getItemDefinition(choice.itemId)
         if (!definition) return ''
         const detail = definition.type === 'weapon'
-          ? `ATK ${definition.attack} \u00b7 R ${definition.range} \u00b7 ${LABELS.durability} ${definition.durability}`
+          ? `${WEAPON_CLASS_LABELS[definition.weaponClass] || LABELS.weaponClass} · ATK ${definition.attack} · R ${definition.range} · ${LABELS.durability} ${definition.durability}`
           : definition.type === 'potion' ? `HP +${definition.heal}`
             : definition.type === 'armor' ? `${LABELS.armor} +${definition.armor}`
               : definition.type === 'whetstone' ? `${LABELS.durability} +${definition.repair}`
@@ -514,7 +512,7 @@ export class HUD {
       const originIndex = this.run.backpack.originIndex(placement)
       const selected = this.run.selectedInventoryIndex === originIndex
       const detail = item.type === 'weapon'
-        ? `ATK ${item.attack} \u00b7 R ${item.range} \u00b7 ${LABELS.durability} ${item.durability}`
+        ? `${WEAPON_CLASS_LABELS[item.weaponClass] || LABELS.weaponClass} · ATK ${item.attack} · R ${item.range} · ${LABELS.durability} ${item.durability}`
         : item.type === 'potion' ? `HP +${item.heal}`
           : item.type === 'armor' ? `${LABELS.armor} +${item.armor}`
             : item.type === 'buff' ? `ATK +${item.attackBonus}`

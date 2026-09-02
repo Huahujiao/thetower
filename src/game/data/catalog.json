@@ -12,7 +12,7 @@
       "attack": 4,
       "experience": 2,
       "relicDropChance": 0.015,
-      "drop": { "chance": 0.25, "itemId": "rough-bone-club" },
+      "drop": { "chance": 0.25, "itemId": "ghoul-bone-stinger" },
       "attackCooldownMax": 1,
       "initialActionDelay": 1
     },
@@ -59,7 +59,7 @@
       "attack": 4,
       "experience": 2,
       "relicDropChance": 0.02,
-      "drop": { "chance": 0.2, "itemId": "rusty-dagger" },
+      "drop": { "chance": 0.2, "itemId": "venom-sac" },
       "attackCooldownMax": 1,
       "initialActionDelay": 1
     },
@@ -76,7 +76,7 @@
       "elite": true,
       "experience": 4,
       "relicDropChance": 0.06,
-      "drop": { "chance": 0.6, "itemId": "notched-war-hammer" },
+      "drop": { "chance": 0.6, "itemId": "shell-shatter-maul" },
       "attackCooldownMax": 3,
       "initialActionDelay": 1
     },
@@ -92,7 +92,7 @@
       "attack": 3,
       "experience": 3,
       "relicDropChance": 0.03,
-      "drop": { "chance": 0.6, "itemId": "spectral-short-spear" },
+      "drop": { "chance": 0.6, "itemId": "ghost-bone-spear" },
       "attackCooldownMax": 1,
       "initialActionDelay": 1
     },
@@ -161,7 +161,7 @@
       "elite": true,
       "experience": 4,
       "relicDropChance": 0.06,
-      "drop": { "chance": 0.6, "itemId": "worn-shortbow" },
+      "drop": { "chance": 0.6, "itemId": "moss-ointment" },
       "attackCooldownMax": 2,
       "initialActionDelay": 1
     },
@@ -178,7 +178,7 @@
       "elite": true,
       "experience": 4,
       "relicDropChance": 0.06,
-      "drop": { "chance": 0.5, "itemId": "tombguard-shortsword" },
+      "drop": { "chance": 0.5, "itemId": "tombguard-remnant-sword" },
       "attackCooldownMax": 2,
       "initialActionDelay": 1
     },
@@ -230,7 +230,7 @@
       "elite": true,
       "experience": 4,
       "relicDropChance": 0.06,
-      "drop": { "chance": 0.5, "itemId": "cracked-armor-hookblade" },
+      "drop": { "chance": 0.5, "itemId": "shell-fragment" },
       "attackCooldownMax": 2,
       "initialActionDelay": 1
     },
@@ -290,12 +290,24 @@
     "initialActionDelay": 1
   },
   "weapons": [
-    { "id": "rust-sword", "name": "\u9508\u5251", "type": "weapon", "grip": "one", "attribute": "scorch", "attack": 4, "range": 1, "durability": 3, "shape": [[1], [1]] },
-    { "id": "short-sword", "name": "\u77ed\u5251", "type": "weapon", "grip": "one", "attribute": "wither", "attack": 5, "range": 1, "durability": 3, "shape": [[1], [1]] },
-    { "id": "spear", "name": "\u957f\u67aa", "type": "weapon", "grip": "two", "attribute": "drown", "attack": 4, "range": 2, "durability": 3, "shape": [[1], [1], [1]] },
-    { "id": "bow", "name": "\u77ed\u5f13", "type": "weapon", "grip": "two", "attribute": "wither", "attack": 5, "range": 3, "durability": 2, "shape": [[1], [1]] },
-    { "id": "war-hammer", "name": "\u6218\u9524", "type": "weapon", "grip": "two", "attribute": "wither", "attack": 6, "range": 1, "durability": 3, "shape": [[1], [1], [1]] },
-    { "id": "executioner", "name": "\u5904\u51b3\u4e4b\u5203", "type": "weapon", "grip": "two", "attribute": "scorch", "attack": 8, "range": 1, "durability": 2, "shape": [[1], [1], [1], [1]] }
+    { "id": "rust-sword", "name": "锈蚀短剑", "type": "weapon", "weaponClass": "sword", "attribute": "scorch", "attack": 3, "range": 1, "durability": 6, "shape": [[1], [1]] },
+    { "id": "short-sword", "name": "枯木长剑", "type": "weapon", "weaponClass": "sword", "attribute": "wither", "attack": 4, "range": 1, "durability": 5, "shape": [[1], [1], [1]] },
+    { "id": "silver-sword", "name": "沉银剑", "type": "weapon", "weaponClass": "sword", "attribute": "drown", "attack": 5, "range": 1, "durability": 4, "shape": [[1], [1], [1]] },
+    { "id": "scorched-hand-axe", "name": "焦痕手斧", "type": "weapon", "weaponClass": "axe", "attribute": "scorch", "attack": 4, "range": 1, "durability": 5, "shape": [[1], [1]] },
+    { "id": "withered-root-axe", "name": "腐根斧", "type": "weapon", "weaponClass": "axe", "attribute": "wither", "attack": 5, "range": 1, "durability": 4, "shape": [[1], [1], [1]] },
+    { "id": "drowned-battle-axe", "name": "浸水战斧", "type": "weapon", "weaponClass": "axe", "attribute": "drown", "attack": 6, "range": 1, "durability": 3, "shape": [[1], [1], [1], [1]] },
+    { "id": "seared-dagger", "name": "烧灼匕首", "type": "weapon", "weaponClass": "dagger", "attribute": "scorch", "attack": 2, "range": 1, "durability": 7, "shape": [[1]] },
+    { "id": "bone-dagger", "name": "枯骨短刃", "type": "weapon", "weaponClass": "dagger", "attribute": "wither", "attack": 3, "range": 1, "durability": 6, "shape": [[1]] },
+    { "id": "drowned-ritual-knife", "name": "溺亡祭刀", "type": "weapon", "weaponClass": "dagger", "attribute": "drown", "attack": 4, "range": 1, "durability": 4, "shape": [[1], [1]] },
+    { "id": "charred-short-spear", "name": "炭化短矛", "type": "weapon", "weaponClass": "polearm", "attribute": "scorch", "attack": 3, "range": 2, "durability": 6, "shape": [[1], [1], [1]] },
+    { "id": "thorn-long-spear", "name": "荆棘长枪", "type": "weapon", "weaponClass": "polearm", "attribute": "wither", "attack": 4, "range": 2, "durability": 5, "shape": [[1], [1], [1], [1]] },
+    { "id": "sunken-hook-spear", "name": "沉船钩枪", "type": "weapon", "weaponClass": "polearm", "attribute": "drown", "attack": 5, "range": 2, "durability": 4, "shape": [[1], [1], [1], [1]] },
+    { "id": "scorched-iron-club", "name": "焦铁棒", "type": "weapon", "weaponClass": "heavy", "attribute": "scorch", "attack": 6, "range": 1, "durability": 5, "shape": [[1], [1], [1]] },
+    { "id": "rotten-wood-maul", "name": "腐木大槌", "type": "weapon", "weaponClass": "heavy", "attribute": "wither", "attack": 7, "range": 1, "durability": 4, "shape": [[1], [1], [1], [1]] },
+    { "id": "drowned-iron-hammer", "name": "沉铁战锤", "type": "weapon", "weaponClass": "heavy", "attribute": "drown", "attack": 8, "range": 1, "durability": 3, "shape": [[1], [1], [1], [1]] },
+    { "id": "singed-shortbow", "name": "烧弦短弓", "type": "weapon", "weaponClass": "bow", "attribute": "scorch", "attack": 3, "range": 3, "durability": 6, "shape": [[1], [1]] },
+    { "id": "vine-hunting-bow", "name": "枯藤猎弓", "type": "weapon", "weaponClass": "bow", "attribute": "wither", "attack": 4, "range": 3, "durability": 5, "shape": [[1], [1], [1]] },
+    { "id": "sunken-longbow", "name": "沉木长弓", "type": "weapon", "weaponClass": "bow", "attribute": "drown", "attack": 5, "range": 3, "durability": 4, "shape": [[1], [1], [1], [1]] }
   ],
   "consumables": [
     { "id": "armor-potion", "name": "\u5c0f\u94c1\u7532\u836f\u5242", "type": "armor", "attribute": "wither", "armor": 5, "shape": [[1]] },
@@ -307,18 +319,23 @@
     { "id": "large-whetstone", "name": "\u5927\u53f7\u78e8\u5200\u77f3", "type": "whetstone", "attribute": "wither", "repair": 3, "minFloor": 3, "shape": [[1]] }
   ],
   "enemyLoot": [
-    { "id": "rough-bone-club", "name": "\u7c97\u9aa8\u68d2", "type": "weapon", "dropOnly": true, "grip": "one", "attribute": "scorch", "attack": 4, "range": 1, "durability": 1, "shape": [[1], [1]] },
+    { "id": "ghoul-bone-stinger", "name": "猩鬼骨刺", "type": "weapon", "dropOnly": true, "weaponClass": "dagger", "attribute": "scorch", "attack": 6, "range": 1, "durability": 2, "shape": [[1]] },
     { "id": "venom-sac", "name": "\u6bd2\u56ca", "type": "buff", "dropOnly": true, "attribute": "wither", "attackBonus": 4, "shape": [[1]] },
     { "id": "shell-fragment", "name": "\u7532\u58f3\u788e\u7247", "type": "armor", "dropOnly": true, "attribute": "wither", "armor": 5, "shape": [[1]] },
-    { "id": "rusty-dagger", "name": "\u9508\u77ed\u5200", "type": "weapon", "dropOnly": true, "grip": "one", "attribute": "scorch", "attack": 5, "range": 1, "durability": 1, "shape": [[1], [1]] },
-    { "id": "spectral-short-spear", "name": "\u5e7d\u5149\u77ed\u77db", "type": "weapon", "dropOnly": true, "grip": "two", "attribute": "drown", "attack": 4, "range": 2, "durability": 1, "shape": [[1], [1], [1]] },
-    { "id": "notched-war-hammer", "name": "\u7f3a\u53e3\u6218\u9524", "type": "weapon", "dropOnly": true, "grip": "two", "attribute": "wither", "attack": 6, "range": 1, "durabilityRange": [1, 2], "shape": [[1], [1], [1]] },
+    { "id": "ghost-bone-spear", "name": "幽灵骨矛", "type": "weapon", "dropOnly": true, "weaponClass": "polearm", "attribute": "drown", "attack": 7, "range": 2, "durability": 1, "shape": [[1], [1], [1]] },
+    { "id": "shell-shatter-maul", "name": "甲壳碎锤", "type": "weapon", "dropOnly": true, "weaponClass": "heavy", "attribute": "wither", "attack": 10, "range": 1, "durability": 1, "shape": [[1], [1], [1], [1]] },
     { "id": "beast-fang", "name": "\u517d\u7259", "type": "buff", "dropOnly": true, "attribute": "scorch", "attackBonus": 4, "attackTarget": "melee", "shape": [[1]] },
     { "id": "worm-glue", "name": "\u866b\u80f6", "type": "whetstone", "dropOnly": true, "attribute": "wither", "repair": 2, "shape": [[1]] },
     { "id": "moss-ointment", "name": "\u82d4\u85d3\u836f\u818f", "type": "potion", "dropOnly": true, "attribute": "wither", "heal": 6, "shape": [[1]] },
-    { "id": "worn-shortbow", "name": "\u6298\u65e7\u77ed\u5f13", "type": "weapon", "dropOnly": true, "grip": "two", "attribute": "drown", "attack": 5, "range": 3, "durability": 1, "shape": [[1], [1]] },
-    { "id": "tombguard-shortsword", "name": "\u5893\u536b\u77ed\u5251", "type": "weapon", "dropOnly": true, "grip": "one", "attribute": "drown", "attack": 6, "range": 1, "durability": 2, "shape": [[1], [1]] },
-    { "id": "bone-grinding-powder", "name": "\u9aa8\u78e8\u7c89", "type": "whetstone", "dropOnly": true, "attribute": "wither", "repair": 2, "shape": [[1]] },
-    { "id": "cracked-armor-hookblade", "name": "\u88c2\u7532\u94a9\u5203", "type": "weapon", "dropOnly": true, "grip": "one", "attribute": "wither", "attack": 5, "range": 1, "durability": 1, "shape": [[1], [1]] }
+    { "id": "tombguard-remnant-sword", "name": "墓卫残剑", "type": "weapon", "dropOnly": true, "weaponClass": "sword", "attribute": "drown", "attack": 7, "range": 1, "durability": 2, "shape": [[1], [1], [1]] },
+    { "id": "bone-grinding-powder", "name": "\u9aa8\u78e8\u7c89", "type": "whetstone", "dropOnly": true, "attribute": "wither", "repair": 2, "shape": [[1]] }
+  ],
+  "merchantWeapons": [
+    { "id": "blacksteel-knight-sword", "name": "黑钢骑士剑", "type": "weapon", "merchantOnly": true, "weaponClass": "sword", "attribute": "drown", "attack": 6, "range": 1, "durability": 8, "shape": [[1], [1], [1]] },
+    { "id": "ashen-execution-axe", "name": "灰烬处刑斧", "type": "weapon", "merchantOnly": true, "weaponClass": "axe", "attribute": "scorch", "attack": 8, "range": 1, "durability": 6, "shape": [[1], [1], [1], [1]] },
+    { "id": "bone-piercing-dagger", "name": "枯骨刺刃", "type": "weapon", "merchantOnly": true, "weaponClass": "dagger", "attribute": "wither", "attack": 5, "range": 1, "durability": 9, "shape": [[1], [1]] },
+    { "id": "abyssal-long-spear", "name": "深渊长枪", "type": "weapon", "merchantOnly": true, "weaponClass": "polearm", "attribute": "drown", "attack": 7, "range": 2, "durability": 7, "shape": [[1], [1], [1], [1]] },
+    { "id": "forge-warhammer", "name": "熔炉战锤", "type": "weapon", "merchantOnly": true, "weaponClass": "heavy", "attribute": "scorch", "attack": 11, "range": 1, "durability": 5, "shape": [[1], [1], [1], [1]] },
+    { "id": "composite-wood-bow", "name": "枯木复合弓", "type": "weapon", "merchantOnly": true, "weaponClass": "bow", "attribute": "wither", "attack": 7, "range": 3, "durability": 7, "shape": [[1], [1], [1]] }
   ]
 }

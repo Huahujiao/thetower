@@ -197,6 +197,9 @@ export class BackpackGrid {
   }
 
   static hydrate(payload) {
+    if (!payload || payload.columns !== BACKPACK_COLUMNS || payload.rows !== BACKPACK_ROWS) {
+      throw new Error('Invalid backpack save')
+    }
     const backpack = new BackpackGrid(BACKPACK_COLUMNS, BACKPACK_ROWS)
     backpack.restore(payload)
     return backpack

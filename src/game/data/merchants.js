@@ -1,7 +1,7 @@
 import catalog from './catalog.json' with { type: 'json' }
 import { nextEntityId } from './content.js'
 
-const ITEM_DEFS = Object.freeze([...catalog.weapons, ...catalog.consumables, ...(catalog.enemyLoot || [])])
+const ITEM_DEFS = Object.freeze([...catalog.weapons, ...catalog.consumables, ...(catalog.enemyLoot || []), ...(catalog.merchantWeapons || [])])
 const ITEM_BY_ID = new Map(ITEM_DEFS.map((definition) => [definition.id, definition]))
 export const MERCHANT_STOCK_SIZE = 4
 
@@ -28,7 +28,7 @@ const BY_ID = new Map(MERCHANT_DEFS.map((definition) => [definition.id, definiti
 function availableItems(floor) {
   return ITEM_DEFS.filter((definition) => {
     if (floor < (definition.minFloor || 1)) return false
-    return definition.dropOnly === true
+    return definition.dropOnly === true || definition.merchantOnly === true
   })
 }
 

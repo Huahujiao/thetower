@@ -7,11 +7,8 @@ export const ATTRIBUTE_DEFS = Object.freeze({
 })
 
 const ATTRIBUTE_IDS = new Set(ATTRIBUTE_ORDER)
-const LEGACY_ATTRIBUTE_IDS = Object.freeze({ slime: 'wither', crystal: 'wither', tide: 'drown' })
 
 export function isAttribute(value) { return ATTRIBUTE_IDS.has(value) }
-
-export function migrateAttributeId(value) { return LEGACY_ATTRIBUTE_IDS[value] || (isAttribute(value) ? value : null) }
 
 export function getAttributeDefinition(attribute) { return ATTRIBUTE_DEFS[attribute] || null }
 

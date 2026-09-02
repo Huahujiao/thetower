@@ -28,7 +28,8 @@ const COPY = Object.freeze({
   range: '\u5c04\u7a0b',
   durability: '\u8010\u4e45',
   footprint: '\u5360\u683c',
-  grip: '\u63e1\u6301',
+  weaponClass: '\u7c7b\u522b',
+  weaponEffect: '\u7279\u6548',
   attribute: '\u5c5e\u6027',
   floor: '\u6700\u65e9\u51fa\u73b0\u697c\u5c42',
   delay: '\u884c\u52a8\u5ef6\u8fdf',
@@ -52,8 +53,12 @@ const COPY = Object.freeze({
   autoActivate: '\u83b7\u5f97\u89c4\u5219',
   enemyDrop: '\u654c\u4eba\u6389\u843d',
   futureRule: '\u9884\u8ba1\u89c4\u5219',
-  oneHanded: '\u5355\u624b',
-  twoHanded: '\u53cc\u624b',
+  sword: '\u5251',
+  axe: '\u65a7',
+  dagger: '\u5315\u9996',
+  polearm: '\u957f\u67c4',
+  heavy: '\u91cd\u6b66\u5668',
+  bow: '\u5f13',
   scorch: '\u707c\u70ed',
   wither: '\u67af\u840e',
   drown: '\u6c89\u6eba',
@@ -118,18 +123,7 @@ const PROPOSALS = Object.freeze({
       stats: [[COPY.health, '30'], [COPY.attack, '9'], [COPY.range, `2 ${COPY.cell}`], [COPY.delay, `1 ${COPY.turn}`], [COPY.interval, `2 ${COPY.turn}`], [COPY.futureRule, '\u7ed3\u6676 \u00b7 \u9a7b\u5b88 \u00b7 \u590d\u6d3b']],
     },
   ],
-  weapons: [
-    {
-      tone: 'tone-weapon', tag: COPY.weapon, title: '\u94a9\u5203', accent: '\u2020',
-      description: '\u9002\u5408\u5f00\u8def\u7684\u8f7b\u578b\u6b66\u5668\uff0c\u7528\u4f4e\u4f24\u5bb3\u6362\u53d6\u66f4\u597d\u7684\u8d70\u4f4d\u3002',
-      stats: [[COPY.attack, '3'], [COPY.range, `2 ${COPY.cell}`], [COPY.durability, '4'], [COPY.grip, COPY.oneHanded], [COPY.footprint, '3\u00d71 \u00b7 3\u683c'], [COPY.futureRule, '\u51fb\u8d25\u540e\u53ef\u5411\u76ee\u6807\u9760\u8fd1 1 \u683c']],
-    },
-    {
-      tone: 'tone-weapon', tag: COPY.weapon, title: '\u6298\u53e0\u5f29', accent: '\u2694',
-      description: '\u4ee5\u6709\u9650\u8010\u4e45\u6362\u53d6\u975e\u5e38\u7a33\u5b9a\u7684\u8fdc\u7a0b\u5f00\u8def\u80fd\u529b\u3002',
-      stats: [[COPY.attack, '4'], [COPY.range, `4 ${COPY.cell}`], [COPY.durability, '2'], [COPY.grip, COPY.twoHanded], [COPY.footprint, '2\u00d71 \u00b7 2\u683c'], [COPY.futureRule, '\u7b2c\u4e00\u6b21\u8fdc\u7a0b\u653b\u51fb\u65e0\u89c6\u969c\u788d\u60e9\u7f5a']],
-    },
-  ],
+  weapons: [],
   relics: [
     {
       tone: 'tone-relic', tag: COPY.relic, title: '\u56de\u58f0\u7f57\u76d8', accent: '\u2726',
@@ -213,19 +207,28 @@ function enemyCards() {
 }
 
 function weaponCards() {
-  const weapons = [...catalog.weapons, ...(catalog.enemyLoot || []).filter((item) => item.type === 'weapon')]
+  const effects = {
+    sword: '\u653b\u51fb\u540e\uff0c\u4e0b\u4e00\u6b21\u53d7\u5230\u7684\u8fd1\u6218\u4f24\u5bb3 -40%\uff1b\u6700\u540e\u4e00\u51fb\u6539\u4e3a -80%\u4fdd\u62a4\u3002',
+    axe: '\u76ee\u6807\u76f8\u90bb\u654c\u4eba\u53d7 50% \u4f24\u5bb3\uff1b\u6700\u540e\u4e00\u51fb\u6539\u4e3a\u516b\u90bb\u57df 80% \u65cb\u65a9\u3002',
+    dagger: '\u51fb\u6740\u76ee\u6807\u65f6\u4e0d\u6d88\u8017\u8010\u4e45\uff1b\u6700\u540e\u4e00\u51fb\u4f7f\u76ee\u6807\u5ef6\u8fdf 1 \u56de\u5408\u3002',
+    polearm: '\u5c04\u7a0b 2\uff0c\u8ddd\u79bb 2 \u547d\u4e2d\u65f6\u51fb\u9000 1 \u683c\uff1b\u6700\u540e\u4e00\u51fb\u5c04\u7a0b 4\u3001\u51fb\u9000 2 \u683c\u3002',
+    heavy: '\u653b\u51fb\u76fe\u724c\u6216\u91cd\u7532\u65f6\u65e0\u89c6\u9632\u5fa1\uff1b\u6700\u540e\u4e00\u51fb\u4f24\u5bb3 +50% \u5e76\u7834\u574f\u9632\u5fa1\u3002',
+    bow: '\u57fa\u7840\u5c04\u7a0b 3\uff1b\u6700\u540e\u4e00\u51fb\u5c04\u7a0b 5\uff0c\u76f4\u7ebf\u6700\u591a\u547d\u4e2d 3 \u540d\u654c\u4eba\u3002',
+  }
+  const weapons = [...catalog.weapons, ...(catalog.enemyLoot || []).filter((item) => item.type === 'weapon'), ...(catalog.merchantWeapons || [])]
   return weapons.map((weapon) => card({
     tone: 'tone-weapon',
     tag: COPY.weapon,
     title: weapon.name,
-    accent: weapon.grip === 'two' ? '\u2694' : '\u2020',
+    accent: '\u2694',
     stats: [
+      stat(COPY.weaponClass, label(weapon.weaponClass)),
       stat(COPY.attack, weapon.attack),
       stat(COPY.range, `${weapon.range} ${COPY.cell}`),
       stat(COPY.durability, weapon.durabilityRange ? weapon.durabilityRange.join('\u2013') : weapon.durability),
-      stat(COPY.grip, weapon.grip === 'two' ? COPY.twoHanded : COPY.oneHanded),
       stat(COPY.attribute, attributeLabel(weapon.attribute)),
       stat(COPY.footprint, shapeText(weapon.shape)),
+      stat(COPY.weaponEffect, effects[weapon.weaponClass] || ''),
     ],
   })).join('') + proposalCards('weapons')
 }

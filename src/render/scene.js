@@ -41,10 +41,13 @@ const CARD_COLORS = Object.freeze({
   key: '#3a1a4a',
   door: '#4a2a0a',
   merchant: '#3c2a16',
+  relic: '#3d3157',
   trap: '#4a2338',
   entry: '#2a2a2a',
   empty: '#20242d',
 })
+
+const WEAPON_CLASS_LABELS = Object.freeze({ sword: '\u5251', axe: '\u65a7', dagger: '\u5315\u9996', polearm: '\u957f\u67c4', heavy: '\u91cd\u6b66\u5668', bow: '\u5f13' })
 
 const CARD_BACK_THEMES = Object.freeze({
   scorch: Object.freeze({
@@ -1311,6 +1314,9 @@ export class GameScene {
     if (entity.kind === 'key') {
       return { type: 'key', title: '开门机关', value: '锁', valueColor: '#d8b7ff', detail: '解锁对应的门', clickHint: '点击拾取' }
     }
+    if (entity.kind === 'relic') {
+      return { type: 'relic', title: entity.name || '\u5723\u9057\u7269', value: '\u2726', valueColor: '#e5d5ff', detail: '\u70b9\u51fb\u62fe\u53d6', clickHint: '\u70b9\u51fb\u62fe\u53d6' }
+    }
     if (entity.kind === 'door') {
       const locked = this.run.isDoorLocked(entity)
       return {
@@ -1333,7 +1339,7 @@ export class GameScene {
       return {
         type: 'weapon',
         title: item.name,
-        subtitle: '',
+        subtitle: WEAPON_CLASS_LABELS[item.weaponClass] || '\u6b66\u5668',
         value: `ATK ${item.attack}`,
         valueColor: '#a9d8ff',
         durability: item.durability,

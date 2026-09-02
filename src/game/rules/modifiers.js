@@ -28,12 +28,12 @@ export function attackAttributeModifier(weapon, target, { adapted = false } = {}
   return attributeModifier(weapon?.attribute, target?.attribute, { adapted })
 }
 
-export function computeAttackDamage({ weapon, target, strengthBonus = 0, pendingAttackBonus = 0, ignoreLastDurability = false, relicModifiers = [], terrainModifiers = [] } = {}) {
+export function computeAttackDamage({ weapon, target, strengthBonus = 0, pendingAttackBonus = 0, ignoreLastDurability: _ignoreLastDurability = false, relicModifiers = [], terrainModifiers = [], finalStrike = false, adapted = false } = {}) {
   if (!weapon) return { damage: 0, countered: false, resisted: false, resolution: resolveDamage(0) }
-  const type = attackAttributeModifier(weapon, target)
+  const type = attackAttributeModifier(weapon, target, { adapted })
   const modifiers = [
     ...(pendingAttackBonus ? [damageModifier(DAMAGE_STAGES.FLAT, pendingAttackBonus, 'pending-buff')] : []),
-    ...(weapon.durability === 1 && !ignoreLastDurability ? [damageModifier(DAMAGE_STAGES.MULTIPLY, 0.5, 'last-durability')] : []),
+    ...(finalStrike && weapon.weaponClass === 'heavy' ? [damageModifier(DAMAGE_STAGES.MULTIPLY, 1.5, 'weapon:heavy-final')] : []),
     ...(type.multiplier !== 1 ? [damageModifier(DAMAGE_STAGES.MULTIPLY, type.multiplier, type.countered ? 'counter' : 'resisted')] : []),
     ...relicModifiers,
     ...terrainModifiers,
