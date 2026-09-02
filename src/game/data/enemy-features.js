@@ -13,30 +13,24 @@ export const ENEMY_TRAIT_LABELS = Object.freeze({
   alert: '\u8b66\u62a5',
 })
 
-export const ENEMY_ACTIVE_SKILL_LABELS = Object.freeze({
-  summon: '\u53ec\u5524',
-  'self-destruct': '\u81ea\u7206',
-})
-
 export const ENEMY_STATUS_LABELS = Object.freeze({
   marked: '\u6807\u8bb0',
 })
 
-export function enemyBehaviorLabel(behavior) { return ENEMY_BEHAVIOR_LABELS[behavior] || behavior || '' }
+const DEATH_EXPLOSION_LABEL = '\u6b7b\u4ea1\u7206\u70b8'
 
-export function enemyActiveSkillLabel(activeSkill) {
-  return ENEMY_ACTIVE_SKILL_LABELS[activeSkill?.id] || activeSkill?.name || activeSkill?.id || ''
-}
+export function enemyBehaviorLabel(behavior) { return ENEMY_BEHAVIOR_LABELS[behavior] || behavior || '' }
 
 export function enemyFeatureLabel(entity) {
   return [
     entity?.boss ? '\u9996\u9886' : '',
     ...(entity?.traits || []).map((trait) => ENEMY_TRAIT_LABELS[trait] || trait),
     entity?.deathRule ? ENEMY_TRAIT_LABELS[entity.deathRule] || entity.deathRule : '',
+    entity?.deathExplosionDamage > 0 ? DEATH_EXPLOSION_LABEL : '',
     entity?.marked ? ENEMY_STATUS_LABELS.marked : '',
   ].filter(Boolean).join('\u00b7')
 }
 
 export function enemyCardSubtitle(entity) {
-  return [enemyBehaviorLabel(entity?.behavior), enemyActiveSkillLabel(entity?.activeSkill), enemyFeatureLabel(entity)].filter(Boolean).join('\u00b7')
+  return [enemyBehaviorLabel(entity?.behavior), enemyFeatureLabel(entity)].filter(Boolean).join('\u00b7')
 }

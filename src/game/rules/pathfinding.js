@@ -1,4 +1,4 @@
-import { combatDistance, neighbors8, posKey, samePos } from '../core/geometry.js'
+import { combatDistance, manhattan, neighbors8, posKey, samePos } from '../core/geometry.js'
 
 function reconstruct(cameFrom, startKey, endKey) {
   const path = []
@@ -67,9 +67,21 @@ export function findShortestPathToAny(room, start, goals) {
   return result
 }
 
-export function findRevealPath(room, start, target) {
+function revealApproaches(room, target, distance) {
+  if (distance <= 1) return neighbors8(target, room.width, room.height)
+  const approaches = []
+  for (let r = 0; r < room.height; r++) {
+    for (let c = 0; c < room.width; c++) {
+      const candidate = { c, r }
+      if (manhattan(candidate, target) <= distance) approaches.push(candidate)
+    }
+  }
+  return approaches
+}
+
+export function findRevealPath(room, start, target, { distance = 1 } = {}) {
   if (room.isRevealed(target)) return null
-  const approaches = neighbors8(target, room.width, room.height)
+  const approaches = revealApproaches(room, target, distance)
     .filter((candidate) => room.isRevealed(candidate) && room.isEmpty(candidate))
   return findShortestPathToAny(room, start, approaches)
 }

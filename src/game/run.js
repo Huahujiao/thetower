@@ -2,7 +2,7 @@ import { createEmitter } from './core/emitter.js'
 import { chebyshev, combatDistance, manhattan, neighbors8 } from './core/geometry.js'
 import { ATTRIBUTE_ORDER, attributeLabel } from './data/attributes.js'
 import { createGoldEntity, createLootEntity, createMinion, createRelicEntity, getItemDefinition, makeItemById, randomWeapon, starterWeapon, synchronizeEntityIds } from './data/content.js'
-import { enemyActiveSkillLabel, enemyBehaviorLabel, enemyFeatureLabel } from './data/enemy-features.js'
+import { enemyBehaviorLabel, enemyFeatureLabel } from './data/enemy-features.js'
 import { getMerchantDefinition, merchantSellPrice, refreshMerchantSlot, refreshMerchantStock } from './data/merchants.js'
 import { buildRelicChoices, getRelicDefinition } from './data/relics.js'
 import { buildRoomRewardChoices } from './data/rewards.js'
@@ -23,7 +23,7 @@ export const INVENTORY_ROWS = 5
 export const INVENTORY_CAPACITY = INVENTORY_COLUMNS * INVENTORY_ROWS
 export const EQUIPMENT_SLOTS = 2
 export const SAVE_KEY = 'grid_flip_adventure_v2'
-export const SAVE_VERSION = 15
+export const SAVE_VERSION = 16
 
 function clone(value) { return JSON.parse(JSON.stringify(value)) }
 
@@ -98,7 +98,6 @@ const DETAIL_LABELS = Object.freeze({
   cooldown: '\u51b7\u5374',
   normalAttack: '\u666e\u901a\u653b\u51fb',
   normalAttackCooldown: '\u666e\u653b\u51b7\u5374',
-  activeSkill: '\u4e3b\u52a8\u6280\u80fd',
   behavior: '\u884c\u4e3a',
   strength: '\u529b\u91cf',
   mastery: '\u638c\u63a7',
@@ -150,7 +149,7 @@ const MERCHANT_SERVICE_LABELS = Object.freeze({
 function detailForItem(item) {
   const type = DETAIL_LABELS[item?.type] || '\u7269\u54c1'
   const lines = []
-  const badges = item?.attribute ? [attributeLabel(item.attribute)] : []
+  const badges = item?.type === 'weapon' && item.attribute ? [attributeLabel(item.attribute)] : []
   if (item?.type === 'weapon') {
     lines.push(`${DETAIL_LABELS.attack} ${item.attack || 0}`)
     lines.push(`${DETAIL_LABELS.range} ${item.range || 1}`)
@@ -285,12 +284,12 @@ export class GameRun {
 
   countFlippableCards(room = this.currentRoom) {
     if (!room) return 0
+    const revealDistance = this.hasActiveRelic('r-long-flip') ? 2 : 1
     let count = 0
     for (let r = 0; r < room.height; r++) {
       for (let c = 0; c < room.width; c++) {
         const position = { c, r }
-        if (!room.isRevealed(position) && (findRevealPath(room, this.player.pos, position)
-          || (this.hasActiveRelic('r-long-flip') && manhattan(this.player.pos, position) <= 2))) count += 1
+        if (!room.isRevealed(position) && findRevealPath(room, this.player.pos, position, { distance: revealDistance })) count += 1
       }
     }
     return count
@@ -537,11 +536,6 @@ export class GameRun {
     const definition = getRelicDefinition(id)
     if (!definition) return false
     const entry = this.relics.entries.find((candidate) => candidate.id === id)
-    const lines = []
-    if (definition.activeSkill) {
-      const cooldown = this.relicRuntime[id]?.cooldown || 0
-      lines.push(`${definition.activeSkill.name} \u00b7 ${DETAIL_LABELS.cooldown} ${cooldown}/${definition.activeSkill.cooldown}`)
-    }
     return this._showDetail({
       position: 'top',
       title: definition.name,
@@ -549,7 +543,7 @@ export class GameRun {
       icon: 'relic',
       badges: [entry?.active ? DETAIL_LABELS.active : DETAIL_LABELS.inactive],
       description: definition.description,
-      lines,
+      lines: [],
     })
   }
 
@@ -562,7 +556,6 @@ export class GameRun {
     if (entity.kind === 'item') return this._showDetail({ position: 'bottom', ...detailForItem(entity.item) })
     if (entity.kind === 'enemy') {
       const features = enemyFeatureLabel(entity)
-      const activeSkill = enemyActiveSkillLabel(entity.activeSkill)
       const lines = [
         `${DETAIL_LABELS.health} ${entity.hp}/${entity.maxHp}`,
         `${DETAIL_LABELS.behavior} ${enemyBehaviorLabel(entity.behavior)}`,
@@ -570,7 +563,6 @@ export class GameRun {
         `${DETAIL_LABELS.actionDelay} ${normalizedCounter(entity.actionDelay)}`,
         `${DETAIL_LABELS.normalAttackCooldown} ${cooldownStatus(entity.attackCooldown, entity.attackCooldownMax)}`,
       ]
-      if (activeSkill) lines.push(`${DETAIL_LABELS.activeSkill} ${activeSkill} \u00b7 ${DETAIL_LABELS.cooldown} ${cooldownStatus(entity.activeSkillCooldown, entity.activeSkill?.cooldown)}`)
       if (features) lines.push(`${DETAIL_LABELS.features} ${features}`)
       return this._showDetail({
         position: 'bottom',
@@ -627,12 +619,6 @@ export class GameRun {
     return true
   }
 
-  activeRelicSkills() {
-    return this.activeRelics()
-      .filter((definition) => definition.activeSkill)
-      .map((definition) => ({ relicId: definition.id, ...definition.activeSkill, cooldownRemaining: this.relicRuntime[definition.id]?.cooldown || 0 }))
-  }
-
   _emitRelicEvent(event, context = {}) {
     const actions = this.relicEngine.emit(event, { run: this, event, ...context })
     this.relicEventQueue.push(...actions.filter((action) => action && typeof action === 'object'))
@@ -652,59 +638,6 @@ export class GameRun {
       }
       if (action.log) this._log(action.log)
     }
-  }
-
-  _tickRelicSkillCooldowns() {
-    for (const runtime of Object.values(this.relicRuntime)) {
-      if (runtime?.cooldown > 0) runtime.cooldown -= 1
-    }
-  }
-
-  useRelicSkill(relicId) {
-    if (!this._canAct()) return false
-    const definition = this.activeRelics().find((relic) => relic.id === relicId)
-    const skill = definition?.activeSkill
-    if (!skill || (this.relicRuntime[relicId]?.cooldown || 0) > 0) return false
-    const outcome = this._resolveActiveSkill(skill)
-    if (!outcome) return false
-    this.relicRuntime[relicId] = { cooldown: skill.cooldown + 1 }
-    this._emitRelicEvent('skill:used', { relicId, skillId: skill.id })
-    this._log(`\u53d1\u52a8\u4e3b\u52a8\u6280\u80fd\uff1a${skill.name}\u3002`)
-    this._endTurn({ skipEnemyIds: outcome.skipEnemyIds })
-    this._changed()
-    return true
-  }
-
-  _resolveActiveSkill(skill) {
-    const room = this.currentRoom
-    if (!room) return null
-    if (skill.id === 'command-shout') {
-      const skipEnemyIds = new Set()
-      const enemies = [...room.entities.values()].filter((entity) => entity.kind === 'enemy')
-      for (const enemy of enemies) {
-        if (!room.isRevealed(enemy.pos)) {
-          const wasFlippable = this.tileCanBeFlipped(enemy.pos)
-          room.reveal(enemy.pos)
-          this.bus.emit('animate:flip', { roomId: room.id, position: { ...enemy.pos }, backUnflippable: !wasFlippable })
-          skipEnemyIds.add(enemy.id)
-        }
-      }
-      const entry = room.entry || this.player.pos
-      const destinations = neighbors8(entry, room.width, room.height)
-        .filter((position) => room.isEmpty(position) && (position.c !== this.player.pos.c || position.r !== this.player.pos.r))
-      let moved = 0
-      for (const enemy of enemies) {
-        const destination = destinations.shift()
-        if (!destination) break
-        if (room.moveEntity(enemy.id, destination)) {
-          room.reveal(destination)
-          moved += 1
-        }
-      }
-      this._log(`\u53f7\u4ee4\u4e4b\u58f0\uff1a\u7ffb\u5f00 ${enemies.length} \u4e2a\u654c\u4eba\uff0c\u62c9\u8fd1 ${moved} \u4e2a\u3002`)
-      return { skipEnemyIds }
-    }
-    return null
   }
 
   setDebugReveal(reveal) {
@@ -766,8 +699,8 @@ export class GameRun {
 
   tileCanBeFlipped(position) {
     const room = this.currentRoom
-    return !!room && !room.isRevealed(position) && (!!findRevealPath(room, this.player.pos, position)
-      || (this.hasActiveRelic('r-long-flip') && manhattan(this.player.pos, position) <= 2))
+    const revealDistance = this.hasActiveRelic('r-long-flip') ? 2 : 1
+    return !!room && !room.isRevealed(position) && !!findRevealPath(room, this.player.pos, position, { distance: revealDistance })
   }
 
   previewTileAction(c, r) {
@@ -777,11 +710,9 @@ export class GameRun {
     if (!room?.contains(target)) return null
     if (target.c === this.player.pos.c && target.r === this.player.pos.r && !room.entityAt(target)) return null
     if (!room.isRevealed(target)) {
-      const route = findRevealPath(room, this.player.pos, target)
-      if (route) return this._pathPreview('flip', target, route.path)
-      return this.hasActiveRelic('r-long-flip') && manhattan(this.player.pos, target) <= 2
-        ? this._pathPreview('flip', target, [])
-        : null
+      const revealDistance = this.hasActiveRelic('r-long-flip') ? 2 : 1
+      const route = findRevealPath(room, this.player.pos, target, { distance: revealDistance })
+      return route ? this._pathPreview('flip', target, route.path) : null
     }
     const entity = room.entityAt(target)
     if (!entity) {
@@ -814,8 +745,13 @@ export class GameRun {
   }
 
   _pathPreview(kind, target, path) {
-    const dangerSteps = path.filter((step) => this._activeEnemies()
-      .some((enemy) => combatDistance(step, enemy.pos, enemy.range) <= enemy.range))
+    const attackTargetId = kind === 'attack' ? this.currentRoom?.entityAt(target)?.id : null
+    const dangerSteps = []
+    let previous = { ...this.player.pos }
+    for (const step of path) {
+      if (this._canBeIntercepted(previous, step, attackTargetId)) dangerSteps.push(step)
+      previous = { ...step }
+    }
     return {
       kind,
       target: { ...target },
@@ -1198,11 +1134,11 @@ export class GameRun {
   }
 
   _flipAt(position) {
-    const route = findRevealPath(this.currentRoom, this.player.pos, position)
-    const remoteFlip = this.hasActiveRelic('r-long-flip') && manhattan(this.player.pos, position) <= 2
-    if (!route && !remoteFlip) return this._reject('\u65e0\u6cd5\u8d70\u5230\u8fd9\u5f20\u724c\u7684\u65c1\u8fb9\u3002')
+    const revealDistance = this.hasActiveRelic('r-long-flip') ? 2 : 1
+    const route = findRevealPath(this.currentRoom, this.player.pos, position, { distance: revealDistance })
+    if (!route) return this._reject('\u65e0\u6cd5\u8d70\u5230\u8fd9\u5f20\u724c\u7684\u9644\u8fd1\u3002')
     const start = { ...this.player.pos }
-    const movement = this._walk(route?.path || [])
+    const movement = this._walk(route.path)
     let flipOutcome = { skipEnemyIds: new Set() }
     if (!movement.stopped) {
       if (this.player.pos.c !== start.c || this.player.pos.r !== start.r) this.bus.emit('change')
@@ -1401,7 +1337,7 @@ export class GameRun {
     if (!route) return this._reject('\u6ca1\u6709\u53ef\u8fbe\u7684\u653b\u51fb\u4f4d\u7f6e\u3002')
     const attackers = [{ weapon, hand }]
     this._emitRelicEvent('attack:started', { enemy, attackers, weapon, hand })
-    const movement = this._walk(route.path)
+    const movement = this._walk(route.path, { attackTargetId: enemy.id })
     const roomState = this._roomRuntime()
     const firstAttackInRoom = !roomState.firstAttackUsed
     const vanguardStrike = this.hasActiveRelic('r-vanguard-strike') && firstAttackInRoom
@@ -1474,9 +1410,8 @@ export class GameRun {
     return true
   }
 
-  _walk(path) {
+  _walk(path, { attackTargetId = null } = {}) {
     const roomId = this.currentRoom?.id
-    const finalPosition = path[path.length - 1] || this.player.pos
     let interceptorId = null
     for (const step of path) {
       const previous = { ...this.player.pos }
@@ -1491,7 +1426,7 @@ export class GameRun {
       this._discoverNearbyExitDoors()
       this._triggerAmbushes(step)
       if (this.gameOver) return { interceptorId, stopped: true }
-      const interceptor = this._findInterceptor(previous, step, finalPosition)
+      const interceptor = this._findInterceptor(previous, step, attackTargetId)
       if (!interceptor) continue
       interceptorId = interceptor.id
       if (this.random() < 0.3) {
@@ -1502,18 +1437,21 @@ export class GameRun {
     return { interceptorId, stopped: false }
   }
 
-  _findInterceptor(previous, step, finalPosition) {
+  _findInterceptor(previous, step, attackTargetId = null) {
     const candidates = this._activeEnemies()
       .filter((enemy) => enemy.attack > 0 && normalizedCounter(enemy.actionDelay) === 0 && normalizedCounter(enemy.attackCooldown) === 0)
+      .filter((enemy) => enemy.id !== attackTargetId)
       .filter((enemy) => combatDistance(previous, enemy.pos, enemy.range) > enemy.range)
       .filter((enemy) => combatDistance(step, enemy.pos, enemy.range) <= enemy.range)
-      .filter((enemy) => combatDistance(finalPosition, enemy.pos, enemy.range) > enemy.range)
     return candidates[0] || null
+  }
+
+  _canBeIntercepted(previous, step, attackTargetId = null) {
+    return !!this._findInterceptor(previous, step, attackTargetId)
   }
 
   _endTurn({ interceptorId = null, skipEnemyPhase = false, skipEnemyIds = new Set() } = {}) {
     this.turn += 1
-    this._tickRelicSkillCooldowns()
     this._emitRelicEvent('turn:started', { turn: this.turn })
     if (skipEnemyPhase || this.gameOver) {
       this._emitRelicEvent('turn:ended', { turn: this.turn })
@@ -1535,7 +1473,6 @@ export class GameRun {
         player: this.player,
         attack: (actor) => this._enemyAttack(actor),
         move: (actor, position) => this._moveEnemy(actor, position),
-        activeSkill: (actor, skill) => this._useEnemyActiveSkill(actor, skill),
       })
     }
     this._emitRelicEvent('turn:ended', { turn: this.turn })
@@ -1551,7 +1488,7 @@ export class GameRun {
     this._log(`${enemy.name} \u653b\u51fb\u4f60\uff0c${damageReductionLog(result)}\u3002`)
     if (enemy.traits?.includes('split') && !enemy.splitTriggered) {
       enemy.splitTriggered = true
-      this._spawnMinion(enemy, enemy.splitMinionId)
+      this._spawnSplitMinion(enemy, enemy.splitMinionId)
     }
   }
 
@@ -1624,8 +1561,8 @@ export class GameRun {
 
   _defeatEnemy(enemy, { source = 'attack', suppressDeathExplosion = false, suppressLoot = false } = {}) {
     if (!enemy || !this.currentRoom?.entity(enemy.id)) return false
-    if (enemy.activeSkill?.id === 'self-destruct' && !suppressDeathExplosion) {
-      this._explodeEnemy(enemy, enemy.earlyExplosionDamage || Math.ceil(enemy.attack / 2), 'small')
+    if (enemy.deathExplosionDamage > 0 && !suppressDeathExplosion) {
+      this._explodeEnemy(enemy, enemy.deathExplosionDamage, 'small')
     }
     this.currentRoom.removeEntity(enemy.id)
     this._log(`${enemy.name} \u88ab\u51fb\u8d25\u3002`)
@@ -1696,7 +1633,6 @@ export class GameRun {
       enemy.hp = enemy.maxHp
       enemy.actionDelay = normalizedCounter(enemy.initialActionDelay)
       enemy.attackCooldown = 0
-      enemy.activeSkillCooldown = 0
       this._log(`${enemy.name}\u6ee1\u8840\u590d\u6d3b\u4e86\u3002`)
     }
   }
@@ -1721,32 +1657,14 @@ export class GameRun {
     return candidates[0] || null
   }
 
-  _spawnMinion(source, minionId) {
+  _spawnSplitMinion(source, minionId) {
     const room = this.currentRoom
     const position = this._nearestEmptyPosition(source?.pos)
     const minion = position ? createMinion(minionId, position) : null
     if (!room || !minion) return false
     room.addEntity(minion)
-    this._log(`${source.name}\u53ec\u5524\u4e86 ${minion.name}\u3002`)
+    this._log(`${source.name}\u5206\u88c2\u51fa\u4e86 ${minion.name}\u3002`)
     return true
-  }
-
-  _useEnemyActiveSkill(enemy, skill = enemy?.activeSkill) {
-    if (!enemy || !skill) return { acted: false, reason: 'no-active-skill' }
-    if (skill.id === 'summon') {
-      const acted = this._spawnMinion(enemy, skill.minionId)
-      if (acted) this._emitRelicEvent('enemy:active-skill', { enemy, skill })
-      return { acted, reason: 'summon' }
-    }
-    if (skill.id === 'self-destruct') {
-      const radius = enemy.explosionRadius || enemy.range || 1
-      if (combatDistance(enemy.pos, this.player.pos, radius) > radius) return { acted: false, reason: 'out-of-range' }
-      if (!this._explodeEnemy(enemy, enemy.attack, 'large')) return { acted: false, reason: 'out-of-range' }
-      this._defeatEnemy(enemy, { source: 'self-destruct', suppressDeathExplosion: true, suppressLoot: true })
-      this._emitRelicEvent('enemy:active-skill', { enemy, skill })
-      return { acted: true, reason: 'self-destruct' }
-    }
-    return { acted: false, reason: 'unknown-active-skill' }
   }
 
   _explodeEnemy(enemy, damage, size) {

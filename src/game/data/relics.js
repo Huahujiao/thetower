@@ -57,7 +57,7 @@ export const RELIC_DEFS = Object.freeze([
   {
     id: 'r-long-flip',
     name: '\u8fdc\u89c1\u6307\u595d',
-    description: '\u53ef\u4ee5\u7ffb\u5f00\u4e0e\u89d2\u8272\u76f4\u7ebf\u8ddd\u79bb\u4e0d\u8d85\u8fc7 2 \u683c\u7684\u5361\u724c\u3002',
+    description: '\u7ffb\u724c\u65f6\u53ef\u8d70\u5230\u8ddd\u76ee\u6807\u4e0d\u8d85\u8fc7 2 \u683c\u7684\u6700\u8fd1\u53ef\u901a\u884c\u4f4d\u7f6e\u518d\u7ffb\u724c\u3002',
   },
   {
     id: 'r-unseen-force',
@@ -204,35 +204,6 @@ export const RELIC_DEFS = Object.freeze([
       : [],
   },
   {
-    id: 'r-opportunity-strike',
-    name: '\u653b\u5176\u4e0d\u5907',
-    description: '\u5f53\u654c\u4eba\u7684\u666e\u653b\u4e0e\u4e3b\u52a8\u6280\u80fd\u90fd\u5904\u4e8e\u51b7\u5374\u4e2d\u65f6\uff0c\u5bf9\u5176\u4f24\u5bb3 +5\u3002',
-    damageModifiers: ({ target }) => target?.activeSkill && target.attackCooldown > 0 && target.activeSkillCooldown > 0
-      ? [damageModifier(DAMAGE_STAGES.FLAT, 5, 'relic:opportunity-strike')]
-      : [],
-  },
-  {
-    id: 'r-counter-ember',
-    name: '\u53cd\u5236\u4f59\u70ec',
-    description: '\u623f\u95f4\u5185\u4efb\u4f55\u654c\u4eba\u65bd\u653e\u4e3b\u52a8\u6280\u80fd\u65f6\uff0c\u83b7\u5f97 3 \u70b9\u62a4\u7532\u3002',
-    events: {
-      'enemy:active-skill': () => [{ type: 'armor', amount: 3, log: '\u53cd\u5236\u4f59\u70ec\uff1a\u62a4\u7532 +3\u3002' }],
-    },
-  },
-  {
-    id: 'r-timely-disposal',
-    name: '\u53ca\u65f6\u5904\u7406',
-    description: '\u51fb\u6740\u201c\u4e3b\u52a8\u6280\u80fd\u53ef\u7acb\u5373\u65bd\u653e\u201d\u7684\u654c\u4eba\u65f6\uff0c\u56de\u590d 1 \u70b9\u751f\u547d\u5e76\u83b7\u5f97 1 \u91d1\u5e01\u3002',
-    events: {
-      'enemy:killed': ({ enemy }) => enemy?.activeSkill && (Number(enemy.activeSkillCooldown) || 0) === 0
-        ? [
-            { type: 'heal', amount: 1, log: '\u53ca\u65f6\u5904\u7406\uff1a\u56de\u590d 1 \u70b9\u751f\u547d\u3002' },
-            { type: 'gold', amount: 1, log: '\u53ca\u65f6\u5904\u7406\uff1a\u83b7\u5f97 1 \u91d1\u5e01\u3002' },
-          ]
-        : [],
-    },
-  },
-  {
     id: 'r-harmonic-echo',
     name: '\u540c\u8c03\u4f59\u54cd',
     description: '\u4ee5\u5c5e\u6027\u514b\u5236\u51fb\u6740\u654c\u4eba\u65f6\uff0c\u5f53\u524d\u6b66\u5668\u6062\u590d 1 \u70b9\u8010\u4e45\u3002',
@@ -280,7 +251,7 @@ export const RELIC_DEFS = Object.freeze([
   {
     id: 'r-threshold-seal',
     name: '\u95e8\u69db\u5c01\u5370',
-    description: '\u6bcf\u4e2a\u623f\u95f4\u9996\u6b21\u7ffb\u5f00\u654c\u4eba\u65f6\uff0c\u5176\u884c\u52a8\u5ef6\u8fdf +1\uff1b\u5176\u4e3b\u52a8\u6280\u80fd\u51b7\u5374\u6c38\u4e45 +1\u3002',
+    description: '\u6bcf\u4e2a\u623f\u95f4\u9996\u6b21\u7ffb\u5f00\u654c\u4eba\u65f6\uff0c\u5176\u884c\u52a8\u5ef6\u8fdf +1\u3002',
     events: {
       'enemy:revealed': ({ run, enemy, room }) => {
         if (!run || !enemy) return []
@@ -288,7 +259,6 @@ export const RELIC_DEFS = Object.freeze([
         if (state.triggered) return []
         state.triggered = true
         enemy.actionDelay = Math.max(0, Number(enemy.actionDelay) || 0) + 1
-        if (enemy.activeSkill) enemy.activeSkill.cooldown = Math.max(0, Number(enemy.activeSkill.cooldown) || 0) + 1
         return [{ log: '\u95e8\u69db\u5c01\u5370\uff1a\u9996\u540d\u654c\u4eba\u7684\u884c\u52a8\u88ab\u63a8\u8fdf\u3002' }]
       },
     },
@@ -343,7 +313,7 @@ export const RELIC_DEFS = Object.freeze([
   {
     id: 'r-residual-lens',
     name: '\u6b8b\u5c40\u900f\u955c',
-    description: '\u623f\u95f4\u4ec5\u5269\u6700\u540e 1 \u540d\u654c\u4eba\u65f6\uff0c\u7ffb\u5f00\u5e76\u6807\u8bb0\u5b83\uff1b\u5176\u4e3b\u52a8\u6280\u80fd\u5f53\u524d\u51b7\u5374 +1\u3002',
+    description: '\u623f\u95f4\u4ec5\u5269\u6700\u540e 1 \u540d\u654c\u4eba\u65f6\uff0c\u7ffb\u5f00\u5e76\u6807\u8bb0\u5b83\u3002',
     events: {
       'enemy:killed': ({ run }) => {
         if (!run || run.remainingEnemies() !== 1) return []
@@ -354,7 +324,6 @@ export const RELIC_DEFS = Object.freeze([
         state.triggered = true
         lastEnemy.marked = true
         if (!run.currentRoom.isRevealed(lastEnemy.pos)) run._revealTile(lastEnemy.pos, { cause: 'relic:residual-lens' })
-        if (lastEnemy.activeSkill) lastEnemy.activeSkillCooldown = Math.max(0, Number(lastEnemy.activeSkillCooldown) || 0) + 1
         return [{ log: '\u6b8b\u5c40\u900f\u955c\uff1a\u5df2\u6807\u8bb0\u6700\u540e\u7684\u654c\u4eba\u3002' }]
       },
     },

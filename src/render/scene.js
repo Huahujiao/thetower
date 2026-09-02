@@ -29,7 +29,6 @@ const GHOST_ROOM_GAP = TILE_SIZE * 0.54
 const ENEMY_STATUS_LAYER_OFFSET = 0.012
 const ENEMY_STATUS_HEALTH_Y = CARD_SIZE * 0.43
 const ENEMY_STATUS_BOTTOM_Y = -CARD_SIZE * 0.43
-const ENEMY_STATUS_RIGHT_X = CARD_SIZE * 0.45
 
 const CARD_COLORS = Object.freeze({
   monster: '#5b1a1a',
@@ -456,18 +455,6 @@ export class GameScene {
         total: Math.max(1, turnCounter(enemy.attackCooldownMax) - 1, turnCounter(enemy.attackCooldown)),
         remaining: turnCounter(enemy.attackCooldown),
         color: 0xff7777,
-      })
-    }
-
-    if (enemy.activeSkill && turnCounter(enemy.activeSkillCooldown) > 0) {
-      const skillCooldown = turnCounter(enemy.activeSkillCooldown)
-      this._addEnemyTurnMeter(turnOverlay, {
-        axis: 'vertical',
-        x: ENEMY_STATUS_RIGHT_X,
-        y: 0,
-        total: Math.max(1, turnCounter(enemy.activeSkill.cooldown) - 1, skillCooldown),
-        remaining: skillCooldown,
-        color: 0x69b7ee,
       })
     }
 
@@ -1306,7 +1293,7 @@ export class GameScene {
         boss: !!entity.boss,
       }
     }
-    if (entity.kind === 'item') return { ...this._itemCardFaceData(entity.item), attribute: entity.item.attribute }
+    if (entity.kind === 'item') return { ...this._itemCardFaceData(entity.item), attribute: entity.item.type === 'weapon' ? entity.item.attribute : null }
     if (entity.kind === 'trap') return { type: 'trap', title: entity.name, value: '!', valueColor: '#ffabb7' }
     if (entity.kind === 'gold') {
       return { type: 'gold', title: '金币', value: `+${entity.amount}`, valueColor: '#ffd56b', detail: '点击拾取', clickHint: '点击拾取' }

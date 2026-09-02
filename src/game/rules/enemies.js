@@ -7,9 +7,7 @@ function tickCounter(enemy, key) {
   return true
 }
 
-function cooldownWaitTurns(interval) {
-  return Math.max(0, Math.floor(Number(interval) || 0) - 1)
-}
+function cooldownWaitTurns(interval) { return Math.max(0, Number(interval) - 1) }
 
 function hasNormalAttack(enemy) {
   return (enemy.attack || 0) > 0 && (enemy.range || 0) > 0
@@ -52,15 +50,6 @@ export function stepEnemy(enemy, context) {
   const movement = behavior(enemy, context)
   if (movement.acted) enemy.hasActed = true
   const attackCooling = tickCounter(enemy, 'attackCooldown')
-  const activeSkillCooling = tickCounter(enemy, 'activeSkillCooldown')
-  if (!activeSkillCooling && enemy.activeSkill) {
-    const outcome = context.activeSkill?.(enemy, enemy.activeSkill)
-    if (outcome?.acted) {
-      enemy.activeSkillCooldown = cooldownWaitTurns(enemy.activeSkill.cooldown)
-      enemy.hasActed = true
-      return { ...outcome, moved: movement.acted }
-    }
-  }
 
   if (!attackCooling) {
     const attack = attackIfInRange(enemy, context)

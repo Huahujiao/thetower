@@ -67,17 +67,29 @@ function openMerchant(run, merchantId) {
 const run = new GameRun({ autoLoad: false, random: () => 0.5 })
 assert(run.dungeon.rooms.size === 8, 'expected 8 configured rooms')
 assert(Array.isArray(catalog.enemies) && Array.isArray(catalog.weapons) && Array.isArray(catalog.consumables), 'static game data must be stored in the catalog JSON')
-const attributeContent = [...catalog.enemies, catalog.boss, ...catalog.weapons, ...catalog.consumables, ...catalog.enemyLoot]
+const attributeContent = [
+  ...catalog.enemies,
+  catalog.boss,
+  ...catalog.weapons,
+  ...(catalog.enemyLoot || []).filter((entry) => entry.type === 'weapon'),
+  ...(catalog.merchantWeapons || []),
+]
+const neutralItemContent = [
+  ...catalog.consumables,
+  ...(catalog.enemyLoot || []).filter((entry) => entry.type !== 'weapon'),
+]
 assert(JSON.stringify(ATTRIBUTE_ORDER) === JSON.stringify(['scorch', 'wither', 'drown']), 'attribute roster must contain only scorch, wither, and drown')
 assert(attributeLabel('scorch') === '\u707c\u70ed' && attributeLabel('wither') === '\u67af\u840e' && attributeLabel('drown') === '\u6c89\u6eba', 'attribute labels are invalid')
 assert(!ATTRIBUTE_ORDER.includes('slime') && !ATTRIBUTE_ORDER.includes('crystal') && !ATTRIBUTE_ORDER.includes('tide'), 'legacy attributes must not remain in the active roster')
-assert(attributeContent.every((entry) => ATTRIBUTE_ORDER.includes(entry.attribute)), 'every authored enemy, weapon, and item must have one valid attribute')
+assert(attributeContent.every((entry) => ATTRIBUTE_ORDER.includes(entry.attribute)), 'every authored enemy and weapon must have one valid attribute')
+assert(neutralItemContent.every((entry) => !('attribute' in entry)), 'consumables and non-weapon enemy loot must not have attributes')
 assert(attributeContent.every((entry) => !('category' in entry) && !('damageType' in entry)), 'legacy weapon types and enemy categories must not remain in authored content')
 assert(catalog.enemies.find((enemy) => enemy.id === 'gnawer')?.initialActionDelay === 1, 'gnawer must have a one-turn initial action delay')
-assert(catalog.enemies.find((enemy) => enemy.id === 'nest-spider')?.minFloor === 3, 'nest spider must first appear on floor three')
+assert([...catalog.enemies, catalog.boss].every((enemy) => Number.isInteger(enemy.minFloor) && enemy.minFloor >= 1), 'every enemy must define its first appearance floor')
 assert(catalog.enemies.every((enemy) => Number.isInteger(enemy.initialActionDelay) && enemy.initialActionDelay >= 0), 'every enemy must define its own initial action delay')
 assert(catalog.enemies.every((enemy) => Number.isInteger(enemy.hp) && Number.isInteger(enemy.attack) && !('hpBase' in enemy) && !('attackBase' in enemy)), 'enemy attributes must be fixed static values rather than floor-scaled values')
 assert(catalog.enemies.filter((enemy) => !enemy.spawnOnly).every((enemy) => Number.isInteger(enemy.experience) && enemy.experience > 0 && enemy.relicDropChance > 0), 'every natural enemy must author its experience and relic-drop probability')
+assert(enemyFeatureLabel(catalog.enemies.find((enemy) => enemy.id === 'bomb-wisp')).includes('\u6b7b\u4ea1\u7206\u70b8'), 'bomb wisp death explosion must be exposed as a passive feature')
 const floorFourGnawer = createMonster(4, 0)
 assert(floorFourGnawer?.enemyId === 'gnawer' && floorFourGnawer.hp === 4 && floorFourGnawer.attack === 4, 'a gnawer on a later floor must retain its fixed 4 HP and 4 attack')
 for (let floor = 1; floor <= 4; floor += 1) {
@@ -134,9 +146,7 @@ try {
 }
 assert(doorDirectionRejected, 'layout validation accepted a door facing away from its neighboring room')
 const openingRoomEnemies = [...run.currentRoom.entities.values()].filter((entity) => entity.kind === 'enemy')
-const openingAlarmTraps = [...run.currentRoom.entities.values()].filter((entity) => entity.kind === 'trap' && entity.trapId === 'alarm')
 assert(openingRoomEnemies.length === 12 && openingRoomEnemies.every((entity) => entity.behavior !== 'ambush'), 'the opening room must not contain ambush enemies')
-assert(openingAlarmTraps.length === 1, 'the opening room must retain one alarm trap')
 assert([...run.currentRoom.entities.values()].some((entity) => entity.kind === 'item' && entity.item.id === 'short-sword'), 'the opening room must guarantee an accessible weapon card')
 for (const room of run.dungeon.rooms.values()) {
   assert(room.entities.size >= Math.ceil(room.width * room.height * 0.8), 'room occupancy must keep empty cards at or below twenty percent')
@@ -397,8 +407,8 @@ merchantRun.chooseInitialRelic(merchantRun.initialRelicChoices[0])
 openMerchant(merchantRun, 'merchant')
 merchantRun.player.gold = 20
 const merchantItemsBefore = merchantRun.backpack.items.length
-const merchantStockDefs = merchantRun.merchantEntity.stock.map((entry) => catalog.enemyLoot.find((item) => item.id === entry.itemId))
-assert(merchantStockDefs.length === 4 && merchantStockDefs.every((item) => item?.dropOnly === true), 'merchant stock must contain only drop-only advanced items')
+const merchantStockDefs = merchantRun.merchantEntity.stock.map((entry) => [...catalog.enemyLoot, ...catalog.merchantWeapons].find((item) => item.id === entry.itemId))
+assert(merchantStockDefs.length === 4 && merchantStockDefs.every((item) => item?.dropOnly === true || item?.merchantOnly === true), 'merchant stock must contain only advanced items')
 assert(new Set(merchantRun.merchantEntity.stock.map((entry) => entry.itemId)).size === merchantRun.merchantEntity.stock.length, 'merchant stock should not repeat an item')
 assert(merchantRun.merchantEntity.stock.every((entry) => Number.isFinite(entry.price) && entry.price > 0), 'merchant stock prices must remain valid for enemy loot')
 assert(merchantRun.buyMerchantItem(0), 'merchant item purchase was rejected')
@@ -595,21 +605,17 @@ assert(typeof ENEMY_BEHAVIORS.stationary === 'function', 'stationary enemy behav
 const enemyBehaviorTest = {
   behavior: 'stationary', actionDelay: 1, attack: 3, range: 2, pos: pos(0, 0),
   attackCooldown: 0, attackCooldownMax: 2,
-  activeSkill: { id: 'test-skill', cooldown: 3 }, activeSkillCooldown: 0,
 }
 let enemyBehaviorAttacks = 0
-let enemyBehaviorSkills = 0
 const enemyBehaviorContext = {
   player: { pos: pos(1, 1) },
   attack: () => { enemyBehaviorAttacks += 1 },
-  activeSkill: () => { enemyBehaviorSkills += 1; return { acted: true, reason: 'active-skill' } },
 }
 assert(stepEnemy(enemyBehaviorTest, enemyBehaviorContext).reason === 'action-delay', 'enemy action delay did not block its first turn')
-assert(enemyBehaviorTest.actionDelay === 0 && enemyBehaviorAttacks === 0 && enemyBehaviorSkills === 0, 'enemy action delay advanced incorrectly')
-assert(stepEnemy(enemyBehaviorTest, enemyBehaviorContext).reason === 'active-skill', 'ready active skill did not take priority over normal attack')
-assert(enemyBehaviorSkills === 1 && enemyBehaviorAttacks === 0 && enemyBehaviorTest.activeSkillCooldown === 2, 'active skill cooldown was not initialized independently')
-assert(stepEnemy(enemyBehaviorTest, enemyBehaviorContext).reason === 'attack', 'normal attack did not act while the active skill was cooling down')
-assert(enemyBehaviorAttacks === 1 && enemyBehaviorTest.attackCooldown === 1 && enemyBehaviorTest.activeSkillCooldown === 1, 'normal attack and active skill cooldowns did not tick independently')
+assert(enemyBehaviorTest.actionDelay === 0 && enemyBehaviorAttacks === 0, 'enemy action delay advanced incorrectly')
+assert(stepEnemy(enemyBehaviorTest, enemyBehaviorContext).reason === 'attack', 'ready normal attack did not act')
+assert(enemyBehaviorAttacks === 1 && enemyBehaviorTest.attackCooldown === 1, 'normal attack cooldown was not initialized')
+assert(stepEnemy(enemyBehaviorTest, enemyBehaviorContext).reason === 'idle' && enemyBehaviorTest.attackCooldown === 0, 'normal attack cooldown did not tick independently')
 const everyTurnEnemy = { behavior: 'stationary', actionDelay: 0, attack: 3, range: 1, pos: pos(0, 0), attackCooldown: 0, attackCooldownMax: 1 }
 let everyTurnAttacks = 0
 const everyTurnContext = { player: { pos: pos(1, 0) }, attack: () => { everyTurnAttacks += 1 } }
@@ -621,17 +627,12 @@ const alternatingContext = { player: { pos: pos(1, 0) }, attack: () => { alterna
 assert(stepEnemy(alternatingEnemy, alternatingContext).reason === 'attack' && alternatingEnemy.attackCooldown === 1, 'cooldown 2 did not initialize one skipped enemy turn')
 assert(stepEnemy(alternatingEnemy, alternatingContext).reason === 'idle' && alternatingEnemy.attackCooldown === 0 && alternatingAttacks === 1, 'cooldown 2 did not skip exactly one enemy turn')
 assert(stepEnemy(alternatingEnemy, alternatingContext).reason === 'attack' && alternatingAttacks === 2, 'cooldown 2 enemy did not resume after one skipped turn')
-const everyTurnSkillEnemy = { behavior: 'stationary', actionDelay: 0, attack: 0, range: 0, pos: pos(0, 0), activeSkill: { id: 'test-skill', cooldown: 1 }, activeSkillCooldown: 0 }
-let everyTurnSkills = 0
-const everyTurnSkillContext = { player: { pos: pos(1, 0) }, activeSkill: () => { everyTurnSkills += 1; return { acted: true, reason: 'active-skill' } } }
-assert(stepEnemy(everyTurnSkillEnemy, everyTurnSkillContext).reason === 'active-skill' && everyTurnSkillEnemy.activeSkillCooldown === 0, 'active skill cooldown 1 should leave no skipped enemy turns')
-assert(stepEnemy(everyTurnSkillEnemy, everyTurnSkillContext).reason === 'active-skill' && everyTurnSkills === 2, 'active skill cooldown 1 did not act every turn')
 const outOfRangeEnemy = { behavior: 'stationary', actionDelay: 0, attack: 3, range: 2, attackCooldown: 0, pos: pos(0, 0) }
 assert(stepEnemy(outOfRangeEnemy, { player: { pos: pos(3, 0) }, attack: () => { enemyBehaviorAttacks += 1 } }).reason === 'idle', 'enemy range check is invalid')
 assert(enemyBehaviorAttacks === 1, 'out-of-range enemy attacked')
 assert(stepEnemy({ ...outOfRangeEnemy, behavior: 'future-behavior', attackCooldown: 0 }, { player: { pos: pos(1, 0) }, attack: () => { enemyBehaviorAttacks += 1 } }).reason === 'attack', 'unknown enemy behavior did not safely fall back')
 assert(enemyBehaviorAttacks === 2, 'in-range enemy did not attack exactly once')
-assert(typeof ENEMY_BEHAVIORS.chaser === 'function' && typeof ENEMY_BEHAVIORS.ambush === 'function' && !ENEMY_BEHAVIORS.patrol && !ENEMY_BEHAVIORS.summoner && !ENEMY_BEHAVIORS['self-destruct'], 'enemy movement behaviors were not normalized')
+assert(typeof ENEMY_BEHAVIORS.chaser === 'function' && typeof ENEMY_BEHAVIORS.ambush === 'function' && Object.keys(ENEMY_BEHAVIORS).length === 3, 'enemy movement behaviors were not normalized')
 
 const behaviorRoom = new Room({ id: 'new-enemy-behavior-test', floor: 4, width: 6, height: 2 })
 for (let r = 0; r < behaviorRoom.height; r++) for (let c = 0; c < behaviorRoom.width; c++) behaviorRoom.reveal(pos(c, r))
@@ -695,7 +696,7 @@ const authoredDrops = {
   gnawer: [0.25, 'ghoul-bone-stinger'], 'nest-spider': [0.35, 'venom-sac'], 'beetle-guard': [0.35, 'shell-fragment'], 'rot-walker': [0.2, 'venom-sac'],
   wisp: [0.6, 'ghost-bone-spear'], shellguard: [0.6, 'shell-shatter-maul'], 'patrol-hound': [0.25, 'beast-fang'], broodmother: [0.4, 'worm-glue'],
   'moss-colossus': [0.45, 'moss-ointment'], 'sentry-crossbow': [0.6, 'moss-ointment'], 'revenant-guard': [0.5, 'tombguard-remnant-sword'],
-  'bone-priest': [0.5, 'bone-grinding-powder'], 'cracked-hunter': [0.5, 'shell-fragment'],
+  'cracked-hunter': [0.5, 'shell-fragment'],
 }
 for (const [enemyId, [chance, itemId]] of Object.entries(authoredDrops)) {
   const drop = catalog.enemies.find((enemy) => enemy.id === enemyId)?.drop
@@ -759,6 +760,39 @@ distantAmbushRoom.addEntity(distantSpider)
 distantAmbushRoom.tile(distantSpider.pos).revealed = false
 assert(!distantAmbushRun._walk([pos(1, 0)]).stopped && !distantAmbushRoom.isRevealed(distantSpider.pos), 'ambush must use the protagonist 8-neighborhood instead of enemy range')
 
+const { testRun: interceptionRun, room: interceptionRoom } = clearedEnemyRun(() => 0)
+const interceptionEnemy = createEnemyById('gnawer', pos(2, 0))
+interceptionEnemy.actionDelay = 0
+interceptionEnemy.attackCooldown = 0
+interceptionRoom.addEntity(interceptionEnemy)
+assert(interceptionRun.previewTileAction(1, 0)?.danger === true, 'path preview did not mark a potentially intercepted step red')
+const interceptionMovement = interceptionRun._walk([pos(1, 0)])
+assert(interceptionMovement.stopped && interceptionMovement.interceptorId === interceptionEnemy.id, 'an available enemy must be able to intercept while the destination remains in its attack range')
+
+const { testRun: attackPassRun, room: attackPassRoom } = clearedEnemyRun(() => 0)
+const attackPassEnemy = createEnemyById('gnawer', pos(2, 0))
+attackPassEnemy.actionDelay = 0
+attackPassEnemy.attackCooldown = 0
+attackPassRoom.addEntity(attackPassEnemy)
+assert(attackPassRun.previewTileAction(2, 0)?.danger === false, 'path preview incorrectly marked an attack on the target enemy as interception risk')
+assert(!attackPassRun._walk([pos(1, 0)], { attackTargetId: attackPassEnemy.id }).stopped, 'moving to attack an enemy must bypass interception by that enemy')
+
+const { testRun: attackActionRun, room: attackActionRoom } = clearedEnemyRun(() => 0)
+const attackActionEnemy = createEnemyById('gnawer', pos(2, 0))
+attackActionEnemy.actionDelay = 0
+attackActionEnemy.attackCooldown = 0
+attackActionRoom.addEntity(attackActionEnemy)
+const attackActionHp = attackActionEnemy.hp
+assert(attackActionRun._attack(attackActionEnemy) && attackActionRun.player.pos.c === 1 && attackActionEnemy.hp < attackActionHp, 'attacking an enemy must pass through its range without interception')
+
+const { testRun: cooldownRun, room: cooldownRoom } = clearedEnemyRun(() => 0)
+const cooldownEnemy = createEnemyById('gnawer', pos(2, 0))
+cooldownEnemy.actionDelay = 0
+cooldownEnemy.attackCooldown = 1
+cooldownRoom.addEntity(cooldownEnemy)
+assert(cooldownRun.previewTileAction(1, 0)?.danger === false, 'path preview marked an enemy on normal attack cooldown as interception risk')
+assert(!cooldownRun._walk([pos(1, 0)]).stopped, 'an enemy whose normal attack is cooling down must not intercept')
+
 const { testRun: shieldRun, room: shieldRoom } = clearedEnemyRun()
 const shielded = createEnemyById('beetle-guard', pos(3, 0))
 shieldRoom.addEntity(shielded)
@@ -775,20 +809,12 @@ splitRun.random = () => 0
 splitRun._defeatEnemy(broodling)
 assert(!splitRoom.entityAt(broodling.pos), 'summoned or split minions must not leave loot')
 
-const { testRun: summonRun, room: summonRoom } = clearedEnemyRun()
-const priest = createEnemyById('bone-priest', pos(3, 0))
-summonRoom.addEntity(priest)
 const enemyActionContext = (testRun, room) => ({
   room,
   player: testRun.player,
   attack: (actor) => testRun._enemyAttack(actor),
   move: (actor, position) => testRun._moveEnemy(actor, position),
-  activeSkill: (actor, skill) => testRun._useEnemyActiveSkill(actor, skill),
 })
-assert(stepEnemy(priest, enemyActionContext(summonRun, summonRoom)).reason === 'action-delay', 'summoner active skill ignored its action delay')
-assert(![...summonRoom.entities.values()].some((entity) => entity.enemyId === 'skeleton-minion'), 'summoner acted on its reveal turn')
-assert(stepEnemy(priest, enemyActionContext(summonRun, summonRoom)).reason === 'summon', 'summoner did not use its active skill after the action delay')
-assert([...summonRoom.entities.values()].some((entity) => entity.enemyId === 'skeleton-minion') && priest.activeSkillCooldown === 2, 'summoner active skill did not create its authored minion or enter cooldown')
 
 const { testRun: reviveRun, room: reviveRoom } = clearedEnemyRun()
 const revenant = createEnemyById('revenant-guard', pos(5, 0))
@@ -801,17 +827,18 @@ assert(!revenant.downed && revenant.hp === revenant.maxHp, 'revive enemy did not
 const { testRun: detonationRun, room: detonationRoom } = clearedEnemyRun()
 const bombWisp = createEnemyById('bomb-wisp', pos(2, 0))
 detonationRoom.addEntity(bombWisp)
-assert(stepEnemy(bombWisp, enemyActionContext(detonationRun, detonationRoom)).reason === 'action-delay', 'self-destruct enemy ignored its first delay turn')
-assert(stepEnemy(bombWisp, enemyActionContext(detonationRun, detonationRoom)).reason === 'action-delay', 'self-destruct enemy ignored its second delay turn')
-assert(stepEnemy(bombWisp, enemyActionContext(detonationRun, detonationRoom)).reason === 'action-delay', 'self-destruct enemy ignored its third delay turn')
-assert(detonationRun.player.hp === 20 && detonationRoom.entity(bombWisp.id), 'self-destruct enemy acted before its configured delay elapsed')
-assert(stepEnemy(bombWisp, enemyActionContext(detonationRun, detonationRoom)).reason === 'self-destruct' && detonationRun.player.hp === 8 && !detonationRoom.entity(bombWisp.id), 'self-destruct enemy did not use its active skill after its delay')
+assert(stepEnemy(bombWisp, enemyActionContext(detonationRun, detonationRoom)).reason === 'action-delay', 'delayed enemy ignored its first delay turn')
+assert(stepEnemy(bombWisp, enemyActionContext(detonationRun, detonationRoom)).reason === 'action-delay', 'delayed enemy ignored its second delay turn')
+assert(stepEnemy(bombWisp, enemyActionContext(detonationRun, detonationRoom)).reason === 'action-delay', 'delayed enemy ignored its third delay turn')
+assert(detonationRun.player.hp === 20 && detonationRoom.entity(bombWisp.id), 'delayed enemy acted before its configured delay elapsed')
+assert(stepEnemy(bombWisp, enemyActionContext(detonationRun, detonationRoom)).reason === 'attack' && detonationRun.player.hp === 8 && detonationRoom.entity(bombWisp.id), 'bomb wisp did not use its normal attack after its delay')
 
 const { testRun: distantDetonationRun, room: distantDetonationRoom } = clearedEnemyRun()
 const distantBombWisp = createEnemyById('bomb-wisp', pos(4, 0))
 distantBombWisp.actionDelay = 0
 distantDetonationRoom.addEntity(distantBombWisp)
-assert(stepEnemy(distantBombWisp, enemyActionContext(distantDetonationRun, distantDetonationRoom)).reason === 'idle' && distantDetonationRun.player.hp === 20 && distantDetonationRoom.entity(distantBombWisp.id), 'self-destruct active skill detonated outside its explosion range')
+assert(stepEnemy(distantBombWisp, enemyActionContext(distantDetonationRun, distantDetonationRoom)).reason === 'idle' && distantDetonationRun.player.hp === 20 && distantDetonationRoom.entity(distantBombWisp.id), 'out-of-range bomb wisp attacked unexpectedly')
+assert(detonationRun._damageEnemy(bombWisp, 99).defeated && detonationRun.player.hp === 2, 'bomb wisp death explosion did not apply its authored damage')
 
 const relicCapacity = new RelicCollection()
 for (const definition of RELIC_DEFS.slice(0, 6)) relicCapacity.acquire(definition.id)
@@ -829,12 +856,12 @@ assert(computeAttackDamage({ weapon: scorchWeapon, target: { attribute: 'drown' 
 assert(masteryPreservationChance(0) === 0 && masteryPreservationChance(10) === 0.5, 'weapon mastery probability does not follow its authored formula')
 
 const relicRun = new GameRun({ autoLoad: false, random: () => 0.5 })
-relicRun.initialRelicChoices = ['r-opportunity-strike']
-assert(relicRun.chooseInitialRelic('r-opportunity-strike')?.active, 'initial relic acquisition did not activate')
+relicRun.initialRelicChoices = ['r-double-edged-fate']
+assert(relicRun.chooseInitialRelic('r-double-edged-fate')?.active, 'initial relic acquisition did not activate')
 assert(relicRun.acquireRelic('r-empty-core')?.active, 'later relic acquisition must auto-activate below capacity')
 assert(relicRun.relics.deactivate('r-empty-core'), 'test setup could not isolate the cooldown relic')
 const damagedWeapon = { ...scorchWeapon, durability: 3 }
-const cooldownTarget = { ...witherTarget, id: 'cooldown-target', attackCooldown: 1, activeSkill: { id: 'test', cooldown: 3 }, activeSkillCooldown: 1 }
+const cooldownTarget = { ...witherTarget, id: 'cooldown-target', attackCooldown: 1 }
 const type = attackAttributeModifier(damagedWeapon, cooldownTarget)
 const relicModifiers = relicRun.relicEngine.damageModifiers({
   run: relicRun,
@@ -845,7 +872,7 @@ const relicModifiers = relicRun.relicEngine.damageModifiers({
   resisted: type.resisted,
 })
 assert(computeAttackDamage({ weapon: damagedWeapon, target: cooldownTarget, relicModifiers }).damage === 16, 'relic damage modifier is not applied')
-assert(buildRelicChoices(relicRun.relics, { random: () => 0 }).every((relic) => relic.id !== 'r-opportunity-strike'), 'owned relic returned as a choice')
+assert(buildRelicChoices(relicRun.relics, { random: () => 0 }).every((relic) => relic.id !== 'r-double-edged-fate'), 'owned relic returned as a choice')
 
 const relicDamageWeapon = { name: 'test', attack: 4, attribute: 'wither', durability: 2 }
 const neutralRelicTarget = { attribute: 'wither', hp: 10, maxHp: 10 }
@@ -881,6 +908,15 @@ for (const hidden of [pos(1, 0), pos(1, 1), pos(2, 1), pos(3, 0), pos(3, 1), rem
 assert(remoteFlipRun.acquireRelic('r-long-flip')?.active, 'remote-flip relic could not activate')
 assert(remoteFlipRun.previewTileAction(remoteTarget.c, remoteTarget.r)?.kind === 'flip', 'two-cell remote flip did not produce a preview')
 assert(remoteFlipRun.clickTile(remoteTarget.c, remoteTarget.r) && remoteFlipRoom.isRevealed(remoteTarget) && remoteFlipRun.player.pos.c === 0, 'two-cell remote flip did not reveal without movement')
+
+const { testRun: rangedFlipRun, room: rangedFlipRoom } = clearedEnemyRun()
+const rangedFlipTarget = createEnemyById('gnawer', pos(4, 0))
+rangedFlipRoom.addEntity(rangedFlipTarget)
+rangedFlipRoom.tile(rangedFlipTarget.pos).revealed = false
+assert(rangedFlipRun.acquireRelic('r-long-flip')?.active, 'ranged remote-flip relic could not activate')
+const rangedFlipPreview = rangedFlipRun.previewTileAction(rangedFlipTarget.pos.c, rangedFlipTarget.pos.r)
+assert(rangedFlipPreview?.kind === 'flip' && rangedFlipPreview.path.length === 2 && rangedFlipPreview.path[1].c === 2, 'remote flip did not route to the nearest distance-two approach')
+assert(rangedFlipRun.clickTile(rangedFlipTarget.pos.c, rangedFlipTarget.pos.r) && rangedFlipRun.player.pos.c === 2 && rangedFlipRoom.isRevealed(rangedFlipTarget.pos), 'remote flip did not walk to the nearest distance-two approach before revealing')
 
 const { testRun: ricochetRun, room: ricochetRoom } = clearedEnemyRun()
 const ricochetPrimary = createEnemyById('gnawer', pos(1, 0))

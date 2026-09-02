@@ -16,9 +16,6 @@ export const DUNGEON_CONFIG = Object.freeze({
   merchantRoomIndexes: [1, 3, 5],
   merchantIds: ['merchant', 'merchant', 'collector'],
   minimumOccupiedRatio: 0.8,
-  firstFloorTestContent: Object.freeze({
-    alarmTraps: 1,
-  }),
 })
 
 // Rooms are still traversed in a deliberate sequence, but their floor-plan
@@ -408,21 +405,7 @@ function addTrap(room, reserved, random) {
   return true
 }
 
-function addNamedTrap(room, reserved, random, trapId) {
-  const position = randomOpenPosition(room, reserved, random)
-  if (!position) return false
-  room.addEntity(createTrapEntity(trapId, position))
-  return true
-}
-
-function addFirstFloorTestContent(room, reserved, random, content) {
-  if (room.floor !== 1 || !content) return
-  for (let index = 0; index < (content.alarmTraps || 0); index += 1) {
-    if (!addNamedTrap(room, reserved, random, 'alarm')) break
-  }
-}
-
-function populateRoom(room, reserved, random, { bossRoom = false, firstRoom = false, minimumOccupiedRatio = 0.8 } = {}) {
+function populateRoom(room, reserved, random, { bossRoom = false, minimumOccupiedRatio = 0.8 } = {}) {
   const targetCount = Math.ceil(room.width * room.height * minimumOccupiedRatio)
   let monsterIndex = 0
   if (bossRoom) {
@@ -440,7 +423,7 @@ function populateRoom(room, reserved, random, { bossRoom = false, firstRoom = fa
   addGold(room, reserved, random)
   while (room.entities.size < targetCount) {
     const roll = random()
-    if (!firstRoom && roll < 0.03 && addTrap(room, reserved, random)) continue
+    if (roll < 0.03 && addTrap(room, reserved, random)) continue
     if (roll < 0.86 && addLoot(room, reserved, random, randomItem(room.floor, random))) continue
     if (addGold(room, reserved, random)) continue
     break
@@ -595,10 +578,8 @@ function createLinearDungeonAttempt({ config, random }) {
     for (let index = 1; index < anchors.length; index++) {
       reserveRoute(room, reservations.get(room.id), anchors[index])
     }
-    addFirstFloorTestContent(room, reservations.get(room.id), random, config.firstFloorTestContent)
     populateRoom(room, reservations.get(room.id), random, {
       bossRoom: room.id === lastRoomId,
-      firstRoom: room.id === dungeon.roomOrder[0],
       minimumOccupiedRatio: config.minimumOccupiedRatio,
     })
   }

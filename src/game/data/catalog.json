@@ -188,9 +188,8 @@
       "minFloor": 4,
       "attribute": "scorch",
       "behavior": "stationary",
-      "activeSkill": { "id": "self-destruct", "cooldown": 3 },
       "explosionRadius": 2,
-      "earlyExplosionDamage": 6,
+      "deathExplosionDamage": 6,
       "range": 2,
       "hp": 6,
       "attack": 12,
@@ -199,23 +198,6 @@
       "relicDropChance": 0.06,
       "attackCooldownMax": 1,
       "initialActionDelay": 3
-    },
-    {
-      "id": "bone-priest",
-      "name": "\u5524\u9aa8\u796d\u53f8",
-      "minFloor": 4,
-      "attribute": "drown",
-      "behavior": "stationary",
-      "activeSkill": { "id": "summon", "minionId": "skeleton-minion", "cooldown": 3 },
-      "range": 0,
-      "hp": 10,
-      "attack": 0,
-      "elite": true,
-      "experience": 4,
-      "relicDropChance": 0.06,
-      "drop": { "chance": 0.5, "itemId": "bone-grinding-powder" },
-      "attackCooldownMax": 1,
-      "initialActionDelay": 1
     },
     {
       "id": "cracked-hunter",
@@ -247,42 +229,14 @@
       "attack": 2,
       "attackCooldownMax": 1,
       "initialActionDelay": 1
-    },
-    {
-      "id": "skeleton-minion",
-      "name": "\u9ab7\u9ac5\u4ec6\u4ece",
-      "minFloor": 4,
-      "attribute": "drown",
-      "behavior": "stationary",
-      "spawnOnly": true,
-      "noLoot": true,
-      "range": 1,
-      "hp": 3,
-      "attack": 2,
-      "attackCooldownMax": 1,
-      "initialActionDelay": 1
-    },
-    {
-      "id": "wisp-minion",
-      "name": "\u5e7d\u5149\u4ec6\u4ece",
-      "minFloor": 5,
-      "attribute": "drown",
-      "behavior": "stationary",
-      "spawnOnly": true,
-      "noLoot": true,
-      "range": 2,
-      "hp": 3,
-      "attack": 2,
-      "attackCooldownMax": 1,
-      "initialActionDelay": 1
     }
   ],
   "boss": {
     "id": "overseer",
     "name": "\u76d1\u89c6\u8005",
+    "minFloor": 5,
     "attribute": "wither",
     "behavior": "stationary",
-    "activeSkill": { "id": "summon", "minionId": "wisp-minion", "cooldown": 3 },
     "hp": 36,
     "attack": 10,
     "range": 2,
@@ -310,25 +264,24 @@
     { "id": "sunken-longbow", "name": "沉木长弓", "type": "weapon", "weaponClass": "bow", "attribute": "drown", "attack": 5, "range": 3, "durability": 4, "shape": [[1], [1], [1], [1]] }
   ],
   "consumables": [
-    { "id": "armor-potion", "name": "\u5c0f\u94c1\u7532\u836f\u5242", "type": "armor", "attribute": "wither", "armor": 5, "shape": [[1]] },
-    { "id": "large-armor-potion", "name": "\u5927\u94c1\u7532\u836f\u5242", "type": "armor", "attribute": "wither", "armor": 10, "minFloor": 3, "shape": [[1], [1]] },
-    { "id": "small-potion", "name": "\u5c0f\u751f\u547d\u836f\u6c34", "type": "potion", "attribute": "drown", "heal": 6, "shape": [[1]] },
-    { "id": "large-potion", "name": "\u5927\u751f\u547d\u836f\u6c34", "type": "potion", "attribute": "drown", "heal": 12, "minFloor": 3, "shape": [[1], [1]] },
-    { "id": "battle-charm", "name": "\u70c8\u7130\u7b26\u5492", "type": "buff", "attribute": "scorch", "attackBonus": 4, "shape": [[1]] },
-    { "id": "whetstone", "name": "\u5c0f\u53f7\u78e8\u5200\u77f3", "type": "whetstone", "attribute": "wither", "repair": 2, "shape": [[1]] },
-    { "id": "large-whetstone", "name": "\u5927\u53f7\u78e8\u5200\u77f3", "type": "whetstone", "attribute": "wither", "repair": 3, "minFloor": 3, "shape": [[1]] }
+    { "id": "armor-potion", "name": "\u5c0f\u94c1\u7532\u836f\u5242", "type": "armor", "armor": 5, "shape": [[1]] },
+    { "id": "large-armor-potion", "name": "\u5927\u94c1\u7532\u836f\u5242", "type": "armor", "armor": 10, "minFloor": 3, "shape": [[1], [1]] },
+    { "id": "small-potion", "name": "\u5c0f\u751f\u547d\u836f\u6c34", "type": "potion", "heal": 6, "shape": [[1]] },
+    { "id": "large-potion", "name": "\u5927\u751f\u547d\u836f\u6c34", "type": "potion", "heal": 12, "minFloor": 3, "shape": [[1], [1]] },
+    { "id": "battle-charm", "name": "\u70c8\u7130\u7b26\u5492", "type": "buff", "attackBonus": 4, "shape": [[1]] },
+    { "id": "whetstone", "name": "\u5c0f\u53f7\u78e8\u5200\u77f3", "type": "whetstone", "repair": 2, "shape": [[1]] },
+    { "id": "large-whetstone", "name": "\u5927\u53f7\u78e8\u5200\u77f3", "type": "whetstone", "repair": 3, "minFloor": 3, "shape": [[1]] }
   ],
   "enemyLoot": [
     { "id": "ghoul-bone-stinger", "name": "猩鬼骨刺", "type": "weapon", "dropOnly": true, "weaponClass": "dagger", "attribute": "scorch", "attack": 6, "range": 1, "durability": 2, "shape": [[1]] },
-    { "id": "venom-sac", "name": "\u6bd2\u56ca", "type": "buff", "dropOnly": true, "attribute": "wither", "attackBonus": 4, "shape": [[1]] },
-    { "id": "shell-fragment", "name": "\u7532\u58f3\u788e\u7247", "type": "armor", "dropOnly": true, "attribute": "wither", "armor": 5, "shape": [[1]] },
+    { "id": "venom-sac", "name": "\u6bd2\u56ca", "type": "buff", "dropOnly": true, "attackBonus": 4, "shape": [[1]] },
+    { "id": "shell-fragment", "name": "\u7532\u58f3\u788e\u7247", "type": "armor", "dropOnly": true, "armor": 5, "shape": [[1]] },
     { "id": "ghost-bone-spear", "name": "幽灵骨矛", "type": "weapon", "dropOnly": true, "weaponClass": "polearm", "attribute": "drown", "attack": 7, "range": 2, "durability": 1, "shape": [[1], [1], [1]] },
     { "id": "shell-shatter-maul", "name": "甲壳碎锤", "type": "weapon", "dropOnly": true, "weaponClass": "heavy", "attribute": "wither", "attack": 10, "range": 1, "durability": 1, "shape": [[1], [1], [1], [1]] },
-    { "id": "beast-fang", "name": "\u517d\u7259", "type": "buff", "dropOnly": true, "attribute": "scorch", "attackBonus": 4, "attackTarget": "melee", "shape": [[1]] },
-    { "id": "worm-glue", "name": "\u866b\u80f6", "type": "whetstone", "dropOnly": true, "attribute": "wither", "repair": 2, "shape": [[1]] },
-    { "id": "moss-ointment", "name": "\u82d4\u85d3\u836f\u818f", "type": "potion", "dropOnly": true, "attribute": "wither", "heal": 6, "shape": [[1]] },
-    { "id": "tombguard-remnant-sword", "name": "墓卫残剑", "type": "weapon", "dropOnly": true, "weaponClass": "sword", "attribute": "drown", "attack": 7, "range": 1, "durability": 2, "shape": [[1], [1], [1]] },
-    { "id": "bone-grinding-powder", "name": "\u9aa8\u78e8\u7c89", "type": "whetstone", "dropOnly": true, "attribute": "wither", "repair": 2, "shape": [[1]] }
+    { "id": "beast-fang", "name": "\u517d\u7259", "type": "buff", "dropOnly": true, "attackBonus": 4, "attackTarget": "melee", "shape": [[1]] },
+    { "id": "worm-glue", "name": "\u866b\u80f6", "type": "whetstone", "dropOnly": true, "repair": 2, "shape": [[1]] },
+    { "id": "moss-ointment", "name": "\u82d4\u85d3\u836f\u818f", "type": "potion", "dropOnly": true, "heal": 6, "shape": [[1]] },
+     { "id": "tombguard-remnant-sword", "name": "墓卫残剑", "type": "weapon", "dropOnly": true, "weaponClass": "sword", "attribute": "drown", "attack": 7, "range": 1, "durability": 2, "shape": [[1], [1], [1]] }
   ],
   "merchantWeapons": [
     { "id": "blacksteel-knight-sword", "name": "黑钢骑士剑", "type": "weapon", "merchantOnly": true, "weaponClass": "sword", "attribute": "drown", "attack": 6, "range": 1, "durability": 8, "shape": [[1], [1], [1]] },

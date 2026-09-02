@@ -1,6 +1,6 @@
 import catalog from '../game/data/catalog.json' with { type: 'json' }
 import { attributeLabel } from '../game/data/attributes.js'
-import { enemyActiveSkillLabel, enemyBehaviorLabel, enemyFeatureLabel } from '../game/data/enemy-features.js'
+import { enemyBehaviorLabel, enemyFeatureLabel } from '../game/data/enemy-features.js'
 import { RELIC_DEFS } from '../game/data/relics.js'
 import '../wiki.css'
 
@@ -35,11 +35,8 @@ const COPY = Object.freeze({
   delay: '\u884c\u52a8\u5ef6\u8fdf',
   interval: '\u666e\u901a\u653b\u51fb\u51b7\u5374',
   normalAttackCooldown: '\u666e\u901a\u653b\u51fb\u51b7\u5374',
-  activeSkillCooldown: '\u4e3b\u52a8\u6280\u80fd\u51b7\u5374',
   behavior: '\u884c\u4e3a',
   features: '\u7279\u6027',
-  active: '\u4e3b\u52a8\u6280\u80fd',
-  cooldown: '\u51b7\u5374',
   healing: '\u6062\u590d\u751f\u547d',
   armorValue: '\u589e\u52a0\u62a4\u7532',
   nextAttack: '\u4e0b\u6b21\u653b\u51fb',
@@ -65,14 +62,12 @@ const COPY = Object.freeze({
   stationary: '\u9a7b\u5b88',
   chaser: '\u8ffd\u730e',
   ambush: '\u4f0f\u51fb',
-  summoner: '\u53ec\u5524',
-  selfDestruct: '\u81ea\u7206',
   shield: '\u76fe\u5175',
   heavyArmor: '\u91cd\u7532',
   regen: '\u518d\u751f',
   split: '\u5206\u88c2',
   revive: '\u590d\u6d3b',
-  spawn: '\u53ec\u5524\u7269',
+  generated: '\u751f\u6210\u7269',
   cell: '\u683c',
   turn: '\u56de\u5408',
 })
@@ -89,7 +84,7 @@ function escapeHtml(value) {
 }
 
 function label(value) {
-  const aliases = { 'heavy-armor': 'heavyArmor', 'self-destruct': 'selfDestruct' }
+  const aliases = { 'heavy-armor': 'heavyArmor' }
   return COPY[aliases[value] || value] || value || ''
 }
 
@@ -180,11 +175,11 @@ function proposalCards(group) {
 }
 
 function enemyCards() {
-  const enemies = [...catalog.enemies, { ...catalog.boss, boss: true, minFloor: 5 }]
+  const enemies = [...catalog.enemies, { ...catalog.boss, boss: true }]
   const lootById = new Map((catalog.enemyLoot || []).map((item) => [item.id, item]))
   return enemies.map((enemy) => card({
     tone: enemy.boss ? 'tone-boss' : 'tone-enemy',
-    tag: enemy.boss ? COPY.boss : enemy.spawnOnly ? COPY.spawn : COPY.enemy,
+      tag: enemy.boss ? COPY.boss : enemy.spawnOnly ? COPY.generated : COPY.enemy,
     title: enemy.name,
     accent: enemy.boss ? '\u2620' : '\u2020',
     stats: [
@@ -193,12 +188,10 @@ function enemyCards() {
       stat(COPY.range, `${enemy.range} ${COPY.cell}`),
       stat(COPY.delay, `${enemy.initialActionDelay} ${COPY.turn}`),
       stat(COPY.normalAttackCooldown, `${enemy.attackCooldownMax || 0} ${COPY.turn}`),
-      enemy.activeSkill ? stat(COPY.active, enemyActiveSkillLabel(enemy.activeSkill)) : '',
-      enemy.activeSkill ? stat(COPY.activeSkillCooldown, `${enemy.activeSkill.cooldown || 0} ${COPY.turn}`) : '',
       stat(COPY.attribute, attributeLabel(enemy.attribute)),
       stat(COPY.behavior, enemyBehaviorLabel(enemy.behavior)),
       enemyFeatureLabel(enemy) ? stat(COPY.features, enemyFeatureLabel(enemy)) : '',
-      stat(COPY.floor, enemy.spawnOnly ? COPY.spawn : enemy.minFloor),
+      stat(COPY.floor, enemy.spawnOnly ? COPY.generated : enemy.minFloor),
       !enemy.spawnOnly && !enemy.boss ? stat(COPY.experience, enemy.experience || 0) : '',
       enemy.drop ? stat(COPY.loot, `${Math.round(enemy.drop.chance * 100)}% \u00b7 ${lootById.get(enemy.drop.itemId)?.name || enemy.drop.itemId}`) : '',
       !enemy.spawnOnly && !enemy.boss && enemy.relicDropChance ? stat(COPY.relicChance, `${Math.round(enemy.relicDropChance * 100)}%`) : '',
@@ -252,9 +245,7 @@ function relicCards() {
     title: relic.name,
     description: relic.description,
     accent: '\u2726',
-    stats: relic.activeSkill
-      ? [stat(COPY.active, relic.activeSkill.name), stat(COPY.cooldown, `${relic.activeSkill.cooldown} ${COPY.turn}`)]
-      : [],
+    stats: [],
   })).join('') + proposalCards('relics')
 }
 
@@ -275,7 +266,6 @@ function itemCards() {
     accent: item.type === 'whetstone' ? '\u25c6' : item.type === 'buff' ? '\u2727' : '\u25cf',
     stats: [
       itemEffect(item),
-      stat(COPY.attribute, attributeLabel(item.attribute)),
       stat(COPY.footprint, shapeText(item.shape)),
       stat(COPY.floor, item.dropOnly ? COPY.enemyDrop : item.minFloor || 1),
     ],
