@@ -2,18 +2,20 @@ import catalog from '../game/data/catalog.json' with { type: 'json' }
 import { attributeLabel } from '../game/data/attributes.js'
 import { enemyBehaviorLabel, enemyFeatureLabel } from '../game/data/enemy-features.js'
 import { RELIC_DEFS } from '../game/data/relics.js'
+import { TALENT_DEFS } from '../game/data/progression.js'
 import '../wiki.css'
 
 const COPY = Object.freeze({
   title: '\u5730\u7262\u56fe\u9274',
   subtitle: '\u5730\u7262\u5185\u5bb9\u56fe\u9274',
-  summary: '\u4e09\u5c5e\u6027\u3001\u89d2\u8272\u6210\u957f\u3001\u5723\u9057\u7269\u6784\u7b51\u4e0e\u5f62\u72b6\u80cc\u5305\u5171\u540c\u6784\u6210\u5730\u7262\u7684\u8def\u7ebf\u9009\u62e9\u3002',
+  summary: '\u4e09\u5c5e\u6027\u3001\u4e09\u5c42\u5929\u8d4b\u7f51\u3001\u5723\u9057\u7269\u6784\u7b51\u4e0e\u5f62\u72b6\u80cc\u5305\u5171\u540c\u6784\u6210\u5730\u7262\u7684\u8def\u7ebf\u9009\u62e9\u3002',
   implemented: '\u5df2\u5b9e\u88c5',
   proposed: '\u5f85\u786e\u8ba4\uff0f\u672a\u5b9e\u88c5',
   back: '\u8fd4\u56de\u5730\u7262',
   enemies: '\u654c\u4eba',
   weapons: '\u6b66\u5668',
   relics: '\u5723\u9057\u7269',
+  talents: '\u5929\u8d4b',
   items: '\u7269\u54c1',
   enemy: '\u654c\u4eba',
   boss: '\u9996\u9886',
@@ -76,6 +78,7 @@ const TABS = Object.freeze([
   { id: 'enemies', label: COPY.enemies },
   { id: 'weapons', label: COPY.weapons },
   { id: 'relics', label: COPY.relics },
+  { id: 'talents', label: COPY.talents },
   { id: 'items', label: COPY.items },
 ])
 
@@ -119,28 +122,7 @@ const PROPOSALS = Object.freeze({
     },
   ],
   weapons: [],
-  relics: [
-    {
-      tone: 'tone-relic', tag: COPY.relic, title: '\u56de\u58f0\u7f57\u76d8', accent: '\u2726',
-      description: '\u6bcf\u4e2a\u623f\u95f4\u7684\u7b2c\u4e00\u6b21\u7ffb\u724c\u540e\uff0c\u6307\u51fa\u6700\u8fd1\u7684\u672a\u7ffb\u724c\u7269\u54c1\u65b9\u5411\u3002',
-      stats: [[COPY.futureRule, '\u63d0\u4f9b\u65b9\u5411\u63d0\u793a\uff0c\u4e0d\u900f\u9732\u5177\u4f53\u7269\u54c1']],
-    },
-    {
-      tone: 'tone-relic', tag: COPY.relic, title: '\u95e8\u94ed\u4f59\u6e29', accent: '\u2726',
-      description: '\u7a7f\u8fc7\u623f\u95f4\u95e8\u540e\uff0c\u4f7f\u65b0\u623f\u95f4\u7684\u7b2c\u4e00\u4e2a\u654c\u4eba\u591a\u5ef6\u8fdf 1 \u56de\u5408\u3002',
-      stats: [[COPY.futureRule, '\u65e0\u6cd5\u9632\u6b62\u6781\u901f\u654c\u4eba\u7ffb\u724c\u65f6\u7684\u7b2c\u4e00\u51fb']],
-    },
-    {
-      tone: 'tone-relic', tag: COPY.relic, title: '\u90bb\u57df\u6362\u4f4d', accent: '\u2726',
-      description: '\u4ea4\u6362\u89d2\u8272\u5468\u56f4 8 \u90bb\u57df\u5361\u724c\u4e0e\u968f\u673a\u5c0f\u533a\u57df\u3002',
-      stats: [[COPY.futureRule, '\u5df2\u786e\u8ba4\u6548\u679c\uff0c\u6682\u7f13\u5b9e\u73b0\uff1b\u9700\u8981\u5b9a\u4e49\u6362\u724c\u4e0e\u5173\u952e\u5b9e\u4f53\u4fdd\u62a4\u89c4\u5219']],
-    },
-    {
-      tone: 'tone-relic', tag: COPY.relic, title: '\u654c\u4f4d\u6362\u4f4d', accent: '\u2726',
-      description: '\u653b\u51fb\u540e\u5c06\u654c\u4eba\u4ea4\u6362\u81f3\u968f\u673a\u4f4d\u7f6e\u3002',
-      stats: [[COPY.futureRule, '\u5df2\u786e\u8ba4\u6548\u679c\uff0c\u6682\u7f13\u5b9e\u73b0\uff1b\u9700\u8981\u5b9a\u4e49\u76ee\u6807\u5361\u3001\u7ffb\u5f00\u72b6\u6001\u4e0e\u5b9e\u4f53\u4ea4\u6362\u8bed\u4e49']],
-    },
-  ],
+  relics: [],
   items: [
     {
       tone: 'tone-buff', tag: COPY.buff, title: '\u70df\u5e55\u74f6', accent: '\u2727',
@@ -174,6 +156,10 @@ function proposalCards(group) {
   })).join('')
 }
 
+// Kept as design-only data for future content planning; proposals are not rendered in the runtime wiki.
+void PROPOSALS
+void proposalCards
+
 function enemyCards() {
   const enemies = [...catalog.enemies, { ...catalog.boss, boss: true }]
   const lootById = new Map((catalog.enemyLoot || []).map((item) => [item.id, item]))
@@ -196,7 +182,7 @@ function enemyCards() {
       enemy.drop ? stat(COPY.loot, `${Math.round(enemy.drop.chance * 100)}% \u00b7 ${lootById.get(enemy.drop.itemId)?.name || enemy.drop.itemId}`) : '',
       !enemy.spawnOnly && !enemy.boss && enemy.relicDropChance ? stat(COPY.relicChance, `${Math.round(enemy.relicDropChance * 100)}%`) : '',
     ],
-  })).join('') + proposalCards('enemies')
+  })).join('')
 }
 
 function weaponCards() {
@@ -223,7 +209,7 @@ function weaponCards() {
       stat(COPY.footprint, shapeText(weapon.shape)),
       stat(COPY.weaponEffect, effects[weapon.weaponClass] || ''),
     ],
-  })).join('') + proposalCards('weapons')
+  })).join('')
 }
 
 function relicCards() {
@@ -246,7 +232,21 @@ function relicCards() {
     description: relic.description,
     accent: '\u2726',
     stats: [],
-  })).join('') + proposalCards('relics')
+  })).join('')
+}
+
+function talentCards() {
+  return TALENT_DEFS.map((talent) => card({
+    tone: 'tone-relic',
+    tag: `${talent.line} · ${talent.slot}`,
+    title: talent.name,
+    description: talent.description,
+    accent: '\u2736',
+    stats: [
+      stat('\u5c42\u7ea7', talent.tier),
+      stat('\u524d\u7f6e', talent.prerequisites.length ? talent.prerequisites.join('、') : '\u65e0'),
+    ],
+  })).join('')
 }
 
 function itemEffect(item) {
@@ -269,10 +269,10 @@ function itemCards() {
       stat(COPY.footprint, shapeText(item.shape)),
       stat(COPY.floor, item.dropOnly ? COPY.enemyDrop : item.minFloor || 1),
     ],
-  })).join('') + proposalCards('items')
+  })).join('')
 }
 
-const BUILDERS = Object.freeze({ enemies: enemyCards, weapons: weaponCards, relics: relicCards, items: itemCards })
+const BUILDERS = Object.freeze({ enemies: enemyCards, weapons: weaponCards, relics: relicCards, talents: talentCards, items: itemCards })
 
 export class WikiPage {
   constructor(root = document.getElementById('hud')) {

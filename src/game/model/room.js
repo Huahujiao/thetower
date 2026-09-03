@@ -1,17 +1,16 @@
 import { inBounds, posKey } from '../core/geometry.js'
-import { randomCardBackAttribute } from '../data/attributes.js'
 
-function makeTile(random) {
-  return { revealed: false, peeked: false, entityId: null, terrain: 'plain', backAttribute: randomCardBackAttribute(random) }
+function makeTile() {
+  return { revealed: false, peeked: false, entityId: null, terrain: 'plain' }
 }
 
 export class Room {
-  constructor({ id, floor, width, height = 8, random = Math.random }) {
+  constructor({ id, floor, width, height = 8 }) {
     this.id = id
     this.floor = floor
     this.width = width
     this.height = height
-    this.tiles = Array.from({ length: height }, () => Array.from({ length: width }, () => makeTile(random)))
+    this.tiles = Array.from({ length: height }, () => Array.from({ length: width }, () => makeTile()))
     this.entities = new Map()
     this.revealCounter = 0
     this.visited = false

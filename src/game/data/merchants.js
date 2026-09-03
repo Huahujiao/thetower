@@ -28,7 +28,10 @@ const BY_ID = new Map(MERCHANT_DEFS.map((definition) => [definition.id, definiti
 function availableItems(floor) {
   return ITEM_DEFS.filter((definition) => {
     if (floor < (definition.minFloor || 1)) return false
-    return definition.dropOnly === true || definition.merchantOnly === true
+    // The merchant is intentionally the source of items that cannot be
+    // picked up from the ground. Enemy-only drops remain encounter rewards
+    // and should not dilute the shop's advanced, merchant-exclusive stock.
+    return definition.merchantOnly === true
   })
 }
 

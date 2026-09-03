@@ -18,15 +18,15 @@ export function randomCardBackAttribute(random = Math.random) {
   return ATTRIBUTE_ORDER[Math.floor(random() * ATTRIBUTE_ORDER.length)] || ATTRIBUTE_ORDER[0]
 }
 
-export function attributeModifier(attackerAttribute, targetAttribute, { adapted = false } = {}) {
+export function attributeModifier(attackerAttribute, targetAttribute) {
   const attackerIndex = ATTRIBUTE_ORDER.indexOf(attackerAttribute)
   const targetIndex = ATTRIBUTE_ORDER.indexOf(targetAttribute)
   if (attackerIndex < 0 || targetIndex < 0) return { multiplier: 1, countered: false, resisted: false }
   if (ATTRIBUTE_ORDER[(attackerIndex + 1) % ATTRIBUTE_ORDER.length] === targetAttribute) {
-    return { multiplier: adapted ? 1.8 : 1.6, countered: true, resisted: false }
+    return { multiplier: 1.6, countered: true, resisted: false }
   }
   if (ATTRIBUTE_ORDER[(attackerIndex + ATTRIBUTE_ORDER.length - 1) % ATTRIBUTE_ORDER.length] === targetAttribute) {
-    return { multiplier: adapted ? 0.8 : 0.65, countered: false, resisted: true }
+    return { multiplier: 0.65, countered: false, resisted: true }
   }
   return { multiplier: 1, countered: false, resisted: false }
 }

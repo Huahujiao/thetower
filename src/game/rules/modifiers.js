@@ -19,18 +19,23 @@ export function resolveDamage(baseDamage, modifiers = []) {
     base,
     flat,
     multiplier,
-    total: Math.max(1, Math.floor((base + flat) * multiplier)),
+    // All rule calculations are floored and may legitimately resolve to 0.
+    // Individual callers can impose a minimum where the game rule requires
+    // one (for example, an enemy's normal attack), but the generic damage
+    // resolver must not silently turn a zero result into 1.
+    total: Math.max(0, Math.floor((base + flat) * multiplier)),
     modifiers: modifiers.map((modifier) => ({ ...modifier })),
   }
 }
 
-export function attackAttributeModifier(weapon, target, { adapted = false } = {}) {
-  return attributeModifier(weapon?.attribute, target?.attribute, { adapted })
+export function attackAttributeModifier(weapon, target, { counterBonus = 0 } = {}) {
+  const result = attributeModifier(weapon?.attribute, target?.attribute)
+  return result.countered ? { ...result, multiplier: result.multiplier + Math.max(0, Number(counterBonus) || 0) } : result
 }
 
-export function computeAttackDamage({ weapon, target, strengthBonus = 0, pendingAttackBonus = 0, ignoreLastDurability: _ignoreLastDurability = false, relicModifiers = [], terrainModifiers = [], finalStrike = false, adapted = false } = {}) {
+export function computeAttackDamage({ weapon, target, pendingAttackBonus = 0, relicModifiers = [], terrainModifiers = [], finalStrike = false, counterBonus = 0 } = {}) {
   if (!weapon) return { damage: 0, countered: false, resisted: false, resolution: resolveDamage(0) }
-  const type = attackAttributeModifier(weapon, target, { adapted })
+  const type = attackAttributeModifier(weapon, target, { counterBonus })
   const modifiers = [
     ...(pendingAttackBonus ? [damageModifier(DAMAGE_STAGES.FLAT, pendingAttackBonus, 'pending-buff')] : []),
     ...(finalStrike && weapon.weaponClass === 'heavy' ? [damageModifier(DAMAGE_STAGES.MULTIPLY, 1.5, 'weapon:heavy-final')] : []),
@@ -38,7 +43,7 @@ export function computeAttackDamage({ weapon, target, strengthBonus = 0, pending
     ...relicModifiers,
     ...terrainModifiers,
   ]
-  const resolution = resolveDamage((weapon.attack || 0) + Math.max(0, Number(strengthBonus) || 0), modifiers)
+  const resolution = resolveDamage(weapon.attack || 0, modifiers)
   return { damage: resolution.total, countered: type.countered, resisted: type.resisted, resolution }
 }
 import { attributeModifier } from '../data/attributes.js'

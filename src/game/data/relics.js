@@ -1,18 +1,6 @@
 import { DAMAGE_STAGES, damageModifier } from '../rules/modifiers.js'
 import { manhattan, neighbors8 } from '../core/geometry.js'
 
-function fullHealthMultiplier(player) {
-  if (!player?.maxHp || player.hp < player.maxHp / 2) return 1
-  const missingTenths = Math.floor(Math.max(0, player.maxHp - player.hp) / (player.maxHp / 10))
-  return Math.max(1, 1.5 - missingTenths * 0.1)
-}
-
-function berserkerMultiplier(player) {
-  if (!player?.maxHp) return 1
-  const missingHealth = Math.max(0, Number(player.maxHp) - (Number(player.hp) || 0))
-  return Math.min(5, 1 + Math.floor(missingHealth / 5) * 0.5)
-}
-
 function relicState(run, id) {
   if (!run.relicRuntime[id] || typeof run.relicRuntime[id] !== 'object') run.relicRuntime[id] = {}
   return run.relicRuntime[id]
@@ -27,7 +15,7 @@ function reachedAttackCount(run, id, threshold) {
   return true
 }
 
-export const RELIC_DEFS = Object.freeze([
+const ALL_RELIC_DEFS = Object.freeze([
   {
     id: 'r-packed-core',
     name: '\u6ee1\u8f7d\u6838\u5fc3',
@@ -49,7 +37,7 @@ export const RELIC_DEFS = Object.freeze([
     name: '\u5f39\u9053\u6298\u5c04',
     description: '\u6bcf\u6b21\u653b\u51fb\u540e\uff0c\u5bf9\u76ee\u6807\u8eab\u540e\u7b2c\u4e00\u683c\u9020\u6210\u540c\u7b49\u4f24\u5bb3\uff0c\u82e5\u8be5\u683c\u672a\u7ffb\u5f00\u5219\u540c\u65f6\u7ffb\u5f00\u3002',
     events: {
-      'attack:hit': ({ run, enemy, damage }) => run?._ricochetBehind(enemy, damage)
+      'attack:primary-hit': ({ run, enemy, damage }) => run?._ricochetBehind(enemy, damage)
         ? [{ log: '\u5f39\u9053\u6298\u5c04\uff1a\u653b\u51fb\u4e86\u76ee\u6807\u8eab\u540e\u7684\u5361\u724c\u3002' }]
         : [],
     },
@@ -102,31 +90,12 @@ export const RELIC_DEFS = Object.freeze([
     damageModifiers: () => [damageModifier(DAMAGE_STAGES.MULTIPLY, 2, 'relic:double-edged-fate')],
   },
   {
-    id: 'r-repeat-strike',
-    name: '\u8fde\u65a9\u523b\u75d5',
-    description: '\u5bf9\u540c\u4e00\u654c\u4eba\u7684\u8fde\u7eed\u653b\u51fb\uff0c\u6bcf\u6b21\u4f24\u5bb3\u9012\u589e 1 \u70b9\u3002',
-    damageModifiers: ({ run, target }) => {
-      const state = run?.relicRuntime?.['r-repeat-strike']
-      const bonus = state?.targetId === target?.id ? Math.max(0, Number(state.hits) || 0) : 0
-      return bonus ? [damageModifier(DAMAGE_STAGES.FLAT, bonus, 'relic:repeat-strike')] : []
-    },
-    events: {
-      'attack:hit': ({ run, enemy, damage }) => {
-        if (!run || !enemy || damage <= 0) return []
-        const state = relicState(run, 'r-repeat-strike')
-        state.hits = state.targetId === enemy.id ? (Number(state.hits) || 0) + 1 : 1
-        state.targetId = enemy.id
-        return []
-      },
-    },
-  },
-  {
     id: 'r-blood-prism',
     name: '\u996e\u8840\u68f1\u955c',
-    description: '\u6bcf\u6b21\u653b\u51fb\u540e\uff0c\u56de\u590d\u9020\u6210\u4f24\u5bb3\u7684 30%\uff08\u5411\u4e0b\u53d6\u6574\uff09\u3002',
+    description: '\u4ec5\u5728\u6b66\u5668\u56e0\u6700\u540e\u4e00\u51fb\u635f\u6bc1\u540e\u89e6\u53d1\uff1a\u56de\u590d\u8be5\u6b21\u4e3b\u653b\u51fb\u5bf9\u4e3b\u76ee\u6807\u76f4\u63a5\u9020\u6210\u4f24\u5bb3\u7684 30%\uff0c\u81f3\u5c11 1\u70b9\u3002',
     events: {
-      'attack:hit': ({ damage }) => {
-        const amount = Math.floor(Math.max(0, damage || 0) * 0.3)
+      'weapon:broken': ({ primaryHealthDamage = 0 }) => {
+        const amount = Math.max(1, Math.floor(Math.max(0, primaryHealthDamage) * 0.3))
         return amount ? [{ type: 'heal', amount, log: '\u996e\u8840\u68f1\u955c\uff1a\u56de\u590d ' + amount + ' \u70b9\u751f\u547d\u3002' }] : []
       },
     },
@@ -134,11 +103,18 @@ export const RELIC_DEFS = Object.freeze([
   {
     id: 'r-tide-heart',
     name: '\u6f6e\u6c50\u5fc3\u810f',
-    description: '\u6bcf\u53d1\u8d77 2 \u6b21\u653b\u51fb\uff0c\u6062\u590d 2 \u70b9\u751f\u547d\u3002',
+    description: '\u8fde\u7eed\u4e24\u6b21\u4e3b\u653b\u51fb\u5206\u522b\u4f7f\u7528\u5de6\u624b\u548c\u53f3\u624b\u65f6\uff0c\u7b2c\u4e8c\u6b21\u653b\u51fb\u540e\u56de\u590d 2 \u70b9\u751f\u547d\u3002',
     events: {
-      'attack:started': ({ run }) => reachedAttackCount(run, 'r-tide-heart', 2)
-        ? [{ type: 'heal', amount: 2, log: '\u6f6e\u6c50\u5fc3\u810f\uff1a\u56de\u590d 2 \u70b9\u751f\u547d\u3002' }]
-        : [],
+      'attack:primary-hit': ({ run, hand }) => {
+        const state = relicState(run, 'r-tide-heart')
+        const trigger = Number.isInteger(state.lastHand) && state.lastHand !== hand
+        state.lastHand = hand
+        return trigger ? [{ type: 'heal', amount: 2, log: '\u6f6e\u6c50\u5fc3\u810f\uff1a\u56de\u590d 2 \u70b9\u751f\u547d\u3002' }] : []
+      },
+      'room:entered': ({ run }) => {
+        relicState(run, 'r-tide-heart').lastHand = null
+        return []
+      },
     },
   },
   {
@@ -164,26 +140,11 @@ export const RELIC_DEFS = Object.freeze([
     },
   },
   {
-    id: 'r-perfect-edge',
-    name: '\u65e0\u4f24\u950b\u8292',
-    description: '\u6ee1\u8840\u65f6\u4f24\u5bb3\u00d71.5\uff1b\u6bcf\u635f\u5931 10% \u751f\u547d\u51cf 0.1 \u500d\uff0c\u534a\u8840\u53ca\u4ee5\u4e0b\u65e0\u52a0\u6210\u3002',
-    damageModifiers: ({ player }) => {
-      const multiplier = fullHealthMultiplier(player)
-      return multiplier > 1 ? [damageModifier(DAMAGE_STAGES.MULTIPLY, multiplier, 'relic:perfect-edge')] : []
-    },
-  },
-  {
-    id: 'r-berserker-oath',
-    name: '\u72c2\u6218\u58eb\u4e4b\u8a93',
-    description: '\u6bcf\u635f\u5931 5 \u70b9\u751f\u547d\uff0c\u653b\u51fb\u4f24\u5bb3\u500d\u7387 +0.5\uff0c\u6700\u9ad8\u4e3a \u00d75\u3002',
-    damageModifiers: ({ player }) => [damageModifier(DAMAGE_STAGES.MULTIPLY, berserkerMultiplier(player), 'relic:berserker-oath')],
-  },
-  {
     id: 'r-armor-echo',
     name: '\u7532\u80c4\u56de\u54cd',
-    description: '\u6bcf\u6b21\u653b\u51fb\u540e\u83b7\u5f97 3 \u70b9\u62a4\u7532\u3002',
+    description: '\u6b66\u5668\u56e0\u6700\u540e\u4e00\u51fb\u635f\u6bc1\u65f6\u83b7\u5f97 5 \u70b9\u62a4\u7532\uff1b\u82e5\u540c\u65f6\u76f4\u63a5\u51fb\u6740\u4e3b\u76ee\u6807\uff0c\u518d\u83b7\u5f97 3 \u70b9\u3002',
     events: {
-      'attack:hit': () => [{ type: 'armor', amount: 3, log: '\u7532\u80c4\u56de\u54cd\uff1a\u62a4\u7532 +3\u3002' }],
+      'weapon:broken': ({ primaryKilled }) => [{ type: 'armor', amount: 5 + (primaryKilled ? 3 : 0), log: `\u7532\u80c4\u56de\u54cd\uff1a\u62a4\u7532 +${5 + (primaryKilled ? 3 : 0)}\u3002` }],
     },
   },
   {
@@ -204,37 +165,6 @@ export const RELIC_DEFS = Object.freeze([
       : [],
   },
   {
-    id: 'r-harmonic-echo',
-    name: '\u540c\u8c03\u4f59\u54cd',
-    description: '\u4ee5\u5c5e\u6027\u514b\u5236\u51fb\u6740\u654c\u4eba\u65f6\uff0c\u5f53\u524d\u6b66\u5668\u6062\u590d 1 \u70b9\u8010\u4e45\u3002',
-    events: {
-      'attack:enemy-defeated': ({ weapon, countered, finalStrike }) => countered && !finalStrike && weapon?.type === 'weapon'
-        ? [{ type: 'repair', weapon, amount: 1, log: '\u540c\u8c03\u4f59\u54cd\uff1a\u6b66\u5668\u8010\u4e45 +1\u3002' }]
-        : [],
-    },
-  },
-  {
-    id: 'r-apprentice-mark',
-    name: '\u5b66\u5f92\u523b\u5370',
-    description: '\u6bcf\u5c42\u9996\u6b21\u4ee5\u6b66\u5668\u51fb\u6740\u4e00\u79cd\u654c\u4eba\u65f6\uff0c\u51fb\u6740\u624b\u7684\u638c\u63a7 +1\u3002',
-    events: {
-      'attack:enemy-defeated': ({ run, enemy, hand }) => {
-        if (!run || !enemy?.enemyId || !Number.isInteger(hand)) return []
-        const state = relicState(run, 'r-apprentice-mark')
-        const key = `${run.currentRoom?.floor || 0}:${enemy.enemyId}`
-        if (state[key]) return []
-        state[key] = true
-        run.player.mastery[hand] = Math.max(0, Number(run.player.mastery[hand]) || 0) + 1
-        return [{ log: '\u5b66\u5f92\u523b\u5370\uff1a\u638c\u63a7 +1\u3002' }]
-      },
-    },
-  },
-  {
-    id: 'r-last-stand',
-    name: '\u7edd\u5883\u4fdd\u9669',
-    description: '\u6bcf\u4e2a\u623f\u95f4 1 \u6b21\uff0c\u53d7\u5230\u81f4\u547d\u4f24\u5bb3\u65f6\u4fdd\u7559 1 \u70b9\u751f\u547d\uff0c\u5e76\u83b7\u5f97 5 \u70b9\u62a4\u7532\u3002',
-  },
-  {
     id: 'r-clearing-protocol',
     name: '\u6e05\u9053\u534f\u8bae',
     description: '\u51fb\u8d25\u654c\u4eba\u65f6\uff0c\u82e5\u623f\u95f4\u6ca1\u6709\u5176\u4ed6\u5df2\u7ffb\u5f00\u7684\u654c\u4eba\uff0c\u968f\u673a\u7ffb\u5f00 1 \u5f20\u672a\u7ffb\u724c\u3002',
@@ -245,21 +175,6 @@ export const RELIC_DEFS = Object.freeze([
           .some((entity) => entity.kind === 'enemy' && room.isRevealed(entity.pos))
         if (!room || hasOtherRevealedEnemy || !run._revealRandomHidden('relic:clearing-protocol')) return []
         return [{ log: '\u6e05\u9053\u534f\u8bae\uff1a\u968f\u673a\u7ffb\u5f00 1 \u5f20\u672a\u7ffb\u724c\u3002' }]
-      },
-    },
-  },
-  {
-    id: 'r-threshold-seal',
-    name: '\u95e8\u69db\u5c01\u5370',
-    description: '\u6bcf\u4e2a\u623f\u95f4\u9996\u6b21\u7ffb\u5f00\u654c\u4eba\u65f6\uff0c\u5176\u884c\u52a8\u5ef6\u8fdf +1\u3002',
-    events: {
-      'enemy:revealed': ({ run, enemy, room }) => {
-        if (!run || !enemy) return []
-        const state = run._relicRoomRuntime('r-threshold-seal', room)
-        if (state.triggered) return []
-        state.triggered = true
-        enemy.actionDelay = Math.max(0, Number(enemy.actionDelay) || 0) + 1
-        return [{ log: '\u95e8\u69db\u5c01\u5370\uff1a\u9996\u540d\u654c\u4eba\u7684\u884c\u52a8\u88ab\u63a8\u8fdf\u3002' }]
       },
     },
   },
@@ -395,8 +310,8 @@ export const RELIC_DEFS = Object.freeze([
     name: '\u65ad\u5203\u7ee7\u627f',
     description: '\u6bcf\u635f\u6bc1 1 \u628a\u6b66\u5668\uff0c\u4f7f\u53e6\u4e00\u628a\u5df2\u88c5\u5907\u6b66\u5668\u653b\u51fb +2\u3002',
     events: {
-      'weapon:broken': ({ run }) => {
-        const weapon = run?.equippedWeapons[0]
+      'weapon:broken': ({ run, weapon: brokenWeapon }) => {
+        const weapon = run?.equippedWeapons.find((candidate) => candidate?.uid !== brokenWeapon?.uid)
         if (!weapon) return []
         weapon.attack = Math.max(0, Number(weapon.attack) || 0) + 2
         return [{ log: `\u65ad\u5203\u7ee7\u627f\uff1a${weapon.name}\u653b\u51fb +2\u3002` }]
@@ -451,14 +366,6 @@ export const RELIC_DEFS = Object.freeze([
     },
   },
   {
-    id: 'r-no-mercy',
-    name: '\u7edd\u4e0d\u624b\u8f6f',
-    description: '\u654c\u4eba\u751f\u547d\u4e0d\u9ad8\u4e8e\u4e00\u534a\u65f6\uff0c\u5bf9\u5176\u653b\u51fb\u4f24\u5bb3\u00d71.5\u3002',
-    damageModifiers: ({ target }) => target?.maxHp > 0 && target.hp * 2 <= target.maxHp
-      ? [damageModifier(DAMAGE_STAGES.MULTIPLY, 1.5, 'relic:no-mercy')]
-      : [],
-  },
-  {
     id: 'r-weapon-foundry',
     name: '\u6d41\u52a8\u5175\u5e93',
     description: '\u6bcf\u53d1\u8d77 3 \u6b21\u653b\u51fb\uff0c\u5c06 1 \u628a\u968f\u673a\u6b66\u5668\u653e\u5165\u80cc\u5305\uff08\u65e0\u7a7a\u4f4d\u65f6\u8df3\u8fc7\uff09\u3002',
@@ -467,6 +374,21 @@ export const RELIC_DEFS = Object.freeze([
         ? [{ log: '\u6d41\u52a8\u5175\u5e93\uff1a\u968f\u673a\u6b66\u5668\u5df2\u5165\u5305\u3002' }]
         : [],
     },
+  },
+  {
+    id: 'r-whetstone-echo',
+    name: '\u78e8\u77f3\u56de\u58f0',
+    description: '\u4f7f\u7528\u78e8\u5200\u77f3\u4fee\u590d\u4e00\u628a\u624b\u4e2d\u7684\u6b66\u5668\u65f6\uff0c\u53e6\u4e00\u53ea\u624b\u7684\u6b66\u5668\u4e5f\u589e\u52a01\u70b9\u8010\u4e45\u3002',
+  },
+  {
+    id: 'r-gray-divination',
+    name: '\u7070\u7b7e\u535c\u7b6e',
+    description: '\u6bcf\u5f53\u73a9\u5bb6\u4e3b\u52a8\u7ffb\u5f004\u5f20\u663e\u793a\u4e3a\u4e2d\u6027\u7070\u767d\u5361\u80cc\u7684\u5361\u724c\u540e\uff0c\u968f\u673a\u7aa5\u89c6\u5f53\u524d\u623f\u95f41\u5f20\u5c5e\u6027\u5361\u724c\u3002\u8ba1\u6570\u8de8\u623f\u95f4\u4fdd\u7559\uff0c\u81ea\u52a8\u7ffb\u5f00\u3001\u5723\u9057\u7269\u7ffb\u5f00\u548c\u7aa5\u89c6\u4e0d\u8ba1\u6570\u3002',
+  },
+  {
+    id: 'r-scrap-charm',
+    name: '\u5e9f\u94c1\u62a4\u7b26',
+    description: '\u6bcf\u4e2a\u623f\u95f4\u6700\u591a1\u6b21\uff1a\u4e3b\u52a8\u4e22\u5f03\u4e00\u628a\u4f4d\u4e8e\u80cc\u5305\u4e2d\u7684\u6b66\u5668\u65f6\u83b7\u5f975\u70b9\u62a4\u7532\u3002',
   },
   {
     id: 'r-death-burst',
@@ -499,6 +421,8 @@ export const RELIC_DEFS = Object.freeze([
     },
   },
 ])
+
+export const RELIC_DEFS = ALL_RELIC_DEFS
 
 const BY_ID = new Map(RELIC_DEFS.map((definition) => [definition.id, definition]))
 

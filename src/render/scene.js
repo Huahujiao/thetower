@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import { getAttributeDefinition } from '../game/data/attributes.js'
 import { enemyCardSubtitle } from '../game/data/enemy-features.js'
 import { isAdjacent8 } from '../game/core/geometry.js'
+import floorTextureUrl from '../assets/floor.png'
 
 const TILE_SIZE = 1.14
 const CARD_SIZE = TILE_SIZE
@@ -29,6 +30,9 @@ const GHOST_ROOM_GAP = TILE_SIZE * 0.54
 const ENEMY_STATUS_LAYER_OFFSET = 0.012
 const ENEMY_STATUS_HEALTH_Y = CARD_SIZE * 0.43
 const ENEMY_STATUS_BOTTOM_Y = -CARD_SIZE * 0.43
+const FLOOR_TEXTURE = new THREE.TextureLoader().load(floorTextureUrl)
+FLOOR_TEXTURE.colorSpace = THREE.SRGBColorSpace
+FLOOR_TEXTURE.anisotropy = 4
 
 const CARD_COLORS = Object.freeze({
   monster: '#5b1a1a',
@@ -200,7 +204,7 @@ function disposeObject(object) {
     child.geometry?.dispose?.()
     const materials = Array.isArray(child.material) ? child.material : [child.material]
     for (const material of materials) {
-      material?.map?.dispose?.()
+      if (material?.map && material.map !== FLOOR_TEXTURE) material.map.dispose?.()
       material?.dispose?.()
     }
   })
@@ -375,6 +379,9 @@ export class GameScene {
       new THREE.MeshBasicMaterial({
         map: texture,
         color: revealed || peeked || flippable ? 0xffffff : UNREACHABLE_HIDDEN_CARD_TINT,
+        // Standing tokens keep opacity 1, but their cleared canvas pixels must
+        // still be composited as transparent. Raycast is disabled below so
+        // the ground tile remains clickable without making the figure fade.
         transparent: standing || peeked,
         opacity: peeked ? 0.46 : 1,
         side: THREE.DoubleSide,
@@ -383,11 +390,13 @@ export class GameScene {
     )
     this._setFacePose(face, point, standing)
     face.renderOrder = standing ? 2 : 0
-    face.raycast = card?.type === 'entry' ? NO_RAYCAST : THREE.Mesh.prototype.raycast
+    // Standing tokens are visual overlays. Let the ground tile receive the
+    // pointer instead so a character/enemy cannot block the tile behind it.
+    face.raycast = standing ? NO_RAYCAST : THREE.Mesh.prototype.raycast
     face.userData.position = { ...position }
     face.userData.lift = 0
     face.userData.body = mesh
-    face.userData.groundFace = emptyGround ? this._makeEmptyGroundFace(point) : null
+    face.userData.groundFace = emptyGround ? this._makeEmptyGroundFace(point, position) : null
     face.userData.visualKey = visual.key
     if (face.userData.groundFace) this.roomGroup.add(face.userData.groundFace)
     this.roomGroup.add(face)
@@ -405,14 +414,15 @@ export class GameScene {
     face.userData.standing = standing
   }
 
-  _makeEmptyGroundFace(point) {
+  _makeEmptyGroundFace(point, position = null) {
     const groundFace = new THREE.Mesh(
       new THREE.PlaneGeometry(CARD_SIZE, CARD_SIZE),
-      new THREE.MeshBasicMaterial({ map: this._makeFrontTexture({ type: 'empty' }), side: THREE.DoubleSide }),
+      new THREE.MeshBasicMaterial({ map: FLOOR_TEXTURE, side: THREE.DoubleSide }),
     )
     groundFace.rotation.x = -Math.PI / 2
     groundFace.position.set(point.x, CARD_THICKNESS / 2 + 0.003, point.z)
-    groundFace.raycast = () => {}
+    groundFace.userData.position = position ? { ...position } : null
+    groundFace.raycast = THREE.Mesh.prototype.raycast
     return groundFace
   }
 
@@ -534,7 +544,6 @@ export class GameScene {
         revealed,
         peeked,
         flippable,
-        backAttribute: tile.backAttribute,
         entity,
         player: isPlayer ? {
           hp: this.run.player.hp,
@@ -808,20 +817,22 @@ export class GameScene {
       ? this._makeFrontTexture(card)
       : this._makeBackTexture(this._backAttributeFor(room, position), { unflippable: !flippable })
     face.material.needsUpdate = true
+    // Click-through is handled by the custom raycast below. Standing tokens
+    // remain visually opaque while their cleared canvas pixels stay transparent.
     face.material.transparent = standing || peeked
     face.material.opacity = peeked ? 0.46 : 1
     face.material.depthWrite = !standing
     face.material.color.setHex(revealed || peeked || flippable ? 0xffffff : UNREACHABLE_HIDDEN_CARD_TINT)
-    oldTexture?.dispose()
+    if (oldTexture !== FLOOR_TEXTURE) oldTexture?.dispose()
     face.visible = true
     face.userData.lift = 0
     this._setFacePose(face, this._gridPosition(room, position), standing)
     face.renderOrder = standing ? 2 : 0
-    face.raycast = card?.type === 'entry' ? NO_RAYCAST : THREE.Mesh.prototype.raycast
+    face.raycast = standing ? NO_RAYCAST : THREE.Mesh.prototype.raycast
     body.visible = true
     body.position.y = 0
     if (emptyGround && !face.userData.groundFace) {
-      face.userData.groundFace = this._makeEmptyGroundFace(this._gridPosition(room, position))
+      face.userData.groundFace = this._makeEmptyGroundFace(this._gridPosition(room, position), position)
       this.roomGroup.add(face.userData.groundFace)
     }
     if (face.userData.groundFace) face.userData.groundFace.visible = emptyGround
@@ -1116,7 +1127,10 @@ export class GameScene {
     this.pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
     this.roomGroup.updateMatrixWorld(true)
     this.raycaster.setFromCamera(this.pointer, this.camera)
-    return this.raycaster.intersectObjects(this.tileMeshes.filter((mesh) => mesh.visible), false)[0]?.object || null
+    const pickableTiles = this.tileMeshes
+      .filter((mesh) => mesh.visible)
+      .flatMap((mesh) => mesh.userData.groundFace?.visible ? [mesh.userData.groundFace] : [mesh])
+    return this.raycaster.intersectObjects(pickableTiles, false)[0]?.object || null
   }
 
   _pickDoor(event) {
@@ -1222,6 +1236,7 @@ export class GameScene {
   }
 
   _makeFrontTexture(card) {
+    if (card.type === 'empty') return FLOOR_TEXTURE
     return makeCanvasTexture((context) => {
       if (card.type === 'monster') {
         drawStandingToken(context, card)
@@ -1331,7 +1346,7 @@ export class GameScene {
         valueColor: '#a9d8ff',
         durability: item.durability,
         detail: `攻 ${item.attack}  耐 ${item.durability}`,
-        footer: `射程 ${item.range}`,
+        footer: `射程 ${this.run.weaponRange(item)}`,
         clickHint: '点击拾取',
       }
     }
