@@ -237,7 +237,8 @@ export class HUD {
 
       <div class="relic-choice level-up" data=levelup>
         <div class="relic-choice-title" data=leveluptitle></div>
-        <div class="relic-choice-row" data=leveluprow></div>
+        <div class="relic-choice-row level-up-talent-row" data=leveluprow></div>
+        <div class="level-up-fixed-row" data=levelupfixed></div>
       </div>
 
         <div class="hud-rest" data=merchantpanel>
@@ -446,9 +447,16 @@ export class HUD {
     panel.classList.toggle('show', open)
     if (!open) return
     this.q('leveluptitle').textContent = LABELS.growthChoice
-    this.q('leveluprow').innerHTML = this.run.levelUpChoices().map((choice) => (
-      `<button class="relic-choice-card" data-level-up-choice="${choice.id}"><span class="relic-name">${escapeHtml(choice.name)}</span><span class="relic-desc">${escapeHtml(choice.description)}</span></button>`
-    )).join('')
+    const choices = this.run.levelUpChoices()
+    const talents = choices.filter((choice) => !choice.fixed)
+    const fixed = choices.find((choice) => choice.fixed)
+    this.q('leveluprow').innerHTML = talents.map((choice) => {
+      const branch = TALENT_LINE_LABELS[choice.line] || choice.line
+      return `<button class="relic-choice-card talent-choice-card" data-level-up-choice="${choice.id}"><span class="talent-choice-branch">${escapeHtml(branch)}</span><span class="relic-name">${escapeHtml(choice.name)}</span><span class="relic-desc">${escapeHtml(choice.description)}</span></button>`
+    }).join('')
+    this.q('levelupfixed').innerHTML = fixed
+      ? `<div class="level-up-fixed-label">${escapeHtml(LABELS.fixedGrowth)}</div><button class="relic-choice-card level-up-fixed-choice" data-level-up-choice="${fixed.id}"><span class="relic-name">${escapeHtml(fixed.name)}</span><span class="relic-desc">${escapeHtml(fixed.description)}</span></button>`
+      : ''
   }
 
   _renderMerchant() {
@@ -524,6 +532,9 @@ export class HUD {
       const shape = this.run.backpack.shapeFor(item, placement.rotation)
       const originIndex = this.run.backpack.originIndex(placement)
       const selected = this.run.selectedInventoryIndex === originIndex
+      const itemClasses = ['bag-item', item.type]
+      if (item.type === 'weapon' && item.attribute) itemClasses.push(`attribute-${item.attribute}`)
+      if (selected) itemClasses.push('selected')
       const detail = item.type === 'weapon'
         ? `${WEAPON_CLASS_LABELS[item.weaponClass] || LABELS.weaponClass} · ATK ${item.attack} · R ${this.run.weaponRange(item)} · ${LABELS.durability} ${item.durability}`
         : item.type === 'potion' ? `HP +${item.heal}`
@@ -540,7 +551,7 @@ export class HUD {
         firstFilled = false
         return `<span class="occupied" data-bag-item="${cellIndex}">${name}</span>`
       }).join('')
-      return `<div class="bag-item ${item.type}${selected ? ' selected' : ''}" style="grid-column:${placement.x + 1} / span ${shape[0].length};grid-row:${placement.y + 1} / span ${shape.length}"><span class="bag-shape" style="grid-template-columns:repeat(${shape[0].length},1fr);grid-template-rows:repeat(${shape.length},1fr)">${shapeCells}</span><span class="bag-details"><small>${detail}</small></span></div>`
+      return `<div class="${itemClasses.join(' ')}" style="grid-column:${placement.x + 1} / span ${shape[0].length};grid-row:${placement.y + 1} / span ${shape.length}"><span class="bag-shape" style="grid-template-columns:repeat(${shape[0].length},1fr);grid-template-rows:repeat(${shape.length},1fr)">${shapeCells}</span><span class="bag-details"><small>${detail}</small></span></div>`
     }).join('')
     backpack.innerHTML = `${cells}${items}`
     const rotate = this.root.querySelector('[data-action="rotate-bag"]')

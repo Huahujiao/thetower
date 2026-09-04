@@ -164,21 +164,33 @@ function drawEmptyCardBase(context) {
 function drawStandingToken(context, card) {
   context.clearRect(0, 0, 160, 160)
   const merchant = card.type === 'merchant'
+  const attribute = !merchant ? getAttributeDefinition(card.attribute) : null
   const color = merchant ? '#d5a85d' : card.boss ? '#ff7777' : '#e36b6b'
   context.fillStyle = color
   context.strokeStyle = merchant ? '#ffe3a3' : '#ffc0c0'
   context.lineWidth = 4
-  context.beginPath()
-  context.moveTo(34, 142)
-  context.lineTo(126, 142)
-  context.lineTo(80, 58)
-  context.closePath()
-  context.fill()
-  context.stroke()
-  context.beginPath()
-  context.arc(80, 42, 27, 0, Math.PI * 2)
-  context.fill()
-  context.stroke()
+  const drawSilhouette = ({ fill = false } = {}) => {
+    context.beginPath()
+    context.moveTo(34, 142)
+    context.lineTo(126, 142)
+    context.lineTo(80, 58)
+    context.closePath()
+    if (fill) context.fill()
+    context.stroke()
+    context.beginPath()
+    context.arc(80, 42, 27, 0, Math.PI * 2)
+    if (fill) context.fill()
+    context.stroke()
+  }
+  drawSilhouette({ fill: true })
+  if (attribute) {
+    // Keep the red danger outline and add a quieter attribute-colored trim.
+    context.strokeStyle = attribute.color
+    context.globalAlpha = 0.78
+    context.lineWidth = 2
+    drawSilhouette()
+    context.globalAlpha = 1
+  }
   const glyph = Array.from(String(card.title || '?'))[0] || '?'
   context.fillStyle = '#241c24'
   context.font = 'bold 29px sans-serif'
@@ -370,7 +382,7 @@ export class GameScene {
     this.roomGroup.add(mesh)
     const card = revealed || peeked ? this._cardFaceData(room, position) : null
     const standing = revealed && (card?.type === 'monster' || card?.type === 'merchant' || card?.type === 'entry')
-    const emptyGround = standing && (card?.type === 'monster' || card?.type === 'entry')
+    const emptyGround = standing && (card?.type === 'monster' || card?.type === 'merchant' || card?.type === 'entry')
     const texture = card
       ? this._makeFrontTexture(card)
       : this._makeBackTexture(this._backAttributeFor(room, position), { unflippable: !flippable })
@@ -812,7 +824,7 @@ export class GameScene {
     const oldTexture = face.material.map
     const card = revealed || peeked ? this._cardFaceData(room, position) : null
     const standing = revealed && (card?.type === 'monster' || card?.type === 'merchant' || card?.type === 'entry')
-    const emptyGround = standing && (card?.type === 'monster' || card?.type === 'entry')
+    const emptyGround = standing && (card?.type === 'monster' || card?.type === 'merchant' || card?.type === 'entry')
     face.material.map = card
       ? this._makeFrontTexture(card)
       : this._makeBackTexture(this._backAttributeFor(room, position), { unflippable: !flippable })
@@ -1264,17 +1276,18 @@ export class GameScene {
       context.strokeStyle = card.boss ? '#d98080' : '#888'
       context.lineWidth = card.boss ? 5 : 3
       context.strokeRect(4, 4, 152, 152)
-      drawAttributeLabel(context, card.attribute)
+      if (card.attribute && card.type !== 'weapon') drawAttributeLabel(context, card.attribute)
       const isBuff = card.type === 'buff'
       const isMonster = card.type === 'monster'
       const isWeapon = card.type === 'weapon'
       const value = isMonster && Number.isFinite(card.maxValue) ? `${card.value}/${card.maxValue}` : card.value
       const subtitle = isMonster || isWeapon ? card.subtitle : ''
-      const detail = isMonster ? `ATK ${card.attack}` : isWeapon ? `\u8010 ${card.durability}` : card.type === 'door' ? card.detail : ''
-      const footer = isMonster || isWeapon ? card.footer : ''
+      const detail = isMonster ? `ATK ${card.attack}` : isWeapon ? `\u8010 ${card.durability} \u00b7 \u5c04\u7a0b ${card.range}` : card.type === 'door' ? card.detail : ''
+      const footer = isMonster ? card.footer : ''
+      const valueColor = isWeapon ? getAttributeDefinition(card.attribute)?.color || card.valueColor || '#fff' : card.valueColor || '#fff'
       drawCenteredText(context, card.title, 32, { color: card.boss ? '#fbb' : '#fff', size: 22, weight: 'bold' })
       if (!isBuff && subtitle) drawCenteredText(context, subtitle, 50, { color: '#ffa', size: 14 })
-      if (value) drawCenteredText(context, value, 90, { color: card.valueColor || '#fff', size: 36, weight: 'bold' })
+      if (value) drawCenteredText(context, value, 90, { color: valueColor, size: 36, weight: 'bold' })
       if (!isBuff && detail) drawCenteredText(context, detail, 116, { color: '#d8e4ff', size: 14 })
       if (!isBuff && footer) drawCenteredText(context, footer, 136, { color: card.footerColor || '#ffd56b', size: 13, weight: 'bold' })
     })
@@ -1340,11 +1353,12 @@ export class GameScene {
     if (item.type === 'weapon') {
       return {
         type: 'weapon',
-        title: item.name,
-        subtitle: WEAPON_CLASS_LABELS[item.weaponClass] || '\u6b66\u5668',
-        value: `ATK ${item.attack}`,
+         title: item.name,
+         subtitle: WEAPON_CLASS_LABELS[item.weaponClass] || '\u6b66\u5668',
+        value: String(item.attack),
         valueColor: '#a9d8ff',
         durability: item.durability,
+        range: this.run.weaponRange(item),
         detail: `攻 ${item.attack}  耐 ${item.durability}`,
         footer: `射程 ${this.run.weaponRange(item)}`,
         clickHint: '点击拾取',
