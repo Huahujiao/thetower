@@ -16,13 +16,15 @@
 | [01-overview.md](./01-overview.md) | 一局游戏的目标、流程与状态 |
 | [02-dungeon.md](./02-dungeon.md) | 楼层、房间、卡牌、翻牌与门 |
 | [03-turn-and-combat.md](./03-turn-and-combat.md) | 回合、移动、敌人、伤害与胜负 |
+| [回合相关机制.md](./回合相关机制.md) | 三层回合计数、攻击／行动／全局回合及扩展讨论清单（临时稿） |
+| [陷阱和敌人.md](./陷阱和敌人.md) | 当前陷阱、敌人、特性和掉落清单（临时讨论稿） |
 | [04-inventory.md](./04-inventory.md) | 背包、装备、物品与操作规则 |
 | [05-encounters-relics.md](./05-encounters-relics.md) | 角色成长、房间奖励、商人、收藏家、陷阱与圣遗物 |
 | [06-content.md](./06-content.md) | 已实装对象清单的索引 |
-| [07-interface.md](./07-interface.md) | 手机布局、三维棋盘和详情交互 |
+| [07-interface.md](./07-interface.md) | 手机布局、三维棋盘、卡面与详情交互 |
 | [08-technical.md](./08-technical.md) | 模块边界、数据来源、存档与验证 |
 | [09-wiki.md](./09-wiki.md) | `/wiki` 图鉴与已实装内容的展示规范 |
-| [12-attributes.md](./12-attributes.md) | 三属性克制与八种明暗卡背状态 |
+| [12-attributes.md](./12-attributes.md) | 三属性克制、卡背与卡面显示规则 |
 | [敌人规则.md](./敌人规则.md) | 敌人行动、延迟、冷却、被动与死亡规则 |
 | [敌人.md](./敌人.md) | 敌人的静态数值、特性与掉落来源 |
 | [物品清单.md](./物品清单.md) | 常规武器、商店专售武器、消耗品、工具与敌人专属掉落清单 |

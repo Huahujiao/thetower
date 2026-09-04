@@ -1322,7 +1322,17 @@ export class GameScene {
       }
     }
     if (entity.kind === 'item') return { ...this._itemCardFaceData(entity.item), attribute: entity.item.type === 'weapon' ? entity.item.attribute : null }
-    if (entity.kind === 'trap') return { type: 'trap', title: entity.name, value: '!', valueColor: '#ffabb7' }
+    if (entity.kind === 'trap') {
+      const triggered = entity.triggered === true
+      return {
+        type: 'trap',
+        title: entity.name,
+        value: triggered ? '✓' : '!',
+        valueColor: triggered ? '#d2b9c0' : '#ffabb7',
+        detail: triggered ? '已触发' : '未触发',
+        footer: triggered ? '下一个全局回合后消失' : '触发后显示',
+      }
+    }
     if (entity.kind === 'gold') {
       return { type: 'gold', title: '金币', value: `+${entity.amount}`, valueColor: '#ffd56b', detail: '点击拾取', clickHint: '点击拾取' }
     }
@@ -1365,16 +1375,16 @@ export class GameScene {
       }
     }
     if (item.type === 'potion') {
-      return { type: 'potion', title: item.name, value: `+${item.heal} HP`, valueColor: '#8eff9f', detail: '使用后生效', footer: '不耗回合', clickHint: '点击拾取' }
+      return { type: 'potion', title: item.name, value: `+${item.heal} HP`, valueColor: '#8eff9f', detail: '使用后生效', footer: '消耗行动', clickHint: '点击拾取' }
     }
     if (item.type === 'armor') {
-      return { type: 'potion', title: item.name, value: `ARMOR +${item.armor}`, valueColor: '#8ed7ff', detail: 'Use to gain armor', footer: 'No turn cost', clickHint: 'Click to pick up' }
+      return { type: 'potion', title: item.name, value: `ARMOR +${item.armor}`, valueColor: '#8ed7ff', detail: '使用后获得护甲', footer: '消耗行动', clickHint: '点击拾取' }
     }
     if (item.type === 'buff') {
-      return { type: 'buff', title: item.name, value: `攻击 +${item.attackBonus}`, valueColor: '#8effc8', detail: '下次攻击生效', footer: '不耗回合', clickHint: '点击拾取' }
+      return { type: 'buff', title: item.name, value: `攻击 +${item.attackBonus}`, valueColor: '#8effc8', detail: '下次攻击生效', footer: '消耗行动', clickHint: '点击拾取' }
     }
     if (item.type === 'whetstone') {
-      return { type: 'item', title: item.name, value: `修理 +${item.repair}`, valueColor: '#b8d6ff', detail: '耐久度恢复', footer: '消耗回合', clickHint: '点击拾取' }
+      return { type: 'item', title: item.name, value: `修理 +${item.repair}`, valueColor: '#b8d6ff', detail: '耐久度恢复', footer: '消耗行动', clickHint: '点击拾取' }
     }
     return { type: 'item', title: item.name || '道具', value: '道具', clickHint: '点击拾取' }
   }

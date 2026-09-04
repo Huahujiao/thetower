@@ -94,7 +94,8 @@ const ALL_RELIC_DEFS = Object.freeze([
     name: '\u996e\u8840\u68f1\u955c',
     description: '\u4ec5\u5728\u6b66\u5668\u56e0\u6700\u540e\u4e00\u51fb\u635f\u6bc1\u540e\u89e6\u53d1\uff1a\u56de\u590d\u8be5\u6b21\u4e3b\u653b\u51fb\u5bf9\u4e3b\u76ee\u6807\u76f4\u63a5\u9020\u6210\u4f24\u5bb3\u7684 30%\uff0c\u81f3\u5c11 1\u70b9\u3002',
     events: {
-      'weapon:broken': ({ primaryHealthDamage = 0 }) => {
+      'weapon:broken': ({ primaryHealthDamage = 0, finalStrike = false }) => {
+        if (!finalStrike) return []
         const amount = Math.max(1, Math.floor(Math.max(0, primaryHealthDamage) * 0.3))
         return amount ? [{ type: 'heal', amount, log: '\u996e\u8840\u68f1\u955c\uff1a\u56de\u590d ' + amount + ' \u70b9\u751f\u547d\u3002' }] : []
       },
@@ -144,7 +145,9 @@ const ALL_RELIC_DEFS = Object.freeze([
     name: '\u7532\u80c4\u56de\u54cd',
     description: '\u6b66\u5668\u56e0\u6700\u540e\u4e00\u51fb\u635f\u6bc1\u65f6\u83b7\u5f97 5 \u70b9\u62a4\u7532\uff1b\u82e5\u540c\u65f6\u76f4\u63a5\u51fb\u6740\u4e3b\u76ee\u6807\uff0c\u518d\u83b7\u5f97 3 \u70b9\u3002',
     events: {
-      'weapon:broken': ({ primaryKilled }) => [{ type: 'armor', amount: 5 + (primaryKilled ? 3 : 0), log: `\u7532\u80c4\u56de\u54cd\uff1a\u62a4\u7532 +${5 + (primaryKilled ? 3 : 0)}\u3002` }],
+      'weapon:broken': ({ primaryKilled, finalStrike = false }) => finalStrike
+        ? [{ type: 'armor', amount: 5 + (primaryKilled ? 3 : 0), log: `\u7532\u80c4\u56de\u54cd\uff1a\u62a4\u7532 +${5 + (primaryKilled ? 3 : 0)}\u3002` }]
+        : [],
     },
   },
   {

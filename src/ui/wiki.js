@@ -3,6 +3,7 @@ import { attributeLabel } from '../game/data/attributes.js'
 import { enemyBehaviorLabel, enemyFeatureLabel } from '../game/data/enemy-features.js'
 import { RELIC_DEFS } from '../game/data/relics.js'
 import { TALENT_DEFS } from '../game/data/progression.js'
+import { TRAP_DEFS } from '../game/data/traps.js'
 import '../wiki.css'
 
 const COPY = Object.freeze({
@@ -13,6 +14,7 @@ const COPY = Object.freeze({
   proposed: '\u5f85\u786e\u8ba4\uff0f\u672a\u5b9e\u88c5',
   back: '\u8fd4\u56de\u5730\u7262',
   enemies: '\u654c\u4eba',
+  traps: '\u9677\u9631',
   weapons: '\u6b66\u5668',
   relics: '\u5723\u9057\u7269',
   talents: '\u5929\u8d4b',
@@ -58,6 +60,7 @@ const COPY = Object.freeze({
   polearm: '\u957f\u67c4',
   heavy: '\u91cd\u6b66\u5668',
   bow: '\u5f13',
+  survival: '\u751f\u5b58',
   scorch: '\u707c\u70ed',
   wither: '\u67af\u840e',
   drown: '\u6c89\u6eba',
@@ -72,10 +75,28 @@ const COPY = Object.freeze({
   generated: '\u751f\u6210\u7269',
   cell: '\u683c',
   turn: '\u56de\u5408',
+  trigger: '\u89e6\u53d1',
+  lifecycle: '\u72b6\u6001',
+  trapLifecycle: '\u89e6\u53d1\u540e\u4fdd\u7559\u4e00\u4e2a\u5b8c\u6574\u540e\u7eed\u5168\u5c40\u56de\u5408\u8ba1\u6570\uff0c\u4e14\u4e0d\u4f1a\u91cd\u590d\u89e6\u53d1',
+  target: '\u76ee\u6807',
+  duration: '\u6301\u7eed',
+  damage: '\u4f24\u5bb3',
+  regen: '\u518d\u751f',
+  deathExplosion: '\u6b7b\u4ea1\u7206\u70b8',
+  splitMinion: '\u5206\u88c2\u751f\u6210\u7269',
+  burning: '\u71c3\u70e7',
+  poison: '\u4e2d\u6bd2',
+  deathStatus: '\u6b7b\u4ea1\u6548\u679c',
+  pull: '\u7275\u5f15',
+  summon: '\u53ec\u5524',
+  deathSpawn: '\u6b7b\u4ea1\u5b73\u751f',
+  revealTrigger: '\u7ffb\u5f00\u540e\u7acb\u5373\u89e6\u53d1',
+  globalTurns: '\u5168\u5c40\u56de\u5408',
 })
 
 const TABS = Object.freeze([
   { id: 'enemies', label: COPY.enemies },
+  { id: 'traps', label: COPY.traps },
   { id: 'weapons', label: COPY.weapons },
   { id: 'relics', label: COPY.relics },
   { id: 'talents', label: COPY.talents },
@@ -121,6 +142,7 @@ const PROPOSALS = Object.freeze({
       stats: [[COPY.health, '30'], [COPY.attack, '9'], [COPY.range, `2 ${COPY.cell}`], [COPY.delay, `1 ${COPY.turn}`], [COPY.interval, `2 ${COPY.turn}`], [COPY.futureRule, '\u7ed3\u6676 \u00b7 \u9a7b\u5b88 \u00b7 \u590d\u6d3b']],
     },
   ],
+  traps: [],
   weapons: [],
   relics: [],
   items: [
@@ -177,6 +199,14 @@ function enemyCards() {
       stat(COPY.attribute, attributeLabel(enemy.attribute)),
       stat(COPY.behavior, enemyBehaviorLabel(enemy.behavior)),
       enemyFeatureLabel(enemy) ? stat(COPY.features, enemyFeatureLabel(enemy)) : '',
+      enemy.regen > 0 ? stat(COPY.regen, enemy.regen) : '',
+      enemy.deathExplosionDamage > 0 ? stat(COPY.deathExplosion, `\u534a\u5f84 ${enemy.explosionRadius || enemy.range || 1} \u00b7 ${enemy.deathExplosionDamage} ${COPY.damage}`) : '',
+      enemy.splitMinionId ? stat(COPY.splitMinion, catalog.enemies.find((candidate) => candidate.id === enemy.splitMinionId)?.name || enemy.splitMinionId) : '',
+      enemy.burningTurns > 0 ? stat(COPY.burning, `${enemy.burningTurns} ${COPY.globalTurns} \u00b7 ${enemy.burningDamage || 1} ${COPY.damage}`) : '',
+      enemy.deathStatus ? stat(COPY.deathStatus, `${label(enemy.deathStatus)} ${enemy.deathStatusTurns || 0} ${COPY.globalTurns}`) : '',
+      enemy.pullDistance > 0 ? stat(COPY.pull, `${enemy.pullDistance} ${COPY.cell}`) : '',
+      enemy.summonMinionId ? stat(COPY.summon, `\u6bcf ${enemy.summonEvery || 0} \u6b21\u81ea\u8eab\u884c\u52a8 \u00b7 ${catalog.enemies.find((candidate) => candidate.id === enemy.summonMinionId)?.name || enemy.summonMinionId} \u00b7 \u4e0a\u9650 ${enemy.summonLimit || 0}`) : '',
+      enemy.deathSpawnMinionId ? stat(COPY.deathSpawn, `${catalog.enemies.find((candidate) => candidate.id === enemy.deathSpawnMinionId)?.name || enemy.deathSpawnMinionId} \u00d7 ${enemy.deathSpawnCount || 0}`) : '',
       stat(COPY.floor, enemy.spawnOnly ? COPY.generated : enemy.minFloor),
       !enemy.spawnOnly && !enemy.boss ? stat(COPY.experience, enemy.experience || 0) : '',
       enemy.drop ? stat(COPY.loot, `${Math.round(enemy.drop.chance * 100)}% \u00b7 ${lootById.get(enemy.drop.itemId)?.name || enemy.drop.itemId}`) : '',
@@ -238,7 +268,7 @@ function relicCards() {
 function talentCards() {
   return TALENT_DEFS.map((talent) => card({
     tone: 'tone-relic',
-    tag: `${talent.line} · ${talent.slot}`,
+    tag: `${label(talent.line)} · ${talent.slot}`,
     title: talent.name,
     description: talent.description,
     accent: '\u2736',
@@ -272,7 +302,28 @@ function itemCards() {
   })).join('')
 }
 
-const BUILDERS = Object.freeze({ enemies: enemyCards, weapons: weaponCards, relics: relicCards, talents: talentCards, items: itemCards })
+function trapCards() {
+  return TRAP_DEFS.map((trap) => {
+    const stats = [stat(COPY.trigger, COPY.revealTrigger), stat(COPY.lifecycle, COPY.trapLifecycle)]
+    if (trap.effect === 'explosion') stats.push(stat(COPY.range, '\u516b\u90bb\u57df'))
+    if (trap.effect === 'alarm') stats.push(stat(COPY.range, '\u534a\u5f84 2'))
+    if (trap.effect === 'corrosion') stats.push(stat(COPY.target, '\u5df2\u88c5\u5907\u6b66\u5668'))
+    if (trap.effect === 'poison') {
+      stats.push(stat(COPY.duration, `${trap.poisonTurns} ${COPY.globalTurns}`))
+      stats.push(stat(COPY.damage, `${trap.poisonDamage} ${COPY.health} \u00b7 \u65e0\u89c6\u62a4\u7532`))
+    }
+    return card({
+      tone: 'tone-trap',
+      tag: COPY.traps,
+      title: trap.name,
+      description: trap.description,
+      accent: trap.effect === 'explosion' ? '\u2739' : trap.effect === 'alarm' ? '\u266b' : trap.effect === 'corrosion' ? '\u2248' : '\u2601',
+      stats,
+    })
+  }).join('')
+}
+
+const BUILDERS = Object.freeze({ enemies: enemyCards, traps: trapCards, weapons: weaponCards, relics: relicCards, talents: talentCards, items: itemCards })
 
 export class WikiPage {
   constructor(root = document.getElementById('hud')) {

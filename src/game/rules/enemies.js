@@ -24,11 +24,22 @@ function moveTowardPlayer(enemy, context) {
   if (hasNormalAttack(enemy) && combatDistance(enemy.pos, context.player.pos, enemy.range) <= enemy.range) {
     return { acted: false, reason: 'in-range' }
   }
-  const route = findPath(context.room, enemy.pos, context.player.pos)
-  const next = route?.[0]
-  if (next?.c === context.player.pos.c && next?.r === context.player.pos.r) return { acted: false, reason: 'blocked' }
-  if (!next || !context.move?.(enemy, next)) return { acted: false, reason: 'blocked' }
-  return { acted: true, reason: 'move' }
+  const maxSteps = enemy.traits?.includes('swift') ? 2 : 1
+  let movedSteps = 0
+  while (movedSteps < maxSteps) {
+    const route = findPath(context.room, enemy.pos, context.player.pos)
+    const next = route?.[0]
+    if (next?.c === context.player.pos.c && next?.r === context.player.pos.r) break
+    if (!next || !context.move?.(enemy, next)) break
+    movedSteps += 1
+  }
+  if (movedSteps === 0) return { acted: false, reason: 'blocked' }
+  return {
+    acted: true,
+    reason: 'move',
+    movedSteps,
+    skipAttack: movedSteps >= 2,
+  }
 }
 
 export function stationaryBehavior() { return { acted: false, reason: 'idle' } }
@@ -51,7 +62,7 @@ export function stepEnemy(enemy, context) {
   if (movement.acted) enemy.hasActed = true
   const attackCooling = tickCounter(enemy, 'attackCooldown')
 
-  if (!attackCooling) {
+  if (!movement.skipAttack && !attackCooling) {
     const attack = attackIfInRange(enemy, context)
     if (attack.acted) {
       enemy.attackCooldown = cooldownWaitTurns(enemy.attackCooldownMax)

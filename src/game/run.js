@@ -1,5 +1,6 @@
 import { createEmitter } from './core/emitter.js'
 import { chebyshev, combatDistance, manhattan, neighbors8 } from './core/geometry.js'
+import { TURN_KINDS, TurnLedger } from './core/turns.js'
 import { attributeLabel } from './data/attributes.js'
 import { createGoldEntity, createLootEntity, createMinion, createRelicEntity, getItemDefinition, makeItemById, randomWeapon, starterWeapon, synchronizeEntityIds } from './data/content.js'
 import { enemyBehaviorLabel, enemyFeatureLabel } from './data/enemy-features.js'
@@ -157,6 +158,7 @@ export class GameRun {
     this.bus = createEmitter()
     this.on = this.bus.on
     this.off = this.bus.off
+    this.turns = new TurnLedger()
     this.merchantEntering = false
     this.roomEntering = false
     this.moveCompleteUnsubscribe = this.on('animate:move-complete', () => {
@@ -171,6 +173,12 @@ export class GameRun {
   }
 
   get currentRoom() { return this.dungeon?.room(this.player?.roomId) || null }
+  get attackCount() { return this.turns.attackCount }
+  get actionCount() { return this.turns.actionCount }
+  get globalTurn() { return this.turns.globalTurn }
+  get movementCount() { return this.turns.movementCount }
+  get turn() { return this.globalTurn }
+  set turn(value) { this.turns.setGlobalTurn(value) }
   get equippedWeapons() { return uniqueWeapons(this.player?.equipment || []) }
   get equippedWeapon() { return this.equippedWeapons[0] || null }
   get selectedItem() {
@@ -199,13 +207,17 @@ export class GameRun {
       pendingAttackBonus: 0,
       pendingAttackBuffs: [],
       parry: null,
+      poisonedTurns: 0,
+      poisonDamage: 0,
+      burningTurns: 0,
+      burningDamage: 0,
     }
     this.backpack = new BackpackGrid(INVENTORY_COLUMNS, INVENTORY_ROWS)
     this.relics = new RelicCollection()
     this.relicEngine = new RelicEngine(this.relics)
     this.relicLoadoutDraft = null
     this.initialRelicChoices = buildRelicChoices(this.relics, { random: this.random }).map((relic) => relic.id)
-    this.turn = 0
+    this.turns = new TurnLedger()
     this.phase = 'explore'
     this.gameOver = false
     this.win = false
@@ -562,6 +574,11 @@ export class GameRun {
         `${DETAIL_LABELS.normalAttackCooldown} ${cooldownStatus(entity.attackCooldown, entity.attackCooldownMax)}`,
       ]
       if (features) lines.push(`${DETAIL_LABELS.features} ${features}`)
+      if (entity.burningTurns > 0) lines.push(`\u71c3\u70e7 ${entity.burningTurns} \u4e2a\u5168\u5c40\u56de\u5408 \u00b7 \u6bcf\u56de\u5408 ${entity.burningDamage || 1} \u70b9`)
+      if (entity.deathStatus) lines.push(`\u6b7b\u4ea1\u6548\u679c ${entity.deathStatus} ${entity.deathStatusTurns || 0} \u4e2a\u5168\u5c40\u56de\u5408`)
+      if (entity.pullDistance > 0) lines.push(`\u7275\u5f15 ${entity.pullDistance} \u683c`)
+      if (entity.summonMinionId) lines.push(`\u6bcf ${entity.summonEvery || 0} \u6b21\u81ea\u8eab\u884c\u52a8\u53ec\u5524 ${entity.summonMinionId}\uff0c\u4e0a\u9650 ${entity.summonLimit || 0}`)
+      if (entity.deathSpawnMinionId) lines.push(`\u6b7b\u4ea1时生成 ${entity.deathSpawnMinionId} \u00d7 ${entity.deathSpawnCount || 0}`)
       return this._showDetail({
         position: 'bottom',
         title: entity.name,
@@ -574,10 +591,11 @@ export class GameRun {
     if (entity.kind === 'trap') {
       const trap = getTrapDefinition(entity.trapId)
       if (!trap) return false
-      const effect = trap.effect === 'explosion'
+      const effect = trap.description || (trap.effect === 'explosion'
         ? `${DETAIL_LABELS.explosion} ${DETAIL_LABELS.attack} ${trap.damage || 0}`
-        : DETAIL_LABELS.alarm
-      return this._showDetail({ position: 'bottom', title: trap.name, type: DETAIL_LABELS.trap, icon: 'trap', description: effect })
+        : DETAIL_LABELS.alarm)
+      const status = entity.triggered ? '\u5df2\u89e6\u53d1\uff0c\u5c06\u5728\u518d\u8fc7\u4e00\u4e2a\u5168\u5c40\u56de\u5408\u8ba1\u6570\u540e\u6d88\u5931\u3002' : ''
+      return this._showDetail({ position: 'bottom', title: trap.name, type: DETAIL_LABELS.trap, icon: 'trap', description: [effect, status].filter(Boolean).join(' ') })
     }
     if (entity.kind === 'gold') {
       return this._showDetail({ position: 'bottom', title: '\u91d1\u5e01', type: DETAIL_LABELS.resource, icon: 'gold', lines: [`+${entity.amount || 0} \u91d1\u5e01`] })
@@ -636,6 +654,11 @@ export class GameRun {
       }
       if (action.log) this._log(action.log)
     }
+  }
+
+  _emitTurnEvent(event, context) {
+    this._emitRelicEvent(event, context)
+    this.bus.emit(event, context)
   }
 
   setDebugReveal(reveal) {
@@ -727,6 +750,7 @@ export class GameRun {
       const route = findInteractionPath(room, this.player.pos, entity)
       return route ? this._pathPreview('merchant', target, route.path) : null
     }
+    if (entity.kind === 'trap') return null
     if (entity.kind === 'item' && !this.backpack.canFit(entity.item)) return null
     const path = findPath(room, this.player.pos, target, { allowGoalOccupied: true })
     return path ? this._pathPreview('pickup', target, path) : null
@@ -868,7 +892,7 @@ export class GameRun {
     this.itemTargeting = false
     this._log(`\u4f7f\u7528 ${item.name}\uff0c${weapon.name} \u8010\u4e45 +${item.repair}\u3002`)
     if (this.hasActiveRelic('r-whetstone-echo') && other?.type === 'weapon') this._log(`\u78e8\u77f3\u56de\u58f0\uff1a${other.name}\u8010\u4e45 +1\u3002`)
-    this._endTurn()
+    this._endTurn({ turnKind: TURN_KINDS.ACTION })
     this._changed()
     return true
   }
@@ -896,7 +920,7 @@ export class GameRun {
     this.selectedInventoryIndex = null
     this.selectedEquipmentSlot = null
     this._log(`\u88c5\u5907 ${item.name}\u3002`)
-    this._endTurn()
+    this._endTurn({ turnKind: TURN_KINDS.ACTION })
     this._changed()
     return true
   }
@@ -913,7 +937,7 @@ export class GameRun {
     this.selectedEquipmentSlot = null
     this.itemTargeting = false
     this._log(`\u5378\u4e0b ${weapon.name}\u3002`)
-    this._endTurn()
+    this._endTurn({ turnKind: TURN_KINDS.ACTION })
     this._changed()
     return true
   }
@@ -954,6 +978,7 @@ export class GameRun {
       this.selectedInventoryIndex = null
       this.itemTargeting = false
       this._log(`\u4f7f\u7528 ${item.name}\uff0c\u6062\u590d ${healed} HP\u3002`)
+      this._endTurn({ turnKind: TURN_KINDS.ACTION })
       this._changed()
       return true
     }
@@ -963,6 +988,7 @@ export class GameRun {
       this.selectedInventoryIndex = null
       this.itemTargeting = false
       this._log(`\u4f7f\u7528 ${item.name}\uff0c\u62a4\u7532 +${item.armor}\u3002`)
+      this._endTurn({ turnKind: TURN_KINDS.ACTION })
       this._changed()
       return true
     }
@@ -974,6 +1000,7 @@ export class GameRun {
       this.itemTargeting = false
       const target = item.attackTarget === 'melee' ? '\u4e0b\u6b21\u8fd1\u6218\u653b\u51fb' : '\u4e0b\u6b21\u653b\u51fb'
       this._log(`\u4f7f\u7528 ${item.name}\uff0c${target} +${item.attackBonus}\u3002`)
+      this._endTurn({ turnKind: TURN_KINDS.ACTION })
       this._changed()
       return true
     }
@@ -1004,6 +1031,7 @@ export class GameRun {
       return this._attack(entity)
     }
     if (entity.kind === 'merchant') return this._interactMerchant(entity)
+    if (entity.kind === 'trap') return false
     return this._pickUp(entity)
   }
 
@@ -1019,7 +1047,7 @@ export class GameRun {
     if (!route) return this._reject('\u65e0\u6cd5\u9760\u8fd1\u8fd9\u4f4d\u5546\u4eba\u3002')
     this.merchantEntering = route.path.length > 0
     const movement = this._walk(route.path)
-    this._endTurn({ interceptorId: movement.interceptorId })
+    this._endTurn({ interceptorId: movement.interceptorId, turnKind: movement.stopped ? TURN_KINDS.MOVEMENT : TURN_KINDS.ACTION })
     if (movement.stopped || this.gameOver) this.merchantEntering = false
     if (!movement.stopped && !this.gameOver) {
       this.merchant = { entityId: merchant.id }
@@ -1182,7 +1210,11 @@ export class GameRun {
       const entity = this.currentRoom.entityAt(position)
       this._log(entity ? `\u7ffb\u5f00\uff1a${entity.name || this._entityName(entity)}\u3002` : '\u7ffb\u5f00\u4e86\u4e00\u4e2a\u7a7a\u683c\u3002')
     }
-    this._endTurn({ interceptorId: movement.interceptorId, skipEnemyIds: flipOutcome.skipEnemyIds })
+    this._endTurn({
+      interceptorId: movement.interceptorId,
+      skipEnemyIds: flipOutcome.skipEnemyIds,
+      turnKind: movement.stopped ? TURN_KINDS.MOVEMENT : TURN_KINDS.ACTION,
+    })
     this._changed()
     return true
   }
@@ -1208,15 +1240,19 @@ export class GameRun {
     const definition = getTrapDefinition(trap.trapId)
     const skipEnemyIds = new Set()
     if (!room || !definition) return { skipEnemyIds }
+    if (trap.triggered === true) return { skipEnemyIds }
     if (!this.suppressedTrapIds) this.suppressedTrapIds = new Set()
     this.suppressedTrapIds.delete(trap.id)
     this._emitRelicEvent('trap:before-trigger', { trap, definition, cause })
-    room.removeEntity(trap.id)
     if (this.suppressedTrapIds.has(trap.id)) {
+      room.removeEntity(trap.id)
       this.suppressedTrapIds.delete(trap.id)
       this._log(`${definition.name}\u88ab\u5b89\u5168\u62c6\u9664\u3002`)
       return { skipEnemyIds }
     }
+    trap.triggered = true
+    trap.triggeredAtGlobalTurn = this.globalTurn
+    trap.removeAfterGlobalTurn = this.globalTurn + 2
     if (definition.effect === 'explosion') {
       const result = this._damagePlayer(definition.damage, { source: 'trap:explosion' })
       this._log(`${definition.name}\u89e6\u53d1\uff0c${damageReductionLog(result)}\u3002`)
@@ -1241,6 +1277,34 @@ export class GameRun {
       }
       this._animateEnemyRevealBatch(room, flips)
       this._log(`${definition.name}\u89e6\u53d1\uff0c\u7ffb\u5f00\u4e86 ${targets.length} \u4e2a\u9644\u8fd1\u654c\u4eba\u3002`)
+    } else if (definition.effect === 'corrosion') {
+      const durabilityLoss = Math.max(1, Math.floor(Number(definition.durabilityLoss) || 1))
+      const weapons = uniqueWeapons(this.player.equipment)
+      for (const weapon of weapons) {
+        const hand = weaponHands(this.player, weapon)[0] ?? null
+        weapon.durability = Math.max(0, normalizedCounter(weapon.durability) - durabilityLoss)
+        if (weapon.durability <= 0) {
+          this._breakWeapon(weapon, {
+            source: 'trap:corrosion',
+            trap,
+            hand,
+            finalStrike: false,
+            primaryDamage: 0,
+            primaryHealthDamage: 0,
+            primaryKilled: false,
+            countered: false,
+          })
+        }
+      }
+      this._log(`${definition.name}\u89e6\u53d1\uff0c\u5df2\u88c5\u5907\u6b66\u5668\u5404\u635f\u5931 ${durabilityLoss} \u70b9\u8010\u4e45\u3002`)
+    } else if (definition.effect === 'poison') {
+      const poisonTurns = Math.max(1, Math.floor(Number(definition.poisonTurns) || 1))
+      const poisonDamage = Math.max(1, Math.floor(Number(definition.poisonDamage) || 1))
+      const currentTurns = normalizedCounter(this.player.poisonedTurns)
+      const currentDamage = Math.max(0, Math.floor(Number(this.player.poisonDamage) || 0))
+      this.player.poisonedTurns = Math.max(currentTurns, poisonTurns)
+      this.player.poisonDamage = Math.max(currentDamage, poisonDamage)
+      this._log(`${definition.name}\u89e6\u53d1\uff0c\u4e2d\u6bd2 ${this.player.poisonedTurns} \u4e2a\u5168\u5c40\u56de\u5408\uff0c\u6bcf\u56de\u5408\u53d7\u5230 ${this.player.poisonDamage} \u70b9\u65e0\u89c6\u62a4\u7532\u7684\u4f24\u5bb3\u3002`)
     }
     this._emitRelicEvent('trap:triggered', { trap, definition, cause })
     return { skipEnemyIds }
@@ -1250,7 +1314,7 @@ export class GameRun {
     const route = findPath(this.currentRoom, this.player.pos, position)
     if (!route) return this._reject('\u76ee\u6807\u4e0d\u53ef\u8fbe\u3002')
     const movement = this._walk(route)
-    this._endTurn({ interceptorId: movement.interceptorId })
+    this._endTurn({ interceptorId: movement.interceptorId, turnKind: TURN_KINDS.MOVEMENT })
     this._changed()
     return true
   }
@@ -1282,7 +1346,7 @@ export class GameRun {
         if (!entry) this._log(`\u5723\u9057\u7269\u5df2\u88ab\u83b7\u5f97\uff0c\u65e0\u6cd5\u91cd\u590d\u6536\u96c6\u3002`)
       }
     }
-    this._endTurn({ interceptorId: movement.interceptorId })
+    this._endTurn({ interceptorId: movement.interceptorId, turnKind: movement.stopped ? TURN_KINDS.MOVEMENT : TURN_KINDS.ACTION })
     this._changed()
     return true
   }
@@ -1296,7 +1360,7 @@ export class GameRun {
     const movement = this._walk(route)
     if (movement.stopped) {
       this.roomEntering = false
-      this._endTurn({ interceptorId: movement.interceptorId })
+      this._endTurn({ interceptorId: movement.interceptorId, turnKind: TURN_KINDS.MOVEMENT })
       this._changed()
       return true
     }
@@ -1311,7 +1375,7 @@ export class GameRun {
     this.player.roomId = targetRoom.id
     this.player.pos = { ...targetDoor.arrival }
     this._log(`\u8fdb\u5165 ${this.roomLabel(targetRoom)}\u3002`)
-    this._endTurn({ skipEnemyPhase: true })
+    this._endTurn({ skipEnemyPhase: true, turnKind: TURN_KINDS.ACTION })
     this._emitRelicEvent('room:entered', { room: targetRoom, firstVisit })
     const talentState = this._talentRuntime()
     talentState.roomLastStandUsed = false
@@ -1532,7 +1596,7 @@ export class GameRun {
     if (!route) return this._reject('\u6ca1\u6709\u53ef\u8fbe\u7684\u653b\u51fb\u4f4d\u7f6e\u3002')
     const movement = this._walk(route.path, { attackTargetId: enemy.id })
     if (movement.stopped || !this.currentRoom?.entity(enemy.id)) {
-      if (!this.gameOver) this._endTurn({ interceptorId: movement.interceptorId })
+      this._endTurn({ interceptorId: movement.interceptorId, turnKind: TURN_KINDS.MOVEMENT })
       this._changed()
       return true
     }
@@ -1618,26 +1682,20 @@ export class GameRun {
         this._log(`${relation}${weapon.name} \u5bf9 ${enemy.name}${hit.finishedDowned ? '\u7ec8\u7ed3\u4e86' : '\u9020\u6210'} ${hit.damage} \u4f24\u5bb3${finalStrike ? '\uff08\u6700\u540e\u4e00\u51fb\uff09' : ''}\u3002`)
         if (durabilityPreserved || talentFree) this._log(`${weapon.name}\u4fdd\u7559\u4e86\u8010\u4e45\u3002`)
         if (finalStrike) weapon.durability = 0
-        if (weapon.durability <= 0) {
-          this._log(`${weapon.name} \u635f\u6bc1\u4e86\u3002`)
-          this.player.equipment = this.player.equipment.map((equipped) => equipped?.uid === weapon.uid ? null : equipped)
-          if (this.selectedEquipmentSlot === hand) this.selectedEquipmentSlot = null
-          this._emitRelicEvent('weapon:broken', {
-            weapon,
-            target: enemy,
-            hand,
-            finalStrike,
-            primaryDamage: hit.damage,
-            primaryHealthDamage: hit.healthDamage,
-            primaryKilled: hit.defeated,
-            countered: outcome.countered,
-          })
-        }
+        if (weapon.durability <= 0) this._breakWeapon(weapon, {
+          target: enemy,
+          hand,
+          finalStrike,
+          primaryDamage: hit.damage,
+          primaryHealthDamage: hit.healthDamage,
+          primaryKilled: hit.defeated,
+          countered: outcome.countered,
+        })
       }
     }
     roomState.firstAttackUsed = true
     this._emitRelicEvent('attack:resolved', { enemy, weapon, hand })
-    if (!this.gameOver) this._endTurn({ interceptorId: movement.interceptorId })
+    this._endTurn({ interceptorId: movement.interceptorId, turnKind: TURN_KINDS.ATTACK })
     this._changed()
     return true
   }
@@ -1682,11 +1740,26 @@ export class GameRun {
     return !!this._findInterceptor(previous, step, attackTargetId)
   }
 
-  _endTurn({ interceptorId = null, skipEnemyPhase = false, skipEnemyIds = new Set() } = {}) {
-    this.turn += 1
-    this._emitRelicEvent('turn:started', { turn: this.turn })
+  _breakWeapon(weapon, context = {}) {
+    if (weapon?.type !== 'weapon' || normalizedCounter(weapon.durability) > 0) return false
+    const selected = Number.isInteger(this.selectedEquipmentSlot)
+      && this.player.equipment[this.selectedEquipmentSlot]?.uid === weapon.uid
+    this.player.equipment = this.player.equipment.map((equipped) => equipped?.uid === weapon.uid ? null : equipped)
+    if (selected) this.selectedEquipmentSlot = null
+    this._log(`${weapon.name} \u635f\u6bc1\u4e86\u3002`)
+    this._emitRelicEvent('weapon:broken', { ...context, weapon })
+    return true
+  }
+
+  _endTurn({ interceptorId = null, skipEnemyPhase = false, skipEnemyIds = new Set(), turnKind = TURN_KINDS.ACTION } = {}) {
+    const counters = this.turns.advance(turnKind)
+    this._cleanupTriggeredTraps(counters.globalTurn)
+    const turnContext = { turn: counters.globalTurn, turnKind, ...counters }
+    this._emitTurnEvent('turn:advanced', turnContext)
+    this._emitTurnEvent('turn:started', turnContext)
+    this._tickPlayerStatuses()
     if (skipEnemyPhase || this.gameOver) {
-      this._emitRelicEvent('turn:ended', { turn: this.turn })
+      this._emitTurnEvent('turn:ended', turnContext)
       return
     }
     this._tickEnemyStates()
@@ -1694,20 +1767,24 @@ export class GameRun {
     const enemies = this._activeEnemies()
     if (interceptorId) {
       const interceptor = enemies.find((enemy) => enemy.id === interceptorId)
-      if (interceptor) this._enemyAttack(interceptor, 0.5)
+      if (interceptor) {
+        this._enemyAttack(interceptor, 0.5)
+        this._onEnemyAction(interceptor)
+      }
     }
     for (const enemy of enemies) {
       if (this.gameOver || enemy.id === interceptorId || skipEnemyIds.has(enemy.id) || !this.currentRoom.entity(enemy.id)) continue
       this._applyEnemyTraits(enemy)
       if (!this.currentRoom.entity(enemy.id) || this.gameOver) continue
-      stepEnemy(enemy, {
+      const outcome = stepEnemy(enemy, {
         room: this.currentRoom,
         player: this.player,
         attack: (actor) => this._enemyAttack(actor),
         move: (actor, position) => this._moveEnemy(actor, position),
       })
+      if (outcome.acted) this._onEnemyAction(enemy)
     }
-    this._emitRelicEvent('turn:ended', { turn: this.turn })
+    this._emitTurnEvent('turn:ended', turnContext)
   }
 
   _enemyAttack(enemy, multiplier = 1) {
@@ -1718,10 +1795,21 @@ export class GameRun {
     const result = this._damagePlayer(rawDamage, { source: 'enemy:attack', enemy })
     enemy.attackCooldown = cooldownWaitTurns(enemy.attackCooldownMax)
     this._log(`${enemy.name} \u653b\u51fb\u4f60\uff0c${damageReductionLog(result)}\u3002`)
+    if (!this.gameOver && enemy.traits?.includes('burning')) {
+      const turns = Math.max(1, Math.floor(Number(enemy.burningTurns) || 2))
+      const damage = Math.max(1, Math.floor(Number(enemy.burningDamage) || 1))
+      this._applyBurning(turns, damage)
+      this._log(`${enemy.name}\u4f7f\u4f60\u71c3\u70e7 ${turns} \u4e2a\u5168\u5c40\u56de\u5408\uff0c\u6bcf\u56de\u5408 ${damage} \u70b9\u4f24\u5bb3\u3002`)
+    }
+    if (!this.gameOver && enemy.traits?.includes('pull')) {
+      const distance = Math.max(1, Math.floor(Number(enemy.pullDistance) || 1))
+      if (this._pullPlayer(enemy, distance)) this._log(`${enemy.name}\u5c06\u4f60\u7275\u5f15\u4e86 ${distance} \u683c\u3002`)
+    }
     if (enemy.traits?.includes('split') && !enemy.splitTriggered) {
       enemy.splitTriggered = true
       this._spawnSplitMinion(enemy, enemy.splitMinionId)
     }
+    return result
   }
 
   _damagePlayer(rawDamage, context = {}) {
@@ -1735,8 +1823,8 @@ export class GameRun {
       this.player.parry = null
       if (rawDamage > 0) this._onParrySuccess()
     }
-    if (this.hasTalent('survival-hardening') && this.player.armor > 0) damage = Math.max(0, damage - 1)
-    const absorbed = Math.min(this.player.armor, damage)
+    if (!context.ignoreArmor && this.hasTalent('survival-hardening') && this.player.armor > 0) damage = Math.max(0, damage - 1)
+    const absorbed = context.ignoreArmor ? 0 : Math.min(this.player.armor, damage)
     const healthDamage = damage - absorbed
     const fatal = this.player.hp - healthDamage <= 0
     this.player.armor -= absorbed
@@ -1815,6 +1903,8 @@ export class GameRun {
     this.currentRoom.removeEntity(enemy.id)
     this._log(`${enemy.name} \u88ab\u51fb\u8d25\u3002`)
     this._emitRelicEvent('enemy:killed', { enemy, source })
+    this._applyEnemyDeathStatus(enemy)
+    if (enemy.traits?.includes('death-spawn')) this._spawnMinionsNear(enemy, enemy.deathSpawnMinionId, enemy.deathSpawnCount)
     if (this.hasTalent('wither-spread') && (Number(enemy.corrosion) || 0) > 0) {
       const targets = this._spreadCorrosion(enemy.pos, 1 + (this.hasTalent('wither-decay') ? 1 : 0))
       if (targets.length) this._log(`\u8150\u8680\u6269\u6563\u5230 ${targets.length} \u540d\u654c\u4eba\u3002`)
@@ -1875,6 +1965,67 @@ export class GameRun {
     }
   }
 
+  _onEnemyAction(enemy) {
+    if (!enemy || this.gameOver || !this.currentRoom?.entity(enemy.id)) return false
+    enemy.ownActionCount = normalizedCounter(enemy.ownActionCount) + 1
+    if (!enemy.traits?.includes('summon')) return true
+    const every = Math.max(1, Math.floor(Number(enemy.summonEvery) || 0))
+    const minionId = enemy.summonMinionId
+    const limit = Math.max(1, Math.floor(Number(enemy.summonLimit) || 0))
+    if (!every || !minionId || !limit || enemy.ownActionCount % every !== 0) return true
+    const activeCount = [...this.currentRoom.entities.values()]
+      .filter((entity) => entity.kind === 'enemy' && entity.enemyId === minionId).length
+    if (activeCount >= limit) {
+      this._log(`${enemy.name}\u5df2\u8fbe\u53ec\u5524\u4e0a\u9650\uff0c\u672c\u6b21\u53ec\u5524\u5931\u8d25\u3002`)
+      return true
+    }
+    this._spawnMinionsNear(enemy, minionId, 1)
+    return true
+  }
+
+  _applyBurning(turns, damage = 1) {
+    const duration = Math.max(1, Math.floor(Number(turns) || 1))
+    const amount = Math.max(1, Math.floor(Number(damage) || 1))
+    const currentTurns = normalizedCounter(this.player.burningTurns)
+    const currentDamage = Math.max(0, Math.floor(Number(this.player.burningDamage) || 0))
+    this.player.burningTurns = Math.max(currentTurns, duration)
+    this.player.burningDamage = Math.max(currentDamage, amount)
+    return true
+  }
+
+  _applyPoison(turns, damage = 2) {
+    const duration = Math.max(1, Math.floor(Number(turns) || 1))
+    const amount = Math.max(1, Math.floor(Number(damage) || 1))
+    const currentTurns = normalizedCounter(this.player.poisonedTurns)
+    const currentDamage = Math.max(0, Math.floor(Number(this.player.poisonDamage) || 0))
+    this.player.poisonedTurns = Math.max(currentTurns, duration)
+    this.player.poisonDamage = Math.max(currentDamage, amount)
+    return true
+  }
+
+  _tickPlayerStatuses() {
+    let ticked = false
+    const poisonTurns = normalizedCounter(this.player?.poisonedTurns)
+    if (poisonTurns > 0 && !this.gameOver) {
+      const damage = Math.max(1, Math.floor(Number(this.player.poisonDamage) || 2))
+      this.player.poisonedTurns = Math.max(0, poisonTurns - 1)
+      if (this.player.poisonedTurns === 0) this.player.poisonDamage = 0
+      const result = this._damagePlayer(damage, { source: 'trap:poison-fog', ignoreArmor: true })
+      this._log(`\u4e2d\u6bd2\u53d1\u4f5c\uff0c${damageReductionLog(result)}\uff08\u65e0\u89c6\u62a4\u7532\uff09\u3002`)
+      ticked = true
+    }
+    const burningTurns = normalizedCounter(this.player?.burningTurns)
+    if (burningTurns > 0 && !this.gameOver) {
+      const damage = Math.max(1, Math.floor(Number(this.player.burningDamage) || 1))
+      this.player.burningTurns = Math.max(0, burningTurns - 1)
+      if (this.player.burningTurns === 0) this.player.burningDamage = 0
+      const result = this._damagePlayer(damage, { source: 'enemy:burning' })
+      this._log(`\u71c3\u70e7\u53d1\u4f5c\uff0c${damageReductionLog(result)}\u3002`)
+      ticked = true
+    }
+    return ticked
+  }
+
   _tickEnemyStates() {
     const room = this.currentRoom
     if (!room) return
@@ -1887,6 +2038,20 @@ export class GameRun {
       enemy.attackCooldown = 0
       this._log(`${enemy.name}\u6ee1\u8840\u590d\u6d3b\u4e86\u3002`)
     }
+  }
+
+  _cleanupTriggeredTraps(globalTurn) {
+    let removed = false
+    for (const room of this.dungeon?.rooms.values() || []) {
+      for (const entity of [...room.entities.values()]) {
+        if (entity.kind !== 'trap' || entity.triggered !== true) continue
+        const removeAfter = Number(entity.removeAfterGlobalTurn)
+        if (!Number.isFinite(removeAfter) || removeAfter > globalTurn) continue
+        room.removeEntity(entity.id)
+        removed = true
+      }
+    }
+    return removed
   }
 
   _nearestEmptyPosition(origin) {
@@ -1907,6 +2072,57 @@ export class GameRun {
       return leftDistance - rightDistance || left.r - right.r || left.c - right.c
     })
     return candidates[0] || null
+  }
+
+  _pullPlayer(enemy, distance = 1) {
+    const room = this.currentRoom
+    if (!room || !enemy?.pos || !this.player?.pos || this.gameOver) return false
+    const amount = Math.max(1, Math.floor(Number(distance) || 1))
+    const destination = {
+      c: this.player.pos.c + Math.sign(enemy.pos.c - this.player.pos.c) * amount,
+      r: this.player.pos.r + Math.sign(enemy.pos.r - this.player.pos.r) * amount,
+    }
+    if ((destination.c === this.player.pos.c && destination.r === this.player.pos.r)
+      || !room.isRevealed(destination) || !room.isEmpty(destination)) return false
+    this.player.pos = destination
+    return true
+  }
+
+  _applyEnemyDeathStatus(enemy) {
+    const room = this.currentRoom
+    const status = enemy?.deathStatus
+    if (!room || !status || !this.player?.pos || this.gameOver) return false
+    const adjacent = neighbors8(enemy.pos, room.width, room.height)
+      .some((position) => position.c === this.player.pos.c && position.r === this.player.pos.r)
+    if (!adjacent) return false
+    if (status === 'poison') {
+      const turns = Math.max(1, Math.floor(Number(enemy.deathStatusTurns) || 1))
+      const damage = Math.max(1, Math.floor(Number(enemy.deathStatusDamage) || 2))
+      this._applyPoison(turns, damage)
+      this._log(`${enemy.name}死亡，毒液使你中毒 ${turns} 个全局回合。`)
+      return true
+    }
+    return false
+  }
+
+  _spawnMinionsNear(source, minionId, count = 1) {
+    const room = this.currentRoom
+    const amount = Math.max(0, Math.floor(Number(count) || 0))
+    if (!room || !source?.pos || !minionId || amount <= 0) return 0
+    const positions = neighbors8(source.pos, room.width, room.height)
+      .filter((position) => position.c !== this.player.pos.c || position.r !== this.player.pos.r)
+      .filter((position) => room.isRevealed(position) && room.isEmpty(position))
+    let spawned = 0
+    for (const position of positions) {
+      if (spawned >= amount) break
+      const minion = createMinion(minionId, position)
+      if (!minion) continue
+      room.addEntity(minion)
+      spawned += 1
+      this._log(`${source.name}生成了${minion.name}。`)
+    }
+    if (spawned < amount) this._log(`${source.name}的生成物空间不足，剩余生成失败。`)
+    return spawned
   }
 
   _spawnSplitMinion(source, minionId) {
@@ -1942,6 +2158,7 @@ export class GameRun {
       this._log(`${enemy.name}\u4ece\u4f0f\u51fb\u4e2d\u73b0\u8eab\u3002`)
       if (normalizedCounter(enemy.actionDelay) === 0 && normalizedCounter(enemy.attackCooldown) === 0) {
         this._enemyAttack(enemy)
+        this._onEnemyAction(enemy)
         enemy.attackCooldown = cooldownWaitTurns(enemy.attackCooldownMax)
       }
       if (this.gameOver) break
@@ -2006,6 +2223,7 @@ export class GameRun {
       relicLoadoutDraft: Array.isArray(this.relicLoadoutDraft) ? [...this.relicLoadoutDraft] : null,
       initialRelicChoices: [...this.initialRelicChoices],
       turn: this.turn,
+      turnCounters: this.turns.serialize(),
       phase: this.phase,
       gameOver: this.gameOver,
       win: this.win,
@@ -2050,13 +2268,27 @@ export class GameRun {
         ? this.player.pendingAttackBuffs.filter((buff) => Number.isFinite(buff?.amount) && (buff.target === 'melee' || buff.target === 'any'))
         : []
       this.player.pendingAttackBonus = this.player.pendingAttackBuffs.reduce((total, buff) => total + buff.amount, 0)
+      this.player.poisonedTurns = normalizedCounter(this.player.poisonedTurns)
+      this.player.poisonDamage = this.player.poisonedTurns > 0
+        ? Math.max(1, Math.floor(Number(this.player.poisonDamage) || 2))
+        : 0
+      this.player.burningTurns = normalizedCounter(this.player.burningTurns)
+      this.player.burningDamage = this.player.burningTurns > 0
+        ? Math.max(1, Math.floor(Number(this.player.burningDamage) || 1))
+        : 0
       this.relics = RelicCollection.hydrate(data.relics)
       this.relics.entries = this.relics.entries.filter((entry) => !!getRelicDefinition(entry.id))
       this.relicEngine = new RelicEngine(this.relics)
       this.relicLoadoutDraft = Array.isArray(data.relicLoadoutDraft) ? [...data.relicLoadoutDraft] : null
       this.initialRelicChoices = (Array.isArray(data.initialRelicChoices) ? data.initialRelicChoices : buildRelicChoices(this.relics, { random: this.random }).map((relic) => relic.id))
         .filter((id) => !!getRelicDefinition(id) && !this.relics.has(id))
-      this.turn = Number.isInteger(data.turn) && data.turn >= 0 ? data.turn : 0
+      const legacyTurn = Number.isInteger(data.turn) && data.turn >= 0 ? data.turn : 0
+      const savedTurnCounters = data.turnCounters && typeof data.turnCounters === 'object' ? data.turnCounters : {}
+      this.turns = new TurnLedger({
+        attackCount: savedTurnCounters.attackCount ?? data.attackCount ?? 0,
+        actionCount: savedTurnCounters.actionCount ?? data.actionCount ?? 0,
+        globalTurn: savedTurnCounters.globalTurn ?? data.globalTurn ?? legacyTurn,
+      })
       this.phase = ['explore', 'merchant', 'reward', 'level-up', 'over'].includes(data.phase) ? data.phase : 'explore'
       this.gameOver = !!data.gameOver
       this.win = !!data.win

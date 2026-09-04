@@ -8,7 +8,11 @@
     "dev": "vite",
     "firewall:setup": "scripts\\firewall-setup.bat",
     "build": "vite build",
-    "lint": "eslint.cmd src scripts/v2-check.mjs",
+    "lint": "eslint.cmd src scripts/v2-check.mjs scripts/turns-check.mjs scripts/traps-check.mjs scripts/items-check.mjs scripts/enemies-check.mjs",
+    "check:turns": "node scripts/turns-check.mjs",
+    "check:traps": "node scripts/traps-check.mjs",
+    "check:items": "node scripts/items-check.mjs",
+    "check:enemies": "node scripts/enemies-check.mjs",
     "preview": "vite preview",
     "check:rules": "node scripts/v2-check.mjs"
   },
