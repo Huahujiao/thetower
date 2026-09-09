@@ -26,11 +26,10 @@ const COPY = Object.freeze({
   potion: '\u751f\u547d\u836f\u6c34',
   armor: '\u62a4\u7532\u836f\u5242',
   buff: '\u589e\u76ca\u7269\u54c1',
-  whetstone: '\u78e8\u5200\u77f3',
   attack: '\u653b\u51fb',
   health: '\u751f\u547d',
   range: '\u5c04\u7a0b',
-  durability: '\u8010\u4e45',
+  energy: '\u4f53\u529b\u6d88\u8017',
   footprint: '\u5360\u683c',
   weaponClass: '\u7c7b\u522b',
   weaponEffect: '\u7279\u6548',
@@ -45,7 +44,6 @@ const COPY = Object.freeze({
   armorValue: '\u589e\u52a0\u62a4\u7532',
   nextAttack: '\u4e0b\u6b21\u653b\u51fb',
   nextMeleeAttack: '\u4e0b\u6b21\u8fd1\u6218\u653b\u51fb',
-  repair: '\u4fee\u590d\u8010\u4e45',
   loot: '\u6389\u843d',
   experience: '\u7ecf\u9a8c',
   relicChance: '\u5723\u9057\u7269\u6389\u843d',
@@ -103,6 +101,8 @@ const TABS = Object.freeze([
   { id: 'items', label: COPY.items },
 ])
 
+const WEAPON_ENERGY_COSTS = Object.freeze({ dagger: 2, sword: 3, axe: 4, polearm: 4, bow: 4, heavy: 5 })
+
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[character]))
 }
@@ -152,7 +152,7 @@ const PROPOSALS = Object.freeze({
       stats: [[COPY.footprint, '1\u00d71 \u00b7 1\u683c'], [COPY.floor, '2'], [COPY.futureRule, '\u4f7f\u5df2\u7ffb\u5f00\u654c\u4eba\u672c\u56de\u5408\u4e0d\u884c\u52a8']],
     },
     {
-      tone: 'tone-whetstone', tag: COPY.buff, title: '\u63a2\u8def\u7c89', accent: '\u25c6',
+      tone: 'tone-item', tag: COPY.buff, title: '\u63a2\u8def\u7c89', accent: '\u25c6',
       description: '\u4e0d\u76f4\u63a5\u63ed\u793a\u5185\u5bb9\uff0c\u4f46\u5e2e\u52a9\u5728\u5371\u9669\u623f\u95f4\u4e2d\u4fdd\u7559\u9009\u8def\u4fe1\u606f\u3002',
       stats: [[COPY.footprint, '1\u00d71 \u00b7 1\u683c'], [COPY.floor, '2'], [COPY.futureRule, '\u9ad8\u4eae\u672c\u56de\u5408\u53ef\u7ffb\u5f00\u7684\u5168\u90e8\u724c']],
     },
@@ -219,7 +219,7 @@ function weaponCards() {
   const effects = {
     sword: '\u653b\u51fb\u540e\uff0c\u4e0b\u4e00\u6b21\u53d7\u5230\u7684\u8fd1\u6218\u4f24\u5bb3 -40%\uff1b\u6700\u540e\u4e00\u51fb\u6539\u4e3a -80%\u4fdd\u62a4\u3002',
     axe: '\u76ee\u6807\u76f8\u90bb\u654c\u4eba\u53d7 50% \u4f24\u5bb3\uff1b\u6700\u540e\u4e00\u51fb\u6539\u4e3a\u516b\u90bb\u57df 80% \u65cb\u65a9\u3002',
-    dagger: '\u51fb\u6740\u76ee\u6807\u65f6\u4e0d\u6d88\u8017\u8010\u4e45\uff1b\u6700\u540e\u4e00\u51fb\u4f7f\u76ee\u6807\u5ef6\u8fdf 1 \u56de\u5408\u3002',
+    dagger: '\u51fb\u6740\u76ee\u6807\u65f6\uff0c\u6700\u540e\u4e00\u51fb\u4f7f\u76ee\u6807\u5ef6\u8fdf 1 \u56de\u5408\u3002',
     polearm: '\u5c04\u7a0b 2\uff0c\u8ddd\u79bb 2 \u547d\u4e2d\u65f6\u51fb\u9000 1 \u683c\uff1b\u6700\u540e\u4e00\u51fb\u5c04\u7a0b 4\u3001\u51fb\u9000 2 \u683c\u3002',
     heavy: '\u653b\u51fb\u76fe\u724c\u6216\u91cd\u7532\u65f6\u65e0\u89c6\u9632\u5fa1\uff1b\u6700\u540e\u4e00\u51fb\u4f24\u5bb3 +50% \u5e76\u7834\u574f\u9632\u5fa1\u3002',
     bow: '\u57fa\u7840\u5c04\u7a0b 3\uff1b\u6700\u540e\u4e00\u51fb\u5c04\u7a0b 5\uff0c\u76f4\u7ebf\u6700\u591a\u547d\u4e2d 3 \u540d\u654c\u4eba\u3002',
@@ -234,7 +234,7 @@ function weaponCards() {
       stat(COPY.weaponClass, label(weapon.weaponClass)),
       stat(COPY.attack, weapon.attack),
       stat(COPY.range, `${weapon.range} ${COPY.cell}`),
-      stat(COPY.durability, weapon.durabilityRange ? weapon.durabilityRange.join('\u2013') : weapon.durability),
+      stat(COPY.energy, WEAPON_ENERGY_COSTS[weapon.weaponClass] || 3),
       stat(COPY.attribute, attributeLabel(weapon.attribute)),
       stat(COPY.footprint, shapeText(weapon.shape)),
       stat(COPY.weaponEffect, effects[weapon.weaponClass] || ''),
@@ -283,7 +283,6 @@ function itemEffect(item) {
   if (item.type === 'potion') return stat(COPY.healing, `+${item.heal}`)
   if (item.type === 'armor') return stat(COPY.armorValue, `+${item.armor}`)
   if (item.type === 'buff') return stat(item.attackTarget === 'melee' ? COPY.nextMeleeAttack : COPY.nextAttack, `+${item.attackBonus}`)
-  if (item.type === 'whetstone') return stat(COPY.repair, `+${item.repair}`)
   return ''
 }
 
@@ -293,7 +292,7 @@ function itemCards() {
     tone: `tone-${item.type}`,
     tag: label(item.type),
     title: item.name,
-    accent: item.type === 'whetstone' ? '\u25c6' : item.type === 'buff' ? '\u2727' : '\u25cf',
+    accent: item.type === 'buff' ? '\u2727' : '\u25cf',
     stats: [
       itemEffect(item),
       stat(COPY.footprint, shapeText(item.shape)),

@@ -104,16 +104,16 @@ const ALL_RELIC_DEFS = Object.freeze([
   {
     id: 'r-tide-heart',
     name: '\u6f6e\u6c50\u5fc3\u810f',
-    description: '\u8fde\u7eed\u4e24\u6b21\u4e3b\u653b\u51fb\u5206\u522b\u4f7f\u7528\u5de6\u624b\u548c\u53f3\u624b\u65f6\uff0c\u7b2c\u4e8c\u6b21\u653b\u51fb\u540e\u56de\u590d 2 \u70b9\u751f\u547d\u3002',
+    description: '\u8fde\u7eed\u4e24\u6b21\u4e3b\u653b\u51fb\u5206\u522b\u4f7f\u7528\u4e0d\u540c\u6b66\u5668\u65f6\uff0c\u7b2c\u4e8c\u6b21\u653b\u51fb\u540e\u56de\u590d 2 \u70b9\u751f\u547d\u3002',
     events: {
-      'attack:primary-hit': ({ run, hand }) => {
+      'attack:primary-hit': ({ run, weapon }) => {
         const state = relicState(run, 'r-tide-heart')
-        const trigger = Number.isInteger(state.lastHand) && state.lastHand !== hand
-        state.lastHand = hand
+        const trigger = !!state.lastWeaponUid && state.lastWeaponUid !== weapon?.uid
+        state.lastWeaponUid = weapon?.uid || null
         return trigger ? [{ type: 'heal', amount: 2, log: '\u6f6e\u6c50\u5fc3\u810f\uff1a\u56de\u590d 2 \u70b9\u751f\u547d\u3002' }] : []
       },
       'room:entered': ({ run }) => {
-        relicState(run, 'r-tide-heart').lastHand = null
+        relicState(run, 'r-tide-heart').lastWeaponUid = null
         return []
       },
     },
@@ -129,10 +129,10 @@ const ALL_RELIC_DEFS = Object.freeze([
   {
     id: 'r-healer-forge',
     name: '\u7597\u6108\u70bc\u51b6',
-    description: '\u6bcf\u6b21\u56de\u590d\u751f\u547d\u65f6\uff0c\u968f\u673a\u4f7f 1 \u628a\u5df2\u88c5\u5907\u6b66\u5668\u653b\u51fb +1\u3002',
+    description: '\u6bcf\u6b21\u56de\u590d\u751f\u547d\u65f6\uff0c\u968f\u673a\u4f7f 1 \u628a\u80cc\u5305\u6b66\u5668\u653b\u51fb +1\u3002',
     events: {
       'player:healed': ({ run }) => {
-        const weapons = run?.equippedWeapons || []
+        const weapons = run?.backpackWeapons || []
         if (!weapons.length) return []
         const weapon = weapons[Math.floor(run.random() * weapons.length)]
         weapon.attack = Math.max(0, Number(weapon.attack) || 0) + 1
@@ -184,7 +184,7 @@ const ALL_RELIC_DEFS = Object.freeze([
   {
     id: 'r-vanguard-strike',
     name: '\u5148\u950b\u4e00\u51fb',
-    description: '\u6bcf\u4e2a\u623f\u95f4\u7684\u7b2c\u4e00\u6b21\u653b\u51fb\u4e0d\u6d88\u8017\u6b66\u5668\u8010\u4e45\uff1b\u5bf9\u5c1a\u672a\u884c\u52a8\u8fc7\u7684\u654c\u4eba\u4f24\u5bb3 +2\u3002',
+    description: '\u6bcf\u4e2a\u623f\u95f4\u7684\u7b2c\u4e00\u6b21\u653b\u51fb\uff0c\u5bf9\u5c1a\u672a\u884c\u52a8\u8fc7\u7684\u654c\u4eba\u4f24\u5bb3 +2\u3002',
     damageModifiers: ({ firstAttackInRoom, target }) => firstAttackInRoom && !target?.hasActed
       ? [damageModifier(DAMAGE_STAGES.FLAT, 2, 'relic:vanguard-strike')]
       : [],
@@ -192,16 +192,15 @@ const ALL_RELIC_DEFS = Object.freeze([
   {
     id: 'r-vanguard-bounty',
     name: '\u5148\u950b\u8d4f\u91d1',
-    description: '\u6bcf\u4e2a\u623f\u95f4\u9996\u6740\u65f6\uff0c\u83b7\u5f97 2 \u91d1\u5e01\u5e76\u4fee\u590d\u5f53\u524d\u6b66\u5668 1 \u70b9\u8010\u4e45\u3002',
+    description: '\u6bcf\u4e2a\u623f\u95f4\u9996\u6740\u65f6\uff0c\u83b7\u5f97 2 \u91d1\u5e01\u3002',
     events: {
-      'attack:enemy-defeated': ({ run, weapon, finalStrike }) => {
+      'attack:enemy-defeated': ({ run, weapon }) => {
         if (!run || !weapon) return []
         const state = run._relicRoomRuntime('r-vanguard-bounty')
         if (state.claimed) return []
         state.claimed = true
         return [
           { type: 'gold', amount: 2, log: '\u5148\u950b\u8d4f\u91d1\uff1a\u83b7\u5f97 2 \u91d1\u5e01\u3002' },
-          ...(!finalStrike ? [{ type: 'repair', weapon, amount: 1, log: '\u5148\u950b\u8d4f\u91d1\uff1a\u6b66\u5668\u8010\u4e45 +1\u3002' }] : []),
         ]
       },
     },
@@ -257,11 +256,10 @@ const ALL_RELIC_DEFS = Object.freeze([
   {
     id: 'r-requiem-anvil',
     name: '\u5b89\u9b42\u94c1\u7827',
-    description: '\u623f\u95f4\u6e05\u573a\u65f6\uff0c\u4fee\u590d\u88c5\u5907\u4e2d\u8010\u4e45\u6700\u4f4e\u7684\u6b66\u5668 2 \u70b9\u3002',
+    description: '\u623f\u95f4\u6e05\u573a\u65f6\uff0c\u6062\u590d 2 \u70b9\u4f53\u529b\u3002',
     events: {
       'room:cleared': ({ run }) => {
-        const weapon = [...(run?.equippedWeapons || [])].sort((left, right) => left.durability - right.durability)[0]
-        return weapon ? [{ type: 'repair', weapon, amount: 2, log: '\u5b89\u9b42\u94c1\u7827\uff1a\u6b66\u5668\u8010\u4e45 +2\u3002' }] : []
+        return run ? [{ type: 'energy', amount: 2, log: '\u5b89\u9b42\u94c1\u7827\uff1a\u4f53\u529b +2\u3002' }] : []
       },
     },
   },
@@ -311,10 +309,10 @@ const ALL_RELIC_DEFS = Object.freeze([
   {
     id: 'r-inheritance-edge',
     name: '\u65ad\u5203\u7ee7\u627f',
-    description: '\u6bcf\u635f\u6bc1 1 \u628a\u6b66\u5668\uff0c\u4f7f\u53e6\u4e00\u628a\u5df2\u88c5\u5907\u6b66\u5668\u653b\u51fb +2\u3002',
+    description: '\u6bcf\u635f\u6bc1 1 \u628a\u6b66\u5668\uff0c\u4f7f\u53e6\u4e00\u628a\u80cc\u5305\u6b66\u5668\u653b\u51fb +2\u3002',
     events: {
       'weapon:broken': ({ run, weapon: brokenWeapon }) => {
-        const weapon = run?.equippedWeapons.find((candidate) => candidate?.uid !== brokenWeapon?.uid)
+        const weapon = run?.backpackWeapons.find((candidate) => candidate?.uid !== brokenWeapon?.uid)
         if (!weapon) return []
         weapon.attack = Math.max(0, Number(weapon.attack) || 0) + 2
         return [{ log: `\u65ad\u5203\u7ee7\u627f\uff1a${weapon.name}\u653b\u51fb +2\u3002` }]
@@ -377,11 +375,6 @@ const ALL_RELIC_DEFS = Object.freeze([
         ? [{ log: '\u6d41\u52a8\u5175\u5e93\uff1a\u968f\u673a\u6b66\u5668\u5df2\u5165\u5305\u3002' }]
         : [],
     },
-  },
-  {
-    id: 'r-whetstone-echo',
-    name: '\u78e8\u77f3\u56de\u58f0',
-    description: '\u4f7f\u7528\u78e8\u5200\u77f3\u4fee\u590d\u4e00\u628a\u624b\u4e2d\u7684\u6b66\u5668\u65f6\uff0c\u53e6\u4e00\u53ea\u624b\u7684\u6b66\u5668\u4e5f\u589e\u52a01\u70b9\u8010\u4e45\u3002',
   },
   {
     id: 'r-gray-divination',

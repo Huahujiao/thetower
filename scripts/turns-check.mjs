@@ -5,32 +5,24 @@ import { TURN_KINDS, TurnLedger } from '../src/game/core/turns.js'
 const ledger = new TurnLedger()
 assert.deepEqual(ledger.snapshot(), {
   attackCount: 0,
-  actionCount: 0,
-  movementCount: 0,
   globalTurn: 0,
 })
 
 ledger.advance(TURN_KINDS.MOVEMENT)
 assert.deepEqual(ledger.snapshot(), {
   attackCount: 0,
-  actionCount: 0,
-  movementCount: 1,
   globalTurn: 1,
 })
 
 ledger.advance(TURN_KINDS.ACTION)
 assert.deepEqual(ledger.snapshot(), {
   attackCount: 0,
-  actionCount: 1,
-  movementCount: 1,
   globalTurn: 2,
 })
 
 ledger.advance(TURN_KINDS.ATTACK)
 assert.deepEqual(ledger.snapshot(), {
   attackCount: 1,
-  actionCount: 2,
-  movementCount: 1,
   globalTurn: 3,
 })
 
@@ -45,23 +37,19 @@ run._endTurn({ skipEnemyPhase: true, turnKind: TURN_KINDS.ACTION })
 run._endTurn({ skipEnemyPhase: true, turnKind: TURN_KINDS.ATTACK })
 
 assert.equal(run.attackCount, 1)
-assert.equal(run.actionCount, 2)
-assert.equal(run.movementCount, 1)
 assert.equal(run.globalTurn, 3)
 assert.equal(run.turn, run.globalTurn)
-assert.deepEqual(advanced.map(({ turnKind, attackCount, actionCount, movementCount, globalTurn }) => ({
-  turnKind, attackCount, actionCount, movementCount, globalTurn,
+assert.deepEqual(advanced.map(({ turnKind, attackCount, globalTurn }) => ({
+  turnKind, attackCount, globalTurn,
 })), [
-  { turnKind: TURN_KINDS.MOVEMENT, attackCount: 0, actionCount: 0, movementCount: 1, globalTurn: 1 },
-  { turnKind: TURN_KINDS.ACTION, attackCount: 0, actionCount: 1, movementCount: 1, globalTurn: 2 },
-  { turnKind: TURN_KINDS.ATTACK, attackCount: 1, actionCount: 2, movementCount: 1, globalTurn: 3 },
+  { turnKind: TURN_KINDS.MOVEMENT, attackCount: 0, globalTurn: 1 },
+  { turnKind: TURN_KINDS.ACTION, attackCount: 0, globalTurn: 2 },
+  { turnKind: TURN_KINDS.ATTACK, attackCount: 1, globalTurn: 3 },
 ])
 
 const serialized = run.serialize()
 assert.deepEqual(serialized.turnCounters, {
   attackCount: 1,
-  actionCount: 2,
-  movementCount: 1,
   globalTurn: 3,
 })
 assert.equal(serialized.turn, 3)
@@ -69,7 +57,26 @@ assert.equal(serialized.turn, 3)
 const legacy = new GameRun({ autoLoad: false, random: () => 0.25 })
 legacy.turn = 9
 assert.equal(legacy.globalTurn, 9)
-assert.equal(legacy.actionCount, 0)
-assert.equal(legacy.movementCount, 9)
+
+const movementRun = new GameRun({ autoLoad: false, random: () => 0.99 })
+const path = [
+  { c: movementRun.player.pos.c + 1, r: movementRun.player.pos.r },
+  { c: movementRun.player.pos.c + 1, r: movementRun.player.pos.r + 1 },
+]
+const movementEvents = []
+movementRun.on('turn:advanced', (context) => movementEvents.push(context))
+movementRun.player.energy = 5
+assert.equal(movementRun._walk(path).stopped, false)
+assert.equal(movementRun.globalTurn, 2)
+assert.equal(movementRun.player.energy, 7)
+assert.deepEqual(movementEvents.map(({ turnKind, globalTurn }) => ({ turnKind, globalTurn })), [
+  { turnKind: TURN_KINDS.MOVEMENT, globalTurn: 1 },
+  { turnKind: TURN_KINDS.MOVEMENT, globalTurn: 2 },
+])
+
+const weapon = movementRun.backpackWeapons[0]
+assert.equal(movementRun.weaponEnergyCost(weapon), 3)
+movementRun.player.energy = 2
+assert.equal(movementRun._spendEnergy(movementRun.weaponEnergyCost(weapon)), false)
 
 console.log('turns-check passed')

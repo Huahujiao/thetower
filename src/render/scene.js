@@ -1282,7 +1282,7 @@ export class GameScene {
       const isWeapon = card.type === 'weapon'
       const value = isMonster && Number.isFinite(card.maxValue) ? `${card.value}/${card.maxValue}` : card.value
       const subtitle = isMonster || isWeapon ? card.subtitle : ''
-      const detail = isMonster ? `ATK ${card.attack}` : isWeapon ? `\u8010 ${card.durability} \u00b7 \u5c04\u7a0b ${card.range}` : card.type === 'door' ? card.detail : ''
+      const detail = isMonster ? `ATK ${card.attack}` : isWeapon ? `\u6c14 ${card.energyCost} \u00b7 \u5c04\u7a0b ${card.range}` : card.type === 'door' ? card.detail : ''
       const footer = isMonster ? card.footer : ''
       const valueColor = isWeapon ? getAttributeDefinition(card.attribute)?.color || card.valueColor || '#fff' : card.valueColor || '#fff'
       drawCenteredText(context, card.title, 32, { color: card.boss ? '#fbb' : '#fff', size: 22, weight: 'bold' })
@@ -1367,9 +1367,9 @@ export class GameScene {
          subtitle: WEAPON_CLASS_LABELS[item.weaponClass] || '\u6b66\u5668',
         value: String(item.attack),
         valueColor: '#a9d8ff',
-        durability: item.durability,
+        energyCost: this.run.weaponEnergyCost(item),
         range: this.run.weaponRange(item),
-        detail: `攻 ${item.attack}  耐 ${item.durability}`,
+        detail: `ATK ${item.attack} · EN ${this.run.weaponEnergyCost(item)}`,
         footer: `射程 ${this.run.weaponRange(item)}`,
         clickHint: '点击拾取',
       }
@@ -1382,9 +1382,6 @@ export class GameScene {
     }
     if (item.type === 'buff') {
       return { type: 'buff', title: item.name, value: `攻击 +${item.attackBonus}`, valueColor: '#8effc8', detail: '下次攻击生效', footer: '消耗行动', clickHint: '点击拾取' }
-    }
-    if (item.type === 'whetstone') {
-      return { type: 'item', title: item.name, value: `修理 +${item.repair}`, valueColor: '#b8d6ff', detail: '耐久度恢复', footer: '消耗行动', clickHint: '点击拾取' }
     }
     return { type: 'item', title: item.name || '道具', value: '道具', clickHint: '点击拾取' }
   }

@@ -20,8 +20,8 @@ export const TRAP_DEFS = Object.freeze([
     id: 'corrosion',
     name: '\u8150\u8680\u9677\u9631',
     effect: 'corrosion',
-    durabilityLoss: 1,
-    description: '\u5df2\u88c5\u5907\u7684\u53cc\u624b\u6b66\u5668\u5404\u5931\u53bb 1 \u70b9\u8010\u4e45\uff1b\u8010\u4e45\u5f52\u96f6\u65f6\u6309\u6b63\u5e38\u89c4\u5219\u635f\u6bc1\u3002',
+    energyLoss: 2,
+    description: '\u89e6\u53d1\u540e\u5931\u53bb 2 \u70b9\u4f53\u529b\u3002',
   },
   {
     id: 'poison-fog',

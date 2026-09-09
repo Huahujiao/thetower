@@ -2,9 +2,7 @@ import catalog from './catalog.json' with { type: 'json' }
 import { buildRelicChoices } from './relics.js'
 
 const WEAPONS = Object.freeze(catalog.weapons)
-const CONSUMABLES = Object.freeze(catalog.consumables)
-const USABLE_CONSUMABLES = Object.freeze(CONSUMABLES.filter((item) => item.type !== 'whetstone'))
-const TOOLS = Object.freeze(CONSUMABLES.filter((item) => item.type === 'whetstone'))
+const USABLE_CONSUMABLES = Object.freeze(catalog.consumables)
 
 function pick(values, random) { return values[Math.floor(random() * values.length)] || null }
 
@@ -18,7 +16,7 @@ export function buildSupplyRewardChoices({ floor, count = 3, random = Math.rando
   const choices = [
     itemChoice(pick(eligible(WEAPONS, floor), random)),
     itemChoice(pick(eligible(USABLE_CONSUMABLES, floor), random)),
-    random() < 0.5 ? itemChoice(pick(eligible(TOOLS, floor), random)) : goldChoice(floor),
+    goldChoice(floor),
   ].filter(Boolean)
   while (choices.length < count) choices.push(goldChoice(floor))
   return choices.slice(0, count)

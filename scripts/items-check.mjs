@@ -13,21 +13,13 @@ function runWithSelectedItem(itemId) {
 
 for (const itemId of ['small-potion', 'armor-potion', 'battle-charm']) {
   const { run, item } = runWithSelectedItem(itemId)
-  const actionCount = run.actionCount
+  run.player.energy = 5
   const globalTurn = run.globalTurn
   assert(run.useSelected())
-  assert.equal(run.actionCount, actionCount + 1)
+  assert.equal(run.player.energy, 6)
   assert.equal(run.globalTurn, globalTurn + 1)
   assert.equal(run.selectedItem, null)
   assert.equal(run.backpack.placementOf(item.uid), null)
 }
-
-const whetstoneRun = runWithSelectedItem('whetstone').run
-assert.equal(whetstoneRun.useSelected(), true)
-assert.equal(whetstoneRun.actionCount, 0)
-assert.equal(whetstoneRun.itemTargeting, true)
-assert.equal(whetstoneRun.applySelectedItemToEquipment(0), true)
-assert.equal(whetstoneRun.actionCount, 1)
-assert.equal(whetstoneRun.globalTurn, 1)
 
 console.log('items-check passed')

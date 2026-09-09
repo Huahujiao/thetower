@@ -1,7 +1,11 @@
 import { enemyDefinitionFor, getEnemyDefinition } from './enemies.js'
 import catalog from './catalog.json' with { type: 'json' }
 
-const WEAPONS = Object.freeze(catalog.weapons)
+const WEAPON_ENERGY_COSTS = Object.freeze({ dagger: 2, sword: 3, axe: 4, polearm: 4, bow: 4, heavy: 5 })
+function weaponDefinition(source) {
+  return Object.freeze({ ...source, energyCost: WEAPON_ENERGY_COSTS[source.weaponClass] || 3 })
+}
+const WEAPONS = Object.freeze(catalog.weapons.map(weaponDefinition))
 const CONSUMABLES = Object.freeze(catalog.consumables)
 const ENEMY_LOOT = Object.freeze(catalog.enemyLoot || [])
 const MERCHANT_WEAPONS = Object.freeze(catalog.merchantWeapons || [])
@@ -31,14 +35,10 @@ export function synchronizeEntityIds(identifiers) {
 
 export function starterWeapon() { return makeItem(WEAPONS[0]) }
 
-export function makeItem(definition, random = Math.random) {
+export function makeItem(definition, _random = Math.random) {
   const item = { ...definition, shape: cloneShape(definition.shape), uid: nextEntityId('item') }
   if (item.type === 'weapon') {
-    const [minimum, maximum] = definition.durabilityRange || [definition.durability, definition.durability]
-    item.durability = Number.isInteger(minimum) && Number.isInteger(maximum)
-      ? minimum + Math.floor(random() * (maximum - minimum + 1))
-      : definition.durability || 1
-    item.maxDurability = item.durability
+    item.energyCost = WEAPON_ENERGY_COSTS[item.weaponClass] || 3
   }
   return item
 }

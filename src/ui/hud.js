@@ -1,4 +1,4 @@
-import { EQUIPMENT_SLOTS, INVENTORY_COLUMNS, INVENTORY_ROWS } from '../game/run.js'
+import { INVENTORY_COLUMNS, INVENTORY_ROWS } from '../game/run.js'
 import { getItemDefinition } from '../game/data/content.js'
 import { getRelicDefinition } from '../game/data/relics.js'
 import { merchantSellPrice } from '../game/data/merchants.js'
@@ -7,6 +7,7 @@ const LABELS = Object.freeze({
   floor: '\u697c\u5c42',
   health: '\u751f\u547d',
   armor: '\u62a4\u7532',
+  energy: '\u4f53\u529b',
   gold: '\u91d1\u5e01',
   turn: '\u5168\u5c40\u56de\u5408',
   poison: '\u4e2d\u6bd2',
@@ -26,15 +27,9 @@ const LABELS = Object.freeze({
   log: '\u65e5\u5fd7',
   reveal: '\u8c03\u8bd5\uff1a\u663e\u793a\u724c\u5185\u5bb9',
   discard: '\u4e22\u5f03',
-  unequip: '\u5378\u4e0b',
   rotate: '\u65cb\u8f6c',
-  equip: '\u88c5\u5907',
   use: '\u4f7f\u7528',
   empty: '\u7a7a',
-  equipment: '\u5f53\u524d\u88c5\u5907',
-  leftHand: '\u5de6\u624b',
-  rightHand: '\u53f3\u624b',
-  durability: '\u8010\u4e45',
   nextAttack: '\u4e0b\u6b21\u653b\u51fb',
   nextMeleeAttack: '\u4e0b\u6b21\u8fd1\u6218\u653b\u51fb',
   relicBook: '\u6253\u5f00\u5723\u9057\u7269\u56fe\u9274',
@@ -75,7 +70,6 @@ const DETAIL_ICONS = Object.freeze({
   potion: '\u271a',
   armor: '\u26e8',
   buff: '\u2726',
-  whetstone: '\u25c8',
   relic: '\u25c6',
   trap: '!',
   gold: '\u25cf',
@@ -93,11 +87,11 @@ const TALENT_LINE_LABELS = Object.freeze({
 const HELP_SECTIONS = Object.freeze([
   { title: '\u76ee\u6807\u4e0e\u80dc\u5229', items: ['\u7a7f\u8fc7\u4e94\u5c42\u623f\u95f4\uff0c\u51fb\u8d25\u7b2c\u4e94\u5c42\u7684\u76d1\u89c6\u8005\u5373\u53ef\u83b7\u80dc\u3002', '\u6bcf\u4e2a\u65b0\u623f\u95f4\u9996\u6b21\u8fdb\u5165\u4f1a\u63d0\u4f9b\u8865\u7ed9\u6216\u5723\u9057\u7269\u5956\u52b1\uff1b\u901a\u8fc7\u95e8\u7ee7\u7eed\u524d\u8fdb\u3002'] },
   { title: '\u63a2\u7d22\u4e0e\u7ffb\u724c', items: ['\u5728\u5df2\u7ffb\u5f00\u7684\u724c\u4e2d\u53ef\u516b\u65b9\u5411\u79fb\u52a8\u3002\u70b9\u51fb\u89d2\u8272\u516b\u90bb\u57df\u76ee\u6807\u4f1a\u76f4\u63a5\u6267\u884c\uff1b\u8fdc\u5904\u76ee\u6807\u5148\u9884\u89c8\uff0c\u518d\u70b9\u51fb\u540c\u4e00\u683c\u786e\u8ba4\u3002', '\u7ffb\u672a\u77e5\u724c\u65f6\uff0c\u89d2\u8272\u4f1a\u5148\u8d70\u5230\u76ee\u6807\u516b\u90bb\u57df\u7684\u53ef\u8fbe\u7a7a\u683c\uff1b\u7ffb\u724c\u672c\u8eab\u4e0d\u8e0f\u5165\u8be5\u683c\u3002\u653b\u51fb\u3001\u7ffb\u724c\u548c\u4ea4\u4e92\u9884\u89c8\u4f1a\u663e\u793a\u5230\u8fbe\u4f4d\u7f6e\u4e0e\u76ee\u6807\u5f27\u7ebf\u3002'] },
-  { title: '\u6218\u6597\u4e0e\u654c\u4eba', items: ['\u5148\u70b9\u51fb\u5de6\u624b\u6216\u53f3\u624b\u7684\u6b66\u5668\uff0c\u518d\u70b9\u51fb\u654c\u4eba\u53d1\u8d77\u653b\u51fb\uff1b\u6bcf\u6b21\u53ea\u4f7f\u7528\u88ab\u9009\u4e2d\u7684\u4e00\u628a\u6b66\u5668\u3002\u6b66\u5668\u8010\u4e45\u964d\u4e3a\u96f6\u65f6\u635f\u6bc1\uff0c\u8010\u4e45 1 \u65f6\u4f1a\u89e6\u53d1\u6700\u540e\u4e00\u51fb\u7279\u6548\u3002', '\u654c\u4eba\u7ffb\u5f00\u540e\u6309\u884c\u52a8\u5ef6\u8fdf\u548c\u666e\u901a\u653b\u51fb\u51b7\u5374\u884c\u52a8\u3002\u8ffd\u730e\u654c\u4eba\u53ef\u79fb\u52a8\u540e\u653b\u51fb\u3002'] },
-  { title: '\u88c5\u5907\u3001\u5929\u8d4b\u4e0e\u80cc\u5305', items: ['\u80cc\u5305\u4e3a\u4e94\u884c\u4e94\u5217\uff1b\u7269\u54c1\u6309\u5f62\u72b6\u5360\u683c\uff0c\u53ef\u65cb\u8f6c\u3002\u88c5\u5907\u6b66\u5668\u3001\u4f7f\u7528\u78e8\u5200\u77f3\u548c\u7269\u54c1\u4f1a\u5f71\u54cd\u63a5\u4e0b\u6765\u7684\u6218\u6597\u3002', '\u51fb\u6740\u654c\u4eba\u83b7\u5f97\u7ecf\u9a8c\uff0c\u5347\u7ea7\u65f6\u4ece 4 \u4e2a\u968f\u673a\u5929\u8d4b\u4e0e 1 \u4e2a\u53ef\u65e0\u9650\u53e0\u52a0\u7684\u5f3a\u5316\u4f53\u683c\u4e2d\u4e94\u9009\u4e00\u3002\u5929\u8d4b\u6309\u4f4d\u7f6e\u5728\u4e09\u5c42\u5929\u8d4b\u7f51\u4e2d\u89e3\u9501\u3002'] },
-  { title: '\u5723\u9057\u7269\u4e0e\u4fe1\u606f', items: ['\u5f00\u5c40\u3001\u623f\u95f4\u5956\u52b1\u3001\u6536\u85cf\u5bb6\u548c\u602a\u7269\u6389\u843d\u90fd\u53ef\u80fd\u83b7\u5f97\u5723\u9057\u7269\uff1b\u540c\u65f6\u6700\u591a\u6fc0\u6d3b\u4e94\u4ef6\u3002', '\u957f\u6309\u68cb\u76d8\u5bf9\u8c61\u53ef\u67e5\u770b\u8be6\u60c5\uff1b\u7ecf\u9a8c\u884c\u53f3\u4fa7\u7684\u5723\u9057\u7269\u56fe\u6807\u53ef\u67e5\u770b\u5df2\u83b7\u5f97\u7684\u5723\u9057\u7269\uff1b\u53f3\u4e0a\u65e5\u5fd7\u53ef\u56de\u770b\u4e8b\u4ef6\u3002'] },
-  { title: '\u89c6\u89c9\u4e0e\u5347\u7ea7', items: ['\u654c\u4eba\u7ad6\u724c\u4fdd\u6301\u7ea2\u8272\u5371\u9669\u4e3b\u4f53\uff0c\u5c5e\u6027\u4ee5\u7ec6\u8f6e\u5ed3\u548c\u5934\u90e8\u5706\u73af\u533a\u5206\uff1b\u5730\u9762\u6b66\u5668\u5361\u9762\u7684\u653b\u51fb\u529b\u4f7f\u7528\u5c5e\u6027\u8272\u7684\u7eaf\u6570\u5b57\u3002', '\u5347\u7ea7\u65f6\u56db\u4e2a\u666e\u901a\u5929\u8d4b\u6309 2\u00d72 \u6392\u5217\uff0c\u5f3a\u5316\u4f53\u683c\u5355\u72ec\u4e00\u884c\uff0c\u5361\u7247\u4e0a\u4f1a\u6807\u6ce8\u6240\u5c5e\u5206\u652f\u3002', '\u80cc\u5305\u7269\u54c1\u4f7f\u7528\u4f4e\u9971\u548c\u80cc\u666f\u8272\u533a\u5206\u7c7b\u578b\uff1a\u6cbb\u7597\u7eff\u3001\u62a4\u7532\u68d5\u3001\u78e8\u5200\u77f3\u7070\u3001\u7b26\u5492\u975b\u84dd\u7d2b\uff1b\u6b66\u5668\u80cc\u666f\u6309\u5c5e\u6027\u53d8\u5316\u3002'] },
-  { title: '\u5feb\u6377\u63d0\u793a', items: ['\u7ea2\u8272\u8def\u5f84\u8868\u793a\u53ef\u80fd\u88ab\u5df2\u7ffb\u5f00\u654c\u4eba\u62e6\u622a\uff1b\u84dd\u8272\u8def\u5f84\u8868\u793a\u5f53\u524d\u5df2\u77e5\u5b89\u5168\u3002', '\u4e0d\u53ef\u7ffb\u724c\u6bd4\u53ef\u7ffb\u724c\u66f4\u6697\u3002\u534a\u900f\u660e\u5361\u724c\u53ea\u662f\u88ab\u7aa5\u89c6\uff0c\u5c1a\u672a\u7ffb\u5f00\u3002'] },
+  { title: '\u6218\u6597\u4e0e\u654c\u4eba', items: ['\u76f4\u63a5\u4ece\u80cc\u5305\u9009\u62e9\u6b66\u5668\uff0c\u518d\u70b9\u51fb\u654c\u4eba\u53d1\u8d77\u653b\u51fb\uff1b\u653b\u51fb\u6309\u6b66\u5668\u7c7b\u578b\u6d88\u8017 2\u20135 \u70b9\u4f53\u529b\uff0c\u7269\u54c1\u53ef\u56de\u590d 1 \u70b9\u4f53\u529b\u3002', '\u654c\u4eba\u7ffb\u5f00\u540e\u4f1a\u6309\u51b7\u5374\u6267\u884c\u666e\u901a\u653b\u51fb\uff1b\u6bcf\u79fb\u52a8\u4e00\u683c\u6d88\u8017 1 \u4e2a\u5168\u5c40\u56de\u5408\u5e76\u56de\u590d 1 \u70b9\u4f53\u529b\u3002'] },
+  { title: '\u5929\u8d4b\u4e0e\u80cc\u5305', items: ['\u80cc\u5305\u4e3a\u516b\u5217\u4e94\u884c\uff1b\u7269\u54c1\u6309\u5f62\u72b6\u5360\u683c\uff0c\u53ef\u65cb\u8f6c\u3002\u76f4\u63a5\u4ece\u80cc\u5305\u4e2d\u4f7f\u7528\u7269\u54c1\uff0c\u4e0d\u518d\u8bbe\u7f6e\u5de6\u53f3\u624b\u6216\u6b66\u5668\u8010\u4e45\u3002', '\u51fb\u6740\u654c\u4eba\u83b7\u5f97\u7ecf\u9a8c\uff0c\u5347\u7ea7\u65f6\u4ece 4 \u4e2a\u968f\u673a\u5929\u8d4b\u4e0e 1 \u4e2a\u53ef\u65e0\u9650\u53e0\u52a0\u7684\u5f3a\u5316\u4f53\u683c\u4e2d\u4e94\u9009\u4e00\u3002\u5929\u8d4b\u6309\u4f4d\u7f6e\u5728\u4e09\u5c42\u5929\u8d4b\u7f51\u4e2d\u89e3\u9501\u3002'] },
+  { title: '\u5723\u9057\u7269\u4e0e\u4fe1\u606f', items: ['\u5f00\u5c40\u3001\u623f\u95f4\u5956\u52b1\u3001\u6536\u85cf\u5bb6\u548c\u602a\u7269\u6389\u843d\u90fd\u53ef\u80fd\u83b7\u5f97\u5723\u9057\u7269\uff1b\u540c\u65f6\u6700\u591a\u6fc0\u6d3b\u4e94\u4ef6\u3002', '\u957f\u6309\u68cb\u76d8\u5bf9\u8c61\u53ef\u67e5\u770b\u8be6\u60c5\uff1b\u70b9\u51fb\u9876\u90e8\u7684\u5723\u9057\u7269\u56fe\u6807\u53ef\u67e5\u770b\u5df2\u83b7\u5f97\u7684\u5723\u9057\u7269\uff1b\u53f3\u4e0a\u65e5\u5fd7\u53ef\u56de\u770b\u4e8b\u4ef6\u3002'] },
+  { title: '\u89c6\u89c9\u4e0e\u5347\u7ea7', items: ['\u654c\u4eba\u7ad6\u724c\u4fdd\u6301\u7ea2\u8272\u5371\u9669\u4e3b\u4f53\uff0c\u5c5e\u6027\u4ee5\u7ec6\u8f6e\u5ed3\u548c\u5934\u90e8\u5706\u73af\u533a\u5206\uff1b\u5730\u9762\u6b66\u5668\u5361\u9762\u7684\u653b\u51fb\u529b\u4f7f\u7528\u5c5e\u6027\u8272\u7684\u7eaf\u6570\u5b57\u3002', '\u5347\u7ea7\u65f6\u56db\u4e2a\u666e\u901a\u5929\u8d4b\u6309 2\u00d72 \u6392\u5217\uff0c\u5f3a\u5316\u4f53\u683c\u5355\u72ec\u4e00\u884c\uff0c\u5361\u7247\u4e0a\u4f1a\u6807\u6ce8\u6240\u5c5e\u5206\u652f\u3002', '\u80cc\u5305\u7269\u54c1\u4f7f\u7528\u4f4e\u9971\u548c\u80cc\u666f\u8272\u533a\u5206\u7c7b\u578b\uff1a\u6cbb\u7597\u7eff\u3001\u62a4\u7532\u68d5\u3001\u589e\u76ca\u7d2b\uff1b\u6b66\u5668\u80cc\u666f\u6309\u5c5e\u6027\u53d8\u5316\u3002'] },
+  { title: '\u5feb\u6377\u63d0\u793a', items: ['\u7ffb\u724c\u548c\u79fb\u52a8\u90fd\u4f1a\u6309\u6b65\u9aa4\u89e6\u53d1\u654c\u4eba\u56de\u5408\uff1b\u8fdc\u8ddd\u79bb\u79fb\u52a8\u65f6\uff0c\u8def\u4e0a\u53ef\u80fd\u591a\u6b21\u7ecf\u8fc7\u654c\u4eba\u7684\u653b\u51fb\u8303\u56f4\u3002', '\u4e0d\u53ef\u7ffb\u724c\u6bd4\u53ef\u7ffb\u724c\u66f4\u6697\u3002\u534a\u900f\u660e\u5361\u724c\u53ea\u662f\u88ab\u7aa5\u89c6\uff0c\u5c1a\u672a\u7ffb\u5f00\u3002'] },
 ])
 
 function escapeHtml(value) {
@@ -142,7 +136,6 @@ export class HUD {
       <div class="hud-top">
         <div class="hud-stats">
           <div class="stat floor"><span class="label">${LABELS.floor}</span><span class="value" data=floor></span></div>
-          <div class="stat turn"><span class="label">${LABELS.turn}</span><span class="value" data=turn></span></div>
           <div class="stat level"><span class="label">${LABELS.level}</span><span class="value" data=level></span></div>
           <div class="stat gold"><span class="label">${LABELS.gold}</span><span class="value" data=gold></span></div>
         </div>
@@ -192,7 +185,7 @@ export class HUD {
           <div class="character-stat"><span>${LABELS.maxHealth}</span><strong data=characterhealth></strong></div>
         </div>
         <div class="character-expbar" aria-hidden="true"><span data=characterexperiencebar></span></div>
-        <div class="character-hands" data=characterhands></div>
+        <div class="character-talents" data=charactertalents></div>
       </section>
 
       <section class="talent-panel" data=talentpanel aria-hidden="true">
@@ -255,28 +248,26 @@ export class HUD {
           </section>
         </div>
 
-      <div class="hud-bottom">
-        <section class="backpack-panel">
-          <div class="relic-slots" data=relicslots></div>
-          <div class="backpack-grid" data=backpack></div>
-        </section>
-        <aside class="vital-strip" aria-label="${LABELS.health} ${LABELS.armor}">
-          <button class="bag-rotate" data-action="rotate-bag" title="${LABELS.rotate}" aria-label="${LABELS.rotate}" hidden>\u21bb</button>
-          <div class="vital-armor" title="${LABELS.armor}"><strong data=armorstrip></strong></div>
-          <div class="vital-health" title="${LABELS.health}"><span class="vital-health-fill" data=healthfill></span><strong data=hpstrip></strong></div>
-        </aside>
-        <section class="loadout-panel">
-          <div class="card-actions" data=actions>
-            <button class="act-use" data-action="use">${LABELS.use}</button>
-            <button class="act-unequip" data-action="unequip">${LABELS.unequip}</button>
+        <div class="hud-bottom">
+          <div class="backpack-toolbar" data=actions aria-label="${LABELS.health} ${LABELS.armor} ${LABELS.energy}">
+            <div class="backpack-action-slot act-drop-slot"><button class="backpack-action act-drop" data-action="discard" hidden>${LABELS.discard}</button></div>
+            <div class="vital-armor" title="${LABELS.armor}"><strong data=armorstrip></strong></div>
+            <div class="vital-bars">
+              <div class="vital-health" title="${LABELS.health}"><span class="vital-health-fill" data=healthfill></span><strong data=hpstrip></strong></div>
+              <div class="vital-energy" title="${LABELS.energy}"><span class="vital-energy-fill" data=energyfill></span><strong data=energystrip></strong></div>
+            </div>
+            <div class="backpack-action-slot act-use-slot"><button class="backpack-action act-use" data-action="use" hidden>${LABELS.use}</button></div>
+            <button class="backpack-action bag-rotate" data-action="rotate-bag" title="${LABELS.rotate}" aria-label="${LABELS.rotate}" hidden>\u21bb</button>
           </div>
-          <div class="equip-row">
-            <button class="equip-slot" data-equip-slot="0"></button>
-            <button class="equip-slot" data-equip-slot="1"></button>
-          </div>
-          <button class="act-drop loadout-discard" data-action="discard">${LABELS.discard}</button>
-        </section>
-      </div>
+          <aside class="hud-relics" aria-label="${LABELS.relics}">
+            <div class="relic-slots" data=relicslots></div>
+          </aside>
+          <section class="backpack-panel">
+            <div class="backpack-grid-wrap">
+              <div class="backpack-grid" data=backpack></div>
+            </div>
+          </section>
+        </div>
 
       <div class="hud-over" data=over>
         <h1 data=overtitle></h1><p data=overmessage></p>
@@ -305,9 +296,10 @@ export class HUD {
     this.q('floor').textContent = room ? String(room.floor) : ''
     this.q('hpstrip').textContent = `${player.hp}/${player.maxHp}`
     this.q('armorstrip').textContent = String(player.armor)
-    this.q('healthfill').style.height = `${Math.max(0, Math.min(100, player.hp / Math.max(1, player.maxHp) * 100))}%`
+    this.q('healthfill').style.width = `${Math.max(0, Math.min(100, player.hp / Math.max(1, player.maxHp) * 100))}%`
     this.q('gold').textContent = String(player.gold)
-    this.q('turn').textContent = String(this.run.turn)
+    this.q('energystrip').textContent = `${player.energy}/${player.maxEnergy}`
+    this.q('energyfill').style.width = `${Math.max(0, Math.min(100, player.energy / Math.max(1, player.maxEnergy) * 100))}%`
     this.q('level').textContent = String(player.level)
     this.q('experiencevalue').textContent = `${player.experience}/${player.experienceToNext}`
     const experienceProgress = player.experienceToNext > 0 ? Math.min(100, Math.max(0, player.experience / player.experienceToNext * 100)) : 0
@@ -321,23 +313,6 @@ export class HUD {
     if (player.poisonedTurns > 0) hints.push(`${LABELS.poison} ${player.poisonedTurns}${LABELS.turn}`)
     if (player.burningTurns > 0) hints.push(`${LABELS.burning} ${player.burningTurns}${LABELS.turn}`)
     this.q('hint').textContent = hints.join(' · ')
-
-    const equipSlots = this.root.querySelectorAll('[data-equip-slot]')
-    for (let slot = 0; slot < EQUIPMENT_SLOTS; slot++) {
-      const equipSlot = equipSlots[slot]
-      if (!equipSlot) continue
-      const weapon = player.equipment[slot]
-      const growth = weapon ? this.run.weaponGrowth(weapon) : null
-      const side = slot === 0 ? LABELS.leftHand : LABELS.rightHand
-      equipSlot.classList.toggle('filled', !!weapon)
-      equipSlot.classList.remove('occupied')
-      equipSlot.classList.toggle('armed', this.run.selectedEquipmentSlot === slot)
-      equipSlot.classList.toggle('target', this.run.itemTargeting && !!weapon)
-      equipSlot.disabled = false
-      equipSlot.innerHTML = weapon
-        ? `<div class="nm">${escapeHtml(weapon.name)}</div><div class="sub">${side} · ${WEAPON_CLASS_LABELS[weapon.weaponClass] || LABELS.weaponClass} · ATK ${weapon.attack} · R ${this.run.weaponRange(weapon)}</div><div class="sub">${LABELS.durability} ${weapon.durability}${growth?.talents ? ` · ${LABELS.talents} ${growth.talents}` : ''}</div>`
-        : `<div class="sub">${side} · ${LABELS.empty}</div>`
-    }
 
     this._renderRelics()
     this._renderInitialRelicChoice()
@@ -388,7 +363,7 @@ export class HUD {
     this.q('characterhealth').textContent = `${player.hp} / ${player.maxHp}`
     const progress = player.experienceToNext > 0 ? Math.min(100, Math.max(0, player.experience / player.experienceToNext * 100)) : 0
     this.q('characterexperiencebar').style.width = `${progress}%`
-    this.q('characterhands').innerHTML = `<section class="character-hand"><div class="character-hand-title">${LABELS.talents}</div><div class="character-row"><span>${LABELS.talents}</span><strong>${player.talents?.length || 0}</strong></div><div class="character-row sub"><span>${LABELS.fixedGrowth}</span><strong>${player.talentRuntime?.bodyStrength || 0}</strong></div></section>`
+    this.q('charactertalents').innerHTML = `<section class="character-talent-summary"><div class="character-talent-title">${LABELS.talents}</div><div class="character-row"><span>${LABELS.talents}</span><strong>${player.talents?.length || 0}</strong></div><div class="character-row sub"><span>${LABELS.fixedGrowth}</span><strong>${player.talentRuntime?.bodyStrength || 0}</strong></div></section>`
     return
   }
 
@@ -435,11 +410,10 @@ export class HUD {
         const definition = getItemDefinition(choice.itemId)
         if (!definition) return ''
         const detail = definition.type === 'weapon'
-          ? `${WEAPON_CLASS_LABELS[definition.weaponClass] || LABELS.weaponClass} · ATK ${definition.attack} · R ${this.run.weaponRange({ ...definition, durability: definition.durability ?? definition.durabilityRange?.[1] ?? 0 })} · ${LABELS.durability} ${definition.durability}`
+          ? `${WEAPON_CLASS_LABELS[definition.weaponClass] || LABELS.weaponClass} · ATK ${definition.attack} · R ${this.run.weaponRange(definition)} · ${LABELS.energy} ${this.run.weaponEnergyCost(definition)}`
           : definition.type === 'potion' ? `HP +${definition.heal}`
             : definition.type === 'armor' ? `${LABELS.armor} +${definition.armor}`
-              : definition.type === 'whetstone' ? `${LABELS.durability} +${definition.repair}`
-                : `ATK +${definition.attackBonus}`
+              : `ATK +${definition.attackBonus}`
         const item = { ...definition, uid: 'reward-preview' }
         const disabled = !this.run.backpack.canFit(item) ? ' disabled' : ''
         return `<button class="relic-choice-card" data-room-reward="${index}"${disabled}><span class="relic-name">${escapeHtml(definition.name)}</span><span class="relic-desc">${detail}</span></button>`
@@ -489,7 +463,7 @@ export class HUD {
       if (!definition) return ''
       return `<button class="merchant-stock-item" data-merchant-stock="${index}"><b>${escapeHtml(definition.name)}</b><small>${LABELS.buy} ${entry.price}</small></button>`
     }).join('')
-    const selected = this.run.selectedItem || this.run.selectedEquipment
+    const selected = this.run.selectedItem
     const refreshPrice = merchant.restockPrice || 0
     this.q('merchanttrade').innerHTML = `<button data-action="merchant-sell"${selected ? '' : ' disabled'}>${LABELS.sellSelected}${selected ? ` ${merchantSellText(selected)}` : ''}</button>${refreshPrice > 0 ? `<button data-action="merchant-refresh"${this.run.player.gold < refreshPrice ? ' disabled' : ''}>${LABELS.refreshStock} ${refreshPrice}</button>` : ''}`
     const relics = this.q('merchantrelics')
@@ -543,11 +517,11 @@ export class HUD {
       if (item.type === 'weapon' && item.attribute) itemClasses.push(`attribute-${item.attribute}`)
       if (selected) itemClasses.push('selected')
       const detail = item.type === 'weapon'
-        ? `${WEAPON_CLASS_LABELS[item.weaponClass] || LABELS.weaponClass} · ATK ${item.attack} · R ${this.run.weaponRange(item)} · ${LABELS.durability} ${item.durability}`
+        ? `${WEAPON_CLASS_LABELS[item.weaponClass] || LABELS.weaponClass} · ATK ${item.attack} · R ${this.run.weaponRange(item)} · ${LABELS.energy} ${this.run.weaponEnergyCost(item)}`
         : item.type === 'potion' ? `HP +${item.heal}`
           : item.type === 'armor' ? `${LABELS.armor} +${item.armor}`
             : item.type === 'buff' ? `ATK +${item.attackBonus}`
-              : item.type === 'whetstone' ? `${LABELS.durability} +${item.repair}` : ''
+              : ''
       let firstFilled = true
       const shapeCells = shape.flat().map((filled, shapeIndex) => {
         if (!filled) return '<span class="void"></span>'
@@ -565,27 +539,29 @@ export class HUD {
     const placement = selectedItem ? this.run.backpack.placementOf(selectedItem.uid) : null
     const selectedShape = placement && selectedItem ? this.run.backpack.shapeFor(selectedItem, placement.rotation) : null
     const rotatable = !!selectedShape && (selectedShape.length > 1 || selectedShape[0].length > 1)
-    rotate.hidden = !rotatable
+    rotate.hidden = false
+    rotate.classList.toggle('is-hidden', !rotatable)
+    rotate.setAttribute('aria-hidden', rotatable ? 'false' : 'true')
+    rotate.tabIndex = rotatable ? 0 : -1
     rotate.disabled = !rotatable
   }
 
   _renderActions() {
     const selected = this.run.selectedItem
-    const actions = this.q('actions')
     const discard = this.root.querySelector('[data-action="discard"]')
     const use = this.root.querySelector('[data-action="use"]')
-    const unequip = this.root.querySelector('[data-action="unequip"]')
-    const selectedEquipment = this.run.selectedEquipment
     const usableItem = !!selected && selected.type !== 'weapon'
-    actions.classList.toggle('show', this.run.phase === 'explore' && !this.run.gameOver)
-    actions.classList.toggle('item-selected', usableItem)
-    actions.classList.toggle('weapon-selected', !!selectedEquipment)
-    discard.disabled = !selected && !selectedEquipment
-    use.disabled = !usableItem
-    unequip.disabled = !selectedEquipment
+    const actionsAvailable = this.run.phase === 'explore' && !this.run.gameOver
+    const setActionState = (button, visible, enabled) => {
+      button.hidden = false
+      button.classList.toggle('is-hidden', !visible)
+      button.setAttribute('aria-hidden', visible ? 'false' : 'true')
+      button.tabIndex = visible ? 0 : -1
+      button.disabled = !enabled
+    }
+    setActionState(discard, actionsAvailable && !!selected, !!selected)
+    setActionState(use, actionsAvailable && usableItem, usableItem)
   }
-
-  selectedIsWeapon() { return this.run.selectedItem?.type === 'weapon' }
 
   _renderDetailPanel() {
     const detail = this.run.detailPanel
@@ -622,17 +598,12 @@ export class HUD {
       const item = this.run.backpack.placementForCellIndex(Number(inventory.dataset.slot))?.item
       return item ? () => this.run.showItemDetail(item) : null
     }
-    const equipment = target.closest('[data-equip-slot]')
-    if (equipment) {
-      const item = this.run.player.equipment[Number(equipment.dataset.equipSlot)]
-      return item ? () => this.run.showItemDetail(item) : null
-    }
     const merchantStock = target.closest('[data-merchant-stock]')
     if (merchantStock) {
       const entry = this.run.merchantEntity?.stock?.[Number(merchantStock.dataset.merchantStock)]
       const definition = getItemDefinition(entry?.itemId)
       if (definition) {
-        const preview = { ...definition, uid: `merchant-preview-${definition.id}`, durability: definition.durability ?? definition.durabilityRange?.[1] ?? 0 }
+        const preview = { ...definition, uid: `merchant-preview-${definition.id}` }
         return () => this.run.showItemDetail(preview)
       }
     }
@@ -744,19 +715,10 @@ export class HUD {
       }
       return
     }
-    const equipSlot = event.target.closest('[data-equip-slot]')
-    if (equipSlot) {
-      const targetSlot = Number(equipSlot.dataset.equipSlot)
-      if (this.run.itemTargeting) this.run.applySelectedItemToEquipment(targetSlot)
-      else if (this.selectedIsWeapon()) this.run.equipSelected(targetSlot)
-      else this.run.selectEquipmentSlot(targetSlot)
-      return
-    }
     const action = event.target.closest('[data-action]')?.dataset.action
     if (!action) return
     if (action === 'use') this.run.useSelected()
     if (action === 'discard') this.run.discardSelected()
-    if (action === 'unequip') this.run.unequipSelected()
     if (action === 'rotate-bag') this.run.rotateSelectedInventory()
     if (action === 'restart') {
       this.run.clearSave()

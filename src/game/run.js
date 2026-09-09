@@ -18,37 +18,17 @@ import { stepEnemy } from './rules/enemies.js'
 import { findAttackPath, findDoorPath, findInteractionPath, findPath, findRevealPath } from './rules/pathfinding.js'
 import { terrainDamageModifiers } from './rules/terrain.js'
 
-// The design notation is rows × columns: five rows, five columns.
-export const INVENTORY_COLUMNS = 5
+// The design notation is rows × columns: five rows, eight columns.
+export const INVENTORY_COLUMNS = 8
 export const INVENTORY_ROWS = 5
 export const INVENTORY_CAPACITY = INVENTORY_COLUMNS * INVENTORY_ROWS
-export const EQUIPMENT_SLOTS = 2
+export const ENERGY_MAX = 10
 export const SAVE_KEY = 'grid_flip_adventure_v2'
 // This release removes the per-tile random card-back attribute and changes
 // merchant stock semantics. Old test saves are intentionally discarded.
-export const SAVE_VERSION = 18
+export const SAVE_VERSION = 20
 
 function clone(value) { return JSON.parse(JSON.stringify(value)) }
-
-function uniqueWeapons(weapons) {
-  const known = new Set()
-  return weapons.filter((weapon) => {
-    if (!weapon) return false
-    const key = weapon.uid || weapon
-    if (known.has(key)) return false
-    known.add(key)
-    return true
-  })
-}
-
-function weaponHands(player, weapon) {
-  if (!player || !weapon) return []
-  const hands = []
-  for (let index = 0; index < EQUIPMENT_SLOTS; index++) {
-    if (player.equipment[index]?.uid === weapon.uid) hands.push(index)
-  }
-  return hands
-}
 
 function shuffled(values, random) {
   const copy = [...values]
@@ -64,7 +44,6 @@ const DETAIL_LABELS = Object.freeze({
   potion: '\u836f\u5242',
   armor: '\u62a4\u7532',
   buff: '\u589e\u76ca',
-  whetstone: '\u78e8\u5200\u77f3',
   relic: '\u5723\u9057\u7269',
   enemy: '\u654c\u4eba',
   trap: '\u9677\u9631',
@@ -73,12 +52,10 @@ const DETAIL_LABELS = Object.freeze({
   merchant: '\u5546\u4eba',
   attack: '\u653b\u51fb',
   range: '\u5c04\u7a0b',
-  durability: '\u8010\u4e45',
   weaponClass: '\u7c7b\u522b',
   health: '\u751f\u547d',
   armorValue: '\u62a4\u7532',
   nextAttack: '\u4e0b\u6b21\u653b\u51fb',
-  repair: '\u4fee\u590d\u8010\u4e45',
   attribute: '\u5c5e\u6027',
   active: '\u5df2\u6fc0\u6d3b',
   inactive: '\u672a\u6fc0\u6d3b',
@@ -100,9 +77,13 @@ const WEAPON_CLASS_LABELS = Object.freeze({
 function weaponClassLabel(value) { return WEAPON_CLASS_LABELS[value] || value || '\u6b66\u5668' }
 
 function weaponAttackRange(weapon, player = null) {
-  if (weapon?.durability === 1 && weapon.weaponClass === 'polearm') return 4
-  const base = weapon?.durability === 1 && weapon.weaponClass === 'bow' ? 5 : Math.max(1, Number(weapon?.range) || 1)
+  const base = Math.max(1, Number(weapon?.range) || 1)
   return base + (weapon?.weaponClass === 'bow' && hasTalent(player, 'bow-range') ? 1 : 0)
+}
+
+function weaponEnergyCost(weapon) {
+  const fallback = { dagger: 2, sword: 3, axe: 4, polearm: 4, bow: 4, heavy: 5 }[weapon?.weaponClass] || 3
+  return Math.max(2, Math.min(5, Math.floor(Number(weapon?.energyCost) || fallback)))
 }
 
 function normalizedCounter(value) { return Math.max(0, Number(value) || 0) }
@@ -124,6 +105,18 @@ function damageReductionLog({ healthDamage = 0, absorbed = 0 } = {}) {
   return armor > 0 ? `\u51cf${health}\u8840\uff0c\u51cf${armor}\u7532` : `\u51cf${health}\u8840`
 }
 
+function playerDeathCause(context = {}) {
+  const source = context.source || ''
+  const enemyName = context.enemy?.name
+  if (source === 'enemy:small-explosion') return enemyName ? `${enemyName}\u7684\u5c0f\u81ea\u7206` : '\u5c0f\u81ea\u7206'
+  if (source === 'enemy:large-explosion') return enemyName ? `${enemyName}\u7684\u5927\u81ea\u7206` : '\u5927\u81ea\u7206'
+  if (source === 'enemy:attack') return enemyName ? `${enemyName}\u7684\u653b\u51fb` : '\u654c\u4eba\u653b\u51fb'
+  if (source === 'trap:explosion') return '\u9677\u9631\u7206\u70b8'
+  if (source === 'trap:poison-fog') return '\u6bd2\u96fe'
+  if (source === 'enemy:burning') return enemyName ? `${enemyName}\u7684\u71c3\u70e7` : '\u71c3\u70e7'
+  return '\u672a\u77e5\u4f24\u5bb3'
+}
+
 const MERCHANT_SERVICE_LABELS = Object.freeze({
   stock: '\u8d2d\u4e70\u5546\u54c1',
   sell: '\u51fa\u552e\u7269\u54c1',
@@ -138,7 +131,7 @@ function detailForItem(item, player = null) {
   if (item?.type === 'weapon') {
     lines.push(`${DETAIL_LABELS.attack} ${item.attack || 0}`)
     lines.push(`${DETAIL_LABELS.range} ${weaponAttackRange(item, player)}`)
-    lines.push(`${DETAIL_LABELS.durability} ${item.durability || 0}`)
+    lines.push(`\u4f53\u529b\u6d88\u8017 ${weaponEnergyCost(item)}`)
     lines.push(`${DETAIL_LABELS.weaponClass}\uff1a${weaponClassLabel(item.weaponClass)}`)
   } else if (item?.type === 'potion') {
     lines.push(`${DETAIL_LABELS.health} +${item.heal || 0}`)
@@ -147,8 +140,6 @@ function detailForItem(item, player = null) {
   } else if (item?.type === 'buff') {
     const target = item.attackTarget === 'melee' ? '\u4e0b\u6b21\u8fd1\u6218\u653b\u51fb' : DETAIL_LABELS.nextAttack
     lines.push(`${target} +${item.attackBonus || 0}`)
-  } else if (item?.type === 'whetstone') {
-    lines.push(`${DETAIL_LABELS.repair} +${item.repair || 0}`)
   }
   return { title: item?.name || type, type, icon: item?.type || 'item', badges, lines }
 }
@@ -174,19 +165,15 @@ export class GameRun {
 
   get currentRoom() { return this.dungeon?.room(this.player?.roomId) || null }
   get attackCount() { return this.turns.attackCount }
-  get actionCount() { return this.turns.actionCount }
   get globalTurn() { return this.turns.globalTurn }
-  get movementCount() { return this.turns.movementCount }
   get turn() { return this.globalTurn }
   set turn(value) { this.turns.setGlobalTurn(value) }
-  get equippedWeapons() { return uniqueWeapons(this.player?.equipment || []) }
-  get equippedWeapon() { return this.equippedWeapons[0] || null }
+  get backpackWeapons() { return this.backpack?.items.filter((item) => item?.type === 'weapon') || [] }
   get selectedItem() {
     return Number.isInteger(this.selectedInventoryIndex)
       ? this.backpack.placementForCellIndex(this.selectedInventoryIndex)?.item || null
       : null
   }
-  get selectedEquipment() { return Number.isInteger(this.selectedEquipmentSlot) ? this.player.equipment[this.selectedEquipmentSlot] || null : null }
 
   reset({ emit = true } = {}) {
     const generated = createLinearDungeon({ random: this.random })
@@ -195,10 +182,11 @@ export class GameRun {
       hp: 20,
       maxHp: 20,
       armor: 0,
+      energy: ENERGY_MAX,
+      maxEnergy: ENERGY_MAX,
       gold: 0,
       roomId: generated.startRoomId,
       pos: { ...generated.start },
-      equipment: [starterWeapon(), null],
       level: PROGRESSION.startingLevel,
       experience: 0,
       experienceToNext: experienceToNextLevel(PROGRESSION.startingLevel),
@@ -213,6 +201,8 @@ export class GameRun {
       burningDamage: 0,
     }
     this.backpack = new BackpackGrid(INVENTORY_COLUMNS, INVENTORY_ROWS)
+    const starter = starterWeapon()
+    if (!this.backpack.add(starter)) throw new Error('Unable to add starter weapon to backpack')
     this.relics = new RelicCollection()
     this.relicEngine = new RelicEngine(this.relics)
     this.relicLoadoutDraft = null
@@ -222,7 +212,6 @@ export class GameRun {
     this.gameOver = false
     this.win = false
     this.selectedInventoryIndex = null
-    this.selectedEquipmentSlot = null
     this.itemTargeting = false
     this.merchant = null
     this.merchantEntering = false
@@ -233,9 +222,10 @@ export class GameRun {
     this.relicEventQueue = []
     this.relicRuntime = {}
     this.detailPanel = null
+    this.deathLogEntry = null
     this.log = []
     this._log('\u8fdb\u5165\u7b2c 1 \u5c42\u7684\u7b2c 1 \u4e2a\u623f\u95f4\u3002')
-    this._log(`\u521d\u59cb\u88c5\u5907\uff1a${this.player.equipment[0].name}\u3002`)
+    this._log(`\u521d\u59cb\u7269\u54c1\uff1a${starter.name}\u3002`)
     this._persist()
     if (emit) this.bus.emit('change')
   }
@@ -256,6 +246,20 @@ export class GameRun {
   hasActiveRelic(id) { return this.relics.isActive(id) }
 
   weaponRange(weapon) { return weaponAttackRange(weapon, this.player) }
+  weaponEnergyCost(weapon) { return weaponEnergyCost(weapon) }
+
+  _recoverEnergy(amount = 0) {
+    const recovery = Math.max(0, Math.floor(Number(amount) || 0))
+    this.player.energy = Math.min(this.player.maxEnergy, Math.max(0, Number(this.player.energy) || 0) + recovery)
+    return this.player.energy
+  }
+
+  _spendEnergy(amount = 0) {
+    const cost = Math.max(0, Math.floor(Number(amount) || 0))
+    if ((Number(this.player.energy) || 0) < cost) return false
+    this.player.energy -= cost
+    return true
+  }
 
   hasTalent(id) { return hasTalent(this.player, id) }
 
@@ -281,13 +285,12 @@ export class GameRun {
     return true
   }
 
-  _consumeTalentBuffs(weapon, enemy, hand = this.selectedEquipmentSlot) {
+  _consumeTalentBuffs(weapon, enemy) {
     const state = this._talentRuntime()
     const matching = state.pending.filter((buff) => {
       if (!Number.isFinite(buff.amount)) return false
       if (buff.weaponClass && buff.weaponClass !== weapon?.weaponClass) return false
       if (buff.attribute && buff.attribute !== weapon?.attribute) return false
-      if (buff.hand != null && buff.hand !== hand) return false
       if (buff.targetId && buff.targetId !== enemy?.id) return false
       return true
     })
@@ -531,9 +534,8 @@ export class GameRun {
     if (!item) return false
     const detail = detailForItem(item, this.player)
     if (item.type === 'weapon') {
-      const hands = weaponHands(this.player, item)
       const growth = this.weaponGrowth(item)
-      if (hands.length && growth.talents) detail.lines.push(`\u5929\u8d4b ${growth.talents}`)
+      if (growth.talents) detail.lines.push(`\u5929\u8d4b ${growth.talents}`)
     }
     return this._showDetail({ position: 'top', ...detail })
   }
@@ -643,7 +645,7 @@ export class GameRun {
       if (action.type === 'heal') this._healPlayer(action.amount, { source: action.source || `relic:${event}` })
       if (action.type === 'armor') this.player.armor += Math.max(0, action.amount || 0)
       if (action.type === 'gold') this.player.gold += Math.max(0, Math.floor(action.amount || 0))
-      if (action.type === 'repair' && action.weapon?.type === 'weapon') action.weapon.durability += Math.max(0, Math.floor(action.amount || 0))
+      if (action.type === 'energy') this._recoverEnergy(action.amount)
       if (action.type === 'relic:war-spirit:lose') {
         const state = this._relicRoomRuntime('r-war-spirit')
         state.stacks = Math.max(0, (Number(state.stacks) || 0) - 1)
@@ -741,8 +743,8 @@ export class GameRun {
       return path ? this._pathPreview('move', target, path) : null
     }
     if (entity.kind === 'enemy') {
-      const selectedWeapon = this.selectedEquipment
-      if (selectedWeapon?.type !== 'weapon' || selectedWeapon.durability <= 0) return null
+      const selectedWeapon = this.selectedItem
+      if (selectedWeapon?.type !== 'weapon' || this.player.energy < weaponEnergyCost(selectedWeapon)) return null
        const route = findAttackPath(room, this.player.pos, entity, [{ ...selectedWeapon, range: weaponAttackRange(selectedWeapon, this.player) }])
       return route ? this._pathPreview('attack', target, route.path) : null
     }
@@ -767,21 +769,12 @@ export class GameRun {
   }
 
   _pathPreview(kind, target, path) {
-    const attackTargetId = kind === 'attack' ? this.currentRoom?.entityAt(target)?.id : null
-    const dangerSteps = []
-    let previous = { ...this.player.pos }
-    for (const step of path) {
-      if (this._canBeIntercepted(previous, step, attackTargetId)) dangerSteps.push(step)
-      previous = { ...step }
-    }
     return {
       kind,
       target: { ...target },
       path: path.map((step) => ({ ...step })),
       arrival: { ...(path.at(-1) || this.player.pos) },
       targeted: ['attack', 'flip', 'merchant'].includes(kind),
-      danger: dangerSteps.length > 0,
-      dangerSteps: dangerSteps.map((step) => ({ ...step })),
     }
   }
 
@@ -793,16 +786,14 @@ export class GameRun {
     const origin = this.backpack.originIndex(placement)
     if (this.selectedInventoryIndex === origin && !this.itemTargeting) return this.clearSelection()
     this.selectedInventoryIndex = origin
-    this.selectedEquipmentSlot = null
     this.itemTargeting = false
     this._changed()
     return true
   }
 
   clearSelection() {
-    if (this.selectedInventoryIndex == null && this.selectedEquipmentSlot == null && !this.itemTargeting) return false
+    if (this.selectedInventoryIndex == null && !this.itemTargeting) return false
     this.selectedInventoryIndex = null
-    this.selectedEquipmentSlot = null
     this.itemTargeting = false
     this._changed()
     return true
@@ -816,7 +807,6 @@ export class GameRun {
     const moved = this.backpack.move(item.uid, index % INVENTORY_COLUMNS, Math.floor(index / INVENTORY_COLUMNS))
     if (!moved) return false
     this.selectedInventoryIndex = this.backpack.originIndex(this.backpack.placementOf(item.uid))
-    this.selectedEquipmentSlot = null
     this.itemTargeting = false
     this._changed()
     return true
@@ -858,90 +848,6 @@ export class GameRun {
     return true
   }
 
-  selectEquipmentSlot(slot) {
-    if (this.merchantEntering || this.roomEntering) return false
-    if (!Number.isInteger(slot) || slot < 0 || slot >= EQUIPMENT_SLOTS) return false
-    this.selectedEquipmentSlot = this.player.equipment[slot] && this.selectedEquipmentSlot !== slot ? slot : null
-    this.selectedInventoryIndex = null
-    this._changed()
-    return true
-  }
-
-  applySelectedItemToEquipment(slot) {
-    if (!this._canAct() || !this.itemTargeting || !Number.isInteger(slot) || slot < 0 || slot >= EQUIPMENT_SLOTS) return false
-    const weapon = this.player.equipment[slot]
-    return this._applySelectedWhetstone(weapon)
-  }
-
-  applySelectedItemToBackpackWeapon(index) {
-    if (!this._canAct() || !this.itemTargeting || !Number.isInteger(index) || index < 0 || index >= INVENTORY_CAPACITY) return false
-    const weapon = this.backpack.placementForCellIndex(index)?.item
-    if (weapon?.type !== 'weapon') return false
-    return this._applySelectedWhetstone(weapon)
-  }
-
-  _applySelectedWhetstone(weapon) {
-    const item = this.selectedItem
-    if (!item || item.type !== 'whetstone' || !weapon) return false
-    weapon.durability += item.repair
-    const hand = weaponHands(this.player, weapon)[0]
-    const other = Number.isInteger(hand) ? this.player.equipment[hand === 0 ? 1 : 0] : null
-    if (this.hasActiveRelic('r-whetstone-echo') && Number.isInteger(hand) && other?.type === 'weapon') other.durability += 1
-    this.backpack.removeByUid(item.uid)
-    this.selectedInventoryIndex = null
-    this.itemTargeting = false
-    this._log(`\u4f7f\u7528 ${item.name}\uff0c${weapon.name} \u8010\u4e45 +${item.repair}\u3002`)
-    if (this.hasActiveRelic('r-whetstone-echo') && other?.type === 'weapon') this._log(`\u78e8\u77f3\u56de\u58f0\uff1a${other.name}\u8010\u4e45 +1\u3002`)
-    this._endTurn({ turnKind: TURN_KINDS.ACTION })
-    this._changed()
-    return true
-  }
-
-  equipSelected(slot = null) {
-    if (!this._canAct()) return false
-    const item = this.selectedItem
-    if (!item || item.type !== 'weapon') return this._reject('\u8bf7\u5148\u9009\u4e2d\u4e00\u628a\u6b66\u5668\u3002')
-    const emptySlot = this.player.equipment.findIndex((weapon) => !weapon)
-    const targetSlot = Number.isInteger(slot) && slot >= 0 && slot < EQUIPMENT_SLOTS
-      ? slot
-      : Number.isInteger(this.selectedEquipmentSlot) ? this.selectedEquipmentSlot : emptySlot >= 0 ? emptySlot : 0
-    const nextEquipment = [...this.player.equipment]
-    nextEquipment[targetSlot] = item
-    const displaced = this.player.equipment[targetSlot] && this.player.equipment[targetSlot].uid !== item.uid
-      ? [this.player.equipment[targetSlot]] : []
-    const preview = BackpackGrid.hydrate(this.backpack.serialize(clone))
-    preview.removeByUid(item.uid)
-    for (const weapon of displaced) {
-      if (!preview.add(weapon)) return this._reject('\u80cc\u5305\u6ca1\u6709\u8db3\u591f\u7a7a\u95f4\u6362\u4e0b\u6b64\u6b66\u5668\u3002')
-    }
-    this.backpack.removeByUid(item.uid)
-    for (const weapon of displaced) this.backpack.add(weapon)
-    this.player.equipment = nextEquipment
-    this.selectedInventoryIndex = null
-    this.selectedEquipmentSlot = null
-    this._log(`\u88c5\u5907 ${item.name}\u3002`)
-    this._endTurn({ turnKind: TURN_KINDS.ACTION })
-    this._changed()
-    return true
-  }
-
-  unequipSelected() {
-    if (!this._canAct()) return false
-    const weapon = this.selectedEquipment
-    if (!weapon) return false
-    const preview = BackpackGrid.hydrate(this.backpack.serialize(clone))
-    if (!preview.add(weapon)) return this._reject('\u80cc\u5305\u6ca1\u6709\u8db3\u591f\u7a7a\u95f4\u5378\u4e0b\u6b64\u6b66\u5668\u3002')
-    this.player.equipment = this.player.equipment.map((equipped) => equipped?.uid === weapon.uid ? null : equipped)
-    this.backpack.add(weapon)
-    this.selectedInventoryIndex = null
-    this.selectedEquipmentSlot = null
-    this.itemTargeting = false
-    this._log(`\u5378\u4e0b ${weapon.name}\u3002`)
-    this._endTurn({ turnKind: TURN_KINDS.ACTION })
-    this._changed()
-    return true
-  }
-
   discardSelected() {
     if (this.merchantEntering || this.roomEntering) return false
     const item = this.selectedItem
@@ -957,13 +863,7 @@ export class GameRun {
         }
       }
       this.selectedInventoryIndex = null
-    } else {
-      const weapon = this.selectedEquipment
-      if (!weapon) return false
-      this.player.equipment = this.player.equipment.map((equipped) => equipped?.uid === weapon.uid ? null : equipped)
-      this._log(`\u4e22\u5f03 ${weapon.name}\u3002`)
-      this.selectedEquipmentSlot = null
-    }
+    } else return false
     this.itemTargeting = false
     this._changed()
     return true
@@ -978,6 +878,7 @@ export class GameRun {
       this.selectedInventoryIndex = null
       this.itemTargeting = false
       this._log(`\u4f7f\u7528 ${item.name}\uff0c\u6062\u590d ${healed} HP\u3002`)
+      this._recoverEnergy(1)
       this._endTurn({ turnKind: TURN_KINDS.ACTION })
       this._changed()
       return true
@@ -988,6 +889,7 @@ export class GameRun {
       this.selectedInventoryIndex = null
       this.itemTargeting = false
       this._log(`\u4f7f\u7528 ${item.name}\uff0c\u62a4\u7532 +${item.armor}\u3002`)
+      this._recoverEnergy(1)
       this._endTurn({ turnKind: TURN_KINDS.ACTION })
       this._changed()
       return true
@@ -1000,15 +902,8 @@ export class GameRun {
       this.itemTargeting = false
       const target = item.attackTarget === 'melee' ? '\u4e0b\u6b21\u8fd1\u6218\u653b\u51fb' : '\u4e0b\u6b21\u653b\u51fb'
       this._log(`\u4f7f\u7528 ${item.name}\uff0c${target} +${item.attackBonus}\u3002`)
+      this._recoverEnergy(1)
       this._endTurn({ turnKind: TURN_KINDS.ACTION })
-      this._changed()
-      return true
-    }
-    if (item.type === 'whetstone') {
-      const hasTarget = this.equippedWeapons.some((weapon) => weapon.type === 'weapon')
-        || this.backpack.items.some((candidate) => candidate.type === 'weapon')
-      if (!hasTarget) return this._reject('\u6ca1\u6709\u53ef\u4fee\u590d\u7684\u6b66\u5668\u3002')
-      this.itemTargeting = true
       this._changed()
       return true
     }
@@ -1025,8 +920,8 @@ export class GameRun {
     const entity = room.entityAt(position)
     if (!entity) return this._moveTo(position)
     if (entity.kind === 'enemy') {
-      if (!this.selectedEquipment || this.selectedEquipment.type !== 'weapon' || this.selectedEquipment.durability <= 0) {
-        return this._reject('\u8bf7\u5148\u70b9\u51fb\u4e00\u628a\u5df2\u88c5\u5907\u7684\u6b66\u5668\u3002')
+      if (!this.selectedItem || this.selectedItem.type !== 'weapon' || this.player.energy < weaponEnergyCost(this.selectedItem)) {
+        return this._reject('\u8bf7\u5148\u4ece\u80cc\u5305\u9009\u4e2d\u4e00\u628a\u6b66\u5668\u3002')
       }
       return this._attack(entity)
     }
@@ -1047,7 +942,7 @@ export class GameRun {
     if (!route) return this._reject('\u65e0\u6cd5\u9760\u8fd1\u8fd9\u4f4d\u5546\u4eba\u3002')
     this.merchantEntering = route.path.length > 0
     const movement = this._walk(route.path)
-    this._endTurn({ interceptorId: movement.interceptorId, turnKind: movement.stopped ? TURN_KINDS.MOVEMENT : TURN_KINDS.ACTION })
+    if (!movement.stopped) this._endTurn({ turnKind: TURN_KINDS.ACTION })
     if (movement.stopped || this.gameOver) this.merchantEntering = false
     if (!movement.stopped && !this.gameOver) {
       this.merchant = { entityId: merchant.id }
@@ -1057,7 +952,6 @@ export class GameRun {
       }
       this.phase = 'merchant'
       this.selectedInventoryIndex = null
-      this.selectedEquipmentSlot = null
       this.itemTargeting = false
       this._log(`\u4e0e ${merchant.name} \u4ea4\u8c08\u3002`)
     }
@@ -1105,16 +999,11 @@ export class GameRun {
 
   sellSelectedMerchantItem() {
     if (!this.canSellAtMerchant()) return false
-    const item = this.selectedItem || this.selectedEquipment
+    const item = this.selectedItem
     if (!item) return this._reject('\u8bf7\u5148\u9009\u4e2d\u8981\u51fa\u552e\u7684\u7269\u54c1\u3002')
     const price = merchantSellPrice(item)
-    if (this.selectedItem) {
-      this.backpack.removeByUid(item.uid)
-      this.selectedInventoryIndex = null
-    } else {
-      this.player.equipment = this.player.equipment.map((equipped) => equipped?.uid === item.uid ? null : equipped)
-      this.selectedEquipmentSlot = null
-    }
+    this.backpack.removeByUid(item.uid)
+    this.selectedInventoryIndex = null
     this.itemTargeting = false
     this.player.gold += price
     this._log(`\u51fa\u552e ${item.name}\uff0c\u83b7\u5f97 ${price} \u91d1\u5e01\u3002`)
@@ -1210,10 +1099,9 @@ export class GameRun {
       const entity = this.currentRoom.entityAt(position)
       this._log(entity ? `\u7ffb\u5f00\uff1a${entity.name || this._entityName(entity)}\u3002` : '\u7ffb\u5f00\u4e86\u4e00\u4e2a\u7a7a\u683c\u3002')
     }
-    this._endTurn({
-      interceptorId: movement.interceptorId,
+    if (!movement.stopped) this._endTurn({
       skipEnemyIds: flipOutcome.skipEnemyIds,
-      turnKind: movement.stopped ? TURN_KINDS.MOVEMENT : TURN_KINDS.ACTION,
+      turnKind: TURN_KINDS.ACTION,
     })
     this._changed()
     return true
@@ -1278,25 +1166,9 @@ export class GameRun {
       this._animateEnemyRevealBatch(room, flips)
       this._log(`${definition.name}\u89e6\u53d1\uff0c\u7ffb\u5f00\u4e86 ${targets.length} \u4e2a\u9644\u8fd1\u654c\u4eba\u3002`)
     } else if (definition.effect === 'corrosion') {
-      const durabilityLoss = Math.max(1, Math.floor(Number(definition.durabilityLoss) || 1))
-      const weapons = uniqueWeapons(this.player.equipment)
-      for (const weapon of weapons) {
-        const hand = weaponHands(this.player, weapon)[0] ?? null
-        weapon.durability = Math.max(0, normalizedCounter(weapon.durability) - durabilityLoss)
-        if (weapon.durability <= 0) {
-          this._breakWeapon(weapon, {
-            source: 'trap:corrosion',
-            trap,
-            hand,
-            finalStrike: false,
-            primaryDamage: 0,
-            primaryHealthDamage: 0,
-            primaryKilled: false,
-            countered: false,
-          })
-        }
-      }
-      this._log(`${definition.name}\u89e6\u53d1\uff0c\u5df2\u88c5\u5907\u6b66\u5668\u5404\u635f\u5931 ${durabilityLoss} \u70b9\u8010\u4e45\u3002`)
+      const energyLoss = Math.max(1, Math.floor(Number(definition.energyLoss) || 2))
+      this.player.energy = Math.max(0, this.player.energy - energyLoss)
+      this._log(`${definition.name}\u89e6\u53d1\uff0c\u4f53\u529b -${energyLoss}\u3002`)
     } else if (definition.effect === 'poison') {
       const poisonTurns = Math.max(1, Math.floor(Number(definition.poisonTurns) || 1))
       const poisonDamage = Math.max(1, Math.floor(Number(definition.poisonDamage) || 1))
@@ -1313,8 +1185,7 @@ export class GameRun {
   _moveTo(position) {
     const route = findPath(this.currentRoom, this.player.pos, position)
     if (!route) return this._reject('\u76ee\u6807\u4e0d\u53ef\u8fbe\u3002')
-    const movement = this._walk(route)
-    this._endTurn({ interceptorId: movement.interceptorId, turnKind: TURN_KINDS.MOVEMENT })
+    this._walk(route)
     this._changed()
     return true
   }
@@ -1346,7 +1217,7 @@ export class GameRun {
         if (!entry) this._log(`\u5723\u9057\u7269\u5df2\u88ab\u83b7\u5f97\uff0c\u65e0\u6cd5\u91cd\u590d\u6536\u96c6\u3002`)
       }
     }
-    this._endTurn({ interceptorId: movement.interceptorId, turnKind: movement.stopped ? TURN_KINDS.MOVEMENT : TURN_KINDS.ACTION })
+    if (!movement.stopped) this._endTurn({ turnKind: TURN_KINDS.ACTION })
     this._changed()
     return true
   }
@@ -1360,7 +1231,6 @@ export class GameRun {
     const movement = this._walk(route)
     if (movement.stopped) {
       this.roomEntering = false
-      this._endTurn({ interceptorId: movement.interceptorId, turnKind: TURN_KINDS.MOVEMENT })
       this._changed()
       return true
     }
@@ -1481,7 +1351,7 @@ export class GameRun {
     return targets
   }
 
-  _talentAttackContext(weapon, enemy, hand, distance) {
+  _talentAttackContext(weapon, enemy, distance) {
     const flat = []
     const state = this._talentRuntime()
     const add = (amount, source) => { if (amount) flat.push({ amount, source }) }
@@ -1504,7 +1374,7 @@ export class GameRun {
       }
       if (distance === weaponAttackRange(weapon, this.player) && this.hasTalent('bow-hunt')) add(2, 'talent:bow-hunt')
     }
-    const pendingTalent = this._consumeTalentBuffs(weapon, enemy, hand)
+    const pendingTalent = this._consumeTalentBuffs(weapon, enemy)
     for (const buff of pendingTalent) add(buff.amount, buff.source || 'talent:pending')
     const itemBuffs = (this.player.pendingAttackBuffs || []).filter((buff) => buff.target !== 'melee' || weapon.range === 1)
     return {
@@ -1515,52 +1385,33 @@ export class GameRun {
     }
   }
 
-  _rollTalentDurabilityPreservation(weapon, _enemy, { distance } = {}) {
-    if (weapon?.weaponClass === 'bow' && distance === weaponAttackRange(weapon, this.player) && this.hasTalent('bow-ammo')) return this.random() < 0.5
-    return false
-  }
-
-  _markDurabilityFree(weapon, source = 'talent') {
-    if (!weapon?.uid) return false
-    this._queueTalentFlag({ kind: 'free-durability', weaponUid: weapon.uid, source })
-    return true
-  }
-
-  _clearDurabilityFree(weapon, hand = null) {
-    const state = this._talentRuntime()
-    state.pending = state.pending.filter((buff) => !(buff.kind === 'free-durability'
-      && (!buff.weaponUid || buff.weaponUid === weapon?.uid)
-      && (!buff.weaponClass || buff.weaponClass === weapon?.weaponClass)
-      && (buff.hand == null || buff.hand === hand)))
-  }
-
   _recordAxeMultiAttack(multiTarget, weapon) {
     if (!multiTarget || weapon?.weaponClass !== 'axe') return
-    if (this.hasTalent('axe-leverage') && this.random() < 0.5) this._markDurabilityFree(weapon, 'talent:axe-leverage')
+    if (this.hasTalent('axe-leverage') && this.random() < 0.5) this._recoverEnergy(1)
     if (this.hasTalent('axe-formation')) this._queueTalentBuff({ amount: 2, weaponClass: 'axe', source: 'talent:axe-formation' })
   }
 
-  _applyTalentPrimaryOutcome({ enemy, weapon, hand, outcome, hit }) {
+  _applyTalentPrimaryOutcome({ enemy, weapon, distance, outcome, hit }) {
     const state = this._talentRuntime()
     const primaryKilled = !!hit?.defeated
     const maxHp = Math.max(1, Number(enemy?.maxHp) || 1)
     const actualHealthDamage = Math.max(0, Number(hit?.healthDamage ?? hit?.damage) || 0)
     if (weapon.weaponClass === 'heavy') {
       if (this.hasTalent('heavy-aftershock') && actualHealthDamage >= maxHp * 0.4) this.player.armor += 2
-      if (this.hasTalent('heavy-shake') && actualHealthDamage >= maxHp * 0.5 && this.random() < 0.5) this._markDurabilityFree(weapon, 'talent:heavy-shake')
+      if (this.hasTalent('heavy-shake') && actualHealthDamage >= maxHp * 0.5 && this.random() < 0.5) this._recoverEnergy(1)
       if (this.hasTalent('heavy-unstoppable') && actualHealthDamage >= maxHp * 0.5) this._queueTalentBuff({ amount: 3, weaponClass: 'heavy', source: 'talent:heavy-unstoppable' })
     }
-    if (state.daggerTwin && state.daggerTwin.expectedHand === hand) {
-      if (primaryKilled && this.hasTalent('dagger-twin')) this._queueTalentBuff({ amount: 2, weaponClass: 'dagger', hand: state.daggerTwin.daggerHand, source: 'talent:dagger-twin' })
+    if (state.daggerTwin) {
+      if (primaryKilled && this.hasTalent('dagger-twin')) this._queueTalentBuff({ amount: 2, weaponClass: 'dagger', source: 'talent:dagger-twin' })
       state.daggerTwin = null
     }
     if (weapon.weaponClass === 'dagger' && primaryKilled) {
-      const otherHand = hand === 0 ? 1 : 0
       if (this.hasTalent('dagger-harvest')) this._queueTalentBuff({ amount: 2, weaponClass: 'dagger', source: 'talent:dagger-harvest' })
-      if (this.hasTalent('dagger-pass')) this._queueTalentBuff({ amount: 2, hand: otherHand, source: 'talent:dagger-pass' })
-      if (this.hasTalent('dagger-edge')) this._queueTalentFlag({ kind: 'free-durability', hand: otherHand, source: 'talent:dagger-edge' })
-      if (this.hasTalent('dagger-twin')) state.daggerTwin = { expectedHand: otherHand, daggerHand: hand }
+      if (this.hasTalent('dagger-pass')) this._queueTalentBuff({ amount: 2, source: 'talent:dagger-pass' })
+      if (this.hasTalent('dagger-edge')) this._recoverEnergy(1)
+      if (this.hasTalent('dagger-twin')) state.daggerTwin = true
     }
+    if (weapon.weaponClass === 'bow' && distance === weaponAttackRange(weapon, this.player) && this.hasTalent('bow-ammo') && this.random() < 0.5) this._recoverEnergy(1)
     if (outcome.countered && weapon.attribute === 'scorch') {
       if (primaryKilled && this.hasTalent('scorch-ignite')) {
         const targets = this._nearbyEnemies(enemy.pos, 2, 1 + (this.hasTalent('scorch-spread') ? 1 : 0), new Set([enemy.id]))
@@ -1588,32 +1439,29 @@ export class GameRun {
   }
 
   _attack(enemy) {
-    const hand = this.selectedEquipmentSlot
-    const weapon = this.selectedEquipment
-    if (!Number.isInteger(hand) || weapon?.type !== 'weapon' || weapon.durability <= 0) return this._reject('\u8bf7\u5148\u70b9\u51fb\u4e00\u628a\u5df2\u88c5\u5907\u7684\u6b66\u5668\u3002')
+    const weapon = this.selectedItem
+    if (weapon?.type !== 'weapon') return this._reject('\u8bf7\u5148\u4ece\u80cc\u5305\u9009\u4e2d\u4e00\u628a\u6b66\u5668\u3002')
+    if (this.player.energy < weaponEnergyCost(weapon)) return this._reject('\u4f53\u529b\u4e0d\u8db3\u3002')
     const attackRange = weaponAttackRange(weapon, this.player)
     const route = findAttackPath(this.currentRoom, this.player.pos, enemy, [{ ...weapon, range: attackRange }])
     if (!route) return this._reject('\u6ca1\u6709\u53ef\u8fbe\u7684\u653b\u51fb\u4f4d\u7f6e\u3002')
-    const movement = this._walk(route.path, { attackTargetId: enemy.id })
+    const movement = this._walk(route.path)
     if (movement.stopped || !this.currentRoom?.entity(enemy.id)) {
-      this._endTurn({ interceptorId: movement.interceptorId, turnKind: TURN_KINDS.MOVEMENT })
       this._changed()
       return true
     }
-    const attackers = [{ weapon, hand }]
-    this._emitRelicEvent('attack:started', { enemy, attackers, weapon, hand })
+    const attackers = [{ weapon }]
+    this._emitRelicEvent('attack:started', { enemy, attackers, weapon })
     const roomState = this._roomRuntime()
     const firstAttackInRoom = !roomState.firstAttackUsed
-    const vanguardStrike = this.hasActiveRelic('r-vanguard-strike') && firstAttackInRoom
     if (combatDistance(this.player.pos, enemy.pos, attackRange) <= attackRange) {
       if (!this._tryTenthAttackTransmutation(enemy)) {
-        const durabilityBefore = Math.max(0, Number(weapon.durability) || 0)
-        const finalStrike = durabilityBefore === 1
+        const finalStrike = false
         const distance = combatDistance(this.player.pos, enemy.pos)
-        const talentContext = this._talentAttackContext(weapon, enemy, hand, distance)
+        const talentContext = this._talentAttackContext(weapon, enemy, distance)
         const type = attackAttributeModifier(weapon, enemy, { counterBonus: talentContext.counterBonus })
-        const durabilityPreserved = !finalStrike && this._rollTalentDurabilityPreservation(weapon, enemy, { distance, hitCount: 1 })
         const relicModifiers = this.relicEngine.damageModifiers({ run: this, weapon, target: enemy, player: this.player, room: this.currentRoom, firstAttackInRoom, countered: type.countered, resisted: type.resisted })
+        if (!this._spendEnergy(weaponEnergyCost(weapon))) return this._reject('\u4f53\u529b\u4e0d\u8db3\u3002')
         const outcome = computeAttackDamage({
           weapon,
           target: enemy,
@@ -1624,14 +1472,14 @@ export class GameRun {
           counterBonus: talentContext.counterBonus,
         })
         const hit = this._damageEnemy(enemy, outcome.damage, { ignoreDefense: weapon.weaponClass === 'heavy' })
-        this._emitRelicEvent('attack:primary-hit', { enemy, weapon, hand, damage: hit.damage, healthDamage: hit.healthDamage, countered: outcome.countered, defeated: hit.defeated, finalStrike })
-        this._emitRelicEvent('attack:hit', { enemy, weapon, hand, damage: hit.damage, countered: outcome.countered, defeated: hit.defeated, finalStrike, weaponBroken: finalStrike })
+        this._emitRelicEvent('attack:primary-hit', { enemy, weapon, damage: hit.damage, healthDamage: hit.healthDamage, countered: outcome.countered, defeated: hit.defeated, finalStrike })
+        this._emitRelicEvent('attack:hit', { enemy, weapon, damage: hit.damage, countered: outcome.countered, defeated: hit.defeated, finalStrike, weaponBroken: finalStrike })
         if (talentContext.itemBuffs.length > 0) {
           this.player.pendingAttackBuffs = this.player.pendingAttackBuffs.filter((buff) => !talentContext.itemBuffs.includes(buff))
           this.player.pendingAttackBonus = this.player.pendingAttackBuffs.reduce((total, buff) => total + buff.amount, 0)
         }
-        if (hit.defeated) this._emitRelicEvent('attack:primary-kill', { enemy, weapon, hand, damage: hit.damage, healthDamage: hit.healthDamage, countered: outcome.countered, finalStrike })
-        this._applyTalentPrimaryOutcome({ enemy, weapon, hand, distance, finalStrike, outcome, hit })
+        if (hit.defeated) this._emitRelicEvent('attack:primary-kill', { enemy, weapon, damage: hit.damage, healthDamage: hit.healthDamage, countered: outcome.countered, finalStrike })
+        this._applyTalentPrimaryOutcome({ enemy, weapon, distance, finalStrike, outcome, hit })
         if (weapon.weaponClass === 'sword') {
           const reduction = finalStrike ? 0.2 : 0.6
           this.player.parry = { multiplier: Math.max(0, reduction - (this.hasTalent('sword-steady') ? 0.1 : 0)), ranged: this.hasTalent('sword-guard') }
@@ -1656,8 +1504,8 @@ export class GameRun {
               collisionDamage: (this.hasTalent('polearm-impact') ? 3 : 0) + (this.hasTalent('polearm-anti-cavalry') ? 2 : 0),
               collisionDelay: this.hasTalent('polearm-anti-cavalry') ? 1 : 0,
             })
+            if (knockback?.moved && this.hasTalent('polearm-step') && this.random() < 0.5) this._recoverEnergy(1)
             if (knockback?.collision) this._emitRelicEvent('damage:secondary', { enemy, source: 'weapon:polearm-collision', weapon, damage: 0, collision: knockback.collision })
-            if (knockback?.moved && this.hasTalent('polearm-step') && this.random() < 0.5) this._markDurabilityFree(weapon, 'talent:polearm-step')
           }
         } else if (weapon.weaponClass === 'bow' && finalStrike) {
           for (const target of this._bowPiercingEnemies(enemy)) {
@@ -1670,39 +1518,20 @@ export class GameRun {
           enemy.shieldConsumed = true
           enemy.armorBroken = true
         }
-        const daggerSavedOnKill = weapon.weaponClass === 'dagger' && hit.defeated && !finalStrike
-        const talentFree = this._talentRuntime().pending.some((buff) => buff.kind === 'free-durability'
-          && (!buff.weaponUid || buff.weaponUid === weapon.uid)
-          && (!buff.weaponClass || buff.weaponClass === weapon.weaponClass)
-          && (buff.hand == null || buff.hand === hand))
-        if (!durabilityPreserved && !talentFree && (!vanguardStrike || finalStrike) && !daggerSavedOnKill) weapon.durability -= 1
-        if (talentFree) this._clearDurabilityFree(weapon, hand)
-        if (hit.defeated) this._emitRelicEvent('attack:enemy-defeated', { enemy, weapon, countered: outcome.countered, hand, finalStrike })
+        if (hit.defeated) this._emitRelicEvent('attack:enemy-defeated', { enemy, weapon, countered: outcome.countered, finalStrike })
         const relation = outcome.countered ? '\u514b\u5236\u00b7' : outcome.resisted ? '\u53d7\u5236\u00b7' : ''
-        this._log(`${relation}${weapon.name} \u5bf9 ${enemy.name}${hit.finishedDowned ? '\u7ec8\u7ed3\u4e86' : '\u9020\u6210'} ${hit.damage} \u4f24\u5bb3${finalStrike ? '\uff08\u6700\u540e\u4e00\u51fb\uff09' : ''}\u3002`)
-        if (durabilityPreserved || talentFree) this._log(`${weapon.name}\u4fdd\u7559\u4e86\u8010\u4e45\u3002`)
-        if (finalStrike) weapon.durability = 0
-        if (weapon.durability <= 0) this._breakWeapon(weapon, {
-          target: enemy,
-          hand,
-          finalStrike,
-          primaryDamage: hit.damage,
-          primaryHealthDamage: hit.healthDamage,
-          primaryKilled: hit.defeated,
-          countered: outcome.countered,
-        })
+        this._log(`${relation}${weapon.name} \u5bf9 ${enemy.name}${hit.finishedDowned ? '\u7ec8\u7ed3\u4e86' : '\u9020\u6210'} ${hit.damage} \u4f24\u5bb3\u3002`)
       }
     }
     roomState.firstAttackUsed = true
-    this._emitRelicEvent('attack:resolved', { enemy, weapon, hand })
-    this._endTurn({ interceptorId: movement.interceptorId, turnKind: TURN_KINDS.ATTACK })
+    this._emitRelicEvent('attack:resolved', { enemy, weapon })
+    this._endTurn({ turnKind: TURN_KINDS.ATTACK })
     this._changed()
     return true
   }
 
-  _walk(path, { attackTargetId = null } = {}) {
+  _walk(path) {
     const roomId = this.currentRoom?.id
-    let interceptorId = null
     for (const step of path) {
       const previous = { ...this.player.pos }
       if (roomId) {
@@ -1713,45 +1542,20 @@ export class GameRun {
         })
       }
       this.player.pos = { ...step }
+      this._recoverEnergy(1)
       this._discoverNearbyExitDoors()
       this._triggerAmbushes(step)
-      if (this.gameOver) return { interceptorId, stopped: true }
-      const interceptor = this._findInterceptor(previous, step, attackTargetId)
-      if (!interceptor) continue
-      interceptorId = interceptor.id
-      if (this.random() < 0.3) {
-        this._log(`${interceptor.name} \u62e6\u4e0b\u4e86\u4f60\u3002`)
-        return { interceptorId, stopped: true }
+      if (this.gameOver) {
+        this._endTurn({ turnKind: TURN_KINDS.MOVEMENT })
+        return { stopped: true }
       }
+      this._endTurn({ turnKind: TURN_KINDS.MOVEMENT })
+      if (this.gameOver) return { stopped: true }
     }
-    return { interceptorId, stopped: false }
+    return { stopped: false }
   }
 
-  _findInterceptor(previous, step, attackTargetId = null) {
-    const candidates = this._activeEnemies()
-      .filter((enemy) => enemy.attack > 0 && normalizedCounter(enemy.actionDelay) === 0 && normalizedCounter(enemy.attackCooldown) === 0)
-      .filter((enemy) => enemy.id !== attackTargetId)
-      .filter((enemy) => combatDistance(previous, enemy.pos, enemy.range) > enemy.range)
-      .filter((enemy) => combatDistance(step, enemy.pos, enemy.range) <= enemy.range)
-    return candidates[0] || null
-  }
-
-  _canBeIntercepted(previous, step, attackTargetId = null) {
-    return !!this._findInterceptor(previous, step, attackTargetId)
-  }
-
-  _breakWeapon(weapon, context = {}) {
-    if (weapon?.type !== 'weapon' || normalizedCounter(weapon.durability) > 0) return false
-    const selected = Number.isInteger(this.selectedEquipmentSlot)
-      && this.player.equipment[this.selectedEquipmentSlot]?.uid === weapon.uid
-    this.player.equipment = this.player.equipment.map((equipped) => equipped?.uid === weapon.uid ? null : equipped)
-    if (selected) this.selectedEquipmentSlot = null
-    this._log(`${weapon.name} \u635f\u6bc1\u4e86\u3002`)
-    this._emitRelicEvent('weapon:broken', { ...context, weapon })
-    return true
-  }
-
-  _endTurn({ interceptorId = null, skipEnemyPhase = false, skipEnemyIds = new Set(), turnKind = TURN_KINDS.ACTION } = {}) {
+  _endTurn({ skipEnemyPhase = false, skipEnemyIds = new Set(), turnKind = TURN_KINDS.ACTION } = {}) {
     const counters = this.turns.advance(turnKind)
     this._cleanupTriggeredTraps(counters.globalTurn)
     const turnContext = { turn: counters.globalTurn, turnKind, ...counters }
@@ -1765,15 +1569,8 @@ export class GameRun {
     this._tickEnemyStates()
     if (this.gameOver) return
     const enemies = this._activeEnemies()
-    if (interceptorId) {
-      const interceptor = enemies.find((enemy) => enemy.id === interceptorId)
-      if (interceptor) {
-        this._enemyAttack(interceptor, 0.5)
-        this._onEnemyAction(interceptor)
-      }
-    }
     for (const enemy of enemies) {
-      if (this.gameOver || enemy.id === interceptorId || skipEnemyIds.has(enemy.id) || !this.currentRoom.entity(enemy.id)) continue
+      if (this.gameOver || skipEnemyIds.has(enemy.id) || !this.currentRoom.entity(enemy.id)) continue
       this._applyEnemyTraits(enemy)
       if (!this.currentRoom.entity(enemy.id) || this.gameOver) continue
       const outcome = stepEnemy(enemy, {
@@ -1842,7 +1639,7 @@ export class GameRun {
       this.player.hp = 0
       this.gameOver = true
       this.phase = 'over'
-      this._log('\u4f60\u5012\u4e0b\u4e86\u3002')
+      this._log(`\u4f60\u5012\u4e0b\u4e86\uff08\u539f\u56e0\uff1a${playerDeathCause(context)}\uff09\u3002`, { death: true })
     }
     return { rawDamage: damage, absorbed, healthDamage }
   }
@@ -1860,7 +1657,7 @@ export class GameRun {
   _onParrySuccess() {
     if (this.hasTalent('sword-counter')) this._queueTalentBuff({ amount: 2, weaponClass: 'sword', source: 'talent:sword-counter' })
     if (this.hasTalent('sword-unity')) this._queueTalentBuff({ amount: 2, weaponClass: 'sword', source: 'talent:sword-unity' })
-    if (this.hasTalent('sword-rebound')) this._queueTalentFlag({ kind: 'free-durability', weaponClass: 'sword', source: 'talent:sword-rebound' })
+    if (this.hasTalent('sword-rebound')) this._recoverEnergy(1)
   }
 
   _damageEnemy(enemy, damage, { source = 'attack', ignoreDefense = false } = {}) {
@@ -2203,8 +2000,16 @@ export class GameRun {
     return false
   }
 
-  _log(message) {
-    this.log.unshift(`[${this.turn}] ${message}`)
+  _log(message, { death = false } = {}) {
+    const entry = `[${this.turn}] ${message}`
+    if (death) {
+      this.deathLogEntry = entry
+      this.log.unshift(entry)
+    } else if (this.deathLogEntry) {
+      this.log.splice(1, 0, entry)
+    } else {
+      this.log.unshift(entry)
+    }
     if (this.log.length > 40) this.log.length = 40
   }
 
@@ -2228,7 +2033,6 @@ export class GameRun {
       gameOver: this.gameOver,
       win: this.win,
       selectedInventoryIndex: this.selectedInventoryIndex,
-      selectedEquipmentSlot: this.selectedEquipmentSlot,
       itemTargeting: this.itemTargeting,
       merchant: this.merchant ? { ...this.merchant } : null,
       roomReward: this.roomReward ? clone(this.roomReward) : null,
@@ -2256,6 +2060,8 @@ export class GameRun {
       this.dungeon = Dungeon.hydrate(data.dungeon)
       this.player = data.player
       this.backpack = BackpackGrid.hydrate(data.backpack)
+      this.player.maxEnergy = ENERGY_MAX
+      this.player.energy = Math.max(0, Math.min(this.player.maxEnergy, Math.floor(Number(this.player.energy) || this.player.maxEnergy)))
       this.player.level = Math.max(PROGRESSION.startingLevel, Number(this.player.level) || PROGRESSION.startingLevel)
       this.player.experience = Math.max(0, Number(this.player.experience) || 0)
       this.player.experienceToNext = Math.max(1, Number(this.player.experienceToNext) || experienceToNextLevel(this.player.level))
@@ -2286,7 +2092,6 @@ export class GameRun {
       const savedTurnCounters = data.turnCounters && typeof data.turnCounters === 'object' ? data.turnCounters : {}
       this.turns = new TurnLedger({
         attackCount: savedTurnCounters.attackCount ?? data.attackCount ?? 0,
-        actionCount: savedTurnCounters.actionCount ?? data.actionCount ?? 0,
         globalTurn: savedTurnCounters.globalTurn ?? data.globalTurn ?? legacyTurn,
       })
       this.phase = ['explore', 'merchant', 'reward', 'level-up', 'over'].includes(data.phase) ? data.phase : 'explore'
@@ -2294,11 +2099,6 @@ export class GameRun {
       this.win = !!data.win
       this.selectedInventoryIndex = Number.isInteger(data.selectedInventoryIndex) && this.backpack.placementForCellIndex(data.selectedInventoryIndex)
         ? this.backpack.originIndex(this.backpack.placementForCellIndex(data.selectedInventoryIndex))
-        : null
-      this.selectedEquipmentSlot = Number.isInteger(data.selectedEquipmentSlot)
-        && this.player.equipment[data.selectedEquipmentSlot]?.type === 'weapon'
-        && this.player.equipment[data.selectedEquipmentSlot].durability > 0
-        ? data.selectedEquipmentSlot
         : null
       this.itemTargeting = !!data.itemTargeting
       this.merchant = data.merchant && typeof data.merchant.entityId === 'string' ? { entityId: data.merchant.entityId } : null
@@ -2317,7 +2117,7 @@ export class GameRun {
       this.relicRuntime = data.relicRuntime && typeof data.relicRuntime === 'object' ? clone(data.relicRuntime) : {}
       this.detailPanel = null
       this.log = Array.isArray(data.log) ? data.log : []
-      synchronizeEntityIds([...this.backpack.items, ...this.player.equipment].map((item) => item?.uid))
+      synchronizeEntityIds(this.backpack.items.map((item) => item?.uid))
       if (!this.currentRoom?.contains(this.player.pos) || !this.currentRoom.isRevealed(this.player.pos)) return discard()
       if (this.gameOver || this.win) {
         this.gameOver = true

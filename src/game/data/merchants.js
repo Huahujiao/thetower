@@ -45,12 +45,10 @@ export function merchantItemPrice(itemOrId) {
   const item = typeof itemOrId === 'string' ? ITEM_BY_ID.get(itemOrId) : itemOrId
   if (!item) return 0
   if (item.type === 'weapon') {
-    const durability = Number(item.durability ?? item.durabilityRange?.[1] ?? 1) || 1
-    return 4 + (Number(item.attack) || 0) + durability + (Number(item.range) || 1)
+    return 4 + (Number(item.attack) || 0) + (Number(item.energyCost) || 3) + (Number(item.range) || 1)
   }
   if (item.type === 'potion') return 3 + Math.ceil(item.heal / 2)
   if (item.type === 'armor') return 3 + Math.ceil(item.armor / 2)
-  if (item.type === 'whetstone') return 3 + item.repair
   if (item.type === 'buff') return 4 + item.attackBonus
   return 4
 }
