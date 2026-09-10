@@ -38,6 +38,7 @@ const CARD_COLORS = Object.freeze({
   monster: '#5b1a1a',
   weapon: '#1a2b4a',
   potion: '#1a3b2a',
+  energy: '#4a3d16',
   buff: '#21402e',
   item: '#2a3b4a',
   gold: '#4a3a0a',
@@ -1339,9 +1340,6 @@ export class GameScene {
     if (entity.kind === 'key') {
       return { type: 'key', title: '开门机关', value: '锁', valueColor: '#d8b7ff', detail: '解锁对应的门', clickHint: '点击拾取' }
     }
-    if (entity.kind === 'relic') {
-      return { type: 'relic', title: entity.name || '\u5723\u9057\u7269', value: '\u2726', valueColor: '#e5d5ff', detail: '\u70b9\u51fb\u62fe\u53d6', clickHint: '\u70b9\u51fb\u62fe\u53d6' }
-    }
     if (entity.kind === 'door') {
       const locked = this.run.isDoorLocked(entity)
       return {
@@ -1380,8 +1378,14 @@ export class GameScene {
     if (item.type === 'armor') {
       return { type: 'potion', title: item.name, value: `ARMOR +${item.armor}`, valueColor: '#8ed7ff', detail: '使用后获得护甲', footer: '消耗行动', clickHint: '点击拾取' }
     }
+    if (item.type === 'energy') {
+      return { type: 'energy', title: item.name, value: `+${item.energy} \u4f53\u529b`, valueColor: '#ffd56b', detail: '\u4f7f\u7528\u540e\u6062\u590d\u4f53\u529b', footer: '\u6d88\u8017\u884c\u52a8', clickHint: '\u70b9\u51fb\u62fe\u53d6' }
+    }
     if (item.type === 'buff') {
       return { type: 'buff', title: item.name, value: `攻击 +${item.attackBonus}`, valueColor: '#8effc8', detail: '下次攻击生效', footer: '消耗行动', clickHint: '点击拾取' }
+    }
+    if (item.type === 'relic') {
+      return { type: 'relic', title: item.name, value: '✦', valueColor: '#e5d5ff', detail: '放入背包后生效', clickHint: '点击拾取' }
     }
     return { type: 'item', title: item.name || '道具', value: '道具', clickHint: '点击拾取' }
   }

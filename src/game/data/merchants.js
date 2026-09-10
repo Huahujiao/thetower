@@ -9,14 +9,14 @@ export const MERCHANT_DEFS = Object.freeze([
   {
     id: 'merchant',
     name: '\u5546\u4eba',
-    services: ['stock', 'relic-management', 'sell'],
+    services: ['stock', 'sell'],
     stockPool: 'all',
     restockPrice: 6,
   },
   {
     id: 'collector',
     name: '\u6536\u85cf\u5bb6',
-    services: ['relic-management', 'relic-choice', 'sell'],
+    services: ['relic-choice', 'sell'],
     stockPool: null,
     restockPrice: 0,
     relicPrice: 9,
@@ -49,6 +49,7 @@ export function merchantItemPrice(itemOrId) {
   }
   if (item.type === 'potion') return 3 + Math.ceil(item.heal / 2)
   if (item.type === 'armor') return 3 + Math.ceil(item.armor / 2)
+  if (item.type === 'energy') return 4 + Math.ceil(item.energy / 2)
   if (item.type === 'buff') return 4 + item.attackBonus
   return 4
 }
@@ -109,7 +110,6 @@ export function createMerchantEntity(merchantId, position, { floor = 1, random =
     relicChoices: [],
     relicOfferResolved: false,
     relicOfferPrice: definition.relicPrice || 0,
-    relicManagementConfirmed: false,
     pos: { ...position },
     revealOrder: null,
   }

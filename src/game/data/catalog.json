@@ -565,11 +565,12 @@
     { "id": "sunken-longbow", "name": "沉木长弓", "type": "weapon", "weaponClass": "bow", "attribute": "drown", "attack": 5, "range": 3, "shape": [[1], [1], [1], [1]] }
   ],
   "consumables": [
-    { "id": "armor-potion", "name": "\u5c0f\u94c1\u7532\u836f\u5242", "type": "armor", "armor": 5, "shape": [[1]] },
-    { "id": "large-armor-potion", "name": "\u5927\u94c1\u7532\u836f\u5242", "type": "armor", "armor": 10, "minFloor": 3, "shape": [[1], [1]] },
-    { "id": "small-potion", "name": "\u5c0f\u751f\u547d\u836f\u6c34", "type": "potion", "heal": 6, "shape": [[1]] },
-    { "id": "large-potion", "name": "\u5927\u751f\u547d\u836f\u6c34", "type": "potion", "heal": 12, "minFloor": 3, "shape": [[1], [1]] },
-    { "id": "battle-charm", "name": "\u70c8\u7130\u7b26\u5492", "type": "buff", "attackBonus": 4, "shape": [[1]] }
+    { "id": "armor-potion", "name": "\u5c0f\u94c1\u7532\u836f\u5242", "type": "armor", "armor": 5, "supplyWeight": 2, "shape": [[1]] },
+    { "id": "large-armor-potion", "name": "\u5927\u94c1\u7532\u836f\u5242", "type": "armor", "armor": 10, "minFloor": 3, "supplyWeight": 2, "shape": [[1], [1]] },
+    { "id": "small-potion", "name": "\u5c0f\u751f\u547d\u836f\u6c34", "type": "potion", "heal": 6, "supplyWeight": 2, "shape": [[1]] },
+    { "id": "large-potion", "name": "\u5927\u751f\u547d\u836f\u6c34", "type": "potion", "heal": 12, "minFloor": 3, "supplyWeight": 2, "shape": [[1], [1]] },
+    { "id": "energy-potion", "name": "\u5c0f\u4f53\u529b\u836f\u5242", "type": "energy", "energy": 2, "supplyWeight": 2, "shape": [[1]] },
+    { "id": "battle-charm", "name": "\u70c8\u7130\u7b26\u5492", "type": "buff", "attackBonus": 4, "supplyWeight": 1, "shape": [[1]] }
   ],
   "enemyLoot": [
     { "id": "ghoul-bone-stinger", "name": "猩鬼骨刺", "type": "weapon", "dropOnly": true, "weaponClass": "dagger", "attribute": "scorch", "attack": 6, "range": 1, "shape": [[1]] },

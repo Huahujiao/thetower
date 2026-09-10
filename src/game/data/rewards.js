@@ -1,8 +1,8 @@
 import catalog from './catalog.json' with { type: 'json' }
+import { randomConsumableDefinition } from './content.js'
 import { buildRelicChoices } from './relics.js'
 
 const WEAPONS = Object.freeze(catalog.weapons)
-const USABLE_CONSUMABLES = Object.freeze(catalog.consumables)
 
 function pick(values, random) { return values[Math.floor(random() * values.length)] || null }
 
@@ -15,7 +15,7 @@ function goldChoice(floor) { return { kind: 'gold', amount: 3 + Math.max(1, floo
 export function buildSupplyRewardChoices({ floor, count = 3, random = Math.random } = {}) {
   const choices = [
     itemChoice(pick(eligible(WEAPONS, floor), random)),
-    itemChoice(pick(eligible(USABLE_CONSUMABLES, floor), random)),
+    itemChoice(randomConsumableDefinition(floor, random)),
     goldChoice(floor),
   ].filter(Boolean)
   while (choices.length < count) choices.push(goldChoice(floor))

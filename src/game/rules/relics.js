@@ -5,17 +5,18 @@ export class RelicEngine {
     this.collection = collection
   }
 
-  activeDefinitions() {
+  activeDefinitions({ run = null } = {}) {
+    if (run?.relicOverload?.() > 0) return []
     return this.collection.active
       .map((entry) => getRelicDefinition(entry.id))
       .filter(Boolean)
   }
 
   damageModifiers(context) {
-    return this.activeDefinitions().flatMap((definition) => definition.damageModifiers?.(context) || [])
+    return this.activeDefinitions(context).flatMap((definition) => definition.damageModifiers?.(context) || [])
   }
 
   emit(event, context) {
-    return this.activeDefinitions().flatMap((definition) => definition.events?.[event]?.({ ...context, relic: definition }) || [])
+    return this.activeDefinitions(context).flatMap((definition) => definition.events?.[event]?.({ ...context, relic: definition }) || [])
   }
 }

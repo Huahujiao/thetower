@@ -24,6 +24,7 @@ const COPY = Object.freeze({
   relic: '\u5723\u9057\u7269',
   potion: '\u751f\u547d\u836f\u6c34',
   armor: '\u62a4\u7532\u836f\u5242',
+  energyPotion: '\u4f53\u529b\u836f\u5242',
   buff: '\u589e\u76ca\u7269\u54c1',
   attack: '\u653b\u51fb',
   health: '\u751f\u547d',
@@ -48,8 +49,8 @@ const COPY = Object.freeze({
   experience: '\u7ecf\u9a8c',
   relicChance: '\u5723\u9057\u7269\u6389\u843d',
   relicSources: '\u83b7\u53d6\u6765\u6e90',
-  activeLimit: '\u540c\u65f6\u6fc0\u6d3b\u4e0a\u9650',
-  autoActivate: '\u83b7\u5f97\u89c4\u5219',
+  softLimit: '\u5723\u9057\u7269\u8f6f\u9650\u5236',
+  overload: '\u8d85\u8f7d\u6548\u679c',
   enemyDrop: '\u654c\u4eba\u6389\u843d',
   sword: '\u5251',
   axe: '\u65a7',
@@ -107,7 +108,7 @@ function escapeHtml(value) {
 }
 
 function label(value) {
-  const aliases = { 'heavy-armor': 'heavyArmor' }
+  const aliases = { 'heavy-armor': 'heavyArmor', energy: 'energyPotion' }
   return COPY[aliases[value] || value] || value || ''
 }
 
@@ -197,13 +198,13 @@ function relicCards() {
   const system = card({
     tone: 'tone-relic',
     tag: COPY.relic,
-    title: '\u5723\u9057\u7269\u83b7\u53d6\u4e0e\u6fc0\u6d3b',
-    description: '\u623f\u95f4\u5956\u52b1\u3001\u6536\u85cf\u5bb6\u4e0e\u602a\u7269\u6389\u843d\u5747\u53ef\u83b7\u5f97\u5723\u9057\u7269\u3002\u672a\u8fbe\u4e0a\u9650\u65f6\u65b0\u83b7\u5f97\u7684\u5723\u9057\u7269\u4f1a\u7acb\u5373\u6fc0\u6d3b\uff1b\u53ef\u5728\u5546\u4eba\u6216\u6536\u85cf\u5bb6\u5904\u8c03\u6574\u3002',
+    title: '\u5723\u9057\u7269\u83b7\u53d6\u4e0e\u80cc\u5305',
+    description: '\u5723\u9057\u7269\u4f5c\u4e3a\u4e00\u683c\u666e\u901a\u7269\u54c1\u653e\u5165\u80cc\u5305\uff0c\u6301\u6709\u65f6\u7acb\u5373\u751f\u6548\u3002\u8d85\u8fc7 5 \u4ef6\u540e\uff0c\u6240\u6709\u5723\u9057\u7269\u6682\u65f6\u5931\u6548\uff1b\u51cf\u5c11\u5230 5 \u4ef6\u6216\u4ee5\u4e0b\u540e\u6062\u590d\u751f\u6548\u3002\u4e22\u5f03\u540e\u4ecd\u53ef\u518d\u6b21\u83b7\u5f97\u3002',
     accent: '\u2726',
     stats: [
-      stat(COPY.relicSources, '\u623f\u95f4\u5956\u52b1 \u00b7 \u6536\u85cf\u5bb6 \u00b7 \u602a\u7269\u6389\u843d'),
-      stat(COPY.activeLimit, '5'),
-      stat(COPY.autoActivate, '\u672a\u6ee1 5 \u4ef6\u65f6\u7acb\u5373\u6fc0\u6d3b'),
+      stat(COPY.relicSources, '\u5f00\u5c40 \u00b7 \u623f\u95f4\u5956\u52b1 \u00b7 \u6536\u85cf\u5bb6 \u00b7 \u602a\u7269\u6389\u843d'),
+      stat(COPY.softLimit, '5 \u4ef6'),
+      stat(COPY.overload, '\u8d85\u8fc7 5 \u4ef6\u65f6\u6682\u65f6\u5931\u6548'),
     ],
   })
   return system + RELIC_DEFS.map((relic) => card({
@@ -233,6 +234,7 @@ function talentCards() {
 function itemEffect(item) {
   if (item.type === 'potion') return stat(COPY.healing, `+${item.heal}`)
   if (item.type === 'armor') return stat(COPY.armorValue, `+${item.armor}`)
+  if (item.type === 'energy') return stat('\u6062\u590d\u4f53\u529b', `+${item.energy}`)
   if (item.type === 'buff') return stat(item.attackTarget === 'melee' ? COPY.nextMeleeAttack : COPY.nextAttack, `+${item.attackBonus}`)
   return ''
 }

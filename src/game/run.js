@@ -2,7 +2,7 @@ import { createEmitter } from './core/emitter.js'
 import { chebyshev, combatDistance, manhattan, neighbors8 } from './core/geometry.js'
 import { TURN_KINDS, TurnLedger } from './core/turns.js'
 import { attributeLabel } from './data/attributes.js'
-import { createGoldEntity, createLootEntity, createMinion, createRelicEntity, getItemDefinition, makeItemById, randomWeapon, starterWeapon, synchronizeEntityIds } from './data/content.js'
+import { createGoldEntity, createLootEntity, createMinion, createRelicEntity, getItemDefinition, makeItemById, makeRelicItem, randomWeapon, starterWeapon, synchronizeEntityIds } from './data/content.js'
 import { enemyBehaviorLabel, enemyFeatureLabel } from './data/enemy-features.js'
 import { getMerchantDefinition, merchantSellPrice, refreshMerchantSlot, refreshMerchantStock } from './data/merchants.js'
 import { buildRelicChoices, getRelicDefinition } from './data/relics.js'
@@ -18,15 +18,15 @@ import { stepEnemy } from './rules/enemies.js'
 import { findAttackPath, findDoorPath, findInteractionPath, findPath, findRevealPath } from './rules/pathfinding.js'
 import { terrainDamageModifiers } from './rules/terrain.js'
 
-// The design notation is rows × columns: five rows, eight columns.
-export const INVENTORY_COLUMNS = 8
+// The design notation is rows × columns: five rows, nine columns.
+export const INVENTORY_COLUMNS = 9
 export const INVENTORY_ROWS = 5
 export const INVENTORY_CAPACITY = INVENTORY_COLUMNS * INVENTORY_ROWS
+export const RELIC_SOFT_LIMIT = 5
 export const ENERGY_MAX = 10
 export const SAVE_KEY = 'grid_flip_adventure_v2'
-// This release removes the per-tile random card-back attribute and changes
-// merchant stock semantics. Old test saves are intentionally discarded.
-export const SAVE_VERSION = 20
+// This release stores relics as one-cell backpack items. Old saves are intentionally discarded.
+export const SAVE_VERSION = 21
 
 function clone(value) { return JSON.parse(JSON.stringify(value)) }
 
@@ -54,11 +54,10 @@ const DETAIL_LABELS = Object.freeze({
   range: '\u5c04\u7a0b',
   weaponClass: '\u7c7b\u522b',
   health: '\u751f\u547d',
+  energy: '\u4f53\u529b',
   armorValue: '\u62a4\u7532',
   nextAttack: '\u4e0b\u6b21\u653b\u51fb',
   attribute: '\u5c5e\u6027',
-  active: '\u5df2\u6fc0\u6d3b',
-  inactive: '\u672a\u6fc0\u6d3b',
   actionDelay: '\u884c\u52a8\u5ef6\u8fdf',
   cooldown: '\u51b7\u5374',
   normalAttack: '\u666e\u901a\u653b\u51fb',
@@ -84,6 +83,13 @@ function weaponAttackRange(weapon, player = null) {
 function weaponEnergyCost(weapon) {
   const fallback = { dagger: 2, sword: 3, axe: 4, polearm: 4, bow: 4, heavy: 5 }[weapon?.weaponClass] || 3
   return Math.max(2, Math.min(5, Math.floor(Number(weapon?.energyCost) || fallback)))
+}
+
+function energyAfterMovement(player, steps = 0) {
+  const current = Math.max(0, Number(player?.energy) || 0)
+  const maximum = Math.max(current, Number(player?.maxEnergy) || current)
+  const movement = Math.max(0, Math.floor(Number(steps) || 0))
+  return Math.min(maximum, current + movement)
 }
 
 function normalizedCounter(value) { return Math.max(0, Number(value) || 0) }
@@ -120,7 +126,6 @@ function playerDeathCause(context = {}) {
 const MERCHANT_SERVICE_LABELS = Object.freeze({
   stock: '\u8d2d\u4e70\u5546\u54c1',
   sell: '\u51fa\u552e\u7269\u54c1',
-  'relic-management': '\u6fc0\u6d3b\u5723\u9057\u7269',
   'relic-choice': '\u83b7\u53d6\u5723\u9057\u7269',
 })
 
@@ -137,11 +142,14 @@ function detailForItem(item, player = null) {
     lines.push(`${DETAIL_LABELS.health} +${item.heal || 0}`)
   } else if (item?.type === 'armor') {
     lines.push(`${DETAIL_LABELS.armorValue} +${item.armor || 0}`)
+  } else if (item?.type === 'energy') {
+    lines.push(`${DETAIL_LABELS.energy} +${item.energy || 0}`)
   } else if (item?.type === 'buff') {
     const target = item.attackTarget === 'melee' ? '\u4e0b\u6b21\u8fd1\u6218\u653b\u51fb' : DETAIL_LABELS.nextAttack
     lines.push(`${target} +${item.attackBonus || 0}`)
   }
-  return { title: item?.name || type, type, icon: item?.type || 'item', badges, lines }
+  const description = item?.type === 'relic' ? item.description || '' : ''
+  return { title: item?.name || type, type, icon: item?.type || 'item', badges, lines, description }
 }
 
 export class GameRun {
@@ -150,6 +158,7 @@ export class GameRun {
     this.on = this.bus.on
     this.off = this.bus.off
     this.turns = new TurnLedger()
+    this._logRevealAnchor = null
     this.merchantEntering = false
     this.roomEntering = false
     this.moveCompleteUnsubscribe = this.on('animate:move-complete', () => {
@@ -205,7 +214,6 @@ export class GameRun {
     if (!this.backpack.add(starter)) throw new Error('Unable to add starter weapon to backpack')
     this.relics = new RelicCollection()
     this.relicEngine = new RelicEngine(this.relics)
-    this.relicLoadoutDraft = null
     this.initialRelicChoices = buildRelicChoices(this.relics, { random: this.random }).map((relic) => relic.id)
     this.turns = new TurnLedger()
     this.phase = 'explore'
@@ -223,6 +231,7 @@ export class GameRun {
     this.relicRuntime = {}
     this.detailPanel = null
     this.deathLogEntry = null
+    this._logRevealAnchor = null
     this._logSequence = 0
     this.log = []
     this._log('\u8fdb\u5165\u7b2c 1 \u5c42\u7684\u7b2c 1 \u4e2a\u623f\u95f4\u3002')
@@ -242,9 +251,13 @@ export class GameRun {
   isExitDoor(door) { return !!door && this.doorEdge(door)?.fromDoor.id === door.id }
   isDoorRevealed(door) { return !!door && (!this.isExitDoor(door) || door.discovered === true) }
   isDoorLocked(door) { return !!this.doorEdge(door)?.locked && !this.doorEdge(door)?.unlocked }
-  activeRelics() { return this.relicEngine.activeDefinitions() }
+  activeRelics() { return this.relicEngine.activeDefinitions({ run: this }) }
 
-  hasActiveRelic(id) { return this.relics.isActive(id) }
+  hasActiveRelic(id) { return this.activeRelics().some((relic) => relic.id === id) }
+
+  relicCount() { return this.backpack?.items.filter((item) => item?.type === 'relic').length || 0 }
+  relicOverload() { return Math.max(0, this.relicCount() - RELIC_SOFT_LIMIT) }
+  canFitRelic(id) { return !!getRelicDefinition(id) && this.backpack.usedCells < this.backpack.capacity }
 
   weaponRange(weapon) { return weaponAttackRange(weapon, this.player) }
   weaponEnergyCost(weapon) { return weaponEnergyCost(weapon) }
@@ -443,27 +456,8 @@ export class GameRun {
   }
   get merchantEntity() { return this.merchant ? this.currentRoom?.entity(this.merchant.entityId) || null : null }
   get merchantDefinition() { return getMerchantDefinition(this.merchantEntity?.merchantId) }
-  canManageRelics() {
-    return this.phase === 'merchant'
-      && this.merchantDefinition?.services.includes('relic-management')
-      && !this.merchantEntity?.relicManagementConfirmed
-  }
 
   canSellAtMerchant() { return this.phase === 'merchant' && this.merchantDefinition?.services.includes('sell') }
-
-  relicLoadoutDraftIds() {
-    const owned = new Set(this.relics.entries.map((entry) => entry.id))
-    const source = Array.isArray(this.relicLoadoutDraft) ? this.relicLoadoutDraft : this.relics.active.map((entry) => entry.id)
-    const seen = new Set()
-    return source.filter((id) => owned.has(id) && !seen.has(id) && seen.add(id)).slice(0, this.relics.maxActive)
-  }
-
-  isRelicLoadoutDraftActive(id) { return this.relicLoadoutDraftIds().includes(id) }
-
-  _ensureRelicLoadoutDraft() {
-    if (!Array.isArray(this.relicLoadoutDraft)) this.relicLoadoutDraft = this.relicLoadoutDraftIds()
-    return this.relicLoadoutDraft
-  }
 
   _drawRoomRewardType() {
     if (!this.roomRewardBag.length) this.roomRewardBag = shuffled(['supply', 'supply', 'supply', 'relic'], this.random)
@@ -548,15 +542,13 @@ export class GameRun {
   showRelicDetail(id) {
     const definition = getRelicDefinition(id)
     if (!definition) return false
-    const entry = this.relics.entries.find((candidate) => candidate.id === id)
     return this._showDetail({
       position: 'top',
       title: definition.name,
       type: DETAIL_LABELS.relic,
       icon: 'relic',
-      badges: [entry?.active ? DETAIL_LABELS.active : DETAIL_LABELS.inactive],
       description: definition.description,
-      lines: [],
+      lines: ['\u5360\u7528\u80cc\u5305 1 \u683c\uff0c\u6301\u6709\u65f6\u751f\u6548\u3002'],
     })
   }
 
@@ -605,18 +597,6 @@ export class GameRun {
     }
     if (entity.kind === 'key') {
       return this._showDetail({ position: 'bottom', title: DETAIL_LABELS.key, type: DETAIL_LABELS.resource, icon: 'key', description: DETAIL_LABELS.keyHint })
-    }
-    if (entity.kind === 'relic') {
-      const definition = getRelicDefinition(entity.relicId)
-      if (!definition) return false
-      return this._showDetail({
-        position: 'bottom',
-        title: entity.name || definition.name,
-        type: DETAIL_LABELS.relic,
-        icon: 'relic',
-        description: definition.description,
-        lines: ['\u70b9\u51fb\u62fe\u53d6'],
-      })
     }
     if (entity.kind === 'merchant') {
       const services = (entity.services || []).map((service) => MERCHANT_SERVICE_LABELS[service]).filter(Boolean)
@@ -669,56 +649,30 @@ export class GameRun {
     this.bus.emit('change')
   }
 
-  acquireRelic(id, { activate = null, notify = true } = {}) {
+  acquireRelic(id, { notify = true } = {}) {
     const definition = getRelicDefinition(id)
     if (!definition) return this._reject('\u672a\u77e5\u5723\u9057\u7269\u3002')
-    const shouldActivate = activate == null ? this.relics.active.length < this.relics.maxActive : activate
-    const entry = this.relics.acquire(id, { activate: shouldActivate })
-    if (!entry) return this._reject('\u6b64\u5723\u9057\u7269\u5df2\u62e5\u6709\u3002')
-    this._log(`\u83b7\u5f97\u5723\u9057\u7269\uff1a${definition.name}${entry.active ? '' : '\uff08\u672a\u6fc0\u6d3b\uff09'}\u3002`)
+    if (this.relics.has(id)) return this._reject('\u6b64\u5723\u9057\u7269\u5df2\u5728\u80cc\u5305\u4e2d\u3002')
+    const item = makeRelicItem(definition)
+    if (!item || !this.backpack.add(item)) return this._reject('\u80cc\u5305\u6ca1\u6709\u8db3\u591f\u7a7a\u95f4\u3002')
+    const entry = this.relics.acquire(id, { uid: item.uid })
+    if (!entry) {
+      this.backpack.removeByUid(item.uid)
+      return this._reject('\u6b64\u5723\u9057\u7269\u5df2\u5728\u80cc\u5305\u4e2d\u3002')
+    }
+    this._log(`\u83b7\u5f97 ${definition.name}\u3002`)
     if (notify) this._changed()
     return entry
   }
 
   chooseInitialRelic(id) {
     if (this.relics.entries.length > 0 || !this.initialRelicChoices.includes(id)) return false
-    const entry = this.acquireRelic(id, { activate: true })
+    const entry = this.acquireRelic(id)
     if (entry) {
       this.initialRelicChoices = []
       this._changed()
     }
     return entry
-  }
-
-  activateRelic(id) {
-    if (!this.canManageRelics()) return false
-    const draft = this._ensureRelicLoadoutDraft()
-    if (!this.relics.has(id) || draft.includes(id) || draft.length >= this.relics.maxActive) return false
-    draft.push(id)
-    this._changed()
-    return true
-  }
-
-  deactivateRelic(id) {
-    if (!this.canManageRelics()) return false
-    const draft = this._ensureRelicLoadoutDraft()
-    const index = draft.indexOf(id)
-    if (index < 0) return false
-    draft.splice(index, 1)
-    this._changed()
-    return true
-  }
-
-  confirmRelicLoadout() {
-    const merchant = this.merchantEntity
-    if (!this.canManageRelics() || !merchant) return false
-    const activeIds = new Set(this.relicLoadoutDraftIds())
-    for (const entry of this.relics.entries) entry.active = activeIds.has(entry.id)
-    this.relicLoadoutDraft = null
-    merchant.relicManagementConfirmed = true
-    this._log(`${merchant.name}\u7684\u5723\u9057\u7269\u914d\u7f6e\u5df2\u786e\u8ba4\u3002`)
-    this._changed()
-    return true
   }
 
   tileCanBeFlipped(position) {
@@ -745,9 +699,10 @@ export class GameRun {
     }
     if (entity.kind === 'enemy') {
       const selectedWeapon = this.selectedItem
-      if (selectedWeapon?.type !== 'weapon' || this.player.energy < weaponEnergyCost(selectedWeapon)) return null
-       const route = findAttackPath(room, this.player.pos, entity, [{ ...selectedWeapon, range: weaponAttackRange(selectedWeapon, this.player) }])
-      return route ? this._pathPreview('attack', target, route.path) : null
+      if (selectedWeapon?.type !== 'weapon') return null
+      const route = findAttackPath(room, this.player.pos, entity, [{ ...selectedWeapon, range: weaponAttackRange(selectedWeapon, this.player) }])
+      if (!route || energyAfterMovement(this.player, route.path.length) < weaponEnergyCost(selectedWeapon)) return null
+      return this._pathPreview('attack', target, route.path)
     }
     if (entity.kind === 'merchant') {
       const route = findInteractionPath(room, this.player.pos, entity)
@@ -854,6 +809,7 @@ export class GameRun {
     const item = this.selectedItem
     if (item) {
       this.backpack.removeByUid(item.uid)
+      if (item.type === 'relic') this.relics.remove(item.uid) || this.relics.remove(item.relicId)
       this._log(`\u4e22\u5f03 ${item.name}\u3002`)
       if (item.type === 'weapon' && this.hasActiveRelic('r-scrap-charm')) {
         const state = this._relicRoomRuntime('r-scrap-charm')
@@ -873,13 +829,26 @@ export class GameRun {
   useSelected() {
     const item = this.selectedItem
     if (!item || !this._canAct()) return false
+    if (item.type === 'energy') {
+      const before = this.player.energy
+      this._recoverEnergy(Number(item.energy) || 0)
+      const itemRecovered = this.player.energy - before
+      const roundRecovered = Math.max(0, Math.min(1, this.player.maxEnergy - this.player.energy))
+      const recovered = itemRecovered + roundRecovered
+      this.backpack.removeByUid(item.uid)
+      this.selectedInventoryIndex = null
+      this.itemTargeting = false
+      this._log(`\u4f7f\u7528 ${item.name}\uff0c\u6062\u590d ${recovered} \u70b9\u4f53\u529b\u3002`)
+      this._endTurn({ turnKind: TURN_KINDS.ACTION })
+      this._changed()
+      return true
+    }
     if (item.type === 'potion') {
       const healed = this._healPlayer(item.heal, { source: 'item:potion', item })
       this.backpack.removeByUid(item.uid)
       this.selectedInventoryIndex = null
       this.itemTargeting = false
       this._log(`\u4f7f\u7528 ${item.name}\uff0c\u6062\u590d ${healed} HP\u3002`)
-      this._recoverEnergy(1)
       this._endTurn({ turnKind: TURN_KINDS.ACTION })
       this._changed()
       return true
@@ -890,7 +859,6 @@ export class GameRun {
       this.selectedInventoryIndex = null
       this.itemTargeting = false
       this._log(`\u4f7f\u7528 ${item.name}\uff0c\u62a4\u7532 +${item.armor}\u3002`)
-      this._recoverEnergy(1)
       this._endTurn({ turnKind: TURN_KINDS.ACTION })
       this._changed()
       return true
@@ -903,7 +871,6 @@ export class GameRun {
       this.itemTargeting = false
       const target = item.attackTarget === 'melee' ? '\u4e0b\u6b21\u8fd1\u6218\u653b\u51fb' : '\u4e0b\u6b21\u653b\u51fb'
       this._log(`\u4f7f\u7528 ${item.name}\uff0c${target} +${item.attackBonus}\u3002`)
-      this._recoverEnergy(1)
       this._endTurn({ turnKind: TURN_KINDS.ACTION })
       this._changed()
       return true
@@ -921,7 +888,7 @@ export class GameRun {
     const entity = room.entityAt(position)
     if (!entity) return this._moveTo(position)
     if (entity.kind === 'enemy') {
-      if (!this.selectedItem || this.selectedItem.type !== 'weapon' || this.player.energy < weaponEnergyCost(this.selectedItem)) {
+      if (!this.selectedItem || this.selectedItem.type !== 'weapon') {
         return this._reject('\u8bf7\u5148\u4ece\u80cc\u5305\u9009\u4e2d\u4e00\u628a\u6b66\u5668\u3002')
       }
       return this._attack(entity)
@@ -947,7 +914,6 @@ export class GameRun {
     if (movement.stopped || this.gameOver) this.merchantEntering = false
     if (!movement.stopped && !this.gameOver) {
       this.merchant = { entityId: merchant.id }
-      this.relicLoadoutDraft = null
       if (this.merchantDefinition?.services.includes('relic-choice') && !merchant.relicOfferResolved) {
         merchant.relicChoices = buildRelicChoices(this.relics, { random: this.random }).map((relic) => relic.id)
       }
@@ -964,7 +930,6 @@ export class GameRun {
     if (this.phase !== 'merchant') return false
     this.phase = 'explore'
     this.merchant = null
-    this.relicLoadoutDraft = null
     this._changed()
     return true
   }
@@ -1004,6 +969,7 @@ export class GameRun {
     if (!item) return this._reject('\u8bf7\u5148\u9009\u4e2d\u8981\u51fa\u552e\u7684\u7269\u54c1\u3002')
     const price = merchantSellPrice(item)
     this.backpack.removeByUid(item.uid)
+    if (item.type === 'relic') this.relics.remove(item.uid) || this.relics.remove(item.relicId)
     this.selectedInventoryIndex = null
     this.itemTargeting = false
     this.player.gold += price
@@ -1014,7 +980,7 @@ export class GameRun {
 
   chooseMerchantRelic(id) {
     const merchant = this.merchantEntity
-    if (!this.canManageRelics() || !merchant || merchant.relicOfferResolved || !merchant.relicChoices?.includes(id)) return false
+    if (this.phase !== 'merchant' || !this.merchantDefinition?.services.includes('relic-choice') || !merchant || merchant.relicOfferResolved || !merchant.relicChoices?.includes(id)) return false
     const price = Math.max(0, merchant.relicOfferPrice || 0)
     if (this.player.gold < price) return this._reject('\u91d1\u5e01\u4e0d\u8db3\u3002')
     const entry = this.acquireRelic(id)
@@ -1096,9 +1062,7 @@ export class GameRun {
     let flipOutcome = { skipEnemyIds: new Set() }
     if (!movement.stopped) {
       if (this.player.pos.c !== start.c || this.player.pos.r !== start.r) this.bus.emit('change')
-      flipOutcome = this._revealTile(position)
-      const entity = this.currentRoom.entityAt(position)
-      this._log(entity ? `\u7ffb\u5f00\uff1a${entity.name || this._entityName(entity)}\u3002` : '\u7ffb\u5f00\u4e86\u4e00\u4e2a\u7a7a\u683c\u3002')
+      flipOutcome = this._revealTile(position, { logReveal: true })
     }
     if (!movement.stopped) this._endTurn({
       skipEnemyIds: flipOutcome.skipEnemyIds,
@@ -1108,20 +1072,32 @@ export class GameRun {
     return true
   }
 
-  _revealTile(position, { cause = 'player' } = {}) {
+  _revealTile(position, { cause = 'player', logReveal = false } = {}) {
     const room = this.currentRoom
     const wasFlippable = this.tileCanBeFlipped(position)
     if (!room?.reveal(position)) return { skipEnemyIds: new Set() }
-    this.bus.emit('animate:flip', { roomId: room.id, position: { ...position }, backUnflippable: !wasFlippable })
-    this._emitRelicEvent('card:revealed', { room, position, cause })
-    this._recordNeutralFlip(room, position, cause)
     const entity = room.entityAt(position)
-    if (entity?.kind === 'enemy') {
-      this._emitRelicEvent('enemy:revealed', { enemy: entity, room, cause })
-      this._triggerEnemyAlert(room, entity)
+    const previousRevealAnchor = this._logRevealAnchor
+    if (logReveal) {
+      const message = entity
+        ? `\u7ffb\u5f00\uff1a${entity.name || this._entityName(entity)}\u3002`
+        : '\u7ffb\u5f00\u4e86\u4e00\u4e2a\u7a7a\u683c\u3002'
+      this._log(message)
+      this._logRevealAnchor = `[${this.turn}] ${message}`
     }
-    if (entity?.kind === 'trap') return this._triggerTrap(entity, { cause })
-    return { skipEnemyIds: new Set() }
+    this.bus.emit('animate:flip', { roomId: room.id, position: { ...position }, backUnflippable: !wasFlippable })
+    try {
+      this._emitRelicEvent('card:revealed', { room, position, cause })
+      this._recordNeutralFlip(room, position, cause)
+      if (entity?.kind === 'enemy') {
+        this._emitRelicEvent('enemy:revealed', { enemy: entity, room, cause })
+        this._triggerEnemyAlert(room, entity)
+      }
+      if (entity?.kind === 'trap') return this._triggerTrap(entity, { cause })
+      return { skipEnemyIds: new Set() }
+    } finally {
+      this._logRevealAnchor = previousRevealAnchor
+    }
   }
 
   _triggerTrap(trap, { cause = 'player' } = {}) {
@@ -1194,28 +1170,36 @@ export class GameRun {
   _pickUp(entity) {
     const room = this.currentRoom
     if (entity.kind === 'item' && !this.backpack.canFit(entity.item)) return this._reject('\u80cc\u5305\u6ca1\u6709\u8db3\u591f\u7a7a\u95f4\uff0c\u65e0\u6cd5\u5f00\u59cb\u79fb\u52a8\u3002')
-    if (entity.kind === 'relic' && !getRelicDefinition(entity.relicId)) return this._reject('\u65e0\u6cd5\u8bc6\u522b\u8fd9\u4ef6\u5723\u9057\u7269\u3002')
+    if (entity.kind === 'item' && entity.item?.type === 'relic' && !getRelicDefinition(entity.item.relicId)) return this._reject('\u65e0\u6cd5\u8bc6\u522b\u8fd9\u4ef6\u5723\u9057\u7269\u3002')
     const route = findPath(room, this.player.pos, entity.pos, { allowGoalOccupied: true })
     if (!route) return this._reject('\u76ee\u6807\u4e0d\u53ef\u8fbe\u3002')
     const movement = this._walk(route)
     if (!movement.stopped) {
-      room.removeEntity(entity.id)
       if (entity.kind === 'item') {
-        this._putInInventory(entity.item)
-        this._log(`\u83b7\u5f97 ${entity.item.name}\u3002`)
-        this._emitRelicEvent('item:collected', { item: entity.item })
+        if (entity.item?.type === 'relic') {
+          const entry = this.acquireRelic(entity.item.relicId, { notify: false })
+          if (entry) {
+            room.removeEntity(entity.id)
+            const item = this.backpack.placementOf(entry.uid)?.item
+            this._emitRelicEvent('item:collected', { item })
+          } else this._log(`\u5723\u9057\u7269\u5df2\u88ab\u83b7\u5f97\uff0c\u65e0\u6cd5\u91cd\u590d\u6536\u96c6\u3002`)
+        } else {
+          room.removeEntity(entity.id)
+          this._putInInventory(entity.item)
+          this._log(`\u83b7\u5f97 ${entity.item.name}\u3002`)
+          this._emitRelicEvent('item:collected', { item: entity.item })
+        }
       } else if (entity.kind === 'gold') {
+        room.removeEntity(entity.id)
         this.player.gold += entity.amount
         this._log(`\u83b7\u5f97 ${entity.amount} \u91d1\u5e01\u3002`)
         this._emitRelicEvent('gold:collected', { amount: entity.amount })
       } else if (entity.kind === 'key') {
+        room.removeEntity(entity.id)
         const edge = this.dungeon.edge(entity.edgeId)
         edge.unlocked = true
         this._log('\u627e\u5230\u4e86\u5f00\u95e8\u673a\u5173\uff0c\u5bf9\u5e94\u95e8\u5df2\u6c38\u4e45\u6253\u5f00\u3002')
         this._emitRelicEvent('key:collected', { key: entity, edge })
-      } else if (entity.kind === 'relic') {
-        const entry = this.acquireRelic(entity.relicId, { notify: false })
-        if (!entry) this._log(`\u5723\u9057\u7269\u5df2\u88ab\u83b7\u5f97\uff0c\u65e0\u6cd5\u91cd\u590d\u6536\u96c6\u3002`)
       }
     }
     if (!movement.stopped) this._endTurn({ turnKind: TURN_KINDS.ACTION })
@@ -1426,10 +1410,11 @@ export class GameRun {
   _attack(enemy) {
     const weapon = this.selectedItem
     if (weapon?.type !== 'weapon') return this._reject('\u8bf7\u5148\u4ece\u80cc\u5305\u9009\u4e2d\u4e00\u628a\u6b66\u5668\u3002')
-    if (this.player.energy < weaponEnergyCost(weapon)) return this._reject('\u4f53\u529b\u4e0d\u8db3\u3002')
+    const energyCost = weaponEnergyCost(weapon)
     const attackRange = weaponAttackRange(weapon, this.player)
     const route = findAttackPath(this.currentRoom, this.player.pos, enemy, [{ ...weapon, range: attackRange }])
     if (!route) return this._reject('\u6ca1\u6709\u53ef\u8fbe\u7684\u653b\u51fb\u4f4d\u7f6e\u3002')
+    if (energyAfterMovement(this.player, route.path.length) < energyCost) return this._reject('\u4f53\u529b\u4e0d\u8db3\u3002')
     const movement = this._walk(route.path)
     if (movement.stopped || !this.currentRoom?.entity(enemy.id)) {
       this._changed()
@@ -1514,7 +1499,6 @@ export class GameRun {
         })
       }
       this.player.pos = { ...step }
-      this._recoverEnergy(1)
       this._discoverNearbyExitDoors()
       this._triggerAmbushes(step)
       if (this.gameOver) {
@@ -1533,6 +1517,7 @@ export class GameRun {
     const turnContext = { turn: counters.globalTurn, turnKind, ...counters }
     this._emitTurnEvent('turn:advanced', turnContext)
     this._emitTurnEvent('turn:started', turnContext)
+    if (turnKind !== TURN_KINDS.ATTACK) this._recoverEnergy(1)
     this._tickPlayerStatuses()
     if (skipEnemyPhase || this.gameOver) {
       this._emitTurnEvent('turn:ended', turnContext)
@@ -1954,7 +1939,6 @@ export class GameRun {
     if (entity.kind === 'gold') return '\u91d1\u5e01'
     if (entity.kind === 'key') return '\u5f00\u95e8\u673a\u5173'
     if (entity.kind === 'trap') return '\u9677\u9631'
-    if (entity.kind === 'relic') return '\u5723\u9057\u7269'
     return '\u7269\u54c1'
   }
 
@@ -1981,6 +1965,11 @@ export class GameRun {
     } else if (Number.isInteger(insertAt)) {
       const index = Math.max(0, Math.min(insertAt, this.log.length))
       this.log.splice(index, 0, entry)
+    } else if (this._logRevealAnchor) {
+      const anchorIndex = this.log.indexOf(this._logRevealAnchor)
+      if (anchorIndex >= 0) this.log.splice(anchorIndex + 1, 0, entry)
+      else if (this.deathLogEntry) this.log.splice(1, 0, entry)
+      else this.log.unshift(entry)
     } else if (this.deathLogEntry) {
       this.log.splice(1, 0, entry)
     } else {
@@ -2000,8 +1989,6 @@ export class GameRun {
       dungeon: this.dungeon.serialize(),
       player: clone(this.player),
       backpack: this.backpack.serialize(clone),
-      relics: this.relics.serialize(),
-      relicLoadoutDraft: Array.isArray(this.relicLoadoutDraft) ? [...this.relicLoadoutDraft] : null,
       initialRelicChoices: [...this.initialRelicChoices],
       turn: this.turn,
       turnCounters: this.turns.serialize(),
@@ -2058,10 +2045,9 @@ export class GameRun {
       this.player.burningDamage = this.player.burningTurns > 0
         ? Math.max(1, Math.floor(Number(this.player.burningDamage) || 1))
         : 0
-      this.relics = RelicCollection.hydrate(data.relics)
-      this.relics.entries = this.relics.entries.filter((entry) => !!getRelicDefinition(entry.id))
+      this.relics = RelicCollection.fromItems(this.backpack.items)
+      this.relics.entries = this.relics.entries.filter((entry) => !!getRelicDefinition(entry.id) && this.backpack.placementOf(entry.uid))
       this.relicEngine = new RelicEngine(this.relics)
-      this.relicLoadoutDraft = Array.isArray(data.relicLoadoutDraft) ? [...data.relicLoadoutDraft] : null
       this.initialRelicChoices = (Array.isArray(data.initialRelicChoices) ? data.initialRelicChoices : buildRelicChoices(this.relics, { random: this.random }).map((relic) => relic.id))
         .filter((id) => !!getRelicDefinition(id) && !this.relics.has(id))
       const legacyTurn = Number.isInteger(data.turn) && data.turn >= 0 ? data.turn : 0
@@ -2106,7 +2092,6 @@ export class GameRun {
       } else if (this.phase !== 'merchant') {
         this.merchant = null
       }
-      if (!this.canManageRelics()) this.relicLoadoutDraft = null
       if (this.phase === 'reward' && (!this.roomReward || this.roomReward.roomId !== this.currentRoom?.id)) this.phase = 'explore'
       if (this.phase !== 'reward') this.roomReward = null
       if (this.phase === 'level-up' && !this.levelUp?.choices.length) this.phase = 'explore'

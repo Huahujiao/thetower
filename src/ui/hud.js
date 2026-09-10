@@ -35,29 +35,20 @@ const LABELS = Object.freeze({
   empty: '\u7a7a',
   nextAttack: '\u4e0b\u6b21\u653b\u51fb',
   nextMeleeAttack: '\u4e0b\u6b21\u8fd1\u6218\u653b\u51fb',
-  relicBook: '\u6253\u5f00\u5723\u9057\u7269\u56fe\u9274',
-  relics: '\u5723\u9057\u7269\u56fe\u9274',
-  collected: '\u5df2\u6536\u96c6',
-  active: '\u5df2\u6fc0\u6d3b',
-  inactive: '\u672a\u6fc0\u6d3b',
+  relics: '\u5723\u9057\u7269',
+  relicOverload: '\u5723\u9057\u7269\u8d85\u8f7d',
   initialRelic: '\u9009\u62e9\u521d\u59cb\u5723\u9057\u7269',
   leaveMerchant: '\u79bb\u5f00',
   sold: '\u5df2\u552e\u7f44',
   buy: '\u8d2d\u4e70',
-  relicManagement: '\u5723\u9057\u7269\u6fc0\u6d3b',
-  merchantRelicsTab: '\u5723\u9057\u7269\u914d\u7f6e',
-  relicLoadout: '\u914d\u7f6e\u8349\u6848',
-  relicLoadoutHint: '\u70b9\u51fb\u8c03\u6574\u914d\u7f6e\uff0c\u70b9\u51fb\u786e\u8ba4\u540e\u624d\u751f\u6548',
-  current: '\u5f53\u524d',
-  pending: '\u5f85\u786e\u8ba4',
+  merchantRelicsTab: '\u5723\u9057\u7269',
+  noRelicsAvailable: '\u6682\u65e0\u53ef\u83b7\u5f97\u7684\u5723\u9057\u7269',
   relicChoice: '\u9009\u62e9\u4e00\u4ef6\u5723\u9057\u7269',
   roomReward: '\u65b0\u623f\u95f4\u5956\u52b1',
   growthChoice: '\u9009\u62e9\u5929\u8d4b\u6216\u5f3a\u5316\u4f53\u683c',
   skipReward: '\u8df3\u8fc7',
   sellSelected: '\u51fa\u552e\u6240\u9009',
   refreshStock: '\u5237\u65b0\u8d27\u67b6',
-  confirmRelics: '\u786e\u8ba4\u5723\u9057\u7269\u914d\u7f6e',
-  relicsLocked: '\u5723\u9057\u7269\u914d\u7f6e\u5df2\u786e\u8ba4',
   weaponClass: '\u7c7b\u522b',
   restart: '\u91cd\u65b0\u5f00\u59cb',
   restartConfirm: '\u786e\u5b9a\u8981\u91cd\u65b0\u5f00\u59cb\u5417\uff1f\u5f53\u524d\u8fdb\u5ea6\u5c06\u88ab\u6e05\u9664\u3002',
@@ -72,6 +63,7 @@ const DETAIL_ICONS = Object.freeze({
   weapon: '\u2694',
   potion: '\u271a',
   armor: '\u26e8',
+  energy: '\u26a1',
   buff: '\u2726',
   relic: '\u25c6',
   trap: '!',
@@ -90,9 +82,9 @@ const TALENT_LINE_LABELS = Object.freeze({
 const HELP_SECTIONS = Object.freeze([
   { title: '\u76ee\u6807\u4e0e\u80dc\u5229', items: ['\u7a7f\u8fc7\u4e94\u5c42\u623f\u95f4\uff0c\u51fb\u8d25\u7b2c\u4e94\u5c42\u7684\u76d1\u89c6\u8005\u5373\u53ef\u83b7\u80dc\u3002', '\u6bcf\u4e2a\u65b0\u623f\u95f4\u9996\u6b21\u8fdb\u5165\u4f1a\u63d0\u4f9b\u8865\u7ed9\u6216\u5723\u9057\u7269\u5956\u52b1\uff1b\u901a\u8fc7\u95e8\u7ee7\u7eed\u524d\u8fdb\u3002'] },
   { title: '\u63a2\u7d22\u4e0e\u7ffb\u724c', items: ['\u5728\u5df2\u7ffb\u5f00\u7684\u724c\u4e2d\u53ef\u516b\u65b9\u5411\u79fb\u52a8\u3002\u70b9\u51fb\u89d2\u8272\u516b\u90bb\u57df\u76ee\u6807\u4f1a\u76f4\u63a5\u6267\u884c\uff1b\u8fdc\u5904\u76ee\u6807\u5148\u9884\u89c8\uff0c\u518d\u70b9\u51fb\u540c\u4e00\u683c\u786e\u8ba4\u3002', '\u7ffb\u672a\u77e5\u724c\u65f6\uff0c\u89d2\u8272\u4f1a\u5148\u8d70\u5230\u76ee\u6807\u516b\u90bb\u57df\u7684\u53ef\u8fbe\u7a7a\u683c\uff1b\u7ffb\u724c\u672c\u8eab\u4e0d\u8e0f\u5165\u8be5\u683c\u3002\u653b\u51fb\u3001\u7ffb\u724c\u548c\u4ea4\u4e92\u9884\u89c8\u4f1a\u663e\u793a\u5230\u8fbe\u4f4d\u7f6e\u4e0e\u76ee\u6807\u5f27\u7ebf\u3002'] },
-  { title: '\u6218\u6597\u4e0e\u654c\u4eba', items: ['\u76f4\u63a5\u4ece\u80cc\u5305\u9009\u62e9\u6b66\u5668\uff0c\u518d\u70b9\u51fb\u654c\u4eba\u53d1\u8d77\u653b\u51fb\uff1b\u653b\u51fb\u6309\u6b66\u5668\u7c7b\u578b\u6d88\u8017 2\u20135 \u70b9\u4f53\u529b\uff0c\u7269\u54c1\u53ef\u56de\u590d 1 \u70b9\u4f53\u529b\u3002', '\u654c\u4eba\u7ffb\u5f00\u540e\u4f1a\u6309\u51b7\u5374\u6267\u884c\u666e\u901a\u653b\u51fb\uff1b\u6bcf\u79fb\u52a8\u4e00\u683c\u6d88\u8017 1 \u4e2a\u5168\u5c40\u56de\u5408\u5e76\u56de\u590d 1 \u70b9\u4f53\u529b\u3002'] },
-  { title: '\u5929\u8d4b\u4e0e\u80cc\u5305', items: ['\u80cc\u5305\u4e3a\u516b\u5217\u4e94\u884c\uff1b\u7269\u54c1\u6309\u5f62\u72b6\u5360\u683c\uff0c\u53ef\u65cb\u8f6c\u3002\u76f4\u63a5\u4ece\u80cc\u5305\u4e2d\u4f7f\u7528\u7269\u54c1\uff0c\u4e0d\u518d\u8bbe\u7f6e\u5de6\u53f3\u624b\u6216\u6b66\u5668\u8010\u4e45\u3002', '\u51fb\u6740\u654c\u4eba\u83b7\u5f97\u7ecf\u9a8c\uff0c\u5347\u7ea7\u65f6\u4ece 4 \u4e2a\u968f\u673a\u5929\u8d4b\u4e0e 1 \u4e2a\u53ef\u65e0\u9650\u53e0\u52a0\u7684\u5f3a\u5316\u4f53\u683c\u4e2d\u4e94\u9009\u4e00\u3002\u5929\u8d4b\u6309\u4f4d\u7f6e\u5728\u4e09\u5c42\u5929\u8d4b\u7f51\u4e2d\u89e3\u9501\u3002'] },
-  { title: '\u5723\u9057\u7269\u4e0e\u4fe1\u606f', items: ['\u5f00\u5c40\u3001\u623f\u95f4\u5956\u52b1\u3001\u6536\u85cf\u5bb6\u548c\u602a\u7269\u6389\u843d\u90fd\u53ef\u80fd\u83b7\u5f97\u5723\u9057\u7269\uff1b\u540c\u65f6\u6700\u591a\u6fc0\u6d3b\u4e94\u4ef6\u3002', '\u957f\u6309\u68cb\u76d8\u5bf9\u8c61\u53ef\u67e5\u770b\u8be6\u60c5\uff1b\u70b9\u51fb\u9876\u90e8\u7684\u5723\u9057\u7269\u56fe\u6807\u53ef\u67e5\u770b\u5df2\u83b7\u5f97\u7684\u5723\u9057\u7269\uff1b\u53f3\u4e0a\u65e5\u5fd7\u53ef\u56de\u770b\u4e8b\u4ef6\u3002'] },
+  { title: '\u6218\u6597\u4e0e\u654c\u4eba', items: ['\u76f4\u63a5\u4ece\u80cc\u5305\u9009\u62e9\u6b66\u5668\uff0c\u518d\u70b9\u51fb\u654c\u4eba\u53d1\u8d77\u653b\u51fb\uff1b\u653b\u51fb\u6309\u6b66\u5668\u7c7b\u578b\u6d88\u8017 2\u20135 \u70b9\u4f53\u529b\uff0c\u6240\u6709\u975e\u653b\u51fb\u56de\u5408\u56de\u590d 1 \u70b9\u4f53\u529b\uff0c\u4f53\u529b\u836f\u5242\u989d\u5916\u56de\u590d 2 \u70b9\u3002', '\u654c\u4eba\u7ffb\u5f00\u540e\u4f1a\u6309\u51b7\u5374\u6267\u884c\u666e\u901a\u653b\u51fb\uff1b\u6bcf\u79fb\u52a8\u4e00\u683c\u6d88\u8017 1 \u4e2a\u5168\u5c40\u56de\u5408\u5e76\u56de\u590d 1 \u70b9\u4f53\u529b\u3002'] },
+  { title: '\u5929\u8d4b\u4e0e\u80cc\u5305', items: ['\u80cc\u5305\u4e3a\u4e5d\u5217\u4e94\u884c\uff1b\u7269\u54c1\u6309\u5f62\u72b6\u5360\u683c\uff0c\u53ef\u65cb\u8f6c\u3002\u5723\u9057\u7269\u4e5f\u662f\u5360\u4e00\u683c\u7684\u666e\u901a\u7269\u54c1\uff0c\u53ef\u76f4\u63a5\u4ece\u80cc\u5305\u4e2d\u4f7f\u7528\u5176\u4ed6\u53ef\u4f7f\u7528\u7269\u54c1\uff0c\u4e0d\u518d\u8bbe\u7f6e\u5de6\u53f3\u624b\u6216\u6b66\u5668\u8010\u4e45\u3002', '\u51fb\u6740\u654c\u4eba\u83b7\u5f97\u7ecf\u9a8c\uff0c\u5347\u7ea7\u65f6\u4ece 4 \u4e2a\u968f\u673a\u5929\u8d4b\u4e0e 1 \u4e2a\u53ef\u65e0\u9650\u53e0\u52a0\u7684\u5f3a\u5316\u4f53\u683c\u4e2d\u4e94\u9009\u4e00\u3002\u5929\u8d4b\u6309\u4f4d\u7f6e\u5728\u4e09\u5c42\u5929\u8d4b\u7f51\u4e2d\u89e3\u9501\u3002'] },
+  { title: '\u5723\u9057\u7269\u4e0e\u4fe1\u606f', items: ['\u5f00\u5c40\u3001\u623f\u95f4\u5956\u52b1\u3001\u6536\u85cf\u5bb6\u548c\u602a\u7269\u6389\u843d\u90fd\u53ef\u80fd\u83b7\u5f97\u5723\u9057\u7269\uff1b\u5723\u9057\u7269\u653e\u5165\u80cc\u5305\u540e\u901a\u5e38\u7acb\u5373\u751f\u6548\uff0c\u8d85\u8fc7 5 \u4ef6\u540e\u6240\u6709\u5723\u9057\u7269\u6682\u65f6\u5931\u6548\uff1b\u51cf\u5c11\u5230 5 \u4ef6\u6216\u4ee5\u4e0b\u540e\u6062\u590d\u751f\u6548\u3002', '\u957f\u6309\u68cb\u76d8\u5bf9\u8c61\u53ef\u67e5\u770b\u8be6\u60c5\uff1b\u53f3\u4e0a\u65e5\u5fd7\u53ef\u56de\u770b\u4e8b\u4ef6\u3002'] },
   { title: '\u89c6\u89c9\u4e0e\u5347\u7ea7', items: ['\u654c\u4eba\u7ad6\u724c\u4fdd\u6301\u7ea2\u8272\u5371\u9669\u4e3b\u4f53\uff0c\u5c5e\u6027\u4ee5\u7ec6\u8f6e\u5ed3\u548c\u5934\u90e8\u5706\u73af\u533a\u5206\uff1b\u5730\u9762\u6b66\u5668\u5361\u9762\u7684\u653b\u51fb\u529b\u4f7f\u7528\u5c5e\u6027\u8272\u7684\u7eaf\u6570\u5b57\u3002', '\u5347\u7ea7\u65f6\u56db\u4e2a\u666e\u901a\u5929\u8d4b\u6309 2\u00d72 \u6392\u5217\uff0c\u5f3a\u5316\u4f53\u683c\u5355\u72ec\u4e00\u884c\uff0c\u5361\u7247\u4e0a\u4f1a\u6807\u6ce8\u6240\u5c5e\u5206\u652f\u3002', '\u80cc\u5305\u7269\u54c1\u4f7f\u7528\u4f4e\u9971\u548c\u80cc\u666f\u8272\u533a\u5206\u7c7b\u578b\uff1a\u6cbb\u7597\u7eff\u3001\u62a4\u7532\u68d5\u3001\u589e\u76ca\u7d2b\uff1b\u6b66\u5668\u80cc\u666f\u6309\u5c5e\u6027\u53d8\u5316\u3002'] },
   { title: '\u5feb\u6377\u63d0\u793a', items: ['\u7ffb\u724c\u548c\u79fb\u52a8\u90fd\u4f1a\u6309\u6b65\u9aa4\u89e6\u53d1\u654c\u4eba\u56de\u5408\uff1b\u8fdc\u8ddd\u79bb\u79fb\u52a8\u65f6\uff0c\u8def\u4e0a\u53ef\u80fd\u591a\u6b21\u7ecf\u8fc7\u654c\u4eba\u7684\u653b\u51fb\u8303\u56f4\u3002', '\u4e0d\u53ef\u7ffb\u724c\u6bd4\u53ef\u7ffb\u724c\u66f4\u6697\u3002\u534a\u900f\u660e\u5361\u724c\u53ea\u662f\u88ab\u7aa5\u89c6\uff0c\u5c1a\u672a\u7ffb\u5f00\u3002'] },
 ])
@@ -143,7 +135,6 @@ export class HUD {
           <div class="stat gold"><span class="label">${LABELS.gold}</span><span class="value" data=gold></span></div>
         </div>
         <div class="hud-btns">
-          <button class="hud-icon relic-book-top" data-action="relics" title="${LABELS.relicBook}" aria-label="${LABELS.relicBook}">\u25a6</button>
           <button class="hud-icon talent-book-top" data-action="talents" title="${LABELS.talentGraph}" aria-label="${LABELS.talentGraph}">\u2736</button>
           <button class="hud-icon" data-action="character" title="${LABELS.character}" aria-label="${LABELS.character}">\ud83d\udc64</button>
           <button class="hud-icon" data-action="help" title="${LABELS.help}" aria-label="${LABELS.help}">?</button>
@@ -201,17 +192,6 @@ export class HUD {
         <div class="log-body" data=logbody></div>
       </div>
 
-      <div class="relic-collection-modal" data=relicmodal aria-hidden="true">
-        <div class="relic-modal-backdrop" data-action="close-relics"></div>
-        <section class="relic-modal-panel" role="dialog" aria-modal="true" aria-label="${LABELS.relics}">
-          <div class="relic-modal-head">
-            <span>${LABELS.relics}</span><span class="relic-modal-count" data=reliccount></span>
-            <button class="relic-modal-close" data-action="close-relics" aria-label="close">\u00d7</button>
-          </div>
-          <div class="relic-collection" data=reliccollection></div>
-        </section>
-      </div>
-
       <div class="help-modal" data=helpmodal aria-hidden="true">
         <div class="help-modal-backdrop" data-action="close-help"></div>
         <section class="help-modal-panel" role="dialog" aria-modal="true" aria-labelledby="help-title">
@@ -262,9 +242,6 @@ export class HUD {
             <div class="backpack-action-slot act-use-slot"><button class="backpack-action act-use" data-action="use" hidden>${LABELS.use}</button></div>
             <button class="backpack-action bag-rotate" data-action="rotate-bag" title="${LABELS.rotate}" aria-label="${LABELS.rotate}" hidden>\u21bb</button>
           </div>
-          <aside class="hud-relics" aria-label="${LABELS.relics}">
-            <div class="relic-slots" data=relicslots></div>
-          </aside>
           <section class="backpack-panel">
             <div class="backpack-grid-wrap">
               <div class="backpack-grid" data=backpack></div>
@@ -312,12 +289,14 @@ export class HUD {
     const pendingBuffs = player.pendingAttackBuffs || []
     const isMeleeOnly = pendingBuffs.length > 0 && pendingBuffs.every((buff) => buff.target === 'melee')
     const hints = []
+    const relicOverloaded = this.run.relicOverload() > 0
+    this.q('hintrow').classList.toggle('overloaded', relicOverloaded)
+    if (relicOverloaded) hints.push(LABELS.relicOverload)
     if (player.pendingAttackBonus) hints.push(`${isMeleeOnly ? LABELS.nextMeleeAttack : LABELS.nextAttack} +${player.pendingAttackBonus}`)
     if (player.poisonedTurns > 0) hints.push(`${LABELS.poison} ${player.poisonedTurns}${LABELS.turn}`)
     if (player.burningTurns > 0) hints.push(`${LABELS.burning} ${player.burningTurns}${LABELS.turn}`)
     this.q('hint').textContent = hints.join(' · ')
 
-    this._renderRelics()
     this._renderInitialRelicChoice()
     this._renderRoomReward()
     this._renderLevelUp()
@@ -334,30 +313,6 @@ export class HUD {
     over.classList.toggle('lose', !this.run.win)
     this.q('overtitle').textContent = this.run.win ? LABELS.win : LABELS.lose
     this.q('overmessage').textContent = this.run.win ? LABELS.winMessage : LABELS.loseMessage
-  }
-
-  _renderRelics() {
-    const entries = this.run.relics.entries
-    const slots = this.q('relicslots')
-    slots.innerHTML = ''
-    for (let index = 0; index < this.run.relics.maxActive; index++) {
-      const entry = this.run.relics.active[index]
-      const definition = entry ? getRelicDefinition(entry.id) : null
-      const slot = document.createElement('div')
-      slot.className = `relic-slot ${definition ? 'active' : 'empty'}`
-      slot.title = definition ? `${definition.name}\uff1a${definition.description}` : LABELS.empty
-      slot.textContent = definition ? definition.name.slice(0, 4) : '\u00b7'
-      if (definition) slot.dataset.relicDetail = definition.id
-      slots.appendChild(slot)
-    }
-    this.q('reliccount').textContent = `${LABELS.collected} ${entries.length}`
-    const collection = this.q('reliccollection')
-    collection.innerHTML = entries.map((entry) => {
-      const definition = getRelicDefinition(entry.id)
-      if (!definition) return ''
-      const state = entry.active ? LABELS.active : LABELS.inactive
-      return `<div class="relic-collection-item ${entry.active ? 'active' : 'inactive'}"><span class="relic-item-name">${escapeHtml(definition.name)}</span><small>${state}</small><span class="relic-item-desc">${escapeHtml(definition.description)}</span></div>`
-    }).join('')
   }
 
   _renderCharacterPanel(player) {
@@ -407,7 +362,8 @@ export class HUD {
       if (choice.kind === 'relic') {
         const definition = getRelicDefinition(choice.relicId)
         if (!definition) return ''
-        return `<button class="relic-choice-card" data-room-reward="${index}"><span class="relic-name">${escapeHtml(definition.name)}</span><span class="relic-desc">${escapeHtml(definition.description)}</span></button>`
+        const disabled = this.run.canFitRelic(choice.relicId) ? '' : ' disabled'
+        return `<button class="relic-choice-card" data-room-reward="${index}"${disabled}><span class="relic-name">${escapeHtml(definition.name)}</span><span class="relic-desc">${escapeHtml(definition.description)}</span></button>`
       }
       if (choice.kind === 'item') {
         const definition = getItemDefinition(choice.itemId)
@@ -416,6 +372,7 @@ export class HUD {
           ? `${WEAPON_CLASS_LABELS[definition.weaponClass] || LABELS.weaponClass} · ATK ${definition.attack} · R ${this.run.weaponRange(definition)} · ${LABELS.energy} ${this.run.weaponEnergyCost(definition)}`
           : definition.type === 'potion' ? `HP +${definition.heal}`
             : definition.type === 'armor' ? `${LABELS.armor} +${definition.armor}`
+              : definition.type === 'energy' ? `${LABELS.energy} +${definition.energy}`
               : `ATK +${definition.attackBonus}`
         const item = { ...definition, uid: 'reward-preview' }
         const disabled = !this.run.backpack.canFit(item) ? ' disabled' : ''
@@ -452,7 +409,7 @@ export class HUD {
     this.q('merchanttitle').textContent = merchant.name
     const services = merchant.services || this.run.merchantDefinition?.services || []
     const canBuy = services.includes('stock')
-    const canRelics = services.includes('relic-management') || services.includes('relic-choice')
+    const canRelics = services.includes('relic-choice')
     const availableTabs = [canBuy ? 'stock' : null, canRelics ? 'relics' : null].filter(Boolean)
     if (!availableTabs.includes(this.merchantTab)) this.merchantTab = availableTabs[0] || null
     const tabs = this.q('merchanttabs')
@@ -480,19 +437,7 @@ export class HUD {
     const offerHtml = offer.length ? `<section class="merchant-relic-section merchant-relic-offer"><div class="merchant-relic-section-head"><div class="merchant-relic-title">${LABELS.relicChoice}</div></div><div class="merchant-relic-grid">${offer.map((definition) => (
       `<button class="merchant-relic-item${this.run.player.gold < offerPrice ? ' disabled' : ''}" data-merchant-relic-choice="${definition.id}" aria-disabled="${this.run.player.gold < offerPrice}"><b>${escapeHtml(definition.name)}</b><small>${escapeHtml(definition.description)} \u00b7 ${LABELS.buy} ${offerPrice}</small></button>`
     )).join('')}</div></section>` : ''
-    if (!this.run.canManageRelics()) {
-      relics.innerHTML = `${offerHtml}<div class="merchant-relic-locked">${LABELS.relicsLocked}</div>`
-      return
-    }
-    const draftIds = new Set(this.run.relicLoadoutDraftIds())
-    relics.innerHTML = `${offerHtml}<section class="merchant-relic-section merchant-relic-loadout"><div class="merchant-relic-section-head"><div><div class="merchant-relic-title">${LABELS.relicLoadout}</div><small class="merchant-relic-hint">${LABELS.relicLoadoutHint}</small></div><strong class="merchant-relic-capacity">${draftIds.size}/${this.run.relics.maxActive}</strong></div><div class="merchant-relic-grid">${this.run.relics.entries.map((entry) => {
-      const definition = getRelicDefinition(entry.id)
-      if (!definition) return ''
-      const draftActive = draftIds.has(entry.id)
-      const changed = draftActive !== entry.active
-      const state = draftActive ? LABELS.active : LABELS.inactive
-      return `<button class="merchant-relic-item ${draftActive ? 'draft-active' : 'draft-inactive'}${changed ? ' pending' : ''}" data-merchant-relic="${entry.id}" aria-pressed="${draftActive}"><b>${escapeHtml(definition.name)}</b><small>${state} \u00b7 ${changed ? LABELS.pending : LABELS.current}</small></button>`
-    }).join('')}</div><button class="merchant-relic-confirm" data-action="confirm-relic-loadout"><b>${LABELS.confirmRelics}</b><small>${LABELS.relicLoadoutHint}</small></button></section>`
+    relics.innerHTML = offerHtml || `<div class="merchant-relic-empty">${LABELS.noRelicsAvailable}</div>`
   }
 
   _renderBackpack() {
@@ -500,6 +445,7 @@ export class HUD {
     backpack.style.setProperty('--bag-columns', INVENTORY_COLUMNS)
     backpack.style.setProperty('--bag-rows', INVENTORY_ROWS)
     const selectedItem = this.run.selectedItem
+    const relicOverloaded = this.run.relicOverload() > 0
     const cells = Array.from({ length: INVENTORY_COLUMNS * INVENTORY_ROWS }, (_, index) => {
       const placement = this.run.backpack.placementForCellIndex(index)
       const action = this.run.previewInventoryCellAction(index)
@@ -517,13 +463,16 @@ export class HUD {
       const originIndex = this.run.backpack.originIndex(placement)
       const selected = this.run.selectedInventoryIndex === originIndex
       const itemClasses = ['bag-item', item.type]
+      if (item.type === 'relic' && relicOverloaded) itemClasses.push('overloaded')
       if (item.type === 'weapon' && item.attribute) itemClasses.push(`attribute-${item.attribute}`)
       if (selected) itemClasses.push('selected')
       const detail = item.type === 'weapon'
         ? `${WEAPON_CLASS_LABELS[item.weaponClass] || LABELS.weaponClass} · ATK ${item.attack} · R ${this.run.weaponRange(item)} · ${LABELS.energy} ${this.run.weaponEnergyCost(item)}`
         : item.type === 'potion' ? `HP +${item.heal}`
           : item.type === 'armor' ? `${LABELS.armor} +${item.armor}`
+            : item.type === 'energy' ? `${LABELS.energy} +${item.energy}`
             : item.type === 'buff' ? `ATK +${item.attackBonus}`
+              : item.type === 'relic' ? LABELS.relics
               : ''
       let firstFilled = true
       const shapeCells = shape.flat().map((filled, shapeIndex) => {
@@ -553,7 +502,7 @@ export class HUD {
     const selected = this.run.selectedItem
     const discard = this.root.querySelector('[data-action="discard"]')
     const use = this.root.querySelector('[data-action="use"]')
-    const usableItem = !!selected && selected.type !== 'weapon'
+    const usableItem = !!selected && ['potion', 'armor', 'energy', 'buff'].includes(selected.type)
     const actionsAvailable = this.run.phase === 'explore' && !this.run.gameOver
     const setActionState = (button, visible, enabled) => {
       button.hidden = false
@@ -612,8 +561,6 @@ export class HUD {
     }
     const merchantRelicChoice = target.closest('[data-merchant-relic-choice]')
     if (merchantRelicChoice) return () => this.run.showRelicDetail(merchantRelicChoice.dataset.merchantRelicChoice)
-    const merchantRelic = target.closest('[data-merchant-relic]')
-    if (merchantRelic) return () => this.run.showRelicDetail(merchantRelic.dataset.merchantRelic)
     return null
   }
 
@@ -681,13 +628,6 @@ export class HUD {
       this.run.buyMerchantItem(Number(merchantStock.dataset.merchantStock))
       return
     }
-    const merchantRelic = event.target.closest('[data-merchant-relic]')
-    if (merchantRelic) {
-      const id = merchantRelic.dataset.merchantRelic
-      if (this.run.isRelicLoadoutDraftActive(id)) this.run.deactivateRelic(id)
-      else this.run.activateRelic(id)
-      return
-    }
     const merchantRelicChoice = event.target.closest('[data-merchant-relic-choice]')
     if (merchantRelicChoice) {
       if (merchantRelicChoice.getAttribute('aria-disabled') === 'true') return
@@ -740,7 +680,6 @@ export class HUD {
     if (action === 'close-merchant') this.run.closeMerchant()
     if (action === 'merchant-sell') this.run.sellSelectedMerchantItem()
     if (action === 'merchant-refresh') this.run.refreshMerchantInventory()
-    if (action === 'confirm-relic-loadout') this.run.confirmRelicLoadout()
     if (action === 'skip-room-reward') this.run.skipRoomReward()
     if (action === 'close-detail') this.run.closeDetail()
     if (action === 'log') this._toggleTopPanel('log')
@@ -749,8 +688,6 @@ export class HUD {
     if (action === 'talents') this._toggleTopPanel('talentpanel')
     if (action === 'help') this._setHelpModal(true)
     if (action === 'close-help') this._setHelpModal(false)
-    if (action === 'relics') this._setRelicModal(true)
-    if (action === 'close-relics') this._setRelicModal(false)
   }
 
   async _copyLog() {
@@ -786,18 +723,11 @@ export class HUD {
     }, 1600)
   }
 
-  _setRelicModal(show) {
-    const modal = this.q('relicmodal')
-    modal.classList.toggle('show', show)
-    modal.setAttribute('aria-hidden', show ? 'false' : 'true')
-  }
-
   _setHelpModal(show) {
     const modal = this.q('helpmodal')
     if (!modal) return
     if (show) {
       this.helpReturnFocus = document.activeElement?.focus ? document.activeElement : null
-      this._setRelicModal(false)
       for (const key of ['settings', 'log', 'characterpanel', 'talentpanel']) this.q(key).classList.remove('show')
       this.q('characterpanel').setAttribute('aria-hidden', 'true')
       this.q('talentpanel').setAttribute('aria-hidden', 'true')

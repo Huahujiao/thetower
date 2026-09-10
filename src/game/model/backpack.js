@@ -1,4 +1,4 @@
-export const BACKPACK_COLUMNS = 8
+export const BACKPACK_COLUMNS = 9
 export const BACKPACK_ROWS = 5
 
 function cloneShape(shape) {

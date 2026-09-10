@@ -1,5 +1,6 @@
 import { enemyDefinitionFor, getEnemyDefinition } from './enemies.js'
 import catalog from './catalog.json' with { type: 'json' }
+import { getRelicDefinition } from './relics.js'
 
 const WEAPON_ENERGY_COSTS = Object.freeze({ dagger: 2, sword: 3, axe: 4, polearm: 4, bow: 4, heavy: 5 })
 function weaponDefinition(source) {
@@ -50,11 +51,41 @@ export function makeItemById(id, random = Math.random) {
   return definition ? makeItem(definition, random) : null
 }
 
+export function makeRelicItem(relicOrId) {
+  const relicId = typeof relicOrId === 'string' ? relicOrId : relicOrId?.id
+  const definition = getRelicDefinition(relicId)
+  if (!definition) return null
+  return {
+    type: 'relic',
+    relicId: definition.id,
+    name: definition.name,
+    description: definition.description,
+    shape: [[1]],
+    rotatable: false,
+    uid: nextEntityId('relic-item'),
+  }
+}
+
+function weightedPick(values, random) {
+  if (!values.length) return null
+  const total = values.reduce((sum, value) => sum + Math.max(1, Number(value.supplyWeight) || 1), 0)
+  let cursor = Math.max(0, Number(random()) || 0) * total
+  for (const value of values) {
+    cursor -= Math.max(1, Number(value.supplyWeight) || 1)
+    if (cursor < 0) return value
+  }
+  return values.at(-1)
+}
+
+export function randomConsumableDefinition(floor, random = Math.random) {
+  const pool = CONSUMABLES.filter((item) => floor >= (item.minFloor || 1))
+  return weightedPick(pool, random)
+}
+
 export function randomItem(floor, random = Math.random) {
   const weaponPool = WEAPONS.filter((weapon) => floor <= 2 || weapon.id !== 'rust-sword')
-  const consumablePool = CONSUMABLES.filter((item) => floor >= (item.minFloor || 1))
   if (random() < 0.42) return makeItem(weaponPool[Math.floor(random() * weaponPool.length)])
-  return makeItem(consumablePool[Math.floor(random() * consumablePool.length)])
+  return makeItem(randomConsumableDefinition(floor, random))
 }
 
 export function randomWeapon(floor, random = Math.random) {
@@ -134,14 +165,8 @@ export function createLootEntity(item, position) {
 
 export function createRelicEntity(relic, position) {
   const relicId = typeof relic === 'string' ? relic : relic?.id
-  if (!relicId) return null
-  return {
-    id: nextEntityId('relic'),
-    kind: 'relic',
-    relicId,
-    name: typeof relic === 'object' ? relic.name : null,
-    pos: { ...position },
-  }
+  const item = makeRelicItem(relicId)
+  return item ? createLootEntity(item, position) : null
 }
 
 export function createGoldEntity(amount, position) {
