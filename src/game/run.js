@@ -223,6 +223,7 @@ export class GameRun {
     this.relicRuntime = {}
     this.detailPanel = null
     this.deathLogEntry = null
+    this._logSequence = 0
     this.log = []
     this._log('\u8fdb\u5165\u7b2c 1 \u5c42\u7684\u7b2c 1 \u4e2a\u623f\u95f4\u3002')
     this._log(`\u521d\u59cb\u7269\u54c1\uff1a${starter.name}\u3002`)
@@ -1335,22 +1336,6 @@ export class GameRun {
     return targets
   }
 
-  _bowPiercingEnemies(enemy) {
-    const room = this.currentRoom
-    if (!room || !enemy?.pos) return []
-    const dc = Math.sign(enemy.pos.c - this.player.pos.c)
-    const dr = Math.sign(enemy.pos.r - this.player.pos.r)
-    const targets = []
-    let position = { ...enemy.pos }
-    for (let index = 0; index < 2; index += 1) {
-      position = { c: position.c + dc, r: position.r + dr }
-      if (!room.contains(position)) break
-      const candidate = room.entityAt(position)
-      if (candidate?.kind === 'enemy' && !candidate.downed && room.isRevealed(position)) targets.push(candidate)
-    }
-    return targets
-  }
-
   _talentAttackContext(weapon, enemy, distance) {
     const flat = []
     const state = this._talentRuntime()
@@ -1456,7 +1441,6 @@ export class GameRun {
     const firstAttackInRoom = !roomState.firstAttackUsed
     if (combatDistance(this.player.pos, enemy.pos, attackRange) <= attackRange) {
       if (!this._tryTenthAttackTransmutation(enemy)) {
-        const finalStrike = false
         const distance = combatDistance(this.player.pos, enemy.pos)
         const talentContext = this._talentAttackContext(weapon, enemy, distance)
         const type = attackAttributeModifier(weapon, enemy, { counterBonus: talentContext.counterBonus })
@@ -1468,23 +1452,22 @@ export class GameRun {
           pendingAttackBonus: talentContext.flat,
           relicModifiers,
           terrainModifiers: terrainDamageModifiers(this.currentRoom, this.player.pos),
-          finalStrike,
           counterBonus: talentContext.counterBonus,
         })
+        const attackLogSequence = this._logSequence
         const hit = this._damageEnemy(enemy, outcome.damage, { ignoreDefense: weapon.weaponClass === 'heavy' })
-        this._emitRelicEvent('attack:primary-hit', { enemy, weapon, damage: hit.damage, healthDamage: hit.healthDamage, countered: outcome.countered, defeated: hit.defeated, finalStrike })
-        this._emitRelicEvent('attack:hit', { enemy, weapon, damage: hit.damage, countered: outcome.countered, defeated: hit.defeated, finalStrike, weaponBroken: finalStrike })
+        this._emitRelicEvent('attack:primary-hit', { enemy, weapon, damage: hit.damage, healthDamage: hit.healthDamage, countered: outcome.countered, defeated: hit.defeated })
+        this._emitRelicEvent('attack:hit', { enemy, weapon, damage: hit.damage, countered: outcome.countered, defeated: hit.defeated })
         if (talentContext.itemBuffs.length > 0) {
           this.player.pendingAttackBuffs = this.player.pendingAttackBuffs.filter((buff) => !talentContext.itemBuffs.includes(buff))
           this.player.pendingAttackBonus = this.player.pendingAttackBuffs.reduce((total, buff) => total + buff.amount, 0)
         }
-        if (hit.defeated) this._emitRelicEvent('attack:primary-kill', { enemy, weapon, damage: hit.damage, healthDamage: hit.healthDamage, countered: outcome.countered, finalStrike })
-        this._applyTalentPrimaryOutcome({ enemy, weapon, distance, finalStrike, outcome, hit })
+        if (hit.defeated) this._emitRelicEvent('attack:primary-kill', { enemy, weapon, damage: hit.damage, healthDamage: hit.healthDamage, countered: outcome.countered })
+        this._applyTalentPrimaryOutcome({ enemy, weapon, distance, outcome, hit })
         if (weapon.weaponClass === 'sword') {
-          const reduction = finalStrike ? 0.2 : 0.6
-          this.player.parry = { multiplier: Math.max(0, reduction - (this.hasTalent('sword-steady') ? 0.1 : 0)), ranged: this.hasTalent('sword-guard') }
+          this.player.parry = { multiplier: Math.max(0, 0.6 - (this.hasTalent('sword-steady') ? 0.1 : 0)), ranged: this.hasTalent('sword-guard') }
         } else if (weapon.weaponClass === 'axe') {
-          const splashMultiplier = (finalStrike ? 0.8 : 0.5) + (this.hasTalent('axe-wide') ? 0.15 : 0) + (this.hasTalent('axe-bloodstorm') ? 0.15 : 0)
+          const splashMultiplier = 0.5 + (this.hasTalent('axe-wide') ? 0.15 : 0) + (this.hasTalent('axe-bloodstorm') ? 0.15 : 0)
           const targetCount = 1 + (this.hasTalent('axe-sweep') ? 1 : 0) + (this.hasTalent('axe-bloodstorm') ? 1 : 0)
           const splashDamage = Math.floor(hit.damage * splashMultiplier)
           const targets = splashDamage > 0 ? this._nearbyEnemies(enemy.pos, 2, targetCount, new Set([enemy.id])) : []
@@ -1495,11 +1478,9 @@ export class GameRun {
             this._emitRelicEvent('damage:secondary', { enemy: target, source: 'weapon:axe', weapon, damage: splashHit.damage, defeated: splashHit.defeated })
           }
           this._recordAxeMultiAttack(hit.damage > 0 && actualTargets > 0, weapon)
-        } else if (weapon.weaponClass === 'dagger' && finalStrike && !hit.defeated) {
-          enemy.actionDelay = Math.max(0, Number(enemy.actionDelay) || 0) + 1
         } else if (weapon.weaponClass === 'polearm') {
-          const knockbackDistance = (finalStrike ? 2 : 1) + (this.hasTalent('polearm-push') ? 1 : 0)
-          if (distance === 2 || finalStrike) {
+          const knockbackDistance = 1 + (this.hasTalent('polearm-push') ? 1 : 0)
+          if (distance === 2) {
             const knockback = this._knockbackEnemy(enemy, knockbackDistance, {
               collisionDamage: (this.hasTalent('polearm-impact') ? 3 : 0) + (this.hasTalent('polearm-anti-cavalry') ? 2 : 0),
               collisionDelay: this.hasTalent('polearm-anti-cavalry') ? 1 : 0,
@@ -1507,20 +1488,11 @@ export class GameRun {
             if (knockback?.moved && this.hasTalent('polearm-step') && this.random() < 0.5) this._recoverEnergy(1)
             if (knockback?.collision) this._emitRelicEvent('damage:secondary', { enemy, source: 'weapon:polearm-collision', weapon, damage: 0, collision: knockback.collision })
           }
-        } else if (weapon.weaponClass === 'bow' && finalStrike) {
-          for (const target of this._bowPiercingEnemies(enemy)) {
-            const piercingHit = this._damageEnemy(target, hit.damage, { source: 'weapon:bow' })
-            this._emitRelicEvent('damage:secondary', { enemy: target, source: 'weapon:bow', weapon, damage: piercingHit.damage, defeated: piercingHit.defeated })
-          }
         }
-        if (weapon.weaponClass === 'heavy' && finalStrike) {
-          enemy.traits = (enemy.traits || []).filter((trait) => trait !== 'shield' && trait !== 'heavy-armor')
-          enemy.shieldConsumed = true
-          enemy.armorBroken = true
-        }
-        if (hit.defeated) this._emitRelicEvent('attack:enemy-defeated', { enemy, weapon, countered: outcome.countered, finalStrike })
+        if (hit.defeated) this._emitRelicEvent('attack:enemy-defeated', { enemy, weapon, countered: outcome.countered })
         const relation = outcome.countered ? '\u514b\u5236\u00b7' : outcome.resisted ? '\u53d7\u5236\u00b7' : ''
-        this._log(`${relation}${weapon.name} \u5bf9 ${enemy.name}${hit.finishedDowned ? '\u7ec8\u7ed3\u4e86' : '\u9020\u6210'} ${hit.damage} \u4f24\u5bb3\u3002`)
+        const attackLogIndex = Math.max(0, this._logSequence - attackLogSequence)
+        this._log(`${relation}${weapon.name} \u5bf9 ${enemy.name}${hit.finishedDowned ? '\u7ec8\u7ed3\u4e86' : '\u9020\u6210'} ${hit.damage} \u4f24\u5bb3\u3002`, { insertAt: attackLogIndex })
       }
     }
     roomState.firstAttackUsed = true
@@ -2000,11 +1972,15 @@ export class GameRun {
     return false
   }
 
-  _log(message, { death = false } = {}) {
+  _log(message, { death = false, insertAt = null } = {}) {
     const entry = `[${this.turn}] ${message}`
+    this._logSequence = (this._logSequence || 0) + 1
     if (death) {
       this.deathLogEntry = entry
       this.log.unshift(entry)
+    } else if (Number.isInteger(insertAt)) {
+      const index = Math.max(0, Math.min(insertAt, this.log.length))
+      this.log.splice(index, 0, entry)
     } else if (this.deathLogEntry) {
       this.log.splice(1, 0, entry)
     } else {
@@ -2117,6 +2093,7 @@ export class GameRun {
       this.relicRuntime = data.relicRuntime && typeof data.relicRuntime === 'object' ? clone(data.relicRuntime) : {}
       this.detailPanel = null
       this.log = Array.isArray(data.log) ? data.log : []
+      this._logSequence = this.log.length
       synchronizeEntityIds(this.backpack.items.map((item) => item?.uid))
       if (!this.currentRoom?.contains(this.player.pos) || !this.currentRoom.isRevealed(this.player.pos)) return discard()
       if (this.gameOver || this.win) {

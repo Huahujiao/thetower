@@ -33,12 +33,11 @@ export function attackAttributeModifier(weapon, target, { counterBonus = 0 } = {
   return result.countered ? { ...result, multiplier: result.multiplier + Math.max(0, Number(counterBonus) || 0) } : result
 }
 
-export function computeAttackDamage({ weapon, target, pendingAttackBonus = 0, relicModifiers = [], terrainModifiers = [], finalStrike = false, counterBonus = 0 } = {}) {
+export function computeAttackDamage({ weapon, target, pendingAttackBonus = 0, relicModifiers = [], terrainModifiers = [], counterBonus = 0 } = {}) {
   if (!weapon) return { damage: 0, countered: false, resisted: false, resolution: resolveDamage(0) }
   const type = attackAttributeModifier(weapon, target, { counterBonus })
   const modifiers = [
     ...(pendingAttackBonus ? [damageModifier(DAMAGE_STAGES.FLAT, pendingAttackBonus, 'pending-buff')] : []),
-    ...(finalStrike && weapon.weaponClass === 'heavy' ? [damageModifier(DAMAGE_STAGES.MULTIPLY, 1.5, 'weapon:heavy-final')] : []),
     ...(type.multiplier !== 1 ? [damageModifier(DAMAGE_STAGES.MULTIPLY, type.multiplier, type.countered ? 'counter' : 'resisted')] : []),
     ...relicModifiers,
     ...terrainModifiers,

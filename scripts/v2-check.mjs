@@ -8,9 +8,9 @@ import { buildMerchantStock } from '../src/game/data/merchants.js'
 import catalog from '../src/game/data/catalog.json' with { type: 'json' }
 import { computeAttackDamage } from '../src/game/rules/modifiers.js'
 
-const removedRelics = ['r-harmonic-echo', 'r-apprentice-mark', 'r-last-stand', 'r-threshold-seal', 'r-no-mercy']
+const removedRelics = ['r-harmonic-echo', 'r-apprentice-mark', 'r-last-stand', 'r-threshold-seal', 'r-no-mercy', 'r-blood-prism', 'r-armor-echo', 'r-inheritance-edge', 'r-breaker-spark']
 const relicIds = new Set(RELIC_DEFS.map((definition) => definition.id))
-assert.equal(RELIC_DEFS.length, 34, 'relic pool must contain 34 definitions')
+assert.equal(RELIC_DEFS.length, 30, 'relic pool must contain 30 definitions')
 for (const id of removedRelics) assert.equal(getRelicDefinition(id), null, `${id} must be removed`)
 for (const id of ['r-gray-divination', 'r-scrap-charm']) assert(relicIds.has(id), `${id} must be present`)
 

@@ -79,4 +79,19 @@ assert.equal(movementRun.weaponEnergyCost(weapon), 3)
 movementRun.player.energy = 2
 assert.equal(movementRun._spendEnergy(movementRun.weaponEnergyCost(weapon)), false)
 
+const logRun = new GameRun({ autoLoad: false, random: () => 0.25 })
+logRun._log('earlier event')
+const attackLogStart = logRun._logSequence
+logRun._log('secondary explosion')
+logRun._log('enemy defeated')
+logRun._log('experience gained')
+logRun._log('primary attack', { insertAt: logRun._logSequence - attackLogStart })
+assert.deepEqual(logRun.log.slice(0, 5).map((entry) => entry.split('] ')[1]), [
+  'experience gained',
+  'enemy defeated',
+  'secondary explosion',
+  'primary attack',
+  'earlier event',
+])
+
 console.log('turns-check passed')

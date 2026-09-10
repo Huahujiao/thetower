@@ -25,6 +25,9 @@ const LABELS = Object.freeze({
   close: '\u5173\u95ed',
   settings: '\u8bbe\u7f6e',
   log: '\u65e5\u5fd7',
+  copyLog: '\u590d\u5236\u65e5\u5fd7',
+  copied: '\u5df2\u590d\u5236',
+  copyFailed: '\u590d\u5236\u5931\u8d25',
   reveal: '\u8c03\u8bd5\uff1a\u663e\u793a\u724c\u5185\u5bb9',
   discard: '\u4e22\u5f03',
   rotate: '\u65cb\u8f6c',
@@ -194,7 +197,7 @@ export class HUD {
       </section>
 
       <div class="hud-log" data=log>
-        <div class="log-head"><span class="log-title">${LABELS.log}</span></div>
+        <div class="log-head"><span class="log-title">${LABELS.log}</span><button class="log-copy" data=logcopy data-action="copy-log" type="button">${LABELS.copyLog}</button></div>
         <div class="log-body" data=logbody></div>
       </div>
 
@@ -717,6 +720,10 @@ export class HUD {
     }
     const action = event.target.closest('[data-action]')?.dataset.action
     if (!action) return
+    if (action === 'copy-log') {
+      void this._copyLog()
+      return
+    }
     if (action === 'use') this.run.useSelected()
     if (action === 'discard') this.run.discardSelected()
     if (action === 'rotate-bag') this.run.rotateSelectedInventory()
@@ -744,6 +751,39 @@ export class HUD {
     if (action === 'close-help') this._setHelpModal(false)
     if (action === 'relics') this._setRelicModal(true)
     if (action === 'close-relics') this._setRelicModal(false)
+  }
+
+  async _copyLog() {
+    const text = this.run.log.slice(0, 40).join('\n')
+    if (!text) return
+    let copied = false
+    try {
+      const clipboard = globalThis.navigator?.clipboard
+      if (clipboard?.writeText) {
+        await clipboard.writeText(text)
+        copied = true
+      }
+    } catch {
+      copied = false
+    }
+    if (!copied) {
+      const textarea = document.createElement('textarea')
+      textarea.value = text
+      textarea.setAttribute('readonly', '')
+      textarea.style.position = 'fixed'
+      textarea.style.opacity = '0'
+      document.body.appendChild(textarea)
+      textarea.select()
+      try { copied = document.execCommand('copy') } catch { copied = false }
+      textarea.remove()
+    }
+    const button = this.q('logcopy')
+    if (!button?.isConnected) return
+    button.textContent = copied ? LABELS.copied : LABELS.copyFailed
+    if (this.logCopyTimer) window.clearTimeout(this.logCopyTimer)
+    this.logCopyTimer = window.setTimeout(() => {
+      if (button.isConnected) button.textContent = LABELS.copyLog
+    }, 1600)
   }
 
   _setRelicModal(show) {
@@ -786,6 +826,7 @@ export class HUD {
     this.unsubscribe?.()
     this.detailUnsubscribe?.()
     if (this.hold?.timer) window.clearTimeout(this.hold.timer)
+    if (this.logCopyTimer) window.clearTimeout(this.logCopyTimer)
     this.root.removeEventListener('click', this._onClick)
     this.root.removeEventListener('pointerdown', this._onPointerDown)
     this.root.removeEventListener('pointermove', this._onPointerMove)

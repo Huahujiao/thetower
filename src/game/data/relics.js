@@ -44,7 +44,7 @@ const ALL_RELIC_DEFS = Object.freeze([
   },
   {
     id: 'r-long-flip',
-    name: '\u8fdc\u89c1\u6307\u595d',
+    name: '\u8fdc\u89c1\u6307\u73af',
     description: '\u7ffb\u724c\u65f6\u53ef\u8d70\u5230\u8ddd\u76ee\u6807\u4e0d\u8d85\u8fc7 2 \u683c\u7684\u6700\u8fd1\u53ef\u901a\u884c\u4f4d\u7f6e\u518d\u7ffb\u724c\u3002',
   },
   {
@@ -90,18 +90,6 @@ const ALL_RELIC_DEFS = Object.freeze([
     damageModifiers: () => [damageModifier(DAMAGE_STAGES.MULTIPLY, 2, 'relic:double-edged-fate')],
   },
   {
-    id: 'r-blood-prism',
-    name: '\u996e\u8840\u68f1\u955c',
-    description: '\u4ec5\u5728\u6b66\u5668\u56e0\u6700\u540e\u4e00\u51fb\u635f\u6bc1\u540e\u89e6\u53d1\uff1a\u56de\u590d\u8be5\u6b21\u4e3b\u653b\u51fb\u5bf9\u4e3b\u76ee\u6807\u76f4\u63a5\u9020\u6210\u4f24\u5bb3\u7684 30%\uff0c\u81f3\u5c11 1\u70b9\u3002',
-    events: {
-      'weapon:broken': ({ primaryHealthDamage = 0, finalStrike = false }) => {
-        if (!finalStrike) return []
-        const amount = Math.max(1, Math.floor(Math.max(0, primaryHealthDamage) * 0.3))
-        return amount ? [{ type: 'heal', amount, log: '\u996e\u8840\u68f1\u955c\uff1a\u56de\u590d ' + amount + ' \u70b9\u751f\u547d\u3002' }] : []
-      },
-    },
-  },
-  {
     id: 'r-tide-heart',
     name: '\u6f6e\u6c50\u5fc3\u810f',
     description: '\u8fde\u7eed\u4e24\u6b21\u4e3b\u653b\u51fb\u5206\u522b\u4f7f\u7528\u4e0d\u540c\u6b66\u5668\u65f6\uff0c\u7b2c\u4e8c\u6b21\u653b\u51fb\u540e\u56de\u590d 2 \u70b9\u751f\u547d\u3002',
@@ -128,7 +116,7 @@ const ALL_RELIC_DEFS = Object.freeze([
   },
   {
     id: 'r-healer-forge',
-    name: '\u7597\u6108\u70bc\u51b6',
+    name: '\u7597\u6108\u70bc\u6210',
     description: '\u6bcf\u6b21\u56de\u590d\u751f\u547d\u65f6\uff0c\u968f\u673a\u4f7f 1 \u628a\u80cc\u5305\u6b66\u5668\u653b\u51fb +1\u3002',
     events: {
       'player:healed': ({ run }) => {
@@ -138,16 +126,6 @@ const ALL_RELIC_DEFS = Object.freeze([
         weapon.attack = Math.max(0, Number(weapon.attack) || 0) + 1
         return [{ log: `\u7597\u6108\u70bc\u51b6\uff1a${weapon.name}\u653b\u51fb +1\u3002` }]
       },
-    },
-  },
-  {
-    id: 'r-armor-echo',
-    name: '\u7532\u80c4\u56de\u54cd',
-    description: '\u6b66\u5668\u56e0\u6700\u540e\u4e00\u51fb\u635f\u6bc1\u65f6\u83b7\u5f97 5 \u70b9\u62a4\u7532\uff1b\u82e5\u540c\u65f6\u76f4\u63a5\u51fb\u6740\u4e3b\u76ee\u6807\uff0c\u518d\u83b7\u5f97 3 \u70b9\u3002',
-    events: {
-      'weapon:broken': ({ primaryKilled, finalStrike = false }) => finalStrike
-        ? [{ type: 'armor', amount: 5 + (primaryKilled ? 3 : 0), log: `\u7532\u80c4\u56de\u54cd\uff1a\u62a4\u7532 +${5 + (primaryKilled ? 3 : 0)}\u3002` }]
-        : [],
     },
   },
   {
@@ -307,19 +285,6 @@ const ALL_RELIC_DEFS = Object.freeze([
     },
   },
   {
-    id: 'r-inheritance-edge',
-    name: '\u65ad\u5203\u7ee7\u627f',
-    description: '\u6bcf\u635f\u6bc1 1 \u628a\u6b66\u5668\uff0c\u4f7f\u53e6\u4e00\u628a\u80cc\u5305\u6b66\u5668\u653b\u51fb +2\u3002',
-    events: {
-      'weapon:broken': ({ run, weapon: brokenWeapon }) => {
-        const weapon = run?.backpackWeapons.find((candidate) => candidate?.uid !== brokenWeapon?.uid)
-        if (!weapon) return []
-        weapon.attack = Math.max(0, Number(weapon.attack) || 0) + 2
-        return [{ log: `\u65ad\u5203\u7ee7\u627f\uff1a${weapon.name}\u653b\u51fb +2\u3002` }]
-      },
-    },
-  },
-  {
     id: 'r-tenth-alchemy',
     name: '\u70bc\u91d1\u8109\u640f',
     description: '\u8de8\u5c42\u8ba1\u6570\uff0c\u6bcf\u7b2c 10 \u6b21\u653b\u51fb\u76f4\u63a5\u5c06\u76ee\u6807\u53d8\u4e3a\u5176\u5f53\u524d\u751f\u547d\u7b49\u989d\u7684\u91d1\u5e01\u3002',
@@ -333,21 +298,6 @@ const ALL_RELIC_DEFS = Object.freeze([
       const distance = exits.length ? Math.min(...exits.map((door) => manhattan(target.pos, door.arrival))) : Infinity
       const bonus = distance >= 1 && distance <= 5 ? 6 - distance : 0
       return bonus ? [damageModifier(DAMAGE_STAGES.FLAT, bonus, 'relic:victory-near')] : []
-    },
-  },
-  {
-    id: 'r-breaker-spark',
-    name: '\u7834\u788e\u706b\u82b1',
-    description: '\u6b66\u5668\u635f\u6bc1\u65f6\uff0c\u5bf9\u5f53\u524d\u76ee\u6807\u4f18\u5148\uff0c\u5426\u5219\u5bf9\u968f\u673a\u654c\u4eba\u9020\u6210 3 \u70b9\u4f24\u5bb3\u3002',
-    events: {
-      'weapon:broken': ({ run, target }) => {
-        if (!run?.currentRoom) return []
-        const candidate = run.currentRoom.entity(target?.id)
-          || [...run.currentRoom.entities.values()].filter((entity) => entity.kind === 'enemy')[Math.floor(run.random() * run.remainingEnemies())]
-        if (!candidate) return []
-        run._damageEnemy(candidate, 3, { source: 'relic:breaker-spark' })
-        return [{ log: `\u7834\u788e\u706b\u82b1\uff1a\u5bf9${candidate.name}\u9020\u6210 3 \u70b9\u4f24\u5bb3\u3002` }]
-      },
     },
   },
   {

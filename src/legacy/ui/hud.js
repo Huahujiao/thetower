@@ -117,10 +117,9 @@ export class HUD {
       <div class="hud-log" data=log>
         <div class="log-head">
           <span class="log-title">日志</span>
-          <button class="log-send" data=logsend>发送日志</button>
+          <button class="log-copy" data=logcopy>复制日志</button>
         </div>
         <div class="log-body" data=logbody></div>
-        <div class="log-status" data=logstatus></div>
       </div>
 
       <div class="hud-bottom">
@@ -219,7 +218,7 @@ export class HUD {
     this.q('bagrotatebtn').addEventListener('click', () => {
       if (this.state.selectedBackpackUid) this.state.rotateBackpack(this.state.selectedBackpackUid)
     })
-    this.q('logsend').addEventListener('click', () => this._sendLog())
+    this.q('logcopy').addEventListener('click', () => this._copyLog())
   }
 
   _closeRelicCollection() {
@@ -351,46 +350,31 @@ export class HUD {
     window.dispatchEvent(new CustomEvent('game:restart'))
   }
 
-  // 发送日志到本机日志接收服务（地址按当前页面 host 拼，兼容 Tailscale 设备访问）
-  async _sendLog() {
-    const s = this.state
-    const btn = this.q('logsend')
-    const status = this.q('logstatus')
-    if (btn.disabled) return
-    btn.disabled = true
-    const prev = status.textContent
-    status.textContent = '发送中…'
+  async _copyLog() {
+    const text = this.state.log.join('\n')
+    if (!text) return
+    const button = this.q('logcopy')
+    let copied = false
     try {
-      const payload = {
-        sentAt: new Date().toISOString(),
-        url: location.href,
-        floor: s.floor,
-        turn: s.turn,
-        player: {
-          hp: s.player.hp, maxHp: s.player.maxHp,
-          armor: s.player.armor,
-          san: s.player.san, maxSan: s.player.maxSan,
-          gold: s.player.gold, keys: s.player.keys,
-        },
-        log: s.log,
+      const clipboard = globalThis.navigator?.clipboard
+      if (clipboard?.writeText) {
+        await clipboard.writeText(text)
+        copied = true
       }
-      // 日志服务固定端口；用当前页面协议+host，适配 localhost / 局域网 / Tailscale IP
-      const LOG_PORT = 7700
-      const url = `${location.protocol}//${location.hostname}:${LOG_PORT}/log`
-      const resp = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
-      if (!resp.ok) throw new Error('HTTP ' + resp.status)
-      const data = await resp.json()
-      status.textContent = `已发送 ${s.log.length} 条（${new Date().toLocaleTimeString()}）`
-    } catch (e) {
-      status.textContent = '发送失败：' + e.message + '（服务是否已启动？）'
-    } finally {
-      btn.disabled = false
-      setTimeout(() => { if (status.textContent.startsWith('已发送')) status.textContent = '' }, 4000)
+    } catch {}
+    if (!copied) {
+      const textarea = document.createElement('textarea')
+      textarea.value = text
+      textarea.setAttribute('readonly', '')
+      textarea.style.position = 'fixed'
+      textarea.style.opacity = '0'
+      document.body.appendChild(textarea)
+      textarea.select()
+      try { copied = document.execCommand('copy') } catch { copied = false }
+      textarea.remove()
     }
+    button.textContent = copied ? '已复制' : '复制失败'
+    window.setTimeout(() => { if (button.isConnected) button.textContent = '复制日志' }, 1600)
   }
 
   // 商店货架：8 格（4 列 × 2 行），点击格 → 请求购买（进入确认流）

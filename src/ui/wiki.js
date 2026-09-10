@@ -11,7 +11,6 @@ const COPY = Object.freeze({
   subtitle: '\u5730\u7262\u5185\u5bb9\u56fe\u9274',
   summary: '\u4e09\u5c5e\u6027\u3001\u4e09\u5c42\u5929\u8d4b\u7f51\u3001\u5723\u9057\u7269\u6784\u7b51\u4e0e\u5f62\u72b6\u80cc\u5305\u5171\u540c\u6784\u6210\u5730\u7262\u7684\u8def\u7ebf\u9009\u62e9\u3002',
   implemented: '\u5df2\u5b9e\u88c5',
-  proposed: '\u5f85\u786e\u8ba4\uff0f\u672a\u5b9e\u88c5',
   back: '\u8fd4\u56de\u5730\u7262',
   enemies: '\u654c\u4eba',
   traps: '\u9677\u9631',
@@ -33,6 +32,7 @@ const COPY = Object.freeze({
   footprint: '\u5360\u683c',
   weaponClass: '\u7c7b\u522b',
   weaponEffect: '\u7279\u6548',
+  energyLoss: '\u4f53\u529b\u635f\u5931',
   attribute: '\u5c5e\u6027',
   floor: '\u6700\u65e9\u51fa\u73b0\u697c\u5c42',
   delay: '\u884c\u52a8\u5ef6\u8fdf',
@@ -51,7 +51,6 @@ const COPY = Object.freeze({
   activeLimit: '\u540c\u65f6\u6fc0\u6d3b\u4e0a\u9650',
   autoActivate: '\u83b7\u5f97\u89c4\u5219',
   enemyDrop: '\u654c\u4eba\u6389\u843d',
-  futureRule: '\u9884\u8ba1\u89c4\u5219',
   sword: '\u5251',
   axe: '\u65a7',
   dagger: '\u5315\u9996',
@@ -124,63 +123,15 @@ function stat(labelText, value) {
   return `<div class="wiki-stat"><dt>${escapeHtml(labelText)}</dt><dd>${escapeHtml(value)}</dd></div>`
 }
 
-const PROPOSALS = Object.freeze({
-  enemies: [
-    {
-      tone: 'tone-enemy', tag: COPY.enemy, title: '\u8ffd\u730e\u8005', accent: '\u2020',
-      description: '\u7ffb\u5f00\u540e\u4f1a\u6cbf\u6700\u77ed\u8def\u5f84\u671d\u73a9\u5bb6\u9760\u8fd1\uff0c\u76f4\u5230\u8fdb\u5165\u8fd1\u6218\u8303\u56f4\u3002',
-      stats: [[COPY.health, '8'], [COPY.attack, '4'], [COPY.range, `1 ${COPY.cell}`], [COPY.delay, `1 ${COPY.turn}`], [COPY.interval, `1 ${COPY.turn}`], [COPY.futureRule, '\u707c\u70ed \u00b7 \u8ffd\u51fb']],
-    },
-    {
-      tone: 'tone-enemy', tag: COPY.enemy, title: '\u89c2\u671b\u8005', accent: '\u25ce',
-      description: '\u4e0d\u79fb\u52a8\uff0c\u4f46\u5728\u5c04\u7a0b\u5185\u4f1a\u538b\u7f29\u73a9\u5bb6\u7684\u8def\u7ebf\u9009\u62e9\u3002',
-      stats: [[COPY.health, '7'], [COPY.attack, '3'], [COPY.range, `3 ${COPY.cell}`], [COPY.delay, `1 ${COPY.turn}`], [COPY.interval, `2 ${COPY.turn}`], [COPY.futureRule, '\u6e4d\u6d41 \u00b7 \u8fdc\u7a0b\u76d1\u89c6']],
-    },
-    {
-      tone: 'tone-boss', tag: COPY.boss, title: '\u4e0d\u706d\u76d1\u89c6\u8005', accent: '\u2620',
-      description: '\u5f3a\u5316\u9996\u9886\u5019\u9009\uff1a\u53ef\u5728\u9996\u6b21\u6b7b\u4ea1\u540e\u8fd4\u56de\u6218\u573a\u3002',
-      stats: [[COPY.health, '30'], [COPY.attack, '9'], [COPY.range, `2 ${COPY.cell}`], [COPY.delay, `1 ${COPY.turn}`], [COPY.interval, `2 ${COPY.turn}`], [COPY.futureRule, '\u7ed3\u6676 \u00b7 \u9a7b\u5b88 \u00b7 \u590d\u6d3b']],
-    },
-  ],
-  traps: [],
-  weapons: [],
-  relics: [],
-  items: [
-    {
-      tone: 'tone-buff', tag: COPY.buff, title: '\u70df\u5e55\u74f6', accent: '\u2727',
-      description: '\u5c0f\u578b\u4e00\u6b21\u6027\u9053\u5177\uff0c\u4e3a\u9003\u8dd1\u63d0\u4f9b\u4e00\u56de\u5408\u7f13\u51b2\u3002',
-      stats: [[COPY.footprint, '1\u00d71 \u00b7 1\u683c'], [COPY.floor, '2'], [COPY.futureRule, '\u4f7f\u5df2\u7ffb\u5f00\u654c\u4eba\u672c\u56de\u5408\u4e0d\u884c\u52a8']],
-    },
-    {
-      tone: 'tone-item', tag: COPY.buff, title: '\u63a2\u8def\u7c89', accent: '\u25c6',
-      description: '\u4e0d\u76f4\u63a5\u63ed\u793a\u5185\u5bb9\uff0c\u4f46\u5e2e\u52a9\u5728\u5371\u9669\u623f\u95f4\u4e2d\u4fdd\u7559\u9009\u8def\u4fe1\u606f\u3002',
-      stats: [[COPY.footprint, '1\u00d71 \u00b7 1\u683c'], [COPY.floor, '2'], [COPY.futureRule, '\u9ad8\u4eae\u672c\u56de\u5408\u53ef\u7ffb\u5f00\u7684\u5168\u90e8\u724c']],
-    },
-  ],
-})
-
-function card({ tone, tag, title, description = '', stats = [], accent = '', status = 'implemented' }) {
-  const proposed = status === 'proposed'
-  return `<article class="wiki-card ${tone}${proposed ? ' is-proposed' : ''}">
+function card({ tone, tag, title, description = '', stats = [], accent = '' }) {
+  return `<article class="wiki-card ${tone}">
     <div class="wiki-card-accent">${escapeHtml(accent)}</div>
-    <div class="wiki-card-head"><span class="wiki-tag">${escapeHtml(tag)}</span><span class="wiki-status">${proposed ? COPY.proposed : COPY.implemented}</span></div>
+    <div class="wiki-card-head"><span class="wiki-tag">${escapeHtml(tag)}</span><span class="wiki-status">${COPY.implemented}</span></div>
     <h2>${escapeHtml(title)}</h2>
     ${description ? `<p>${escapeHtml(description)}</p>` : ''}
     <dl class="wiki-stats">${stats.join('')}</dl>
   </article>`
 }
-
-function proposalCards(group) {
-  return PROPOSALS[group].map((proposal) => card({
-    ...proposal,
-    status: 'proposed',
-    stats: proposal.stats.map(([labelText, value]) => stat(labelText, value)),
-  })).join('')
-}
-
-// Kept as design-only data for future content planning; proposals are not rendered in the runtime wiki.
-void PROPOSALS
-void proposalCards
 
 function enemyCards() {
   const enemies = [...catalog.enemies, { ...catalog.boss, boss: true }]
@@ -217,12 +168,12 @@ function enemyCards() {
 
 function weaponCards() {
   const effects = {
-    sword: '\u653b\u51fb\u540e\uff0c\u4e0b\u4e00\u6b21\u53d7\u5230\u7684\u8fd1\u6218\u4f24\u5bb3 -40%\uff1b\u6700\u540e\u4e00\u51fb\u6539\u4e3a -80%\u4fdd\u62a4\u3002',
-    axe: '\u76ee\u6807\u76f8\u90bb\u654c\u4eba\u53d7 50% \u4f24\u5bb3\uff1b\u6700\u540e\u4e00\u51fb\u6539\u4e3a\u516b\u90bb\u57df 80% \u65cb\u65a9\u3002',
-    dagger: '\u51fb\u6740\u76ee\u6807\u65f6\uff0c\u6700\u540e\u4e00\u51fb\u4f7f\u76ee\u6807\u5ef6\u8fdf 1 \u56de\u5408\u3002',
-    polearm: '\u5c04\u7a0b 2\uff0c\u8ddd\u79bb 2 \u547d\u4e2d\u65f6\u51fb\u9000 1 \u683c\uff1b\u6700\u540e\u4e00\u51fb\u5c04\u7a0b 4\u3001\u51fb\u9000 2 \u683c\u3002',
-    heavy: '\u653b\u51fb\u76fe\u724c\u6216\u91cd\u7532\u65f6\u65e0\u89c6\u9632\u5fa1\uff1b\u6700\u540e\u4e00\u51fb\u4f24\u5bb3 +50% \u5e76\u7834\u574f\u9632\u5fa1\u3002',
-    bow: '\u57fa\u7840\u5c04\u7a0b 3\uff1b\u6700\u540e\u4e00\u51fb\u5c04\u7a0b 5\uff0c\u76f4\u7ebf\u6700\u591a\u547d\u4e2d 3 \u540d\u654c\u4eba\u3002',
+    sword: '\u653b\u51fb\u540e\uff0c\u4e0b\u4e00\u6b21\u53d7\u5230\u7684\u8fd1\u6218\u4f24\u5bb3\u964d\u4f4e 40%\u3002',
+    axe: '\u653b\u51fb\u540e\uff0c\u5bf9\u76ee\u6807\u5468\u56f4 2 \u683c\u5185\u7684\u6700\u8fd1\u5176\u4ed6\u654c\u4eba\u9020\u6210\u4e3b\u653b\u51fb\u4f24\u5bb3\u7684 50%\u3002',
+    dagger: '\u57fa\u7840\u7c7b\u522b\u65e0\u989d\u5916\u6548\u679c\uff1b\u76f8\u5173\u6548\u679c\u7531\u5315\u9996\u5929\u8d4b\u63d0\u4f9b\u3002',
+    polearm: '\u5c04\u7a0b 2\uff1b\u8ddd\u79bb 2 \u547d\u4e2d\u65f6\u5c06\u76ee\u6807\u51fb\u9000 1 \u683c\uff0c\u53ef\u89e6\u53d1\u78b0\u649e\u6548\u679c\u3002',
+    heavy: '\u653b\u51fb\u76fe\u724c\u6216\u91cd\u7532\u654c\u4eba\u65f6\u65e0\u89c6\u5bf9\u5e94\u9632\u5fa1\u7279\u6027\u3002',
+    bow: '\u57fa\u7840\u5c04\u7a0b 3\uff1b\u8fdc\u5c04\u5929\u8d4b\u53ef\u4ee5\u8fdb\u4e00\u6b65\u589e\u52a0\u5c04\u7a0b\u3002',
   }
   const weapons = [...catalog.weapons, ...(catalog.enemyLoot || []).filter((item) => item.type === 'weapon'), ...(catalog.merchantWeapons || [])]
   return weapons.map((weapon) => card({
@@ -306,7 +257,7 @@ function trapCards() {
     const stats = [stat(COPY.trigger, COPY.revealTrigger), stat(COPY.lifecycle, COPY.trapLifecycle)]
     if (trap.effect === 'explosion') stats.push(stat(COPY.range, '\u516b\u90bb\u57df'))
     if (trap.effect === 'alarm') stats.push(stat(COPY.range, '\u534a\u5f84 2'))
-    if (trap.effect === 'corrosion') stats.push(stat(COPY.target, '\u5df2\u88c5\u5907\u6b66\u5668'))
+    if (trap.effect === 'corrosion') stats.push(stat(COPY.energyLoss, `-${trap.energyLoss || 0}`))
     if (trap.effect === 'poison') {
       stats.push(stat(COPY.duration, `${trap.poisonTurns} ${COPY.globalTurns}`))
       stats.push(stat(COPY.damage, `${trap.poisonDamage} ${COPY.health} \u00b7 \u65e0\u89c6\u62a4\u7532`))

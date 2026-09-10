@@ -180,14 +180,12 @@
 .hud-log.show { display: block; }
 .hud-log .log-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
 .hud-log .log-title { font-size: 12px; font-weight: 700; opacity: 0.8; }
-.hud-log .log-send {
+ .hud-log .log-copy {
   font-size: 11px; padding: 4px 10px; border-radius: 6px; cursor: pointer;
   border: 1px solid rgba(255,213,107,0.5); background: rgba(255,213,107,0.15); color: #ffd56b;
 }
-.hud-log .log-send:hover { background: rgba(255,213,107,0.28); }
-.hud-log .log-send:disabled { opacity: 0.5; cursor: default; }
+ .hud-log .log-copy:hover { background: rgba(255,213,107,0.28); }
 .hud-log .log-body { max-height: 24vh; overflow-y: auto; }
-.hud-log .log-status { margin-top: 6px; font-size: 11px; opacity: 0.75; min-height: 14px; color: #8effc8; }
 .hud-log .line { padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
 .hud-log .line:last-child { border: none; }
 
