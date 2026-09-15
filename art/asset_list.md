@@ -6,8 +6,8 @@
 
 - 已生成云纹牌背母版：`art/generated/card-back-neutral-v1.png`，提示词记录于 `art/generated/prompts.md`。
 - 已接入两款暗色地板：取现有四格母版的左上和右下；其余彩色地砖留待后续。
-- 已接入中性、灼热、枯萎、沉溺四种牌背：共用新母版，由程序叠加颜色与不同符号。不可翻开状态压暗，保留属性辨识。
-- 游戏使用 `src/assets/board-floor-atlas-v1.jpg` 与 `src/assets/board-card-back-v1.jpg`；原母版保留。`src/render/board-textures.js` 管理裁切、绘制和共享缓存。
+- 已分别通过生图模型生成灼热火纹、枯萎根纹、沉溺水纹完整牌背：`art/generated/card-back-{scorch,wither,drown}-v1.png`。与中性母版合计4张，运行时使用各自的成图，不再染色或覆盖程序图标。
+- 游戏使用 `src/assets/board-floor-atlas-v1.jpg`、`src/assets/board-card-back-v1.jpg` 和 `src/assets/board-card-back-{scorch,wither,drown}-v1.jpg`；原母版保留。`src/render/board-textures.js` 管理图集裁切、原图复制和共享缓存。不可翻开的牌仅叠加28%暗层。
 - 首批只覆盖地板与牌背，角色、牌面正面和其他素材仍按下方计划排期。
 - 按用户要求未进行浏览器预览；检查范围为构建、静态检查和纹理缓存/加载/释放的逻辑测试，实际画面由用户预览。
 

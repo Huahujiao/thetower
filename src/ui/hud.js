@@ -168,6 +168,8 @@ export class HUD {
           <div class="stat gold"><span class="label">${LABELS.gold}</span><span class="value" data=gold></span></div>
         </div>
         <div class="hud-btns">
+          <button type="button" class="hud-icon" data-action="craft-open" title="合成" aria-label="合成"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m14 3 7 7-4 4-7-7zM12 12 3 21M4 3v6M1 6h6"/></svg></button>
+          <button type="button" class="hud-icon" data-action="build-status" title="构筑状态" aria-label="构筑状态"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="15" y="15" width="6" height="6" rx="1"/><path d="M9 6h9v6M15 18H6v-6"/></svg></button>
           <button class="hud-icon talent-book-top" data-action="talents" title="${LABELS.talentGraph}" aria-label="${LABELS.talentGraph}">\u2736</button>
           <button class="hud-icon" data-action="character" title="${LABELS.character}" aria-label="${LABELS.character}">\ud83d\udc64</button>
           <button class="hud-icon" data-action="help" title="${LABELS.help}" aria-label="${LABELS.help}">?</button>
@@ -279,7 +281,6 @@ export class HUD {
             <div class="backpack-action-slot act-use-slot"><button class="backpack-action act-use" data-action="use" hidden>${LABELS.use}</button></div>
             <button class="backpack-action bag-rotate" data-action="rotate-bag" title="${LABELS.rotate}" aria-label="${LABELS.rotate}" hidden>\u21bb</button>
           </div>
-          <div class="craft-toolbar"><button data-action="craft-open">合成</button><button data-action="build-status">构筑状态</button><span>移动 / 旋转：1回合</span></div>
           <section class="backpack-panel">
             <div class="backpack-grid-wrap">
               <div class="backpack-grid" data=backpack></div>

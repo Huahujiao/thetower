@@ -3,7 +3,10 @@ Add-Type -AssemblyName System.Drawing
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $entries = @(
   @{ Source = 'art/generated/floor-tiles-v1.png'; Target = 'src/assets/board-floor-atlas-v1.jpg' },
-  @{ Source = 'art/generated/card-back-neutral-v1.png'; Target = 'src/assets/board-card-back-v1.jpg' }
+  @{ Source = 'art/generated/card-back-neutral-v1.png'; Target = 'src/assets/board-card-back-v1.jpg' },
+  @{ Source = 'art/generated/card-back-scorch-v1.png'; Target = 'src/assets/board-card-back-scorch-v1.jpg' },
+  @{ Source = 'art/generated/card-back-wither-v1.png'; Target = 'src/assets/board-card-back-wither-v1.jpg' },
+  @{ Source = 'art/generated/card-back-drown-v1.png'; Target = 'src/assets/board-card-back-drown-v1.jpg' }
 )
 $codec = [System.Drawing.Imaging.ImageCodecInfo]::GetImageEncoders() | Where-Object { $_.MimeType -eq 'image/jpeg' }
 foreach ($entry in $entries) {

@@ -1,5 +1,30 @@
 # Generated art prompts
 
+## Independent colored card backs — current integration
+
+Built-in image generation produced three separate finished textures using `card-back-neutral-v1.png` as the style/layout reference:
+
+- `art/generated/card-back-scorch-v1.png`: cinnabar flame ornament.
+- `art/generated/card-back-wither-v1.png`: ochre root ornament.
+- `art/generated/card-back-drown-v1.png`: indigo water ornament.
+
+The corresponding runtime JPEGs are `src/assets/board-card-back-{scorch,wither,drown}-v1.jpg`. Neutral uses `src/assets/board-card-back-v1.jpg`. All are exported at 1024 square, JPEG quality 88, using `scripts/export-board-art.ps1`.
+
+The renderer now copies these complete images into cached textures without tinting, central icons, or extra borders. Only blocked cards receive a 28% dark overlay. The older single-master tint-and-icon experiment described below is superseded. Floor textures also retain their source colors without the former desaturation/darkening filter.
+
+### scorch
+
+Use case: stylized-concept. Generate ONE square game card-back texture, flat orthographic top-down, edge-to-edge, no perspective or thickness. Reference image is a STYLE and LAYOUT reference, not an atlas. Match its Chinese antique ink woodblock, mineral pigment, old lacquer, tactile rubbed grain, thin double-line geometric Chinese border, corner clouds, circular central ornamental seal. It must have clearly visible rich hand-painted ornament at small game tile sizes, with moderate contrast between lighter antique-gold lines and colored lacquer. This is a FINISHED colored card back used directly as a texture, not a blank icon background. No letters, text, numbers, pseudo-writing, UI icons, symbols stamped over the artwork, creatures, Japanese crests, watermark, multiple tiles, perspective, shadows, or scene. Single square opaque tile. Cinnabar red burnt-lacquer base. Central circular seal formed by curling flame and ember-cloud motifs, intricate Chinese flame scrolls integrated into ornament; dark red and muted copper/gold, visibly red throughout.
+
+### wither
+
+Use case: stylized-concept. Generate ONE square game card-back texture, flat orthographic top-down, edge-to-edge, no perspective or thickness. Reference image is a STYLE and LAYOUT reference, not an atlas. Match its Chinese antique ink woodblock, mineral pigment, old lacquer, tactile rubbed grain, thin double-line geometric Chinese border, corner clouds, circular central ornamental seal. It must have clearly visible rich hand-painted ornament at small game tile sizes, with moderate contrast between lighter antique-gold lines and colored lacquer. This is a FINISHED colored card back used directly as a texture, not a blank icon background. No letters, text, numbers, pseudo-writing, UI icons, symbols stamped over the artwork, creatures, Japanese crests, watermark, multiple tiles, perspective, shadows, or scene. Single square opaque tile. Ochre yellow and aged bronze base. Central circular seal formed by withered branching roots and dry leaf veins, restrained decay cracks; dusty mustard-gold and dark umber, visibly yellow throughout, no green.
+
+### drown
+
+Use case: stylized-concept. Generate ONE square game card-back texture, flat orthographic top-down, edge-to-edge, no perspective or thickness. Reference image is a STYLE and LAYOUT reference, not an atlas. Match its Chinese antique ink woodblock, mineral pigment, old lacquer, tactile rubbed grain, thin double-line geometric Chinese border, corner clouds, circular central ornamental seal. It must have clearly visible rich hand-painted ornament at small game tile sizes, with moderate contrast between lighter antique-gold lines and colored lacquer. This is a FINISHED colored card back used directly as a texture, not a blank icon background. No letters, text, numbers, pseudo-writing, UI icons, symbols stamped over the artwork, creatures, Japanese crests, watermark, multiple tiles, perspective, shadows, or scene. Single square opaque tile. Deep indigo and slate-blue lacquer base. Central circular seal formed by spiraling water currents and traditional Chinese cloud-wave motifs; weathered blue and pale antique gold, visibly blue throughout.
+
+
 ## Card back master v1 — integrated batch
 
 - Tool: built-in image generation.

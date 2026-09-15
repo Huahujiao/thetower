@@ -33,7 +33,7 @@ assert.equal(all.size, 10)
 assert.equal(textures.back('unknown', false), textures.back('neutral', false))
 const before = textures.back('scorch', false).version
 pendingImages.splice(0).forEach(image => image.onload())
-assert.deepEqual(await textures.ready, [true, true])
+assert.deepEqual(await textures.ready, [true, true, true, true, true])
 assert(textures.back('scorch', false).version > before)
 let disposed = 0
 for (const texture of all) {
