@@ -1,5 +1,20 @@
 # Generated art prompts
 
+## Card back master v1 — integrated batch
+
+- Tool: built-in image generation.
+- New master: `art/generated/card-back-neutral-v1.png`.
+- Style references: `floor-tiles-v1.png` and `card-plates-v1.png`; not edit targets.
+- Runtime export: `src/assets/board-card-back-v1.jpg`, 1024 square, JPEG quality 88.
+- Existing floor master exported to `src/assets/board-floor-atlas-v1.jpg` with the same settings.
+- Re-export command: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/export-board-art.ps1`.
+- Renderer samples the top-left and bottom-right dark floor tiles. Colored wave tiles remain unused.
+- Card color, central attribute symbols, and blocked-state dimming are drawn at runtime. Originals stay unchanged.
+- Original prompt:
+
+Use case: stylized-concept. Asset type: ONE square production texture for the BACK of hidden cards in a Chinese folk-horror dungeon board game. Image 1 and Image 2 are STYLE REFERENCES ONLY, do not reproduce their atlas layouts. Generate a single square tile filling the image edge to edge, directly top-down orthographic, NO perspective, NO thickness, NO shadows, no surrounding scene. Antique mineral pigments, hand-inked woodblock lines, worn lacquer and subtle paper fibers, matching references. Almost monochromatic neutral charcoal and warm muted gray, NOT saturated color: the game applies cinnabar, ochre and indigo tints at runtime. Thin balanced double-line geometric Chinese border at 4% inset, delicate restrained cloud scrolls in the corners, a faint closed circular ritual seal in the center with abstract interlocking cloud lines, never resembling readable letters. Eerie restrained Chinese tower mystery. Center must remain low contrast with generous negative space for a small dynamic attribute symbol, artwork still legible at 100 pixels. Fine wear, softly rubbed pigment, no loud crack pattern, no large bright cream frame. Preserve equal margins on all four sides. No text, numbers, pseudo-writing, Japanese crests, creatures, eyes, weapons, UI, watermarks, grids, or multiple panels. Single flat square card back, fully opaque.
+
+
 Reference images for both generations:
 
 - `art/fullscene1.png`

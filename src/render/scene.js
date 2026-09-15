@@ -2,7 +2,7 @@ import * as THREE from 'three'
 import { getAttributeDefinition } from '../game/data/attributes.js'
 import { enemyCardSubtitle } from '../game/data/enemy-features.js'
 import { isAdjacent8 } from '../game/core/geometry.js'
-import floorTextureUrl from '../assets/floor.png'
+import { BoardTextures } from './board-textures.js'
 
 const TILE_SIZE = 1.14
 const CARD_SIZE = TILE_SIZE
@@ -34,9 +34,6 @@ const GHOST_ROOM_GAP = TILE_SIZE * 0.54
 const ENEMY_STATUS_LAYER_OFFSET = 0.012
 const ENEMY_STATUS_HEALTH_Y = CARD_SIZE * 0.43
 const ENEMY_STATUS_BOTTOM_Y = -CARD_SIZE * 0.43
-const FLOOR_TEXTURE = new THREE.TextureLoader().load(floorTextureUrl)
-FLOOR_TEXTURE.colorSpace = THREE.SRGBColorSpace
-FLOOR_TEXTURE.anisotropy = 4
 
 const CARD_COLORS = Object.freeze({
   monster: '#5b1a1a',
@@ -57,24 +54,6 @@ const CARD_COLORS = Object.freeze({
 
 const WEAPON_CLASS_LABELS = Object.freeze({ sword: '\u5251', axe: '\u65a7', dagger: '\u5315\u9996', polearm: '\u957f\u67c4', heavy: '\u91cd\u6b66\u5668', bow: '\u5f13' })
 
-const CARD_BACK_THEMES = Object.freeze({
-  scorch: Object.freeze({
-    flippable: Object.freeze({ top: '#473039', bottom: '#20141a', border: '#754f59', accent: '#ef5b5b', primaryAlpha: 0.27, detailAlpha: 0.14, cornerAlpha: 0.22 }),
-    unflippable: Object.freeze({ top: '#24171e', bottom: '#0d090d', border: '#3f2a32', accent: '#ef5b5b', primaryAlpha: 0.13, detailAlpha: 0.07, cornerAlpha: 0.11 }),
-  }),
-  wither: Object.freeze({
-    flippable: Object.freeze({ top: '#413d28', bottom: '#1d1b11', border: '#756e4e', accent: '#f4d56d', primaryAlpha: 0.18, detailAlpha: 0.09, cornerAlpha: 0.15 }),
-    unflippable: Object.freeze({ top: '#242214', bottom: '#0e0d08', border: '#3d3a25', accent: '#f4d56d', primaryAlpha: 0.09, detailAlpha: 0.045, cornerAlpha: 0.075 }),
-  }),
-  drown: Object.freeze({
-    flippable: Object.freeze({ top: '#2d3a4d', bottom: '#141c29', border: '#526b8a', accent: '#69b7ee', primaryAlpha: 0.23, detailAlpha: 0.12, cornerAlpha: 0.19 }),
-    unflippable: Object.freeze({ top: '#18213d', bottom: '#090e20', border: '#202b50', accent: '#69b7ee', primaryAlpha: 0.11, detailAlpha: 0.055, cornerAlpha: 0.095 }),
-  }),
-  neutral: Object.freeze({
-    flippable: Object.freeze({ top: '#353b44', bottom: '#1a1f26', border: '#707985', accent: '#e5ebf4', primaryAlpha: 0.18, detailAlpha: 0.09, cornerAlpha: 0.15 }),
-    unflippable: Object.freeze({ top: '#1c2128', bottom: '#0b0e12', border: '#363d46', accent: '#e5ebf4', primaryAlpha: 0.09, detailAlpha: 0.045, cornerAlpha: 0.075 }),
-  }),
-})
 const NO_RAYCAST = () => {}
 
 function makeCanvasTexture(draw) {
@@ -221,7 +200,7 @@ function disposeObject(object) {
     child.geometry?.dispose?.()
     const materials = Array.isArray(child.material) ? child.material : [child.material]
     for (const material of materials) {
-      if (material?.map && material.map !== FLOOR_TEXTURE) material.map.dispose?.()
+      if (material?.map && !material.map.userData.boardShared) material.map.dispose?.()
       material?.dispose?.()
     }
   })
@@ -231,6 +210,7 @@ export class GameScene {
   constructor(run, container) {
     this.run = run
     this.container = container
+    this.boardTextures = new BoardTextures()
     this.raycaster = new THREE.Raycaster()
     this.pointer = new THREE.Vector2()
     this.groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0)
@@ -391,7 +371,7 @@ export class GameScene {
     const standing = revealed && (card?.type === 'monster' || card?.type === 'merchant' || card?.type === 'entry')
     const emptyGround = standing && (card?.type === 'monster' || card?.type === 'merchant' || card?.type === 'entry')
     const texture = card
-      ? this._makeFrontTexture(card)
+      ? this._makeFrontTexture(card, position)
       : this._makeBackTexture(this._backAttributeFor(room, position), { unflippable: !flippable })
     const face = new THREE.Mesh(
       new THREE.PlaneGeometry(CARD_SIZE, CARD_SIZE),
@@ -436,7 +416,7 @@ export class GameScene {
   _makeEmptyGroundFace(point, position = null) {
     const groundFace = new THREE.Mesh(
       new THREE.PlaneGeometry(CARD_SIZE, CARD_SIZE),
-      new THREE.MeshBasicMaterial({ map: FLOOR_TEXTURE, side: THREE.DoubleSide }),
+      new THREE.MeshBasicMaterial({ map: this.boardTextures.floor(position), side: THREE.DoubleSide }),
     )
     groundFace.rotation.x = -Math.PI / 2
     groundFace.position.set(point.x, CARD_THICKNESS / 2 + 0.003, point.z)
@@ -833,7 +813,7 @@ export class GameScene {
     const standing = revealed && (card?.type === 'monster' || card?.type === 'merchant' || card?.type === 'entry')
     const emptyGround = standing && (card?.type === 'monster' || card?.type === 'merchant' || card?.type === 'entry')
     face.material.map = card
-      ? this._makeFrontTexture(card)
+      ? this._makeFrontTexture(card, position)
       : this._makeBackTexture(this._backAttributeFor(room, position), { unflippable: !flippable })
     face.material.needsUpdate = true
     // Click-through is handled by the custom raycast below. Standing tokens
@@ -842,7 +822,7 @@ export class GameScene {
     face.material.opacity = peeked ? 0.46 : 1
     face.material.depthWrite = !standing
     face.material.color.setHex(revealed || peeked || flippable ? 0xffffff : UNREACHABLE_HIDDEN_CARD_TINT)
-    if (oldTexture !== FLOOR_TEXTURE) oldTexture?.dispose()
+    if (!oldTexture?.userData.boardShared) oldTexture?.dispose()
     face.visible = true
     face.userData.lift = 0
     this._setFacePose(face, this._gridPosition(room, position), standing)
@@ -888,6 +868,7 @@ export class GameScene {
     const texture = face?.visible ? face.material.map : null
     if (!texture) return null
     const snapshot = texture.clone()
+    snapshot.userData.boardShared = false
     snapshot.needsUpdate = true
     return snapshot
   }
@@ -924,7 +905,7 @@ export class GameScene {
     const group = new THREE.Group()
     group.position.set(point.x, CARD_THICKNESS / 2 + 0.004, point.z)
     group.rotation.x = Math.PI
-    const frontTexture = this._makeFrontTexture(this._cardFaceData(room, position))
+    const frontTexture = this._makeFrontTexture(this._cardFaceData(room, position), position)
     const backTexture = sourceBackTexture || this._makeBackTexture(this._backAttributeFor(room, position), { unflippable: backUnflippable })
     const front = new THREE.Mesh(
       new THREE.PlaneGeometry(CARD_SIZE, CARD_SIZE),
@@ -964,13 +945,13 @@ export class GameScene {
     const startFace = this.tileMeshByKey.get(tileKey(from))
     if (startFace?.visible) {
       const oldTexture = startFace.material.map
-      startFace.material.map = this._makeFrontTexture({ type: 'empty' })
+      startFace.material.map = this._makeFrontTexture({ type: 'empty' }, from)
       startFace.material.needsUpdate = true
       startFace.material.transparent = false
       startFace.material.depthWrite = true
       this._setFacePose(startFace, this._gridPosition(room, from), false)
       startFace.raycast = THREE.Mesh.prototype.raycast
-      oldTexture?.dispose()
+      if (!oldTexture?.userData.boardShared) oldTexture?.dispose()
     }
     const startPoint = this._gridPosition(room, from)
     const group = new THREE.Group()
@@ -1213,50 +1194,11 @@ export class GameScene {
   }
 
   _makeBackTexture(attribute, { unflippable = false } = {}) {
-    return makeCanvasTexture((context) => {
-      const definition = getAttributeDefinition(attribute)
-      const theme = CARD_BACK_THEMES[definition?.id] || CARD_BACK_THEMES.neutral
-      const state = theme[unflippable ? 'unflippable' : 'flippable']
-      const gradient = context.createLinearGradient(0, 0, 0, 160)
-      gradient.addColorStop(0, state.top)
-      gradient.addColorStop(1, state.bottom)
-      context.fillStyle = gradient
-      context.fillRect(0, 0, 160, 160)
-      context.strokeStyle = state.border
-      context.lineWidth = 4
-      context.strokeRect(6, 6, 148, 148)
-      context.strokeStyle = state.accent
-      context.globalAlpha = state.primaryAlpha
-      context.lineWidth = 3
-      context.beginPath()
-      context.moveTo(80, 22)
-      context.lineTo(132, 80)
-      context.lineTo(80, 138)
-      context.lineTo(28, 80)
-      context.closePath()
-      context.stroke()
-      context.globalAlpha = state.detailAlpha
-      context.lineWidth = 2
-      context.beginPath()
-      context.moveTo(80, 44)
-      context.lineTo(110, 80)
-      context.lineTo(80, 116)
-      context.lineTo(50, 80)
-      context.closePath()
-      context.stroke()
-      context.globalAlpha = state.cornerAlpha
-      context.fillStyle = state.accent
-      for (const [x, y] of [[22, 22], [138, 22], [22, 138], [138, 138]]) {
-        context.beginPath()
-        context.arc(x, y, 4, 0, Math.PI * 2)
-        context.fill()
-      }
-      context.globalAlpha = 1
-    })
+    return this.boardTextures.back(attribute, unflippable)
   }
 
-  _makeFrontTexture(card) {
-    if (card.type === 'empty') return FLOOR_TEXTURE
+  _makeFrontTexture(card, position = null) {
+    if (card.type === 'empty') return this.boardTextures.floor(position)
     return makeCanvasTexture((context) => {
       if (card.type === 'monster') {
         drawStandingToken(context, card)
@@ -1694,6 +1636,7 @@ export class GameScene {
     this._clearMovementAnimation()
     this._clearPlayerMarker()
     disposeObject(this.roomGroup)
+    this.boardTextures.dispose()
     this.renderer.dispose()
     this.renderer.domElement.remove()
   }
