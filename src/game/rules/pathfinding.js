@@ -98,13 +98,16 @@ export function findInteractionPath(room, start, target) {
 }
 
 export function findAttackPath(room, start, enemy, weapons) {
-  const ranges = Array.isArray(weapons) ? weapons.map((weapon) => weapon.range) : [weapons]
+  const entries = Array.isArray(weapons) ? weapons : [{ range: weapons }]
   const positions = []
   for (let r = 0; r < room.height; r++) {
     for (let c = 0; c < room.width; c++) {
       const candidate = { c, r }
       if (!room.isRevealed(candidate) || !room.isEmpty(candidate)) continue
-      if (ranges.some((range) => combatDistance(candidate, enemy.pos, range) <= range)) positions.push(candidate)
+      if (entries.some(weapon => {
+        const range = weapon.rangeAt ? weapon.rangeAt(candidate) : weapon.range
+        return combatDistance(candidate, enemy.pos, range) <= range
+      })) positions.push(candidate)
     }
   }
   return findShortestPathToAny(room, start, positions)

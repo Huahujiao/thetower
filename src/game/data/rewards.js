@@ -2,7 +2,7 @@ import catalog from './catalog.json' with { type: 'json' }
 import { randomConsumableDefinition } from './content.js'
 import { buildRelicChoices } from './relics.js'
 
-const WEAPONS = Object.freeze(catalog.weapons)
+const WEAPONS = Object.freeze([...catalog.weapons.filter(w => !w.crafted), ...catalog.defenses])
 
 function pick(values, random) { return values[Math.floor(random() * values.length)] || null }
 

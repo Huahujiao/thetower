@@ -84,6 +84,8 @@ export class Room {
       entities: [...this.entities.values()].map((entity) => ({ ...entity, pos: { ...entity.pos }, arrival: entity.arrival ? { ...entity.arrival } : null })),
       revealCounter: this.revealCounter,
       visited: this.visited,
+      tacticalLayout: this.tacticalLayout || 'scattered',
+      tacticalCells: (this.tacticalCells || []).map(p => ({ ...p })),
       entry: this.entry ? { ...this.entry } : null,
     }
   }
@@ -98,6 +100,8 @@ export class Room {
     }]))
     room.revealCounter = data.revealCounter || 0
     room.visited = !!data.visited
+    room.tacticalLayout = data.tacticalLayout || 'scattered'
+    room.tacticalCells = (data.tacticalCells || []).map(p => ({ ...p }))
     room.entry = data.entry ? { ...data.entry } : null
     return room
   }

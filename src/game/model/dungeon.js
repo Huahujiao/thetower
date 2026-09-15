@@ -3,6 +3,7 @@ import { createMerchantEntity } from '../data/merchants.js'
 import { createTrapEntity, randomTrapId } from '../data/traps.js'
 import { neighbors8, pos, posKey } from '../core/geometry.js'
 import { Room } from './room.js'
+import { arrangeTacticalEnemies } from './tactical-layouts.js'
 
 const DOOR_SIDES = Object.freeze(['left', 'right', 'top', 'bottom'])
 const ROOM_LAYOUT_GAP = 0.54
@@ -407,7 +408,8 @@ function addTrap(room, reserved, random) {
 
 function populateRoom(room, reserved, random, { bossRoom = false, minimumOccupiedRatio = 0.8 } = {}) {
   const targetCount = Math.ceil(room.width * room.height * minimumOccupiedRatio)
-  let monsterIndex = 0
+  const layoutKind = ['scattered', 'firing', 'wall'][(Number(room.id.split('-').at(-1)) - 1) % 3]
+  let monsterIndex = bossRoom ? 0 : arrangeTacticalEnemies(room, reserved, layoutKind)
   if (bossRoom) {
     const position = randomOpenPosition(room, reserved, random)
     if (!position) throw new Error(`Could not place boss in ${room.id}`)
@@ -417,7 +419,7 @@ function populateRoom(room, reserved, random, { bossRoom = false, minimumOccupie
   while (monsterIndex < targetMonsterCount && addMonster(room, reserved, random, monsterIndex)) {
     monsterIndex += 1
   }
-  for (const itemId of ['small-potion', 'armor-potion', 'small-potion', 'armor-potion', 'short-sword']) {
+  for (const itemId of ['health-potion', 'iron-powder', 'health-potion', 'wood-shield', 'silver-guard']) {
     if (!addLoot(room, reserved, random, makeItemById(itemId))) break
   }
   addGold(room, reserved, random)

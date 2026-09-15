@@ -22,9 +22,13 @@ const LONG_PRESS_MS = 420
 const CAMERA_FOV = 45
 const CAMERA_NEAR = 0.1
 const CAMERA_FAR = 80
-const CAMERA_HEIGHT_RATIO = 0.74
-const CAMERA_DEPTH_RATIO = 0.41
-const CAMERA_AZIMUTH = 25 * Math.PI / 180
+const DEFAULT_CAMERA_AZIMUTH = 25 * Math.PI / 180
+const DEFAULT_CAMERA_ELEVATION = Math.atan2(0.74, 0.41)
+const CAMERA_ORBIT_DISTANCE_RATIO = Math.hypot(0.74, 0.41)
+const CAMERA_AZIMUTH_STEP = 1 * Math.PI / 180
+const CAMERA_ELEVATION_STEP = 4 * Math.PI / 180
+const MIN_CAMERA_ELEVATION = 38 * Math.PI / 180
+const MAX_CAMERA_ELEVATION = 78 * Math.PI / 180
 const STANDING_BACK_LEAN = 30 * Math.PI / 180
 const GHOST_ROOM_GAP = TILE_SIZE * 0.54
 const ENEMY_STATUS_LAYER_OFFSET = 0.012
@@ -242,6 +246,8 @@ export class GameScene {
     this.hoveredTileKey = null
     this.visibleDoorKey = ''
     this.zoom = DEFAULT_ZOOM
+    this.cameraAzimuth = DEFAULT_CAMERA_AZIMUTH
+    this.cameraElevation = DEFAULT_CAMERA_ELEVATION
     this.framedRoomId = null
     this.viewportWidth = 0
     this.viewportHeight = 0
@@ -421,7 +427,7 @@ export class GameScene {
   _setFacePose(face, point, standing) {
     const baseY = standing ? CARD_SIZE / 2 + CARD_THICKNESS / 2 : CARD_THICKNESS / 2 + 0.002
     face.rotation.order = standing ? 'YXZ' : 'XYZ'
-    face.rotation.set(standing ? -STANDING_BACK_LEAN : -Math.PI / 2, standing ? CAMERA_AZIMUTH : 0, 0)
+    face.rotation.set(standing ? -STANDING_BACK_LEAN : -Math.PI / 2, standing ? this.cameraAzimuth : 0, 0)
     face.position.set(point.x, baseY, point.z)
     face.userData.baseY = baseY
     face.userData.standing = standing
@@ -979,7 +985,8 @@ export class GameScene {
     )
     marker.raycast = NO_RAYCAST
     marker.rotation.order = 'YXZ'
-    marker.rotation.set(-STANDING_BACK_LEAN, CAMERA_AZIMUTH, 0)
+    marker.rotation.set(-STANDING_BACK_LEAN, this.cameraAzimuth, 0)
+    marker.userData.cameraFacing = true
     marker.position.y = CARD_SIZE / 2
     marker.renderOrder = 2
     group.add(marker)
@@ -1358,6 +1365,9 @@ export class GameScene {
   }
 
   _itemCardFaceData(item) {
+    if (item.type === 'defense' || item.type === 'material') {
+      return { type: 'item', title: item.name, value: item.type === 'defense' ? '防具' : '材料', valueColor: '#d8ccac', detail: '背包内被动生效', clickHint: '点击拾取' }
+    }
     if (item.type === 'weapon') {
       return {
         type: 'weapon',
@@ -1419,10 +1429,52 @@ export class GameScene {
 
   _updateCamera() {
     const distance = this.baseCameraDistance / this.zoom
-    const horizontal = distance * CAMERA_DEPTH_RATIO
-    this.camera.position.set(Math.sin(CAMERA_AZIMUTH) * horizontal, distance * CAMERA_HEIGHT_RATIO, Math.cos(CAMERA_AZIMUTH) * horizontal)
+    const orbitDistance = distance * CAMERA_ORBIT_DISTANCE_RATIO
+    const horizontal = orbitDistance * Math.cos(this.cameraElevation)
+    this.camera.position.set(
+      Math.sin(this.cameraAzimuth) * horizontal,
+      orbitDistance * Math.sin(this.cameraElevation),
+      Math.cos(this.cameraAzimuth) * horizontal,
+    )
     this.camera.lookAt(0, -0.35, 0)
     this.camera.updateProjectionMatrix()
+  }
+
+  adjustCameraAzimuth(direction = 0) {
+    const amount = Math.sign(Number(direction) || 0)
+    if (!amount) return
+    this.cameraAzimuth = THREE.MathUtils.euclideanModulo(this.cameraAzimuth + amount * CAMERA_AZIMUTH_STEP, Math.PI * 2)
+    this._updateCamera()
+    this._updateCameraFacingTokens()
+  }
+
+  adjustCameraPitch(direction = 0) {
+    const amount = Math.sign(Number(direction) || 0)
+    if (!amount) return
+    this.cameraElevation = THREE.MathUtils.clamp(
+      this.cameraElevation + amount * CAMERA_ELEVATION_STEP,
+      MIN_CAMERA_ELEVATION,
+      MAX_CAMERA_ELEVATION,
+    )
+    this._updateCamera()
+  }
+
+  cameraAngles() {
+    return {
+      azimuth: Math.round(THREE.MathUtils.radToDeg(this.cameraAzimuth)),
+      pitch: Math.round(THREE.MathUtils.radToDeg(this.cameraElevation)),
+    }
+  }
+
+  _updateCameraFacingTokens() {
+    for (const face of this.tileMeshes) {
+      if (face?.userData?.standing) face.rotation.y = this.cameraAzimuth
+    }
+    for (const group of [this.movementAnimation?.group, this.playerMarker]) {
+      for (const child of group?.children || []) {
+        if (child?.userData?.cameraFacing) child.rotation.y = this.cameraAzimuth
+      }
+    }
   }
 
   _resize(force = false) {
@@ -1475,6 +1527,11 @@ export class GameScene {
   _startBoardHold(event) {
     const position = this._pickTile(event)?.userData?.position
     if (!position) return
+    if (this.run.itemTargeting && this.run.selectedItem?.type === 'teleport') {
+      this._clearPathPreview()
+      this.run.clickTile(position.c, position.r)
+      return
+    }
     const hold = {
       pointerId: event.pointerId,
       position: { ...position },

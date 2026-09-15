@@ -108,6 +108,8 @@ function escapeHtml(value) {
 }
 
 function label(value) {
+  const names = { flow: '换势', guard: '守御', harmony: '调和', defense: '防具', material: '合成材料', cleanse: '净化散', teleport: '换位符' }
+  if (names[value]) return names[value]
   const aliases = { 'heavy-armor': 'heavyArmor', energy: 'energyPotion' }
   return COPY[aliases[value] || value] || value || ''
 }
@@ -168,14 +170,7 @@ function enemyCards() {
 }
 
 function weaponCards() {
-  const effects = {
-    sword: '\u653b\u51fb\u540e\uff0c\u4e0b\u4e00\u6b21\u53d7\u5230\u7684\u8fd1\u6218\u4f24\u5bb3\u964d\u4f4e 40%\u3002',
-    axe: '\u653b\u51fb\u540e\uff0c\u5bf9\u76ee\u6807\u5468\u56f4 2 \u683c\u5185\u7684\u6700\u8fd1\u5176\u4ed6\u654c\u4eba\u9020\u6210\u4e3b\u653b\u51fb\u4f24\u5bb3\u7684 50%\u3002',
-    dagger: '\u57fa\u7840\u7c7b\u522b\u65e0\u989d\u5916\u6548\u679c\uff1b\u76f8\u5173\u6548\u679c\u7531\u5315\u9996\u5929\u8d4b\u63d0\u4f9b\u3002',
-    polearm: '\u5c04\u7a0b 2\uff1b\u8ddd\u79bb 2 \u547d\u4e2d\u65f6\u5c06\u76ee\u6807\u51fb\u9000 1 \u683c\uff0c\u53ef\u89e6\u53d1\u78b0\u649e\u6548\u679c\u3002',
-    heavy: '\u653b\u51fb\u76fe\u724c\u6216\u91cd\u7532\u654c\u4eba\u65f6\u65e0\u89c6\u5bf9\u5e94\u9632\u5fa1\u7279\u6027\u3002',
-    bow: '\u57fa\u7840\u5c04\u7a0b 3\uff1b\u8fdc\u5c04\u5929\u8d4b\u53ef\u4ee5\u8fdb\u4e00\u6b65\u589e\u52a0\u5c04\u7a0b\u3002',
-  }
+
   const weapons = [...catalog.weapons, ...(catalog.enemyLoot || []).filter((item) => item.type === 'weapon'), ...(catalog.merchantWeapons || [])]
   return weapons.map((weapon) => card({
     tone: 'tone-weapon',
@@ -189,24 +184,13 @@ function weaponCards() {
       stat(COPY.energy, WEAPON_ENERGY_COSTS[weapon.weaponClass] || 3),
       stat(COPY.attribute, attributeLabel(weapon.attribute)),
       stat(COPY.footprint, shapeText(weapon.shape)),
-      stat(COPY.weaponEffect, effects[weapon.weaponClass] || ''),
+      stat(COPY.weaponEffect, weapon.description || ''),
     ],
   })).join('')
 }
 
 function relicCards() {
-  const system = card({
-    tone: 'tone-relic',
-    tag: COPY.relic,
-    title: '\u5723\u9057\u7269\u83b7\u53d6\u4e0e\u80cc\u5305',
-    description: '\u5723\u9057\u7269\u4f5c\u4e3a\u4e00\u683c\u666e\u901a\u7269\u54c1\u653e\u5165\u80cc\u5305\uff0c\u6301\u6709\u65f6\u7acb\u5373\u751f\u6548\u3002\u8d85\u8fc7 5 \u4ef6\u540e\uff0c\u6240\u6709\u5723\u9057\u7269\u6682\u65f6\u5931\u6548\uff1b\u51cf\u5c11\u5230 5 \u4ef6\u6216\u4ee5\u4e0b\u540e\u6062\u590d\u751f\u6548\u3002\u4e22\u5f03\u540e\u4ecd\u53ef\u518d\u6b21\u83b7\u5f97\u3002',
-    accent: '\u2726',
-    stats: [
-      stat(COPY.relicSources, '\u5f00\u5c40 \u00b7 \u623f\u95f4\u5956\u52b1 \u00b7 \u6536\u85cf\u5bb6 \u00b7 \u602a\u7269\u6389\u843d'),
-      stat(COPY.softLimit, '5 \u4ef6'),
-      stat(COPY.overload, '\u8d85\u8fc7 5 \u4ef6\u65f6\u6682\u65f6\u5931\u6548'),
-    ],
-  })
+  const system = card({ tone: 'tone-relic', tag: COPY.relic, title: '圣遗物与背包', description: '背包内持有时生效，同名不叠加；无数量超载限制。通过开局选择、房间奖励和商店获得。', stats: [] })
   return system + RELIC_DEFS.map((relic) => card({
     tone: 'tone-relic',
     tag: COPY.relic,
@@ -240,11 +224,12 @@ function itemEffect(item) {
 }
 
 function itemCards() {
-  const items = [...catalog.consumables, ...(catalog.enemyLoot || []).filter((item) => item.type !== 'weapon')]
+  const items = [...catalog.defenses, ...catalog.consumables, ...(catalog.enemyLoot || []).filter((item) => item.type !== 'weapon')]
   return items.map((item) => card({
     tone: `tone-${item.type}`,
     tag: label(item.type),
     title: item.name,
+    description: item.description,
     accent: item.type === 'buff' ? '\u2727' : '\u25cf',
     stats: [
       itemEffect(item),

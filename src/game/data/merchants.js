@@ -1,7 +1,6 @@
-import catalog from './catalog.json' with { type: 'json' }
-import { nextEntityId } from './content.js'
+import { nextEntityId, ALL_ITEM_DEFS } from './content.js'
 
-const ITEM_DEFS = Object.freeze([...catalog.weapons, ...catalog.consumables, ...(catalog.enemyLoot || []), ...(catalog.merchantWeapons || [])])
+const ITEM_DEFS = ALL_ITEM_DEFS
 const ITEM_BY_ID = new Map(ITEM_DEFS.map((definition) => [definition.id, definition]))
 export const MERCHANT_STOCK_SIZE = 4
 
@@ -28,10 +27,8 @@ const BY_ID = new Map(MERCHANT_DEFS.map((definition) => [definition.id, definiti
 function availableItems(floor) {
   return ITEM_DEFS.filter((definition) => {
     if (floor < (definition.minFloor || 1)) return false
-    // The merchant is intentionally the source of items that cannot be
-    // picked up from the ground. Enemy-only drops remain encounter rewards
-    // and should not dilute the shop's advanced, merchant-exclusive stock.
-    return definition.merchantOnly === true
+    // First release: every item category, including materials and crafted weapons.
+    return true
   })
 }
 
@@ -51,6 +48,10 @@ export function merchantItemPrice(itemOrId) {
   if (item.type === 'armor') return 3 + Math.ceil(item.armor / 2)
   if (item.type === 'energy') return 4 + Math.ceil(item.energy / 2)
   if (item.type === 'buff') return 4 + item.attackBonus
+  if (item.type === 'relic') return 9
+  if (item.type === 'defense' || item.type === 'material') return 4 + item.shape.flat().filter(Boolean).length
+  if (item.type === 'teleport') return 6
+  if (item.type === 'cleanse') return 5
   return 4
 }
 
@@ -58,9 +59,9 @@ export function merchantSellPrice(item) { return Math.max(1, Math.floor(merchant
 
 function makeStockEntry(definition) { return { itemId: definition.id, price: merchantItemPrice(definition) } }
 
-function pickStockEntry(merchantId, floor, random = Math.random, excludedIds = new Set()) {
+function pickStockEntry(merchantId, floor, random = Math.random, excludedIds = new Set(), materialOnly = false) {
   const definition = getMerchantDefinition(merchantId)
-  const candidates = stockCandidates(definition, floor).filter((item) => !excludedIds.has(item.id))
+  const candidates = stockCandidates(definition, floor).filter((item) => !excludedIds.has(item.id) && (!materialOnly || item.type === 'material'))
   const item = candidates[Math.floor(random() * candidates.length)] || null
   return item ? makeStockEntry(item) : null
 }
@@ -69,7 +70,7 @@ export function buildMerchantStock(merchantId, floor, random = Math.random) {
   const entries = []
   const usedIds = new Set()
   for (let index = 0; index < MERCHANT_STOCK_SIZE; index++) {
-    const entry = pickStockEntry(merchantId, floor, random, usedIds)
+    const entry = pickStockEntry(merchantId, floor, random, usedIds, index === MERCHANT_STOCK_SIZE - 1)
     if (!entry) break
     entries.push(entry)
     usedIds.add(entry.itemId)
@@ -80,7 +81,7 @@ export function buildMerchantStock(merchantId, floor, random = Math.random) {
 export function refreshMerchantSlot(merchant, floor, index, random = Math.random) {
   if (!merchant?.merchantId || !Number.isInteger(index) || index < 0 || index >= merchant.stock.length) return false
   const excludedIds = new Set(merchant.stock.filter((_, slot) => slot !== index).map((stock) => stock.itemId))
-  const entry = pickStockEntry(merchant.merchantId, floor, random, excludedIds)
+  const entry = pickStockEntry(merchant.merchantId, floor, random, excludedIds, index === MERCHANT_STOCK_SIZE - 1)
   if (!entry) return false
   merchant.stock[index] = entry
   return true

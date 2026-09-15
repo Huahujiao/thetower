@@ -24,6 +24,13 @@ const LABELS = Object.freeze({
   basicGameplay: '\u57fa\u672c\u73a9\u6cd5',
   close: '\u5173\u95ed',
   settings: '\u8bbe\u7f6e',
+  camera: '\u89c6\u89d2',
+  cameraAzimuth: '\u65cb\u8f6c\u89d2\u5ea6',
+  cameraPitch: '\u4fef\u4ef0\u89d2\u5ea6',
+  cameraAzimuthDecrease: '\u51cf\u5c0f\u65cb\u8f6c\u89d2\u5ea6',
+  cameraAzimuthIncrease: '\u589e\u52a0\u65cb\u8f6c\u89d2\u5ea6',
+  cameraPitchDecrease: '\u51cf\u5c0f\u4fef\u4ef0\u89d2\u5ea6',
+  cameraPitchIncrease: '\u589e\u52a0\u4fef\u4ef0\u89d2\u5ea6',
   log: '\u65e5\u5fd7',
   copyLog: '\u590d\u5236\u65e5\u5fd7',
   copied: '\u5df2\u590d\u5236',
@@ -75,18 +82,43 @@ const DETAIL_ICONS = Object.freeze({
 
 const WEAPON_CLASS_LABELS = Object.freeze({ sword: '\u5251', axe: '\u65a7', dagger: '\u5315\u9996', polearm: '\u957f\u67c4', heavy: '\u91cd\u6b66\u5668', bow: '\u5f13' })
 const TALENT_LINE_LABELS = Object.freeze({
+  flow: '换势', guard: '守御', harmony: '调和',
   sword: '\u5251', axe: '\u65a7', dagger: '\u5315\u9996', polearm: '\u957f\u67c4', heavy: '\u91cd\u6b66\u5668', bow: '\u5f13',
   scorch: '\u707c\u70ed', wither: '\u67af\u840e', drown: '\u6c89\u6eba', survival: '\u751f\u5b58',
 })
 
 const HELP_SECTIONS = Object.freeze([
-  { title: '\u76ee\u6807\u4e0e\u80dc\u5229', items: ['\u7a7f\u8fc7\u4e94\u5c42\u623f\u95f4\uff0c\u51fb\u8d25\u7b2c\u4e94\u5c42\u7684\u76d1\u89c6\u8005\u5373\u53ef\u83b7\u80dc\u3002', '\u6bcf\u4e2a\u65b0\u623f\u95f4\u9996\u6b21\u8fdb\u5165\u4f1a\u63d0\u4f9b\u8865\u7ed9\u6216\u5723\u9057\u7269\u5956\u52b1\uff1b\u901a\u8fc7\u95e8\u7ee7\u7eed\u524d\u8fdb\u3002'] },
-  { title: '\u63a2\u7d22\u4e0e\u7ffb\u724c', items: ['\u5728\u5df2\u7ffb\u5f00\u7684\u724c\u4e2d\u53ef\u516b\u65b9\u5411\u79fb\u52a8\u3002\u70b9\u51fb\u89d2\u8272\u516b\u90bb\u57df\u76ee\u6807\u4f1a\u76f4\u63a5\u6267\u884c\uff1b\u8fdc\u5904\u76ee\u6807\u5148\u9884\u89c8\uff0c\u518d\u70b9\u51fb\u540c\u4e00\u683c\u786e\u8ba4\u3002', '\u7ffb\u672a\u77e5\u724c\u65f6\uff0c\u89d2\u8272\u4f1a\u5148\u8d70\u5230\u76ee\u6807\u516b\u90bb\u57df\u7684\u53ef\u8fbe\u7a7a\u683c\uff1b\u7ffb\u724c\u672c\u8eab\u4e0d\u8e0f\u5165\u8be5\u683c\u3002\u653b\u51fb\u3001\u7ffb\u724c\u548c\u4ea4\u4e92\u9884\u89c8\u4f1a\u663e\u793a\u5230\u8fbe\u4f4d\u7f6e\u4e0e\u76ee\u6807\u5f27\u7ebf\u3002'] },
-  { title: '\u6218\u6597\u4e0e\u654c\u4eba', items: ['\u76f4\u63a5\u4ece\u80cc\u5305\u9009\u62e9\u6b66\u5668\uff0c\u518d\u70b9\u51fb\u654c\u4eba\u53d1\u8d77\u653b\u51fb\uff1b\u653b\u51fb\u6309\u6b66\u5668\u7c7b\u578b\u6d88\u8017 2\u20135 \u70b9\u4f53\u529b\uff0c\u6240\u6709\u975e\u653b\u51fb\u56de\u5408\u56de\u590d 1 \u70b9\u4f53\u529b\uff0c\u4f53\u529b\u836f\u5242\u989d\u5916\u56de\u590d 2 \u70b9\u3002', '\u654c\u4eba\u7ffb\u5f00\u540e\u4f1a\u6309\u51b7\u5374\u6267\u884c\u666e\u901a\u653b\u51fb\uff1b\u6bcf\u79fb\u52a8\u4e00\u683c\u6d88\u8017 1 \u4e2a\u5168\u5c40\u56de\u5408\u5e76\u56de\u590d 1 \u70b9\u4f53\u529b\u3002'] },
-  { title: '\u5929\u8d4b\u4e0e\u80cc\u5305', items: ['\u80cc\u5305\u4e3a\u4e5d\u5217\u4e94\u884c\uff1b\u7269\u54c1\u6309\u5f62\u72b6\u5360\u683c\uff0c\u53ef\u65cb\u8f6c\u3002\u5723\u9057\u7269\u4e5f\u662f\u5360\u4e00\u683c\u7684\u666e\u901a\u7269\u54c1\uff0c\u53ef\u76f4\u63a5\u4ece\u80cc\u5305\u4e2d\u4f7f\u7528\u5176\u4ed6\u53ef\u4f7f\u7528\u7269\u54c1\uff0c\u4e0d\u518d\u8bbe\u7f6e\u5de6\u53f3\u624b\u6216\u6b66\u5668\u8010\u4e45\u3002', '\u51fb\u6740\u654c\u4eba\u83b7\u5f97\u7ecf\u9a8c\uff0c\u5347\u7ea7\u65f6\u4ece 4 \u4e2a\u968f\u673a\u5929\u8d4b\u4e0e 1 \u4e2a\u53ef\u65e0\u9650\u53e0\u52a0\u7684\u5f3a\u5316\u4f53\u683c\u4e2d\u4e94\u9009\u4e00\u3002\u5929\u8d4b\u6309\u4f4d\u7f6e\u5728\u4e09\u5c42\u5929\u8d4b\u7f51\u4e2d\u89e3\u9501\u3002'] },
-  { title: '\u5723\u9057\u7269\u4e0e\u4fe1\u606f', items: ['\u5f00\u5c40\u3001\u623f\u95f4\u5956\u52b1\u3001\u6536\u85cf\u5bb6\u548c\u602a\u7269\u6389\u843d\u90fd\u53ef\u80fd\u83b7\u5f97\u5723\u9057\u7269\uff1b\u5723\u9057\u7269\u653e\u5165\u80cc\u5305\u540e\u901a\u5e38\u7acb\u5373\u751f\u6548\uff0c\u8d85\u8fc7 5 \u4ef6\u540e\u6240\u6709\u5723\u9057\u7269\u6682\u65f6\u5931\u6548\uff1b\u51cf\u5c11\u5230 5 \u4ef6\u6216\u4ee5\u4e0b\u540e\u6062\u590d\u751f\u6548\u3002', '\u957f\u6309\u68cb\u76d8\u5bf9\u8c61\u53ef\u67e5\u770b\u8be6\u60c5\uff1b\u53f3\u4e0a\u65e5\u5fd7\u53ef\u56de\u770b\u4e8b\u4ef6\u3002'] },
-  { title: '\u89c6\u89c9\u4e0e\u5347\u7ea7', items: ['\u654c\u4eba\u7ad6\u724c\u4fdd\u6301\u7ea2\u8272\u5371\u9669\u4e3b\u4f53\uff0c\u5c5e\u6027\u4ee5\u7ec6\u8f6e\u5ed3\u548c\u5934\u90e8\u5706\u73af\u533a\u5206\uff1b\u5730\u9762\u6b66\u5668\u5361\u9762\u7684\u653b\u51fb\u529b\u4f7f\u7528\u5c5e\u6027\u8272\u7684\u7eaf\u6570\u5b57\u3002', '\u5347\u7ea7\u65f6\u56db\u4e2a\u666e\u901a\u5929\u8d4b\u6309 2\u00d72 \u6392\u5217\uff0c\u5f3a\u5316\u4f53\u683c\u5355\u72ec\u4e00\u884c\uff0c\u5361\u7247\u4e0a\u4f1a\u6807\u6ce8\u6240\u5c5e\u5206\u652f\u3002', '\u80cc\u5305\u7269\u54c1\u4f7f\u7528\u4f4e\u9971\u548c\u80cc\u666f\u8272\u533a\u5206\u7c7b\u578b\uff1a\u6cbb\u7597\u7eff\u3001\u62a4\u7532\u68d5\u3001\u589e\u76ca\u7d2b\uff1b\u6b66\u5668\u80cc\u666f\u6309\u5c5e\u6027\u53d8\u5316\u3002'] },
-  { title: '\u5feb\u6377\u63d0\u793a', items: ['\u7ffb\u724c\u548c\u79fb\u52a8\u90fd\u4f1a\u6309\u6b65\u9aa4\u89e6\u53d1\u654c\u4eba\u56de\u5408\uff1b\u8fdc\u8ddd\u79bb\u79fb\u52a8\u65f6\uff0c\u8def\u4e0a\u53ef\u80fd\u591a\u6b21\u7ecf\u8fc7\u654c\u4eba\u7684\u653b\u51fb\u8303\u56f4\u3002', '\u4e0d\u53ef\u7ffb\u724c\u6bd4\u53ef\u7ffb\u724c\u66f4\u6697\u3002\u534a\u900f\u660e\u5361\u724c\u53ea\u662f\u88ab\u7aa5\u89c6\uff0c\u5c1a\u672a\u7ffb\u5f00\u3002'] },
+  {
+    "title": "行动与体力",
+    "items": [
+      "实际每移动一格推进1回合，恢复1体力；翻牌、拾取和普通交互也恢复1体力。",
+      "武器攻击按当前费用消耗体力，最低1；使用消耗品、合成、移动与旋转背包物品各推进1回合，不自动回体力。"
+    ]
+  },
+  {
+    "title": "背包与合成",
+    "items": [
+      "背包为9列5行，物品四向相邻生效。同名被动不叠加。",
+      "所有防具均为被动，放在背包内生效。成功移动或旋转物品消耗1回合；选择、取消、失败操作免费。",
+      "合成面板列出背包内拥有原料的配方。成品放不下时不能合成；长按公式物品查看详情。",
+      "材料仅由敌人掉落或在商店购买，不在随机地面与房间奖励中生成。商店可售卖所有物品。"
+    ]
+  },
+  {
+    "title": "天赋与圣遗物",
+    "items": [
+      "升级时选择换势、守御、调和、求生四条路线的天赋，也可重复强化体格。",
+      "圣遗物没有超载限制，持有时生效。每房间次数不会因离开再进入或整理背包重置。"
+    ]
+  },
+  {
+    "title": "战斗与探索",
+    "items": [
+      "选择武器后点击敌人；远处目标先预览路径，再次点击执行。自动接近也算主动移动。",
+      "换位符只推进1回合，不累计移动步数。长按棋盘或背包物品查看详情。",
+      "穿过五层并击败监视者获胜。"
+    ]
+  }
 ])
 
 function escapeHtml(value) {
@@ -105,6 +137,7 @@ export class HUD {
     this.root = document.getElementById('hud')
     if (!this.root) throw new Error('Missing #hud container')
     this.merchantTab = 'stock'
+    this.scene = null
     this._build()
     this._onClick = (event) => this._handleClick(event)
     this._onPointerDown = (event) => this._handlePointerDown(event)
@@ -169,6 +202,10 @@ export class HUD {
 
       <div class="hud-settings" data=settings>
         <label class="settings-row"><input type="checkbox" data=revealtoggle> ${LABELS.reveal}</label>
+        <div class="settings-camera" aria-label="${LABELS.camera}">
+          <div class="settings-camera-row"><span>${LABELS.cameraAzimuth} <strong data=cameraazimuthvalue></strong></span><div class="settings-camera-controls"><button type="button" class="settings-camera-button" data-action="camera-azimuth-minus" title="${LABELS.cameraAzimuthDecrease}" aria-label="${LABELS.cameraAzimuthDecrease}">&minus;</button><button type="button" class="settings-camera-button" data-action="camera-azimuth-plus" title="${LABELS.cameraAzimuthIncrease}" aria-label="${LABELS.cameraAzimuthIncrease}">+</button></div></div>
+          <div class="settings-camera-row"><span>${LABELS.cameraPitch} <strong data=camerapitchvalue></strong></span><div class="settings-camera-controls"><button type="button" class="settings-camera-button" data-action="camera-pitch-minus" title="${LABELS.cameraPitchDecrease}" aria-label="${LABELS.cameraPitchDecrease}">&minus;</button><button type="button" class="settings-camera-button" data-action="camera-pitch-plus" title="${LABELS.cameraPitchIncrease}" aria-label="${LABELS.cameraPitchIncrease}">+</button></div></div>
+        </div>
         <button class="settings-restart" data-action="restart-settings">${LABELS.restart}</button>
       </div>
 
@@ -242,6 +279,7 @@ export class HUD {
             <div class="backpack-action-slot act-use-slot"><button class="backpack-action act-use" data-action="use" hidden>${LABELS.use}</button></div>
             <button class="backpack-action bag-rotate" data-action="rotate-bag" title="${LABELS.rotate}" aria-label="${LABELS.rotate}" hidden>\u21bb</button>
           </div>
+          <div class="craft-toolbar"><button data-action="craft-open">合成</button><button data-action="build-status">构筑状态</button><span>移动 / 旋转：1回合</span></div>
           <section class="backpack-panel">
             <div class="backpack-grid-wrap">
               <div class="backpack-grid" data=backpack></div>
@@ -249,6 +287,15 @@ export class HUD {
           </section>
         </div>
 
+      <section class="build-status-panel" data=buildstatuspanel hidden aria-label="构筑状态">
+        <header><strong>构筑状态</strong><button data-action="build-status-close">关闭</button></header>
+        <div data=buildstatus></div>
+      </section>
+      <section class="craft-panel" data=craftpanel role="dialog" aria-modal="true" aria-label="合成" hidden>
+        <div class="craft-dialog"><header><h2>合成</h2><button data-action="craft-close" aria-label="关闭合成">关闭</button></header>
+        <p>消耗背包中的原料，合成推进1回合。长按公式中的物品查看详情。</p>
+        <div data=craftrows></div></div>
+      </section>
       <div class="hud-over" data=over>
         <h1 data=overtitle></h1><p data=overmessage></p>
         <button data-action="restart">${LABELS.restart}</button>
@@ -270,7 +317,13 @@ export class HUD {
     return container
   }
 
+  setScene(scene) {
+    this.scene = scene || null
+    this._renderCameraSettings()
+  }
+
   render() {
+    this._renderCraft()
     const { player } = this.run
     const room = this.run.currentRoom
     this.q('floor').textContent = room ? String(room.floor) : ''
@@ -281,18 +334,16 @@ export class HUD {
     this.q('energystrip').textContent = `${player.energy}/${player.maxEnergy}`
     this.q('energyfill').style.width = `${Math.max(0, Math.min(100, player.energy / Math.max(1, player.maxEnergy) * 100))}%`
     this.q('level').textContent = String(player.level)
+    this._renderCameraSettings()
     this.q('experiencevalue').textContent = `${player.experience}/${player.experienceToNext}`
     const experienceProgress = player.experienceToNext > 0 ? Math.min(100, Math.max(0, player.experience / player.experienceToNext * 100)) : 0
     this.q('experiencefill').style.width = `${experienceProgress}%`
     this._renderCharacterPanel(player)
     this._renderTalentPanel()
-    const pendingBuffs = player.pendingAttackBuffs || []
-    const isMeleeOnly = pendingBuffs.length > 0 && pendingBuffs.every((buff) => buff.target === 'melee')
-    const hints = []
-    const relicOverloaded = this.run.relicOverload() > 0
-    this.q('hintrow').classList.toggle('overloaded', relicOverloaded)
-    if (relicOverloaded) hints.push(LABELS.relicOverload)
-    if (player.pendingAttackBonus) hints.push(`${isMeleeOnly ? LABELS.nextMeleeAttack : LABELS.nextAttack} +${player.pendingAttackBonus}`)
+    const hints = this.run.itemRules.pendingLines(this.run.selectedItem?.type === 'weapon' ? this.run.selectedItem : null)
+    this.q('hintrow').classList.remove('overloaded')
+    const stateLines = this.run.itemRules.statusLines()
+    this.q('buildstatus').innerHTML = stateLines.length ? stateLines.map(line => `<p>${escapeHtml(line)}</p>`).join('') : '<p>当前没有待用增益或次数效果。</p>'
     if (player.poisonedTurns > 0) hints.push(`${LABELS.poison} ${player.poisonedTurns}${LABELS.turn}`)
     if (player.burningTurns > 0) hints.push(`${LABELS.burning} ${player.burningTurns}${LABELS.turn}`)
     this.q('hint').textContent = hints.join(' · ')
@@ -323,6 +374,12 @@ export class HUD {
     this.q('characterexperiencebar').style.width = `${progress}%`
     this.q('charactertalents').innerHTML = `<section class="character-talent-summary"><div class="character-talent-title">${LABELS.talents}</div><div class="character-row"><span>${LABELS.talents}</span><strong>${player.talents?.length || 0}</strong></div><div class="character-row sub"><span>${LABELS.fixedGrowth}</span><strong>${player.talentRuntime?.bodyStrength || 0}</strong></div></section>`
     return
+  }
+
+  _renderCameraSettings() {
+    const angles = this.scene?.cameraAngles?.()
+    this.q('cameraazimuthvalue').textContent = angles ? `${angles.azimuth}\u00b0` : ''
+    this.q('camerapitchvalue').textContent = angles ? `${angles.pitch}\u00b0` : ''
   }
 
   _renderTalentPanel() {
@@ -373,7 +430,7 @@ export class HUD {
           : definition.type === 'potion' ? `HP +${definition.heal}`
             : definition.type === 'armor' ? `${LABELS.armor} +${definition.armor}`
               : definition.type === 'energy' ? `${LABELS.energy} +${definition.energy}`
-              : `ATK +${definition.attackBonus}`
+              : escapeHtml(definition.description || '')
         const item = { ...definition, uid: 'reward-preview' }
         const disabled = !this.run.backpack.canFit(item) ? ' disabled' : ''
         return `<button class="relic-choice-card" data-room-reward="${index}"${disabled}><span class="relic-name">${escapeHtml(definition.name)}</span><span class="relic-desc">${detail}</span></button>`
@@ -472,6 +529,10 @@ export class HUD {
           : item.type === 'armor' ? `${LABELS.armor} +${item.armor}`
             : item.type === 'energy' ? `${LABELS.energy} +${item.energy}`
             : item.type === 'buff' ? `ATK +${item.attackBonus}`
+              : item.type === 'defense' ? '防具'
+                : item.type === 'material' ? '材料'
+                : item.type === 'cleanse' ? '净化'
+                : item.type === 'teleport' ? '换位'
               : item.type === 'relic' ? LABELS.relics
               : ''
       let firstFilled = true
@@ -502,7 +563,7 @@ export class HUD {
     const selected = this.run.selectedItem
     const discard = this.root.querySelector('[data-action="discard"]')
     const use = this.root.querySelector('[data-action="use"]')
-    const usableItem = !!selected && ['potion', 'armor', 'energy', 'buff'].includes(selected.type)
+    const usableItem = !!selected && ['potion', 'armor', 'energy', 'buff', 'cleanse', 'teleport'].includes(selected.type)
     const actionsAvailable = this.run.phase === 'explore' && !this.run.gameOver
     const setActionState = (button, visible, enabled) => {
       button.hidden = false
@@ -532,7 +593,22 @@ export class HUD {
     description.hidden = !detail.description
   }
 
+  _renderCraft() {
+    const panel = this.q('craftpanel')
+    const available = this.run._canOrganizeBackpack() && !this.run.itemTargeting
+    if (!available) this.craftOpen = false
+    panel.hidden = !this.craftOpen
+    const openButton = this.root.querySelector('[data-action="craft-open"]')
+    openButton.disabled = !available
+    if (!this.craftOpen) return
+    const recipes = this.run.availableRecipes()
+    const itemButton = id => `<button class="craft-item" data-craft-item="${id}">${escapeHtml(getItemDefinition(id).name)}</button>`
+    this.q('craftrows').innerHTML = recipes.length ? recipes.map(r => `<div class="craft-row">${itemButton(r.a)}<span>+</span>${itemButton(r.b)}<span>=</span>${itemButton(r.result)}<button data-craft-result="${r.result}" ${r.canFit ? '' : 'disabled'}>${r.canFit ? '合成' : '空间不足'}</button></div>`).join('') : '<p>背包内暂无可合成方案。</p>'
+  }
+
   _detailActionFor(target) {
+    const formula = target.closest('[data-craft-item]')
+    if (formula) return () => this.run.showItemDetail(getItemDefinition(formula.dataset.craftItem))
     const relic = target.closest('[data-relic-detail]')
     if (relic) return () => this.run.showRelicDetail(relic.dataset.relicDetail)
     const bagItem = target.closest('[data-bag-item]')
@@ -602,6 +678,8 @@ export class HUD {
 
   _handleClick(event) {
     if (Date.now() < (this.ignoreClicksUntil || 0)) return
+    const craft = event.target.closest('[data-craft-result]')
+    if (craft) { this.run.craft(craft.dataset.craftResult); this._renderCraft(); return }
     const merchantTab = event.target.closest('[data-merchant-tab]')
     if (merchantTab) {
       this.merchantTab = merchantTab.dataset.merchantTab
@@ -639,7 +717,7 @@ export class HUD {
       const index = Number(bagItem.dataset.bagItem)
       if (this.run.itemTargeting) {
         const item = this.run.backpack.placementForCellIndex(index)?.item
-        if (item?.type === 'weapon') this.run.applySelectedItemToBackpackWeapon(index)
+        if (item?.type === 'weapon') this.run.clearSelection()
         else this.run.clearSelection()
       } else {
         this.run.clickInventoryCell(index)
@@ -651,7 +729,7 @@ export class HUD {
       const index = Number(bagCell.dataset.bagCell)
       if (this.run.itemTargeting) {
         const item = this.run.backpack.placementForCellIndex(index)?.item
-        if (item?.type === 'weapon') this.run.applySelectedItemToBackpackWeapon(index)
+        if (item?.type === 'weapon') this.run.clearSelection()
         else this.run.clearSelection()
       } else {
         this.run.clickInventoryCell(index)
@@ -664,9 +742,29 @@ export class HUD {
       void this._copyLog()
       return
     }
+    if (action === 'build-status') { this.q('buildstatuspanel').hidden = !this.q('buildstatuspanel').hidden; return }
+    if (action === 'build-status-close') { this.q('buildstatuspanel').hidden = true; return }
+    if (action === 'craft-open') { this.craftOpen = true; this._renderCraft(); return }
+    if (action === 'craft-close') { this.craftOpen = false; this._renderCraft(); return }
     if (action === 'use') this.run.useSelected()
     if (action === 'discard') this.run.discardSelected()
     if (action === 'rotate-bag') this.run.rotateSelectedInventory()
+    if (action === 'camera-azimuth-minus') {
+      this.scene?.adjustCameraAzimuth(-1)
+      this._renderCameraSettings()
+    }
+    if (action === 'camera-azimuth-plus') {
+      this.scene?.adjustCameraAzimuth(1)
+      this._renderCameraSettings()
+    }
+    if (action === 'camera-pitch-minus') {
+      this.scene?.adjustCameraPitch(-1)
+      this._renderCameraSettings()
+    }
+    if (action === 'camera-pitch-plus') {
+      this.scene?.adjustCameraPitch(1)
+      this._renderCameraSettings()
+    }
     if (action === 'restart') {
       this.run.clearSave()
       this.run.reset()

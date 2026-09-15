@@ -2,23 +2,28 @@
   "enemies": [
     {
       "id": "gnawer",
-      "name": "\u7329\u9b3c",
+      "name": "猩鬼",
       "minFloor": 1,
       "attribute": "scorch",
       "behavior": "stationary",
-      "traits": ["alert"],
+      "traits": [
+        "alert"
+      ],
       "range": 1,
       "hp": 4,
       "attack": 4,
       "experience": 2,
-      "relicDropChance": 0.015,
-      "drop": { "chance": 0.25, "itemId": "ghoul-bone-stinger" },
+      "relicDropChance": 0,
+      "drop": {
+        "chance": 0.25,
+        "itemId": "spring"
+      },
       "attackCooldownMax": 1,
       "initialActionDelay": 1
     },
     {
       "id": "emberwing-moth",
-      "name": "\u70ec\u7fc5\u86fe",
+      "name": "烬翅蛾",
       "minFloor": 1,
       "attribute": "scorch",
       "behavior": "ambush",
@@ -28,29 +33,39 @@
       "hp": 3,
       "attack": 2,
       "experience": 2,
-      "relicDropChance": 0.02,
+      "relicDropChance": 0,
       "attackCooldownMax": 2,
-      "initialActionDelay": 0
+      "initialActionDelay": 0,
+      "drop": {
+        "chance": 0.25,
+        "itemId": "scope"
+      }
     },
     {
       "id": "rootrot-bud",
-      "name": "\u8150\u6839\u82bd",
+      "name": "腐根芽",
       "minFloor": 1,
       "attribute": "wither",
       "behavior": "stationary",
-      "traits": ["regen"],
+      "traits": [
+        "regen"
+      ],
       "regen": 1,
       "range": 2,
       "hp": 7,
       "attack": 2,
       "experience": 2,
-      "relicDropChance": 0.02,
+      "relicDropChance": 0,
       "attackCooldownMax": 2,
-      "initialActionDelay": 1
+      "initialActionDelay": 1,
+      "drop": {
+        "chance": 0.25,
+        "itemId": "venom-sac"
+      }
     },
     {
       "id": "tide-shadow-cub",
-      "name": "\u6f6e\u5f71\u5e7c\u517d",
+      "name": "潮影幼兽",
       "minFloor": 1,
       "attribute": "drown",
       "behavior": "chaser",
@@ -58,13 +73,17 @@
       "hp": 4,
       "attack": 2,
       "experience": 2,
-      "relicDropChance": 0.015,
+      "relicDropChance": 0,
       "attackCooldownMax": 1,
-      "initialActionDelay": 1
+      "initialActionDelay": 1,
+      "drop": {
+        "chance": 0.25,
+        "itemId": "chain"
+      }
     },
     {
       "id": "nest-spider",
-      "name": "\u4f0f\u5de2\u8718\u86db",
+      "name": "伏巢蜘蛛",
       "minFloor": 3,
       "attribute": "wither",
       "behavior": "ambush",
@@ -72,112 +91,146 @@
       "hp": 3,
       "attack": 5,
       "experience": 3,
-      "relicDropChance": 0.04,
-      "drop": { "chance": 0.35, "itemId": "venom-sac" },
+      "relicDropChance": 0,
+      "drop": {
+        "chance": 0.35,
+        "itemId": "venom-sac"
+      },
       "attackCooldownMax": 2,
       "initialActionDelay": 0
     },
     {
       "id": "beetle-guard",
-      "name": "\u7532\u58f3\u866b\u536b",
+      "name": "甲壳虫卫",
       "minFloor": 1,
       "attribute": "wither",
       "behavior": "stationary",
-      "traits": ["shield"],
+      "traits": [
+        "shield"
+      ],
       "range": 1,
       "hp": 6,
       "attack": 3,
       "experience": 2,
-      "relicDropChance": 0.02,
-      "drop": { "chance": 0.35, "itemId": "shell-fragment" },
+      "relicDropChance": 0,
+      "drop": {
+        "chance": 0.35,
+        "itemId": "shield-core"
+      },
       "attackCooldownMax": 2,
       "initialActionDelay": 1
     },
     {
       "id": "rot-walker",
-      "name": "\u8150\u8089\u884c\u8005",
+      "name": "腐肉行者",
       "minFloor": 2,
       "attribute": "wither",
       "behavior": "chaser",
-      "traits": ["alert"],
+      "traits": [
+        "alert"
+      ],
       "range": 1,
       "hp": 7,
       "attack": 4,
       "experience": 2,
-      "relicDropChance": 0.02,
-      "drop": { "chance": 0.2, "itemId": "venom-sac" },
+      "relicDropChance": 0,
+      "drop": {
+        "chance": 0.2,
+        "itemId": "venom-sac"
+      },
       "attackCooldownMax": 1,
       "initialActionDelay": 1
     },
     {
       "id": "shellguard",
-      "name": "\u91cd\u7532\u536b\u58eb",
+      "name": "重甲卫士",
       "minFloor": 2,
       "attribute": "wither",
       "behavior": "stationary",
       "range": 1,
-      "traits": ["heavy-armor"],
+      "traits": [
+        "heavy-armor"
+      ],
       "hp": 10,
       "attack": 7,
       "elite": true,
       "experience": 4,
-      "relicDropChance": 0.06,
-      "drop": { "chance": 0.6, "itemId": "shell-shatter-maul" },
+      "relicDropChance": 0,
+      "drop": {
+        "chance": 0.6,
+        "itemId": "weight"
+      },
       "attackCooldownMax": 3,
       "initialActionDelay": 1
     },
     {
       "id": "wisp",
-      "name": "\u5e7d\u5149\u6295\u77db\u8005",
+      "name": "幽光投矛者",
       "minFloor": 2,
       "attribute": "drown",
       "behavior": "stationary",
-      "traits": ["alert"],
+      "traits": [
+        "alert"
+      ],
       "range": 3,
       "hp": 5,
       "attack": 3,
       "experience": 3,
-      "relicDropChance": 0.03,
-      "drop": { "chance": 0.6, "itemId": "ghost-bone-spear" },
+      "relicDropChance": 0,
+      "drop": {
+        "chance": 0.6,
+        "itemId": "chain"
+      },
       "attackCooldownMax": 1,
       "initialActionDelay": 1
     },
     {
       "id": "patrol-hound",
-      "name": "\u5de1\u8def\u72ac",
+      "name": "巡路犬",
       "minFloor": 2,
       "attribute": "scorch",
       "behavior": "chaser",
-      "traits": ["alert"],
+      "traits": [
+        "alert"
+      ],
       "range": 1,
       "hp": 6,
       "attack": 4,
       "experience": 3,
-      "relicDropChance": 0.03,
-      "drop": { "chance": 0.25, "itemId": "beast-fang" },
+      "relicDropChance": 0,
+      "drop": {
+        "chance": 0.25,
+        "itemId": "spring"
+      },
       "attackCooldownMax": 1,
       "initialActionDelay": 1
     },
     {
       "id": "redneedle-salamander",
-      "name": "\u8d64\u9488\u706b\u8725",
+      "name": "赤针火蜥",
       "minFloor": 2,
       "attribute": "scorch",
       "behavior": "stationary",
-      "traits": ["burning"],
+      "traits": [
+        "burning"
+      ],
       "burningTurns": 2,
       "burningDamage": 1,
       "range": 3,
       "hp": 5,
       "attack": 6,
       "experience": 3,
-      "relicDropChance": 0.03,
+      "relicDropChance": 0,
       "attackCooldownMax": 2,
-      "initialActionDelay": 2
+      "initialActionDelay": 2,
+      "drop": {
+        "chance": 0.25,
+        "itemId": "scope"
+      }
     },
     {
       "id": "rot-sac-toad",
-      "name": "\u8150\u56ca\u87c7",
+      "name": "腐囊蟇",
       "minFloor": 2,
       "attribute": "wither",
       "behavior": "stationary",
@@ -188,80 +241,107 @@
       "hp": 8,
       "attack": 3,
       "experience": 3,
-      "relicDropChance": 0.03,
+      "relicDropChance": 0,
       "attackCooldownMax": 2,
-      "initialActionDelay": 1
+      "initialActionDelay": 1,
+      "drop": {
+        "chance": 0.25,
+        "itemId": "venom-sac"
+      }
     },
     {
       "id": "claw-beast",
-      "name": "\u6eba\u722a\u517d",
+      "name": "溺爪兽",
       "minFloor": 2,
       "attribute": "drown",
       "behavior": "chaser",
-      "traits": ["swift"],
+      "traits": [
+        "swift"
+      ],
       "range": 1,
       "hp": 6,
       "attack": 3,
       "experience": 3,
-      "relicDropChance": 0.03,
+      "relicDropChance": 0,
       "attackCooldownMax": 1,
-      "initialActionDelay": 1
+      "initialActionDelay": 1,
+      "drop": {
+        "chance": 0.25,
+        "itemId": "spring"
+      }
     },
     {
       "id": "broodmother",
-      "name": "\u88c2\u8179\u866b\u6bcd",
+      "name": "裂腹虫母",
       "minFloor": 3,
       "attribute": "wither",
       "behavior": "stationary",
-      "traits": ["split", "alert"],
+      "traits": [
+        "split",
+        "alert"
+      ],
       "splitMinionId": "broodling",
       "range": 2,
       "hp": 11,
       "attack": 5,
       "elite": true,
       "experience": 4,
-      "relicDropChance": 0.06,
+      "relicDropChance": 0,
       "attackCooldownMax": 2,
-      "initialActionDelay": 1
+      "initialActionDelay": 1,
+      "drop": {
+        "chance": 0.5,
+        "itemId": "venom-sac"
+      }
     },
     {
       "id": "moss-colossus",
-      "name": "\u82d4\u85d3\u5de8\u50cf",
+      "name": "苔藓巨像",
       "minFloor": 3,
       "attribute": "wither",
       "behavior": "stationary",
-      "traits": ["regen"],
+      "traits": [
+        "regen"
+      ],
       "regen": 1,
       "range": 1,
       "hp": 14,
       "attack": 6,
       "elite": true,
       "experience": 4,
-      "relicDropChance": 0.06,
-      "drop": { "chance": 0.45, "itemId": "moss-ointment" },
+      "relicDropChance": 0,
+      "drop": {
+        "chance": 0.45,
+        "itemId": "weight"
+      },
       "attackCooldownMax": 2,
       "initialActionDelay": 1
     },
     {
       "id": "sentry-crossbow",
-      "name": "\u54e8\u6212\u5f29\u624b",
+      "name": "哨戒弩手",
       "minFloor": 3,
       "attribute": "wither",
       "behavior": "chaser",
-      "traits": ["alert"],
+      "traits": [
+        "alert"
+      ],
       "range": 3,
       "hp": 8,
       "attack": 6,
       "elite": true,
       "experience": 4,
-      "relicDropChance": 0.06,
-      "drop": { "chance": 0.6, "itemId": "moss-ointment" },
+      "relicDropChance": 0,
+      "drop": {
+        "chance": 0.6,
+        "itemId": "scope"
+      },
       "attackCooldownMax": 2,
       "initialActionDelay": 1
     },
     {
       "id": "ash-cannon-bug",
-      "name": "\u7070\u70ec\u70ae\u866b",
+      "name": "灰烬炮虫",
       "minFloor": 3,
       "attribute": "scorch",
       "behavior": "stationary",
@@ -269,13 +349,17 @@
       "hp": 7,
       "attack": 8,
       "experience": 4,
-      "relicDropChance": 0.04,
+      "relicDropChance": 0,
       "attackCooldownMax": 3,
-      "initialActionDelay": 2
+      "initialActionDelay": 2,
+      "drop": {
+        "chance": 0.25,
+        "itemId": "scope"
+      }
     },
     {
       "id": "furnace-beetle",
-      "name": "\u7089\u7206\u7532\u866b",
+      "name": "炉爆甲虫",
       "minFloor": 3,
       "attribute": "scorch",
       "behavior": "chaser",
@@ -285,61 +369,84 @@
       "hp": 8,
       "attack": 6,
       "experience": 3,
-      "relicDropChance": 0.04,
+      "relicDropChance": 0,
       "attackCooldownMax": 2,
-      "initialActionDelay": 1
+      "initialActionDelay": 1,
+      "drop": {
+        "chance": 0.25,
+        "itemId": "shield-core"
+      }
     },
     {
       "id": "thorn-shell-flower",
-      "name": "\u68d8\u58f3\u82b1",
+      "name": "棘壳花",
       "minFloor": 3,
       "attribute": "wither",
       "behavior": "stationary",
-      "traits": ["shield", "regen"],
+      "traits": [
+        "shield",
+        "regen"
+      ],
       "regen": 1,
       "range": 2,
       "hp": 10,
       "attack": 4,
       "experience": 4,
-      "relicDropChance": 0.04,
+      "relicDropChance": 0,
       "attackCooldownMax": 2,
-      "initialActionDelay": 1
+      "initialActionDelay": 1,
+      "drop": {
+        "chance": 0.25,
+        "itemId": "shield-core"
+      }
     },
     {
       "id": "water-leech-swarm",
-      "name": "\u6c34\u5c38\u86ed\u7fa4",
+      "name": "水尸蛭群",
       "minFloor": 3,
       "attribute": "drown",
       "behavior": "chaser",
-      "traits": ["split"],
+      "traits": [
+        "split"
+      ],
       "splitMinionId": "leech-larva",
       "range": 1,
       "hp": 6,
       "attack": 4,
       "experience": 3,
-      "relicDropChance": 0.03,
+      "relicDropChance": 0,
       "attackCooldownMax": 1,
-      "initialActionDelay": 1
+      "initialActionDelay": 1,
+      "drop": {
+        "chance": 0.25,
+        "itemId": "venom-sac"
+      }
     },
     {
       "id": "whirlpool-eye-sac",
-      "name": "\u6da1\u773c\u6d6e\u56ca",
+      "name": "涡眼浮囊",
       "minFloor": 3,
       "attribute": "drown",
       "behavior": "chaser",
-      "traits": ["pull"],
+      "traits": [
+        "pull"
+      ],
       "pullDistance": 1,
       "range": 2,
       "hp": 7,
       "attack": 4,
       "experience": 4,
-      "relicDropChance": 0.04,
+      "relicDropChance": 0,
       "attackCooldownMax": 2,
-      "initialActionDelay": 1
+      "initialActionDelay": 1,
+      "drop": {
+        "chance": 0.25,
+        "itemId": "chain"
+      }
     },
     {
       "id": "molten-core-beast",
-      "name": "\u7194\u6838\u56ca\u517d",
+      "name": "熔核囊兽",
       "minFloor": 4,
       "attribute": "scorch",
       "behavior": "stationary",
@@ -349,51 +456,69 @@
       "hp": 12,
       "attack": 10,
       "experience": 5,
-      "relicDropChance": 0.05,
+      "relicDropChance": 0,
       "attackCooldownMax": 3,
-      "initialActionDelay": 2
+      "initialActionDelay": 2,
+      "drop": {
+        "chance": 0.25,
+        "itemId": "weight"
+      }
     },
     {
       "id": "redwheel-fire-crow",
-      "name": "\u8d64\u8f6e\u706b\u9e26",
+      "name": "赤轮火鸦",
       "minFloor": 4,
       "attribute": "scorch",
       "behavior": "chaser",
-      "traits": ["burning"],
+      "traits": [
+        "burning"
+      ],
       "burningTurns": 2,
       "burningDamage": 1,
       "range": 3,
       "hp": 8,
       "attack": 9,
       "experience": 5,
-      "relicDropChance": 0.05,
+      "relicDropChance": 0,
       "attackCooldownMax": 2,
-      "initialActionDelay": 1
+      "initialActionDelay": 1,
+      "drop": {
+        "chance": 0.25,
+        "itemId": "spring"
+      }
     },
     {
       "id": "cinder-curse-lamp-swarm",
-      "name": "\u70ec\u5492\u706f\u7fa4",
+      "name": "烬咒灯群",
       "minFloor": 4,
       "attribute": "scorch",
       "behavior": "ambush",
-      "traits": ["burning"],
+      "traits": [
+        "burning"
+      ],
       "burningTurns": 2,
       "burningDamage": 1,
       "range": 3,
       "hp": 5,
       "attack": 8,
       "experience": 4,
-      "relicDropChance": 0.04,
+      "relicDropChance": 0,
       "attackCooldownMax": 2,
-      "initialActionDelay": 0
+      "initialActionDelay": 0,
+      "drop": {
+        "chance": 0.25,
+        "itemId": "scope"
+      }
     },
     {
       "id": "tide-rite-matriarch",
-      "name": "\u6f6e\u7940\u6bcd\u4f53",
+      "name": "潮祀母体",
       "minFloor": 4,
       "attribute": "drown",
       "behavior": "stationary",
-      "traits": ["summon"],
+      "traits": [
+        "summon"
+      ],
       "summonEvery": 3,
       "summonMinionId": "tide-shadow",
       "summonLimit": 2,
@@ -401,46 +526,63 @@
       "hp": 14,
       "attack": 4,
       "experience": 6,
-      "relicDropChance": 0.06,
+      "relicDropChance": 0,
       "attackCooldownMax": 3,
-      "initialActionDelay": 1
+      "initialActionDelay": 1,
+      "drop": {
+        "chance": 0.25,
+        "itemId": "scope"
+      }
     },
     {
       "id": "drown-shadow-hunter",
-      "name": "\u6eba\u5f71\u730e\u624b",
+      "name": "溺影猎手",
       "minFloor": 4,
       "attribute": "drown",
       "behavior": "chaser",
-      "traits": ["swift", "pull"],
+      "traits": [
+        "swift",
+        "pull"
+      ],
       "pullDistance": 1,
       "range": 2,
       "hp": 10,
       "attack": 6,
       "experience": 5,
-      "relicDropChance": 0.05,
+      "relicDropChance": 0,
       "attackCooldownMax": 2,
-      "initialActionDelay": 1
+      "initialActionDelay": 1,
+      "drop": {
+        "chance": 0.25,
+        "itemId": "chain"
+      }
     },
     {
       "id": "tidal-spore-sac",
-      "name": "\u7fa4\u6f6e\u5b62\u56ca",
+      "name": "群潮孢囊",
       "minFloor": 4,
       "attribute": "drown",
       "behavior": "chaser",
-      "traits": ["death-spawn"],
+      "traits": [
+        "death-spawn"
+      ],
       "deathSpawnMinionId": "tide-shadow",
       "deathSpawnCount": 2,
       "range": 1,
       "hp": 9,
       "attack": 5,
       "experience": 5,
-      "relicDropChance": 0.05,
+      "relicDropChance": 0,
       "attackCooldownMax": 2,
-      "initialActionDelay": 1
+      "initialActionDelay": 1,
+      "drop": {
+        "chance": 0.25,
+        "itemId": "venom-sac"
+      }
     },
     {
       "id": "revenant-guard",
-      "name": "\u8fd8\u9b42\u4f8d\u536b",
+      "name": "还魂侍卫",
       "minFloor": 4,
       "attribute": "drown",
       "behavior": "stationary",
@@ -450,14 +592,17 @@
       "attack": 7,
       "elite": true,
       "experience": 4,
-      "relicDropChance": 0.06,
-      "drop": { "chance": 0.5, "itemId": "tombguard-remnant-sword" },
+      "relicDropChance": 0,
+      "drop": {
+        "chance": 0.5,
+        "itemId": "chain"
+      },
       "attackCooldownMax": 2,
       "initialActionDelay": 1
     },
     {
       "id": "bomb-wisp",
-      "name": "\u81ea\u7206\u706f\u7075",
+      "name": "自爆灯灵",
       "minFloor": 4,
       "attribute": "scorch",
       "behavior": "stationary",
@@ -468,30 +613,40 @@
       "attack": 12,
       "elite": true,
       "experience": 4,
-      "relicDropChance": 0.06,
+      "relicDropChance": 0,
       "attackCooldownMax": 1,
-      "initialActionDelay": 3
+      "initialActionDelay": 3,
+      "drop": {
+        "chance": 0.5,
+        "itemId": "weight"
+      }
     },
     {
       "id": "cracked-hunter",
-      "name": "\u88c2\u7532\u8ffd\u730e\u8005",
+      "name": "裂甲追猎者",
       "minFloor": 4,
       "attribute": "wither",
       "behavior": "chaser",
-      "traits": ["shield", "alert"],
+      "traits": [
+        "shield",
+        "alert"
+      ],
       "range": 2,
       "hp": 14,
       "attack": 7,
       "elite": true,
       "experience": 4,
-      "relicDropChance": 0.06,
-      "drop": { "chance": 0.5, "itemId": "shell-fragment" },
+      "relicDropChance": 0,
+      "drop": {
+        "chance": 0.5,
+        "itemId": "shield-core"
+      },
       "attackCooldownMax": 2,
       "initialActionDelay": 1
     },
     {
       "id": "broodling",
-      "name": "\u88c2\u8179\u5e7c\u4f53",
+      "name": "裂腹幼体",
       "minFloor": 3,
       "attribute": "wither",
       "behavior": "stationary",
@@ -501,11 +656,12 @@
       "hp": 3,
       "attack": 2,
       "attackCooldownMax": 1,
-      "initialActionDelay": 1
+      "initialActionDelay": 1,
+      "relicDropChance": 0
     },
     {
       "id": "leech-larva",
-      "name": "\u5c38\u86ed\u5e7c\u4f53",
+      "name": "尸蛭幼体",
       "minFloor": 3,
       "attribute": "drown",
       "behavior": "chaser",
@@ -515,11 +671,12 @@
       "hp": 2,
       "attack": 2,
       "attackCooldownMax": 1,
-      "initialActionDelay": 1
+      "initialActionDelay": 1,
+      "relicDropChance": 0
     },
     {
       "id": "tide-shadow",
-      "name": "\u6f6e\u5f71",
+      "name": "潮影",
       "minFloor": 4,
       "attribute": "drown",
       "behavior": "chaser",
@@ -529,12 +686,13 @@
       "hp": 3,
       "attack": 2,
       "attackCooldownMax": 1,
-      "initialActionDelay": 1
+      "initialActionDelay": 1,
+      "relicDropChance": 0
     }
   ],
   "boss": {
     "id": "overseer",
-    "name": "\u76d1\u89c6\u8005",
+    "name": "监视者",
     "minFloor": 5,
     "attribute": "wither",
     "behavior": "stationary",
@@ -545,49 +703,734 @@
     "initialActionDelay": 1
   },
   "weapons": [
-    { "id": "rust-sword", "name": "锈蚀短剑", "type": "weapon", "weaponClass": "sword", "attribute": "scorch", "attack": 3, "range": 1, "shape": [[1], [1]] },
-    { "id": "short-sword", "name": "枯木长剑", "type": "weapon", "weaponClass": "sword", "attribute": "wither", "attack": 4, "range": 1, "shape": [[1], [1], [1]] },
-    { "id": "silver-sword", "name": "沉银剑", "type": "weapon", "weaponClass": "sword", "attribute": "drown", "attack": 5, "range": 1, "shape": [[1], [1], [1]] },
-    { "id": "scorched-hand-axe", "name": "焦痕手斧", "type": "weapon", "weaponClass": "axe", "attribute": "scorch", "attack": 4, "range": 1, "shape": [[1], [1]] },
-    { "id": "withered-root-axe", "name": "腐根斧", "type": "weapon", "weaponClass": "axe", "attribute": "wither", "attack": 5, "range": 1, "shape": [[1], [1], [1]] },
-    { "id": "drowned-battle-axe", "name": "浸水战斧", "type": "weapon", "weaponClass": "axe", "attribute": "drown", "attack": 6, "range": 1, "shape": [[1], [1], [1], [1]] },
-    { "id": "seared-dagger", "name": "烧灼匕首", "type": "weapon", "weaponClass": "dagger", "attribute": "scorch", "attack": 2, "range": 1, "shape": [[1]] },
-    { "id": "bone-dagger", "name": "枯骨短刃", "type": "weapon", "weaponClass": "dagger", "attribute": "wither", "attack": 3, "range": 1, "shape": [[1]] },
-    { "id": "drowned-ritual-knife", "name": "溺亡祭刀", "type": "weapon", "weaponClass": "dagger", "attribute": "drown", "attack": 4, "range": 1, "shape": [[1], [1]] },
-    { "id": "charred-short-spear", "name": "炭化短矛", "type": "weapon", "weaponClass": "polearm", "attribute": "scorch", "attack": 3, "range": 2, "shape": [[1], [1], [1]] },
-    { "id": "thorn-long-spear", "name": "荆棘长枪", "type": "weapon", "weaponClass": "polearm", "attribute": "wither", "attack": 4, "range": 2, "shape": [[1], [1], [1], [1]] },
-    { "id": "sunken-hook-spear", "name": "沉船钩枪", "type": "weapon", "weaponClass": "polearm", "attribute": "drown", "attack": 5, "range": 2, "shape": [[1], [1], [1], [1]] },
-    { "id": "scorched-iron-club", "name": "焦铁棒", "type": "weapon", "weaponClass": "heavy", "attribute": "scorch", "attack": 6, "range": 1, "shape": [[1], [1], [1]] },
-    { "id": "rotten-wood-maul", "name": "腐木大槌", "type": "weapon", "weaponClass": "heavy", "attribute": "wither", "attack": 7, "range": 1, "shape": [[1], [1], [1], [1]] },
-    { "id": "drowned-iron-hammer", "name": "沉铁战锤", "type": "weapon", "weaponClass": "heavy", "attribute": "drown", "attack": 8, "range": 1, "shape": [[1], [1], [1], [1]] },
-    { "id": "singed-shortbow", "name": "烧弦短弓", "type": "weapon", "weaponClass": "bow", "attribute": "scorch", "attack": 3, "range": 3, "shape": [[1], [1]] },
-    { "id": "vine-hunting-bow", "name": "枯藤猎弓", "type": "weapon", "weaponClass": "bow", "attribute": "wither", "attack": 4, "range": 3, "shape": [[1], [1], [1]] },
-    { "id": "sunken-longbow", "name": "沉木长弓", "type": "weapon", "weaponClass": "bow", "attribute": "drown", "attack": 5, "range": 3, "shape": [[1], [1], [1], [1]] }
+    {
+      "id": "rust-sword",
+      "name": "锈蚀短剑",
+      "type": "weapon",
+      "weaponClass": "sword",
+      "attribute": "scorch",
+      "attack": 3,
+      "range": 1,
+      "shape": [
+        [
+          1
+        ],
+        [
+          1
+        ]
+      ],
+      "energyCost": 3,
+      "description": "攻击后，下一次受到的近战攻击伤害降低30%。"
+    },
+    {
+      "id": "silver-guard",
+      "name": "沉银守剑",
+      "type": "weapon",
+      "weaponClass": "sword",
+      "attribute": "drown",
+      "attack": 4,
+      "range": 1,
+      "shape": [
+        [
+          1
+        ],
+        [
+          1
+        ],
+        [
+          1
+        ]
+      ],
+      "energyCost": 3,
+      "description": "与防具四向相邻时，攻击+1。"
+    },
+    {
+      "id": "ember-axe",
+      "name": "焦痕手斧",
+      "type": "weapon",
+      "weaponClass": "axe",
+      "attribute": "scorch",
+      "attack": 4,
+      "range": 1,
+      "shape": [
+        [
+          1
+        ],
+        [
+          1
+        ]
+      ],
+      "energyCost": 4,
+      "description": "主攻击击杀后，对目标八邻域已现身敌人造成2点伤害。"
+    },
+    {
+      "id": "root-axe",
+      "name": "腐根战斧",
+      "type": "weapon",
+      "weaponClass": "axe",
+      "attribute": "wither",
+      "attack": 5,
+      "range": 1,
+      "shape": [
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "energyCost": 4,
+      "description": "攻击满血敌人时，伤害+2。"
+    },
+    {
+      "id": "bone-knife",
+      "name": "枯骨匕",
+      "type": "weapon",
+      "weaponClass": "dagger",
+      "attribute": "wither",
+      "attack": 2,
+      "range": 1,
+      "shape": [
+        [
+          1
+        ]
+      ],
+      "energyCost": 2,
+      "description": "主攻击击杀返还1体力。"
+    },
+    {
+      "id": "tide-blade",
+      "name": "潮步刃",
+      "type": "weapon",
+      "weaponClass": "dagger",
+      "attribute": "drown",
+      "attack": 3,
+      "range": 1,
+      "shape": [
+        [
+          1
+        ],
+        [
+          1
+        ]
+      ],
+      "energyCost": 2,
+      "description": "上次实际行动是主动移动时，伤害+2。"
+    },
+    {
+      "id": "ember-spear",
+      "name": "炭纹长枪",
+      "type": "weapon",
+      "weaponClass": "polearm",
+      "attribute": "scorch",
+      "attack": 3,
+      "range": 2,
+      "shape": [
+        [
+          1
+        ],
+        [
+          1
+        ],
+        [
+          1
+        ]
+      ],
+      "energyCost": 4,
+      "description": "距离2命中时，击退1格。"
+    },
+    {
+      "id": "thorn-spear",
+      "name": "荆钩枪",
+      "type": "weapon",
+      "weaponClass": "polearm",
+      "attribute": "wither",
+      "attack": 4,
+      "range": 2,
+      "shape": [
+        [
+          1
+        ],
+        [
+          1
+        ],
+        [
+          1
+        ],
+        [
+          1
+        ]
+      ],
+      "energyCost": 4,
+      "description": "对上一敌人阶段主动移动过的敌人，伤害+2。"
+    },
+    {
+      "id": "wood-bow",
+      "name": "沉木短弓",
+      "type": "weapon",
+      "weaponClass": "bow",
+      "attribute": "drown",
+      "attack": 3,
+      "range": 3,
+      "shape": [
+        [
+          1
+        ],
+        [
+          1
+        ]
+      ],
+      "energyCost": 4,
+      "description": "在当前最大射程命中时，伤害+2。"
+    },
+    {
+      "id": "ash-bow",
+      "name": "灰烬猎弓",
+      "type": "weapon",
+      "weaponClass": "bow",
+      "attribute": "scorch",
+      "attack": 4,
+      "range": 3,
+      "shape": [
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "energyCost": 4,
+      "description": "站在房间最外圈时，射程+1。"
+    },
+    {
+      "id": "rock-maul",
+      "name": "枯岩重锤",
+      "type": "weapon",
+      "weaponClass": "heavy",
+      "attribute": "wither",
+      "attack": 6,
+      "range": 1,
+      "shape": [
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "energyCost": 5,
+      "description": "无视护盾与重甲防御特性。"
+    },
+    {
+      "id": "bell-maul",
+      "name": "沉铁钟锤",
+      "type": "weapon",
+      "weaponClass": "heavy",
+      "attribute": "drown",
+      "attack": 7,
+      "range": 1,
+      "shape": [
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "energyCost": 5,
+      "description": "上次实际行动不是攻击时，伤害+3。"
+    },
+    {
+      "id": "wall-sword",
+      "name": "城壁剑",
+      "type": "weapon",
+      "weaponClass": "sword",
+      "attribute": "drown",
+      "attack": 5,
+      "range": 1,
+      "shape": [
+        [
+          1
+        ],
+        [
+          1
+        ],
+        [
+          1
+        ]
+      ],
+      "energyCost": 3,
+      "description": "攻击前有护甲时伤害+2，攻击后消耗最多2护甲。",
+      "crafted": true
+    },
+    {
+      "id": "return-axe",
+      "name": "回旋斧",
+      "type": "weapon",
+      "weaponClass": "axe",
+      "attribute": "scorch",
+      "attack": 6,
+      "range": 1,
+      "shape": [
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "energyCost": 4,
+      "description": "主攻击击杀后，下一次用其他武器攻击伤害+2、体力-1；不可叠加。",
+      "crafted": true
+    },
+    {
+      "id": "erosion-knife",
+      "name": "蚀骨刃",
+      "type": "weapon",
+      "weaponClass": "dagger",
+      "attribute": "wither",
+      "attack": 4,
+      "range": 1,
+      "shape": [
+        [
+          1
+        ],
+        [
+          1
+        ]
+      ],
+      "energyCost": 2,
+      "description": "主攻击克制击杀返还2体力，其他击杀返还1体力。",
+      "crafted": true
+    },
+    {
+      "id": "soul-spear",
+      "name": "锁魂枪",
+      "type": "weapon",
+      "weaponClass": "polearm",
+      "attribute": "scorch",
+      "attack": 5,
+      "range": 2,
+      "shape": [
+        [
+          1
+        ],
+        [
+          1
+        ],
+        [
+          1
+        ],
+        [
+          1
+        ]
+      ],
+      "energyCost": 4,
+      "description": "距离2命中击退1格；撞墙或敌人额外造成3伤害，仅伤害被推动者。",
+      "crafted": true
+    },
+    {
+      "id": "eagle-bow",
+      "name": "鹰眼弓",
+      "type": "weapon",
+      "weaponClass": "bow",
+      "attribute": "drown",
+      "attack": 5,
+      "range": 4,
+      "shape": [
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          1,
+          0
+        ]
+      ],
+      "energyCost": 4,
+      "description": "在当前最大射程攻击时，伤害+3。",
+      "crafted": true
+    },
+    {
+      "id": "mountain-maul",
+      "name": "断岳槌",
+      "type": "weapon",
+      "weaponClass": "heavy",
+      "attribute": "wither",
+      "attack": 9,
+      "range": 1,
+      "shape": [
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          1,
+          0
+        ]
+      ],
+      "energyCost": 5,
+      "description": "物品外缘四向无其他物品时，攻击+4；边界不算占用。",
+      "crafted": true
+    }
   ],
   "consumables": [
-    { "id": "armor-potion", "name": "\u5c0f\u94c1\u7532\u836f\u5242", "type": "armor", "armor": 5, "supplyWeight": 2, "shape": [[1]] },
-    { "id": "large-armor-potion", "name": "\u5927\u94c1\u7532\u836f\u5242", "type": "armor", "armor": 10, "minFloor": 3, "supplyWeight": 2, "shape": [[1], [1]] },
-    { "id": "small-potion", "name": "\u5c0f\u751f\u547d\u836f\u6c34", "type": "potion", "heal": 6, "supplyWeight": 2, "shape": [[1]] },
-    { "id": "large-potion", "name": "\u5927\u751f\u547d\u836f\u6c34", "type": "potion", "heal": 12, "minFloor": 3, "supplyWeight": 2, "shape": [[1], [1]] },
-    { "id": "energy-potion", "name": "\u5c0f\u4f53\u529b\u836f\u5242", "type": "energy", "energy": 2, "supplyWeight": 2, "shape": [[1]] },
-    { "id": "battle-charm", "name": "\u70c8\u7130\u7b26\u5492", "type": "buff", "attackBonus": 4, "supplyWeight": 1, "shape": [[1]] }
+    {
+      "id": "health-potion",
+      "name": "生命药",
+      "type": "potion",
+      "heal": 5,
+      "description": "恢复5生命。",
+      "shape": [
+        [
+          1
+        ]
+      ],
+      "energyCost": 0
+    },
+    {
+      "id": "iron-powder",
+      "name": "铁肤散",
+      "type": "armor",
+      "armor": 5,
+      "description": "获得5护甲。",
+      "shape": [
+        [
+          1
+        ]
+      ],
+      "energyCost": 0
+    },
+    {
+      "id": "energy-potion",
+      "name": "体力药",
+      "type": "energy",
+      "energy": 3,
+      "description": "恢复3体力。",
+      "shape": [
+        [
+          1
+        ]
+      ],
+      "energyCost": 0
+    },
+    {
+      "id": "cleanse",
+      "name": "净化散",
+      "type": "cleanse",
+      "description": "清除中毒与燃烧。",
+      "shape": [
+        [
+          1
+        ]
+      ],
+      "energyCost": 0
+    },
+    {
+      "id": "rage-wine",
+      "name": "狂战酒",
+      "type": "buff",
+      "attribute": "scorch",
+      "attackBonus": 4,
+      "description": "立即失去2生命（可致命），下一次攻击+4；同名增益不叠加。",
+      "shape": [
+        [
+          1
+        ]
+      ],
+      "energyCost": 0
+    },
+    {
+      "id": "teleport",
+      "name": "换位符",
+      "type": "teleport",
+      "attribute": "drown",
+      "description": "移动到曼哈顿距离3内已翻开的空格；只推进1回合，不累计移动步数。",
+      "shape": [
+        [
+          1
+        ]
+      ],
+      "energyCost": 0
+    }
   ],
   "enemyLoot": [
-    { "id": "ghoul-bone-stinger", "name": "猩鬼骨刺", "type": "weapon", "dropOnly": true, "weaponClass": "dagger", "attribute": "scorch", "attack": 6, "range": 1, "shape": [[1]] },
-    { "id": "venom-sac", "name": "\u6bd2\u56ca", "type": "buff", "dropOnly": true, "attackBonus": 4, "shape": [[1]] },
-    { "id": "shell-fragment", "name": "\u7532\u58f3\u788e\u7247", "type": "armor", "dropOnly": true, "armor": 5, "shape": [[1]] },
-    { "id": "ghost-bone-spear", "name": "幽灵骨矛", "type": "weapon", "dropOnly": true, "weaponClass": "polearm", "attribute": "drown", "attack": 7, "range": 2, "shape": [[1], [1], [1]] },
-    { "id": "shell-shatter-maul", "name": "甲壳碎锤", "type": "weapon", "dropOnly": true, "weaponClass": "heavy", "attribute": "wither", "attack": 10, "range": 1, "shape": [[1], [1], [1], [1]] },
-    { "id": "beast-fang", "name": "\u517d\u7259", "type": "buff", "dropOnly": true, "attackBonus": 4, "attackTarget": "melee", "shape": [[1]] },
-    { "id": "moss-ointment", "name": "\u82d4\u85d3\u836f\u818f", "type": "potion", "dropOnly": true, "heal": 6, "shape": [[1]] },
-     { "id": "tombguard-remnant-sword", "name": "墓卫残剑", "type": "weapon", "dropOnly": true, "weaponClass": "sword", "attribute": "drown", "attack": 7, "range": 1, "shape": [[1], [1], [1]] }
+    {
+      "id": "shield-core",
+      "name": "盾芯",
+      "type": "material",
+      "attribute": null,
+      "shape": [
+        [
+          1
+        ]
+      ],
+      "description": "与防具四向相邻时，该防具获得或补足的护甲目标值+1。",
+      "dropOnly": true
+    },
+    {
+      "id": "spring",
+      "name": "弹簧",
+      "type": "material",
+      "attribute": null,
+      "shape": [
+        [
+          1
+        ]
+      ],
+      "description": "相邻武器主攻击击杀后，下一次使用其他武器攻击体力-1；不叠加。",
+      "dropOnly": true
+    },
+    {
+      "id": "venom-sac",
+      "name": "毒囊",
+      "type": "material",
+      "attribute": "wither",
+      "shape": [
+        [
+          1
+        ]
+      ],
+      "description": "相邻武器命中使目标中毒：每回合1伤害，持续2回合；再次命中刷新持续时间。",
+      "dropOnly": true
+    },
+    {
+      "id": "chain",
+      "name": "锁链",
+      "type": "material",
+      "attribute": null,
+      "shape": [
+        [
+          1
+        ],
+        [
+          1
+        ]
+      ],
+      "description": "相邻长柄武器的击退碰撞伤害+2。",
+      "dropOnly": true
+    },
+    {
+      "id": "scope",
+      "name": "瞄准镜",
+      "type": "material",
+      "attribute": "drown",
+      "shape": [
+        [
+          1
+        ],
+        [
+          1
+        ]
+      ],
+      "description": "相邻弓射程+1。",
+      "dropOnly": true
+    },
+    {
+      "id": "weight",
+      "name": "配重块",
+      "type": "material",
+      "attribute": null,
+      "shape": [
+        [
+          1
+        ],
+        [
+          1
+        ]
+      ],
+      "description": "相邻重武器攻击+2，体力消耗+1。",
+      "dropOnly": true
+    }
   ],
-  "merchantWeapons": [
-    { "id": "blacksteel-knight-sword", "name": "黑钢骑士剑", "type": "weapon", "merchantOnly": true, "weaponClass": "sword", "attribute": "drown", "attack": 6, "range": 1, "shape": [[1], [1], [1]] },
-    { "id": "ashen-execution-axe", "name": "灰烬处刑斧", "type": "weapon", "merchantOnly": true, "weaponClass": "axe", "attribute": "scorch", "attack": 8, "range": 1, "shape": [[1], [1], [1], [1]] },
-    { "id": "bone-piercing-dagger", "name": "枯骨刺刃", "type": "weapon", "merchantOnly": true, "weaponClass": "dagger", "attribute": "wither", "attack": 5, "range": 1, "shape": [[1], [1]] },
-    { "id": "abyssal-long-spear", "name": "深渊长枪", "type": "weapon", "merchantOnly": true, "weaponClass": "polearm", "attribute": "drown", "attack": 7, "range": 2, "shape": [[1], [1], [1], [1]] },
-    { "id": "forge-warhammer", "name": "熔炉战锤", "type": "weapon", "merchantOnly": true, "weaponClass": "heavy", "attribute": "scorch", "attack": 11, "range": 1, "shape": [[1], [1], [1], [1]] },
-    { "id": "composite-wood-bow", "name": "枯木复合弓", "type": "weapon", "merchantOnly": true, "weaponClass": "bow", "attribute": "wither", "attack": 7, "range": 3, "shape": [[1], [1], [1]] }
+  "merchantWeapons": [],
+  "defenses": [
+    {
+      "id": "wood-shield",
+      "name": "木盾",
+      "type": "defense",
+      "attribute": null,
+      "shape": [
+        [
+          1
+        ],
+        [
+          1
+        ]
+      ],
+      "description": "每第2次受到敌人普通攻击前，将护甲补足至3。"
+    },
+    {
+      "id": "thorn-shield",
+      "name": "棘盾",
+      "type": "defense",
+      "attribute": "wither",
+      "shape": [
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "description": "受到近战普通攻击并损失生命后，对攻击者造成2伤害。"
+    },
+    {
+      "id": "tide-shield",
+      "name": "潮镜盾",
+      "type": "defense",
+      "attribute": "drown",
+      "shape": [
+        [
+          1
+        ],
+        [
+          1
+        ],
+        [
+          1
+        ]
+      ],
+      "description": "沉溺武器命中后，将护甲补足至2。"
+    },
+    {
+      "id": "red-shield",
+      "name": "赤鳞盾",
+      "type": "defense",
+      "attribute": "scorch",
+      "shape": [
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "description": "护甲被敌人打空后，下一次灼热武器攻击+2；不叠加。"
+    },
+    {
+      "id": "light-armor",
+      "name": "轻甲",
+      "type": "defense",
+      "attribute": null,
+      "shape": [
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "description": "首次进入新房间时获得3护甲。"
+    },
+    {
+      "id": "red-armor",
+      "name": "赤鳞甲",
+      "type": "defense",
+      "attribute": "scorch",
+      "shape": [
+        [
+          1
+        ],
+        [
+          1
+        ],
+        [
+          1
+        ]
+      ],
+      "description": "生命不高于50%时，灼热武器命中后将护甲补足至3。"
+    },
+    {
+      "id": "vine-armor",
+      "name": "腐藤甲",
+      "type": "defense",
+      "attribute": "wither",
+      "shape": [
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "description": "八邻域存在未翻牌时，敌人普通攻击伤害-1。"
+    },
+    {
+      "id": "tide-cloak",
+      "name": "潮行披风",
+      "type": "defense",
+      "attribute": "drown",
+      "shape": [
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "description": "受到远程普通攻击时，伤害-1。"
+    }
+  ],
+  "recipes": [
+    {
+      "a": "silver-guard",
+      "b": "shield-core",
+      "result": "wall-sword"
+    },
+    {
+      "a": "ember-axe",
+      "b": "spring",
+      "result": "return-axe"
+    },
+    {
+      "a": "bone-knife",
+      "b": "venom-sac",
+      "result": "erosion-knife"
+    },
+    {
+      "a": "ember-spear",
+      "b": "chain",
+      "result": "soul-spear"
+    },
+    {
+      "a": "wood-bow",
+      "b": "scope",
+      "result": "eagle-bow"
+    },
+    {
+      "a": "rock-maul",
+      "b": "weight",
+      "result": "mountain-maul"
+    }
   ]
 }

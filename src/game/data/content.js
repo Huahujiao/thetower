@@ -1,6 +1,6 @@
 import { enemyDefinitionFor, getEnemyDefinition } from './enemies.js'
 import catalog from './catalog.json' with { type: 'json' }
-import { getRelicDefinition } from './relics.js'
+import { getRelicDefinition, RELIC_DEFS } from './relics.js'
 
 const WEAPON_ENERGY_COSTS = Object.freeze({ dagger: 2, sword: 3, axe: 4, polearm: 4, bow: 4, heavy: 5 })
 function weaponDefinition(source) {
@@ -11,7 +11,9 @@ const CONSUMABLES = Object.freeze(catalog.consumables)
 const ENEMY_LOOT = Object.freeze(catalog.enemyLoot || [])
 const MERCHANT_WEAPONS = Object.freeze(catalog.merchantWeapons || [])
 const BOSS = Object.freeze(catalog.boss)
-const ALL_ITEM_DEFS = Object.freeze([...WEAPONS, ...CONSUMABLES, ...ENEMY_LOOT, ...MERCHANT_WEAPONS])
+export const DEFENSES = Object.freeze(catalog.defenses)
+export const RECIPES = Object.freeze(catalog.recipes)
+export const ALL_ITEM_DEFS = Object.freeze([...WEAPONS, ...CONSUMABLES, ...DEFENSES, ...ENEMY_LOOT, ...MERCHANT_WEAPONS, ...RELIC_DEFS.map(r => ({ ...r, type: 'relic', relicId: r.id, shape: [[1]], rotatable: false }))])
 const ITEM_BY_ID = new Map(ALL_ITEM_DEFS.map((definition) => [definition.id, definition]))
 
 let serial = 0
@@ -48,6 +50,7 @@ export function getItemDefinition(id) { return ITEM_BY_ID.get(id) || null }
 
 export function makeItemById(id, random = Math.random) {
   const definition = getItemDefinition(id)
+  if (definition?.type === 'relic') return makeRelicItem(id)
   return definition ? makeItem(definition, random) : null
 }
 
@@ -58,6 +61,8 @@ export function makeRelicItem(relicOrId) {
   return {
     type: 'relic',
     relicId: definition.id,
+    id: definition.id,
+    attribute: definition.attribute,
     name: definition.name,
     description: definition.description,
     shape: [[1]],
@@ -83,13 +88,13 @@ export function randomConsumableDefinition(floor, random = Math.random) {
 }
 
 export function randomItem(floor, random = Math.random) {
-  const weaponPool = WEAPONS.filter((weapon) => floor <= 2 || weapon.id !== 'rust-sword')
+  const weaponPool = [...WEAPONS.filter((weapon) => !weapon.crafted), ...DEFENSES]
   if (random() < 0.42) return makeItem(weaponPool[Math.floor(random() * weaponPool.length)])
   return makeItem(randomConsumableDefinition(floor, random))
 }
 
 export function randomWeapon(floor, random = Math.random) {
-  const weaponPool = WEAPONS.filter((weapon) => floor <= 2 || weapon.id !== 'rust-sword')
+  const weaponPool = WEAPONS.filter((weapon) => !weapon.crafted)
   return makeItem(weaponPool[Math.floor(random() * weaponPool.length)], random)
 }
 

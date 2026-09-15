@@ -2,7 +2,7 @@ import { createEmitter } from './core/emitter.js'
 import { chebyshev, combatDistance, manhattan, neighbors8 } from './core/geometry.js'
 import { TURN_KINDS, TurnLedger } from './core/turns.js'
 import { attributeLabel } from './data/attributes.js'
-import { createGoldEntity, createLootEntity, createMinion, createRelicEntity, getItemDefinition, makeItemById, makeRelicItem, randomWeapon, starterWeapon, synchronizeEntityIds } from './data/content.js'
+import { createLootEntity, createMinion, getItemDefinition, makeItemById, makeRelicItem, starterWeapon, synchronizeEntityIds } from './data/content.js'
 import { enemyBehaviorLabel, enemyFeatureLabel } from './data/enemy-features.js'
 import { getMerchantDefinition, merchantSellPrice, refreshMerchantSlot, refreshMerchantStock } from './data/merchants.js'
 import { buildRelicChoices, getRelicDefinition } from './data/relics.js'
@@ -12,7 +12,10 @@ import { getTrapDefinition } from './data/traps.js'
 import { createLinearDungeon, Dungeon } from './model/dungeon.js'
 import { BackpackGrid } from './model/backpack.js'
 import { RelicCollection } from './model/relics.js'
-import { attackAttributeModifier, computeAttackDamage } from './rules/modifiers.js'
+import { resolveDamage } from './rules/modifiers.js'
+import { ItemRules } from './rules/items.js'
+import { TACTICAL_LAYOUT_LABELS } from './model/tactical-layouts.js'
+import { RECIPES } from './data/content.js'
 import { RelicEngine } from './rules/relics.js'
 import { stepEnemy } from './rules/enemies.js'
 import { findAttackPath, findDoorPath, findInteractionPath, findPath, findRevealPath } from './rules/pathfinding.js'
@@ -22,11 +25,11 @@ import { terrainDamageModifiers } from './rules/terrain.js'
 export const INVENTORY_COLUMNS = 9
 export const INVENTORY_ROWS = 5
 export const INVENTORY_CAPACITY = INVENTORY_COLUMNS * INVENTORY_ROWS
-export const RELIC_SOFT_LIMIT = 5
+export const RELIC_SOFT_LIMIT = Infinity
 export const ENERGY_MAX = 10
 export const SAVE_KEY = 'grid_flip_adventure_v2'
 // This release stores relics as one-cell backpack items. Old saves are intentionally discarded.
-export const SAVE_VERSION = 21
+export const SAVE_VERSION = 22
 
 function clone(value) { return JSON.parse(JSON.stringify(value)) }
 
@@ -43,6 +46,7 @@ const DETAIL_LABELS = Object.freeze({
   weapon: '\u6b66\u5668',
   potion: '\u836f\u5242',
   armor: '\u62a4\u7532',
+  defense: '防具', material: '合成材料', cleanse: '净化', teleport: '换位符',
   buff: '\u589e\u76ca',
   relic: '\u5723\u9057\u7269',
   enemy: '\u654c\u4eba',
@@ -75,10 +79,7 @@ const WEAPON_CLASS_LABELS = Object.freeze({
 
 function weaponClassLabel(value) { return WEAPON_CLASS_LABELS[value] || value || '\u6b66\u5668' }
 
-function weaponAttackRange(weapon, player = null) {
-  const base = Math.max(1, Number(weapon?.range) || 1)
-  return base + (weapon?.weaponClass === 'bow' && hasTalent(player, 'bow-range') ? 1 : 0)
-}
+function weaponAttackRange(weapon) { return Math.max(1, Number(weapon?.range) || 1) }
 
 function weaponEnergyCost(weapon) {
   const fallback = { dagger: 2, sword: 3, axe: 4, polearm: 4, bow: 4, heavy: 5 }[weapon?.weaponClass] || 3
@@ -132,7 +133,7 @@ const MERCHANT_SERVICE_LABELS = Object.freeze({
 function detailForItem(item, player = null) {
   const type = DETAIL_LABELS[item?.type] || '\u7269\u54c1'
   const lines = []
-  const badges = item?.type === 'weapon' && item.attribute ? [attributeLabel(item.attribute)] : []
+  const badges = item?.attribute ? [attributeLabel(item.attribute)] : []
   if (item?.type === 'weapon') {
     lines.push(`${DETAIL_LABELS.attack} ${item.attack || 0}`)
     lines.push(`${DETAIL_LABELS.range} ${weaponAttackRange(item, player)}`)
@@ -148,7 +149,8 @@ function detailForItem(item, player = null) {
     const target = item.attackTarget === 'melee' ? '\u4e0b\u6b21\u8fd1\u6218\u653b\u51fb' : DETAIL_LABELS.nextAttack
     lines.push(`${target} +${item.attackBonus || 0}`)
   }
-  const description = item?.type === 'relic' ? item.description || '' : ''
+  const description = item?.description || ''
+  lines.push(`占格 ${item?.shape?.flat().filter(Boolean).length || 1}`)
   return { title: item?.name || type, type, icon: item?.type || 'item', badges, lines, description }
 }
 
@@ -200,9 +202,7 @@ export class GameRun {
       experience: 0,
       experienceToNext: experienceToNextLevel(PROGRESSION.startingLevel),
       talents: [],
-      talentRuntime: { pending: [], bowFirst: {}, drownDelay: {}, roomLastStandUsed: false, bodyStrength: 0 },
-      pendingAttackBonus: 0,
-      pendingAttackBuffs: [],
+      talentRuntime: { bodyStrength: 0 },
       parry: null,
       poisonedTurns: 0,
       poisonDamage: 0,
@@ -259,8 +259,12 @@ export class GameRun {
   relicOverload() { return Math.max(0, this.relicCount() - RELIC_SOFT_LIMIT) }
   canFitRelic(id) { return !!getRelicDefinition(id) && this.backpack.usedCells < this.backpack.capacity }
 
-  weaponRange(weapon) { return weaponAttackRange(weapon, this.player) }
-  weaponEnergyCost(weapon) { return weaponEnergyCost(weapon) }
+  get itemRules() { return new ItemRules(this) }
+  weaponRange(weapon, position) { return this.itemRules.range(weapon, position) }
+  weaponEnergyCost(weapon) { return this.itemRules.cost(weapon) }
+  energyAfterMovement(steps = 0) {
+    return energyAfterMovement(this.player, steps)
+  }
 
   _recoverEnergy(amount = 0) {
     const recovery = Math.max(0, Math.floor(Number(amount) || 0))
@@ -280,36 +284,8 @@ export class GameRun {
   _talentRuntime() {
     if (!this.player.talentRuntime || typeof this.player.talentRuntime !== 'object') this.player.talentRuntime = {}
     const state = this.player.talentRuntime
-    if (!Array.isArray(state.pending)) state.pending = []
-    if (!state.bowFirst || typeof state.bowFirst !== 'object') state.bowFirst = {}
-    if (!state.drownDelay || typeof state.drownDelay !== 'object') state.drownDelay = {}
     state.bodyStrength = Math.max(0, Math.floor(Number(state.bodyStrength) || 0))
     return state
-  }
-
-  _queueTalentBuff(buff) {
-    if (!buff || !Number.isFinite(buff.amount) || buff.amount === 0) return false
-    this._talentRuntime().pending.push({ ...buff, amount: Math.floor(buff.amount) })
-    return true
-  }
-
-  _queueTalentFlag(flag) {
-    if (!flag || typeof flag !== 'object') return false
-    this._talentRuntime().pending.push({ ...flag })
-    return true
-  }
-
-  _consumeTalentBuffs(weapon, enemy) {
-    const state = this._talentRuntime()
-    const matching = state.pending.filter((buff) => {
-      if (!Number.isFinite(buff.amount)) return false
-      if (buff.weaponClass && buff.weaponClass !== weapon?.weaponClass) return false
-      if (buff.attribute && buff.attribute !== weapon?.attribute) return false
-      if (buff.targetId && buff.targetId !== enemy?.id) return false
-      return true
-    })
-    state.pending = state.pending.filter((buff) => !matching.includes(buff))
-    return matching
   }
 
   remainingEnemies(room = this.currentRoom) {
@@ -324,18 +300,9 @@ export class GameRun {
     return this.relicRuntime.__rooms[key]
   }
 
-  _relicRoomRuntime(id, room = this.currentRoom) {
-    const key = room?.id
-    if (!key) return {}
-    if (!this.relicRuntime[id] || typeof this.relicRuntime[id] !== 'object') this.relicRuntime[id] = {}
-    if (!this.relicRuntime[id].rooms || typeof this.relicRuntime[id].rooms !== 'object') this.relicRuntime[id].rooms = {}
-    if (!this.relicRuntime[id].rooms[key] || typeof this.relicRuntime[id].rooms[key] !== 'object') this.relicRuntime[id].rooms[key] = {}
-    return this.relicRuntime[id].rooms[key]
-  }
-
   countFlippableCards(room = this.currentRoom) {
     if (!room) return 0
-    const revealDistance = this.hasActiveRelic('r-long-flip') ? 2 : 1
+    const revealDistance = 1
     let count = 0
     for (let r = 0; r < room.height; r++) {
       for (let c = 0; c < room.width; c++) {
@@ -384,76 +351,6 @@ export class GameRun {
     })
   }
 
-  _addRandomWeaponToBackpack() {
-    const weapon = randomWeapon(this.currentRoom?.floor || 1, this.random)
-    if (!weapon || !this.backpack.canFit(weapon)) return false
-    this._putInInventory(weapon)
-    this._log(`\u88c5\u5907\u81ea\u52a8\u5165\u5305\uff1a${weapon.name}\u3002`)
-    return true
-  }
-
-  _splashEnemies(center, damage, { source = 'relic:splash' } = {}) {
-    const room = this.currentRoom
-    if (!room || !center) return 0
-    let hits = 0
-    for (const position of neighbors8(center, room.width, room.height)) {
-      const enemy = room.entityAt(position)
-      if (enemy?.kind !== 'enemy' || !room.isRevealed(position)) continue
-      this._damageEnemy(enemy, damage, { source })
-      hits += 1
-    }
-    return hits
-  }
-
-  _deathExplosion(center, damage = 2) {
-    const room = this.currentRoom
-    if (!room || !center) return 0
-    let hits = 0
-    for (const position of neighbors8(center, room.width, room.height)) {
-      if (!room.isRevealed(position)) this._revealTile(position, { cause: 'relic:death-explosion' })
-      const enemy = room.entityAt(position)
-      if (enemy?.kind !== 'enemy') continue
-      this._damageEnemy(enemy, damage, { source: 'relic:death-explosion' })
-      hits += 1
-    }
-    return hits
-  }
-
-  _ricochetBehind(enemy, damage) {
-    const room = this.currentRoom
-    if (!room || !enemy?.pos || damage <= 0) return false
-    const directionC = Math.sign(enemy.pos.c - this.player.pos.c)
-    const directionR = Math.sign(enemy.pos.r - this.player.pos.r)
-    if (directionC === 0 && directionR === 0) return false
-    let affected = false
-    for (const distance of [1]) {
-      const destination = {
-        c: enemy.pos.c + directionC * distance,
-        r: enemy.pos.r + directionR * distance,
-      }
-      if (!room.contains(destination)) continue
-      const wasHidden = !room.isRevealed(destination)
-      if (wasHidden) this._revealTile(destination, { cause: 'relic:backline-ricochet' })
-      const target = room.entityAt(destination)
-      if (!wasHidden && target?.kind === 'enemy') this._damageEnemy(target, damage, { source: 'relic:backline-ricochet' })
-      if (wasHidden || target?.kind === 'enemy') affected = true
-    }
-    return affected
-  }
-
-  _tryTenthAttackTransmutation(enemy) {
-    if (!this.hasActiveRelic('r-tenth-alchemy') || !enemy || !this.currentRoom?.entity(enemy.id)) return false
-    if (!this.relicRuntime['r-tenth-alchemy'] || typeof this.relicRuntime['r-tenth-alchemy'] !== 'object') this.relicRuntime['r-tenth-alchemy'] = {}
-    const state = this.relicRuntime['r-tenth-alchemy']
-    state.attacks = (Math.max(0, Number(state.attacks) || 0) % 10) + 1
-    if (state.attacks !== 10) return false
-    state.attacks = 0
-    const gold = Math.max(0, Math.floor(enemy.hp || 0))
-    this.currentRoom.removeEntity(enemy.id)
-    if (gold > 0) this.currentRoom.addEntity(createGoldEntity(gold, enemy.pos))
-    this._log(`${enemy.name}\u88ab\u70bc\u6210\u4e86 ${gold} \u91d1\u5e01\u3002`)
-    return true
-  }
   get merchantEntity() { return this.merchant ? this.currentRoom?.entity(this.merchant.entityId) || null : null }
   get merchantDefinition() { return getMerchantDefinition(this.merchantEntity?.merchantId) }
 
@@ -528,6 +425,11 @@ export class GameRun {
   showItemDetail(item) {
     if (!item) return false
     const detail = detailForItem(item, this.player)
+    if (item.type === 'weapon' && this.backpack.placementOf(item.uid)) {
+      detail.lines[1] = `当前射程 ${this.weaponRange(item)}`
+      detail.lines[2] = `当前体力消耗 ${this.weaponEnergyCost(item)}`
+      detail.lines.push(...this.itemRules.weaponLines(item))
+    }
     if (item.type === 'weapon') {
       const growth = this.weaponGrowth(item)
       if (growth.talents) detail.lines.push(`\u5929\u8d4b ${growth.talents}`)
@@ -569,6 +471,8 @@ export class GameRun {
         `${DETAIL_LABELS.normalAttackCooldown} ${cooldownStatus(entity.attackCooldown, entity.attackCooldownMax)}`,
       ]
       if (features) lines.push(`${DETAIL_LABELS.features} ${features}`)
+      if (entity.itemPoisonTurns > 0) lines.push(`武器附毒：剩余${entity.itemPoisonTurns}回合，每回合1点伤害`)
+      if (entity.nextAttackReduction > 0) lines.push(`应变削弱：下一次普通攻击伤害-${entity.nextAttackReduction}`)
       if (entity.burningTurns > 0) lines.push(`\u71c3\u70e7 ${entity.burningTurns} \u4e2a\u5168\u5c40\u56de\u5408 \u00b7 \u6bcf\u56de\u5408 ${entity.burningDamage || 1} \u70b9`)
       if (entity.deathStatus) lines.push(`\u6b7b\u4ea1\u6548\u679c ${entity.deathStatus} ${entity.deathStatusTurns || 0} \u4e2a\u5168\u5c40\u56de\u5408`)
       if (entity.pullDistance > 0) lines.push(`\u7275\u5f15 ${entity.pullDistance} \u683c`)
@@ -627,14 +531,6 @@ export class GameRun {
       if (action.type === 'armor') this.player.armor += Math.max(0, action.amount || 0)
       if (action.type === 'gold') this.player.gold += Math.max(0, Math.floor(action.amount || 0))
       if (action.type === 'energy') this._recoverEnergy(action.amount)
-      if (action.type === 'relic:war-spirit:lose') {
-        const state = this._relicRoomRuntime('r-war-spirit')
-        state.stacks = Math.max(0, (Number(state.stacks) || 0) - 1)
-      }
-      if (action.type === 'relic:war-spirit:clear') {
-        const state = this._relicRoomRuntime('r-war-spirit')
-        state.stacks = 0
-      }
       if (action.log) this._log(action.log)
     }
   }
@@ -677,7 +573,7 @@ export class GameRun {
 
   tileCanBeFlipped(position) {
     const room = this.currentRoom
-    const revealDistance = this.hasActiveRelic('r-long-flip') ? 2 : 1
+    const revealDistance = 1
     return !!room && !room.isRevealed(position) && !!findRevealPath(room, this.player.pos, position, { distance: revealDistance })
   }
 
@@ -686,9 +582,10 @@ export class GameRun {
     const room = this.currentRoom
     const target = { c, r }
     if (!room?.contains(target)) return null
+    if (this.itemTargeting && this.selectedItem?.type === 'teleport') return null
     if (target.c === this.player.pos.c && target.r === this.player.pos.r && !room.entityAt(target)) return null
     if (!room.isRevealed(target)) {
-      const revealDistance = this.hasActiveRelic('r-long-flip') ? 2 : 1
+      const revealDistance = 1
       const route = findRevealPath(room, this.player.pos, target, { distance: revealDistance })
       return route ? this._pathPreview('flip', target, route.path) : null
     }
@@ -700,8 +597,8 @@ export class GameRun {
     if (entity.kind === 'enemy') {
       const selectedWeapon = this.selectedItem
       if (selectedWeapon?.type !== 'weapon') return null
-      const route = findAttackPath(room, this.player.pos, entity, [{ ...selectedWeapon, range: weaponAttackRange(selectedWeapon, this.player) }])
-      if (!route || energyAfterMovement(this.player, route.path.length) < weaponEnergyCost(selectedWeapon)) return null
+      const route = this._weaponRoute(selectedWeapon, entity)
+      if (!route || this.energyAfterMovement(route.path.length) < this.itemRules.cost(selectedWeapon, route.path.length)) return null
       return this._pathPreview('attack', target, route.path)
     }
     if (entity.kind === 'merchant') {
@@ -760,8 +657,11 @@ export class GameRun {
     if (!Number.isInteger(index) || index < 0 || index >= INVENTORY_CAPACITY) return false
     const item = this.backpack.placementOf(itemUid)?.item
     if (!item) return false
+    const placement = this.backpack.placementOf(item.uid)
+    if (placement.x === index % INVENTORY_COLUMNS && placement.y === Math.floor(index / INVENTORY_COLUMNS)) return false
     const moved = this.backpack.move(item.uid, index % INVENTORY_COLUMNS, Math.floor(index / INVENTORY_COLUMNS))
     if (!moved) return false
+    this._endTurn({ recoverEnergy: false, action: 'organize' })
     this.selectedInventoryIndex = this.backpack.originIndex(this.backpack.placementOf(item.uid))
     this.itemTargeting = false
     this._changed()
@@ -798,27 +698,26 @@ export class GameRun {
 
   rotateSelectedInventory() {
     const item = this.selectedItem
-    if (!this._canOrganizeBackpack() || this.itemTargeting || !item || !this.backpack.rotate(item.uid)) return false
+    if (!this._canOrganizeBackpack() || this.itemTargeting || !item) return false
+    const currentShape = this.backpack.shapeFor(item, this.backpack.placementOf(item.uid).rotation)
+    const nextShape = this.backpack.shapeFor(item, this.backpack.placementOf(item.uid).rotation + 1)
+    if (JSON.stringify(currentShape) === JSON.stringify(nextShape) || !this.backpack.rotate(item.uid)) return false
+    this._endTurn({ recoverEnergy: false, action: 'organize' })
     this.selectedInventoryIndex = this.backpack.originIndex(this.backpack.placementOf(item.uid))
     this._changed()
     return true
   }
 
   discardSelected() {
-    if (this.merchantEntering || this.roomEntering) return false
+    if (!this._canOrganizeBackpack()) return false
     const item = this.selectedItem
     if (item) {
+      this.itemRules.discarded(item)
       this.backpack.removeByUid(item.uid)
       if (item.type === 'relic') this.relics.remove(item.uid) || this.relics.remove(item.relicId)
       this._log(`\u4e22\u5f03 ${item.name}\u3002`)
-      if (item.type === 'weapon' && this.hasActiveRelic('r-scrap-charm')) {
-        const state = this._relicRoomRuntime('r-scrap-charm')
-        if (!state.triggered) {
-          state.triggered = true
-          this.player.armor += 5
-          this._log('\u5e9f\u94c1\u62a4\u7b26\uff1a\u62a4\u7532 +5\u3002')
-        }
-      }
+
+
       this.selectedInventoryIndex = null
     } else return false
     this.itemTargeting = false
@@ -826,56 +725,85 @@ export class GameRun {
     return true
   }
 
+  availableRecipes() {
+    return RECIPES.filter(recipe => this.backpack.items.some(i => i.id === recipe.a) && this.backpack.items.some(i => i.id === recipe.b))
+      .map(recipe => ({ ...recipe, canFit: !!this._craftPreview(recipe) }))
+  }
+
+  _craftPreview(recipe) {
+    const a = this.backpack.items.find(i => i.id === recipe.a)
+    const b = this.backpack.items.find(i => i.id === recipe.b)
+    if (!a || !b || a.uid === b.uid) return null
+    const preview = new BackpackGrid()
+    preview.restore(this.backpack.serialize(item => ({ ...item })))
+    preview.removeByUid(a.uid)
+    preview.removeByUid(b.uid)
+    const result = { ...getItemDefinition(recipe.result), uid: 'craft-preview' }
+    return preview.canFit(result) ? { a, b, result } : null
+  }
+
+  craft(resultId) {
+    if (!this._canOrganizeBackpack() || this.itemTargeting) return false
+    const recipe = RECIPES.find(r => r.result === resultId)
+    const preview = recipe && this._craftPreview(recipe)
+    if (!preview) return this._reject('材料不足或成品没有放置空间。')
+    this.backpack.removeByUid(preview.a.uid)
+    this.backpack.removeByUid(preview.b.uid)
+    const result = makeItemById(recipe.result)
+    this.backpack.add(result)
+    this.selectedInventoryIndex = this.backpack.originIndex(this.backpack.placementOf(result.uid))
+    this._log(`合成：${preview.a.name} + ${preview.b.name} = ${result.name}。`)
+    this._endTurn({ recoverEnergy: false, action: 'craft' })
+    this._changed()
+    return true
+  }
+
   useSelected() {
     const item = this.selectedItem
-    if (!item || !this._canAct()) return false
-    if (item.type === 'energy') {
-      const before = this.player.energy
-      this._recoverEnergy(Number(item.energy) || 0)
-      const itemRecovered = this.player.energy - before
-      const roundRecovered = Math.max(0, Math.min(1, this.player.maxEnergy - this.player.energy))
-      const recovered = itemRecovered + roundRecovered
-      this.backpack.removeByUid(item.uid)
-      this.selectedInventoryIndex = null
-      this.itemTargeting = false
-      this._log(`\u4f7f\u7528 ${item.name}\uff0c\u6062\u590d ${recovered} \u70b9\u4f53\u529b\u3002`)
-      this._endTurn({ turnKind: TURN_KINDS.ACTION })
+    if (!item || !this._canAct() || !['potion', 'armor', 'energy', 'buff', 'cleanse', 'teleport'].includes(item.type)) return false
+    if (item.type === 'teleport') {
+      this.itemTargeting = true
+      this._log('选择距离3以内的已翻开空格；点击使用可继续选取，取消选择可退出。')
       this._changed()
       return true
     }
-    if (item.type === 'potion') {
-      const healed = this._healPlayer(item.heal, { source: 'item:potion', item })
-      this.backpack.removeByUid(item.uid)
-      this.selectedInventoryIndex = null
-      this.itemTargeting = false
-      this._log(`\u4f7f\u7528 ${item.name}\uff0c\u6062\u590d ${healed} HP\u3002`)
-      this._endTurn({ turnKind: TURN_KINDS.ACTION })
-      this._changed()
-      return true
-    }
-    if (item.type === 'armor') {
-      this.player.armor += item.armor
-      this.backpack.removeByUid(item.uid)
-      this.selectedInventoryIndex = null
-      this.itemTargeting = false
-      this._log(`\u4f7f\u7528 ${item.name}\uff0c\u62a4\u7532 +${item.armor}\u3002`)
-      this._endTurn({ turnKind: TURN_KINDS.ACTION })
-      this._changed()
-      return true
+    if (item.type === 'potion') this._healPlayer(item.heal + (this.hasTalent('survival-heal') ? 2 : 0) +
+      (this.hasTalent('survival-last') && this.player.hp <= this.player.maxHp / 4 ? 5 : 0), { source: 'item:potion' })
+    if (item.type === 'energy') this._recoverEnergy(item.energy)
+    if (item.type === 'armor') this.itemRules.armor(item.armor)
+    if (item.type === 'cleanse') {
+      this.player.poisonedTurns = 0
+      this.player.poisonDamage = 0
+      this.player.burningTurns = 0
+      this.player.burningDamage = 0
     }
     if (item.type === 'buff') {
-      this.player.pendingAttackBuffs.push({ amount: item.attackBonus, target: item.attackTarget || 'any' })
-      this.player.pendingAttackBonus = this.player.pendingAttackBuffs.reduce((total, buff) => total + buff.amount, 0)
-      this.backpack.removeByUid(item.uid)
-      this.selectedInventoryIndex = null
-      this.itemTargeting = false
-      const target = item.attackTarget === 'melee' ? '\u4e0b\u6b21\u8fd1\u6218\u653b\u51fb' : '\u4e0b\u6b21\u653b\u51fb'
-      this._log(`\u4f7f\u7528 ${item.name}\uff0c${target} +${item.attackBonus}\u3002`)
-      this._endTurn({ turnKind: TURN_KINDS.ACTION })
-      this._changed()
-      return true
+      this.itemRules.buff('rage-wine', { flat: 4 })
+      this._damagePlayer(2, { source: 'item:rage-wine', ignoreArmor: true })
     }
-    return false
+    this.backpack.removeByUid(item.uid)
+    this.selectedInventoryIndex = null
+    this.itemTargeting = false
+    this._log(`使用 ${item.name}。`)
+    this._endTurn({ recoverEnergy: false, action: 'consume' })
+    this._changed()
+    return true
+  }
+
+  _teleport(position) {
+    const item = this.selectedItem
+    const room = this.currentRoom
+    if (item?.type !== 'teleport' || !room.isRevealed(position) || !room.isEmpty(position) ||
+        manhattan(this.player.pos, position) > 3 || manhattan(this.player.pos, position) === 0) return this._reject('换位目标必须是距离3以内已翻开的其他空格。')
+    this.player.pos = { ...position }
+    this.backpack.removeByUid(item.uid)
+    this.selectedInventoryIndex = null
+    this.itemTargeting = false
+    this._discoverNearbyExitDoors()
+    this._triggerAmbushes(position)
+    this._endTurn({ recoverEnergy: false, action: 'teleport' })
+    this._changed()
+    return true
   }
 
   clickTile(c, r) {
@@ -883,6 +811,7 @@ export class GameRun {
     const room = this.currentRoom
     const position = { c, r }
     if (!room?.contains(position)) return false
+    if (this.itemTargeting && this.selectedItem?.type === 'teleport') return this._teleport(position)
     if (position.c === this.player.pos.c && position.r === this.player.pos.r && !room.entityAt(position)) return false
     if (!room.isRevealed(position)) return this._flipAt(position)
     const entity = room.entityAt(position)
@@ -899,6 +828,7 @@ export class GameRun {
   }
 
   clickDoor(doorId) {
+    if (this.itemTargeting) return false
     if (!this._canAct()) return false
     const door = this.dungeon.door(doorId)
     if (!door || door.roomId !== this.currentRoom?.id || !this.isDoorRevealed(door)) return false
@@ -911,8 +841,8 @@ export class GameRun {
     this.merchantEntering = route.path.length > 0
     const movement = this._walk(route.path)
     if (!movement.stopped) this._endTurn({ turnKind: TURN_KINDS.ACTION })
-    if (movement.stopped || this.gameOver) this.merchantEntering = false
-    if (!movement.stopped && !this.gameOver) {
+    if (movement.stopped || this.gameOver || this.phase !== 'explore') this.merchantEntering = false
+    if (!movement.stopped && !this.gameOver && this.phase === 'explore') {
       this.merchant = { entityId: merchant.id }
       if (this.merchantDefinition?.services.includes('relic-choice') && !merchant.relicOfferResolved) {
         merchant.relicChoices = buildRelicChoices(this.relics, { random: this.random }).map((relic) => relic.id)
@@ -943,8 +873,10 @@ export class GameRun {
     const item = makeItemById(stock.itemId)
     if (!item) return false
     if (!this.backpack.canFit(item)) return this._reject('\u80cc\u5305\u6ca1\u6709\u8db3\u591f\u7a7a\u95f4\u3002')
+    if (item.type === 'relic' && this.relics.has(item.relicId)) return this._reject('已经持有此圣遗物。')
     this.player.gold -= stock.price
-    this._putInInventory(item)
+    if (item.type === 'relic') this.acquireRelic(item.relicId, { notify: false })
+    else this._putInInventory(item)
     this._log(`\u8d2d\u4e70 ${item.name}\uff0c\u82b1\u8d39 ${stock.price} \u91d1\u5e01\u3002`)
     refreshMerchantSlot(merchant, this.currentRoom.floor, index, this.random)
     this._changed()
@@ -968,6 +900,7 @@ export class GameRun {
     const item = this.selectedItem
     if (!item) return this._reject('\u8bf7\u5148\u9009\u4e2d\u8981\u51fa\u552e\u7684\u7269\u54c1\u3002')
     const price = merchantSellPrice(item)
+    this.itemRules.discarded(item)
     this.backpack.removeByUid(item.uid)
     if (item.type === 'relic') this.relics.remove(item.uid) || this.relics.remove(item.relicId)
     this.selectedInventoryIndex = null
@@ -1023,38 +956,8 @@ export class GameRun {
     return true
   }
 
-  _tryGrayDivination(room = this.currentRoom) {
-    if (!this.hasActiveRelic('r-gray-divination') || !room) return false
-    const state = this.relicRuntime['r-gray-divination'] || (this.relicRuntime['r-gray-divination'] = {})
-    if (Math.max(0, Number(state.count) || 0) < 4) return false
-    const candidates = [...room.entities.values()].filter((entity) => {
-      if (!entity?.pos || room.isRevealed(entity.pos) || room.tile(entity.pos)?.peeked) return false
-      return (entity.kind === 'enemy' && entity.attribute) || (entity.kind === 'item' && entity.item?.type === 'weapon' && entity.item.attribute)
-    })
-    if (!candidates.length) return false
-    const target = candidates[Math.floor(this.random() * candidates.length)]
-    const tile = room.tile(target.pos)
-    if (!tile) return false
-    tile.peeked = true
-    state.count = 0
-    this._log('\u7070\u7b7e\u535c\u7b6e\uff1a\u7aa5\u89c1\u4e86\u4e00\u5f20\u5c5e\u6027\u5361\u724c\u3002')
-    return true
-  }
-
-  _recordNeutralFlip(room, position, cause) {
-    if (cause === 'player' && this.hasActiveRelic('r-gray-divination')) {
-      const entity = room?.entityAt(position)
-      const colored = (entity?.kind === 'enemy' && entity.attribute) || (entity?.kind === 'item' && entity.item?.type === 'weapon' && entity.item.attribute)
-      if (!colored) {
-        const state = this.relicRuntime['r-gray-divination'] || (this.relicRuntime['r-gray-divination'] = {})
-        state.count = Math.min(4, Math.max(0, Number(state.count) || 0) + 1)
-      }
-    }
-    return this._tryGrayDivination(room)
-  }
-
   _flipAt(position) {
-    const revealDistance = this.hasActiveRelic('r-long-flip') ? 2 : 1
+    const revealDistance = 1
     const route = findRevealPath(this.currentRoom, this.player.pos, position, { distance: revealDistance })
     if (!route) return this._reject('\u65e0\u6cd5\u8d70\u5230\u8fd9\u5f20\u724c\u7684\u9644\u8fd1\u3002')
     const start = { ...this.player.pos }
@@ -1088,7 +991,6 @@ export class GameRun {
     this.bus.emit('animate:flip', { roomId: room.id, position: { ...position }, backUnflippable: !wasFlippable })
     try {
       this._emitRelicEvent('card:revealed', { room, position, cause })
-      this._recordNeutralFlip(room, position, cause)
       if (entity?.kind === 'enemy') {
         this._emitRelicEvent('enemy:revealed', { enemy: entity, room, cause })
         this._triggerEnemyAlert(room, entity)
@@ -1229,12 +1131,11 @@ export class GameRun {
     targetRoom.visited = true
     this.player.roomId = targetRoom.id
     this.player.pos = { ...targetDoor.arrival }
+    if (targetRoom.tacticalLayout && targetRoom.tacticalLayout !== 'scattered') this._log(`房间布局：${TACTICAL_LAYOUT_LABELS[targetRoom.tacticalLayout]}。`)
     this._log(`\u8fdb\u5165 ${this.roomLabel(targetRoom)}\u3002`)
     this._endTurn({ skipEnemyPhase: true, turnKind: TURN_KINDS.ACTION })
     this._emitRelicEvent('room:entered', { room: targetRoom, firstVisit })
-    const talentState = this._talentRuntime()
-    talentState.roomLastStandUsed = false
-    if (this.hasTalent('survival-shell')) this.player.armor += 3
+    this.itemRules.enter(firstVisit)
     if (firstVisit && !this.gameOver) {
       const reward = buildRoomRewardChoices(this.relics, {
         floor: targetRoom.floor,
@@ -1285,203 +1186,33 @@ export class GameRun {
     return { moved, collision }
   }
 
-  _adjacentEnemy(enemy) {
-    return this._nearbyEnemies(enemy?.pos, 1, 1)[0] || null
-  }
-
-  _nearbyEnemies(center, maxDistance = 2, count = 1, excludeIds = new Set()) {
-    const room = this.currentRoom
-    if (!room || !center) return []
-    const candidates = [...room.entities.values()]
-      .filter((entity) => entity.kind === 'enemy' && !entity.downed && room.isRevealed(entity.pos) && !excludeIds.has(entity.id))
-      .map((entity) => ({ entity, distance: combatDistance(center, entity.pos) }))
-      .filter((entry) => entry.distance <= maxDistance)
-    candidates.sort((left, right) => left.distance - right.distance)
-    const selected = []
-    while (selected.length < count && candidates.length) {
-      const distance = candidates[0].distance
-      const tied = candidates.filter((entry) => entry.distance === distance)
-      const choice = tied[Math.floor(this.random() * tied.length)]
-      selected.push(choice.entity)
-      candidates.splice(candidates.indexOf(choice), 1)
-    }
-    return selected
-  }
-
-  _addCorrosion(enemy, stacks = 1) {
-    if (!enemy || stacks <= 0) return false
-    enemy.corrosion = Math.max(0, Number(enemy.corrosion) || 0) + Math.floor(stacks)
-    return true
-  }
-
-  _spreadCorrosion(center, count = 1) {
-    const targets = this._nearbyEnemies(center, 2, count)
-    for (const target of targets) this._addCorrosion(target, 1)
-    return targets
-  }
-
-  _talentAttackContext(weapon, enemy, distance) {
-    const flat = []
-    const state = this._talentRuntime()
-    const add = (amount, source) => { if (amount) flat.push({ amount, source }) }
-    const hp = Math.max(0, Number(enemy?.hp) || 0)
-    const maxHp = Math.max(1, Number(enemy?.maxHp) || hp || 1)
-    if (weapon.weaponClass === 'heavy') {
-      if (this.hasTalent('heavy-pressure') && hp > maxHp * 0.5) add(2, 'talent:heavy-pressure')
-      if (this.hasTalent('heavy-crush') && hp >= maxHp) add(2, 'talent:heavy-crush')
-    }
-    if (weapon.weaponClass === 'polearm' && distance === 2 && this.hasTalent('polearm-distance')) add(1, 'talent:polearm-distance')
-    if (weapon.weaponClass === 'dagger' && hp * 100 < maxHp * 30 && this.hasTalent('dagger-deadline')) add(2, 'talent:dagger-deadline')
-    if (weapon.attribute === 'drown' && this.hasTalent('drown-pressure')) add(1, 'talent:drown-pressure')
-    if (weapon.attribute === 'scorch' && this.hasTalent('scorch-char')) state.scorchCounterBonus = 0.1
-    if (weapon.weaponClass === 'bow') {
-      const key = enemy?.id || enemy?.enemyId || 'unknown'
-      if (!state.bowFirst[key]) {
-        state.bowFirst[key] = true
-        if (this.hasTalent('bow-first')) add(2, 'talent:bow-first')
-        if (distance >= 3 && this.hasTalent('bow-snipe')) add(2, 'talent:bow-snipe')
-      }
-      if (distance === weaponAttackRange(weapon, this.player) && this.hasTalent('bow-hunt')) add(2, 'talent:bow-hunt')
-    }
-    const pendingTalent = this._consumeTalentBuffs(weapon, enemy)
-    for (const buff of pendingTalent) add(buff.amount, buff.source || 'talent:pending')
-    const itemBuffs = (this.player.pendingAttackBuffs || []).filter((buff) => buff.target !== 'melee' || weapon.range === 1)
-    return {
-      flat: flat.reduce((total, entry) => total + entry.amount, 0) + itemBuffs.reduce((total, buff) => total + (Number(buff.amount) || 0), 0),
-      itemBuffs,
-      pendingTalent,
-      counterBonus: weapon.attribute === 'scorch' && this.hasTalent('scorch-char') ? 0.1 : 0,
-    }
-  }
-
-  _recordAxeMultiAttack(multiTarget, weapon) {
-    if (!multiTarget || weapon?.weaponClass !== 'axe') return
-    if (this.hasTalent('axe-leverage') && this.random() < 0.5) this._recoverEnergy(1)
-    if (this.hasTalent('axe-formation')) this._queueTalentBuff({ amount: 2, weaponClass: 'axe', source: 'talent:axe-formation' })
-  }
-
-  _applyTalentPrimaryOutcome({ enemy, weapon, distance, outcome, hit }) {
-    const state = this._talentRuntime()
-    const primaryKilled = !!hit?.defeated
-    const maxHp = Math.max(1, Number(enemy?.maxHp) || 1)
-    const actualHealthDamage = Math.max(0, Number(hit?.healthDamage ?? hit?.damage) || 0)
-    if (weapon.weaponClass === 'heavy') {
-      if (this.hasTalent('heavy-aftershock') && actualHealthDamage >= maxHp * 0.4) this.player.armor += 2
-      if (this.hasTalent('heavy-shake') && actualHealthDamage >= maxHp * 0.5 && this.random() < 0.5) this._recoverEnergy(1)
-      if (this.hasTalent('heavy-unstoppable') && actualHealthDamage >= maxHp * 0.5) this._queueTalentBuff({ amount: 3, weaponClass: 'heavy', source: 'talent:heavy-unstoppable' })
-    }
-    if (state.daggerTwin) {
-      if (primaryKilled && this.hasTalent('dagger-twin')) this._queueTalentBuff({ amount: 2, weaponClass: 'dagger', source: 'talent:dagger-twin' })
-      state.daggerTwin = null
-    }
-    if (weapon.weaponClass === 'dagger' && primaryKilled) {
-      if (this.hasTalent('dagger-harvest')) this._queueTalentBuff({ amount: 2, weaponClass: 'dagger', source: 'talent:dagger-harvest' })
-      if (this.hasTalent('dagger-pass')) this._queueTalentBuff({ amount: 2, source: 'talent:dagger-pass' })
-      if (this.hasTalent('dagger-edge')) this._recoverEnergy(1)
-      if (this.hasTalent('dagger-twin')) state.daggerTwin = true
-    }
-    if (weapon.weaponClass === 'bow' && distance === weaponAttackRange(weapon, this.player) && this.hasTalent('bow-ammo') && this.random() < 0.5) this._recoverEnergy(1)
-    if (outcome.countered && weapon.attribute === 'scorch') {
-      if (primaryKilled && this.hasTalent('scorch-ignite')) {
-        const targets = this._nearbyEnemies(enemy.pos, 2, 1 + (this.hasTalent('scorch-spread') ? 1 : 0), new Set([enemy.id]))
-        const damage = 2 + (this.hasTalent('scorch-wildfire') ? 1 : 0)
-        for (const target of targets) {
-          const secondary = this._damageEnemy(target, damage, { source: 'talent:scorch-explosion' })
-          this._emitRelicEvent('damage:secondary', { enemy: target, weapon, source: 'talent:scorch-explosion', damage: secondary.damage, defeated: secondary.defeated })
-        }
-      }
-      if (primaryKilled && this.hasTalent('scorch-ember')) this._queueTalentBuff({ amount: 2 + (this.hasTalent('scorch-wildfire') ? 1 : 0), attribute: 'scorch', source: 'talent:scorch-ember' })
-    }
-    if (outcome.countered && weapon.attribute === 'wither') {
-      if (this.hasTalent('wither-corrosion') && this.currentRoom?.entity(enemy.id)) this._addCorrosion(enemy, 1)
-      if (primaryKilled && this.hasTalent('wither-remains')) this._spreadCorrosion(enemy.pos, 1 + (this.hasTalent('wither-decay') ? 1 : 0))
-    }
-    if (outcome.countered && weapon.attribute === 'drown') {
-      if (primaryKilled && this.hasTalent('drown-tide')) this.player.armor += 2
-      if (!primaryKilled && this.hasTalent('drown-depth')) this._queueTalentBuff({ amount: 3, targetId: enemy.id, source: 'talent:drown-depth' })
-      if (!primaryKilled && this.hasTalent('drown-trap') && !state.drownDelay[enemy.id]) {
-        state.drownDelay[enemy.id] = true
-        enemy.actionDelay = Math.max(0, Number(enemy.actionDelay) || 0) + 1
-      }
-      if (primaryKilled && this.hasTalent('drown-surge')) this._queueTalentBuff({ amount: 2, attribute: 'drown', source: 'talent:drown-surge' })
-    }
+  _weaponRoute(weapon, enemy) {
+    return findAttackPath(this.currentRoom, this.player.pos, enemy, [{ ...weapon, rangeAt: position => this.weaponRange(weapon, position) }])
   }
 
   _attack(enemy) {
     const weapon = this.selectedItem
-    if (weapon?.type !== 'weapon') return this._reject('\u8bf7\u5148\u4ece\u80cc\u5305\u9009\u4e2d\u4e00\u628a\u6b66\u5668\u3002')
-    const energyCost = weaponEnergyCost(weapon)
-    const attackRange = weaponAttackRange(weapon, this.player)
-    const route = findAttackPath(this.currentRoom, this.player.pos, enemy, [{ ...weapon, range: attackRange }])
-    if (!route) return this._reject('\u6ca1\u6709\u53ef\u8fbe\u7684\u653b\u51fb\u4f4d\u7f6e\u3002')
-    if (energyAfterMovement(this.player, route.path.length) < energyCost) return this._reject('\u4f53\u529b\u4e0d\u8db3\u3002')
+    if (weapon?.type !== 'weapon') return this._reject('请先选择武器。')
+    const route = this._weaponRoute(weapon, enemy)
+    if (!route) return this._reject('没有可达的攻击位置。')
+    if (this.energyAfterMovement(route.path.length) < this.itemRules.cost(weapon, route.path.length)) return this._reject('体力不足。')
     const movement = this._walk(route.path)
-    if (movement.stopped || !this.currentRoom?.entity(enemy.id)) {
-      this._changed()
-      return true
-    }
-    const attackers = [{ weapon }]
-    this._emitRelicEvent('attack:started', { enemy, attackers, weapon })
-    const roomState = this._roomRuntime()
-    const firstAttackInRoom = !roomState.firstAttackUsed
-    if (combatDistance(this.player.pos, enemy.pos, attackRange) <= attackRange) {
-      if (!this._tryTenthAttackTransmutation(enemy)) {
-        const distance = combatDistance(this.player.pos, enemy.pos)
-        const talentContext = this._talentAttackContext(weapon, enemy, distance)
-        const type = attackAttributeModifier(weapon, enemy, { counterBonus: talentContext.counterBonus })
-        const relicModifiers = this.relicEngine.damageModifiers({ run: this, weapon, target: enemy, player: this.player, room: this.currentRoom, firstAttackInRoom, countered: type.countered, resisted: type.resisted })
-        if (!this._spendEnergy(weaponEnergyCost(weapon))) return this._reject('\u4f53\u529b\u4e0d\u8db3\u3002')
-        const outcome = computeAttackDamage({
-          weapon,
-          target: enemy,
-          pendingAttackBonus: talentContext.flat,
-          relicModifiers,
-          terrainModifiers: terrainDamageModifiers(this.currentRoom, this.player.pos),
-          counterBonus: talentContext.counterBonus,
-        })
-        const attackLogSequence = this._logSequence
-        const hit = this._damageEnemy(enemy, outcome.damage, { ignoreDefense: weapon.weaponClass === 'heavy' })
-        this._emitRelicEvent('attack:primary-hit', { enemy, weapon, damage: hit.damage, healthDamage: hit.healthDamage, countered: outcome.countered, defeated: hit.defeated })
-        this._emitRelicEvent('attack:hit', { enemy, weapon, damage: hit.damage, countered: outcome.countered, defeated: hit.defeated })
-        if (talentContext.itemBuffs.length > 0) {
-          this.player.pendingAttackBuffs = this.player.pendingAttackBuffs.filter((buff) => !talentContext.itemBuffs.includes(buff))
-          this.player.pendingAttackBonus = this.player.pendingAttackBuffs.reduce((total, buff) => total + buff.amount, 0)
-        }
-        if (hit.defeated) this._emitRelicEvent('attack:primary-kill', { enemy, weapon, damage: hit.damage, healthDamage: hit.healthDamage, countered: outcome.countered })
-        this._applyTalentPrimaryOutcome({ enemy, weapon, distance, outcome, hit })
-        if (weapon.weaponClass === 'sword') {
-          this.player.parry = { multiplier: Math.max(0, 0.6 - (this.hasTalent('sword-steady') ? 0.1 : 0)), ranged: this.hasTalent('sword-guard') }
-        } else if (weapon.weaponClass === 'axe') {
-          const splashMultiplier = 0.5 + (this.hasTalent('axe-wide') ? 0.15 : 0) + (this.hasTalent('axe-bloodstorm') ? 0.15 : 0)
-          const targetCount = 1 + (this.hasTalent('axe-sweep') ? 1 : 0) + (this.hasTalent('axe-bloodstorm') ? 1 : 0)
-          const splashDamage = Math.floor(hit.damage * splashMultiplier)
-          const targets = splashDamage > 0 ? this._nearbyEnemies(enemy.pos, 2, targetCount, new Set([enemy.id])) : []
-          let actualTargets = 0
-          for (const target of targets) {
-            const splashHit = this._damageEnemy(target, splashDamage, { source: 'weapon:axe' })
-            if (splashHit.damage > 0) actualTargets += 1
-            this._emitRelicEvent('damage:secondary', { enemy: target, source: 'weapon:axe', weapon, damage: splashHit.damage, defeated: splashHit.defeated })
-          }
-          this._recordAxeMultiAttack(hit.damage > 0 && actualTargets > 0, weapon)
-        } else if (weapon.weaponClass === 'polearm') {
-          const knockbackDistance = 1 + (this.hasTalent('polearm-push') ? 1 : 0)
-          if (distance === 2) {
-            const knockback = this._knockbackEnemy(enemy, knockbackDistance, {
-              collisionDamage: (this.hasTalent('polearm-impact') ? 3 : 0) + (this.hasTalent('polearm-anti-cavalry') ? 2 : 0),
-              collisionDelay: this.hasTalent('polearm-anti-cavalry') ? 1 : 0,
-            })
-            if (knockback?.moved && this.hasTalent('polearm-step') && this.random() < 0.5) this._recoverEnergy(1)
-            if (knockback?.collision) this._emitRelicEvent('damage:secondary', { enemy, source: 'weapon:polearm-collision', weapon, damage: 0, collision: knockback.collision })
-          }
-        }
-        if (hit.defeated) this._emitRelicEvent('attack:enemy-defeated', { enemy, weapon, countered: outcome.countered })
-        const relation = outcome.countered ? '\u514b\u5236\u00b7' : outcome.resisted ? '\u53d7\u5236\u00b7' : ''
-        const attackLogIndex = Math.max(0, this._logSequence - attackLogSequence)
-        this._log(`${relation}${weapon.name} \u5bf9 ${enemy.name}${hit.finishedDowned ? '\u7ec8\u7ed3\u4e86' : '\u9020\u6210'} ${hit.damage} \u4f24\u5bb3\u3002`, { insertAt: attackLogIndex })
-      }
-    }
-    roomState.firstAttackUsed = true
-    this._emitRelicEvent('attack:resolved', { enemy, weapon })
+    if (movement.stopped || !this.currentRoom.entity(enemy.id)) { this._changed(); return true }
+    const range = this.weaponRange(weapon)
+    if (combatDistance(this.player.pos, enemy.pos, range) > range) return this._reject('敌人已经离开射程。')
+    const context = this.itemRules.attackContext(weapon, enemy)
+    if (!this._spendEnergy(this.weaponEnergyCost(weapon))) return this._reject('体力不足。')
+    const damage = resolveDamage(weapon.attack, [
+      { stage: 'flat', value: context.flat },
+      { stage: 'multiply', value: context.multiplier },
+      ...terrainDamageModifiers(this.currentRoom, this.player.pos),
+    ]).total
+    this.itemRules.consume(context)
+    const logSequence = this._logSequence
+    const hit = this._damageEnemy(enemy, damage, { ignoreDefense: context.ignoreDefense })
+    this.itemRules.afterAttack(weapon, enemy, hit, context)
+    this._log(`${weapon.name} 对 ${enemy.name} 造成 ${hit.damage} 伤害。`, { insertAt: this._logSequence - logSequence })
+    this._roomRuntime().firstAttackUsed = true
     this._endTurn({ turnKind: TURN_KINDS.ATTACK })
     this._changed()
     return true
@@ -1489,6 +1220,7 @@ export class GameRun {
 
   _walk(path) {
     const roomId = this.currentRoom?.id
+    const startingPhase = this.phase
     for (const step of path) {
       const previous = { ...this.player.pos }
       if (roomId) {
@@ -1499,6 +1231,7 @@ export class GameRun {
         })
       }
       this.player.pos = { ...step }
+      this.itemRules.move()
       this._discoverNearbyExitDoors()
       this._triggerAmbushes(step)
       if (this.gameOver) {
@@ -1507,17 +1240,22 @@ export class GameRun {
       }
       this._endTurn({ turnKind: TURN_KINDS.MOVEMENT })
       if (this.gameOver) return { stopped: true }
+      if (this.phase !== startingPhase) {
+        this._log('行动已暂停，请先完成当前选择，再重新指定目的地。')
+        return { stopped: true }
+      }
     }
     return { stopped: false }
   }
 
-  _endTurn({ skipEnemyPhase = false, skipEnemyIds = new Set(), turnKind = TURN_KINDS.ACTION } = {}) {
+  _endTurn({ skipEnemyPhase = false, skipEnemyIds = new Set(), turnKind = TURN_KINDS.ACTION, recoverEnergy = true, action = turnKind } = {}) {
+    this.itemRules.action(action)
     const counters = this.turns.advance(turnKind)
     this._cleanupTriggeredTraps(counters.globalTurn)
     const turnContext = { turn: counters.globalTurn, turnKind, ...counters }
     this._emitTurnEvent('turn:advanced', turnContext)
     this._emitTurnEvent('turn:started', turnContext)
-    if (turnKind !== TURN_KINDS.ATTACK) this._recoverEnergy(1)
+    if (recoverEnergy && turnKind !== TURN_KINDS.ATTACK) this._recoverEnergy(1)
     this._tickPlayerStatuses()
     if (skipEnemyPhase || this.gameOver) {
       this._emitTurnEvent('turn:ended', turnContext)
@@ -1526,15 +1264,27 @@ export class GameRun {
     this._tickEnemyStates()
     if (this.gameOver) return
     const enemies = this._activeEnemies()
+    for (const enemy of this.currentRoom.entities.values()) {
+      if (enemy.kind === 'enemy') enemy.movedLastPhase = false
+    }
     for (const enemy of enemies) {
       if (this.gameOver || skipEnemyIds.has(enemy.id) || !this.currentRoom.entity(enemy.id)) continue
+      if (enemy.itemPoisonTurns > 0) {
+        enemy.itemPoisonTurns--
+        this._damageEnemy(enemy, 1, { source: 'item:poison', ignoreDefense: true })
+      }
+      if (!this.currentRoom.entity(enemy.id) || this.gameOver) continue
       this._applyEnemyTraits(enemy)
       if (!this.currentRoom.entity(enemy.id) || this.gameOver) continue
       const outcome = stepEnemy(enemy, {
         room: this.currentRoom,
         player: this.player,
         attack: (actor) => this._enemyAttack(actor),
-        move: (actor, position) => this._moveEnemy(actor, position),
+        move: (actor, position) => {
+          const moved = this._moveEnemy(actor, position)
+          if (moved) actor.movedLastPhase = true
+          return moved
+        },
       })
       if (outcome.acted) this._onEnemyAction(enemy)
     }
@@ -1544,9 +1294,10 @@ export class GameRun {
   _enemyAttack(enemy, multiplier = 1) {
     if (!enemy || enemy.attack <= 0) return { healthDamage: 0 }
     enemy.hasActed = true
-    const finalMultiplier = multiplier * (this.hasActiveRelic('r-final-duel') && this.remainingEnemies() === 1 ? 1.3 : 1)
-    const rawDamage = Math.max(1, Math.floor(enemy.attack * finalMultiplier))
+    const rawDamage = Math.max(0, Math.max(1, Math.floor(enemy.attack * multiplier)) - (enemy.nextAttackReduction || 0))
+    enemy.nextAttackReduction = 0
     const result = this._damagePlayer(rawDamage, { source: 'enemy:attack', enemy })
+    if (!this.currentRoom.entity(enemy.id)) return result
     enemy.attackCooldown = cooldownWaitTurns(enemy.attackCooldownMax)
     this._log(`${enemy.name} \u653b\u51fb\u4f60\uff0c${damageReductionLog(result)}\u3002`)
     if (!this.gameOver && enemy.traits?.includes('burning')) {
@@ -1567,30 +1318,21 @@ export class GameRun {
   }
 
   _damagePlayer(rawDamage, context = {}) {
-    const baseMultiplier = this.hasActiveRelic('r-double-edged-fate') ? 2 : 1
     const isMelee = context.melee === true || context.enemy?.range === 1
-    let damage = Math.max(0, Math.floor((rawDamage || 0) * baseMultiplier))
+    let damage = Math.max(0, Math.floor(rawDamage || 0))
+    damage = this.itemRules.beforeDamage(damage, context)
+    const armorBefore = this.player.armor
     const parry = this.player.parry
-    const canParry = parry && (isMelee || parry.ranged)
+    const canParry = context.source === 'enemy:attack' && parry && (isMelee || parry.ranged)
     if (canParry) {
       damage = Math.max(0, Math.floor(damage * Math.max(0, Number(parry.multiplier) || 0)))
       this.player.parry = null
-      if (rawDamage > 0) this._onParrySuccess()
     }
-    if (!context.ignoreArmor && this.hasTalent('survival-hardening') && this.player.armor > 0) damage = Math.max(0, damage - 1)
     const absorbed = context.ignoreArmor ? 0 : Math.min(this.player.armor, damage)
     const healthDamage = damage - absorbed
-    const fatal = this.player.hp - healthDamage <= 0
     this.player.armor -= absorbed
-    const talentState = this._talentRuntime()
-    if (fatal && this.hasTalent('survival-instinct') && !talentState.roomLastStandUsed) {
-      talentState.roomLastStandUsed = true
-      this.player.hp = 1
-      this.player.armor += 5
-      this._log('\u5b58\u7eed\u672c\u80fd\uff1a\u4fdd\u7559 1 \u70b9\u751f\u547d\uff0c\u62a4\u7532 +5\u3002')
-    } else {
-      this.player.hp -= healthDamage
-    }
+    this.player.hp -= healthDamage
+    this.itemRules.afterDamage(context, healthDamage, armorBefore)
     this._emitRelicEvent('player:damaged', { rawDamage: damage, absorbed, healthDamage, ...context })
     if (this.player.hp <= 0) {
       this.player.hp = 0
@@ -1602,19 +1344,13 @@ export class GameRun {
   }
 
   _healPlayer(amount, context = {}) {
+    if (this.hasActiveRelic('r-blood')) amount = Math.floor(amount / 2)
     const before = this.player.hp
-    const multiplier = this.hasTalent('survival-recovery') ? 1.25 : 1
-    const restored = Math.floor(Math.max(0, Number(amount) || 0) * multiplier)
+    const restored = Math.floor(Math.max(0, Number(amount) || 0))
     this.player.hp = Math.min(this.player.maxHp, this.player.hp + restored)
     const healed = this.player.hp - before
     if (healed > 0) this._emitRelicEvent('player:healed', { amount: healed, ...context })
     return healed
-  }
-
-  _onParrySuccess() {
-    if (this.hasTalent('sword-counter')) this._queueTalentBuff({ amount: 2, weaponClass: 'sword', source: 'talent:sword-counter' })
-    if (this.hasTalent('sword-unity')) this._queueTalentBuff({ amount: 2, weaponClass: 'sword', source: 'talent:sword-unity' })
-    if (this.hasTalent('sword-rebound')) this._recoverEnergy(1)
   }
 
   _damageEnemy(enemy, damage, { source = 'attack', ignoreDefense = false } = {}) {
@@ -1625,11 +1361,6 @@ export class GameRun {
     }
     const hpBefore = Math.max(0, Number(enemy.hp) || 0)
     let applied = Math.max(0, Math.floor(damage || 0))
-    const corrosionStacks = Math.max(0, Number(enemy.corrosion) || 0)
-    if (corrosionStacks > 0) {
-      const perStack = 1 + (this.hasTalent('wither-deep') ? 1 : 0) + (this.hasTalent('wither-decay') ? 1 : 0)
-      applied += corrosionStacks * perStack
-    }
     if (!ignoreDefense && enemy.traits?.includes('shield') && !enemy.shieldConsumed) {
       enemy.shieldConsumed = true
       applied = Math.min(applied, Math.floor(enemy.maxHp / 2))
@@ -1659,29 +1390,13 @@ export class GameRun {
     this._emitRelicEvent('enemy:killed', { enemy, source })
     this._applyEnemyDeathStatus(enemy)
     if (enemy.traits?.includes('death-spawn')) this._spawnMinionsNear(enemy, enemy.deathSpawnMinionId, enemy.deathSpawnCount)
-    if (this.hasTalent('wither-spread') && (Number(enemy.corrosion) || 0) > 0) {
-      const targets = this._spreadCorrosion(enemy.pos, 1 + (this.hasTalent('wither-decay') ? 1 : 0))
-      if (targets.length) this._log(`\u8150\u8680\u6269\u6563\u5230 ${targets.length} \u540d\u654c\u4eba\u3002`)
-    }
     if (this.remainingEnemies() === 0) this._emitRelicEvent('room:cleared', { room: this.currentRoom })
     this._gainExperience(enemy)
     const dropRule = enemy.drop
     const itemDropChance = !enemy.boss && !enemy.noLoot && !suppressLoot && dropRule
       ? Math.max(0, Number(dropRule.chance) || 0)
       : 0
-    const relicDropChance = !enemy.boss && !enemy.noExperience && !suppressLoot
-      ? Math.max(0, Number(enemy.relicDropChance) || 0)
-      : 0
-    const totalDropChance = Math.min(1, itemDropChance + relicDropChance)
-    const lootRoll = totalDropChance > 0 ? this.random() : 1
-    if (lootRoll < relicDropChance) {
-      const relic = buildRelicChoices(this.relics, { count: 1, random: this.random })[0]
-      const drop = relic && createRelicEntity(relic, enemy.pos)
-      if (drop) {
-        this.currentRoom.addEntity(drop)
-        this._log(`${enemy.name} \u6389\u843d\u4e86\u5723\u9057\u7269\uff1a${relic.name}\u3002`)
-      }
-    } else if (lootRoll < totalDropChance) {
+    if (itemDropChance > 0 && this.random() < itemDropChance) {
       const drop = makeItemById(dropRule?.itemId, this.random)
       if (drop) {
         this.currentRoom.addEntity(createLootEntity(drop, enemy.pos))
@@ -2022,9 +1737,28 @@ export class GameRun {
       if (!data || data.version !== SAVE_VERSION || !data.dungeon || !data.player || !data.backpack) return discard()
       this.dungeon = Dungeon.hydrate(data.dungeon)
       this.player = data.player
+      // These relics now use persistent rules, so their former one-shot buffs must not survive migration.
+      if (this.player.itemState?.buffs) {
+        delete this.player.itemState.buffs['r-three']
+        delete this.player.itemState.buffs['r-scales']
+      }
       this.backpack = BackpackGrid.hydrate(data.backpack)
+      // Refresh authored descriptions without resetting the run or its used charges.
+      const refreshDescription = item => {
+        const definition = getItemDefinition(item?.id || item?.relicId)
+        if (definition) item.description = definition.description || ''
+      }
+      this.backpack.items.forEach(refreshDescription)
+      for (const room of this.dungeon.rooms.values()) {
+        for (const entity of room.entities.values()) {
+          if (entity.item) refreshDescription(entity.item)
+          if (entity.merchantId === 'merchant' && entity.stock?.length === 4 && getItemDefinition(entity.stock[3].itemId)?.type !== 'material') {
+            refreshMerchantSlot(entity, room.floor, 3, this.random)
+          }
+        }
+      }
       this.player.maxEnergy = ENERGY_MAX
-      this.player.energy = Math.max(0, Math.min(this.player.maxEnergy, Math.floor(Number(this.player.energy) || this.player.maxEnergy)))
+      this.player.energy = Math.max(0, Math.min(this.player.maxEnergy, Math.floor(Number(this.player.energy) || 0)))
       this.player.level = Math.max(PROGRESSION.startingLevel, Number(this.player.level) || PROGRESSION.startingLevel)
       this.player.experience = Math.max(0, Number(this.player.experience) || 0)
       this.player.experienceToNext = Math.max(1, Number(this.player.experienceToNext) || experienceToNextLevel(this.player.level))
@@ -2033,10 +1767,6 @@ export class GameRun {
       this._talentRuntime()
       this.player.parry = this.player.parry && Number.isFinite(this.player.parry.multiplier)
         ? { multiplier: Math.max(0, Math.min(1, this.player.parry.multiplier)), ranged: !!this.player.parry.ranged } : null
-      this.player.pendingAttackBuffs = Array.isArray(this.player.pendingAttackBuffs)
-        ? this.player.pendingAttackBuffs.filter((buff) => Number.isFinite(buff?.amount) && (buff.target === 'melee' || buff.target === 'any'))
-        : []
-      this.player.pendingAttackBonus = this.player.pendingAttackBuffs.reduce((total, buff) => total + buff.amount, 0)
       this.player.poisonedTurns = normalizedCounter(this.player.poisonedTurns)
       this.player.poisonDamage = this.player.poisonedTurns > 0
         ? Math.max(1, Math.floor(Number(this.player.poisonDamage) || 2))

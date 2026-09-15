@@ -10,22 +10,23 @@ import { computeAttackDamage } from '../src/game/rules/modifiers.js'
 
 const removedRelics = ['r-harmonic-echo', 'r-apprentice-mark', 'r-last-stand', 'r-threshold-seal', 'r-no-mercy', 'r-blood-prism', 'r-armor-echo', 'r-inheritance-edge', 'r-breaker-spark']
 const relicIds = new Set(RELIC_DEFS.map((definition) => definition.id))
-assert.equal(RELIC_DEFS.length, 30, 'relic pool must contain 30 definitions')
+assert.equal(RELIC_DEFS.length, 6, 'relic pool must contain 6 definitions')
 const relicDrop = createRelicEntity(RELIC_DEFS[0], { c: 0, r: 0 })
 assert.equal(relicDrop.kind, 'item')
 assert.equal(relicDrop.item.type, 'relic')
 assert.equal(relicDrop.item.shape.length, 1)
 for (const id of removedRelics) assert.equal(getRelicDefinition(id), null, `${id} must be removed`)
-for (const id of ['r-gray-divination', 'r-scrap-charm']) assert(relicIds.has(id), `${id} must be present`)
+for (const id of ['r-three', 'r-scales']) assert(relicIds.has(id), `${id} must be present`)
 
 assert.equal(ATTRIBUTE_ORDER.join(','), 'scorch,wither,drown')
 assert.equal(attributeModifier('scorch', 'wither').multiplier, 1.6)
 assert.equal(attributeModifier('wither', 'scorch').multiplier, 0.65)
 assert.equal(catalog.consumables.length, 6)
-assert((catalog.consumables || []).every((item) => !item.attribute), 'consumables must not carry attributes')
-assert((catalog.enemyLoot || []).filter((item) => item.type !== 'weapon').every((item) => !item.attribute), 'non-weapon drops must not carry attributes')
-assert.equal(TALENT_DEFS.length, 50, 'talent graph must contain 50 nodes')
-assert.equal(TALENT_DEFS.filter((node) => node.tier === 3).length, 10)
+assert.equal(catalog.weapons.length, 18)
+assert.equal(catalog.defenses.length, 8)
+assert(catalog.enemyLoot.every(item => item.type === 'material'))
+assert.equal(TALENT_DEFS.length, 20, 'talent graph must contain 20 nodes')
+assert.equal(TALENT_DEFS.filter((node) => node.tier === 3).length, 4)
 assert.equal(new Set(TALENT_DEFS.map((node) => node.id)).size, TALENT_DEFS.length)
 
 const initialChoices = buildLevelUpChoices({ talents: [] }, { random: () => 0.25 })
@@ -37,7 +38,7 @@ assert.equal(experienceToNextLevel(2), 10)
 
 const merchantStock = buildMerchantStock('merchant', 1, () => 0.25)
 assert.equal(merchantStock.length, 4, 'merchant stock must stay at four items')
-assert(merchantStock.every((entry) => getItemDefinition(entry.itemId)?.merchantOnly === true), 'shop must only sell merchant-exclusive items')
+assert(merchantStock.every((entry) => getItemDefinition(entry.itemId)))
 assert.equal(getMerchantDefinition('merchant').services.includes('relic-management'), false)
 assert.equal(getMerchantDefinition('collector').services.includes('relic-management'), false)
 
@@ -61,7 +62,7 @@ assert.equal(run.player.talentRuntime.bodyStrength, 1)
 assert.equal(run.phase, 'explore')
 
 const graph = talentGraphState(run.player)
-assert.equal(graph.filter((node) => node.state === 'unlockable').length, 20)
+assert.equal(graph.filter((node) => node.state === 'unlockable').length, 8)
 
 const damage = computeAttackDamage({
   weapon: { attack: 5, attribute: 'scorch', weaponClass: 'sword' },

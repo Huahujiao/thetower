@@ -10,6 +10,7 @@ if (window.location.pathname === '/wiki') {
   const run = new GameRun()
   const hud = new HUD(run)
   const scene = new GameScene(run, hud.sceneContainer)
+  hud.setScene(scene)
 
   window.addEventListener('beforeunload', () => {
     scene.dispose()

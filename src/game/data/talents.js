@@ -1,81 +1,237 @@
-const talent = (id, line, tier, slot, name, description, prerequisites = [], effects = {}) => Object.freeze({
-  id,
-  line,
-  tier,
-  slot,
-  name,
-  description,
-  prerequisites: Object.freeze([...prerequisites]),
-  effects: Object.freeze({ ...effects }),
-})
-
-export const FIXED_GROWTH = Object.freeze({
-  id: 'body-strength',
-  name: '强化体格',
-  description: '最大生命 +2。可无限次选择。',
-  fixed: true,
-})
+export const FIXED_GROWTH = Object.freeze({ id: 'body-strength', name: '强化体格', description: '最大生命+2，可重复选择。', fixed: true })
 
 export const TALENT_DEFS = Object.freeze([
-  talent('sword-steady', 'sword', 1, '1A', '稳架', '剑的近战减伤 +10 个百分点。', [], { parryMelee: 0.1 }),
-  talent('sword-counter', 'sword', 1, '1B', '反击', '剑成功减伤后，下一剑 +2 伤害。', [], { parryNextDamage: 2 }),
-  talent('sword-guard', 'sword', 2, '2A', '护势', '剑的减伤也可以作用于远程攻击。', ['sword-steady'], { parryRanged: true }),
-  talent('sword-rebound', 'sword', 2, '2B', '\u56de\u950b', '\u5251\u6210\u529f\u51cf\u4f24\u540e\uff0c\u6062\u590d 1 \u70b9\u4f53\u529b\u3002', ['sword-counter'], { parryEnergyRecovery: 1 }),
-  talent('sword-unity', 'sword', 3, '3', '攻守一体', '剑成功减伤后，下一剑再 +2 伤害。', ['sword-guard', 'sword-rebound'], { parryNextDamage: 2 }),
-
-  talent('axe-wide', 'axe', 1, '1A', '阔刃', '斧的溅射伤害 +15 个百分点。', [], { axeSplash: 0.15 }),
-  talent('axe-leverage', 'axe', 1, '1B', '\u501f\u52bf', '\u4e00\u6b21\u653b\u51fb\u6253\u5230\u81f3\u5c11 2 \u540d\u654c\u4eba\u65f6\uff0c50% \u6982\u7387\u6062\u590d 1 \u70b9\u4f53\u529b\u3002', [], { axeMultiEnergy: 0.5 }),
-  talent('axe-sweep', 'axe', 2, '2A', '横扫', '斧额外溅射 1 名敌人。', ['axe-wide'], { axeExtraTargets: 1 }),
-  talent('axe-formation', 'axe', 2, '2B', '开阵', '一次攻击打到至少 2 名敌人后，下一斧 +2 伤害。', ['axe-leverage'], { axeNextDamage: 2 }),
-  talent('axe-bloodstorm', 'axe', 3, '3', '血肉风暴', '溅射伤害再 +15 个百分点，并额外溅射 1 名敌人。', ['axe-sweep', 'axe-formation'], { axeSplash: 0.15, axeExtraTargets: 1 }),
-
-  talent('dagger-harvest', 'dagger', 1, '1A', '收割', '匕首击杀后，下一次匕首攻击 +2 伤害。', [], { daggerNextSelf: 2 }),
-  talent('dagger-pass', 'dagger', 1, '1B', '\u9012\u5200', '\u5315\u9996\u51fb\u6740\u540e\uff0c\u4e0b\u4e00\u6b21\u653b\u51fb +2 \u4f24\u5bb3\u3002', [], { daggerNextDamage: 2 }),
-  talent('dagger-deadline', 'dagger', 2, '2A', '死线', '攻击生命低于 30% 的敌人时 +2 伤害。', ['dagger-harvest'], { daggerLowHealth: 2 }),
-  talent('dagger-edge', 'dagger', 2, '2B', '\u501f\u950b', '\u5315\u9996\u51fb\u6740\u540e\uff0c\u6062\u590d 1 \u70b9\u4f53\u529b\u3002', ['dagger-pass'], { daggerEnergyRecovery: 1 }),
-  talent('dagger-twin', 'dagger', 3, '3', '\u53cc\u5203\u8f6e\u821e', '\u5315\u9996\u51fb\u6740\u540e\uff0c\u82e5\u4e0b\u4e00\u6b21\u653b\u51fb\u4e5f\u5b8c\u6210\u51fb\u6740\uff0c\u5219\u4e0b\u4e00\u6b21\u5315\u9996\u653b\u51fb\u989d\u5916 +2 \u4f24\u5bb3\u3002', ['dagger-deadline', 'dagger-edge'], { daggerTwin: 2 }),
-
-  talent('polearm-push', 'polearm', 1, '1A', '强推', '长柄击退距离 +1 格。', [], { polearmKnockback: 1 }),
-  talent('polearm-distance', 'polearm', 1, '1B', '稳距', '距离 2 格攻击时 +1 伤害。', [], { polearmDistanceDamage: 1 }),
-  talent('polearm-impact', 'polearm', 2, '2A', '撞击', '撞到真正的墙或敌人时造成 3 点额外伤害。', ['polearm-push'], { polearmCollisionDamage: 3 }),
-  talent('polearm-step', 'polearm', 2, '2B', '\u501f\u6b65', '\u6210\u529f\u63a8\u52a8\u654c\u4eba\u65f6\uff0c50% \u6982\u7387\u6062\u590d 1 \u70b9\u4f53\u529b\u3002', ['polearm-distance'], { polearmPushEnergy: 0.5 }),
-  talent('polearm-anti-cavalry', 'polearm', 3, '3', '拒马', '碰撞伤害 +2，发生碰撞时目标行动延迟 +1。', ['polearm-impact', 'polearm-step'], { polearmCollisionDamage: 2, polearmCollisionDelay: 1 }),
-
-  talent('heavy-pressure', 'heavy', 1, '1A', '重压', '攻击生命高于 50% 的敌人时 +2 伤害。', [], { heavyAboveHalf: 2 }),
-  talent('heavy-aftershock', 'heavy', 1, '1B', '余威', '一击造成至少目标最大生命 40% 的伤害时，获得 2 护甲。', [], { heavyThreshold: 0.4, heavyArmor: 2 }),
-  talent('heavy-crush', 'heavy', 2, '2A', '压垮', '攻击满血敌人时再 +2 伤害。', ['heavy-pressure'], { heavyFullHealth: 2 }),
-  talent('heavy-shake', 'heavy', 2, '2B', '\u9707\u624b', '\u4e00\u51fb\u9020\u6210\u81f3\u5c11\u76ee\u6807\u6700\u5927\u751f\u547d 50% \u7684\u4f24\u5bb3\u65f6\uff0c50% \u6982\u7387\u6062\u590d 1 \u70b9\u4f53\u529b\u3002', ['heavy-aftershock'], { heavyEnergyThreshold: 0.5, heavyEnergyRecovery: 1 }),
-  talent('heavy-unstoppable', 'heavy', 3, '3', '势不可挡', '一击造成至少目标最大生命 50% 的伤害后，下一次重武器攻击 +3 伤害。', ['heavy-crush', 'heavy-shake'], { heavyThreshold: 0.5, heavyNextDamage: 3 }),
-
-  talent('bow-range', 'bow', 1, '1A', '远射', '弓的普通射程 +1 格。', [], { bowRange: 1 }),
-  talent('bow-first', 'bow', 1, '1B', '先制', '每名敌人第一次受到弓攻击时 +2 伤害。', [], { bowFirst: 2 }),
-  talent('bow-ammo', 'bow', 2, '2A', '\u60dc\u7bad', '\u5728\u5f53\u524d\u6700\u5927\u5c04\u7a0b\u653b\u51fb\u65f6\uff0c50% \u6982\u7387\u6062\u590d 1 \u70b9\u4f53\u529b\u3002', ['bow-range'], { bowMaxEnergy: 0.5 }),
-  talent('bow-snipe', 'bow', 2, '2B', '狙击', '距离至少 3 格第一次攻击每名敌人时再 +2 伤害。', ['bow-first'], { bowFirstLong: 2 }),
-  talent('bow-hunt', 'bow', 3, '3', '猎杀领域', '在当前最大射程攻击时 +2 伤害。', ['bow-ammo', 'bow-snipe'], { bowMaxDamage: 2 }),
-
-  talent('scorch-char', 'scorch', 1, '1A', '炽化', '灼热的克制伤害倍率 +0.1。', [], { scorchCounterMultiplier: 0.1 }),
-  talent('scorch-ignite', 'scorch', 1, '1B', '爆燃', '灼热克制击杀时，距离不超过 2 格的最近 1 名敌人受到 2 点伤害。', [], { scorchExplosion: 2, scorchExplosionTargets: 1 }),
-  talent('scorch-ember', 'scorch', 2, '2A', '余烬', '灼热克制击杀后，下一次灼热攻击 +2 伤害。', ['scorch-char'], { scorchNextDamage: 2 }),
-  talent('scorch-spread', 'scorch', 2, '2B', '蔓燃', '爆燃额外伤害距离不超过 2 格的最近 1 名敌人。', ['scorch-ignite'], { scorchExplosionTargets: 1 }),
-  talent('scorch-wildfire', 'scorch', 3, '3', '燎原', '爆燃伤害 +1，余烬提供的下一击伤害再 +1。', ['scorch-ember', 'scorch-spread'], { scorchExplosion: 1, scorchNextDamage: 1 }),
-
-  talent('wither-corrosion', 'wither', 1, '1A', '腐蚀', '枯萎克制命中后，使目标进入腐蚀：每层受到伤害 +1，持续至该敌人死亡；腐蚀可叠加。', [], { witherCorrosion: 1 }),
-  talent('wither-remains', 'wither', 1, '1B', '残秽', '枯萎克制击杀时，距离不超过 2 格的最近 1 名敌人获得 1 层腐蚀。', [], { witherSpread: 1, witherSpreadTargets: 1 }),
-  talent('wither-deep', 'wither', 2, '2A', '深腐', '腐蚀造成的额外承伤再 +1。', ['wither-corrosion'], { witherCorrosionBonus: 1 }),
-  talent('wither-spread', 'wither', 2, '2B', '蔓蚀', '带腐蚀的敌人死亡时，距离不超过 2 格的最近 1 名敌人获得 1 层腐蚀。', ['wither-remains'], { witherDeathSpread: 1, witherSpreadTargets: 1 }),
-  talent('wither-decay', 'wither', 3, '3', '万物凋零', '腐蚀额外承伤再 +1；每次传播腐蚀时额外影响 1 名敌人。', ['wither-deep', 'wither-spread'], { witherCorrosionBonus: 1, witherSpreadTargets: 1 }),
-
-  talent('drown-pressure', 'drown', 1, '1A', '水压', '沉溺克制攻击 +1 伤害。', [], { drownCounterDamage: 1 }),
-  talent('drown-tide', 'drown', 1, '1B', '回潮', '沉溺克制击杀后获得 2 护甲。', [], { drownCounterArmor: 2 }),
-  talent('drown-depth', 'drown', 2, '2A', '深压', '沉溺克制未击杀时，下一次攻击该敌人 +3 伤害。', ['drown-pressure'], { drownTargetDamage: 3 }),
-  talent('drown-surge', 'drown', 2, '2B', '潮生', '回潮触发后，下一次沉溺攻击 +2 伤害。', ['drown-tide'], { drownNextDamage: 2 }),
-  talent('drown-trap', 'drown', 3, '3', '深陷', '沉溺克制未击杀时，使目标行动延迟 +1；每名敌人最多触发一次。', ['drown-depth', 'drown-surge'], { drownDelay: 1 }),
-
-  talent('survival-vigor', 'survival', 1, '1A', '强健', '最大生命 +3，并恢复 3 生命。', [], { maxHp: 3, heal: 3 }),
-  talent('survival-shell', 'survival', 1, '1B', '甲壳', '进入新房间时获得 3 护甲。', [], { roomArmor: 3 }),
-  talent('survival-recovery', 'survival', 2, '2A', '恢复力', '所有生命恢复量 +25%。', ['survival-vigor'], { healingMultiplier: 1.25 }),
-  talent('survival-hardening', 'survival', 2, '2B', '硬化', '有护甲时，受到的伤害在护甲结算前 -1。', ['survival-shell'], { armorDamageReduction: 1 }),
-  talent('survival-instinct', 'survival', 3, '3', '存续本能', '在每个房间中只可生效一次，受到致命伤害时，保留 1 生命并获得 5 护甲。', ['survival-recovery', 'survival-hardening'], { roomLastStand: true }),
+  {
+    "id": "flow-step",
+    "line": "flow",
+    "tier": 1,
+    "slot": "1A",
+    "name": "踏势",
+    "description": "上次实际行动是主动移动时，攻击+1。",
+    "prerequisites": [],
+    "effects": {}
+  },
+  {
+    "id": "flow-switch",
+    "line": "flow",
+    "tier": 1,
+    "slot": "1B",
+    "name": "交锋",
+    "description": "与上次攻击使用不同武器，且攻击距离至少2格时，伤害+2。",
+    "prerequisites": [],
+    "effects": {}
+  },
+  {
+    "id": "flow-walk",
+    "line": "flow",
+    "tier": 2,
+    "slot": "2A",
+    "name": "稳步",
+    "description": "主动移动后，武器命中时将护甲补足至1。",
+    "prerequisites": [
+      "flow-step"
+    ],
+    "effects": {}
+  },
+  {
+    "id": "flow-relay",
+    "line": "flow",
+    "tier": 2,
+    "slot": "2B",
+    "name": "接力",
+    "description": "主攻击击杀后，下次用不同武器攻击体力-1，不叠加。",
+    "prerequisites": [
+      "flow-switch"
+    ],
+    "effects": {}
+  },
+  {
+    "id": "flow-master",
+    "line": "flow",
+    "tier": 3,
+    "slot": "3",
+    "name": "行云",
+    "description": "同时满足移动后攻击和切换武器时，再+2伤害。",
+    "prerequisites": [
+      "flow-walk",
+      "flow-relay"
+    ],
+    "effects": {}
+  },
+  {
+    "id": "guard-shell",
+    "line": "guard",
+    "tier": 1,
+    "slot": "1A",
+    "name": "厚壳",
+    "description": "首次进入新房间获得2护甲。",
+    "prerequisites": [],
+    "effects": {}
+  },
+  {
+    "id": "guard-gain",
+    "line": "guard",
+    "tier": 1,
+    "slot": "1B",
+    "name": "固甲",
+    "description": "防具补足护甲的目标值+1；从0护甲直接获得防具护甲时额外+1。",
+    "prerequisites": [],
+    "effects": {}
+  },
+  {
+    "id": "guard-hard",
+    "line": "guard",
+    "tier": 2,
+    "slot": "2A",
+    "name": "硬化",
+    "description": "有护甲时，敌人普通攻击伤害-1。",
+    "prerequisites": [
+      "guard-shell"
+    ],
+    "effects": {}
+  },
+  {
+    "id": "guard-reply",
+    "line": "guard",
+    "tier": 2,
+    "slot": "2B",
+    "name": "还击",
+    "description": "通过防具获得护甲后，下一次攻击+1，不叠加。",
+    "prerequisites": [
+      "guard-gain"
+    ],
+    "effects": {}
+  },
+  {
+    "id": "guard-last",
+    "line": "guard",
+    "tier": 3,
+    "slot": "3",
+    "name": "余甲",
+    "description": "护甲被敌人打空后，下一次武器攻击+2；不叠加。",
+    "prerequisites": [
+      "guard-hard",
+      "guard-reply"
+    ],
+    "effects": {}
+  },
+  {
+    "id": "harmony-counter",
+    "line": "harmony",
+    "tier": 1,
+    "slot": "1A",
+    "name": "克敌",
+    "description": "克制攻击+1伤害。",
+    "prerequisites": [],
+    "effects": {}
+  },
+  {
+    "id": "harmony-switch",
+    "line": "harmony",
+    "tier": 1,
+    "slot": "1B",
+    "name": "应变",
+    "description": "换用不同属性的武器命中存活敌人后，使其下一次普通攻击伤害-1；再次触发刷新。",
+    "prerequisites": [],
+    "effects": {}
+  },
+  {
+    "id": "harmony-kill",
+    "line": "harmony",
+    "tier": 2,
+    "slot": "2A",
+    "name": "乘胜",
+    "description": "主攻击克制击杀恢复1体力。",
+    "prerequisites": [
+      "harmony-counter"
+    ],
+    "effects": {}
+  },
+  {
+    "id": "harmony-resist",
+    "line": "harmony",
+    "tier": 2,
+    "slot": "2B",
+    "name": "留势",
+    "description": "被克制攻击后，下一次不同属性攻击+2，不叠加。",
+    "prerequisites": [
+      "harmony-switch"
+    ],
+    "effects": {}
+  },
+  {
+    "id": "harmony-three",
+    "line": "harmony",
+    "tier": 3,
+    "slot": "3",
+    "name": "三相护身",
+    "description": "背包同时持有三种属性武器时，属性敌人的普通攻击伤害-1。",
+    "prerequisites": [
+      "harmony-kill",
+      "harmony-resist"
+    ],
+    "effects": {}
+  },
+  {
+    "id": "survival-vigor",
+    "line": "survival",
+    "tier": 1,
+    "slot": "1A",
+    "name": "强健",
+    "description": "最大生命+3，并恢复3生命。",
+    "prerequisites": [],
+    "effects": {
+      "maxHp": 3,
+      "heal": 3
+    }
+  },
+  {
+    "id": "survival-low",
+    "line": "survival",
+    "tier": 1,
+    "slot": "1B",
+    "name": "背水",
+    "description": "生命≤50%时，武器攻击+1。",
+    "prerequisites": [],
+    "effects": {}
+  },
+  {
+    "id": "survival-heal",
+    "line": "survival",
+    "tier": 2,
+    "slot": "2A",
+    "name": "疗养",
+    "description": "生命药额外恢复2生命。",
+    "prerequisites": [
+      "survival-vigor"
+    ],
+    "effects": {}
+  },
+  {
+    "id": "survival-energy",
+    "line": "survival",
+    "tier": 2,
+    "slot": "2B",
+    "name": "续命",
+    "description": "低血时每第2次受到敌人生命伤害并存活，恢复1体力。",
+    "prerequisites": [
+      "survival-low"
+    ],
+    "effects": {}
+  },
+  {
+    "id": "survival-last",
+    "line": "survival",
+    "tier": 3,
+    "slot": "3",
+    "name": "绝境",
+    "description": "生命不高于25%时，生命药额外恢复5生命。",
+    "prerequisites": [
+      "survival-heal",
+      "survival-energy"
+    ],
+    "effects": {}
+  }
 ])
 
 const TALENT_BY_ID = new Map(TALENT_DEFS.map((definition) => [definition.id, definition]))
