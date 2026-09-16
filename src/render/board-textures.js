@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import floorAtlasUrl from '../assets/board-floor-atlas-v1.jpg'
+import floorUrl from '../assets/board-floor-plain-v1.jpg'
 import cardBackUrl from '../assets/board-card-back-v1.jpg'
 import scorchBackUrl from '../assets/board-card-back-scorch-v1.jpg'
 import witherBackUrl from '../assets/board-card-back-wither-v1.jpg'
@@ -26,22 +26,17 @@ function surface(draw) {
   return { texture, repaint }
 }
 
-// Only the two dark cells of the existing atlas are floors. The colored wave
-// cells remain unused so visual decoration cannot imply an active terrain rule.
+// Plain stone identifies explored ground; ornate artwork is reserved for cards.
 export class BoardTextures {
   constructor() {
     this.disposed = false
-    this.floors = [
-      [14 / 1254, 12 / 1254, 608 / 1254, 608 / 1254],
-      [642 / 1254, 642 / 1254, 598 / 1254, 598 / 1254],
-    ].map(rect => surface((ctx, image) => {
-      ctx.fillStyle = '#252824'
+    this.floors = [surface((ctx, image) => {
+      ctx.fillStyle = '#827e73'
       ctx.fillRect(0, 0, SIZE, SIZE)
       if (image) {
-        const [x, y, w, h] = rect
-        ctx.drawImage(image, x * image.width, y * image.height, w * image.width, h * image.height, 0, 0, SIZE, SIZE)
+        ctx.drawImage(image, 0, 0, SIZE, SIZE)
       }
-    }))
+    })]
     this.backs = new Map()
     for (const attribute of Object.keys(BACK_URLS)) {
       for (const blocked of [false, true]) {
@@ -57,7 +52,7 @@ export class BoardTextures {
       }
     }
     this.ready = Promise.all([
-      this.load(floorAtlasUrl, this.floors),
+      this.load(floorUrl, this.floors),
       ...Object.entries(BACK_URLS).map(([attribute, url]) => this.load(url, [
         this.backs.get(`${attribute}:false`), this.backs.get(`${attribute}:true`),
       ])),
@@ -76,9 +71,8 @@ export class BoardTextures {
     })
   }
 
-  floor(position = null) {
-    const index = position ? Math.abs(position.c * 13 + position.r * 7) % this.floors.length : 0
-    return this.floors[index].texture
+  floor() {
+    return this.floors[0].texture
   }
 
   back(attribute, blocked) {

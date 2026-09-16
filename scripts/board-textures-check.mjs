@@ -21,7 +21,7 @@ const { BoardTextures } = await import(`data:text/javascript;base64,${Buffer.fro
 const textures = new BoardTextures()
 const all = new Set()
 for (let c = 0; c < 9; c++) for (let r = 0; r < 5; r++) all.add(textures.floor({ c, r }))
-assert.equal(all.size, 2)
+assert.equal(all.size, 1)
 for (const attr of ['neutral', 'scorch', 'wither', 'drown']) {
   for (const blocked of [true, false]) {
     const texture = textures.back(attr, blocked)
@@ -29,7 +29,7 @@ for (const attr of ['neutral', 'scorch', 'wither', 'drown']) {
     all.add(texture)
   }
 }
-assert.equal(all.size, 10)
+assert.equal(all.size, 9)
 assert.equal(textures.back('unknown', false), textures.back('neutral', false))
 const before = textures.back('scorch', false).version
 pendingImages.splice(0).forEach(image => image.onload())
@@ -46,7 +46,7 @@ assert.equal(textures.back('scorch', false).userData.boardShared, true)
 snapshot.dispose()
 assert.equal(disposed, 0)
 textures.dispose()
-assert.equal(disposed, 10)
+assert.equal(disposed, 9)
 
 const closed = new BoardTextures()
 const lastVersion = closed.floor().version

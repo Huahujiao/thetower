@@ -1,5 +1,12 @@
 # Generated art prompts
 
+## Plain stone floor — 2026-09-16, current floor
+
+Generated with built-in image generation, without image references. Master: `art/generated/floor-plain-stone-v1.png`. Runtime: `src/assets/board-floor-plain-v1.jpg`, exported by `scripts/export-board-art.ps1`. Replaces the decorative floor atlas on all empty ground, including ground under standing tokens. Original atlas retained but no longer imported. Card backs unchanged.
+
+Prompt: Use case: stylized-concept. Asset type: finished square base-color texture for ONE plain Chinese ancient tower stone floor slab in a hand-painted folk-horror board game. Direct orthographic top down, completely flat, edge-to-edge stone surface. Medium-light warm gray weathered stone, subtle irregular mineral grain, tiny pores, broad very quiet tonal variation, delicate rubbed wear, muted antique hand-painted mineral-pigment aesthetic, matte diffuse surface. This is mundane walkable empty floor, visually clearly different from dark ornate ritual card backs. NO ornament whatsoever: no borders, no frame, no carved lines, no flower, no cloud, no emblem, no seal, no gold, no circle, no intentional decorative pattern. No dramatic cracks, no grass, no objects, no writing, no letters, no grid, no tile joints, no bevel, no shadows, no perspective, no surrounding scene, no atlas. Single quiet uniform square stone texture, all edges similar brightness for repetition, low contrast, no central focal point. Opaque.
+
+
 ## Independent colored card backs — current integration
 
 Built-in image generation produced three separate finished textures using `card-back-neutral-v1.png` as the style/layout reference:
