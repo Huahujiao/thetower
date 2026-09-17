@@ -20,8 +20,12 @@ const source = (await readFile(new URL('../src/render/board-textures.js', import
 const { BoardTextures } = await import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`)
 const textures = new BoardTextures()
 const all = new Set()
-for (let c = 0; c < 9; c++) for (let r = 0; r < 5; r++) all.add(textures.floor({ c, r }))
-assert.equal(all.size, 1)
+for (let c = 0; c < 9; c++) for (let r = 0; r < 5; r++) {
+  const texture = textures.floor({ c, r })
+  assert.equal(texture, textures.floor({ c, r }), 'Variant must remain stable across redraws')
+  all.add(texture)
+}
+assert.equal(all.size, 4)
 for (const attr of ['neutral', 'scorch', 'wither', 'drown']) {
   for (const blocked of [true, false]) {
     const texture = textures.back(attr, blocked)
@@ -29,11 +33,11 @@ for (const attr of ['neutral', 'scorch', 'wither', 'drown']) {
     all.add(texture)
   }
 }
-assert.equal(all.size, 9)
+assert.equal(all.size, 12)
 assert.equal(textures.back('unknown', false), textures.back('neutral', false))
 const before = textures.back('scorch', false).version
 pendingImages.splice(0).forEach(image => image.onload())
-assert.deepEqual(await textures.ready, [true, true, true, true, true])
+assert.deepEqual(await textures.ready, Array(8).fill(true))
 assert(textures.back('scorch', false).version > before)
 let disposed = 0
 for (const texture of all) {
@@ -46,7 +50,7 @@ assert.equal(textures.back('scorch', false).userData.boardShared, true)
 snapshot.dispose()
 assert.equal(disposed, 0)
 textures.dispose()
-assert.equal(disposed, 9)
+assert.equal(disposed, 12)
 
 const closed = new BoardTextures()
 const lastVersion = closed.floor().version

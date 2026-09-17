@@ -3,6 +3,9 @@ import { getAttributeDefinition } from '../game/data/attributes.js'
 import { enemyCardSubtitle } from '../game/data/enemy-features.js'
 import { isAdjacent8 } from '../game/core/geometry.js'
 import { BoardTextures } from './board-textures.js'
+import { DEFAULT_CAMERA_ELEVATION, panAzimuth } from './camera-view.js'
+import { cardBodyGeometry, styleCardBody, HIDDEN_CARD_THICKNESS, HIDDEN_CARD_SCALE } from './card-body.js'
+import { boundaryPillarPoint, createDoorFrame, createLowPolyPillar, createLowPolyWall, evenPillarOffsets } from './wall-kit.js'
 
 const TILE_SIZE = 1.14
 const CARD_SIZE = TILE_SIZE
@@ -10,9 +13,7 @@ const CARD_THICKNESS = 0.08
 const WALL_THICKNESS = 0.14
 const DOOR_DEPTH = WALL_THICKNESS * 1.4
 const BOUNDARY_GAP = 0.012
-const WALL_HEIGHT = 0.44
-const HIDDEN_CARD_BODY_COLOR = 0x17172b
-const UNREACHABLE_HIDDEN_CARD_BODY_COLOR = HIDDEN_CARD_BODY_COLOR
+const WALL_HEIGHT = 0.62
 const UNREACHABLE_HIDDEN_CARD_TINT = 0xffffff
 const DEFAULT_ZOOM = 1
 const MIN_ZOOM = 0.66
@@ -22,10 +23,8 @@ const LONG_PRESS_MS = 420
 const CAMERA_FOV = 45
 const CAMERA_NEAR = 0.1
 const CAMERA_FAR = 80
-const DEFAULT_CAMERA_AZIMUTH = 25 * Math.PI / 180
-const DEFAULT_CAMERA_ELEVATION = Math.atan2(0.74, 0.41)
+const DEFAULT_CAMERA_AZIMUTH = 0
 const CAMERA_ORBIT_DISTANCE_RATIO = Math.hypot(0.74, 0.41)
-const CAMERA_AZIMUTH_STEP = 1 * Math.PI / 180
 const CAMERA_ELEVATION_STEP = 4 * Math.PI / 180
 const MIN_CAMERA_ELEVATION = 38 * Math.PI / 180
 const MAX_CAMERA_ELEVATION = 78 * Math.PI / 180
@@ -357,10 +356,10 @@ export class GameScene {
   _addTile(room, position) {
     const visual = this._tileVisualState(room, position)
     const { revealed, peeked, flippable } = visual
-    const geometry = new THREE.BoxGeometry(CARD_SIZE, CARD_THICKNESS, CARD_SIZE)
+    const geometry = cardBodyGeometry(CARD_SIZE, CARD_THICKNESS)
     const material = new THREE.MeshStandardMaterial({
-      color: revealed ? 0x262a36 : flippable ? HIDDEN_CARD_BODY_COLOR : UNREACHABLE_HIDDEN_CARD_BODY_COLOR,
-      roughness: 0.72,
+      color: 0x262a36,
+      roughness: 0.9,
     })
     const mesh = new THREE.Mesh(geometry, material)
     const point = this._gridPosition(room, position)
@@ -387,7 +386,8 @@ export class GameScene {
         depthWrite: !standing,
       }),
     )
-    this._setFacePose(face, point, standing)
+    this._setFacePose(face, point, standing, !revealed)
+    this._styleTileBody(mesh, room, position, visual)
     face.renderOrder = standing ? 2 : 0
     // Standing tokens are visual overlays. Let the ground tile receive the
     // pointer instead so a character/enemy cannot block the tile behind it.
@@ -404,8 +404,17 @@ export class GameScene {
     this.tileMeshByKey.set(tileKey(position), face)
   }
 
-  _setFacePose(face, point, standing) {
-    const baseY = standing ? CARD_SIZE / 2 + CARD_THICKNESS / 2 : CARD_THICKNESS / 2 + 0.002
+  _styleTileBody(body, room, position, { revealed, flippable }) {
+    const attribute = this._backAttributeFor(room, position)
+    styleCardBody(body, {
+      hidden: !revealed, attribute, baseThickness: CARD_THICKNESS,
+      texture: this._makeBackTexture(attribute, { unflippable: !flippable }),
+    })
+  }
+
+  _setFacePose(face, point, standing, hidden = false) {
+    const baseY = standing ? CARD_SIZE / 2 + CARD_THICKNESS / 2 : CARD_THICKNESS / 2 + 0.002 + (hidden ? HIDDEN_CARD_THICKNESS - CARD_THICKNESS : 0)
+    face.scale.setScalar(hidden ? HIDDEN_CARD_SCALE : 1)
     face.rotation.order = standing ? 'YXZ' : 'XYZ'
     face.rotation.set(standing ? -STANDING_BACK_LEAN : -Math.PI / 2, standing ? this.cameraAzimuth : 0, 0)
     face.position.set(point.x, baseY, point.z)
@@ -577,14 +586,37 @@ export class GameScene {
   _addWallSegment(room, side, offset) {
     const horizontal = side === 'top' || side === 'bottom'
     const point = this._boundaryPosition(room, side, offset)
-    const mesh = new THREE.Mesh(
-      new THREE.BoxGeometry(horizontal ? TILE_SIZE : WALL_THICKNESS, WALL_HEIGHT, horizontal ? WALL_THICKNESS : TILE_SIZE),
-      new THREE.MeshStandardMaterial({ color: 0x55575c, roughness: 0.84, metalness: 0.08 }),
-    )
-    mesh.position.set(point.x, WALL_HEIGHT / 2, point.z)
-    mesh.castShadow = true
-    mesh.receiveShadow = true
-    this.roomGroup.add(mesh)
+    const wall = createLowPolyWall({ horizontal, length: horizontal ? TILE_SIZE : TILE_SIZE, thickness: WALL_THICKNESS, height: WALL_HEIGHT })
+    wall.position.set(point.x, 0, point.z)
+    this.roomGroup.add(wall)
+  }
+
+  _addBoundaryPillar(room, side, offset, seen) {
+    const inset = WALL_THICKNESS / 2 + BOUNDARY_GAP
+    const point = boundaryPillarPoint(room, side, offset, TILE_SIZE, inset)
+    const key = `${point.x.toFixed(3)}:${point.z.toFixed(3)}`
+    if (seen.has(key)) return
+    seen.add(key)
+    const pillar = createLowPolyPillar({ height: WALL_HEIGHT + 0.28 })
+    pillar.position.set(point.x, 0, point.z)
+    this.roomGroup.add(pillar)
+  }
+
+  _addBoundaryPillars(room, doors) {
+    const seen = new Set()
+    const hasDoor = (side, offset) => doors.some(door => door.side === side && door.offset === offset)
+    for (const side of ['top', 'bottom']) {
+      const forbidden = doors.filter(door => door.side === side).map(door => door.offset)
+      for (const offset of evenPillarOffsets(room.width, forbidden)) {
+        if (!hasDoor(side, offset)) this._addBoundaryPillar(room, side, offset, seen)
+      }
+    }
+    for (const side of ['left', 'right']) {
+      const forbidden = doors.filter(door => door.side === side).map(door => door.offset)
+      for (const offset of evenPillarOffsets(room.height, forbidden)) {
+        if (!hasDoor(side, offset)) this._addBoundaryPillar(room, side, offset, seen)
+      }
+    }
   }
 
   _setDoorAppearance(mesh) {
@@ -599,7 +631,7 @@ export class GameScene {
     const horizontal = door.side === 'top' || door.side === 'bottom'
     const point = this._doorPosition(room, door.side, door.offset)
     const mesh = new THREE.Mesh(
-      new THREE.BoxGeometry(horizontal ? TILE_SIZE * 0.72 : DOOR_DEPTH, WALL_HEIGHT + 0.18, horizontal ? DOOR_DEPTH : TILE_SIZE * 0.72),
+      new THREE.BoxGeometry(horizontal ? TILE_SIZE * 0.68 : DOOR_DEPTH, WALL_HEIGHT + 0.18, horizontal ? DOOR_DEPTH : TILE_SIZE * 0.68),
       new THREE.MeshStandardMaterial({ roughness: 0.42, metalness: 0.46 }),
     )
     mesh.position.set(point.x, (WALL_HEIGHT + 0.18) / 2, point.z)
@@ -611,6 +643,9 @@ export class GameScene {
     lockIndicator.scale.set(0.44, 0.44, 1)
     mesh.userData.lockIndicator = lockIndicator
     mesh.add(lockIndicator)
+    const frame = createDoorFrame({ horizontal, width: TILE_SIZE * 0.68, depth: DOOR_DEPTH, height: WALL_HEIGHT + 0.18 })
+    frame.position.set(point.x, 0, point.z)
+    this.roomGroup.add(frame)
     this._setDoorAppearance(mesh)
     this.doorMeshes.push(mesh)
     this.roomGroup.add(mesh)
@@ -625,6 +660,7 @@ export class GameScene {
     for (const side of ['left', 'right']) {
       for (let r = 0; r < room.height; r++) if (!hasDoor(side, r)) this._addWallSegment(room, side, r)
     }
+    this._addBoundaryPillars(room, doors)
     for (const door of doors) this._addDoorMesh(room, door)
   }
 
@@ -825,18 +861,17 @@ export class GameScene {
     if (!oldTexture?.userData.boardShared) oldTexture?.dispose()
     face.visible = true
     face.userData.lift = 0
-    this._setFacePose(face, this._gridPosition(room, position), standing)
+    this._setFacePose(face, this._gridPosition(room, position), standing, !revealed)
     face.renderOrder = standing ? 2 : 0
     face.raycast = standing ? NO_RAYCAST : THREE.Mesh.prototype.raycast
     body.visible = true
-    body.position.y = 0
+    this._styleTileBody(body, room, position, visual)
     if (emptyGround && !face.userData.groundFace) {
       face.userData.groundFace = this._makeEmptyGroundFace(this._gridPosition(room, position), position)
       this.roomGroup.add(face.userData.groundFace)
     }
     if (face.userData.groundFace) face.userData.groundFace.visible = emptyGround
     this._setEnemyStatusOverlay(face, face.userData.groundFace, revealed && card?.type === 'monster' ? room.entityAt(position) : null)
-    body.material.color.setHex(revealed ? 0x262a36 : flippable ? HIDDEN_CARD_BODY_COLOR : UNREACHABLE_HIDDEN_CARD_BODY_COLOR)
     face.userData.visualKey = visual.key
     return true
   }
@@ -903,7 +938,9 @@ export class GameScene {
     if (!face || !face.visible || this.flipAnimations.some((animation) => animation.key === key)) return false
     const point = this._gridPosition(room, position)
     const group = new THREE.Group()
-    group.position.set(point.x, CARD_THICKNESS / 2 + 0.004, point.z)
+    const startY = (HIDDEN_CARD_THICKNESS - CARD_THICKNESS) / 2 + (face.userData.lift || 0)
+    group.position.set(point.x, startY, point.z)
+    group.scale.set(HIDDEN_CARD_SCALE, 1, HIDDEN_CARD_SCALE)
     group.rotation.x = Math.PI
     const frontTexture = this._makeFrontTexture(this._cardFaceData(room, position), position)
     const backTexture = sourceBackTexture || this._makeBackTexture(this._backAttributeFor(room, position), { unflippable: backUnflippable })
@@ -912,17 +949,22 @@ export class GameScene {
       new THREE.MeshBasicMaterial({ map: frontTexture, side: THREE.DoubleSide, transparent: true }),
     )
     front.rotation.x = -Math.PI / 2
-    front.position.y = 0.002
+    front.position.y = HIDDEN_CARD_THICKNESS / 2 + 0.002
     const back = new THREE.Mesh(
       new THREE.PlaneGeometry(CARD_SIZE, CARD_SIZE),
       new THREE.MeshBasicMaterial({ map: backTexture, side: THREE.DoubleSide }),
     )
     back.rotation.x = Math.PI / 2
-    back.position.y = -0.002
-    group.add(front, back)
+    back.position.y = -HIDDEN_CARD_THICKNESS / 2 - 0.002
+    const edge = new THREE.Mesh(cardBodyGeometry(CARD_SIZE, CARD_THICKNESS), new THREE.MeshStandardMaterial({ roughness: 0.9 }))
+    this._styleTileBody(edge, room, position, { revealed: false, flippable: !backUnflippable })
+    edge.position.y = 0
+    edge.scale.x = edge.scale.z = 1
+    group.add(front, back, edge)
     face.visible = false
+    face.userData.body.visible = false
     this.roomGroup.add(group)
-    this.flipAnimations.push({ key, group, frontTexture, backTexture, elapsed: 0, duration: 0.34 })
+    this.flipAnimations.push({ key, group, front, back, edge, startY, frontTexture, backTexture, elapsed: 0, duration: 0.34 })
     return true
   }
 
@@ -1163,7 +1205,7 @@ export class GameScene {
       const target = canLift ? 0.16 : 0
       face.userData.lift += (target - face.userData.lift) * 0.22
       face.position.y = face.userData.baseY + face.userData.lift
-      face.userData.body.position.y = face.userData.lift
+      face.userData.body.position.y = (face.userData.body.userData.baseY || 0) + face.userData.lift
     }
   }
 
@@ -1174,7 +1216,12 @@ export class GameScene {
       const progress = Math.min(1, animation.elapsed / animation.duration)
       const eased = 1 - Math.pow(1 - progress, 3)
       animation.group.rotation.x = Math.PI * (1 - eased)
-      animation.group.position.y = CARD_THICKNESS / 2 + 0.004 + Math.sin(eased * Math.PI) * 0.28
+      animation.group.position.y = THREE.MathUtils.lerp(animation.startY, CARD_THICKNESS / 2, eased) + Math.sin(eased * Math.PI) * 0.28
+      const thickness = HIDDEN_CARD_THICKNESS * (1 - eased)
+      animation.front.position.y = thickness / 2 + 0.002
+      animation.back.position.y = -thickness / 2 - 0.002
+      animation.edge.scale.y = Math.max(0.001, thickness / CARD_THICKNESS)
+      animation.group.scale.x = animation.group.scale.z = THREE.MathUtils.lerp(HIDDEN_CARD_SCALE, 1, eased)
       if (progress < 1) continue
       this.roomGroup.remove(animation.group)
       disposeObject(animation.group)
@@ -1370,23 +1417,19 @@ export class GameScene {
   }
 
   _updateCamera() {
+    const room = this.run.currentRoom
+    this.cameraAzimuth = panAzimuth(-this.roomGroup.position.x, room ? room.width * TILE_SIZE / 2 + BOUNDARY_GAP : 0)
     const distance = this.baseCameraDistance / this.zoom
     const orbitDistance = distance * CAMERA_ORBIT_DISTANCE_RATIO
     const horizontal = orbitDistance * Math.cos(this.cameraElevation)
     this.camera.position.set(
       Math.sin(this.cameraAzimuth) * horizontal,
-      orbitDistance * Math.sin(this.cameraElevation),
+      -0.35 + orbitDistance * Math.sin(this.cameraElevation),
       Math.cos(this.cameraAzimuth) * horizontal,
     )
     this.camera.lookAt(0, -0.35, 0)
     this.camera.updateProjectionMatrix()
-  }
-
-  adjustCameraAzimuth(direction = 0) {
-    const amount = Math.sign(Number(direction) || 0)
-    if (!amount) return
-    this.cameraAzimuth = THREE.MathUtils.euclideanModulo(this.cameraAzimuth + amount * CAMERA_AZIMUTH_STEP, Math.PI * 2)
-    this._updateCamera()
+    this.camera.updateMatrixWorld(true)
     this._updateCameraFacingTokens()
   }
 
@@ -1447,17 +1490,18 @@ export class GameScene {
     const limitZ = Math.max(Math.abs(bounds.minZ), Math.abs(bounds.maxZ)) + 1.2
     this.roomGroup.position.x = THREE.MathUtils.clamp(this.roomGroup.position.x, -limitX, limitX)
     this.roomGroup.position.z = THREE.MathUtils.clamp(this.roomGroup.position.z, -limitZ, limitZ)
+    this._updateCamera()
   }
 
   _pointerPosition(event) {
     return { x: event.clientX, y: event.clientY }
   }
 
-  _groundPoint(event) {
+  _groundPoint(event, camera = this.camera) {
     const rect = this.renderer.domElement.getBoundingClientRect()
     this.pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
     this.pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
-    this.raycaster.setFromCamera(this.pointer, this.camera)
+    this.raycaster.setFromCamera(this.pointer, camera)
     return this.raycaster.ray.intersectPlane(this.groundPlane, new THREE.Vector3())
   }
 
@@ -1510,6 +1554,7 @@ export class GameScene {
         boardX: this.roomGroup.position.x,
         boardZ: this.roomGroup.position.z,
         startWorld: this._groundPoint(event),
+        projectionCamera: this.camera.clone(),
         moved: false,
       }
       this._startBoardHold(event)
@@ -1538,7 +1583,8 @@ export class GameScene {
       this._cancelBoardHold({ close: true })
     }
     if (!this.drag.moved) return
-    const currentWorld = this._groundPoint(event)
+    // Freeze the drag projection so auto-rotation cannot feed back into panning.
+    const currentWorld = this._groundPoint(event, this.drag.projectionCamera)
     if (!this.drag.startWorld || !currentWorld) return
     this.roomGroup.position.x = this.drag.boardX + currentWorld.x - this.drag.startWorld.x
     this.roomGroup.position.z = this.drag.boardZ + currentWorld.z - this.drag.startWorld.z

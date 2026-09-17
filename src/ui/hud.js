@@ -2,6 +2,7 @@ import { INVENTORY_COLUMNS, INVENTORY_ROWS } from '../game/run.js'
 import { getItemDefinition } from '../game/data/content.js'
 import { getRelicDefinition } from '../game/data/relics.js'
 import { merchantSellPrice } from '../game/data/merchants.js'
+import { bagShapeLayout } from './bag-shape.js'
 
 const LABELS = Object.freeze({
   floor: '\u697c\u5c42',
@@ -205,7 +206,7 @@ export class HUD {
       <div class="hud-settings" data=settings>
         <label class="settings-row"><input type="checkbox" data=revealtoggle> ${LABELS.reveal}</label>
         <div class="settings-camera" aria-label="${LABELS.camera}">
-          <div class="settings-camera-row"><span>${LABELS.cameraAzimuth} <strong data=cameraazimuthvalue></strong></span><div class="settings-camera-controls"><button type="button" class="settings-camera-button" data-action="camera-azimuth-minus" title="${LABELS.cameraAzimuthDecrease}" aria-label="${LABELS.cameraAzimuthDecrease}">&minus;</button><button type="button" class="settings-camera-button" data-action="camera-azimuth-plus" title="${LABELS.cameraAzimuthIncrease}" aria-label="${LABELS.cameraAzimuthIncrease}">+</button></div></div>
+          <div class="settings-camera-row"><span>${LABELS.cameraAzimuth}</span><strong data=cameraazimuthvalue></strong></div>
           <div class="settings-camera-row"><span>${LABELS.cameraPitch} <strong data=camerapitchvalue></strong></span><div class="settings-camera-controls"><button type="button" class="settings-camera-button" data-action="camera-pitch-minus" title="${LABELS.cameraPitchDecrease}" aria-label="${LABELS.cameraPitchDecrease}">&minus;</button><button type="button" class="settings-camera-button" data-action="camera-pitch-plus" title="${LABELS.cameraPitchIncrease}" aria-label="${LABELS.cameraPitchIncrease}">+</button></div></div>
         </div>
         <button class="settings-restart" data-action="restart-settings">${LABELS.restart}</button>
@@ -379,7 +380,7 @@ export class HUD {
 
   _renderCameraSettings() {
     const angles = this.scene?.cameraAngles?.()
-    this.q('cameraazimuthvalue').textContent = angles ? `${angles.azimuth}\u00b0` : ''
+    this.q('cameraazimuthvalue').textContent = '\u81ea\u52a8\uff08-15\u00b0 ~ 15\u00b0\uff09'
     this.q('camerapitchvalue').textContent = angles ? `${angles.pitch}\u00b0` : ''
   }
 
@@ -536,17 +537,15 @@ export class HUD {
                 : item.type === 'teleport' ? '换位'
               : item.type === 'relic' ? LABELS.relics
               : ''
-      let firstFilled = true
-      const shapeCells = shape.flat().map((filled, shapeIndex) => {
-        if (!filled) return '<span class="void"></span>'
-        const cellColumn = shapeIndex % shape[0].length
-        const cellRow = Math.floor(shapeIndex / shape[0].length)
-        const cellIndex = (placement.y + cellRow) * INVENTORY_COLUMNS + placement.x + cellColumn
-        const name = firstFilled ? `<b>${escapeHtml(item.name)}</b>` : ''
-        firstFilled = false
-        return `<span class="occupied" data-bag-item="${cellIndex}">${name}</span>`
+      const layout = bagShapeLayout(shape)
+      const shapeCells = layout.cells.map(({ x, y, edges }) => {
+        const cellIndex = (placement.y + y) * INVENTORY_COLUMNS + placement.x + x
+        const edgeMarks = edges.map((visible, index) => visible ? `<i class="shape-edge edge-${['top', 'right', 'bottom', 'left'][index]}" aria-hidden="true"></i>` : '').join('')
+        return `<span class="occupied" data-bag-item="${cellIndex}" style="grid-column:${x + 1};grid-row:${y + 1};border-width:${edges.map(edge => edge ? '1px' : '0').join(' ')}">${edgeMarks}</span>`
       }).join('')
-      return `<div class="${itemClasses.join(' ')}" style="grid-column:${placement.x + 1} / span ${shape[0].length};grid-row:${placement.y + 1} / span ${shape.length}"><span class="bag-shape" style="grid-template-columns:repeat(${shape[0].length},1fr);grid-template-rows:repeat(${shape.length},1fr)">${shapeCells}</span><span class="bag-details"><small>${detail}</small></span></div>`
+      const labelStyle = run => `grid-column:${run.x + 1} / span ${run.width};grid-row:${run.y + 1}`
+      const labels = layout.name ? `<b class="bag-name" style="${labelStyle(layout.name)}">${escapeHtml(item.name)}</b><small class="bag-detail" style="${labelStyle(layout.detail)}">${escapeHtml(detail)}</small>` : ''
+      return `<div class="${itemClasses.join(' ')}" style="grid-column:${placement.x + 1} / span ${shape[0].length};grid-row:${placement.y + 1} / span ${shape.length}"><span class="bag-shape" style="grid-template-columns:repeat(${shape[0].length},1fr);grid-template-rows:repeat(${shape.length},1fr)">${shapeCells}${labels}</span></div>`
     }).join('')
     backpack.innerHTML = `${cells}${items}`
     const rotate = this.root.querySelector('[data-action="rotate-bag"]')
@@ -750,14 +749,6 @@ export class HUD {
     if (action === 'use') this.run.useSelected()
     if (action === 'discard') this.run.discardSelected()
     if (action === 'rotate-bag') this.run.rotateSelectedInventory()
-    if (action === 'camera-azimuth-minus') {
-      this.scene?.adjustCameraAzimuth(-1)
-      this._renderCameraSettings()
-    }
-    if (action === 'camera-azimuth-plus') {
-      this.scene?.adjustCameraAzimuth(1)
-      this._renderCameraSettings()
-    }
     if (action === 'camera-pitch-minus') {
       this.scene?.adjustCameraPitch(-1)
       this._renderCameraSettings()

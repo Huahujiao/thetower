@@ -2,7 +2,10 @@ $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $entries = @(
-  @{ Source = 'art/generated/floor-plain-stone-v1.png'; Target = 'src/assets/board-floor-plain-v1.jpg' },
+  @{ Source = 'art/generated/floor-dungeon-a-v1.png'; Target = 'src/assets/board-floor-dungeon-a-v1.jpg' },
+  @{ Source = 'art/generated/floor-dungeon-b-v1.png'; Target = 'src/assets/board-floor-dungeon-b-v1.jpg' },
+  @{ Source = 'art/generated/floor-dungeon-c-v1.png'; Target = 'src/assets/board-floor-dungeon-c-v1.jpg' },
+  @{ Source = 'art/generated/floor-dungeon-d-v1.png'; Target = 'src/assets/board-floor-dungeon-d-v1.jpg' },
   @{ Source = 'art/generated/card-back-neutral-v1.png'; Target = 'src/assets/board-card-back-v1.jpg' },
   @{ Source = 'art/generated/card-back-scorch-v1.png'; Target = 'src/assets/board-card-back-scorch-v1.jpg' },
   @{ Source = 'art/generated/card-back-wither-v1.png'; Target = 'src/assets/board-card-back-wither-v1.jpg' },

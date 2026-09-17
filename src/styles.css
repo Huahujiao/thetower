@@ -61,23 +61,23 @@ button { font: inherit; }
 .hud-bottom { flex: 0 0 auto; display: flex; flex-direction: column; gap: 4px; padding: 6px 10px 9px; background: linear-gradient(0deg, rgba(10,10,20,.9), rgba(10,10,20,.35)); pointer-events: none; }
 .bag-rotate:active { transform: rotate(90deg); }
 .backpack-grid { --bag-cell: var(--hud-bag-cell); position: relative; display: grid; grid-template-columns: repeat(var(--bag-columns), minmax(0, var(--bag-cell))); grid-template-rows: repeat(var(--bag-rows), var(--bag-cell)); grid-auto-rows: var(--bag-cell); justify-content: center; gap: 2px; width: 100%; height: calc(var(--bag-cell) * 4 + 6px); pointer-events: auto; }
-.bag-cell { z-index: 0; min-width: 0; min-height: 0; padding: 0; border: 1px solid rgba(255,255,255,.12); border-radius: 3px; background: rgba(0,0,0,.28); cursor: pointer; }.bag-item { position: relative; z-index: 1; min-width: 0; min-height: 0; padding: 2px; overflow: hidden; border: 1px solid rgba(130,190,165,.7); border-radius: 4px; background: linear-gradient(135deg, rgba(32,77,56,.98), rgba(20,46,36,.98)); color: #e8fff1; text-align: center; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,.45); }.bag-item.weapon { border-color: rgba(128,176,255,.76); background: linear-gradient(135deg, rgba(36,60,104,.98), rgba(24,38,74,.98)); }.bag-item.potion { border-color: rgba(255,115,142,.76); background: linear-gradient(135deg, rgba(104,34,56,.98), rgba(70,22,41,.98)); }.bag-item.armor { border-color: rgba(246,200,107,.76); background: linear-gradient(135deg, rgba(96,74,30,.98), rgba(62,46,18,.98)); }.bag-item.buff { border-color: rgba(237,145,255,.76); background: linear-gradient(135deg, rgba(83,38,103,.98), rgba(53,24,70,.98)); }.bag-item.selected { z-index: 2; border-color: #ffd56b; box-shadow: 0 0 12px rgba(255,213,107,.74); }.bag-shape { position: absolute; inset: 1px; display: grid; gap: 1px; pointer-events: none; }.bag-shape span { min-width: 0; min-height: 0; border-radius: 2px; }.bag-shape .occupied { display: flex; align-items: flex-start; justify-content: center; overflow: hidden; background: rgba(255,255,255,.08); }.bag-shape .void { background: transparent; }.bag-shape b { max-width: 100%; padding: 1px; overflow: hidden; font-size: clamp(8px, 2.4vw, 11px); line-height: 1.08; text-overflow: ellipsis; white-space: nowrap; }.bag-details { position: absolute; right: 3px; bottom: 2px; left: 3px; overflow: hidden; pointer-events: none; }.bag-details small { display: block; overflow: hidden; font-size: clamp(8px, 2.1vw, 10px); line-height: 1.15; opacity: .84; text-overflow: ellipsis; white-space: nowrap; }
+.bag-cell { z-index: 0; min-width: 0; min-height: 0; padding: 0; border: 1px solid rgba(255,255,255,.12); border-radius: 3px; background: rgba(0,0,0,.28); cursor: pointer; }.bag-item { position: relative; z-index: 1; min-width: 0; min-height: 0; padding: 2px; overflow: hidden; border: 1px solid rgba(130,190,165,.7); border-radius: 4px; --bag-fill: linear-gradient(135deg, rgba(32,77,56,.98), rgba(20,46,36,.98)); color: #e8fff1; text-align: center; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,.45); }.bag-item.weapon { --bag-edge: rgba(128,176,255,.76); --bag-fill: linear-gradient(135deg, rgba(36,60,104,.98), rgba(24,38,74,.98)); }.bag-item.potion { --bag-edge: rgba(255,115,142,.76); --bag-fill: linear-gradient(135deg, rgba(104,34,56,.98), rgba(70,22,41,.98)); }.bag-item.armor { --bag-edge: rgba(246,200,107,.76); --bag-fill: linear-gradient(135deg, rgba(96,74,30,.98), rgba(62,46,18,.98)); }.bag-item.buff { --bag-edge: rgba(237,145,255,.76); --bag-fill: linear-gradient(135deg, rgba(83,38,103,.98), rgba(53,24,70,.98)); }.bag-item.selected { z-index: 2; --bag-edge: #ffd56b; box-shadow: 0 0 12px rgba(255,213,107,.74); }.bag-shape { position: absolute; inset: 1px; display: grid; gap: 1px; pointer-events: none; }.bag-shape span { min-width: 0; min-height: 0; border-radius: 2px; }.bag-shape .occupied { display: flex; align-items: flex-start; justify-content: center; overflow: hidden; background: rgba(255,255,255,.08); }.bag-shape .void { background: transparent; }.bag-shape b { max-width: 100%; padding: 1px; overflow: hidden; font-size: clamp(8px, 2.4vw, 11px); line-height: 1.08; text-overflow: ellipsis; white-space: nowrap; }.bag-details { position: absolute; right: 3px; bottom: 2px; left: 3px; overflow: hidden; pointer-events: none; }.bag-details small { display: block; overflow: hidden; font-size: clamp(8px, 2.1vw, 10px); line-height: 1.15; opacity: .84; text-overflow: ellipsis; white-space: nowrap; }
 .bag-cell { z-index: 0; background: transparent; }.bag-cell.drop-valid { border-color: rgba(130,212,166,.38); background: rgba(78,142,105,.12); box-shadow: inset 0 0 0 1px rgba(156,232,188,.08); }.bag-cell:focus-visible { outline: 2px solid #ffd56b; outline-offset: -2px; }.bag-item,.bag-item.selected { z-index: 1; cursor: default; pointer-events: none; }.bag-shape .occupied { cursor: pointer; pointer-events: auto; }
 
 /* Muted item colors keep the backpack readable while preserving item identity. */
 .bag-item { color: #e6e9f0; }
-.bag-item.potion { border-color: rgba(123,190,145,.58); background: linear-gradient(135deg, rgba(41,77,58,.98), rgba(24,45,35,.98)); }
-.bag-item.armor { border-color: rgba(184,146,101,.58); background: linear-gradient(135deg, rgba(88,70,50,.98), rgba(52,41,31,.98)); }
-.bag-item.energy { border-color: rgba(226,190,88,.64); background: linear-gradient(135deg, rgba(94,75,30,.98), rgba(55,43,20,.98)); }
+.bag-item.potion { --bag-edge: rgba(123,190,145,.58); --bag-fill: linear-gradient(135deg, rgba(41,77,58,.98), rgba(24,45,35,.98)); }
+.bag-item.armor { --bag-edge: rgba(184,146,101,.58); --bag-fill: linear-gradient(135deg, rgba(88,70,50,.98), rgba(52,41,31,.98)); }
+.bag-item.energy { --bag-edge: rgba(226,190,88,.64); --bag-fill: linear-gradient(135deg, rgba(94,75,30,.98), rgba(55,43,20,.98)); }
 
-.bag-item.buff { border-color: rgba(150,137,196,.58); background: linear-gradient(135deg, rgba(75,66,101,.98), rgba(45,41,63,.98)); }
-.bag-item.relic { border-color: rgba(210,170,255,.68); background: linear-gradient(135deg, rgba(74,52,101,.98), rgba(45,31,66,.98)); color: #efe3ff; }
-.bag-item.relic.overloaded { border-color: rgba(169,174,187,.42); background: linear-gradient(135deg, rgba(83,86,96,.92), rgba(48,50,57,.92)); color: rgba(224,227,234,.58); filter: grayscale(1); opacity: .62; }
-.bag-item.weapon { border-color: rgba(128,156,192,.56); background: linear-gradient(135deg, rgba(47,64,89,.98), rgba(31,44,64,.98)); }
-.bag-item.weapon.attribute-scorch { border-color: rgba(190,109,113,.58); background: linear-gradient(135deg, rgba(89,55,59,.98), rgba(50,35,39,.98)); }
-.bag-item.weapon.attribute-wither { border-color: rgba(194,171,95,.58); background: linear-gradient(135deg, rgba(91,82,47,.98), rgba(53,48,29,.98)); }
-.bag-item.weapon.attribute-drown { border-color: rgba(106,164,198,.58); background: linear-gradient(135deg, rgba(48,77,99,.98), rgba(30,50,68,.98)); }
-.bag-item.selected { border-color: #ffd56b; box-shadow: 0 0 12px rgba(255,213,107,.74); }
+.bag-item.buff { --bag-edge: rgba(150,137,196,.58); --bag-fill: linear-gradient(135deg, rgba(75,66,101,.98), rgba(45,41,63,.98)); }
+.bag-item.relic { --bag-edge: rgba(210,170,255,.68); --bag-fill: linear-gradient(135deg, rgba(74,52,101,.98), rgba(45,31,66,.98)); color: #efe3ff; }
+.bag-item.relic.overloaded { --bag-edge: rgba(169,174,187,.42); --bag-fill: linear-gradient(135deg, rgba(83,86,96,.92), rgba(48,50,57,.92)); color: rgba(224,227,234,.58); filter: grayscale(1); opacity: .62; }
+.bag-item.weapon { --bag-edge: rgba(128,156,192,.56); --bag-fill: linear-gradient(135deg, rgba(47,64,89,.98), rgba(31,44,64,.98)); }
+.bag-item.weapon.attribute-scorch { --bag-edge: rgba(190,109,113,.58); --bag-fill: linear-gradient(135deg, rgba(89,55,59,.98), rgba(50,35,39,.98)); }
+.bag-item.weapon.attribute-wither { --bag-edge: rgba(194,171,95,.58); --bag-fill: linear-gradient(135deg, rgba(91,82,47,.98), rgba(53,48,29,.98)); }
+.bag-item.weapon.attribute-drown { --bag-edge: rgba(106,164,198,.58); --bag-fill: linear-gradient(135deg, rgba(48,77,99,.98), rgba(30,50,68,.98)); }
+.bag-item.selected { --bag-edge: #ffd56b; box-shadow: 0 0 12px rgba(255,213,107,.74); }
 
 
 .relic-choice { position: absolute; inset: 18% 8% auto; z-index: 50; display: none; padding: 14px; border: 1px solid rgba(210,170,255,.5); border-radius: 12px; background: rgba(30,22,48,.96); pointer-events: auto; }.relic-choice.show { display: block; }.relic-choice-title { margin-bottom: 12px; color: #e5d5ff; font-size: 15px; font-weight: 700; text-align: center; }.relic-choice-row { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; }.relic-choice-card { min-width: 0; padding: 10px 7px; border: 1px solid rgba(210,170,255,.38); border-radius: 8px; background: rgba(210,170,255,.08); color: #e5d5ff; cursor: pointer; }.relic-choice-card:active { transform: scale(.97); }.relic-choice-card .relic-name,.relic-choice-card .relic-desc { display: block; }.relic-choice-card .relic-name { font-size: 13px; font-weight: 700; }.relic-choice-card .relic-desc { margin-top: 6px; color: rgba(255,255,255,.72); font-size: 11px; line-height: 1.35; }.room-reward { z-index: 55; }.level-up { z-index: 56; border-color: rgba(142,255,200,.56); background: rgba(20,45,45,.97); }.level-up .relic-choice-card { border-color: rgba(142,255,200,.35); background: rgba(74,155,126,.12); }.reward-skip { display: block; margin: 10px auto 0; padding: 5px 14px; border: 1px solid rgba(255,255,255,.22); border-radius: 7px; background: transparent; color: rgba(255,255,255,.68); cursor: pointer; }
@@ -207,8 +207,27 @@ button { font: inherit; }
 .craft-row { display:grid; grid-template-columns:1fr auto 1fr auto 1fr auto; align-items:center; gap:7px; padding:12px 0; border-bottom:1px solid #ffffff20; }
 .craft-row .craft-item { padding:10px 5px; font-size:13px; touch-action:none; user-select:none; }
 .detail-panel { z-index:130; }
-.bag-item.defense { background:#485860; }
-.bag-item.material { background:#65573d; }
+.bag-item.defense { --bag-fill:#485860; }
+.bag-item.material { --bag-fill:#65573d; }
+
+/* The rectangular layout wrapper must never paint over a shape's empty cells. */
+.bag-item, .bag-item.selected { padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; overflow: visible; }
+.bag-item { --bag-edge: rgba(130,190,165,.7); }
+.bag-item.selected { --bag-edge: #ffd56b; }
+.bag-shape { inset: 0; gap: 2px; }
+.bag-shape .occupied { position: relative; box-sizing: border-box; border-style: solid; border-color: var(--bag-edge); border-radius: 0; background: var(--bag-fill); }
+.bag-shape .shape-edge { position: absolute; z-index: 2; display: block; pointer-events: none; background: #ffe7a0; opacity: 0; }
+.bag-shape .edge-top, .bag-shape .edge-bottom { right: 0; left: 0; height: 2px; }
+.bag-shape .edge-top { top: -1px; }
+.bag-shape .edge-bottom { bottom: -1px; }
+.bag-shape .edge-left, .bag-shape .edge-right { top: 0; bottom: 0; width: 2px; }
+.bag-shape .edge-left { left: -1px; }
+.bag-shape .edge-right { right: -1px; }
+.bag-item.selected .occupied { background: linear-gradient(rgba(255,213,107,.13), rgba(255,213,107,.13)), var(--bag-fill); }
+.bag-item.selected .shape-edge { opacity: 1; box-shadow: 0 0 5px 1px rgba(255,213,107,.92), 0 0 10px 2px rgba(255,213,107,.46); }
+.bag-shape .bag-name, .bag-shape .bag-detail { z-index: 1; min-width: 0; max-width: 100%; margin: 0; padding: 2px 3px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; pointer-events: none; }
+.bag-shape .bag-name { align-self: start; }
+.bag-shape .bag-detail { align-self: end; font-size: clamp(8px, 2.1vw, 10px); line-height: 1.15; opacity: .84; }
 @media(max-width:480px) { .craft-dialog { padding:12px; } .craft-row { gap:4px; } .craft-row button { padding:8px 5px; font-size:12px; } }
 .build-status-panel { position:fixed; top:12%; left:50%; transform:translateX(-50%); width:min(560px,calc(100vw - 24px)); max-height:65dvh; overflow:auto; z-index:105; padding:14px; border:1px solid #91836b; border-radius:10px; background:#20272bf5; color:#eee8d8; pointer-events:auto; box-sizing:border-box; }
 .build-status-panel[hidden] { display:none; }

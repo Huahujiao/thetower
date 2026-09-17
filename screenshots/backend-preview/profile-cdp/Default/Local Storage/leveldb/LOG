@@ -1,0 +1,5 @@
+2026/09/16-17:15:31.368 523c Creating DB D:\new_test\thetower\screenshots\backend-preview\profile-cdp\Default\Local Storage\leveldb since it was missing.
+2026/09/16-17:15:31.375 523c Reusing MANIFEST D:\new_test\thetower\screenshots\backend-preview\profile-cdp\Default\Local Storage\leveldb/MANIFEST-000001
+2026/09/16-17:16:31.387 7ab4 Level-0 table #5: started
+2026/09/16-17:16:31.391 7ab4 Level-0 table #5: 62978 bytes OK
+2026/09/16-17:16:31.393 7ab4 Delete type=0 #3

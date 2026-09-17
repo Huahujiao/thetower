@@ -4,10 +4,12 @@
 
 ### 首批接入状态
 
+- 最新空地方案：参考 `screenshots/stoneshard_floor.jpg` 的2行7列地面，通过生图模型生成深青灰像素石板四变体：完整、轻裂、破角、四块拼石。母版为 `art/generated/floor-dungeon-{a,b,c,d}-v1.png`，运行时为 `src/assets/board-floor-dungeon-{a,b,c,d}-v1.jpg`。一格以一块大石板为主，按坐标稳定伪随机分配，权重50%/20%/20%/10%，不消耗游戏随机数，不随行动刷新，不额外调暗。旧砖和素石砖母版保留为历史方案；中性牌背提亮系数1.3保持不变。
+
 - 已生成云纹牌背母版：`art/generated/card-back-neutral-v1.png`，提示词记录于 `art/generated/prompts.md`。
 - 2026-09-16空地改用生图模型新生成的无纹饰暖灰石砖：`art/generated/floor-plain-stone-v1.png`。仅保留石材颗粒与轻微磨损，与深色装饰牌背区分。旧花纹地砖母版保留，但不再用于空地。
 - 已分别通过生图模型生成灼热火纹、枯萎根纹、沉溺水纹完整牌背：`art/generated/card-back-{scorch,wither,drown}-v1.png`。与中性母版合计4张，运行时使用各自的成图，不再染色或覆盖程序图标。
-- 游戏使用 `src/assets/board-floor-plain-v1.jpg`、`src/assets/board-card-back-v1.jpg` 和 `src/assets/board-card-back-{scorch,wither,drown}-v1.jpg`；原母版保留。`src/render/board-textures.js` 管理原图复制和共享缓存。不可翻开的牌仅叠加28%暗层。
+- 游戏使用上述四种地板、`src/assets/board-card-back-v1.jpg` 和 `src/assets/board-card-back-{scorch,wither,drown}-v1.jpg`；原母版保留。`src/render/board-textures.js` 管理原图复制和共享缓存。不可翻开的牌仅叠加28%暗层。
 - 首批只覆盖地板与牌背，角色、牌面正面和其他素材仍按下方计划排期。
 - 按用户要求未进行浏览器预览；检查范围为构建、静态检查和纹理缓存/加载/释放的逻辑测试，实际画面由用户预览。
 
