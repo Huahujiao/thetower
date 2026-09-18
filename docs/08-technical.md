@@ -47,7 +47,7 @@ Room card grids are now one row and one column smaller per floor: 6x6, 7x7, 8x8,
 
 The Three.js scene keeps tile meshes separate from room structure. Revealing a door now rebuilds only walls, doors, and explored-room outlines; card faces retain explicit depth clearance, polygon offset, and non-writing face depth to prevent camera-angle flicker. Unflippable cards share a dedicated charcoal-gray card-back texture, independent of hidden attributes.
 
-Pillars are fixed by room geometry: the world-space south wall (`top` in the renderer's wall-side naming) has pillars only at its two endpoints (when not occupied by a door), while the other walls use normal spacing. Pillars are no longer dynamically hidden based on camera or player position.
+Pillars are fixed by room geometry: the world-space south wall (`bottom` in the renderer's wall-side naming) has no pillars along its middle, while its two endpoints remain eligible (when not occupied by a door); the other walls use normal spacing. Pillars are no longer dynamically hidden based on camera or player position.
 
 ## Enemy baseline
 
