@@ -19,7 +19,7 @@ Enemy health shown by `/wiki` uses the same `ENEMY_HP_MULTIPLIER` as runtime spa
 
 The wiki records that backpack sprites use alpha-transparent canvases sized by each item's occupied shape. The backpack surface is a cool ink-black charcoal gradient rather than the earlier yellow-brown paper field; gameplay balance values remain data-driven rather than painted into the artwork.
 
-The reviewed sprite set currently includes a 1x2 rust sword, 1x1 bone knife, 1x3 ember spear, an L-footprint root axe, a cross-footprint mountain maul, and a 1x2 wooden ward shield. The HUD uses these sprites when their item ids are present and falls back to the procedural shape fill for other items; the wiki's balance cards remain driven by the item catalog.
+The reviewed sprite set currently includes a 1x2 rust sword, 1x1 bone knife, 1x3 ember spear, an L-footprint root axe, a cross-footprint mountain maul, and a 1x2 wooden ward shield. The HUD uses these sprites without labels or procedural cell fills when their item ids are present; other items use the cool charcoal fallback, while the wiki's balance cards remain driven by the item catalog.
 
 | 标签页 | 数据来源 |
 | --- | --- |

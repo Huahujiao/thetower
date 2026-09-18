@@ -523,6 +523,8 @@ export class HUD {
       const originIndex = this.run.backpack.originIndex(placement)
       const selected = this.run.selectedInventoryIndex === originIndex
       const itemClasses = ['bag-item', item.type]
+      const spriteUrl = itemSpriteUrl(item)
+      if (spriteUrl) itemClasses.push('has-sprite')
       if (item.type === 'relic' && relicOverloaded) itemClasses.push('overloaded')
       if (item.type === 'weapon' && item.attribute) itemClasses.push(`attribute-${item.attribute}`)
       if (selected) itemClasses.push('selected')
@@ -546,7 +548,6 @@ export class HUD {
       }).join('')
       const labelStyle = run => `grid-column:${run.x + 1} / span ${run.width};grid-row:${run.y + 1}`
       const labels = layout.name ? `<b class="bag-name" style="${labelStyle(layout.name)}">${escapeHtml(item.name)}</b><small class="bag-detail" style="${labelStyle(layout.detail)}">${escapeHtml(detail)}</small>` : ''
-      const spriteUrl = itemSpriteUrl(item)
       const sprite = spriteUrl ? `<img class="bag-sprite" src="${spriteUrl}" alt="" aria-hidden="true" style="transform:rotate(${placement.rotation * 90}deg)">` : ''
       return `<div class="${itemClasses.join(' ')}" style="grid-column:${placement.x + 1} / span ${shape[0].length};grid-row:${placement.y + 1} / span ${shape.length}"><span class="bag-shape" style="grid-template-columns:repeat(${shape[0].length},1fr);grid-template-rows:repeat(${shape.length},1fr)">${sprite}${shapeCells}${labels}</span></div>`
     }).join('')

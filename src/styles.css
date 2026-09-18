@@ -214,7 +214,7 @@ button { font: inherit; }
 .backpack-grid { border: 1px solid rgba(103,120,116,.72); border-radius: 4px; background: linear-gradient(145deg, #1b2426, #0b1012); box-shadow: inset 0 0 0 1px rgba(138,164,157,.16), inset 0 8px 16px rgba(115,156,151,.06), 0 2px 7px rgba(0,0,0,.58); }
 .bag-cell { border-color: rgba(103,123,118,.42); background: linear-gradient(145deg, rgba(71,91,88,.26), rgba(8,13,15,.54)); }
 .bag-item, .bag-item.selected { padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; overflow: visible; }
-.bag-item,.bag-item.weapon,.bag-item.weapon.attribute-scorch,.bag-item.weapon.attribute-wither,.bag-item.weapon.attribute-drown,.bag-item.potion,.bag-item.armor,.bag-item.energy,.bag-item.buff,.bag-item.relic,.bag-item.defense,.bag-item.material { --bag-fill: linear-gradient(145deg, rgba(164,151,119,.92), rgba(100,104,96,.94)); --bag-edge: rgba(55,66,61,.86); }
+.bag-item,.bag-item.weapon,.bag-item.weapon.attribute-scorch,.bag-item.weapon.attribute-wither,.bag-item.weapon.attribute-drown,.bag-item.potion,.bag-item.armor,.bag-item.energy,.bag-item.buff,.bag-item.relic,.bag-item.defense,.bag-item.material { --bag-fill: linear-gradient(145deg, rgba(42,54,54,.96), rgba(15,22,24,.98)); --bag-edge: rgba(74,94,91,.86); }
 .bag-item.weapon.attribute-scorch { --bag-edge: rgba(153,76,72,.88); }.bag-item.weapon.attribute-wither { --bag-edge: rgba(135,119,57,.88); }.bag-item.weapon.attribute-drown { --bag-edge: rgba(63,123,145,.88); }.bag-item.potion { --bag-edge: rgba(117,73,67,.88); }.bag-item.armor { --bag-edge: rgba(141,110,62,.88); }.bag-item.energy { --bag-edge: rgba(157,125,45,.88); }.bag-item.buff,.bag-item.relic { --bag-edge: rgba(104,86,133,.88); }.bag-item.defense { --bag-edge: rgba(67,91,96,.88); }.bag-item.material { --bag-edge: rgba(110,89,52,.88); }
 .bag-item.selected { --bag-edge: #ffd56b; }
 .bag-shape { inset: 0; gap: 2px; }
@@ -228,6 +228,8 @@ button { font: inherit; }
 .bag-shape .edge-left { left: -1px; }
 .bag-shape .edge-right { right: -1px; }
 .bag-item.selected .occupied { background: linear-gradient(rgba(255,213,107,.13), rgba(255,213,107,.13)), var(--bag-fill); }
+.bag-item.has-sprite .occupied { border-color: transparent; background: transparent; }
+.bag-item.has-sprite .bag-name, .bag-item.has-sprite .bag-detail { display: none; }
 .bag-item.selected .shape-edge { opacity: 1; box-shadow: 0 0 5px 1px rgba(255,213,107,.92), 0 0 10px 2px rgba(255,213,107,.46); }
 .bag-shape .bag-name, .bag-shape .bag-detail { z-index: 3; min-width: 0; max-width: 100%; margin: 0; padding: 2px 3px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; pointer-events: none; text-shadow: 0 1px 2px rgba(0,0,0,.9); }
 .bag-shape .bag-name { align-self: start; }
