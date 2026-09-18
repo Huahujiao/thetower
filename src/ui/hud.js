@@ -145,6 +145,9 @@ export class HUD {
     this._onPointerDown = (event) => this._handlePointerDown(event)
     this._onPointerMove = (event) => this._handlePointerMove(event)
     this._onPointerUp = (event) => this._handlePointerUp(event)
+    this._onContextMenu = (event) => {
+      if (event.target.closest('[data=backpack]')) event.preventDefault()
+    }
     this._onKeyDown = (event) => {
       if (event.key !== 'Escape' || !this.q('helpmodal')?.classList.contains('show')) return
       event.preventDefault()
@@ -155,6 +158,7 @@ export class HUD {
     this.root.addEventListener('pointermove', this._onPointerMove)
     this.root.addEventListener('pointerup', this._onPointerUp)
     this.root.addEventListener('pointercancel', this._onPointerUp)
+    this.root.addEventListener('contextmenu', this._onContextMenu)
     document.addEventListener('keydown', this._onKeyDown)
     this.unsubscribe = this.run.on('change', () => this.render())
     this.detailUnsubscribe = this.run.on('detail', () => this.render())
@@ -862,6 +866,7 @@ export class HUD {
     this.root.removeEventListener('pointermove', this._onPointerMove)
     this.root.removeEventListener('pointerup', this._onPointerUp)
     this.root.removeEventListener('pointercancel', this._onPointerUp)
+    this.root.removeEventListener('contextmenu', this._onContextMenu)
     document.removeEventListener('keydown', this._onKeyDown)
   }
 }

@@ -1,6 +1,7 @@
 @echo off
 setlocal
 chcp 65001 >nul
+cd /d "%~dp0"
 
 git add .
 if errorlevel 1 goto :fail_add
@@ -13,7 +14,6 @@ if errorlevel 1 goto :fail_push
 
 echo.
 echo Update and push completed successfully.
-pause
 endlocal
 exit /b 0
 
