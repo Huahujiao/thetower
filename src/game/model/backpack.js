@@ -70,7 +70,10 @@ export class BackpackGrid {
     return this.placementAt(index % this.columns, Math.floor(index / this.columns))
   }
 
-  originIndex(placement) { return placement ? placement.y * this.columns + placement.x : null }
+  originIndex(placement) {
+    const firstCell = placement ? this.cellsForPlacement(placement)[0] : null
+    return firstCell ? firstCell.y * this.columns + firstCell.x : null
+  }
 
   canPlace(item, x, y, rotation = 0, ignoreUid = item?.uid) {
     if (!item || !Number.isInteger(x) || !Number.isInteger(y)) return false

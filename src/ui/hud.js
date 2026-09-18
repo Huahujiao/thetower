@@ -548,7 +548,10 @@ export class HUD {
       }).join('')
       const labelStyle = run => `grid-column:${run.x + 1} / span ${run.width};grid-row:${run.y + 1}`
       const labels = layout.name ? `<b class="bag-name" style="${labelStyle(layout.name)}">${escapeHtml(item.name)}</b><small class="bag-detail" style="${labelStyle(layout.detail)}">${escapeHtml(detail)}</small>` : ''
-      const sprite = spriteUrl ? `<img class="bag-sprite" src="${spriteUrl}" alt="" aria-hidden="true" style="transform:rotate(${placement.rotation * 90}deg)">` : ''
+      const oddRotation = placement.rotation % 2 === 1
+      const spriteWidth = oddRotation ? `${shape.length / shape[0].length * 100}%` : '100%'
+      const spriteHeight = oddRotation ? `${shape[0].length / shape.length * 100}%` : '100%'
+      const sprite = spriteUrl ? `<img class="bag-sprite" src="${spriteUrl}" alt="" aria-hidden="true" style="width:${spriteWidth};height:${spriteHeight};transform:translate(-50%,-50%) rotate(${placement.rotation * 90}deg)">` : ''
       return `<div class="${itemClasses.join(' ')}" style="grid-column:${placement.x + 1} / span ${shape[0].length};grid-row:${placement.y + 1} / span ${shape.length}"><span class="bag-shape" style="grid-template-columns:repeat(${shape[0].length},1fr);grid-template-rows:repeat(${shape.length},1fr)">${sprite}${shapeCells}${labels}</span></div>`
     }).join('')
     backpack.innerHTML = `${cells}${items}`

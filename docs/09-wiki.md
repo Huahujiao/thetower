@@ -17,7 +17,7 @@
 
 Enemy health shown by `/wiki` uses the same `ENEMY_HP_MULTIPLIER` as runtime spawning, so balance multipliers remain visible in the reference cards.
 
-The wiki records that backpack sprites use alpha-transparent canvases sized by each item's occupied shape. The backpack surface is a cool ink-black charcoal gradient rather than the earlier yellow-brown paper field; gameplay balance values remain data-driven rather than painted into the artwork.
+The wiki records that backpack sprites use alpha-transparent canvases sized by each item's occupied shape. The backpack surface is a cool ink-black charcoal gradient rather than the earlier yellow-brown paper field. Room card grids use the reduced per-floor dimensions (6x6, 7x7, 8x8, 8x8, 9x9), and gameplay balance values remain data-driven rather than painted into the artwork.
 
 The reviewed sprite set currently includes a 1x2 rust sword, 1x1 bone knife, 1x3 ember spear, an L-footprint root axe, a cross-footprint mountain maul, and a 1x2 wooden ward shield. The HUD uses these sprites without labels or procedural cell fills when their item ids are present; other items retain distinct cool dark fills by type and attribute, while the wiki's balance cards remain driven by the item catalog.
 

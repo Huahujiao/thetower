@@ -329,7 +329,7 @@ export class GameScene {
       return
     }
     const visibleDoorKey = this._visibleDoorKey(room)
-    const structureKey = `${visibleDoorKey}|${this._nearestPlayerWallSide(room)}`
+    const structureKey = visibleDoorKey
     const sameRoom = room?.id === this.framedRoomId && this.tileMeshes.length === room.width * room.height && !!this.structureGroup
     if (sameRoom) {
       this._clearPathPreview()
@@ -405,6 +405,9 @@ export class GameScene {
         opacity: peeked ? 0.46 : 1,
         side: THREE.DoubleSide,
         depthWrite: !standing,
+        polygonOffset: true,
+        polygonOffsetFactor: -1,
+        polygonOffsetUnits: -4,
       }),
     )
     this._setFacePose(face, point, standing, !revealed)
@@ -623,18 +626,17 @@ export class GameScene {
     this.structureGroup.add(pillar)
   }
 
-  _addBoundaryPillars(room, doors, omittedSide) {
+  _addBoundaryPillars(room, doors) {
     const seen = new Set()
     const hasDoor = (side, offset) => doors.some(door => door.side === side && door.offset === offset)
     for (const side of ['top', 'bottom']) {
-      if (side === omittedSide) continue
       const forbidden = doors.filter(door => door.side === side).map(door => door.offset)
-      for (const offset of evenPillarOffsets(room.width, forbidden)) {
+      const offsets = side === 'bottom' ? [0, room.width - 1] : evenPillarOffsets(room.width, forbidden)
+      for (const offset of offsets) {
         if (!hasDoor(side, offset)) this._addBoundaryPillar(room, side, offset, seen)
       }
     }
     for (const side of ['left', 'right']) {
-      if (side === omittedSide) continue
       const forbidden = doors.filter(door => door.side === side).map(door => door.offset)
       for (const offset of evenPillarOffsets(room.height, forbidden)) {
         if (!hasDoor(side, offset)) this._addBoundaryPillar(room, side, offset, seen)
@@ -674,7 +676,7 @@ export class GameScene {
     this.structureGroup.add(mesh)
   }
 
-  _addRoomBoundary(room, omittedPillarSide) {
+  _addRoomBoundary(room) {
     const doors = this.run.dungeon.doorsForRoom(room.id).filter((door) => this.run.isDoorRevealed(door))
     const hasDoor = (side, offset) => doors.some((door) => door.side === side && door.offset === offset)
     for (const side of ['top', 'bottom']) {
@@ -683,7 +685,7 @@ export class GameScene {
     for (const side of ['left', 'right']) {
       for (let r = 0; r < room.height; r++) if (!hasDoor(side, r)) this._addWallSegment(room, side, r)
     }
-    this._addBoundaryPillars(room, doors, omittedPillarSide)
+    this._addBoundaryPillars(room, doors)
     for (const door of doors) this._addDoorMesh(room, door)
   }
 
@@ -695,7 +697,7 @@ export class GameScene {
     this.structureGroup = new THREE.Group()
     this.roomGroup.add(this.structureGroup)
     this.doorMeshes = []
-    this._addRoomBoundary(room, this._nearestPlayerWallSide(room))
+    this._addRoomBoundary(room)
     this._addExploredRoomGhosts(room)
   }
 
@@ -981,13 +983,13 @@ export class GameScene {
     const backTexture = sourceBackTexture || this._makeBackTexture(this._backAttributeFor(room, position), { unflippable: backUnflippable })
     const front = new THREE.Mesh(
       new THREE.PlaneGeometry(CARD_SIZE, CARD_SIZE),
-      new THREE.MeshBasicMaterial({ map: frontTexture, side: THREE.DoubleSide, transparent: true }),
+      new THREE.MeshBasicMaterial({ map: frontTexture, side: THREE.DoubleSide, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -4 }),
     )
     front.rotation.x = -Math.PI / 2
     front.position.y = HIDDEN_CARD_THICKNESS / 2 + CARD_FACE_CLEARANCE
     const back = new THREE.Mesh(
       new THREE.PlaneGeometry(CARD_SIZE, CARD_SIZE),
-      new THREE.MeshBasicMaterial({ map: backTexture, side: THREE.DoubleSide }),
+      new THREE.MeshBasicMaterial({ map: backTexture, side: THREE.DoubleSide, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -4 }),
     )
     back.rotation.x = Math.PI / 2
     back.position.y = -HIDDEN_CARD_THICKNESS / 2 - CARD_FACE_CLEARANCE

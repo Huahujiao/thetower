@@ -27,6 +27,8 @@ src/
 
 ## 当前运行状态
 
+Room card grids are now one row and one column smaller per floor: 6x6, 7x7, 8x8, 8x8, and 9x9. The 4x8 backpack remains unchanged.
+
 `GameRun` 维护地牢、玩家生命／护甲／体力、4×8 背包、角色成长、圣遗物、商人、奖励、状态效果、敌人状态和日志。圣遗物以 `type: 'relic'` 的 1×1 背包物品保存；`RelicCollection` 是由背包物品同步出的效果索引。普通探索操作回复1体力；消耗品、整理与合成不自动回复。攻击推进攻击计数和全局回合，实际费用包含物品与天赋修正且最低1。接近路径中的每格移动也是独立的非攻击回合。
 
 回合计数只有 `attackCount` 和 `globalTurn`；`turn` 是全局回合的兼容别名。背包整理与合成成功推进1回合；丢弃、奖励/升级选择与购买/出售不推进计数。运行时不存在左右手、装备栏、行动计数、武器耐久、磨刀石、最后一击、武器损毁或拦截机制。圣遗物无数量超载限制。`ItemRules` 统一处理新版武器、防具、材料、圣遗物与天赋的交叉效果。
@@ -43,13 +45,13 @@ src/
 
 ## Renderer stability
 
-The Three.js scene keeps tile meshes separate from room structure. Revealing a door now rebuilds only walls, doors, and explored-room outlines; card faces retain an explicit depth clearance above their bodies to prevent depth flicker. Unflippable cards share a dedicated charcoal-gray card-back texture, independent of hidden attributes.
+The Three.js scene keeps tile meshes separate from room structure. Revealing a door now rebuilds only walls, doors, and explored-room outlines; card faces retain explicit depth clearance, polygon offset, and non-writing face depth to prevent camera-angle flicker. Unflippable cards share a dedicated charcoal-gray card-back texture, independent of hidden attributes.
 
-The room structure key also tracks the wall nearest the player. Pillars are omitted from that one wall to preserve the board view, and a change of nearest wall rebuilds only the wall/door structure, never the card meshes.
+Pillars are fixed by room geometry: the south wall has pillars only at its two endpoints (when not occupied by a door), while the other walls use normal spacing. Pillars are no longer dynamically hidden based on camera or player position.
 
 ## Enemy baseline
 
-Runtime enemy health is `catalog.json` health multiplied by `ENEMY_HP_MULTIPLIER` (currently `2`). This applies to natural enemies, spawned minions, and the boss; `/wiki` uses the same multiplier. The `heavy-armor` trait reduces every received damage instance by 1 after any shield limit, including damage otherwise marked as ignoring defense. Save version 24 deliberately starts a fresh run so persisted enemies cannot retain the former health values.
+Runtime enemy health is `catalog.json` health multiplied by `ENEMY_HP_MULTIPLIER` (currently `2`). This applies to natural enemies, spawned minions, and the boss; `/wiki` uses the same multiplier. The `heavy-armor` trait reduces every received damage instance by 1 after any shield limit, including damage otherwise marked as ignoring defense. Save version 25 deliberately starts a fresh run so persisted room dimensions and enemy values cannot retain the former layout.
 
 ## Inventory sprite workflow
 

@@ -12,7 +12,7 @@ const MAX_LAYOUT_GENERATION_ATTEMPTS = 24
 
 export const DUNGEON_CONFIG = Object.freeze({
   roomsPerFloor: [1, 2, 2, 2, 1],
-  roomSizes: [7, 8, 9, 9, 10],
+  roomSizes: [6, 7, 8, 8, 9],
   lockedEdgeIndexes: [1, 4],
   merchantRoomIndexes: [1, 3, 5],
   merchantIds: ['merchant', 'merchant', 'collector'],

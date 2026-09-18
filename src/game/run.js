@@ -29,7 +29,7 @@ export const RELIC_SOFT_LIMIT = Infinity
 export const ENERGY_MAX = 10
 export const SAVE_KEY = 'grid_flip_adventure_v2'
 // Enemy health is rebalanced in this release, so old combat state is intentionally discarded.
-export const SAVE_VERSION = 24
+export const SAVE_VERSION = 25
 
 function clone(value) { return JSON.parse(JSON.stringify(value)) }
 

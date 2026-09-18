@@ -1,9 +1,9 @@
-import rustSword from '../assets/inventory/weapon-rust-sword-v2.png'
-import boneKnife from '../assets/inventory/weapon-bone-knife-v1.png'
-import emberSpear from '../assets/inventory/weapon-ember-spear-v1.png'
-import rootAxe from '../assets/inventory/weapon-root-axe-v1.png'
-import mountainMaul from '../assets/inventory/weapon-mountain-maul-v1.png'
-import woodShield from '../assets/inventory/defense-wood-shield-v1.png'
+const rustSword = new globalThis.URL('../assets/inventory/weapon-rust-sword-v2.png', import.meta.url).href
+const boneKnife = new globalThis.URL('../assets/inventory/weapon-bone-knife-v1.png', import.meta.url).href
+const emberSpear = new globalThis.URL('../assets/inventory/weapon-ember-spear-v1.png', import.meta.url).href
+const rootAxe = new globalThis.URL('../assets/inventory/weapon-root-axe-v1.png', import.meta.url).href
+const mountainMaul = new globalThis.URL('../assets/inventory/weapon-mountain-maul-v1.png', import.meta.url).href
+const woodShield = new globalThis.URL('../assets/inventory/defense-wood-shield-v1.png', import.meta.url).href
 
 const ITEM_SPRITES = Object.freeze({
   'rust-sword': rustSword,
