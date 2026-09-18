@@ -1,5 +1,7 @@
 import catalog from './catalog.json' with { type: 'json' }
 
+// Keep runtime enemies and the wiki in sync when tuning the encounter baseline.
+export const ENEMY_HP_MULTIPLIER = 2
 export const ENEMY_DEFS = Object.freeze(catalog.enemies)
 const BY_ID = new Map(ENEMY_DEFS.map((definition) => [definition.id, definition]))
 

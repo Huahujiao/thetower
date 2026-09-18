@@ -35,7 +35,7 @@ src/
 
 状态变化后自动保存到 `localStorage`。存档包括地牢、已翻开卡牌、背包位置与旋转、玩家成长和资源、背包中的圣遗物物品、商人货架、奖励袋、`attackCount`／`globalTurn`、中毒与燃烧、敌人自身行动计数、已触发陷阱的延迟移除状态、日志和结算状态。没有装备栏或武器耐久字段。
 
-当前存档版本为 **22**。版本号不匹配、结构无效或玩家位置无效时会删除存档并创建新局；存档同时保留 `turn` 作为全局回合兼容字段。旧的独立圣遗物收藏存档不迁移。
+当前存档版本为 **24**。版本号不匹配、结构无效或玩家位置无效时会删除存档并创建新局；存档同时保留 `turn` 作为全局回合兼容字段。旧的独立圣遗物收藏存档不迁移。
 
 ## 验证要求
 
@@ -44,6 +44,22 @@ src/
 ## Renderer stability
 
 The Three.js scene keeps tile meshes separate from room structure. Revealing a door now rebuilds only walls, doors, and explored-room outlines; card faces retain an explicit depth clearance above their bodies to prevent depth flicker. Unflippable cards share a dedicated charcoal-gray card-back texture, independent of hidden attributes.
+
+The room structure key also tracks the wall nearest the player. Pillars are omitted from that one wall to preserve the board view, and a change of nearest wall rebuilds only the wall/door structure, never the card meshes.
+
+## Enemy baseline
+
+Runtime enemy health is `catalog.json` health multiplied by `ENEMY_HP_MULTIPLIER` (currently `2`). This applies to natural enemies, spawned minions, and the boss; `/wiki` uses the same multiplier. The `heavy-armor` trait reduces every received damage instance by 1 after any shield limit, including damage otherwise marked as ignoring defense. Save version 24 deliberately starts a fresh run so persisted enemies cannot retain the former health values.
+
+## Inventory sprite workflow
+
+Inventory artwork is produced per concrete item and its `shape`, not as a generic square class icon. The final PNG canvas uses 512 pixels per occupied grid cell and keeps every unoccupied area transparent; for example, the 1x2 `rust-sword` sprite is 512x1024. Source drafts with unsuitable proportions are retained under `src/assets/inventory/backup/`. Art direction is restrained Chinese cosmic horror: aged-paper grain and ink texture belong within the object while its background remains alpha-transparent. Avoid European-medieval construction, low-poly rendering, and saturated ukiyo-e palettes.
+
+Readability at backpack scale takes precedence over prop detail: narrow vertical weapons need a broad primary silhouette and a chunky guard or grip rather than tassels, fine engraving, or large transparent side margins.
+
+The current reviewed set is `weapon-rust-sword-v2.png` (1x2), `weapon-bone-knife-v1.png` (1x1), `weapon-ember-spear-v1.png` (1x3), `weapon-root-axe-v1.png` (2x2 L footprint), and `weapon-mountain-maul-v1.png` (3x3 cross footprint). Every file has been alpha-checked after its final crop; the L-shaped axe deliberately preserves its top-right grid cell as transparent, while the maul preserves all four corner cells.
+
+The backpack surface uses a warm gray-brown old-paper field (`#817766` to `#62655f`) with ink-dark gaps and antique-bronze edging. Sprite art must avoid making that gray-brown/ivory field its dominant color; use ink black, bone gray, oxidized blue-green, and restrained cinnabar accents for contrast.
 
 ```powershell
 npm.cmd run lint

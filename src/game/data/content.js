@@ -1,4 +1,4 @@
-import { enemyDefinitionFor, getEnemyDefinition } from './enemies.js'
+import { ENEMY_HP_MULTIPLIER, enemyDefinitionFor, getEnemyDefinition } from './enemies.js'
 import catalog from './catalog.json' with { type: 'json' }
 import { getRelicDefinition, RELIC_DEFS } from './relics.js'
 
@@ -132,8 +132,8 @@ function createEnemy(definition, { position = null, boss = false } = {}) {
     noExperience: definition.spawnOnly === true,
     boss,
     pos: position ? { ...position } : null,
-    hp: definition.hp,
-    maxHp: definition.hp,
+    hp: definition.hp * ENEMY_HP_MULTIPLIER,
+    maxHp: definition.hp * ENEMY_HP_MULTIPLIER,
     attack: definition.attack,
     range: definition.range,
     attackCooldownMax: Math.max(1, Number(definition.attackCooldownMax ?? definition.cooldownMax) || 0),

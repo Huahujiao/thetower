@@ -28,8 +28,8 @@ export const INVENTORY_CAPACITY = INVENTORY_COLUMNS * INVENTORY_ROWS
 export const RELIC_SOFT_LIMIT = Infinity
 export const ENERGY_MAX = 10
 export const SAVE_KEY = 'grid_flip_adventure_v2'
-// This release stores relics as one-cell backpack items. Old saves are intentionally discarded.
-export const SAVE_VERSION = 23
+// Enemy health is rebalanced in this release, so old combat state is intentionally discarded.
+export const SAVE_VERSION = 24
 
 function clone(value) { return JSON.parse(JSON.stringify(value)) }
 
@@ -1365,6 +1365,7 @@ export class GameRun {
       enemy.shieldConsumed = true
       applied = Math.min(applied, Math.floor(enemy.maxHp / 2))
     }
+    if (enemy.traits?.includes('heavy-armor')) applied = Math.max(0, applied - 1)
     const healthDamage = Math.min(hpBefore, applied)
     enemy.hp -= applied
     if (enemy.hp > 0) return { damage: healthDamage, rawDamage: applied, healthDamage, defeated: false, finishedDowned: false }

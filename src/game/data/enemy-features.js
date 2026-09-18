@@ -6,7 +6,7 @@ export const ENEMY_BEHAVIOR_LABELS = Object.freeze({
 
 export const ENEMY_TRAIT_LABELS = Object.freeze({
   shield: '\u62a4\u76fe',
-  'heavy-armor': '\u91cd\u7532',
+  'heavy-armor': '\u91cd\u7532\uff08\u6bcf\u6b21\u53d7\u4f24 -1\uff09',
   split: '\u5206\u88c2',
   regen: '\u518d\u751f',
   revive: '\u590d\u751f',

@@ -1,5 +1,6 @@
 import catalog from '../game/data/catalog.json' with { type: 'json' }
 import { attributeLabel } from '../game/data/attributes.js'
+import { ENEMY_HP_MULTIPLIER } from '../game/data/enemies.js'
 import { enemyBehaviorLabel, enemyFeatureLabel } from '../game/data/enemy-features.js'
 import { RELIC_DEFS } from '../game/data/relics.js'
 import { TALENT_DEFS } from '../game/data/progression.js'
@@ -9,7 +10,7 @@ import '../wiki.css'
 const COPY = Object.freeze({
   title: '\u5730\u7262\u56fe\u9274',
   subtitle: '\u5730\u7262\u5185\u5bb9\u56fe\u9274',
-  summary: '\u4e09\u5c5e\u6027\u3001\u4e09\u5c42\u5929\u8d4b\u7f51\u3001\u5723\u9057\u7269\u6784\u7b51\u3001\u7edf\u4e00\u6697\u7070\u5361\u80cc\u4e0e 4\u00d78 \u5f62\u72b6\u80cc\u5305\u5171\u540c\u6784\u6210\u5730\u7262\u7684\u8def\u7ebf\u9009\u62e9\u3002',
+  summary: '\u4e09\u5c5e\u6027\u3001\u4e09\u5c42\u5929\u8d4b\u7f51\u3001\u5723\u9057\u7269\u6784\u7b51\u3001\u7edf\u4e00\u6697\u7070\u5361\u80cc\u4e0e 4\u00d78 \u5f62\u72b6\u80cc\u5305\u5171\u540c\u6784\u6210\u5730\u7262\u7684\u8def\u7ebf\u9009\u62e9\uff1b\u80cc\u5305\u4f7f\u7528\u7070\u8910\u65e7\u7eb8\u5e95\u8272\uff0c\u7cbe\u7075\u6309\u5360\u683c\u4f7f\u7528\u900f\u660e\u753b\u5e03\uff0c\u4f18\u5148\u4fdd\u7559\u5c0f\u5c3a\u5bf8\u4e0b\u6e05\u6670\u7684\u5927\u8f6e\u5ed3\uff1b\u5df2\u5ba1\u6838\u7d20\u6750\u5305\u62ec 1\u00d72 \u9523\u5251\u30011\u00d71 \u9aa8\u5305\u30011\u00d73 \u70bd\u67aa\u3001L \u5f62\u8150\u6839\u6218\u65a7\u4e0e\u5341\u5b57\u65ad\u5cb3\u69cc\u3002',
   implemented: '\u5df2\u5b9e\u88c5',
   back: '\u8fd4\u56de\u5730\u7262',
   enemies: '\u654c\u4eba',
@@ -145,7 +146,7 @@ function enemyCards() {
     title: enemy.name,
     accent: enemy.boss ? '\u2620' : '\u2020',
     stats: [
-      stat(COPY.health, enemy.hp),
+      stat(COPY.health, enemy.hp * ENEMY_HP_MULTIPLIER),
       stat(COPY.attack, enemy.attack),
       stat(COPY.range, `${enemy.range} ${COPY.cell}`),
       stat(COPY.delay, `${enemy.initialActionDelay} ${COPY.turn}`),

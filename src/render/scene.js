@@ -225,6 +225,7 @@ export class GameScene {
     this.pendingRebuild = false
     this.hoveredTileKey = null
     this.visibleDoorKey = ''
+    this.structureKey = ''
     this.zoom = DEFAULT_ZOOM
     this.cameraAzimuth = DEFAULT_CAMERA_AZIMUTH
     this.cameraElevation = DEFAULT_CAMERA_ELEVATION
@@ -309,6 +310,18 @@ export class GameScene {
       .join('|')
   }
 
+  _nearestPlayerWallSide(room) {
+    const position = this.run.player?.pos
+    if (!room || !position) return 'bottom'
+    const distances = [
+      ['bottom', room.height - 1 - position.r],
+      ['top', position.r],
+      ['left', position.c],
+      ['right', room.width - 1 - position.c],
+    ]
+    return distances.reduce((nearest, candidate) => candidate[1] < nearest[1] ? candidate : nearest)[0]
+  }
+
   rebuild() {
     const room = this.run.currentRoom
     if (this.movementAnimation || this.animationQueue.length || (this.flipAnimations.length && room?.id === this.framedRoomId)) {
@@ -316,16 +329,17 @@ export class GameScene {
       return
     }
     const visibleDoorKey = this._visibleDoorKey(room)
+    const structureKey = `${visibleDoorKey}|${this._nearestPlayerWallSide(room)}`
     const sameRoom = room?.id === this.framedRoomId && this.tileMeshes.length === room.width * room.height && !!this.structureGroup
     if (sameRoom) {
       this._clearPathPreview()
       this._clearMovementAnimation()
       this._clearPlayerMarker()
       if (this._refreshRoom(room)) {
-        if (this.visibleDoorKey !== visibleDoorKey) {
+        if (this.structureKey !== structureKey) {
           this._rebuildRoomStructure(room)
           this.visibleDoorKey = visibleDoorKey
-          this._frameRoom(room)
+          this.structureKey = structureKey
         } else this._refreshDoors()
         return
       }
@@ -334,6 +348,7 @@ export class GameScene {
       this.animationQueue = []
       this.pendingRebuild = false
       this.visibleDoorKey = ''
+      this.structureKey = ''
     }
     this._clearPathPreview()
     this._clearMovementAnimation()
@@ -355,6 +370,7 @@ export class GameScene {
     this._rebuildRoomStructure(room)
     this._frameRoom(room, { resetView: room.id !== this.framedRoomId })
     this.visibleDoorKey = visibleDoorKey
+    this.structureKey = structureKey
     this.framedRoomId = room.id
   }
 
@@ -607,16 +623,18 @@ export class GameScene {
     this.structureGroup.add(pillar)
   }
 
-  _addBoundaryPillars(room, doors) {
+  _addBoundaryPillars(room, doors, omittedSide) {
     const seen = new Set()
     const hasDoor = (side, offset) => doors.some(door => door.side === side && door.offset === offset)
     for (const side of ['top', 'bottom']) {
+      if (side === omittedSide) continue
       const forbidden = doors.filter(door => door.side === side).map(door => door.offset)
       for (const offset of evenPillarOffsets(room.width, forbidden)) {
         if (!hasDoor(side, offset)) this._addBoundaryPillar(room, side, offset, seen)
       }
     }
     for (const side of ['left', 'right']) {
+      if (side === omittedSide) continue
       const forbidden = doors.filter(door => door.side === side).map(door => door.offset)
       for (const offset of evenPillarOffsets(room.height, forbidden)) {
         if (!hasDoor(side, offset)) this._addBoundaryPillar(room, side, offset, seen)
@@ -656,7 +674,7 @@ export class GameScene {
     this.structureGroup.add(mesh)
   }
 
-  _addRoomBoundary(room) {
+  _addRoomBoundary(room, omittedPillarSide) {
     const doors = this.run.dungeon.doorsForRoom(room.id).filter((door) => this.run.isDoorRevealed(door))
     const hasDoor = (side, offset) => doors.some((door) => door.side === side && door.offset === offset)
     for (const side of ['top', 'bottom']) {
@@ -665,7 +683,7 @@ export class GameScene {
     for (const side of ['left', 'right']) {
       for (let r = 0; r < room.height; r++) if (!hasDoor(side, r)) this._addWallSegment(room, side, r)
     }
-    this._addBoundaryPillars(room, doors)
+    this._addBoundaryPillars(room, doors, omittedPillarSide)
     for (const door of doors) this._addDoorMesh(room, door)
   }
 
@@ -677,7 +695,7 @@ export class GameScene {
     this.structureGroup = new THREE.Group()
     this.roomGroup.add(this.structureGroup)
     this.doorMeshes = []
-    this._addRoomBoundary(room)
+    this._addRoomBoundary(room, this._nearestPlayerWallSide(room))
     this._addExploredRoomGhosts(room)
   }
 

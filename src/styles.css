@@ -211,8 +211,11 @@ button { font: inherit; }
 .bag-item.material { --bag-fill:#65573d; }
 
 /* The rectangular layout wrapper must never paint over a shape's empty cells. */
+.backpack-grid { border: 1px solid rgba(190,174,133,.62); border-radius: 4px; background: linear-gradient(145deg, #817766, #62655f); box-shadow: inset 0 0 0 1px rgba(34,39,36,.62), inset 0 8px 16px rgba(230,216,177,.08), 0 2px 7px rgba(0,0,0,.38); }
+.bag-cell { border-color: rgba(36,42,39,.78); background: linear-gradient(145deg, rgba(193,180,145,.22), rgba(46,53,50,.2)); }
 .bag-item, .bag-item.selected { padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; overflow: visible; }
-.bag-item { --bag-edge: rgba(130,190,165,.7); }
+.bag-item,.bag-item.weapon,.bag-item.weapon.attribute-scorch,.bag-item.weapon.attribute-wither,.bag-item.weapon.attribute-drown,.bag-item.potion,.bag-item.armor,.bag-item.energy,.bag-item.buff,.bag-item.relic,.bag-item.defense,.bag-item.material { --bag-fill: linear-gradient(145deg, rgba(164,151,119,.92), rgba(100,104,96,.94)); --bag-edge: rgba(55,66,61,.86); }
+.bag-item.weapon.attribute-scorch { --bag-edge: rgba(153,76,72,.88); }.bag-item.weapon.attribute-wither { --bag-edge: rgba(135,119,57,.88); }.bag-item.weapon.attribute-drown { --bag-edge: rgba(63,123,145,.88); }.bag-item.potion { --bag-edge: rgba(117,73,67,.88); }.bag-item.armor { --bag-edge: rgba(141,110,62,.88); }.bag-item.energy { --bag-edge: rgba(157,125,45,.88); }.bag-item.buff,.bag-item.relic { --bag-edge: rgba(104,86,133,.88); }.bag-item.defense { --bag-edge: rgba(67,91,96,.88); }.bag-item.material { --bag-edge: rgba(110,89,52,.88); }
 .bag-item.selected { --bag-edge: #ffd56b; }
 .bag-shape { inset: 0; gap: 2px; }
 .bag-shape .occupied { position: relative; box-sizing: border-box; border-style: solid; border-color: var(--bag-edge); border-radius: 0; background: var(--bag-fill); }

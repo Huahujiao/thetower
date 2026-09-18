@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
-import { createEnemyById, createMinion } from '../src/game/data/content.js'
-import { ENEMY_DEFS, getEnemyDefinition } from '../src/game/data/enemies.js'
+import catalog from '../src/game/data/catalog.json' with { type: 'json' }
+import { createBoss, createEnemyById, createMinion } from '../src/game/data/content.js'
+import { ENEMY_DEFS, ENEMY_HP_MULTIPLIER, getEnemyDefinition } from '../src/game/data/enemies.js'
 import { GameRun } from '../src/game/run.js'
 import { stepEnemy } from '../src/game/rules/enemies.js'
 
@@ -37,6 +38,8 @@ for (const [id, values] of Object.entries(expected)) {
   const entity = createEnemyById(id, { c: 1, r: 1 })
   assert.equal(entity.enemyId, id)
   assert.deepEqual(entity.pos, { c: 1, r: 1 })
+  assert.equal(entity.hp, definition.hp * ENEMY_HP_MULTIPLIER)
+  assert.equal(entity.maxHp, definition.hp * ENEMY_HP_MULTIPLIER)
 }
 
 const leechLarva = getEnemyDefinition('leech-larva')
@@ -48,6 +51,14 @@ assert.equal(tideShadow.spawnOnly, true)
 assert.equal(tideShadow.noLoot, true)
 assert.equal(createMinion('tide-shadow', { c: 1, r: 1 }).noExperience, true)
 assert.equal(createMinion('emberwing-moth', { c: 1, r: 1 }), null)
+for (const definition of ENEMY_DEFS) {
+  const entity = createEnemyById(definition.id, { c: 1, r: 1 })
+  assert.equal(entity.hp, definition.hp * ENEMY_HP_MULTIPLIER)
+  assert.equal(entity.maxHp, definition.hp * ENEMY_HP_MULTIPLIER)
+}
+const boss = createBoss({ c: 1, r: 1 })
+assert.equal(boss.hp, catalog.boss.hp * ENEMY_HP_MULTIPLIER)
+assert.equal(boss.maxHp, catalog.boss.hp * ENEMY_HP_MULTIPLIER)
 assert.equal(ENEMY_DEFS.filter((definition) => !definition.spawnOnly).length, 30)
 
 const availableCounts = [1, 2, 3, 4, 5].map((floor) => ENEMY_DEFS.filter((definition) => !definition.spawnOnly && definition.minFloor <= floor).length)
@@ -61,6 +72,16 @@ function blankRoom(run) {
   }
   return room
 }
+
+const armorRun = new GameRun({ autoLoad: false, random: () => 0.25 })
+const armorRoom = blankRoom(armorRun)
+const shellguard = createEnemyById('shellguard', { c: 1, r: 1 })
+armorRoom.addEntity(shellguard)
+const hpBeforeArmorHit = shellguard.hp
+assert.equal(armorRun._damageEnemy(shellguard, 5).damage, 4)
+assert.equal(shellguard.hp, hpBeforeArmorHit - 4)
+assert.equal(armorRun._damageEnemy(shellguard, 1, { ignoreDefense: true }).damage, 0)
+assert.equal(shellguard.hp, hpBeforeArmorHit - 4)
 
 const burningRun = new GameRun({ autoLoad: false, random: () => 0.25 })
 const burningRoom = blankRoom(burningRun)
