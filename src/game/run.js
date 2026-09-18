@@ -21,15 +21,15 @@ import { stepEnemy } from './rules/enemies.js'
 import { findAttackPath, findDoorPath, findInteractionPath, findPath, findRevealPath } from './rules/pathfinding.js'
 import { terrainDamageModifiers } from './rules/terrain.js'
 
-// The design notation is rows × columns: five rows, nine columns.
-export const INVENTORY_COLUMNS = 9
-export const INVENTORY_ROWS = 5
+// The design notation is rows × columns: four rows, eight columns.
+export const INVENTORY_COLUMNS = 8
+export const INVENTORY_ROWS = 4
 export const INVENTORY_CAPACITY = INVENTORY_COLUMNS * INVENTORY_ROWS
 export const RELIC_SOFT_LIMIT = Infinity
 export const ENERGY_MAX = 10
 export const SAVE_KEY = 'grid_flip_adventure_v2'
 // This release stores relics as one-cell backpack items. Old saves are intentionally discarded.
-export const SAVE_VERSION = 22
+export const SAVE_VERSION = 23
 
 function clone(value) { return JSON.parse(JSON.stringify(value)) }
 

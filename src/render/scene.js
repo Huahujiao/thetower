@@ -4,7 +4,7 @@ import { enemyCardSubtitle } from '../game/data/enemy-features.js'
 import { isAdjacent8 } from '../game/core/geometry.js'
 import { BoardTextures } from './board-textures.js'
 import { DEFAULT_CAMERA_ELEVATION, panAzimuth } from './camera-view.js'
-import { cardBodyGeometry, styleCardBody, HIDDEN_CARD_THICKNESS, HIDDEN_CARD_SCALE } from './card-body.js'
+import { cardBodyGeometry, styleCardBody, cardFaceY, CARD_FACE_CLEARANCE, HIDDEN_CARD_THICKNESS, HIDDEN_CARD_SCALE } from './card-body.js'
 import { boundaryPillarPoint, createDoorFrame, createLowPolyPillar, createLowPolyWall, evenPillarOffsets } from './wall-kit.js'
 
 const TILE_SIZE = 1.14
@@ -216,6 +216,7 @@ export class GameScene {
     this.tileMeshes = []
     this.tileMeshByKey = new Map()
     this.doorMeshes = []
+    this.structureGroup = null
     this.flipAnimations = []
     this.animationQueue = []
     this.movementAnimation = null
@@ -315,13 +316,17 @@ export class GameScene {
       return
     }
     const visibleDoorKey = this._visibleDoorKey(room)
-    const sameRoom = room?.id === this.framedRoomId && this.tileMeshes.length === room.width * room.height && this.visibleDoorKey === visibleDoorKey
+    const sameRoom = room?.id === this.framedRoomId && this.tileMeshes.length === room.width * room.height && !!this.structureGroup
     if (sameRoom) {
       this._clearPathPreview()
       this._clearMovementAnimation()
       this._clearPlayerMarker()
       if (this._refreshRoom(room)) {
-        this._refreshDoors()
+        if (this.visibleDoorKey !== visibleDoorKey) {
+          this._rebuildRoomStructure(room)
+          this.visibleDoorKey = visibleDoorKey
+          this._frameRoom(room)
+        } else this._refreshDoors()
         return
       }
     }
@@ -338,6 +343,7 @@ export class GameScene {
     this.tileMeshes = []
     this.tileMeshByKey.clear()
     this.doorMeshes = []
+    this.structureGroup = null
     this.sceneBounds = null
     if (!room) return
     const floorTint = [0x111722, 0x111722, 0x151522, 0x1b1625, 0x221628, 0x29172a][room.floor] || 0x111722
@@ -346,8 +352,7 @@ export class GameScene {
     for (let r = 0; r < room.height; r++) {
       for (let c = 0; c < room.width; c++) this._addTile(room, { c, r })
     }
-    this._addRoomBoundary(room)
-    this._addExploredRoomGhosts(room)
+    this._rebuildRoomStructure(room)
     this._frameRoom(room, { resetView: room.id !== this.framedRoomId })
     this.visibleDoorKey = visibleDoorKey
     this.framedRoomId = room.id
@@ -388,7 +393,7 @@ export class GameScene {
     )
     this._setFacePose(face, point, standing, !revealed)
     this._styleTileBody(mesh, room, position, visual)
-    face.renderOrder = standing ? 2 : 0
+    face.renderOrder = standing ? 2 : 1
     // Standing tokens are visual overlays. Let the ground tile receive the
     // pointer instead so a character/enemy cannot block the tile behind it.
     face.raycast = standing ? NO_RAYCAST : THREE.Mesh.prototype.raycast
@@ -407,13 +412,13 @@ export class GameScene {
   _styleTileBody(body, room, position, { revealed, flippable }) {
     const attribute = this._backAttributeFor(room, position)
     styleCardBody(body, {
-      hidden: !revealed, attribute, baseThickness: CARD_THICKNESS,
+      hidden: !revealed, attribute, blocked: !flippable, baseThickness: CARD_THICKNESS,
       texture: this._makeBackTexture(attribute, { unflippable: !flippable }),
     })
   }
 
   _setFacePose(face, point, standing, hidden = false) {
-    const baseY = standing ? CARD_SIZE / 2 + CARD_THICKNESS / 2 : CARD_THICKNESS / 2 + 0.002 + (hidden ? HIDDEN_CARD_THICKNESS - CARD_THICKNESS : 0)
+    const baseY = standing ? CARD_SIZE / 2 + CARD_THICKNESS / 2 : cardFaceY(hidden, CARD_THICKNESS)
     face.scale.setScalar(hidden ? HIDDEN_CARD_SCALE : 1)
     face.rotation.order = standing ? 'YXZ' : 'XYZ'
     face.rotation.set(standing ? -STANDING_BACK_LEAN : -Math.PI / 2, standing ? this.cameraAzimuth : 0, 0)
@@ -588,7 +593,7 @@ export class GameScene {
     const point = this._boundaryPosition(room, side, offset)
     const wall = createLowPolyWall({ horizontal, length: horizontal ? TILE_SIZE : TILE_SIZE, thickness: WALL_THICKNESS, height: WALL_HEIGHT })
     wall.position.set(point.x, 0, point.z)
-    this.roomGroup.add(wall)
+    this.structureGroup.add(wall)
   }
 
   _addBoundaryPillar(room, side, offset, seen) {
@@ -599,7 +604,7 @@ export class GameScene {
     seen.add(key)
     const pillar = createLowPolyPillar({ height: WALL_HEIGHT + 0.28 })
     pillar.position.set(point.x, 0, point.z)
-    this.roomGroup.add(pillar)
+    this.structureGroup.add(pillar)
   }
 
   _addBoundaryPillars(room, doors) {
@@ -645,10 +650,10 @@ export class GameScene {
     mesh.add(lockIndicator)
     const frame = createDoorFrame({ horizontal, width: TILE_SIZE * 0.68, depth: DOOR_DEPTH, height: WALL_HEIGHT + 0.18 })
     frame.position.set(point.x, 0, point.z)
-    this.roomGroup.add(frame)
+    this.structureGroup.add(frame)
     this._setDoorAppearance(mesh)
     this.doorMeshes.push(mesh)
-    this.roomGroup.add(mesh)
+    this.structureGroup.add(mesh)
   }
 
   _addRoomBoundary(room) {
@@ -662,6 +667,18 @@ export class GameScene {
     }
     this._addBoundaryPillars(room, doors)
     for (const door of doors) this._addDoorMesh(room, door)
+  }
+
+  _rebuildRoomStructure(room) {
+    if (this.structureGroup) {
+      this.roomGroup.remove(this.structureGroup)
+      disposeObject(this.structureGroup)
+    }
+    this.structureGroup = new THREE.Group()
+    this.roomGroup.add(this.structureGroup)
+    this.doorMeshes = []
+    this._addRoomBoundary(room)
+    this._addExploredRoomGhosts(room)
   }
 
   _resetSceneBounds(room) {
@@ -758,7 +775,7 @@ export class GameScene {
       marker.position.set(point.x, CARD_THICKNESS / 2 + 0.027, point.z)
       group.add(marker)
     }
-    this.roomGroup.add(group)
+    this.structureGroup.add(group)
   }
 
   _addGhostRoomConnector(from, to) {
@@ -769,7 +786,7 @@ export class GameScene {
       ]),
       new THREE.LineBasicMaterial({ color: 0x9ab8df, transparent: true, opacity: 0.46, depthWrite: false }),
     )
-    this.roomGroup.add(connector)
+    this.structureGroup.add(connector)
   }
 
   _addFloorTransitionGhost(room, door, direction, center = { x: 0, z: 0 }) {
@@ -805,7 +822,7 @@ export class GameScene {
     const top = new THREE.Mesh(new THREE.BoxGeometry(width * 0.72, 0.055, 0.055), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.66, depthWrite: false }))
     top.position.set(0, endHeight + 0.46, length + 0.04)
     group.add(top)
-    this.roomGroup.add(group)
+    this.structureGroup.add(group)
     this._includeScenePoint(end, 0.44)
   }
 
@@ -862,7 +879,7 @@ export class GameScene {
     face.visible = true
     face.userData.lift = 0
     this._setFacePose(face, this._gridPosition(room, position), standing, !revealed)
-    face.renderOrder = standing ? 2 : 0
+    face.renderOrder = standing ? 2 : 1
     face.raycast = standing ? NO_RAYCAST : THREE.Mesh.prototype.raycast
     body.visible = true
     this._styleTileBody(body, room, position, visual)
@@ -949,13 +966,13 @@ export class GameScene {
       new THREE.MeshBasicMaterial({ map: frontTexture, side: THREE.DoubleSide, transparent: true }),
     )
     front.rotation.x = -Math.PI / 2
-    front.position.y = HIDDEN_CARD_THICKNESS / 2 + 0.002
+    front.position.y = HIDDEN_CARD_THICKNESS / 2 + CARD_FACE_CLEARANCE
     const back = new THREE.Mesh(
       new THREE.PlaneGeometry(CARD_SIZE, CARD_SIZE),
       new THREE.MeshBasicMaterial({ map: backTexture, side: THREE.DoubleSide }),
     )
     back.rotation.x = Math.PI / 2
-    back.position.y = -HIDDEN_CARD_THICKNESS / 2 - 0.002
+    back.position.y = -HIDDEN_CARD_THICKNESS / 2 - CARD_FACE_CLEARANCE
     const edge = new THREE.Mesh(cardBodyGeometry(CARD_SIZE, CARD_THICKNESS), new THREE.MeshStandardMaterial({ roughness: 0.9 }))
     this._styleTileBody(edge, room, position, { revealed: false, flippable: !backUnflippable })
     edge.position.y = 0

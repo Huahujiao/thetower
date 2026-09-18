@@ -4,6 +4,7 @@ import floorBUrl from '../assets/board-floor-dungeon-b-v1.jpg'
 import floorCUrl from '../assets/board-floor-dungeon-c-v1.jpg'
 import floorDUrl from '../assets/board-floor-dungeon-d-v1.jpg'
 import cardBackUrl from '../assets/board-card-back-v1.jpg'
+import blockedBackUrl from '../assets/board-card-back-blocked-v1.jpg'
 import scorchBackUrl from '../assets/board-card-back-scorch-v1.jpg'
 import witherBackUrl from '../assets/board-card-back-wither-v1.jpg'
 import drownBackUrl from '../assets/board-card-back-drown-v1.jpg'
@@ -13,6 +14,7 @@ const SIZE = 512
 // Source artwork stays intact; no painted symbols or opaque color washes.
 const FLOOR_URLS = [floorAUrl, floorBUrl, floorCUrl, floorDUrl]
 const NEUTRAL_BACK_BRIGHTNESS = 1.3
+const BLOCKED_BACK_COLOR = '#363a40'
 const BACK_URLS = { neutral: cardBackUrl, scorch: scorchBackUrl, wither: witherBackUrl, drown: drownBackUrl }
 
 function surface(draw) {
@@ -46,27 +48,27 @@ export class BoardTextures {
     }))
     this.backs = new Map()
     for (const attribute of Object.keys(BACK_URLS)) {
-      for (const blocked of [false, true]) {
-        this.backs.set(`${attribute}:${blocked}`, surface((ctx, image) => {
-          ctx.fillStyle = attribute === 'neutral' ? '#5f5b52' : '#49463f'
-          ctx.fillRect(0, 0, SIZE, SIZE)
-          if (image) {
-            if (attribute === 'neutral') ctx.filter = `brightness(${NEUTRAL_BACK_BRIGHTNESS})`
-            ctx.drawImage(image, 0, 0, SIZE, SIZE)
-            ctx.filter = 'none'
-          }
-          if (blocked) {
-            ctx.fillStyle = 'rgba(8, 12, 15, 0.28)'
-            ctx.fillRect(0, 0, SIZE, SIZE)
-          }
-        }))
-      }
+      this.backs.set(attribute, surface((ctx, image) => {
+        ctx.fillStyle = attribute === 'neutral' ? '#5f5b52' : '#49463f'
+        ctx.fillRect(0, 0, SIZE, SIZE)
+        if (image) {
+          if (attribute === 'neutral') ctx.filter = `brightness(${NEUTRAL_BACK_BRIGHTNESS})`
+          ctx.drawImage(image, 0, 0, SIZE, SIZE)
+          ctx.filter = 'none'
+        }
+      }))
     }
+    this.blockedBack = surface((ctx, image) => {
+      ctx.fillStyle = BLOCKED_BACK_COLOR
+      ctx.fillRect(0, 0, SIZE, SIZE)
+      if (image) ctx.drawImage(image, 0, 0, SIZE, SIZE)
+    })
     this.ready = Promise.all([
       ...FLOOR_URLS.map((url, index) => this.load(url, [this.floors[index]])),
       ...Object.entries(BACK_URLS).map(([attribute, url]) => this.load(url, [
-        this.backs.get(`${attribute}:false`), this.backs.get(`${attribute}:true`),
+        this.backs.get(attribute),
       ])),
+      this.load(blockedBackUrl, [this.blockedBack]),
     ])
   }
 
@@ -93,11 +95,12 @@ export class BoardTextures {
   }
 
   back(attribute, blocked) {
-    return this.backs.get(`${BACK_URLS[attribute] ? attribute : 'neutral'}:${!!blocked}`).texture
+    if (blocked) return this.blockedBack.texture
+    return this.backs.get(BACK_URLS[attribute] ? attribute : 'neutral').texture
   }
 
   dispose() {
     this.disposed = true
-    for (const entry of [...this.floors, ...this.backs.values()]) entry.texture.dispose()
+    for (const entry of [...this.floors, ...this.backs.values(), this.blockedBack]) entry.texture.dispose()
   }
 }

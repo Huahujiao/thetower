@@ -14,7 +14,7 @@ src/
 ├─ game/
 │  ├─ core/       事件、坐标、几何与两层回合计数
 │  ├─ data/       敌人、物品、商人、奖励、陷阱、天赋和圣遗物定义
-│  ├─ model/      地牢、房间、5×9 背包、圣遗物持有索引
+│  ├─ model/      地牢、房间、4×8 背包、圣遗物持有索引
 │  ├─ rules/      寻路、伤害、敌人、地形与圣遗物规则
 │  └─ run.js      一局游戏的状态机、动作和持久化
 ├─ render/        Three.js 卡牌场景、相机与交互
@@ -27,7 +27,7 @@ src/
 
 ## 当前运行状态
 
-`GameRun` 维护地牢、玩家生命／护甲／体力、5×9 背包、角色成长、圣遗物、商人、奖励、状态效果、敌人状态和日志。圣遗物以 `type: 'relic'` 的 1×1 背包物品保存；`RelicCollection` 是由背包物品同步出的效果索引。普通探索操作回复1体力；消耗品、整理与合成不自动回复。攻击推进攻击计数和全局回合，实际费用包含物品与天赋修正且最低1。接近路径中的每格移动也是独立的非攻击回合。
+`GameRun` 维护地牢、玩家生命／护甲／体力、4×8 背包、角色成长、圣遗物、商人、奖励、状态效果、敌人状态和日志。圣遗物以 `type: 'relic'` 的 1×1 背包物品保存；`RelicCollection` 是由背包物品同步出的效果索引。普通探索操作回复1体力；消耗品、整理与合成不自动回复。攻击推进攻击计数和全局回合，实际费用包含物品与天赋修正且最低1。接近路径中的每格移动也是独立的非攻击回合。
 
 回合计数只有 `attackCount` 和 `globalTurn`；`turn` 是全局回合的兼容别名。背包整理与合成成功推进1回合；丢弃、奖励/升级选择与购买/出售不推进计数。运行时不存在左右手、装备栏、行动计数、武器耐久、磨刀石、最后一击、武器损毁或拦截机制。圣遗物无数量超载限制。`ItemRules` 统一处理新版武器、防具、材料、圣遗物与天赋的交叉效果。
 
@@ -40,6 +40,10 @@ src/
 ## 验证要求
 
 规则、数据或界面变更后运行：
+
+## Renderer stability
+
+The Three.js scene keeps tile meshes separate from room structure. Revealing a door now rebuilds only walls, doors, and explored-room outlines; card faces retain an explicit depth clearance above their bodies to prevent depth flicker. Unflippable cards share a dedicated charcoal-gray card-back texture, independent of hidden attributes.
 
 ```powershell
 npm.cmd run lint

@@ -16,7 +16,7 @@ globalThis.document = {
 }
 const source = (await readFile(new URL('../src/render/board-textures.js', import.meta.url), 'utf8'))
   .replace("from 'three'", `from '${import.meta.resolve('three')}'`)
-  .replace(/import (\w+) from '[^']+\.jpg'/g, "const $1 = 'test-image.jpg'")
+  .replace(/import (\w+) from '[^']+\.(?:jpg|png)'/g, "const $1 = 'test-image.jpg'")
 const { BoardTextures } = await import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`)
 const textures = new BoardTextures()
 const all = new Set()
@@ -27,17 +27,18 @@ for (let c = 0; c < 9; c++) for (let r = 0; r < 5; r++) {
 }
 assert.equal(all.size, 4)
 for (const attr of ['neutral', 'scorch', 'wither', 'drown']) {
-  for (const blocked of [true, false]) {
-    const texture = textures.back(attr, blocked)
-    assert.equal(texture, textures.back(attr, blocked))
-    all.add(texture)
-  }
+  const texture = textures.back(attr, false)
+  assert.equal(texture, textures.back(attr, false))
+  all.add(texture)
 }
-assert.equal(all.size, 12)
+const blockedBack = textures.back('neutral', true)
+for (const attr of ['neutral', 'scorch', 'wither', 'drown', 'unknown']) assert.equal(textures.back(attr, true), blockedBack)
+all.add(blockedBack)
+assert.equal(all.size, 9)
 assert.equal(textures.back('unknown', false), textures.back('neutral', false))
 const before = textures.back('scorch', false).version
 pendingImages.splice(0).forEach(image => image.onload())
-assert.deepEqual(await textures.ready, Array(8).fill(true))
+assert.deepEqual(await textures.ready, Array(9).fill(true))
 assert(textures.back('scorch', false).version > before)
 let disposed = 0
 for (const texture of all) {
@@ -50,7 +51,7 @@ assert.equal(textures.back('scorch', false).userData.boardShared, true)
 snapshot.dispose()
 assert.equal(disposed, 0)
 textures.dispose()
-assert.equal(disposed, 12)
+assert.equal(disposed, 9)
 
 const closed = new BoardTextures()
 const lastVersion = closed.floor().version

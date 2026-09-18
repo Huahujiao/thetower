@@ -22,7 +22,7 @@
 | [03-turn-and-combat.md](./03-turn-and-combat.md) | 两层回合计数、逐格移动、敌人和战斗 |
 | [回合相关机制.md](./回合相关机制.md) | 当前回合、体力、敌人阶段和事件顺序 |
 | [陷阱和敌人.md](./陷阱和敌人.md) | 当前敌人与陷阱的实现摘要 |
-| [04-inventory.md](./04-inventory.md) | 5×9 背包、直接使用物品与丢弃 |
+| [04-inventory.md](./04-inventory.md) | 4×8 背包、直接使用物品与丢弃 |
 | [05-encounters-relics.md](./05-encounters-relics.md) | 成长、房间奖励、商人、陷阱与圣遗物 |
 | [06-content.md](./06-content.md) | 已实装对象清单的索引 |
 | [07-interface.md](./07-interface.md) | 手机布局、底部操作栏、棋盘和日志 |

@@ -195,7 +195,7 @@ for(const id of ['ember-spear','soul-spear']) {
   assert.equal(run.player.energy,5)
   assert.equal(run.moveInventory(w.uid,2),false);assert.equal(run.globalTurn,1)
   assert(run.rotateSelectedInventory());assert.equal(run.globalTurn,2);assert.equal(run.player.hp,16)
-  assert.equal(run.moveInventory(w.uid,44),false);assert.equal(run.globalTurn,2)
+  assert.equal(run.moveInventory(w.uid,32),false);assert.equal(run.globalTurn,2)
   assert(e)
 }
 // Craft transaction success, no recipe chaining, full-bag rollback.
@@ -209,7 +209,7 @@ for(const recipe of RECIPES) {
 }
 {
   const run=fixture();add(run,'rock-maul');add(run,'weight')
-  for(let i=0;i<40;i++) add(run,'health-potion')
+  for(let i=0;i<27;i++) add(run,'health-potion')
   const before=run.backpack.serialize()
   assert.equal(run.availableRecipes()[0].canFit,false)
   assert.equal(run.craft('mountain-maul'),false)
