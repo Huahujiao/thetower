@@ -3,6 +3,7 @@ import { getItemDefinition } from '../game/data/content.js'
 import { getRelicDefinition } from '../game/data/relics.js'
 import { merchantSellPrice } from '../game/data/merchants.js'
 import { bagShapeLayout } from './bag-shape.js'
+import { itemSpriteUrl } from './item-sprites.js'
 
 const LABELS = Object.freeze({
   floor: '\u697c\u5c42',
@@ -545,7 +546,9 @@ export class HUD {
       }).join('')
       const labelStyle = run => `grid-column:${run.x + 1} / span ${run.width};grid-row:${run.y + 1}`
       const labels = layout.name ? `<b class="bag-name" style="${labelStyle(layout.name)}">${escapeHtml(item.name)}</b><small class="bag-detail" style="${labelStyle(layout.detail)}">${escapeHtml(detail)}</small>` : ''
-      return `<div class="${itemClasses.join(' ')}" style="grid-column:${placement.x + 1} / span ${shape[0].length};grid-row:${placement.y + 1} / span ${shape.length}"><span class="bag-shape" style="grid-template-columns:repeat(${shape[0].length},1fr);grid-template-rows:repeat(${shape.length},1fr)">${shapeCells}${labels}</span></div>`
+      const spriteUrl = itemSpriteUrl(item)
+      const sprite = spriteUrl ? `<img class="bag-sprite" src="${spriteUrl}" alt="" aria-hidden="true" style="transform:rotate(${placement.rotation * 90}deg)">` : ''
+      return `<div class="${itemClasses.join(' ')}" style="grid-column:${placement.x + 1} / span ${shape[0].length};grid-row:${placement.y + 1} / span ${shape.length}"><span class="bag-shape" style="grid-template-columns:repeat(${shape[0].length},1fr);grid-template-rows:repeat(${shape.length},1fr)">${sprite}${shapeCells}${labels}</span></div>`
     }).join('')
     backpack.innerHTML = `${cells}${items}`
     const rotate = this.root.querySelector('[data-action="rotate-bag"]')

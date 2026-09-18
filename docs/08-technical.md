@@ -57,9 +57,9 @@ Inventory artwork is produced per concrete item and its `shape`, not as a generi
 
 Readability at backpack scale takes precedence over prop detail: narrow vertical weapons need a broad primary silhouette and a chunky guard or grip rather than tassels, fine engraving, or large transparent side margins.
 
-The current reviewed set is `weapon-rust-sword-v2.png` (1x2), `weapon-bone-knife-v1.png` (1x1), `weapon-ember-spear-v1.png` (1x3), `weapon-root-axe-v1.png` (2x2 L footprint), and `weapon-mountain-maul-v1.png` (3x3 cross footprint). Every file has been alpha-checked after its final crop; the L-shaped axe deliberately preserves its top-right grid cell as transparent, while the maul preserves all four corner cells.
+The current reviewed set is `weapon-rust-sword-v2.png` (1x2), `weapon-bone-knife-v1.png` (1x1), `weapon-ember-spear-v1.png` (1x3), `weapon-root-axe-v1.png` (2x2 L footprint), `weapon-mountain-maul-v1.png` (3x3 cross footprint), and `defense-wood-shield-v1.png` (1x2). Every file has been alpha-checked after its final crop; the L-shaped axe deliberately preserves its top-right grid cell as transparent, while the maul preserves all four corner cells. The HUD now maps these item ids to sprites inside the rotated shape container; unmapped items retain the procedural shape fill.
 
-The backpack surface uses a warm gray-brown old-paper field (`#817766` to `#62655f`) with ink-dark gaps and antique-bronze edging. Sprite art must avoid making that gray-brown/ivory field its dominant color; use ink black, bone gray, oxidized blue-green, and restrained cinnabar accents for contrast.
+The backpack surface uses a deep ink-black cool charcoal field (`#1b2426` to `#0b1012`) with blue-green seams and a restrained gray-green edge. It deliberately avoids yellow-brown and parchment tones so the sprite palette can use oxidized blue-green, restrained cinnabar, indigo, and bone-gray accents without blending into the background.
 
 ```powershell
 npm.cmd run lint

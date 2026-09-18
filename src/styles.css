@@ -211,13 +211,14 @@ button { font: inherit; }
 .bag-item.material { --bag-fill:#65573d; }
 
 /* The rectangular layout wrapper must never paint over a shape's empty cells. */
-.backpack-grid { border: 1px solid rgba(190,174,133,.62); border-radius: 4px; background: linear-gradient(145deg, #817766, #62655f); box-shadow: inset 0 0 0 1px rgba(34,39,36,.62), inset 0 8px 16px rgba(230,216,177,.08), 0 2px 7px rgba(0,0,0,.38); }
-.bag-cell { border-color: rgba(36,42,39,.78); background: linear-gradient(145deg, rgba(193,180,145,.22), rgba(46,53,50,.2)); }
+.backpack-grid { border: 1px solid rgba(103,120,116,.72); border-radius: 4px; background: linear-gradient(145deg, #1b2426, #0b1012); box-shadow: inset 0 0 0 1px rgba(138,164,157,.16), inset 0 8px 16px rgba(115,156,151,.06), 0 2px 7px rgba(0,0,0,.58); }
+.bag-cell { border-color: rgba(103,123,118,.42); background: linear-gradient(145deg, rgba(71,91,88,.26), rgba(8,13,15,.54)); }
 .bag-item, .bag-item.selected { padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; overflow: visible; }
 .bag-item,.bag-item.weapon,.bag-item.weapon.attribute-scorch,.bag-item.weapon.attribute-wither,.bag-item.weapon.attribute-drown,.bag-item.potion,.bag-item.armor,.bag-item.energy,.bag-item.buff,.bag-item.relic,.bag-item.defense,.bag-item.material { --bag-fill: linear-gradient(145deg, rgba(164,151,119,.92), rgba(100,104,96,.94)); --bag-edge: rgba(55,66,61,.86); }
 .bag-item.weapon.attribute-scorch { --bag-edge: rgba(153,76,72,.88); }.bag-item.weapon.attribute-wither { --bag-edge: rgba(135,119,57,.88); }.bag-item.weapon.attribute-drown { --bag-edge: rgba(63,123,145,.88); }.bag-item.potion { --bag-edge: rgba(117,73,67,.88); }.bag-item.armor { --bag-edge: rgba(141,110,62,.88); }.bag-item.energy { --bag-edge: rgba(157,125,45,.88); }.bag-item.buff,.bag-item.relic { --bag-edge: rgba(104,86,133,.88); }.bag-item.defense { --bag-edge: rgba(67,91,96,.88); }.bag-item.material { --bag-edge: rgba(110,89,52,.88); }
 .bag-item.selected { --bag-edge: #ffd56b; }
 .bag-shape { inset: 0; gap: 2px; }
+.bag-sprite { position: absolute; inset: 0; z-index: 1; display: block; width: 100%; height: 100%; object-fit: contain; pointer-events: none; transform-origin: center; }
 .bag-shape .occupied { position: relative; box-sizing: border-box; border-style: solid; border-color: var(--bag-edge); border-radius: 0; background: var(--bag-fill); }
 .bag-shape .shape-edge { position: absolute; z-index: 2; display: block; pointer-events: none; background: #ffe7a0; opacity: 0; }
 .bag-shape .edge-top, .bag-shape .edge-bottom { right: 0; left: 0; height: 2px; }
@@ -228,7 +229,7 @@ button { font: inherit; }
 .bag-shape .edge-right { right: -1px; }
 .bag-item.selected .occupied { background: linear-gradient(rgba(255,213,107,.13), rgba(255,213,107,.13)), var(--bag-fill); }
 .bag-item.selected .shape-edge { opacity: 1; box-shadow: 0 0 5px 1px rgba(255,213,107,.92), 0 0 10px 2px rgba(255,213,107,.46); }
-.bag-shape .bag-name, .bag-shape .bag-detail { z-index: 1; min-width: 0; max-width: 100%; margin: 0; padding: 2px 3px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; pointer-events: none; }
+.bag-shape .bag-name, .bag-shape .bag-detail { z-index: 3; min-width: 0; max-width: 100%; margin: 0; padding: 2px 3px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; pointer-events: none; text-shadow: 0 1px 2px rgba(0,0,0,.9); }
 .bag-shape .bag-name { align-self: start; }
 .bag-shape .bag-detail { align-self: end; font-size: clamp(8px, 2.1vw, 10px); line-height: 1.15; opacity: .84; }
 @media(max-width:480px) { .craft-dialog { padding:12px; } .craft-row { gap:4px; } .craft-row button { padding:8px 5px; font-size:12px; } }
