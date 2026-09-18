@@ -551,7 +551,10 @@ export class HUD {
       const oddRotation = placement.rotation % 2 === 1
       const spriteWidth = oddRotation ? `${shape.length / shape[0].length * 100}%` : '100%'
       const spriteHeight = oddRotation ? `${shape[0].length / shape.length * 100}%` : '100%'
-      const sprite = spriteUrl ? `<img class="bag-sprite" src="${spriteUrl}" alt="" aria-hidden="true" style="width:${spriteWidth};height:${spriteHeight};transform:translate(-50%,-50%) rotate(${placement.rotation * 90}deg)">` : ''
+      // Make the sprite itself a reliable hit target. Its data index always
+      // points at the first occupied cell, so transparent corners on L/T
+      // shaped items cannot select a neighboring item.
+      const sprite = spriteUrl ? `<img class="bag-sprite" data-bag-item="${originIndex}" src="${spriteUrl}" alt="" aria-hidden="true" style="width:${spriteWidth};height:${spriteHeight};transform:translate(-50%,-50%) rotate(${placement.rotation * 90}deg)">` : ''
       return `<div class="${itemClasses.join(' ')}" style="grid-column:${placement.x + 1} / span ${shape[0].length};grid-row:${placement.y + 1} / span ${shape.length}"><span class="bag-shape" style="grid-template-columns:repeat(${shape[0].length},1fr);grid-template-rows:repeat(${shape.length},1fr)">${sprite}${shapeCells}${labels}</span></div>`
     }).join('')
     backpack.innerHTML = `${cells}${items}`

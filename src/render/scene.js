@@ -631,7 +631,7 @@ export class GameScene {
     const hasDoor = (side, offset) => doors.some(door => door.side === side && door.offset === offset)
     for (const side of ['top', 'bottom']) {
       const forbidden = doors.filter(door => door.side === side).map(door => door.offset)
-      const offsets = side === 'bottom' ? [0, room.width - 1] : evenPillarOffsets(room.width, forbidden)
+      const offsets = side === 'top' ? [0, room.width - 1] : evenPillarOffsets(room.width, forbidden)
       for (const offset of offsets) {
         if (!hasDoor(side, offset)) this._addBoundaryPillar(room, side, offset, seen)
       }

@@ -47,7 +47,7 @@ Room card grids are now one row and one column smaller per floor: 6x6, 7x7, 8x8,
 
 The Three.js scene keeps tile meshes separate from room structure. Revealing a door now rebuilds only walls, doors, and explored-room outlines; card faces retain explicit depth clearance, polygon offset, and non-writing face depth to prevent camera-angle flicker. Unflippable cards share a dedicated charcoal-gray card-back texture, independent of hidden attributes.
 
-Pillars are fixed by room geometry: the south wall has pillars only at its two endpoints (when not occupied by a door), while the other walls use normal spacing. Pillars are no longer dynamically hidden based on camera or player position.
+Pillars are fixed by room geometry: the world-space south wall (`top` in the renderer's wall-side naming) has pillars only at its two endpoints (when not occupied by a door), while the other walls use normal spacing. Pillars are no longer dynamically hidden based on camera or player position.
 
 ## Enemy baseline
 
@@ -59,7 +59,7 @@ Inventory artwork is produced per concrete item and its `shape`, not as a generi
 
 Readability at backpack scale takes precedence over prop detail: narrow vertical weapons need a broad primary silhouette and a chunky guard or grip rather than tassels, fine engraving, or large transparent side margins.
 
-The current reviewed set is `weapon-rust-sword-v2.png` (1x2), `weapon-bone-knife-v1.png` (1x1), `weapon-ember-spear-v1.png` (1x3), `weapon-root-axe-v1.png` (2x2 L footprint), `weapon-mountain-maul-v1.png` (3x3 cross footprint), and `defense-wood-shield-v1.png` (1x2). Every file has been alpha-checked after its final crop; the L-shaped axe deliberately preserves its top-right grid cell as transparent, while the maul preserves all four corner cells. The HUD now maps these item ids to sprites inside the rotated shape container, hides fallback labels and cell fills for mapped sprites, and keeps distinct cool dark fills for unmapped item types and attributes.
+The current reviewed set is `weapon-rust-sword-v2.png` (1x2), `weapon-bone-knife-v1.png` (1x1), `weapon-ember-spear-v1.png` (1x3), `weapon-root-axe-v1.png` (2x2 L footprint), `weapon-mountain-maul-v1.png` (3x3 cross footprint), and `defense-wood-shield-v1.png` (1x2). Every file has been alpha-checked after its final crop; the L-shaped axe deliberately preserves its top-right grid cell as transparent, while the maul preserves all four corner cells. The HUD now maps these item ids to sprites inside the rotated shape container, hides fallback labels and cell fills for mapped sprites, and keeps distinct cool dark fills for unmapped item types and attributes. Sprite URLs use literal Vite-analyzable `new URL(..., import.meta.url)` expressions so production builds copy the PNGs; each sprite also delegates clicks to its first occupied cell, preserving selection for the starter sword and non-rectangular weapons.
 
 The backpack surface uses a deep ink-black cool charcoal field (`#1b2426` to `#0b1012`) with blue-green seams and a restrained gray-green edge. It deliberately avoids yellow-brown and parchment tones so the sprite palette can use oxidized blue-green, restrained cinnabar, indigo, and bone-gray accents without blending into the background.
 
