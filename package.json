@@ -14,6 +14,7 @@
     "check:items": "node scripts/items-check.mjs",
     "check:enemies": "node scripts/enemies-check.mjs",
     "preview": "vite preview",
+    "sprites:variants": "python scripts/generate-sprite-resolutions.py",
     "check:rules": "node scripts/v2-check.mjs",
     "check:talents": "node scripts/talents-check.mjs"
   },

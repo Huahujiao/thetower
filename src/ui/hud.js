@@ -3,7 +3,7 @@ import { getItemDefinition } from '../game/data/content.js'
 import { getRelicDefinition } from '../game/data/relics.js'
 import { merchantSellPrice } from '../game/data/merchants.js'
 import { bagShapeLayout } from './bag-shape.js'
-import { itemSpriteUrl } from './item-sprites.js'
+import { itemSpriteSources } from './item-sprites.js'
 
 const LABELS = Object.freeze({
   floor: '\u697c\u5c42',
@@ -140,6 +140,7 @@ export class HUD {
     if (!this.root) throw new Error('Missing #hud container')
     this.merchantTab = 'stock'
     this.scene = null
+    this._spriteUpgradeTimers = new Set()
     this._build()
     this._onClick = (event) => this._handleClick(event)
     this._onPointerDown = (event) => this._handlePointerDown(event)
@@ -527,8 +528,8 @@ export class HUD {
       const originIndex = this.run.backpack.originIndex(placement)
       const selected = this.run.selectedInventoryIndex === originIndex
       const itemClasses = ['bag-item', item.type]
-      const spriteUrl = itemSpriteUrl(item)
-      if (spriteUrl) itemClasses.push('has-sprite')
+      const spriteSources = itemSpriteSources(item)
+      if (spriteSources) itemClasses.push('has-sprite')
       if (item.type === 'relic' && relicOverloaded) itemClasses.push('overloaded')
       if (item.type === 'weapon' && item.attribute) itemClasses.push(`attribute-${item.attribute}`)
       if (selected) itemClasses.push('selected')
@@ -558,10 +559,11 @@ export class HUD {
       // Make the sprite itself a reliable hit target. Its data index always
       // points at the first occupied cell, so transparent corners on L/T
       // shaped items cannot select a neighboring item.
-      const sprite = spriteUrl ? `<img class="bag-sprite" data-bag-item="${originIndex}" src="${spriteUrl}" alt="" aria-hidden="true" style="width:${spriteWidth};height:${spriteHeight};transform:translate(-50%,-50%) rotate(${placement.rotation * 90}deg)">` : ''
+      const sprite = spriteSources ? `<img class="bag-sprite" data-bag-item="${originIndex}" data-sprite-medium="${spriteSources.medium}" data-sprite-high="${spriteSources.high}" src="${spriteSources.small}" alt="" aria-hidden="true" decoding="async" fetchpriority="low" style="width:${spriteWidth};height:${spriteHeight};transform:translate(-50%,-50%) rotate(${placement.rotation * 90}deg)">` : ''
       return `<div class="${itemClasses.join(' ')}" style="grid-column:${placement.x + 1} / span ${shape[0].length};grid-row:${placement.y + 1} / span ${shape.length}"><span class="bag-shape" style="grid-template-columns:repeat(${shape[0].length},1fr);grid-template-rows:repeat(${shape.length},1fr)">${sprite}${shapeCells}${labels}</span></div>`
     }).join('')
     backpack.innerHTML = `${cells}${items}`
+    this._upgradeBagSprites()
     const rotate = this.root.querySelector('[data-action="rotate-bag"]')
     const placement = selectedItem ? this.run.backpack.placementOf(selectedItem.uid) : null
     const selectedShape = placement && selectedItem ? this.run.backpack.shapeFor(selectedItem, placement.rotation) : null
@@ -571,6 +573,38 @@ export class HUD {
     rotate.setAttribute('aria-hidden', rotatable ? 'false' : 'true')
     rotate.tabIndex = rotatable ? 0 : -1
     rotate.disabled = !rotatable
+  }
+
+  _upgradeBagSprites() {
+    this.root.querySelectorAll('.bag-sprite[data-sprite-medium]').forEach((sprite) => {
+      this._queueSpriteUpgrade(sprite, sprite.dataset.spriteMedium, sprite.dataset.spriteHigh, 80)
+    })
+  }
+
+  _queueSpriteUpgrade(sprite, url, nextUrl, delay) {
+    if (!url || !sprite.isConnected) return
+    const timer = window.setTimeout(() => {
+      this._spriteUpgradeTimers.delete(timer)
+      if (!sprite.isConnected) return
+      const preloader = document.createElement('img')
+      preloader.decoding = 'async'
+      const applyUpgrade = async (loaded) => {
+        if (loaded) {
+          try {
+            await preloader.decode?.()
+          } catch {
+            // The load event still gives us a usable decoded image in older browsers.
+          }
+          if (!sprite.isConnected) return
+          sprite.src = url
+        }
+        if (nextUrl && sprite.isConnected) this._queueSpriteUpgrade(sprite, nextUrl, '', 160)
+      }
+      preloader.addEventListener('load', () => applyUpgrade(true), { once: true })
+      preloader.addEventListener('error', () => applyUpgrade(false), { once: true })
+      preloader.src = url
+    }, delay)
+    this._spriteUpgradeTimers.add(timer)
   }
 
   _renderActions() {
@@ -859,6 +893,8 @@ export class HUD {
   dispose() {
     this.unsubscribe?.()
     this.detailUnsubscribe?.()
+    for (const timer of this._spriteUpgradeTimers) window.clearTimeout(timer)
+    this._spriteUpgradeTimers.clear()
     if (this.hold?.timer) window.clearTimeout(this.hold.timer)
     if (this.logCopyTimer) window.clearTimeout(this.logCopyTimer)
     this.root.removeEventListener('click', this._onClick)
