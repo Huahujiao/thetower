@@ -37,7 +37,7 @@ Room card grids are now one row and one column smaller per floor: 6x6, 7x7, 8x8,
 
 状态变化后自动保存到 `localStorage`。存档包括地牢、已翻开卡牌、背包位置与旋转、玩家成长和资源、背包中的圣遗物物品、商人货架、奖励袋、`attackCount`／`globalTurn`、中毒与燃烧、敌人自身行动计数、已触发陷阱的延迟移除状态、日志和结算状态。没有装备栏或武器耐久字段。
 
-当前存档版本为 **24**。版本号不匹配、结构无效或玩家位置无效时会删除存档并创建新局；存档同时保留 `turn` 作为全局回合兼容字段。旧的独立圣遗物收藏存档不迁移。
+当前存档版本为 **25**。版本号不匹配、结构无效或玩家位置无效时会删除存档并创建新局；存档同时保留 `turn` 作为全局回合兼容字段。旧的独立圣遗物收藏存档不迁移。
 
 ## 验证要求
 
@@ -85,3 +85,9 @@ npm.cmd run build
 - `check:enemies` 覆盖敌人数据、生成池及敌人特性。
 - `check:talents` 覆盖 20个通用天赋节点、前置关系及其效果。
 - `build` 确认生产构建可完成。
+
+## Vue state invalidation
+
+`GameRun` remains an event-driven plain JavaScript model. Vue computed views must therefore depend on the shared `revision` tick exposed by `state`; they must not cache direct reads of mutable run fields. The HUD increments that tick for every `change` event, while detail overlays use a separate `detail` tick. This keeps rewards, level-up choices, merchants, backpack placements, action buttons, and status text current without replacing the Three.js canvas or unrelated sprite nodes.
+
+The UI also mirrors the model action gates: discard/use are explore-only, rotation and crafting follow backpack-organization rules, and the browser context menu is suppressed across the complete backpack surface for long-press inspection.

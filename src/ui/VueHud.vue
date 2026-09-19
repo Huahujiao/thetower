@@ -34,6 +34,12 @@ const WEAPON_CLASS_LABELS = Object.freeze({ sword: '\u5251', axe: '\u65a7', dagg
 const TALENT_LINE_LABELS = Object.freeze({ flow: '\u6362\u52bf', guard: '\u5b88\u5fa1', harmony: '\u8c03\u548c', sword: '\u5251', axe: '\u65a7', dagger: '\u5315\u9996', polearm: '\u957f\u67c4', heavy: '\u91cd\u6b66\u5668', bow: '\u5f13', scorch: '\u707c\u70ed', wither: '\u67af\u840e', drown: '\u6c89\u6eba', survival: '\u751f\u5b58' })
 const ATTRIBUTE_LABELS = Object.freeze({ scorch: '\u707c\u70ed', wither: '\u67af\u840e', drown: '\u6c89\u6eba' })
 const EDGE_NAMES = ['top', 'right', 'bottom', 'left']
+const HELP_SECTIONS = Object.freeze([
+  { title: '\u884c\u52a8\u4e0e\u4f53\u529b', items: ['\u6bcf\u6b21\u79fb\u52a8\u3001\u7ffb\u724c\u3001\u62fe\u53d6\u548c\u666e\u901a\u4ea4\u4e92\u90fd\u4f1a\u63a8\u8fdb\u56de\u5408\u3002', '\u6b66\u5668\u653b\u51fb\u4f1a\u6d88\u8017\u4f53\u529b\uff0c\u4f7f\u7528\u7269\u54c1\u3001\u5408\u6210\u3001\u79fb\u52a8\u548c\u65cb\u8f6c\u4e5f\u53ef\u80fd\u63a8\u8fdb\u56de\u5408\u3002'] },
+  { title: '\u80cc\u5305\u4e0e\u5408\u6210', items: ['\u80cc\u5305\u662f 8 \u5217 4 \u884c\uff0c\u7269\u54c1\u6309\u5f62\u72b6\u5360\u683c\u3002', '\u70b9\u51fb\u9009\u62e9\u7269\u54c1\uff0c\u518d\u70b9\u51fb\u7a7a\u683c\u53ef\u79fb\u52a8\uff1b\u957f\u6309\u53ef\u67e5\u770b\u8be6\u60c5\u3002', '\u5408\u6210\u9762\u677f\u53ea\u663e\u793a\u5f53\u524d\u80cc\u5305\u53ef\u5408\u6210\u7684\u914d\u65b9\u3002'] },
+  { title: '\u5929\u8d4b\u4e0e\u5723\u9057\u7269', items: ['\u5347\u7ea7\u65f6\u9009\u62e9\u5929\u8d4b\u8def\u7ebf\u6216\u5f3a\u5316\u4f53\u683c\u3002', '\u5723\u9057\u7269\u653e\u5728\u80cc\u5305\u4e2d\u5373\u53ef\u751f\u6548\uff0c\u79bb\u5f00\u623f\u95f4\u4e0d\u4f1a\u91cd\u7f6e\u3002'] },
+  { title: '\u6218\u6597\u4e0e\u63a2\u7d22', items: ['\u9009\u62e9\u6b66\u5668\u540e\u70b9\u51fb\u654c\u4eba\u53d1\u8d77\u653b\u51fb\uff0c\u8fdc\u5904\u76ee\u6807\u4f1a\u5148\u9884\u89c8\u8def\u5f84\u3002', '\u957f\u6309\u68cb\u76d8\u6216\u80cc\u5305\u7269\u54c1\u67e5\u770b\u8be6\u60c5\uff0c\u8fde\u7eed\u79fb\u52a8\u89c6\u89d2\u53ef\u4f7f\u7528\u62d6\u62fd\u548c\u6eda\u8f6e\u7f29\u653e\u3002'] },
+])
 
 const revision = ref(0)
 const detailRevision = ref(0)
@@ -64,17 +70,49 @@ const cameraAngles = computed(() => {
   return scene.value?.cameraAngles?.() || null
 })
 const selectedItem = computed(() => state.value.selectedItem)
+const actionsAvailable = computed(() => {
+  const current = state.value
+  return current.phase === 'explore' && !current.gameOver && current.initialRelicChoices.length === 0 && !current.merchantEntering && !current.roomEntering
+})
+const craftAvailable = computed(() => {
+  const current = state.value
+  return !current.gameOver && current.initialRelicChoices.length === 0 && ['explore', 'merchant'].includes(current.phase) && !current.itemTargeting && !current.merchantEntering && !current.roomEntering
+})
+const selectedUsable = computed(() => {
+  const item = selectedItem.value
+  return actionsAvailable.value && !!item && ['potion', 'armor', 'energy', 'buff', 'cleanse', 'teleport'].includes(item.type)
+})
+const selectedRotatable = computed(() => {
+  const current = state.value
+  const item = selectedItem.value
+  if (!item || current.itemTargeting || !craftAvailable.value) return false
+  const placement = current.backpack.placementOf(item.uid)
+  if (!placement) return false
+  const shape = current.backpack.shapeFor(item, placement.rotation)
+  const nextShape = current.backpack.shapeFor(item, placement.rotation + 1)
+  return JSON.stringify(shape) !== JSON.stringify(nextShape)
+})
 const hints = computed(() => {
+  const current = state.value
   const item = selectedItem.value?.type === 'weapon' ? selectedItem.value : null
   const lines = [...run.itemRules.pendingLines(item)]
-  if (run.player.poisonedTurns > 0) lines.push(`${LABELS.poison} ${run.player.poisonedTurns}${LABELS.turn}`)
-  if (run.player.burningTurns > 0) lines.push(`${LABELS.burning} ${run.player.burningTurns}${LABELS.turn}`)
+  if (current.player.poisonedTurns > 0) lines.push(`${LABELS.poison} ${current.player.poisonedTurns}${LABELS.turn}`)
+  if (current.player.burningTurns > 0) lines.push(`${LABELS.burning} ${current.player.burningTurns}${LABELS.turn}`)
   return lines.join(' · ')
 })
-const statusLines = computed(() => run.itemRules.statusLines())
-const experienceProgress = computed(() => run.player.experienceToNext > 0 ? Math.min(100, Math.max(0, run.player.experience / run.player.experienceToNext * 100)) : 0)
+const statusLines = computed(() => {
+  state.value
+  return run.itemRules.statusLines()
+})
+const experienceProgress = computed(() => {
+  const player = state.value.player
+  return player.experienceToNext > 0 ? Math.min(100, Math.max(0, player.experience / player.experienceToNext * 100)) : 0
+})
 const characterExperienceProgress = experienceProgress
-const talentGraph = computed(() => run.talentGraph())
+const talentGraph = computed(() => {
+  state.value
+  return run.talentGraph()
+})
 const talentLines = computed(() => {
   const graph = talentGraph.value
   const names = new Map(graph.map((node) => [node.id, node.name]))
@@ -88,14 +126,17 @@ const talentLines = computed(() => {
   }))
 })
 const backpackCells = computed(() => Array.from({ length: INVENTORY_COLUMNS * INVENTORY_ROWS }, (_, index) => {
-  const placement = run.backpack.placementForCellIndex(index)
+  const current = state.value
+  const placement = current.backpack.placementForCellIndex(index)
   return { index, placement, action: run.previewInventoryCellAction(index), selected: placement?.item?.uid === selectedItem.value?.uid, label: placement?.item?.name || LABELS.empty }
 }))
-const backpackItems = computed(() => run.backpack.placements.map((placement) => {
+const backpackItems = computed(() => {
+  const current = state.value
+  return current.backpack.placements.map((placement) => {
   const item = placement.item
-  const shape = run.backpack.shapeFor(item, placement.rotation)
+  const shape = current.backpack.shapeFor(item, placement.rotation)
   const layout = bagShapeLayout(shape)
-  const originIndex = run.backpack.originIndex(placement)
+  const originIndex = current.backpack.originIndex(placement)
   const cells = layout.cells.map(({ x, y, edges }) => ({
     x,
     y,
@@ -110,33 +151,58 @@ const backpackItems = computed(() => run.backpack.placements.map((placement) => 
     cells,
     detail: itemDetail(item),
     originIndex,
-    selected: run.selectedInventoryIndex === originIndex,
+    selected: current.selectedInventoryIndex === originIndex,
     spriteSources: itemSpriteSources(item),
-    itemClasses: ['bag-item', item.type, ...(itemSpriteSources(item) ? ['has-sprite'] : []), ...(item.attribute ? [`attribute-${item.attribute}`] : []), ...(item.type === 'relic' && run.relicOverload() > 0 ? ['overloaded'] : []), ...(run.selectedInventoryIndex === originIndex ? ['selected'] : [])],
+    itemClasses: ['bag-item', item.type, ...(itemSpriteSources(item) ? ['has-sprite'] : []), ...(item.attribute ? [`attribute-${item.attribute}`] : []), ...(item.type === 'relic' && run.relicOverload() > 0 ? ['overloaded'] : []), ...(current.selectedInventoryIndex === originIndex ? ['selected'] : [])],
     itemStyle: { gridColumn: `${placement.x + 1} / span ${shape[0].length}`, gridRow: `${placement.y + 1} / span ${shape.length}` },
     shapeStyle: { gridTemplateColumns: `repeat(${shape[0].length}, 1fr)`, gridTemplateRows: `repeat(${shape.length}, 1fr)` },
     nameStyle: layout.name ? { gridColumn: `${layout.name.x + 1} / span ${layout.name.width}`, gridRow: layout.name.y + 1 } : undefined,
     detailStyle: layout.detail ? { gridColumn: `${layout.detail.x + 1} / span ${layout.detail.width}`, gridRow: layout.detail.y + 1 } : undefined,
     spriteStyle: { width: oddRotation ? `${shape.length / shape[0].length * 100}%` : '100%', height: oddRotation ? `${shape[0].length / shape.length * 100}%` : '100%', transform: `translate(-50%, -50%) rotate(${placement.rotation * 90}deg)` },
   }
-}))
-const initialRelics = computed(() => run.initialRelicChoices.map((id) => getRelicDefinition(id)).filter(Boolean))
-const initialRelicOpen = computed(() => initialRelics.value.length > 0 && run.relics.entries.length === 0)
-const roomRewardOpen = computed(() => run.phase === 'reward' && !!run.roomReward && !run.roomEntering)
-const levelUpOpen = computed(() => run.phase === 'level-up' && !!run.levelUp)
-const levelUpChoices = computed(() => run.levelUpChoices())
+  })
+})
+const initialRelics = computed(() => {
+  const current = state.value
+  return current.initialRelicChoices.map((id) => getRelicDefinition(id)).filter(Boolean)
+})
+const initialRelicOpen = computed(() => {
+  const current = state.value
+  return initialRelics.value.length > 0 && current.relics.entries.length === 0
+})
+const roomRewardOpen = computed(() => {
+  const current = state.value
+  return current.phase === 'reward' && !!current.roomReward && !current.roomEntering
+})
+const levelUpOpen = computed(() => {
+  const current = state.value
+  return current.phase === 'level-up' && !!current.levelUp
+})
+const levelUpChoices = computed(() => {
+  state.value
+  return run.levelUpChoices()
+})
 const levelUpTalents = computed(() => levelUpChoices.value.filter((choice) => !choice.fixed))
 const levelUpFixed = computed(() => levelUpChoices.value.find((choice) => choice.fixed))
-const merchant = computed(() => run.merchantEntity)
-const merchantOpen = computed(() => run.phase === 'merchant' && !!merchant.value && !run.merchantEntering)
-const merchantServices = computed(() => merchant.value?.services || run.merchantDefinition?.services || [])
+const merchant = computed(() => state.value.merchantEntity)
+const merchantOpen = computed(() => {
+  const current = state.value
+  return current.phase === 'merchant' && !!merchant.value && !current.merchantEntering
+})
+const merchantServices = computed(() => merchant.value?.services || state.value.merchantDefinition?.services || [])
 const merchantTabs = computed(() => [merchantServices.value.includes('stock') ? 'stock' : null, merchantServices.value.includes('relic-choice') ? 'relics' : null].filter(Boolean))
 const merchantOffers = computed(() => (merchant.value?.relicOfferResolved ? [] : (merchant.value?.relicChoices || []).map((id) => getRelicDefinition(id)).filter(Boolean)))
-const craftRows = computed(() => run.availableRecipes())
+const craftRows = computed(() => {
+  state.value
+  return run.availableRecipes()
+})
 const detailIcon = computed(() => DETAIL_ICONS[detailPanel.value?.icon] || DETAIL_ICONS.item)
 
 watch(merchantTabs, (tabs) => {
   if (!tabs.includes(merchantTab.value)) merchantTab.value = tabs[0] || 'stock'
+}, { immediate: true })
+watch(craftAvailable, (available) => {
+  if (!available) craftOpen.value = false
 }, { immediate: true })
 
 function itemDetail(item) {
@@ -221,7 +287,7 @@ function onPointerUp(event) {
   run.closeDetail()
   ignoreClicksUntil = Date.now() + 120
 }
-function onContextMenu(event) { if (event.target.closest('[data="backpack"]')) event.preventDefault() }
+function onContextMenu(event) { if (event.target instanceof Element && event.target.closest('.backpack-grid')) event.preventDefault() }
 
 function onClick(event) {
   if (Date.now() < ignoreClicksUntil) return
@@ -252,7 +318,7 @@ function onClick(event) {
   if (action === 'copy-log') { void copyLog(); return }
   if (action === 'build-status') { buildStatusOpen.value = !buildStatusOpen.value; return }
   if (action === 'build-status-close') { buildStatusOpen.value = false; return }
-  if (action === 'craft-open') { craftOpen.value = true; return }
+  if (action === 'craft-open') { if (craftAvailable.value) craftOpen.value = true; return }
   if (action === 'craft-close') { craftOpen.value = false; return }
   if (action === 'use') run.useSelected()
   if (action === 'discard') run.discardSelected()
@@ -270,7 +336,7 @@ function onClick(event) {
   if (action === 'settings') toggleTopPanel('settings')
   if (action === 'character') toggleTopPanel('characterpanel')
   if (action === 'talents') toggleTopPanel('talentpanel')
-  if (action === 'help') helpOpen.value = true
+  if (action === 'help') { topPanel.value = null; helpOpen.value = true }
   if (action === 'close-help') helpOpen.value = false
 }
 
@@ -312,7 +378,7 @@ onBeforeUnmount(() => {
   <div class="vue-hud-root" @click="onClick" @pointerdown="onPointerDown" @pointermove="onPointerMove" @pointerup="onPointerUp" @pointercancel="onPointerUp" @contextmenu="onContextMenu">
     <div class="hud-top">
       <div class="hud-stats"><div class="stat floor"><span class="label">{{ LABELS.floor }}</span><span class="value">{{ state.currentRoom?.floor || '' }}</span></div><div class="stat level"><span class="label">{{ LABELS.level }}</span><span class="value">{{ state.player.level }}</span></div><div class="stat gold"><span class="label">{{ LABELS.gold }}</span><span class="value">{{ state.player.gold }}</span></div></div>
-      <div class="hud-btns"><button type="button" class="hud-icon" data-action="craft-open" :title="LABELS.craft" :aria-label="LABELS.craft"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m14 3 7 7-4 4-7-7zM12 12 3 21M4 3v6M1 6h6"/></svg></button><button type="button" class="hud-icon" data-action="build-status" :title="LABELS.buildStatus" :aria-label="LABELS.buildStatus"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="15" y="15" width="6" height="6" rx="1"/><path d="M9 6h9v6M15 18H6v-6"/></svg></button><button class="hud-icon talent-book-top" data-action="talents" :title="LABELS.talentGraph" :aria-label="LABELS.talentGraph">✶</button><button class="hud-icon" data-action="character" :title="LABELS.character" :aria-label="LABELS.character">♙</button><button class="hud-icon" data-action="help" :title="LABELS.help" :aria-label="LABELS.help">?</button><button class="hud-icon" data-action="settings" :title="LABELS.settings" :aria-label="LABELS.settings">⚙</button><button class="hud-icon" data-action="log" :title="LABELS.log" :aria-label="LABELS.log">▤</button></div>
+      <div class="hud-btns"><button type="button" class="hud-icon" data-action="craft-open" :disabled="!craftAvailable" :title="LABELS.craft" :aria-label="LABELS.craft"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m14 3 7 7-4 4-7-7zM12 12 3 21M4 3v6M1 6h6"/></svg></button><button type="button" class="hud-icon" data-action="build-status" :title="LABELS.buildStatus" :aria-label="LABELS.buildStatus"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="15" y="15" width="6" height="6" rx="1"/><path d="M9 6h9v6M15 18H6v-6"/></svg></button><button class="hud-icon talent-book-top" data-action="talents" :title="LABELS.talentGraph" :aria-label="LABELS.talentGraph">✶</button><button class="hud-icon" data-action="character" :title="LABELS.character" :aria-label="LABELS.character">♙</button><button class="hud-icon" data-action="help" :title="LABELS.help" :aria-label="LABELS.help">?</button><button class="hud-icon" data-action="settings" :title="LABELS.settings" :aria-label="LABELS.settings">⚙</button><button class="hud-icon" data-action="log" :title="LABELS.log" :aria-label="LABELS.log">▤</button></div>
     </div>
     <div class="hud-emotion" :class="{ overloaded: state.relicOverload() > 0 }"><span class="emotion-text">{{ hints }}</span></div>
     <div class="experience-bar-row" :aria-label="LABELS.experience"><div class="experience-bar"><span class="experience-fill" :style="{ width: `${experienceProgress}%` }"></span><span class="experience-value">{{ state.player.experience }}/{{ state.player.experienceToNext }}</span></div></div>
@@ -326,7 +392,7 @@ onBeforeUnmount(() => {
     <section class="talent-panel" :class="{ show: topPanel === 'talentpanel' }" :aria-hidden="topPanel === 'talentpanel' ? 'false' : 'true'"><div class="talent-panel-head"><span>{{ LABELS.talentGraph }}</span><strong>{{ talentGraph.filter((node) => node.state === 'owned').length }}/{{ talentGraph.length }}</strong></div><div class="talent-graph"><div v-for="group in talentLines" :key="group.line" class="talent-line"><div class="talent-line-title">{{ group.title }}</div><div v-for="node in group.nodes" :key="node.id" class="talent-node" :class="node.state" :title="`${node.description} · ${node.prerequisites}`"><span class="talent-node-slot">{{ node.slot }}</span><b>{{ node.name }}</b><small>{{ node.description }}</small><small class="talent-node-prereq">{{ node.prerequisites }}</small></div></div></div></section>
 
     <div class="hud-log" :class="{ show: topPanel === 'log' }"><div class="log-head"><span class="log-title">{{ LABELS.log }}</span><button class="log-copy" data-action="copy-log" type="button">{{ copyLabel }}</button></div><div class="log-body"><div v-for="(line, index) in state.log.slice(0, 40)" :key="`${index}-${line}`" class="line">{{ line }}</div></div></div>
-    <div class="help-modal" :class="{ show: helpOpen }" :aria-hidden="helpOpen ? 'false' : 'true'"><div class="help-modal-backdrop" data-action="close-help"></div><section class="help-modal-panel" role="dialog" aria-modal="true"><header class="help-modal-head"><div><span class="help-modal-kicker">{{ LABELS.help }}</span><h2>{{ LABELS.basicGameplay }}</h2></div><button class="help-modal-close" data-action="close-help" :aria-label="LABELS.close">×</button></header><div class="help-modal-body"><section class="help-section"><h3>{{ LABELS.characterGrowth }}</h3><ul><li>{{ LABELS.health }}、{{ LABELS.energy }}、{{ LABELS.talents }} 会随回合和构筑状态更新。</li><li>长按棋盘或背包物品查看详情，短按执行选择或行动。</li></ul></section><section class="help-section"><h3>{{ LABELS.talentGraph }}</h3><ul><li>升级时选择天赋路线或强化体格。</li><li>物品旋转、移动和合成会推进回合。</li></ul></section></div></section></div>
+    <div class="help-modal" :class="{ show: helpOpen }" :aria-hidden="helpOpen ? 'false' : 'true'"><div class="help-modal-backdrop" data-action="close-help"></div><section class="help-modal-panel" role="dialog" aria-modal="true"><header class="help-modal-head"><div><span class="help-modal-kicker">{{ LABELS.help }}</span><h2>{{ LABELS.basicGameplay }}</h2></div><button class="help-modal-close" data-action="close-help" :aria-label="LABELS.close">×</button></header><div class="help-modal-body"><section v-for="section in HELP_SECTIONS" :key="section.title" class="help-section"><h3>{{ section.title }}</h3><ul><li v-for="item in section.items" :key="item">{{ item }}</li></ul></section></div></section></div>
 
     <div class="relic-choice" :class="{ show: initialRelicOpen }"><div class="relic-choice-title">{{ LABELS.initialRelic }}</div><div class="relic-choice-row"><button v-for="relic in initialRelics" :key="relic.id" class="relic-choice-card" :data-relic-choice="relic.id"><span class="relic-name">{{ relic.name }}</span><span class="relic-desc">{{ relic.description }}</span></button></div></div>
     <div class="relic-choice room-reward" :class="{ show: roomRewardOpen }"><div class="relic-choice-title">{{ LABELS.roomReward }}</div><div class="relic-choice-row"><button v-for="(choice, index) in (state.roomReward?.choices || [])" :key="index" class="relic-choice-card" :data-room-reward="index" :disabled="roomRewardDisabled(choice)"><span class="relic-name">{{ roomRewardTitle(choice) }}</span><span class="relic-desc">{{ roomRewardDescription(choice) }}</span></button></div><button class="reward-skip" data-action="skip-room-reward">{{ LABELS.skipReward }}</button></div>
@@ -334,10 +400,10 @@ onBeforeUnmount(() => {
 
     <div class="hud-rest" :class="{ show: merchantOpen }"><section class="merchant-panel"><div class="merchant-head"><span class="merchant-title">{{ merchant?.name }}</span><div class="merchant-tabs"><button v-for="tab in merchantTabs" :key="tab" type="button" class="merchant-tab" :class="{ active: merchantTab === tab }" :data-merchant-tab="tab" :aria-selected="merchantTab === tab">{{ tab === 'stock' ? LABELS.buy : LABELS.merchantRelicsTab }}</button></div><button data-action="close-merchant">{{ LABELS.leaveMerchant }}</button></div><div class="merchant-tab-page merchant-purchase-page" :class="{ show: merchantTab === 'stock' }"><div class="merchant-stock"><button v-for="(entry, index) in (merchant?.stock || [])" :key="`${entry.itemId}-${index}`" class="merchant-stock-item" :data-merchant-stock="index"><b>{{ getItemDefinition(entry.itemId)?.name }}</b><small>{{ LABELS.buy }} {{ entry.price }}</small></button></div><div class="merchant-trade"><button data-action="merchant-sell" :disabled="!selectedItem">{{ LABELS.sellSelected }}{{ selectedItem ? ` ${merchantSellPrice(selectedItem)}` : '' }}</button><button v-if="merchant?.restockPrice > 0" data-action="merchant-refresh" :disabled="state.player.gold < merchant.restockPrice">{{ LABELS.refreshStock }} {{ merchant.restockPrice }}</button></div></div><div class="merchant-relics" :class="{ show: merchantTab === 'relics' }"><section v-if="merchantOffers.length" class="merchant-relic-section merchant-relic-offer"><div class="merchant-relic-title">{{ LABELS.relicChoice }}</div><div class="merchant-relic-grid"><button v-for="relic in merchantOffers" :key="relic.id" class="merchant-relic-item" :class="{ disabled: state.player.gold < (merchant?.relicOfferPrice || 0) }" :data-merchant-relic-choice="relic.id" :aria-disabled="state.player.gold < (merchant?.relicOfferPrice || 0)"><b>{{ relic.name }}</b><small>{{ relic.description }} · {{ LABELS.buy }} {{ merchant.relicOfferPrice }}</small></button></div></section><div v-else class="merchant-relic-empty">{{ LABELS.noRelicsAvailable }}</div></div></section></div>
 
-    <div class="hud-bottom"><div class="backpack-toolbar" :aria-label="`${LABELS.health} ${LABELS.armor} ${LABELS.energy}`"><div class="backpack-action-slot act-drop-slot"><button class="backpack-action act-drop" data-action="discard" :hidden="!state.selectedItem">{{ LABELS.discard }}</button></div><div class="vital-armor" :title="LABELS.armor"><strong>{{ state.player.armor }}</strong></div><div class="vital-bars"><div class="vital-health" :title="LABELS.health"><span class="vital-health-fill" :style="{ width: `${Math.max(0, Math.min(100, state.player.hp / Math.max(1, state.player.maxHp) * 100))}%` }"></span><strong>{{ state.player.hp }}/{{ state.player.maxHp }}</strong></div><div class="vital-energy" :title="LABELS.energy"><span class="vital-energy-fill" :style="{ width: `${Math.max(0, Math.min(100, state.player.energy / Math.max(1, state.player.maxEnergy) * 100))}%` }"></span><strong>{{ state.player.energy }}/{{ state.player.maxEnergy }}</strong></div></div><div class="backpack-action-slot act-use-slot"><button class="backpack-action act-use" data-action="use" :hidden="!state.selectedItem || !['potion', 'armor', 'energy', 'buff', 'cleanse', 'teleport'].includes(state.selectedItem.type)">{{ LABELS.use }}</button></div><button class="backpack-action bag-rotate" data-action="rotate-bag" :disabled="!state.selectedItem" :title="LABELS.rotate">↻</button></div><section class="backpack-panel"><div class="backpack-grid-wrap"><div class="backpack-grid" data="backpack" :style="{ '--bag-columns': INVENTORY_COLUMNS, '--bag-rows': INVENTORY_ROWS }"><button v-for="cell in backpackCells" :key="`cell-${cell.index}`" class="bag-cell" :class="{ 'drop-valid': cell.action === 'move', 'selected-cell': cell.selected }" :data-bag-cell="cell.index" :aria-label="cell.label" :style="{ gridColumn: cell.index % INVENTORY_COLUMNS + 1, gridRow: Math.floor(cell.index / INVENTORY_COLUMNS) + 1 }"></button><div v-for="entry in backpackItems" :key="entry.item.uid" :class="entry.itemClasses" :style="entry.itemStyle"><span class="bag-shape" :style="entry.shapeStyle"><InventorySprite v-if="entry.spriteSources" :sources="entry.spriteSources" :item-index="entry.originIndex" :style="entry.spriteStyle"/><span v-for="cell in entry.cells" :key="cell.index" class="occupied" :data-bag-item="cell.index" :style="cell.style"><i v-for="edge in cell.edgeNames" :key="edge" class="shape-edge" :class="`edge-${edge}`" aria-hidden="true"></i></span><b v-if="entry.nameStyle" class="bag-name" :style="entry.nameStyle">{{ entry.item.name }}</b><small v-if="entry.detailStyle" class="bag-detail" :style="entry.detailStyle">{{ entry.detail }}</small></span></div></div></div></section></div>
+    <div class="hud-bottom"><div class="backpack-toolbar" :aria-label="`${LABELS.health} ${LABELS.armor} ${LABELS.energy}`"><div class="backpack-action-slot act-drop-slot"><button class="backpack-action act-drop" data-action="discard" :hidden="!actionsAvailable || !state.selectedItem" :disabled="!actionsAvailable || !state.selectedItem">{{ LABELS.discard }}</button></div><div class="vital-armor" :title="LABELS.armor"><strong>{{ state.player.armor }}</strong></div><div class="vital-bars"><div class="vital-health" :title="LABELS.health"><span class="vital-health-fill" :style="{ width: `${Math.max(0, Math.min(100, state.player.hp / Math.max(1, state.player.maxHp) * 100))}%` }"></span><strong>{{ state.player.hp }}/{{ state.player.maxHp }}</strong></div><div class="vital-energy" :title="LABELS.energy"><span class="vital-energy-fill" :style="{ width: `${Math.max(0, Math.min(100, state.player.energy / Math.max(1, state.player.maxEnergy) * 100))}%` }"></span><strong>{{ state.player.energy }}/{{ state.player.maxEnergy }}</strong></div></div><div class="backpack-action-slot act-use-slot"><button class="backpack-action act-use" data-action="use" :hidden="!selectedUsable" :disabled="!selectedUsable">{{ LABELS.use }}</button></div><button class="backpack-action bag-rotate" data-action="rotate-bag" :disabled="!selectedRotatable" :title="LABELS.rotate">↻</button></div><section class="backpack-panel"><div class="backpack-grid-wrap"><div class="backpack-grid" data="backpack" :style="{ '--bag-columns': INVENTORY_COLUMNS, '--bag-rows': INVENTORY_ROWS }"><button v-for="cell in backpackCells" :key="`cell-${cell.index}`" class="bag-cell" :class="{ 'drop-valid': cell.action === 'move', 'selected-cell': cell.selected }" :data-bag-cell="cell.index" :aria-label="cell.label" :style="{ gridColumn: cell.index % INVENTORY_COLUMNS + 1, gridRow: Math.floor(cell.index / INVENTORY_COLUMNS) + 1 }"></button><div v-for="entry in backpackItems" :key="entry.item.uid" :class="entry.itemClasses" :style="entry.itemStyle"><span class="bag-shape" :style="entry.shapeStyle"><InventorySprite v-if="entry.spriteSources" :sources="entry.spriteSources" :item-index="entry.originIndex" :style="entry.spriteStyle"/><span v-for="cell in entry.cells" :key="cell.index" class="occupied" :data-bag-item="cell.index" :style="cell.style"><i v-for="edge in cell.edgeNames" :key="edge" class="shape-edge" :class="`edge-${edge}`" aria-hidden="true"></i></span><b v-if="entry.nameStyle" class="bag-name" :style="entry.nameStyle">{{ entry.item.name }}</b><small v-if="entry.detailStyle" class="bag-detail" :style="entry.detailStyle">{{ entry.detail }}</small></span></div></div></div></section></div>
 
     <section class="build-status-panel" :hidden="!buildStatusOpen"><header><strong>{{ LABELS.talentGraph }}</strong><button data-action="build-status-close">{{ LABELS.close }}</button></header><div><p v-for="line in statusLines" :key="line">{{ line }}</p><p v-if="!statusLines.length">当前没有待用增益或次数效果。</p></div></section>
-    <section class="craft-panel" :hidden="!craftOpen"><div class="craft-dialog"><header><h2>{{ LABELS.buy }}</h2><button data-action="craft-close">{{ LABELS.close }}</button></header><p>消耗背包中的原料，合成会推进 1 回合。长按配方中的物品查看详情。</p><div><div v-for="recipe in craftRows" :key="recipe.result" class="craft-row"><button class="craft-item" :data-craft-item="recipe.a">{{ getItemDefinition(recipe.a)?.name }}</button><span>+</span><button class="craft-item" :data-craft-item="recipe.b">{{ getItemDefinition(recipe.b)?.name }}</button><span>=</span><button :data-craft-result="recipe.result" :disabled="!recipe.canFit">{{ recipe.canFit ? '合成' : '空间不足' }}</button></div><p v-if="!craftRows.length">背包内暂无可合成方案。</p></div></div></section>
+    <section class="craft-panel" :hidden="!craftOpen"><div class="craft-dialog"><header><h2>{{ LABELS.craft }}</h2><button data-action="craft-close">{{ LABELS.close }}</button></header><p>消耗背包中的原料，合成会推进 1 回合。长按配方中的物品查看详情。</p><div><div v-for="recipe in craftRows" :key="recipe.result" class="craft-row"><button class="craft-item" :data-craft-item="recipe.a">{{ getItemDefinition(recipe.a)?.name }}</button><span>+</span><button class="craft-item" :data-craft-item="recipe.b">{{ getItemDefinition(recipe.b)?.name }}</button><span>=</span><button :data-craft-result="recipe.result" :disabled="!recipe.canFit">{{ recipe.canFit ? '合成' : '空间不足' }}</button></div><p v-if="!craftRows.length">背包内暂无可合成方案。</p></div></div></section>
     <div class="hud-over" :class="{ show: state.gameOver, win: state.win, lose: !state.win }"><h1>{{ state.win ? LABELS.win : LABELS.lose }}</h1><p>{{ state.win ? LABELS.winMessage : LABELS.loseMessage }}</p><button data-action="restart">{{ LABELS.restart }}</button></div>
   </div>
 </template>
