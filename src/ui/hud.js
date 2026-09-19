@@ -1,3 +1,5 @@
+// Deprecated compatibility surface. Runtime mounting now lives in VueHud.vue;
+// this class remains only for the existing Node-side contract checks.
 import { INVENTORY_COLUMNS, INVENTORY_ROWS } from '../game/run.js'
 import { getItemDefinition } from '../game/data/content.js'
 import { getRelicDefinition } from '../game/data/relics.js'
@@ -162,7 +164,10 @@ export class HUD {
     this.root.addEventListener('contextmenu', this._onContextMenu)
     document.addEventListener('keydown', this._onKeyDown)
     this.unsubscribe = this.run.on('change', () => this.render())
-    this.detailUnsubscribe = this.run.on('detail', () => this.render())
+    // Detail panels are an overlay-only update. Re-rendering the whole HUD
+    // here would replace every backpack sprite and restart its low->high
+    // image upgrade, which makes unrelated equipment visibly flash.
+    this.detailUnsubscribe = this.run.on('detail', () => this._renderDetailPanel())
     this.render()
   }
 

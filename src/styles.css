@@ -25,6 +25,7 @@ button { font: inherit; }
   --hud-bottom-height: calc(var(--hud-unit) + var(--hud-unit) + var(--hud-unit) + var(--hud-unit) + var(--hud-unit) + var(--hud-unit) + 13px + env(safe-area-inset-bottom));
   --hud-action-height: clamp(30px, 8vw, 36px);
 }
+.vue-hud-root { display: contents; }
 
 .hud-top {
   flex: 0 0 var(--hud-top-height); display: flex; align-items: center; justify-content: space-between;

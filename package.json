@@ -19,7 +19,9 @@
     "check:talents": "node scripts/talents-check.mjs"
   },
   "dependencies": {
-    "three": "^0.185.1"
+    "@vitejs/plugin-vue": "^6.0.9",
+    "three": "^0.185.1",
+    "vue": "^3.5.43"
   },
   "devDependencies": {
     "vite": "^8.2.1"

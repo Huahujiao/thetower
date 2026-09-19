@@ -1,19 +1,17 @@
 import './styles.css'
+import { createApp } from 'vue'
 import { GameRun } from './game/run.js'
-import { GameScene } from './render/scene.js'
-import { HUD } from './ui/hud.js'
+import VueHud from './ui/VueHud.vue'
 import { WikiPage } from './ui/wiki.js'
 
 if (window.location.pathname === '/wiki') {
   new WikiPage()
 } else {
   const run = new GameRun()
-  const hud = new HUD(run)
-  const scene = new GameScene(run, hud.sceneContainer)
-  hud.setScene(scene)
+  const app = createApp(VueHud, { run })
+  app.mount('#hud')
 
   window.addEventListener('beforeunload', () => {
-    scene.dispose()
-    hud.dispose()
+    app.unmount()
   }, { once: true })
 }
