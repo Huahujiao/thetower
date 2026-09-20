@@ -93,3 +93,5 @@ npm.cmd run build
 The UI also mirrors the model action gates: discard/use are explore-only, rotation and crafting follow backpack-organization rules, and the browser context menu is suppressed across the complete backpack surface for long-press inspection.
 
 The Vue HUD now binds backpack cell, occupied-shape, and sprite clicks directly with propagation guards; this prevents the transparent sprite layer or parent delegation from swallowing inventory selection. Restart actions call a single reset routine that clears the save and closes transient Vue panels. The build-status panel title is sourced from `LABELS.buildStatus`, not the talent graph label.
+
+Initial relic choice buttons invoke `chooseInitialRelic` directly from the Vue button and stop propagation; the root click delegate remains only as a fallback. This keeps the opening choice responsive even when HUD layers use pointer-event isolation.
