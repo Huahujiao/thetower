@@ -1723,12 +1723,12 @@ export class GameRun {
   }
 
   _persist() {
-    try { localStorage.setItem(SAVE_KEY, JSON.stringify(this.serialize())) } catch {}
+    try { localStorage.setItem(SAVE_KEY, JSON.stringify(this.serialize())) } catch { /* Storage can be unavailable in private contexts. */ }
   }
 
   load() {
     const discard = () => {
-      try { localStorage.removeItem(SAVE_KEY) } catch {}
+      try { localStorage.removeItem(SAVE_KEY) } catch { /* Storage can be unavailable in private contexts. */ }
       return false
     }
     try {
@@ -1838,6 +1838,6 @@ export class GameRun {
   }
 
   clearSave() {
-    try { localStorage.removeItem(SAVE_KEY) } catch {}
+    try { localStorage.removeItem(SAVE_KEY) } catch { /* Storage can be unavailable in private contexts. */ }
   }
 }

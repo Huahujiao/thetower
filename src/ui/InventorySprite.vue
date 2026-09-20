@@ -58,6 +58,7 @@ onBeforeUnmount(clearTimers)
     :src="src"
     :alt="alt"
     aria-hidden="true"
+    draggable="false"
     decoding="async"
     fetchpriority="low"
     :style="style"

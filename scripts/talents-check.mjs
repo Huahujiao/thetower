@@ -60,7 +60,7 @@ assert.equal(buildLevelUpChoices({talents:[]}).length,5)
 }
 {
   const run=fixture();run.player.talents=['harmony-resist','harmony-three']
-  const a=add(run,'rust-sword'),b=add(run,'bone-knife'),c=add(run,'tide-blade'),e=enemy(run,{attribute:'drown'})
+  const a=add(run,'rust-sword'),b=add(run,'bone-knife'),_c=add(run,'tide-blade'),e=enemy(run,{attribute:'drown'})
   attack(run,a,e);assert.equal(run.itemRules.attackContext(a,e).flat,0)
   assert.equal(run.itemRules.attackContext(b,e).flat,2)
   e.attack=3;e.range=2;const hp=run.player.hp;run._enemyAttack(e);assert.equal(run.player.hp,hp-2)

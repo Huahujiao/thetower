@@ -130,7 +130,6 @@ guard('boss', () => {
   boss.flipped = true // 真实玩法中需先翻开 Boss 卡才能攻击
   s.equip[0] = { uid: 990002, def: { id: 't2', name: '测试斧', type: '钝击', atk: 40, tags: [] }, tags: [], curDur: 20, maxDur: 20, maintain: 0, pollutAtk: 0 }
   s.armedSlot = 0; s.player.hp = 300; s.player.maxHp = 300
-  const before = boss.monsterHp
   // 翻几张相邻牌推进回合，触发 Boss 轮换与塔威计时
   const adj = s.board.filter((c) => !c.flipped && !c.dead && s.isAdjacentToFlipped(c))
   for (const c of adj.slice(0, 5)) s.flip(c.uid)

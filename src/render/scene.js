@@ -19,7 +19,7 @@ const DEFAULT_ZOOM = 1
 const MIN_ZOOM = 0.66
 const MAX_ZOOM = 3.2
 const DRAG_THRESHOLD = 8
-const LONG_PRESS_MS = 420
+const LONG_PRESS_MS = 300
 const CAMERA_FOV = 45
 const CAMERA_NEAR = 0.1
 const CAMERA_FAR = 80
@@ -144,6 +144,38 @@ function drawEmptyCardBase(context) {
   context.strokeRect(4, 4, 152, 152)
 }
 
+const WHITE_LINE_CARD_LABELS = Object.freeze({
+  monster: 'ENEMY', merchant: 'MERCHANT', entry: 'PLAYER', weapon: 'WEAPON', potion: 'POTION',
+  armor: 'ARMOR', energy: 'ENERGY', buff: 'BUFF', relic: 'RELIC', trap: 'TRAP', gold: 'GOLD',
+  key: 'KEY', door: 'DOOR', item: 'ITEM', empty: 'EMPTY',
+})
+
+function drawWhiteLineCard(context, { label = 'OBJECT', value = '', detail = '', back = false } = {}) {
+  context.clearRect(0, 0, 160, 160)
+  context.fillStyle = '#050505'
+  context.fillRect(0, 0, 160, 160)
+  context.strokeStyle = '#f4f4f4'
+  context.lineWidth = 3
+  context.strokeRect(5, 5, 150, 150)
+  context.strokeStyle = '#777'
+  context.lineWidth = 1
+  context.strokeRect(12, 12, 136, 136)
+  context.fillStyle = '#f4f4f4'
+  context.textAlign = 'center'
+  context.textBaseline = 'middle'
+  context.font = 'bold 17px monospace'
+  context.fillText(back ? (label === 'BLOCKED' ? 'BLOCKED' : 'HIDDEN') : label, 80, 48)
+  if (value) {
+    context.font = 'bold 25px monospace'
+    context.fillText(String(value), 80, 86)
+  }
+  if (detail) {
+    context.font = '11px monospace'
+    context.fillStyle = '#bbb'
+    context.fillText(String(detail).slice(0, 22), 80, 121)
+  }
+}
+
 function drawStandingToken(context, card) {
   context.clearRect(0, 0, 160, 160)
   const merchant = card.type === 'merchant'
@@ -206,10 +238,11 @@ function disposeObject(object) {
 }
 
 export class GameScene {
-  constructor(run, container) {
+  constructor(run, container, { skin = 'default' } = {}) {
     this.run = run
+    this.skin = skin
     this.container = container
-    this.boardTextures = new BoardTextures()
+    this.boardTextures = skin === 'whiteline' ? null : new BoardTextures()
     this.raycaster = new THREE.Raycaster()
     this.pointer = new THREE.Vector2()
     this.groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0)
@@ -220,6 +253,7 @@ export class GameScene {
     this.flipAnimations = []
     this.animationQueue = []
     this.movementAnimation = null
+    this.moveCompletionPending = false
     this.playerMarker = null
     this.pathPreview = null
     this.pendingRebuild = false
@@ -238,13 +272,13 @@ export class GameScene {
     this.lastDragMoved = false
     this.boardHold = null
     this.scene = new THREE.Scene()
-    this.scene.background = new THREE.Color(0x111722)
+    this.scene.background = new THREE.Color(skin === 'whiteline' ? 0x050505 : 0x111722)
     this.baseCameraDistance = 12
     this.sceneBounds = null
     this.camera = new THREE.PerspectiveCamera(CAMERA_FOV, 1, CAMERA_NEAR, CAMERA_FAR)
     this.renderer = new THREE.WebGLRenderer({ antialias: true })
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
-    this.renderer.shadowMap.enabled = true
+    this.renderer.shadowMap.enabled = skin !== 'whiteline'
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap
     Object.assign(this.renderer.domElement.style, { position: 'absolute', inset: '0', zIndex: '0' })
     this.container.appendChild(this.renderer.domElement)
@@ -379,8 +413,9 @@ export class GameScene {
     const { revealed, peeked, flippable } = visual
     const geometry = cardBodyGeometry(CARD_SIZE, CARD_THICKNESS)
     const material = new THREE.MeshStandardMaterial({
-      color: 0x262a36,
+      color: this.skin === 'whiteline' ? 0x666666 : 0x262a36,
       roughness: 0.9,
+      wireframe: this.skin === 'whiteline',
     })
     const mesh = new THREE.Mesh(geometry, material)
     const point = this._gridPosition(room, position)
@@ -429,6 +464,16 @@ export class GameScene {
   }
 
   _styleTileBody(body, room, position, { revealed, flippable }) {
+    if (this.skin === 'whiteline') {
+      body.scale.set(revealed ? 1 : HIDDEN_CARD_SCALE, revealed ? 1 : HIDDEN_CARD_THICKNESS / CARD_THICKNESS, revealed ? 1 : HIDDEN_CARD_SCALE)
+      body.userData.baseY = revealed ? 0 : (HIDDEN_CARD_THICKNESS - CARD_THICKNESS) / 2
+      body.position.y = body.userData.baseY
+      body.material.map = null
+      body.material.color.setHex(revealed ? 0x666666 : (flippable ? 0xaaaaaa : 0x444444))
+      body.material.wireframe = true
+      body.material.needsUpdate = true
+      return
+    }
     const attribute = this._backAttributeFor(room, position)
     styleCardBody(body, {
       hidden: !revealed, attribute, blocked: !flippable, baseThickness: CARD_THICKNESS,
@@ -449,7 +494,7 @@ export class GameScene {
   _makeEmptyGroundFace(point, position = null) {
     const groundFace = new THREE.Mesh(
       new THREE.PlaneGeometry(CARD_SIZE, CARD_SIZE),
-      new THREE.MeshBasicMaterial({ map: this.boardTextures.floor(position), side: THREE.DoubleSide }),
+      new THREE.MeshBasicMaterial({ map: this.skin === 'whiteline' ? this._makeFrontTexture({ type: 'empty' }, position) : this.boardTextures.floor(position), side: THREE.DoubleSide }),
     )
     groundFace.rotation.x = -Math.PI / 2
     groundFace.position.set(point.x, CARD_THICKNESS / 2 + 0.003, point.z)
@@ -647,8 +692,8 @@ export class GameScene {
   _setDoorAppearance(mesh) {
     const door = this.run.dungeon.door(mesh.userData.doorId)
     const locked = this.run.isDoorLocked(door)
-    mesh.material.color.setHex(locked ? 0x5a341d : 0x9a6533)
-    mesh.material.emissive.setHex(locked ? 0x1c0e05 : 0x2b1608)
+    mesh.material.color.setHex(this.skin === 'whiteline' ? (locked ? 0x555555 : 0xbbbbbb) : (locked ? 0x5a341d : 0x9a6533))
+    mesh.material.emissive?.setHex(locked ? 0x1c0e05 : 0x2b1608)
     mesh.userData.lockIndicator.visible = locked
   }
 
@@ -663,11 +708,15 @@ export class GameScene {
     mesh.castShadow = true
     mesh.receiveShadow = true
     mesh.userData.doorId = door.id
-    const lockIndicator = new THREE.Sprite(new THREE.SpriteMaterial({ map: makeLockIndicatorTexture(), transparent: true, depthTest: false }))
-    lockIndicator.position.set(0, WALL_HEIGHT * 0.48, 0)
-    lockIndicator.scale.set(0.44, 0.44, 1)
-    mesh.userData.lockIndicator = lockIndicator
-    mesh.add(lockIndicator)
+    if (this.skin !== 'whiteline') {
+      const lockIndicator = new THREE.Sprite(new THREE.SpriteMaterial({ map: makeLockIndicatorTexture(), transparent: true, depthTest: false }))
+      lockIndicator.position.set(0, WALL_HEIGHT * 0.48, 0)
+      lockIndicator.scale.set(0.44, 0.44, 1)
+      mesh.userData.lockIndicator = lockIndicator
+      mesh.add(lockIndicator)
+    } else {
+      mesh.userData.lockIndicator = { visible: false }
+    }
     const frame = createDoorFrame({ horizontal, width: TILE_SIZE * 0.68, depth: DOOR_DEPTH, height: WALL_HEIGHT + 0.18 })
     frame.position.set(point.x, 0, point.z)
     this.structureGroup.add(frame)
@@ -699,6 +748,19 @@ export class GameScene {
     this.doorMeshes = []
     this._addRoomBoundary(room)
     this._addExploredRoomGhosts(room)
+    if (this.skin === 'whiteline') {
+      this._lineifyStructure()
+      this._refreshDoors()
+    }
+  }
+
+  _lineifyStructure() {
+    this.structureGroup?.traverse((child) => {
+      if (!child.isMesh) return
+      const old = child.material
+      child.material = new THREE.MeshBasicMaterial({ color: 0x888888, wireframe: true })
+      if (old && !Array.isArray(old)) old.dispose?.()
+    })
   }
 
   _resetSceneBounds(room) {
@@ -1113,10 +1175,15 @@ export class GameScene {
     if (progress < 1) return
     this.movementAnimation = null
     this.playerMarker = animation.group
+    this.moveCompletionPending = true
     this._drainAnimationQueue()
-    if (!this.movementAnimation && !this.flipAnimations.length && !this.animationQueue.length) {
-      this.run.bus?.emit('animate:move-complete')
-    }
+    this._emitMoveCompleteIfIdle()
+  }
+
+  _emitMoveCompleteIfIdle() {
+    if (!this.moveCompletionPending || this.movementAnimation || this.flipAnimations.length || this.animationQueue.length) return
+    this.moveCompletionPending = false
+    this.run.bus?.emit('animate:move-complete')
   }
 
   _showPathPreview(preview, { doorId = null } = {}) {
@@ -1267,7 +1334,10 @@ export class GameScene {
       const face = this.tileMeshByKey.get(animation.key)
       if (room?.id === this.framedRoomId && face?.userData?.position) this._refreshTile(room, face.userData.position, { force: true })
     }
-    if (this.flipAnimations.length === 0) this._drainAnimationQueue()
+    if (this.flipAnimations.length === 0) {
+      this._drainAnimationQueue()
+      this._emitMoveCompleteIfIdle()
+    }
   }
 
   _backAttributeFor(room, position) {
@@ -1278,10 +1348,20 @@ export class GameScene {
   }
 
   _makeBackTexture(attribute, { unflippable = false } = {}) {
+    if (this.skin === 'whiteline') {
+      return makeCanvasTexture((context) => drawWhiteLineCard(context, { label: unflippable ? 'BLOCKED' : 'CARD', back: true }))
+    }
     return this.boardTextures.back(attribute, unflippable)
   }
 
   _makeFrontTexture(card, position = null) {
+    if (this.skin === 'whiteline') {
+      const label = WHITE_LINE_CARD_LABELS[card?.type] || 'OBJECT'
+      const rawValue = card?.type === 'monster' && Number.isFinite(card.maxValue) ? `${card.value}/${card.maxValue}` : card?.value || ''
+      const value = /^[\x20-\x7e]+$/.test(String(rawValue)) ? rawValue : ''
+      const detail = card?.type === 'monster' ? `ATK ${card.attack || 0} / RANGE ${card.range || 1}` : card?.type === 'weapon' ? `ATK ${card.attack || 0} / RANGE ${card.range || 1}` : ''
+      return makeCanvasTexture((context) => drawWhiteLineCard(context, { label, value, detail }))
+    }
     if (card.type === 'empty') return this.boardTextures.floor(position)
     return makeCanvasTexture((context) => {
       if (card.type === 'monster') {
@@ -1673,6 +1753,12 @@ export class GameScene {
     }
     const position = this._pickTile(event)?.userData?.position
     if (!position) return
+    const previewedDoorId = this.pathPreview?.doorId
+    if (previewedDoorId && samePosition(this.pathPreview.target, position) && this.run.previewDoorAction(previewedDoorId)) {
+      this._clearPathPreview()
+      this.run.clickDoor(previewedDoorId)
+      return
+    }
     const preview = this.run.previewTileAction(position.c, position.r)
     if (preview && isAdjacent8(this.run.player.pos, position)) {
       this._clearPathPreview()
@@ -1719,7 +1805,7 @@ export class GameScene {
     this._clearMovementAnimation()
     this._clearPlayerMarker()
     disposeObject(this.roomGroup)
-    this.boardTextures.dispose()
+    this.boardTextures?.dispose()
     this.renderer.dispose()
     this.renderer.domElement.remove()
   }

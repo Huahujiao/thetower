@@ -63,10 +63,20 @@ const ITEM_SPRITE_SOURCES = Object.freeze({
     medium: new URL('../assets/inventory/weapon-tide-blade-v1-medium.png', import.meta.url).href,
     high: new URL('../assets/inventory/weapon-tide-blade-v1.png', import.meta.url).href,
   },
+  'erosion-knife': {
+    small: new URL('../assets/inventory/weapon-erosion-knife-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/weapon-erosion-knife-v1-medium.png', import.meta.url).href,
+    high: new URL('../assets/inventory/weapon-erosion-knife-v1.png', import.meta.url).href,
+  },
   'thorn-spear': {
     small: new URL('../assets/inventory/weapon-thorn-spear-v1-small.png', import.meta.url).href,
     medium: new URL('../assets/inventory/weapon-thorn-spear-v1-medium.png', import.meta.url).href,
     high: new URL('../assets/inventory/weapon-thorn-spear-v1.png', import.meta.url).href,
+  },
+  'soul-spear': {
+    small: new URL('../assets/inventory/weapon-soul-spear-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/weapon-soul-spear-v1-medium.png', import.meta.url).href,
+    high: new URL('../assets/inventory/weapon-soul-spear-v1.png', import.meta.url).href,
   },
   'wood-bow': {
     small: new URL('../assets/inventory/weapon-wood-bow-v1-small.png', import.meta.url).href,
@@ -77,6 +87,21 @@ const ITEM_SPRITE_SOURCES = Object.freeze({
     small: new URL('../assets/inventory/weapon-ash-bow-v1-small.png', import.meta.url).href,
     medium: new URL('../assets/inventory/weapon-ash-bow-v1-medium.png', import.meta.url).href,
     high: new URL('../assets/inventory/weapon-ash-bow-v1.png', import.meta.url).href,
+  },
+  'eagle-bow': {
+    small: new URL('../assets/inventory/weapon-eagle-bow-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/weapon-eagle-bow-v1-medium.png', import.meta.url).href,
+    high: new URL('../assets/inventory/weapon-eagle-bow-v1.png', import.meta.url).href,
+  },
+  'r-three': {
+    small: new URL('../assets/inventory/relic-three-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/relic-three-v1-medium.png', import.meta.url).href,
+    high: new URL('../assets/inventory/relic-three-v1.png', import.meta.url).href,
+  },
+  'r-empty': {
+    small: new URL('../assets/inventory/relic-empty-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/relic-empty-v1-medium.png', import.meta.url).href,
+    high: new URL('../assets/inventory/relic-empty-v1.png', import.meta.url).href,
   },
   'wood-shield': {
     small: new URL('../assets/inventory/defense-wood-shield-v1-small.png', import.meta.url).href,

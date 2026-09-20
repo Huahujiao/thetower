@@ -1,26 +1,63 @@
+import js from '@eslint/js'
+import vue from 'eslint-plugin-vue'
+
+const browserGlobals = {
+  window: 'readonly',
+  document: 'readonly',
+  localStorage: 'readonly',
+  navigator: 'readonly',
+  Element: 'readonly',
+  Image: 'readonly',
+  HTMLImageElement: 'readonly',
+  requestAnimationFrame: 'readonly',
+  cancelAnimationFrame: 'readonly',
+  setTimeout: 'readonly',
+  clearTimeout: 'readonly',
+  console: 'readonly',
+}
+
+const nodeGlobals = {
+  Buffer: 'readonly',
+  URL: 'readonly',
+  console: 'readonly',
+  process: 'readonly',
+}
+
 export default [
   {
-    ignores: ['dist/**', 'src/legacy/**'],
+    ignores: ['dist/**', 'src/legacy/**', 'node_modules/**'],
   },
+  js.configs.recommended,
+  ...vue.configs['flat/recommended'],
   {
-    files: ['src/**/*.js', 'scripts/v2-check.mjs'],
+    files: ['src/**/*.{js,vue}', 'scripts/**/*.mjs'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
-      globals: {
-        window: 'readonly',
-        document: 'readonly',
-        localStorage: 'readonly',
-        requestAnimationFrame: 'readonly',
-        cancelAnimationFrame: 'readonly',
-        console: 'readonly',
-      },
+      globals: browserGlobals,
     },
     rules: {
       'no-constant-binary-expression': 'error',
       'no-redeclare': 'error',
       'no-undef': 'error',
-      'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      'no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+      'vue/multi-word-component-names': 'off',
+      'vue/no-v-html': 'off',
+    },
+  },
+  {
+    files: ['scripts/**/*.mjs', 'smoke-test.mjs', 'tools/**/*.mjs'],
+    languageOptions: {
+      globals: nodeGlobals,
+    },
+  },
+  {
+    files: ['src/**/*.vue'],
+    rules: {
+      'vue/max-attributes-per-line': 'off',
+      'vue/singleline-html-element-content-newline': 'off',
+      'vue/html-self-closing': 'off',
+      'vue/html-closing-bracket-spacing': 'off',
     },
   },
 ]

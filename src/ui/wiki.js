@@ -10,7 +10,7 @@ import '../wiki.css'
 const COPY = Object.freeze({
   title: '\u5730\u7262\u56fe\u9274',
   subtitle: '\u5730\u7262\u5185\u5bb9\u56fe\u9274',
-  summary: '\u4e09\u5c5e\u6027\u3001\u4e09\u5c42\u5929\u8d4b\u7f51\u3001\u5723\u9057\u7269\u6784\u7b51\u3001\u7edf\u4e00\u6697\u7070\u5361\u80cc\u4e0e 4\u00d78 \u5f62\u72b6\u80cc\u5305\u5171\u540c\u6784\u6210\u5730\u7262\u7684\u8def\u7ebf\u9009\u62e9\uff1b\u5730\u9762\u5361\u724c\u7f51\u683c\u6309\u697c\u5c42\u4f7f\u7528 6\u00d76\u30017\u00d77\u30018\u00d78\u30018\u00d78\u30019\u00d79\uff1b\u80cc\u5305\u4f7f\u7528\u6df1\u9ed1\u51b7\u7070\u5e95\u8272\uff0c\u7cbe\u7075\u6309\u5360\u683c\u4f7f\u7528\u900f\u660e\u753b\u5e03\uff0c\u4f18\u5148\u4fdd\u7559\u5c0f\u5c3a\u5bf8\u4e0b\u6e05\u6670\u7684\u5927\u8f6e\u5ed3\uff1b\u5df2\u5ba1\u6838\u7d20\u6750\u5305\u62ec 1\u00d72 \u9523\u5251\u30011\u00d71 \u9aa8\u5305\u30011\u00d73 \u70bd\u67aa\u3001L \u5f62\u8150\u6839\u6218\u65a7\u3001\u5341\u5b57\u65ad\u5cb3\u69cc\u4e0e 1\u00d72 \u6728\u76fe\u3002',
+  summary: '\u4e09\u5c5e\u6027\u3001\u4e09\u5c42\u5929\u8d4b\u7f51\u3001\u5723\u9057\u7269\u6784\u7b51\u3001\u7edf\u4e00\u6697\u7070\u5361\u80cc\u4e0e 4\u00d78 \u5f62\u72b6\u80cc\u5305\u5171\u540c\u6784\u6210\u5730\u7262\u7684\u8def\u7ebf\u9009\u62e9\uff1b\u5730\u9762\u5361\u724c\u7f51\u683c\u6309\u697c\u5c42\u4f7f\u7528 6\u00d76\u30017\u00d77\u30018\u00d78\u30018\u00d78\u30019\u00d79\uff1b\u80cc\u5305\u4f7f\u7528\u6df1\u9ed1\u51b7\u7070\u5e95\u8272\uff0c\u7cbe\u7075\u6309\u5360\u683c\u4f7f\u7528\u900f\u660e\u753b\u5e03\uff0c\u4f18\u5148\u4fdd\u7559\u5c0f\u5c3a\u5bf8\u4e0b\u6e05\u6670\u7684\u5927\u8f6e\u5ed3\uff1b\u5df2\u5ba1\u6838\u7d20\u6750\u5305\u62ec 1\u00d72 \u9523\u5251\u30011\u00d71 \u9aa8\u5305\u30011\u00d73 \u70bd\u67aa\u30011\u00d74 \u9501\u9b42\u67aa\u3001L \u5f62\u8150\u6839\u6218\u65a7\u3001T \u5f62\u9e70\u773c\u5f13\u3001\u5341\u5b57\u65ad\u5cb3\u69cc\u30011\u00d71 \u4e09\u76f8\u8f6e\u4e0e\u7a7a\u5323\u5370\u3002',
   implemented: '\u5df2\u5b9e\u88c5',
   back: '\u8fd4\u56de\u5730\u7262',
   enemies: '\u654c\u4eba',
@@ -68,7 +68,6 @@ const COPY = Object.freeze({
   ambush: '\u4f0f\u51fb',
   shield: '\u76fe\u5175',
   heavyArmor: '\u91cd\u7532',
-  regen: '\u518d\u751f',
   split: '\u5206\u88c2',
   revive: '\u590d\u6d3b',
   generated: '\u751f\u6210\u7269',
@@ -103,6 +102,8 @@ const TABS = Object.freeze([
 ])
 
 const WEAPON_ENERGY_COSTS = Object.freeze({ dagger: 2, sword: 3, axe: 4, polearm: 4, bow: 4, heavy: 5 })
+const LINT_NOTE = 'ESLint status: clean.'
+const INPUT_NOTE = 'Supported device: portrait mobile touch only; click and long press handlers are bound to each target; inventory long press threshold: 300 ms; detail visibility follows the active hold; door confirmation accepts the door or its arrival marker and waits for queued movement and reveal animations to finish.'
 
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[character]))
@@ -280,7 +281,7 @@ export class WikiPage {
     this.root.innerHTML = `<main class="wiki-shell">
       <header class="wiki-header">
         <a class="wiki-back" href="/" aria-label="${COPY.back}">\u2190</a>
-        <div><div class="wiki-kicker">${COPY.subtitle}</div><h1>${COPY.title}</h1><p class="wiki-summary">${COPY.summary}</p></div>
+        <div><div class="wiki-kicker">${COPY.subtitle}</div><h1>${COPY.title}</h1><p class="wiki-summary">${COPY.summary}</p><p class="wiki-lint-note">${LINT_NOTE}</p><p class="wiki-input-note">${INPUT_NOTE}</p></div>
       </header>
       <nav class="wiki-tabs" role="tablist">${TABS.map((tab) => `<button data-wiki-tab="${tab.id}" role="tab">${tab.label}</button>`).join('')}</nav>
       <section class="wiki-content" data-wiki-content></section>

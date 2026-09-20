@@ -34,7 +34,7 @@
 - 敌人立牌保留红色危险主体，属性通过细轮廓和头部圆环颜色区分；商人使用金色轮廓。
 - 武器正面显示名称、类别、攻击、射程、属性和占格，不显示耐久。
 - 角色和敌人脚下使用与空地一致的地面格；敌人生命条显示在立牌上方，行动延迟或普通攻击冷却显示在脚下。
-- 第一次点击远处目标显示路径预览，再次点击同一目标才确认；路径中的每一格都会按移动规则单独结算。
+- 第一次点击远处目标显示路径预览，再次点击同一目标才确认。门也使用相同的两步确认，点击门或门前预览标记均可确认；路径中的每一格都会按移动规则单独结算，确认进门后会等待门前移动及途中翻牌动画完成。
 - 陷阱翻开后显示“已触发”，保留两个后续全局回合后移除，期间不会重复触发。
 
 ## 详情与弹窗
@@ -44,5 +44,9 @@
 商人面板显示购买、出售和圣遗物购买服务。购买、出售、刷新货架及圣遗物购买均为即时操作，不推进回合；商人不再提供圣遗物配置。
 
 ## 日志与结算
+
+## Mobile portrait input contract
+
+The product target is a portrait mobile phone with touch input only. Desktop, keyboard, mouse, stylus, and landscape layouts are outside the supported contract. Inventory long press uses the occupied-cell Vue touch handlers and a 300 ms threshold; do not add desktop pointer compatibility code to the inventory interaction path. For irregular L/T shapes, void cells and the sprite image are excluded from touch hit testing.
 
 右上角日志按钮打开日志面板。日志按最新事件在前显示；当玩家受到致命伤害时，“你倒下了（原因：……）”会被置于顶部，后续同一过程的事件排在其后。日志面板提供“复制日志”按钮，将当前显示的日志复制到系统剪贴板，不再提供发送或分享日志功能。胜败提示使用局部浮层，不遮挡日志按钮。
