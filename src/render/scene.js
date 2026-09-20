@@ -6,6 +6,7 @@ import { BoardTextures } from './board-textures.js'
 import { DEFAULT_CAMERA_ELEVATION, panAzimuth } from './camera-view.js'
 import { cardBodyGeometry, styleCardBody, cardFaceY, CARD_FACE_CLEARANCE, HIDDEN_CARD_THICKNESS, HIDDEN_CARD_SCALE } from './card-body.js'
 import { boundaryPillarPoint, createDoorFrame, createLowPolyPillar, createLowPolyWall, evenPillarOffsets } from './wall-kit.js'
+import { itemSpriteSources } from '../ui/item-sprites.js'
 
 const TILE_SIZE = 1.14
 const CARD_SIZE = TILE_SIZE
@@ -33,6 +34,16 @@ const GHOST_ROOM_GAP = TILE_SIZE * 0.54
 const ENEMY_STATUS_LAYER_OFFSET = 0.012
 const ENEMY_STATUS_HEALTH_Y = CARD_SIZE * 0.43
 const ENEMY_STATUS_BOTTOM_Y = -CARD_SIZE * 0.43
+const ITEM_SPRITE_SIZE = CARD_SIZE * 0.7
+const ITEM_SPRITE_PITCH = -Math.PI / 4
+const ITEM_SPRITE_MIN_SPEED = 0.22
+const ITEM_SPRITE_SPEED_STEP = 0.025
+const ITEM_SPRITE_MAX_SPEED_VARIANT = 8
+const ITEM_SPRITE_FLOAT_AMPLITUDE = 0.018
+const ITEM_SPRITE_FLOAT_SPEED = 1.35
+
+const ITEM_SPRITE_TEXTURES = new Map()
+const ITEM_SPRITE_LOADER = new THREE.TextureLoader()
 
 const CARD_COLORS = Object.freeze({
   monster: '#5b1a1a',
@@ -66,6 +77,39 @@ function makeCanvasTexture(draw) {
   texture.colorSpace = THREE.SRGBColorSpace
   texture.anisotropy = 4
   return texture
+}
+
+function stableHash(value) {
+  let hash = 2166136261
+  for (const character of String(value || '')) {
+    hash ^= character.charCodeAt(0)
+    hash = Math.imul(hash, 16777619)
+  }
+  return hash >>> 0
+}
+
+function itemSpriteTexture(sources, onReady) {
+  const key = sources?.high
+  if (!key) return null
+  let entry = ITEM_SPRITE_TEXTURES.get(key)
+  if (!entry) {
+    entry = { texture: null, listeners: new Set(), failed: false }
+    ITEM_SPRITE_TEXTURES.set(key, entry)
+    ITEM_SPRITE_LOADER.load(key, (texture) => {
+      texture.colorSpace = THREE.SRGBColorSpace
+      texture.anisotropy = 4
+      texture.userData.boardShared = true
+      entry.texture = texture
+      for (const listener of entry.listeners) listener(texture)
+      entry.listeners.clear()
+    }, undefined, () => {
+      entry.failed = true
+      entry.listeners.clear()
+    })
+  }
+  if (entry.texture) return entry.texture
+  if (!entry.failed && onReady) entry.listeners.add(onReady)
+  return null
 }
 
 function makeLockIndicatorTexture() {
@@ -426,7 +470,7 @@ export class GameScene {
     const standing = revealed && (card?.type === 'monster' || card?.type === 'merchant' || card?.type === 'entry')
     const emptyGround = standing && (card?.type === 'monster' || card?.type === 'merchant' || card?.type === 'entry')
     const texture = card
-      ? this._makeFrontTexture(card, position)
+      ? this._makeFrontTexture(card, position, revealed)
       : this._makeBackTexture(this._backAttributeFor(room, position), { unflippable: !flippable })
     const face = new THREE.Mesh(
       new THREE.PlaneGeometry(CARD_SIZE, CARD_SIZE),
@@ -458,6 +502,7 @@ export class GameScene {
     face.userData.visualKey = visual.key
     if (face.userData.groundFace) this.roomGroup.add(face.userData.groundFace)
     this.roomGroup.add(face)
+    this._attachItemSprite(face, card, point, position, revealed)
     this._setEnemyStatusOverlay(face, face.userData.groundFace, revealed && card?.type === 'monster' ? room.entityAt(position) : null)
     this.tileMeshes.push(face)
     this.tileMeshByKey.set(tileKey(position), face)
@@ -489,6 +534,72 @@ export class GameScene {
     face.position.set(point.x, baseY, point.z)
     face.userData.baseY = baseY
     face.userData.standing = standing
+  }
+
+  _clearItemSprite(face) {
+    const sprite = face?.userData?.itemSprite
+    if (sprite) {
+      this.roomGroup.remove(sprite)
+      disposeObject(sprite)
+    }
+    face.userData.itemSprite = null
+    face.userData.itemSpriteState = null
+    face.userData.itemSpriteRequestKey = null
+  }
+
+  _itemSpriteMesh(face, texture, item, point, position, elapsed = 0) {
+    const image = texture.image
+    const aspect = image?.width && image?.height ? image.width / image.height : 1
+    const width = aspect >= 1 ? ITEM_SPRITE_SIZE : ITEM_SPRITE_SIZE * aspect
+    const height = aspect >= 1 ? ITEM_SPRITE_SIZE / aspect : ITEM_SPRITE_SIZE
+    const geometry = new THREE.PlaneGeometry(width, height)
+    const material = new THREE.MeshBasicMaterial({
+      map: texture,
+      alphaTest: 0.02,
+      transparent: true,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+    })
+    const sprite = new THREE.Mesh(geometry, material)
+    const spinSeed = stableHash(`${item?.uid || item?.id || 'item'}:${position?.c || 0}:${position?.r || 0}`)
+    const speed = ITEM_SPRITE_MIN_SPEED + (spinSeed % (ITEM_SPRITE_MAX_SPEED_VARIANT + 1)) * ITEM_SPRITE_SPEED_STEP
+    // The mesh origin is the tile center, so the pitch rotates around the
+    // image's half-height line and heading rotation stays centered on the tile.
+    const groundY = cardFaceY(false, CARD_THICKNESS)
+    const uprightCenterY = groundY + height / 2
+    const pitchLift = (height / 2) * (1 - Math.cos(Math.abs(ITEM_SPRITE_PITCH)))
+    const groundedCenterY = uprightCenterY - pitchLift
+    sprite.position.set(point.x, groundedCenterY + 0.004, point.z)
+    sprite.rotation.order = 'YXZ'
+    sprite.rotation.set(ITEM_SPRITE_PITCH, this.cameraAzimuth, 0)
+    sprite.renderOrder = 4
+    sprite.raycast = NO_RAYCAST
+    sprite.userData.itemSprite = true
+    sprite.userData.position = position ? { ...position } : null
+    sprite.userData.itemSpin = { angle: (elapsed * speed) % (Math.PI * 2), elapsed, speed, baseY: sprite.position.y }
+    face.userData.itemSprite = sprite
+    face.userData.itemSpriteState = { source: itemSpriteSources(item), position: position ? { ...position } : null }
+    this.roomGroup.add(sprite)
+  }
+
+  _attachItemSprite(face, card, point, position, revealed = false) {
+    this._clearItemSprite(face)
+    if (!revealed) return
+    const entity = position ? this.run.currentRoom?.entityAt(position) : null
+    const item = card?.item || (entity?.kind === 'item' ? entity.item : null)
+    if (this.skin === 'whiteline' || !item) return
+    const sources = itemSpriteSources(item)
+    if (!sources) return
+    const sourceKey = sources.high
+    const startedAt = Date.now()
+    face.userData.itemSpriteRequestKey = sourceKey
+    const applyTexture = (texture) => {
+      if (!texture || !face.parent || face.userData.itemSpriteRequestKey !== sourceKey || face.userData.position?.c !== position?.c || face.userData.position?.r !== position?.r) return
+      this._clearItemSprite(face)
+      this._itemSpriteMesh(face, texture, item, point, position, Math.max(0, (Date.now() - startedAt) / 1000))
+    }
+    const texture = itemSpriteTexture(sources, applyTexture)
+    if (texture) applyTexture(texture)
   }
 
   _makeEmptyGroundFace(point, position = null) {
@@ -943,12 +1054,13 @@ export class GameScene {
     const visual = this._tileVisualState(room, position)
     const { revealed, peeked, flippable } = visual
     if (!force && face.visible && face.userData.visualKey === visual.key) return true
+    this._clearItemSprite(face)
     const oldTexture = face.material.map
     const card = revealed || peeked ? this._cardFaceData(room, position) : null
     const standing = revealed && (card?.type === 'monster' || card?.type === 'merchant' || card?.type === 'entry')
     const emptyGround = standing && (card?.type === 'monster' || card?.type === 'merchant' || card?.type === 'entry')
     face.material.map = card
-      ? this._makeFrontTexture(card, position)
+      ? this._makeFrontTexture(card, position, revealed)
       : this._makeBackTexture(this._backAttributeFor(room, position), { unflippable: !flippable })
     face.material.needsUpdate = true
     // Click-through is handled by the custom raycast below. Standing tokens
@@ -970,6 +1082,7 @@ export class GameScene {
       this.roomGroup.add(face.userData.groundFace)
     }
     if (face.userData.groundFace) face.userData.groundFace.visible = emptyGround
+    this._attachItemSprite(face, card, this._gridPosition(room, position), position, revealed)
     this._setEnemyStatusOverlay(face, face.userData.groundFace, revealed && card?.type === 'monster' ? room.entityAt(position) : null)
     face.userData.visualKey = visual.key
     return true
@@ -1041,7 +1154,7 @@ export class GameScene {
     group.position.set(point.x, startY, point.z)
     group.scale.set(HIDDEN_CARD_SCALE, 1, HIDDEN_CARD_SCALE)
     group.rotation.x = Math.PI
-    const frontTexture = this._makeFrontTexture(this._cardFaceData(room, position), position)
+    const frontTexture = this._makeFrontTexture(this._cardFaceData(room, position), position, true)
     const backTexture = sourceBackTexture || this._makeBackTexture(this._backAttributeFor(room, position), { unflippable: backUnflippable })
     const front = new THREE.Mesh(
       new THREE.PlaneGeometry(CARD_SIZE, CARD_SIZE),
@@ -1313,6 +1426,18 @@ export class GameScene {
     }
   }
 
+  _updateItemSprites(delta) {
+    for (const face of this.tileMeshes) {
+      const sprite = face?.userData?.itemSprite
+      const spin = sprite?.userData?.itemSpin
+      if (!sprite || !spin) continue
+      spin.elapsed += delta
+      spin.angle = (spin.angle + delta * spin.speed) % (Math.PI * 2)
+      sprite.rotation.y = this.cameraAzimuth + spin.angle
+      sprite.position.y = spin.baseY + Math.sin(spin.elapsed * ITEM_SPRITE_FLOAT_SPEED) * ITEM_SPRITE_FLOAT_AMPLITUDE
+    }
+  }
+
   _updateFlipAnimations(delta) {
     for (let index = this.flipAnimations.length - 1; index >= 0; index--) {
       const animation = this.flipAnimations[index]
@@ -1354,7 +1479,7 @@ export class GameScene {
     return this.boardTextures.back(attribute, unflippable)
   }
 
-  _makeFrontTexture(card, position = null) {
+  _makeFrontTexture(card, position = null, revealed = false) {
     if (this.skin === 'whiteline') {
       const label = WHITE_LINE_CARD_LABELS[card?.type] || 'OBJECT'
       const rawValue = card?.type === 'monster' && Number.isFinite(card.maxValue) ? `${card.value}/${card.maxValue}` : card?.value || ''
@@ -1362,6 +1487,9 @@ export class GameScene {
       const detail = card?.type === 'monster' ? `ATK ${card.attack || 0} / RANGE ${card.range || 1}` : card?.type === 'weapon' ? `ATK ${card.attack || 0} / RANGE ${card.range || 1}` : ''
       return makeCanvasTexture((context) => drawWhiteLineCard(context, { label, value, detail }))
     }
+    const entity = position ? this.run.currentRoom?.entityAt(position) : null
+    const item = card?.item || (entity?.kind === 'item' ? entity.item : null)
+    if (revealed && itemSpriteSources(item)) return this.boardTextures.floor(position)
     if (card.type === 'empty') return this.boardTextures.floor(position)
     return makeCanvasTexture((context) => {
       if (card.type === 'monster') {
@@ -1435,7 +1563,7 @@ export class GameScene {
         boss: !!entity.boss,
       }
     }
-    if (entity.kind === 'item') return { ...this._itemCardFaceData(entity.item), attribute: entity.item.type === 'weapon' ? entity.item.attribute : null }
+    if (entity.kind === 'item') return { ...this._itemCardFaceData(entity.item), item: entity.item, attribute: entity.item.type === 'weapon' ? entity.item.attribute : null }
     if (entity.kind === 'trap') {
       const triggered = entity.triggered === true
       return {
@@ -1571,6 +1699,9 @@ export class GameScene {
   _updateCameraFacingTokens() {
     for (const face of this.tileMeshes) {
       if (face?.userData?.standing) face.rotation.y = this.cameraAzimuth
+      const sprite = face?.userData?.itemSprite
+      const spin = sprite?.userData?.itemSpin
+      if (sprite && spin) sprite.rotation.y = this.cameraAzimuth + spin.angle
     }
     for (const group of [this.movementAnimation?.group, this.playerMarker]) {
       for (const child of group?.children || []) {
@@ -1781,6 +1912,7 @@ export class GameScene {
     this.lastFrameTime = now
     this._updateMovementAnimation(delta)
     this._updateFlipAnimations(delta)
+    this._updateItemSprites(delta)
     this._updateHoverLift()
     this.renderer.render(this.scene, this.camera)
     this._frame = requestAnimationFrame(this._animate)
