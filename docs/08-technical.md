@@ -91,3 +91,5 @@ npm.cmd run build
 `GameRun` remains an event-driven plain JavaScript model. Vue computed views must therefore depend on the shared `revision` tick exposed by `state`; they must not cache direct reads of mutable run fields. The HUD increments that tick for every `change` event, while detail overlays use a separate `detail` tick. This keeps rewards, level-up choices, merchants, backpack placements, action buttons, and status text current without replacing the Three.js canvas or unrelated sprite nodes.
 
 The UI also mirrors the model action gates: discard/use are explore-only, rotation and crafting follow backpack-organization rules, and the browser context menu is suppressed across the complete backpack surface for long-press inspection.
+
+The Vue HUD now binds backpack cell, occupied-shape, and sprite clicks directly with propagation guards; this prevents the transparent sprite layer or parent delegation from swallowing inventory selection. Restart actions call a single reset routine that clears the save and closes transient Vue panels. The build-status panel title is sourced from `LABELS.buildStatus`, not the talent graph label.

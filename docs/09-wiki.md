@@ -41,3 +41,5 @@ The game HUD is mounted with Vue 3 while Three.js remains the board renderer. Vu
 The game HUD is mounted by Vue 3 while the board remains Three.js. Because `GameRun` is intentionally a plain event-driven model, all mutable HUD projections subscribe through the shared revision tick. This keeps initial relic selection, room rewards, level-up choices, merchant stock, backpack movement, action visibility, and status panels synchronized after each model change.
 
 Long-press detail uses a separate detail update and preserves keyed inventory sprite nodes. The complete backpack grid suppresses the browser context menu, so inspecting a textured item does not open native browser actions or flash unrelated equipment.
+
+Backpack interaction is bound directly to each cell and sprite hit target, so selecting, moving, rotating, and clearing items remains available after Vue updates. Restart clears the saved run and transient panels together. The active-effect panel is labeled as build status, while the talent graph keeps its own title.
