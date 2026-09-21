@@ -1,8 +1,8 @@
 """Generate small and medium transparent inventory sprite variants.
 
-The source files remain the high-resolution ``*-v*.png`` assets.  The HUD
-loads ``-small`` first, then ``-medium``, and finally the source image.
-Requires Pillow: ``python -m pip install pillow``.
+Production source PNGs live in ``inventory/backup/source`` so the runtime
+directory contains only the two shipped resolutions. The HUD loads ``-small``
+first, then ``-medium``. Requires Pillow: ``python -m pip install pillow``.
 """
 
 from pathlib import Path
@@ -25,9 +25,11 @@ def resize_to_max(image: Image.Image, max_edge: int) -> Image.Image:
 
 
 def generate(root: Path) -> int:
+    source_roots = [root / "backup" / "source", root]
     sources = sorted(
         path
-        for path in root.glob("*-v*.png")
+        for source_root in source_roots
+        for path in source_root.glob("*-v*.png")
         if "-small" not in path.stem and "-medium" not in path.stem
     )
     if not sources:
@@ -38,7 +40,7 @@ def generate(root: Path) -> int:
         with Image.open(source) as opened:
             image = opened.convert("RGBA")
             for suffix, max_edge in VARIANTS:
-                target = source.with_name(f"{source.stem}-{suffix}.png")
+                target = root / f"{source.stem}-{suffix}.png"
                 resized = resize_to_max(image, max_edge)
                 resized.save(target, format="PNG", optimize=True)
                 generated += 1

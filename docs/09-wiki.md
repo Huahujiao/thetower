@@ -19,11 +19,23 @@ Enemy health shown by `/wiki` uses the same `ENEMY_HP_MULTIPLIER` as runtime spa
 
 The wiki records that backpack sprites use alpha-transparent canvases sized by each item's occupied shape. The backpack surface is a cool ink-black charcoal gradient rather than the earlier yellow-brown paper field. Room card grids use the reduced per-floor dimensions (6x6, 7x7, 8x8, 8x8, 9x9), and gameplay balance values remain data-driven rather than painted into the artwork.
 
-The reviewed sprite set currently includes nineteen weapon/defense sprites plus six single-cell item sprites: rust sword, bone knife, ember spear, root axe, rock maul, bell maul, wall sword, return axe, mountain maul, silver guard, ember axe, tide blade, erosion knife, thorn spear, soul spear, wood bow, ash bow, eagle bow, wooden ward shield, health potion, iron powder, energy potion, cleanse, rage wine, and teleport. The HUD uses these sprites without labels or procedural cell fills when their item ids are present; weapon attributes remain readable through the occupied-shape outline: muted red for scorch, dried ochre for wither, and oxidized teal for drown. Other items retain distinct cool dark fills by type, while the wiki's balance cards remain driven by the item catalog. Each mapped sprite loads a small preview first and upgrades to medium and high resolution after decoding, so opening or moving the backpack does not immediately fetch the largest PNG. Detail open/close events update only the overlay and preserve existing backpack nodes, so long-pressing one item does not flash other equipment. Browser context menus are disabled within the backpack so long-press inspection does not leave the game UI.
+The reviewed sprite set currently includes nineteen weapon/defense sprites plus six single-cell item sprites and six single-cell relic sprites. The HUD uses these sprites without labels or procedural cell fills when their item ids are present; weapon attributes remain readable through the occupied-shape outline: muted red for scorch, dried ochre for wither, and oxidized teal for drown. Other items retain distinct cool dark fills by type, while relic cells use a faint purple tint. Each mapped sprite loads a small preview first and upgrades only to the medium runtime file after decoding; original high-resolution sources stay in the inventory backup folder. Detail open/close events update only the overlay and preserve existing backpack nodes, so long-pressing one item does not flash other equipment. Browser context menus are disabled within the backpack so long-press inspection does not leave the game UI.
 
-The first relic sprite batch adds Three-Phase Wheel (`r-three`) and Empty Casket Seal (`r-empty`). Both occupy one backpack cell and use transparent staged sprites; the remaining relics are queued for the next generation batch. Relic cells use a faint translucent purple backing behind their sprites, while weapon cells retain a low-opacity tint matching scorch, wither, or drown in addition to the colored outline. When a mapped weapon or item is revealed on the Three.js board, the same transparent sprite is fitted to 0.8 of the tile size, centered close to the ground over the shared empty-ground texture, pitched 45 degrees, and slowly heading-rotated with an independent reveal-based start and speed.
+Defense cards in `/wiki` identify their exclusive acquisition channels: enemy drops, ordinary merchant stock, and supply-room rewards. Defenses are excluded from every fixed or random room-floor loot placement; enemy cards show a material/defense pair when their unchanged drop chance chooses uniformly between those alternatives.
+
+The wiki now reflects complete sprite coverage: 18 weapons, 8 defenses, 6 consumables, 6 materials, and 6 relics. Each mapped item uses a transparent footprint-aware source with only small and medium runtime variants; vertical and irregular defenses keep their occupied-shape proportions.
+
+The relic sprite set now covers all six relic ids: Three-Phase Wheel (`r-three`), Empty Casket Seal (`r-empty`), Reverse Stone (`r-reverse`), Traveler Bone Domino (`r-traveler`), Blood Pact Bronze Mirror (`r-blood`), and Broken-Blade Scales (`r-scales`). Every relic occupies one backpack cell and uses a transparent staged sprite. Relic cells use a faint translucent purple backing behind their sprites, while weapon cells retain a low-opacity tint matching scorch, wither, or drown in addition to the colored outline. When a mapped weapon or item is revealed on the Three.js board, the same transparent sprite is fitted to 0.7 of the tile size, centered close to the ground over the shared empty-ground texture, lowered by the calculated 45-degree pitch lift, and slowly heading-rotated with an independent reveal-based start and speed.
 
 The game HUD is mounted with Vue 3 while Three.js remains the board renderer. Vue owns the reactive panels, keyed backpack placements, detail overlay, and staged sprite component; `GameScene` still owns the canvas, camera, card meshes, walls, and animation loop. This boundary keeps UI updates from replacing the Three canvas or unrelated inventory images.
+
+Wall pillar tops use a smaller capital-and-cap profile, and the initial room framing starts slightly farther away for a less crowded view.
+
+Enemy cards show a doubled-size, lightly outlined name label above the health bar. It shares the health bar's status-group orientation and uses a matching wide texture, so its text remains readable rather than being vertically compressed; it is visual-only and does not intercept board touches.
+
+The health bar is raised slightly toward the name label while the label keeps its existing height, reducing the gap without crowding the enemy head.
+
+Overlapping board visuals follow grid rows rather than camera depth: the more southern row is rendered on top of northern rows, with card, status, and item-sprite sublayers kept in order within each row.
 
 The project lint policy is defined in `eslint.config.js` and runs with `npm.cmd run lint`. It checks Vue templates and all JavaScript/Node tooling, including the smoke test and log server. Undefined names, duplicate keys or attributes, empty exception handlers, and unused variables fail the command; intentionally unused bindings use an underscore prefix. The current lint baseline is clean.
 
@@ -67,3 +79,27 @@ Open `/whiteline` to run the same game rules and interactions with a diagnostic 
 The supported interaction target is portrait mobile touch only. Inventory long press is bound directly to each occupied Vue-rendered cell with `touchstart`, `touchmove`, `touchend`, and `touchcancel`; the Three.js board detail hold uses the same 300 ms threshold. Desktop mouse, keyboard, stylus, and landscape layouts are outside the product contract.
 
 After 300 ms, the corresponding detail panel is populated and shown through `detailPanelVisible`; releasing the touch closes it, while movement or cancellation aborts the pending timer.
+
+## Scene status tray
+
+The main HUD no longer has a separate build-status text row. The experience strip sits directly below the top HUD, and the released space belongs to the Three.js board. Active statuses render inside the board's lower-left edge, flowing from left to right, as compact first-character cells with a badge for remaining turns, an active counter, or a relic threshold. Holding a cell uses the existing 300 ms detail gesture and releasing closes the detail overlay. The wiki header records this interaction alongside the current content reference.
+
+Current tray categories are poison, burning, and active temporary attack/weapon buffs such as rage wine. Relic counters, persistent equipment/talent conditions, defensive counters, and weapon adjacency or empty-space construction checks remain in the relevant details and are intentionally excluded from the compact tray.
+
+## Teleport talisman
+
+The wiki item definition for the teleport talisman now states its Manhattan-distance-6 revealed-empty-cell target rule. The game maps it to a transparent paper-talisman sprite with an ink teleport seal and cyan portal marks; the previous pendant sprite is retained as an unused V1 asset for a future item.
+
+## Fixed south wall
+
+Room boundary walls do not respond to the player's nearby position. The south wall remains visible as the player enters or leaves its adjacent tiles; only the fixed interior-pillar omission is used to preserve sightlines, while both corner pillars stay in place.
+
+## Movement footprints
+
+All crossed movement tiles now depress on arrival. A footprint remains pressed through the following movement turn before lifting, and the final landing tile lifts when a later action advances the global turn. This is visual feedback only and does not change movement range, route cost, or combat rules.
+
+The backpack has no outer frame; only its cells and item outlines remain visible. Weapon tiers use Roman numerals in the detail panel only (I for ordinary weapons, II for crafted weapons). The detail panel uses its icon slot for the matching item sprite when one exists, and ordinary items do not show weapon attribute badges. Relic selection is a borderless, full-screen dimmed overlay whose cards read from top to bottom as name, image, and compact description; the lower description area is top-left aligned.
+
+## Combat animation
+
+Player and enemy attacks use a short 0.5-second presentation animation. The player raises both arms and briefly narrows the stance; an enemy lifts its round head and sways its triangular body twice. Attack events share the Three.js FIFO queue with movement and card flips, so attacks in one turn play one after another instead of simultaneously. The animation is visual-only and does not change damage, turn order, or enemy rules.

@@ -30,6 +30,7 @@
 ## 三维棋盘
 
 - 默认相机采用倾斜视角，支持单指或鼠标拖动平移以及有限范围缩放。
+- 初始三维视角略微拉远；墙柱顶部收窄，减少视觉遮挡。
 - 卡背使用灼热红、枯萎黄、沉溺蓝和中性灰白四种主题；不显示卡牌内容文字。
 - 敌人立牌保留红色危险主体，属性通过细轮廓和头部圆环颜色区分；商人使用金色轮廓。
 - 武器正面显示名称、类别、攻击、射程、属性和占格，不显示耐久。
@@ -48,5 +49,19 @@
 ## Mobile portrait input contract
 
 The product target is a portrait mobile phone with touch input only. Desktop, keyboard, mouse, stylus, and landscape layouts are outside the supported contract. Inventory long press uses the occupied-cell Vue touch handlers and a 300 ms threshold; do not add desktop pointer compatibility code to the inventory interaction path. For irregular L/T shapes, void cells and the sprite image are excluded from touch hit testing.
+
+## Scene status tray
+
+The former text-only build-status row has been removed. The experience strip now follows the top HUD directly, giving the Three.js board the released vertical space. Active statuses appear in a compact tray anchored inside the board's lower-left edge and flow from left to right. Each entry currently uses the first character of its status name, with a corner badge for remaining global turns, a staged count, or a relic threshold. Holding an entry for 300 ms opens the normal detail overlay; releasing closes it.
+
+The tray includes only temporary effects: poison, burning, and active next-attack or next-weapon buffs such as the rage-wine effect. Relic counters, persistent equipment/talent conditions, defensive counters, and per-weapon adjacency/empty-space build checks remain in their corresponding details instead of occupying tray slots.
+
+The teleport talisman reaches a revealed empty cell within Manhattan distance 6. Its mapped inventory sprite is a paper talisman with an ink spatial seal and cyan portal motif; the former pendant artwork remains archived for a later item.
+
+Room walls are fixed boundary geometry. Leaving a tile beside the south wall must not hide or replace that wall; the only south-side visibility exception is the permanent omission of interior pillars, while both corner pillars remain.
+
+Every tile crossed during a movement path visibly depresses when the character lands on it. The preceding footprint starts to rise only after the following movement turn lands, and the final footprint rises when a later global-turn-advancing action occurs.
+
+The backpack surface has no overall border. Weapon tiers use Roman numerals in the detail panel, with crafted results displayed as II. Details show the item sprite in the reserved icon slot when mapped, while ordinary items have no attribute badge. Relic selection uses a full-screen dimmer and borderless cards ordered name, image, and compact description; the description area starts at the top-left of its lower card section.
 
 右上角日志按钮打开日志面板。日志按最新事件在前显示；当玩家受到致命伤害时，“你倒下了（原因：……）”会被置于顶部，后续同一过程的事件排在其后。日志面板提供“复制日志”按钮，将当前显示的日志复制到系统剪贴板，不再提供发送或分享日志功能。胜败提示使用局部浮层，不遮挡日志按钮。

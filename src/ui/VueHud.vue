@@ -29,18 +29,6 @@
             <path d="m14 3 7 7-4 4-7-7zM12 12 3 21M4 3v6M1 6h6" />
           </svg>
         </button><button
-          type="button" class="hud-icon" data-action="build-status" :title="LABELS.buildStatus"
-          :aria-label="LABELS.buildStatus" @click="handleAction('build-status')"
-        >
-          <svg
-            viewBox="0 0 24 24" width="18" height="18" fill="none"
-            stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
-          >
-            <rect x="3" y="3" width="6" height="6" rx="1" />
-            <rect x="15" y="15" width="6" height="6" rx="1" />
-            <path d="M9 6h9v6M15 18H6v-6" />
-          </svg>
-        </button><button
           class="hud-icon talent-book-top" data-action="talents" :title="LABELS.talentGraph"
           :aria-label="LABELS.talentGraph" @click="handleAction('talents')"
         >
@@ -68,10 +56,6 @@
         </button>
       </div>
     </div>
-    <div class="hud-emotion" :class="{ overloaded: state.relicOverload() > 0 }">
-      <span class="emotion-text">{{ hints
-      }}</span>
-    </div>
     <div class="experience-bar-row" :aria-label="LABELS.experience">
       <div class="experience-bar">
         <span
@@ -81,10 +65,29 @@
         }}/{{ state.player.experienceToNext }}</span>
       </div>
     </div>
-    <div id="app" ref="sceneContainer" aria-label="game board"></div>
+    <div id="app" ref="sceneContainer" aria-label="game board">
+      <section v-if="statusEntries.length" class="scene-status-tray" :aria-label="LABELS.status">
+        <button
+          v-for="entry in statusEntries" :key="entry.id" type="button"
+          class="scene-status-icon" :class="entry.tone" :aria-label="entry.name"
+          @touchstart.stop.prevent="onStatusTouchStart(entry, $event)"
+          @touchmove.stop="onTouchMove"
+          @touchend.stop="onTouchEnd"
+          @touchcancel.stop="onTouchCancel"
+          @contextmenu.prevent
+        >
+          <span>{{ entry.glyph }}</span><b v-if="entry.badge">{{ entry.badge }}</b>
+        </button>
+      </section>
+    </div>
     <section v-show="detailPanelVisible" class="detail-panel">
       <div class="detail-card" data-action="close-detail" @click="handleAction('close-detail')">
-        <div class="detail-icon" aria-hidden="true">{{ detailPanel ? detailIcon : 'DETAIL' }}</div>
+        <div class="detail-icon" aria-hidden="true">
+          <img
+            v-if="detailSpriteSources" class="detail-sprite" :src="detailSpriteSources.medium"
+            :alt="detailPanel?.title || ''" draggable="false" decoding="async"
+          ><span v-else>{{ detailPanel ? detailIcon : 'DETAIL' }}</span>
+        </div>
         <div class="detail-content">
           <div class="detail-head">
             <div class="detail-title">{{ detailPanel?.title || 'DETAIL PANEL' }}</div>
@@ -230,8 +233,11 @@
           v-for="relic in initialRelics" :key="relic.id" class="relic-choice-card"
           :data-relic-choice="relic.id" @click.stop="selectInitialRelic(relic.id)"
         >
-          <span class="relic-name">{{
-            relic.name }}</span><span class="relic-desc">{{ relic.description }}</span>
+          <span class="relic-name">{{ relic.name }}</span>
+          <img
+            v-if="itemSpriteSources({ id: relic.id })" class="relic-choice-sprite"
+            :src="itemSpriteSources({ id: relic.id }).medium" :alt="relic.name" draggable="false" decoding="async"
+          ><span class="relic-desc">{{ relic.description }}</span>
         </button>
       </div>
     </div>
@@ -242,10 +248,11 @@
           v-for="(choice, index) in (state.roomReward?.choices || [])" :key="index"
           class="relic-choice-card" :data-room-reward="index" :disabled="roomRewardDisabled(choice)" @click="handleAction('room-reward', index)"
         >
-          <span
-            class="relic-name"
-          >{{ roomRewardTitle(choice) }}</span><span class="relic-desc">{{
-            roomRewardDescription(choice) }}</span>
+          <span class="relic-name">{{ roomRewardTitle(choice) }}</span>
+          <img
+            v-if="roomRewardSpriteSources(choice)" class="relic-choice-sprite"
+            :src="roomRewardSpriteSources(choice).medium" :alt="roomRewardTitle(choice)" draggable="false" decoding="async"
+          ><span class="relic-desc">{{ roomRewardDescription(choice) }}</span>
         </button>
       </div><button
         class="reward-skip"
@@ -446,7 +453,8 @@
       </section>
     </div>
 
-    <section class="build-status-panel" :hidden="!buildStatusOpen">
+    <!-- Legacy status dialog intentionally removed: status details now open from the scene tray. -->
+    <!--
       <header>
         <strong>{{ LABELS.buildStatus }}</strong><button data-action="build-status-close" @click="handleAction('build-status-close')">
           {{ LABELS.close
@@ -457,7 +465,7 @@
         <p v-for="line in statusLines" :key="line">{{ line }}</p>
         <p v-if="!statusLines.length">当前没有待用增益或次数效果。</p>
       </div>
-    </section>
+    -->
     <section class="craft-panel" :hidden="!craftOpen">
       <div class="craft-dialog">
         <header>
@@ -522,7 +530,7 @@ const LABELS = Object.freeze({
   turn: '\u5168\u5c40\u56de\u5408', poison: '\u4e2d\u6bd2', burning: '\u71c3\u70e7', level: '\u7b49\u7ea7', experience: '\u7ecf\u9a8c',
   character: '\u89d2\u8272', characterGrowth: '\u89d2\u8272\u6210\u957f', maxHealth: '\u751f\u547d\u4e0a\u9650', talents: '\u5929\u8d4b',
   talentGraph: '\u5929\u8d4b\u7f51', fixedGrowth: '\u5f3a\u5316\u4f53\u683c', help: '\u5e2e\u52a9', basicGameplay: '\u57fa\u672c\u73a9\u6cd5',
-  close: '\u5173\u95ed', craft: '\u5408\u6210', buildStatus: '\u6784\u7b51\u72b6\u6001', settings: '\u8bbe\u7f6e', camera: '\u89c6\u89d2', cameraAzimuth: '\u65cb\u8f6c\u89d2\u5ea6',
+  close: '\u5173\u95ed', craft: '\u5408\u6210', status: '\u72b6\u6001', settings: '\u8bbe\u7f6e', camera: '\u89c6\u89d2', cameraAzimuth: '\u65cb\u8f6c\u89d2\u5ea6',
   cameraPitch: '\u4fef\u4ef0\u89d2\u5ea6', cameraPitchDecrease: '\u51cf\u5c0f\u4fef\u4ef0\u89d2\u5ea6', cameraPitchIncrease: '\u589e\u52a0\u4fef\u4ef0\u89d2\u5ea6',
   log: '\u65e5\u5fd7', copyLog: '\u590d\u5236\u65e5\u5fd7', copied: '\u5df2\u590d\u5236', copyFailed: '\u590d\u5236\u5931\u8d25',
   reveal: '\u8c03\u8bd5\uff1a\u663e\u793a\u724c\u5185\u5bb9', discard: '\u4e22\u5f03', rotate: '\u65cb\u8f6c', use: '\u4f7f\u7528',
@@ -552,7 +560,6 @@ const sceneContainer = ref(null)
 const scene = shallowRef(null)
 const topPanel = ref(null)
 const craftOpen = ref(false)
-const buildStatusOpen = ref(false)
 const helpOpen = ref(false)
 const merchantTab = ref('stock')
 const copyLabel = ref(LABELS.copyLog)
@@ -614,6 +621,8 @@ const selectedRotatable = computed(() => {
   const nextShape = current.backpack.shapeFor(item, placement.rotation + 1)
   return JSON.stringify(shape) !== JSON.stringify(nextShape)
 })
+/* Old top status text; replaced by the scene status tray. */
+/*
 const hints = computed(() => {
   const current = state.value
   const item = selectedItem.value?.type === 'weapon' ? selectedItem.value : null
@@ -625,6 +634,37 @@ const hints = computed(() => {
 const statusLines = computed(() => {
   state.value
   return run.itemRules.statusLines()
+})
+*/
+const statusEntries = computed(() => {
+  const current = state.value
+  const entries = []
+  if (current.player.poisonedTurns > 0) {
+    entries.push({
+      id: 'poison', name: LABELS.poison, glyph: Array.from(LABELS.poison)[0],
+      badge: String(current.player.poisonedTurns), tone: 'poison',
+      description: `${LABELS.poison} ${current.player.poisonedTurns}${LABELS.turn}`,
+    })
+  }
+  if (current.player.burningTurns > 0) {
+    entries.push({
+      id: 'burning', name: LABELS.burning, glyph: Array.from(LABELS.burning)[0],
+      badge: String(current.player.burningTurns), tone: 'burning',
+      description: `${LABELS.burning} ${current.player.burningTurns}${LABELS.turn}`,
+    })
+  }
+
+  const pendingLines = run.itemRules.pendingLines()
+  for (const [id, buff] of Object.entries(current.player.itemState?.buffs || {})) {
+    if (id.startsWith('r-') || (id === 'spring' && !run.itemRules.has(id))) continue
+    const name = run.itemRules.sourceName(id)
+    entries.push({
+      id: `buff-${id}`, name, glyph: Array.from(name)[0] || '?',
+      badge: buff.flat ? `+${buff.flat}` : buff.discount ? `-${buff.discount}` : '', tone: 'neutral',
+      description: pendingLines.find((line) => line.startsWith(name)) || name,
+    })
+  }
+  return entries
 })
 const experienceProgress = computed(() => {
   const player = state.value.player
@@ -719,6 +759,10 @@ const craftRows = computed(() => {
   return run.availableRecipes()
 })
 const detailIcon = computed(() => DETAIL_ICONS[detailPanel.value?.icon] || DETAIL_ICONS.item)
+const detailSpriteSources = computed(() => {
+  const itemId = detailPanel.value?.itemId
+  return itemId ? itemSpriteSources({ id: itemId }) : null
+})
 
 watch(merchantTabs, (tabs) => {
   if (!tabs.includes(merchantTab.value)) merchantTab.value = tabs[0] || 'stock'
@@ -759,7 +803,6 @@ function restartGame() {
   topPanel.value = null
   helpOpen.value = false
   craftOpen.value = false
-  buildStatusOpen.value = false
   merchantTab.value = 'stock'
 }
 function restartFromSettings() {
@@ -779,6 +822,11 @@ function roomRewardDescription(choice) {
   if (choice.kind === 'relic') return getRelicDefinition(choice.relicId)?.description || ''
   if (choice.kind === 'item') { const definition = getItemDefinition(choice.itemId); return definition ? rewardDetail(definition) : '' }
   return ''
+}
+function roomRewardSpriteSources(choice) {
+  if (choice.kind === 'relic') return itemSpriteSources({ id: choice.relicId })
+  if (choice.kind === 'item') return itemSpriteSources({ id: choice.itemId })
+  return null
 }
 
 function closestInteractive(target, selector, event = null) {
@@ -803,6 +851,12 @@ function setDetailPanelVisible(opened) {
 }
 function openItemDetail(item) { return setDetailPanelVisible(run.showItemDetail(item)) }
 function openRelicDetail(id) { return setDetailPanelVisible(run.showRelicDetail(id)) }
+function openStatusDetail(entry) {
+  return setDetailPanelVisible(run._showDetail({
+    position: 'top', title: entry.name, type: LABELS.status, icon: 'item',
+    lines: entry.badge ? [entry.badge] : [], description: entry.description,
+  }))
+}
 function closeDetailPanel() {
   const closed = run.closeDetail()
   detailPanelVisible.value = false
@@ -857,6 +911,9 @@ function onBagTouchStart(index, event) {
   startLongPress(() => openItemDetail(item), event)
   if (hold.value) hold.value.index = index
 }
+function onStatusTouchStart(entry, event) {
+  startLongPress(() => openStatusDetail(entry), event)
+}
 function onDetailTouchStart(event) {
   const openDetail = detailActionFor(event.currentTarget, event)
   startLongPress(openDetail, event)
@@ -902,8 +959,6 @@ function handleAction(action, value = null) {
     return
   }
   if (action === 'copy-log') { void copyLog(); return }
-  if (action === 'build-status') { buildStatusOpen.value = !buildStatusOpen.value; return }
-  if (action === 'build-status-close') { buildStatusOpen.value = false; return }
   if (action === 'craft-open') { if (craftAvailable.value) craftOpen.value = true; return }
   if (action === 'craft-close') { craftOpen.value = false; return }
   if (action === 'use') run.useSelected()

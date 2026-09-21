@@ -11,6 +11,11 @@ const COPY = Object.freeze({
   title: '\u5730\u7262\u56fe\u9274',
   subtitle: '\u5730\u7262\u5185\u5bb9\u56fe\u9274',
   summary: '\u4e09\u5c5e\u6027\u3001\u4e09\u5c42\u5929\u8d4b\u7f51\u3001\u5723\u9057\u7269\u6784\u7b51\u3001\u7edf\u4e00\u6697\u7070\u5361\u80cc\u4e0e 4\u00d78 \u5f62\u72b6\u80cc\u5305\u5171\u540c\u6784\u6210\u5730\u7262\u7684\u8def\u7ebf\u9009\u62e9\uff1b\u5730\u9762\u5361\u724c\u7f51\u683c\u6309\u697c\u5c42\u4f7f\u7528 6\u00d76\u30017\u00d77\u30018\u00d78\u30018\u00d78\u30019\u00d79\uff1b\u80cc\u5305\u4f7f\u7528\u6df1\u9ed1\u51b7\u7070\u5e95\u8272\uff0c\u7cbe\u7075\u6309\u5360\u683c\u4f7f\u7528\u900f\u660e\u753b\u5e03\uff0c\u4f18\u5148\u4fdd\u7559\u5c0f\u5c3a\u5bf8\u4e0b\u6e05\u6670\u7684\u5927\u8f6e\u5ed3\uff1b\u5df2\u5ba1\u6838\u7d20\u6750\u5305\u62ec 1\u00d72 \u9523\u5251\u30011\u00d71 \u9aa8\u5305\u30011\u00d73 \u70bd\u67aa\u30011\u00d74 \u9501\u9b42\u67aa\u3001L \u5f62\u8150\u6839\u6218\u65a7\u3001T \u5f62\u9e70\u773c\u5f13\u3001\u5341\u5b57\u65ad\u5cb3\u69cc\u30011\u00d71 \u4e09\u76f8\u8f6e\u4e0e\u7a7a\u5323\u5370\u3002',
+  statusNote: '\u72b6\u6001\u56fe\u6807\u951a\u5b9a\u4e8e\u4e09\u7ef4\u573a\u666f\u5de6\u4e0b\u89d2\uff0c\u4ece\u5de6\u5411\u53f3\u6392\u5217\uff1a\u5148\u4ee5\u72b6\u6001\u540d\u9996\u5b57\u8868\u793a\uff0c\u89d2\u6807\u663e\u793a\u5269\u4f59\u56de\u5408\u6216\u8ba1\u6570\uff0c\u957f\u6309\u67e5\u770b\u8be6\u60c5\u3002\u4ec5\u663e\u793a\u4e2d\u6bd2\u3001\u71c3\u70e7\u4e0e\u559d\u9152\u7b49\u4e34\u65f6 Buff/Debuff\uff1b\u5723\u9057\u7269\u3001\u6563\u4ef6\u5e38\u9a7b\u72b6\u6001\u4e0d\u663e\u793a\u3002',
+  boundaryNote: '\u623f\u95f4\u56f4\u5899\u4e0d\u56e0\u89d2\u8272\u9760\u8fd1\u6216\u79bb\u5f00\u800c\u9690\u85cf\uff1b\u5357\u9762\u53ea\u56fa\u5b9a\u4e0d\u751f\u6210\u4e2d\u95f4\u67f1\u5b50\uff0c\u4e24\u7aef\u67f1\u5b50\u4fdd\u7559\u3002',
+  footprintNote: '\u89d2\u8272\u79fb\u52a8\u65f6\uff0c\u8def\u5f84\u4e0a\u6bcf\u4e2a\u843d\u811a\u683c\u90fd\u4f1a\u4e0b\u6c89\uff1b\u5230\u8fbe\u4e0b\u4e00\u683c\u540e\uff0c\u524d\u4e00\u683c\u624d\u62ac\u8d77\uff0c\u6700\u540e\u4e00\u683c\u5219\u5728\u4e0b\u6b21\u63a8\u8fdb\u56de\u5408\u540e\u62ac\u8d77\u3002',
+  attackNote: '\u653b\u51fb\u52a8\u753b\u6682\u65f6\u8bbe\u4e3a 0.5 \u79d2\uff1a\u73a9\u5bb6\u62ac\u8d77\u53cc\u624b\u5e76\u6536\u62e2\u53cc\u811a\uff0c\u654c\u4eba\u62ac\u5934\u5e76\u5de6\u53f3\u6447\u52a8\u4e09\u89d2\u8eab\u4f53\u4e24\u6b21\uff1b\u540c\u4e00\u56de\u5408\u6309\u987a\u5e8f\u9010\u4e2a\u64ad\u653e\u3002',
+  spriteNote: '\u80cc\u5305\u4e0e\u5730\u9762\u7269\u54c1\u7cbe\u7075\u56fe\u5df2\u8986\u76d6\u5168\u90e844\u4ef6\u7269\u54c1\uff1a18\u628a\u6b66\u5668\u30018\u4ef6\u9632\u5177\u30016\u79cd\u6d88\u8017\u54c1\u30016\u79cd\u6750\u6599\u548c6\u4ef6\u5723\u9057\u7269\uff1b\u6309\u5360\u683c\u5f62\u72b6\u52a0\u8f7d\u900f\u660e small/medium \u8d44\u6e90\u3002',
   implemented: '\u5df2\u5b9e\u88c5',
   back: '\u8fd4\u56de\u5730\u7262',
   enemies: '\u654c\u4eba',
@@ -140,7 +145,7 @@ function card({ tone, tag, title, description = '', stats = [], accent = '' }) {
 
 function enemyCards() {
   const enemies = [...catalog.enemies, { ...catalog.boss, boss: true }]
-  const lootById = new Map((catalog.enemyLoot || []).map((item) => [item.id, item]))
+  const lootById = new Map([...(catalog.enemyLoot || []), ...(catalog.defenses || [])].map((item) => [item.id, item]))
   return enemies.map((enemy) => card({
     tone: enemy.boss ? 'tone-boss' : 'tone-enemy',
       tag: enemy.boss ? COPY.boss : enemy.spawnOnly ? COPY.generated : COPY.enemy,
@@ -165,7 +170,7 @@ function enemyCards() {
       enemy.deathSpawnMinionId ? stat(COPY.deathSpawn, `${catalog.enemies.find((candidate) => candidate.id === enemy.deathSpawnMinionId)?.name || enemy.deathSpawnMinionId} \u00d7 ${enemy.deathSpawnCount || 0}`) : '',
       stat(COPY.floor, enemy.spawnOnly ? COPY.generated : enemy.minFloor),
       !enemy.spawnOnly && !enemy.boss ? stat(COPY.experience, enemy.experience || 0) : '',
-      enemy.drop ? stat(COPY.loot, `${Math.round(enemy.drop.chance * 100)}% \u00b7 ${lootById.get(enemy.drop.itemId)?.name || enemy.drop.itemId}`) : '',
+      enemy.drop ? stat(COPY.loot, `${Math.round(enemy.drop.chance * 100)}% \u00b7 ${(Array.isArray(enemy.drop.itemIds) ? enemy.drop.itemIds : [enemy.drop.itemId]).map((itemId) => lootById.get(itemId)?.name || itemId).join(' / ')}`) : '',
       !enemy.spawnOnly && !enemy.boss && enemy.relicDropChance ? stat(COPY.relicChance, `${Math.round(enemy.relicDropChance * 100)}%`) : '',
     ],
   })).join('')
@@ -237,6 +242,7 @@ function itemCards() {
       itemEffect(item),
       stat(COPY.footprint, shapeText(item.shape)),
       stat(COPY.floor, item.dropOnly ? COPY.enemyDrop : item.minFloor || 1),
+      item.type === 'defense' ? stat(COPY.relicSources, '\u654c\u4eba\u6389\u843d\u3001\u5546\u5e97\u8d2d\u4e70\u3001\u623f\u95f4\u5956\u52b1\uff1b\u4e0d\u4f5c\u4e3a\u5730\u9762\u7269\u54c1\u751f\u6210\u3002') : '',
     ],
   })).join('')
 }
@@ -281,7 +287,7 @@ export class WikiPage {
     this.root.innerHTML = `<main class="wiki-shell">
       <header class="wiki-header">
         <a class="wiki-back" href="/" aria-label="${COPY.back}">\u2190</a>
-        <div><div class="wiki-kicker">${COPY.subtitle}</div><h1>${COPY.title}</h1><p class="wiki-summary">${COPY.summary}</p><p class="wiki-lint-note">${LINT_NOTE}</p><p class="wiki-input-note">${INPUT_NOTE}</p></div>
+      <div><div class="wiki-kicker">${COPY.subtitle}</div><h1>${COPY.title}</h1><p class="wiki-summary">${COPY.summary}</p><p class="wiki-input-note">${COPY.statusNote}</p><p class="wiki-input-note">${COPY.boundaryNote}</p><p class="wiki-input-note">${COPY.footprintNote}</p><p class="wiki-input-note">${COPY.attackNote}</p><p class="wiki-input-note">${COPY.spriteNote}</p><p class="wiki-lint-note">${LINT_NOTE}</p><p class="wiki-input-note">${INPUT_NOTE}</p></div>
       </header>
       <nav class="wiki-tabs" role="tablist">${TABS.map((tab) => `<button data-wiki-tab="${tab.id}" role="tab">${tab.label}</button>`).join('')}</nav>
       <section class="wiki-content" data-wiki-content></section>

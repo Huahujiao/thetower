@@ -419,7 +419,7 @@ function populateRoom(room, reserved, random, { bossRoom = false, minimumOccupie
   while (monsterIndex < targetMonsterCount && addMonster(room, reserved, random, monsterIndex)) {
     monsterIndex += 1
   }
-  for (const itemId of ['health-potion', 'iron-powder', 'health-potion', 'wood-shield', 'silver-guard']) {
+  for (const itemId of ['health-potion', 'iron-powder', 'health-potion', 'silver-guard']) {
     if (!addLoot(room, reserved, random, makeItemById(itemId))) break
   }
   addGold(room, reserved, random)

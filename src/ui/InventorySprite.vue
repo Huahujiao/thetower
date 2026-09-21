@@ -43,11 +43,11 @@ function queueUpgrade(url, nextUrl, delay) {
 function startUpgrade() {
   clearTimers()
   src.value = props.sources.small
-  queueUpgrade(props.sources.medium, props.sources.high, 80)
+  queueUpgrade(props.sources.medium, '', 80)
 }
 
 onMounted(startUpgrade)
-watch(() => props.sources.high, startUpgrade)
+watch(() => props.sources.medium, startUpgrade)
 onBeforeUnmount(clearTimers)
 </script>
 

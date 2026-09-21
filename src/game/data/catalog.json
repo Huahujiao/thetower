@@ -115,7 +115,7 @@
       "relicDropChance": 0,
       "drop": {
         "chance": 0.35,
-        "itemId": "shield-core"
+        "itemIds": ["shield-core", "wood-shield"]
       },
       "attackCooldownMax": 2,
       "initialActionDelay": 1
@@ -158,7 +158,7 @@
       "relicDropChance": 0,
       "drop": {
         "chance": 0.6,
-        "itemId": "weight"
+        "itemIds": ["weight", "light-armor"]
       },
       "attackCooldownMax": 3,
       "initialActionDelay": 1
@@ -179,7 +179,7 @@
       "relicDropChance": 0,
       "drop": {
         "chance": 0.6,
-        "itemId": "chain"
+        "itemIds": ["chain", "tide-shield"]
       },
       "attackCooldownMax": 1,
       "initialActionDelay": 1
@@ -312,7 +312,7 @@
       "relicDropChance": 0,
       "drop": {
         "chance": 0.45,
-        "itemId": "weight"
+        "itemIds": ["weight", "vine-armor"]
       },
       "attackCooldownMax": 2,
       "initialActionDelay": 1
@@ -374,7 +374,7 @@
       "initialActionDelay": 1,
       "drop": {
         "chance": 0.25,
-        "itemId": "shield-core"
+        "itemIds": ["shield-core", "red-shield"]
       }
     },
     {
@@ -397,7 +397,7 @@
       "initialActionDelay": 1,
       "drop": {
         "chance": 0.25,
-        "itemId": "shield-core"
+        "itemIds": ["shield-core", "thorn-shield"]
       }
     },
     {
@@ -595,7 +595,7 @@
       "relicDropChance": 0,
       "drop": {
         "chance": 0.5,
-        "itemId": "chain"
+        "itemIds": ["chain", "tide-cloak"]
       },
       "attackCooldownMax": 2,
       "initialActionDelay": 1
@@ -618,7 +618,7 @@
       "initialActionDelay": 3,
       "drop": {
         "chance": 0.5,
-        "itemId": "weight"
+        "itemIds": ["weight", "red-armor"]
       }
     },
     {
@@ -1164,7 +1164,7 @@
       "name": "换位符",
       "type": "teleport",
       "attribute": "drown",
-      "description": "移动到曼哈顿距离3内已翻开的空格；只推进1回合，不累计移动步数。",
+      "description": "\u79fb\u52a8\u5230\u66fc\u54c8\u987f\u8ddd\u79bb6\u5185\u5df2\u7ffb\u5f00\u7684\u7a7a\u683c\uff1b\u53ea\u63a8\u8fdb1\u56de\u5408\uff0c\u4e0d\u7d2f\u8ba1\u79fb\u52a8\u6b65\u6570\u3002",
       "shape": [
         [
           1

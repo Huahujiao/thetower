@@ -85,9 +85,9 @@ export function createLowPolyPillar({ height = 1.02 } = {}) {
   shaft.position.y = 0.21 + height / 2
   const collar = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.19, 0.045, 6), material(CINNABAR_DARK, { roughness: 0.74 }))
   collar.position.y = 0.39
-  const capital = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.18, 0.12, 6), material(CINNABAR_DARK, { roughness: 0.72 }))
+  const capital = new THREE.Mesh(new THREE.CylinderGeometry(0.21, 0.16, 0.12, 6), material(CINNABAR_DARK, { roughness: 0.72 }))
   capital.position.y = 0.21 + height + 0.06
-  const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.31, 0.25, 0.09, 6), material(STONE_CAP))
+  const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.27, 0.22, 0.09, 6), material(STONE_CAP))
   cap.position.y = 0.21 + height + 0.165
   group.add(base, foot, shaft, collar, capital, cap)
   group.traverse(child => { if (!child.isMesh) return; child.castShadow = true; child.receiveShadow = true })

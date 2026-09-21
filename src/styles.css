@@ -16,7 +16,7 @@ button { font: inherit; }
   pointer-events: none; z-index: 20;
   --hud-unit: calc(11.111111vw - 4px);
   --hud-top-height: 44px;
-  --hud-emotion-height: 20px;
+  --hud-emotion-height: 0px;
   --hud-experience-height: 8px;
   --hud-scene-top: calc(var(--hud-top-height) + var(--hud-emotion-height) + var(--hud-experience-height));
   --hud-left-width: calc(var(--hud-unit) + var(--hud-unit) + var(--hud-unit) + var(--hud-unit) + var(--hud-unit));
@@ -41,12 +41,14 @@ button { font: inherit; }
 .stat .value { font-size: 15px; font-weight: 700; }
 .stat.hp .value { color: #ff6b6b; }.stat.armor .value { color: #f6c86b; }.stat.energy .value { color: #ffd56b; }.stat.gold .value { color: #ffd56b; }.stat.floor .value { color: #8effc8; }
 
-.hud-emotion { flex: 0 0 var(--hud-emotion-height); height: var(--hud-emotion-height); display: flex; align-items: center; gap: 8px; padding: 0 10px; pointer-events: none; }
-.hud-emotion.overloaded .emotion-text { color: #ffd56b; }
-.progress-text { flex: 0 0 auto; color: #c6b6ff; font-size: 10px; font-weight: 700; white-space: nowrap; }.emotion-text { min-width: 0; overflow: hidden; color: #b6f5d0; font-size: 11px; font-weight: 600; white-space: nowrap; text-overflow: ellipsis; }
+.progress-text { flex: 0 0 auto; color: #c6b6ff; font-size: 10px; font-weight: 700; white-space: nowrap; }
 
 #app { position: relative; z-index: 0; isolation: isolate; flex: 1 1 0; min-height: 0; width: 100%; pointer-events: auto; overflow: hidden; background: #111722; border-top: 1px solid rgba(145,167,193,.3); border-bottom: 1px solid rgba(145,167,193,.3); }
 #app canvas { position: absolute; inset: 0; z-index: 0; display: block; width: 100%; height: 100%; touch-action: none; }
+.scene-status-tray { position: absolute; left: 8px; bottom: 8px; z-index: 35; display: flex; flex-flow: row wrap; align-content: flex-end; gap: 4px; max-width: calc(100% - 16px); pointer-events: auto; }
+.scene-status-icon { position: relative; display: grid; width: 28px; height: 28px; padding: 0; place-items: center; border: 1px solid rgba(210,220,235,.36); border-radius: 6px; background: rgba(10,16,28,.84); color: #e8f0ff; font-size: 14px; font-weight: 800; touch-action: none; -webkit-touch-callout: none; }
+.scene-status-icon b { position: absolute; right: -4px; bottom: -4px; z-index: 1; min-width: 13px; height: 13px; padding: 0 2px; border: 1px solid rgba(255,255,255,.35); border-radius: 999px; background: #111722; color: #fff; font-size: 8px; line-height: 11px; }
+.scene-status-icon.poison { border-color: rgba(118,190,115,.8); color: #9ce79a; }.scene-status-icon.burning { border-color: rgba(235,102,78,.85); color: #ffae90; }
 
 .detail-panel { position: fixed; left: 10px; right: 10px; z-index: 46; display: none; max-height: 48dvh; pointer-events: none; }.detail-panel.show { display: block; }.detail-panel.top { top: auto; bottom: 51%; }.detail-panel.bottom { top: 51%; bottom: auto; }.detail-card { position: relative; overflow: hidden; padding: 12px 13px; border: 1px solid rgba(186,208,255,.42); border-radius: 13px; background: linear-gradient(145deg, rgba(47,64,107,.97), rgba(17,24,43,.98)); box-shadow: 0 12px 28px rgba(0,0,0,.46), inset 0 1px rgba(255,255,255,.12); }.detail-card::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(125deg, rgba(255,255,255,.12), transparent 30%, transparent 74%, rgba(0,0,0,.22)); }.detail-type,.detail-title,.detail-lines { position: relative; z-index: 1; }.detail-type { display: inline-block; padding: 3px 6px; border: 1px solid rgba(209,222,255,.22); border-radius: 5px; background: rgba(8,14,29,.24); color: #c6d5ff; font-size: 10px; font-weight: 800; letter-spacing: .08em; }.detail-title { margin-top: 6px; color: #fff; font-size: 17px; font-weight: 800; }.detail-lines { display: grid; gap: 4px; margin-top: 9px; color: rgba(243,246,255,.9); font-size: 12px; line-height: 1.35; }.detail-lines > div { padding: 4px 6px; border: 1px solid rgba(255,255,255,.08); border-radius: 6px; background: rgba(5,10,22,.18); }
 
@@ -102,14 +104,11 @@ button { font: inherit; }
 @media (max-width: 380px) { .hud-btns { gap: 3px; }.hud-icon { width: 27px; height: 27px; font-size: 14px; }.help-modal { padding: 10px; }.help-modal-head { gap: 10px; padding: 17px 18px 14px; }.help-modal-head h2 { font-size: 23px; }.help-modal-close { width: 34px; height: 34px; }.help-modal-body { grid-template-columns: 1fr; gap: 10px; padding: 14px 18px 18px; }.help-section { padding: 13px 14px; } }
 
 /* Compact lower HUD: a five-row backpack with a nine-cell toolbar. */
-.hud-emotion { flex-basis: var(--hud-emotion-height); height: var(--hud-emotion-height); display: flex; align-items: center; gap: 6px; padding: 0 8px; }
-.emotion-text { flex: 1 1 0; }
 .experience-bar-row { flex: 0 0 var(--hud-experience-height); width: 100%; height: var(--hud-experience-height); min-height: 0; pointer-events: none; }
 .experience-bar { position: relative; display: grid; place-items: center; width: 100%; min-width: 0; height: var(--hud-experience-height); overflow: hidden; border-top: 1px solid rgba(184,213,255,.44); border-bottom: 1px solid rgba(184,213,255,.44); border-left: 0; border-right: 0; border-radius: 0; background: rgba(8,14,29,.76); box-shadow: inset 0 1px rgba(255,255,255,.1); }
 .experience-fill { position: absolute; inset: 0 auto 0 0; z-index: 0; display: block; width: 0; background: linear-gradient(90deg, #6e63c6, #b48dff); transition: width .16s ease; }
 .experience-bar::before { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none; clip-path: inset(0 1px 0 0); background: repeating-linear-gradient(90deg, transparent 0, transparent calc(10% - 1px), rgba(220,214,255,.34) calc(10% - 1px), rgba(220,214,255,.34) 10%); }
 .experience-value { position: relative; z-index: 2; color: #fff; font-size: 7px; font-weight: 800; line-height: 1; text-shadow: 0 1px 2px rgba(0,0,0,.8); }
-.emotion-text { min-width: 0; overflow: hidden; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
 
 /* Lower HUD base layout; the final nine-column layout is defined below. */
 .hud-bottom { flex: 0 0 auto; display: grid; grid-template-columns: var(--hud-left-width) var(--hud-unit) var(--hud-right-width); width: 100%; justify-content: stretch; align-items: stretch; gap: 3px; padding: 6px 6px calc(7px + env(safe-area-inset-bottom)); }
@@ -213,7 +212,7 @@ button { font: inherit; }
 .bag-item.material { --bag-fill:#65573d; }
 
 /* The rectangular layout wrapper must never paint over a shape's empty cells. */
-.backpack-grid { border: 1px solid rgba(103,120,116,.72); border-radius: 4px; background: linear-gradient(145deg, #1b2426, #0b1012); box-shadow: inset 0 0 0 1px rgba(138,164,157,.16), inset 0 8px 16px rgba(115,156,151,.06), 0 2px 7px rgba(0,0,0,.58); }
+.backpack-grid { border: 0; border-radius: 0; background: linear-gradient(145deg, #1b2426, #0b1012); box-shadow: none; }
 .bag-cell { border-color: rgba(103,123,118,.42); background: linear-gradient(145deg, rgba(71,91,88,.26), rgba(8,13,15,.54)); }
 .bag-item, .bag-item.selected { padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; overflow: visible; }
 .bag-item,.bag-item.weapon,.bag-item.weapon.attribute-scorch,.bag-item.weapon.attribute-wither,.bag-item.weapon.attribute-drown,.bag-item.potion,.bag-item.armor,.bag-item.energy,.bag-item.buff,.bag-item.relic,.bag-item.defense,.bag-item.material { --bag-fill: linear-gradient(145deg, rgba(42,54,54,.96), rgba(15,22,24,.98)); --bag-edge: rgba(74,94,91,.86); --bag-tint: rgba(58,76,74,.24); }
@@ -239,12 +238,28 @@ button { font: inherit; }
 .bag-shape .bag-name, .bag-shape .bag-detail { z-index: 3; min-width: 0; max-width: 100%; margin: 0; padding: 2px 3px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; pointer-events: none; text-shadow: 0 1px 2px rgba(0,0,0,.9); }
 .bag-shape .bag-name { align-self: start; }
 .bag-shape .bag-detail { align-self: end; font-size: clamp(8px, 2.1vw, 10px); line-height: 1.15; opacity: .84; }
+.detail-sprite { width: 86%; height: 86%; object-fit: contain; pointer-events: none; user-select: none; -webkit-touch-callout: none; }
+.detail-icon:has(.detail-sprite) { padding: 3px; }
+
+/* Relic selection uses a full-screen dimmer; each option is a borderless card. */
+.relic-choice:not(.level-up) { position: fixed; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 24px 14px; border: 0; border-radius: 0; background: rgba(3,5,9,.78); }
+.relic-choice:not(.level-up).show { display: flex; }
+.relic-choice:not(.level-up) .relic-choice-title { margin: 0; color: #eee4ff; font-size: 17px; }
+.relic-choice:not(.level-up) .relic-choice-row { width: min(100%, 540px); gap: 9px; }
+.relic-choice:not(.level-up) .relic-choice-card { display: flex; min-height: 210px; flex-direction: column; align-items: center; justify-content: flex-start; gap: 8px; padding: 12px 8px; border: 1px solid rgba(210,170,255,.52); border-radius: 10px; background: linear-gradient(160deg, rgba(67,44,91,.9), rgba(22,17,34,.96)); color: #f0e7ff; box-shadow: 0 10px 22px rgba(0,0,0,.32); text-align: center; }
+.relic-choice:not(.level-up) .relic-choice-card .relic-name { flex: 0 0 auto; font-size: 14px; font-weight: 800; line-height: 1.25; }
+.relic-choice-sprite { display: block; width: min(100%, 112px); height: 112px; flex: 0 0 112px; object-fit: contain; pointer-events: none; user-select: none; -webkit-touch-callout: none; }
+.relic-choice:not(.level-up) .relic-choice-card .relic-desc { flex: 1 1 auto; align-self: stretch; margin: 0; color: rgba(255,255,255,.72); font-size: 10px; line-height: 1.35; text-align: left; }
+.relic-choice:not(.level-up) .reward-skip { margin-top: 0; }
+@media (max-width: 380px) {
+  .relic-choice:not(.level-up) { padding: 18px 9px; gap: 10px; }
+  .relic-choice:not(.level-up) .relic-choice-row { gap: 5px; }
+  .relic-choice:not(.level-up) .relic-choice-card { min-height: 190px; padding: 9px 5px; }
+  .relic-choice-sprite { height: 88px; flex-basis: 88px; }
+  .relic-choice:not(.level-up) .relic-choice-card .relic-name { font-size: 12px; }
+  .relic-choice:not(.level-up) .relic-choice-card .relic-desc { font-size: 9px; }
+}
 @media(max-width:480px) { .craft-dialog { padding:12px; } .craft-row { gap:4px; } .craft-row button { padding:8px 5px; font-size:12px; } }
-.build-status-panel { position:fixed; top:12%; left:50%; transform:translateX(-50%); width:min(560px,calc(100vw - 24px)); max-height:65dvh; overflow:auto; z-index:105; padding:14px; border:1px solid #91836b; border-radius:10px; background:#20272bf5; color:#eee8d8; pointer-events:auto; box-sizing:border-box; }
-.build-status-panel[hidden] { display:none; }
-.build-status-panel header { display:flex; align-items:center; justify-content:space-between; gap:12px; }
-.build-status-panel p { font-size:13px; line-height:1.5; padding:6px 0; border-bottom:1px solid #ffffff15; }
-.build-status-panel button { padding:6px 12px; color:inherit; border:1px solid #91836b; border-radius:5px; background:#394044; }
 .hud-top .hud-icon { width:30px; height:32px; flex-shrink:0; }
 .hud-top .hud-icon:disabled { opacity:.4; cursor:not-allowed; }
 @media(max-width:380px) {

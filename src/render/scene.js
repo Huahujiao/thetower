@@ -32,7 +32,8 @@ const MAX_CAMERA_ELEVATION = 78 * Math.PI / 180
 const STANDING_BACK_LEAN = 30 * Math.PI / 180
 const GHOST_ROOM_GAP = TILE_SIZE * 0.54
 const ENEMY_STATUS_LAYER_OFFSET = 0.012
-const ENEMY_STATUS_HEALTH_Y = CARD_SIZE * 0.43
+const ENEMY_STATUS_HEALTH_Y = CARD_SIZE * 0.46
+const ENEMY_STATUS_NAME_Y = CARD_SIZE * 0.58
 const ENEMY_STATUS_BOTTOM_Y = -CARD_SIZE * 0.43
 const ITEM_SPRITE_SIZE = CARD_SIZE * 0.7
 const ITEM_SPRITE_PITCH = -Math.PI / 4
@@ -41,6 +42,12 @@ const ITEM_SPRITE_SPEED_STEP = 0.025
 const ITEM_SPRITE_MAX_SPEED_VARIANT = 8
 const ITEM_SPRITE_FLOAT_AMPLITUDE = 0.018
 const ITEM_SPRITE_FLOAT_SPEED = 1.35
+const ATTACK_ANIMATION_DURATION = 0.5
+const PLAYER_ATTACK_LIFT = 0.045
+const ENEMY_ATTACK_LIFT = 0.075
+const TILE_RENDER_ORDER_BASE = 100
+const TILE_RENDER_ORDER_ROW_STEP = 16
+const FOOTPRINT_PRESS_DEPTH = 0.1
 
 const ITEM_SPRITE_TEXTURES = new Map()
 const ITEM_SPRITE_LOADER = new THREE.TextureLoader()
@@ -66,17 +73,31 @@ const WEAPON_CLASS_LABELS = Object.freeze({ sword: '\u5251', axe: '\u65a7', dagg
 
 const NO_RAYCAST = () => {}
 
-function makeCanvasTexture(draw) {
+function makeCanvasTexture(draw, { width = 480, height = 480, scale = 3 } = {}) {
   const canvas = document.createElement('canvas')
-  canvas.width = 480
-  canvas.height = 480
+  canvas.width = width
+  canvas.height = height
   const context = canvas.getContext('2d')
-  context.scale(3, 3)
+  context.scale(scale, scale)
   draw(context)
   const texture = new THREE.CanvasTexture(canvas)
   texture.colorSpace = THREE.SRGBColorSpace
   texture.anisotropy = 4
   return texture
+}
+
+function redrawCanvasTexture(texture, draw, { width = 160, height = 160 } = {}) {
+  const canvas = texture?.image
+  const context = canvas?.getContext?.('2d')
+  if (!context) return false
+  const scale = canvas.width / width
+  context.clearRect(0, 0, canvas.width, canvas.height)
+  context.save()
+  context.scale(scale, scale)
+  draw(context)
+  context.restore()
+  texture.needsUpdate = true
+  return true
 }
 
 function stableHash(value) {
@@ -89,7 +110,7 @@ function stableHash(value) {
 }
 
 function itemSpriteTexture(sources, onReady) {
-  const key = sources?.high
+  const key = sources?.medium
   if (!key) return null
   let entry = ITEM_SPRITE_TEXTURES.get(key)
   if (!entry) {
@@ -155,7 +176,7 @@ function drawAttributeLabel(context, attribute) {
   context.shadowBlur = 0
 }
 
-function drawStickFigure(context) {
+function drawStickFigure(context, { armLift = 0, legSpread = 1 } = {}) {
   context.strokeStyle = '#f4dca7'
   context.fillStyle = '#f4dca7'
   context.lineWidth = 8
@@ -167,13 +188,13 @@ function drawStickFigure(context) {
   context.moveTo(80, 65)
   context.lineTo(80, 104)
   context.moveTo(80, 76)
-  context.lineTo(52, 94)
+  context.lineTo(52 - armLift * 4, 94 - armLift * 42)
   context.moveTo(80, 76)
-  context.lineTo(108, 94)
+  context.lineTo(108 + armLift * 4, 94 - armLift * 42)
   context.moveTo(80, 104)
-  context.lineTo(57, 132)
+  context.lineTo(80 - 23 * legSpread, 132)
   context.moveTo(80, 104)
-  context.lineTo(103, 132)
+  context.lineTo(80 + 23 * legSpread, 132)
   context.stroke()
 }
 
@@ -220,7 +241,7 @@ function drawWhiteLineCard(context, { label = 'OBJECT', value = '', detail = '',
   }
 }
 
-function drawStandingToken(context, card) {
+function drawStandingToken(context, card, { headLift = 0, bodySway = 0 } = {}) {
   context.clearRect(0, 0, 160, 160)
   const merchant = card.type === 'merchant'
   const attribute = !merchant ? getAttributeDefinition(card.attribute) : null
@@ -229,6 +250,11 @@ function drawStandingToken(context, card) {
   context.strokeStyle = merchant ? '#ffe3a3' : '#ffc0c0'
   context.lineWidth = 4
   const drawSilhouette = ({ fill = false } = {}) => {
+    context.save()
+    context.translate(bodySway * 5, 0)
+    context.translate(80, 100)
+    context.rotate(bodySway * 0.055)
+    context.translate(-80, -100)
     context.beginPath()
     context.moveTo(34, 142)
     context.lineTo(126, 142)
@@ -236,8 +262,9 @@ function drawStandingToken(context, card) {
     context.closePath()
     if (fill) context.fill()
     context.stroke()
+    context.restore()
     context.beginPath()
-    context.arc(80, 42, 27, 0, Math.PI * 2)
+    context.arc(80, 42 - headLift * 8, 27, 0, Math.PI * 2)
     if (fill) context.fill()
     context.stroke()
   }
@@ -255,12 +282,19 @@ function drawStandingToken(context, card) {
   context.font = 'bold 29px sans-serif'
   context.textAlign = 'center'
   context.textBaseline = 'middle'
-  context.fillText(glyph, 80, 42)
+  context.fillText(glyph, 80, 42 - headLift * 8)
   context.font = 'bold 23px sans-serif'
-  context.fillText(String(card.value ?? ''), 80, 112)
+  context.fillText(String(card.value ?? ''), 80 + bodySway * 5, 112)
 }
 
 function tileKey(position) { return `${position.c}:${position.r}` }
+
+// South rows (larger r values) are intentionally rendered later so they sit
+// in front of north rows even when the camera orbit changes.
+function tileRenderOrder(position, layer = 0) {
+  const row = Number.isFinite(Number(position?.r)) ? Number(position.r) : 0
+  return TILE_RENDER_ORDER_BASE + row * TILE_RENDER_ORDER_ROW_STEP + layer
+}
 
 function samePosition(left, right) {
   return !!left && !!right && left.c === right.c && left.r === right.r
@@ -296,12 +330,16 @@ export class GameScene {
     this.structureGroup = null
     this.flipAnimations = []
     this.animationQueue = []
+    this.attackAnimation = null
     this.movementAnimation = null
     this.moveCompletionPending = false
     this.playerMarker = null
     this.pathPreview = null
     this.pendingRebuild = false
     this.hoveredTileKey = null
+    this.depressedTileKeys = new Set()
+    this.lastFootprintKey = null
+    this.lastFootprintTurn = 0
     this.visibleDoorKey = ''
     this.structureKey = ''
     this.zoom = DEFAULT_ZOOM
@@ -339,6 +377,7 @@ export class GameScene {
     this._onFlip = (payload) => this._queueAnimation('flip', payload)
     this._onFlipBatch = (payload) => this._queueAnimation('flip-batch', payload)
     this._onMove = (payload) => this._queueAnimation('move', payload)
+    this._onAttack = (payload) => this._queueAnimation('attack', payload)
     window.addEventListener('resize', this._onResize)
     this.renderer.domElement.addEventListener('pointerdown', this._onPointerDown)
     this.renderer.domElement.addEventListener('pointermove', this._onPointerMove)
@@ -348,12 +387,14 @@ export class GameScene {
     this.renderer.domElement.addEventListener('click', this._onClick)
     this.renderer.domElement.addEventListener('wheel', this._onWheel, { passive: false })
     this.unsubscribe = this.run.on('change', () => {
+      if (!this.movementAnimation && !this.attackAnimation && !this.animationQueue.length && this.lastFootprintKey && this.run.turns.globalTurn > this.lastFootprintTurn) this._releaseFootprints()
       this._clearPathPreview()
       this.rebuild()
     })
     this.flipUnsubscribe = this.run.on('animate:flip', this._onFlip)
     this.flipBatchUnsubscribe = this.run.on('animate:flip-batch', this._onFlipBatch)
     this.moveUnsubscribe = this.run.on('animate:move', this._onMove)
+    this.attackUnsubscribe = this.run.on('animate:attack', this._onAttack)
     this.rebuild()
     this._resize(true)
     this._animate = this._animate.bind(this)
@@ -388,21 +429,9 @@ export class GameScene {
       .join('|')
   }
 
-  _nearestPlayerWallSide(room) {
-    const position = this.run.player?.pos
-    if (!room || !position) return 'bottom'
-    const distances = [
-      ['bottom', room.height - 1 - position.r],
-      ['top', position.r],
-      ['left', position.c],
-      ['right', room.width - 1 - position.c],
-    ]
-    return distances.reduce((nearest, candidate) => candidate[1] < nearest[1] ? candidate : nearest)[0]
-  }
-
   rebuild() {
     const room = this.run.currentRoom
-    if (this.movementAnimation || this.animationQueue.length || (this.flipAnimations.length && room?.id === this.framedRoomId)) {
+    if (this.movementAnimation || this.attackAnimation || this.animationQueue.length || (this.flipAnimations.length && room?.id === this.framedRoomId)) {
       this.pendingRebuild = true
       return
     }
@@ -427,6 +456,7 @@ export class GameScene {
       this.pendingRebuild = false
       this.visibleDoorKey = ''
       this.structureKey = ''
+      this._releaseFootprints()
     }
     this._clearPathPreview()
     this._clearMovementAnimation()
@@ -482,6 +512,7 @@ export class GameScene {
         // the ground tile remains clickable without making the figure fade.
         transparent: standing || peeked,
         opacity: peeked ? 0.46 : 1,
+        depthTest: !standing,
         side: THREE.DoubleSide,
         depthWrite: !standing,
         polygonOffset: true,
@@ -491,12 +522,13 @@ export class GameScene {
     )
     this._setFacePose(face, point, standing, !revealed)
     this._styleTileBody(mesh, room, position, visual)
-    face.renderOrder = standing ? 2 : 1
+    face.renderOrder = tileRenderOrder(position, standing ? 4 : 1)
     // Standing tokens are visual overlays. Let the ground tile receive the
     // pointer instead so a character/enemy cannot block the tile behind it.
     face.raycast = standing ? NO_RAYCAST : THREE.Mesh.prototype.raycast
     face.userData.position = { ...position }
     face.userData.lift = 0
+    face.userData.press = 0
     face.userData.body = mesh
     face.userData.groundFace = emptyGround ? this._makeEmptyGroundFace(point, position) : null
     face.userData.visualKey = visual.key
@@ -557,6 +589,7 @@ export class GameScene {
       map: texture,
       alphaTest: 0.02,
       transparent: true,
+      depthTest: false,
       depthWrite: false,
       side: THREE.DoubleSide,
     })
@@ -572,7 +605,7 @@ export class GameScene {
     sprite.position.set(point.x, groundedCenterY + 0.004, point.z)
     sprite.rotation.order = 'YXZ'
     sprite.rotation.set(ITEM_SPRITE_PITCH, this.cameraAzimuth, 0)
-    sprite.renderOrder = 4
+    sprite.renderOrder = tileRenderOrder(position, 8)
     sprite.raycast = NO_RAYCAST
     sprite.userData.itemSprite = true
     sprite.userData.position = position ? { ...position } : null
@@ -590,7 +623,7 @@ export class GameScene {
     if (this.skin === 'whiteline' || !item) return
     const sources = itemSpriteSources(item)
     if (!sources) return
-    const sourceKey = sources.high
+    const sourceKey = sources.medium
     const startedAt = Date.now()
     face.userData.itemSpriteRequestKey = sourceKey
     const applyTexture = (texture) => {
@@ -626,13 +659,16 @@ export class GameScene {
 
     const healthOverlay = new THREE.Group()
     healthOverlay.position.z = ENEMY_STATUS_LAYER_OFFSET
+    healthOverlay.userData.renderOrder = tileRenderOrder(face.userData.position, 6)
     healthOverlay.raycast = NO_RAYCAST
     this._addEnemyHealthMeter(healthOverlay, enemy)
+    this._addEnemyNameLabel(healthOverlay, enemy)
     face.add(healthOverlay)
     face.userData.enemyHealthOverlay = healthOverlay
 
     const turnOverlay = new THREE.Group()
     turnOverlay.position.z = ENEMY_STATUS_LAYER_OFFSET
+    turnOverlay.userData.renderOrder = tileRenderOrder(face.userData.position, 5)
     turnOverlay.raycast = NO_RAYCAST
 
     const actionDelay = turnCounter(enemy.actionDelay)
@@ -682,6 +718,41 @@ export class GameScene {
     )
   }
 
+  _addEnemyNameLabel(overlay, enemy) {
+    const label = String(enemy?.name || '').trim()
+    if (!label) return
+    // This texture deliberately matches the label plane's wide aspect ratio.
+    // A square canvas on a narrow strip vertically crushes text into a line.
+    const texture = makeCanvasTexture((context) => {
+      let size = 26
+      context.textAlign = 'center'
+      context.textBaseline = 'middle'
+      do {
+        context.font = `bold ${size}px sans-serif`
+        size -= 1
+      } while (size > 16 && context.measureText(label).width > 154)
+      context.lineWidth = 1
+      context.strokeStyle = 'rgba(4,7,12,.88)'
+      context.strokeText(label, 80, 20)
+      context.fillStyle = '#f0e6d2'
+      context.fillText(label, 80, 20)
+    }, { width: 480, height: 120 })
+    const nameLabel = new THREE.Mesh(
+      new THREE.PlaneGeometry(CARD_SIZE * 0.7, CARD_SIZE * 0.175),
+      new THREE.MeshBasicMaterial({
+        map: texture,
+        transparent: true,
+        depthTest: false,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+      }),
+    )
+    nameLabel.position.set(0, ENEMY_STATUS_NAME_Y, overlay.children.length * 0.0002)
+    nameLabel.raycast = NO_RAYCAST
+    nameLabel.renderOrder = (overlay.userData.renderOrder || 1) + overlay.children.length * 0.001
+    overlay.add(nameLabel)
+  }
+
   _addEnemyTurnMeter(overlay, { axis, x, y, total, remaining, color }) {
     const segmentCount = Math.max(1, Math.min(8, turnCounter(total)))
     const filledSegments = Math.min(segmentCount, Math.ceil(segmentCount * turnCounter(remaining) / Math.max(1, turnCounter(total))))
@@ -709,11 +780,11 @@ export class GameScene {
   _addEnemyStatusPlane(overlay, width, height, x, y, color, opacity) {
     const plane = new THREE.Mesh(
       new THREE.PlaneGeometry(width, height),
-      new THREE.MeshBasicMaterial({ color, transparent: true, opacity, depthTest: true, depthWrite: false, side: THREE.DoubleSide }),
+      new THREE.MeshBasicMaterial({ color, transparent: true, opacity, depthTest: false, depthWrite: false, side: THREE.DoubleSide }),
     )
     plane.position.set(x, y, overlay.children.length * 0.0002)
     plane.raycast = NO_RAYCAST
-    plane.renderOrder = 1 + overlay.children.length * 0.001
+    plane.renderOrder = (overlay.userData.renderOrder || 1) + overlay.children.length * 0.001
     overlay.add(plane)
   }
 
@@ -1068,12 +1139,14 @@ export class GameScene {
     face.material.transparent = standing || peeked
     face.material.opacity = peeked ? 0.46 : 1
     face.material.depthWrite = !standing
+    face.material.depthTest = !standing
     face.material.color.setHex(revealed || peeked || flippable ? 0xffffff : UNREACHABLE_HIDDEN_CARD_TINT)
     if (!oldTexture?.userData.boardShared) oldTexture?.dispose()
     face.visible = true
     face.userData.lift = 0
+    face.userData.press ??= 0
     this._setFacePose(face, this._gridPosition(room, position), standing, !revealed)
-    face.renderOrder = standing ? 2 : 1
+    face.renderOrder = tileRenderOrder(position, standing ? 4 : 1)
     face.raycast = standing ? NO_RAYCAST : THREE.Mesh.prototype.raycast
     body.visible = true
     this._styleTileBody(body, room, position, visual)
@@ -1121,14 +1194,16 @@ export class GameScene {
   }
 
   _drainAnimationQueue() {
-    if (this.movementAnimation || this.flipAnimations.length) return
+    if (this.movementAnimation || this.attackAnimation || this.flipAnimations.length) return
     while (this.animationQueue.length) {
       const animation = this.animationQueue.shift()
       const started = animation.type === 'move'
         ? this._startMove(animation.payload)
         : animation.type === 'flip-batch'
           ? this._startFlipBatch(animation.payload, animation.sourceBackTextures)
-          : this._startFlip(animation.payload, animation.sourceBackTexture)
+          : animation.type === 'attack'
+            ? this._startAttack(animation.payload)
+            : this._startFlip(animation.payload, animation.sourceBackTexture)
       if (started) return
       animation.sourceBackTexture?.dispose()
       for (const texture of animation.sourceBackTextures || []) texture?.dispose()
@@ -1137,7 +1212,7 @@ export class GameScene {
   }
 
   _flushPendingRebuild() {
-    if (!this.pendingRebuild || this.movementAnimation || this.flipAnimations.length || this.animationQueue.length) return
+    if (!this.pendingRebuild || this.movementAnimation || this.attackAnimation || this.flipAnimations.length || this.animationQueue.length) return
     this.pendingRebuild = false
     this.rebuild()
   }
@@ -1210,12 +1285,14 @@ export class GameScene {
     const startPoint = this._gridPosition(room, from)
     const group = new THREE.Group()
     group.position.set(startPoint.x, CARD_THICKNESS / 2 + 0.006, startPoint.z)
+    group.userData.baseY = CARD_THICKNESS / 2 + 0.006
     const marker = new THREE.Mesh(
       new THREE.PlaneGeometry(CARD_SIZE, CARD_SIZE),
       new THREE.MeshBasicMaterial({
         map: this._makeFrontTexture({ type: 'entry' }),
         side: THREE.DoubleSide,
         transparent: true,
+        depthTest: false,
       }),
     )
     marker.raycast = NO_RAYCAST
@@ -1223,7 +1300,7 @@ export class GameScene {
     marker.rotation.set(-STANDING_BACK_LEAN, this.cameraAzimuth, 0)
     marker.userData.cameraFacing = true
     marker.position.y = CARD_SIZE / 2
-    marker.renderOrder = 2
+    marker.renderOrder = tileRenderOrder(from, 8)
     group.add(marker)
     this.roomGroup.add(group)
     const route = [{ ...from }, ...path.map((step) => ({ ...step }))]
@@ -1241,6 +1318,95 @@ export class GameScene {
     return true
   }
 
+  _startAttack({ roomId, actor = 'enemy', position } = {}) {
+    const room = this.run.currentRoom
+    if (!room || room.id !== roomId || room.id !== this.framedRoomId || !position) return false
+    const face = this.tileMeshByKey.get(tileKey(position))
+    if (!face) return false
+    const marker = actor === 'player' && this.playerMarker?.visible ? this.playerMarker : null
+    const object = marker || face
+    const mesh = marker?.children.find((child) => child?.isMesh && child.material?.map) || face
+    if (!object.visible || !mesh?.material) return false
+
+    const sourceTexture = mesh.material.map
+    const attackTexture = this.skin === 'whiteline'
+      ? null
+      : makeCanvasTexture((context) => actor === 'player'
+        ? drawStickFigure(context, { armLift: 0, legSpread: 1 })
+        : drawStandingToken(context, this._cardFaceData(room, position), { headLift: 0, bodySway: 0 }))
+    if (attackTexture) {
+      mesh.material.map = attackTexture
+      mesh.material.needsUpdate = true
+    }
+    this.attackAnimation = {
+      actor,
+      object,
+      mesh,
+      face,
+      tileFace: object === face,
+      sourceTexture,
+      attackTexture,
+      baseScale: object.scale.clone(),
+      baseRotationZ: object.rotation.z,
+      elapsed: 0,
+      duration: ATTACK_ANIMATION_DURATION,
+    }
+    this._setAttackPose(this.attackAnimation, 0)
+    return true
+  }
+
+  _setAttackPose(animation, progress) {
+    const wave = Math.sin(progress * Math.PI)
+    const sway = Math.sin(progress * Math.PI * 4) * wave
+    if (animation.attackTexture) {
+      if (animation.actor === 'player') {
+        redrawCanvasTexture(animation.attackTexture, (context) => drawStickFigure(context, {
+          armLift: wave,
+          legSpread: 1 - wave * 0.35,
+        }))
+      } else {
+        redrawCanvasTexture(animation.attackTexture, (context) => drawStandingToken(
+          context,
+          this._cardFaceData(this.run.currentRoom, animation.face.userData.position),
+          { headLift: wave, bodySway: sway },
+        ))
+      }
+    }
+    const lift = animation.actor === 'player' ? wave * PLAYER_ATTACK_LIFT : wave * ENEMY_ATTACK_LIFT
+    const baseY = animation.tileFace
+      ? animation.face.userData.baseY
+      : animation.object.userData.baseY || animation.object.position.y
+    const heldOffset = animation.tileFace
+      ? (animation.face.userData.lift || 0) + (animation.face.userData.press || 0)
+      : (animation.face.userData.press || 0)
+    animation.object.position.y = baseY + heldOffset + lift
+    animation.object.rotation.z = animation.baseRotationZ + (animation.actor === 'enemy' ? sway * 0.045 : Math.sin(progress * Math.PI * 2) * 0.035)
+  }
+
+  _clearAttackAnimation({ continueQueue = false } = {}) {
+    const animation = this.attackAnimation
+    if (!animation) return
+    if (animation.mesh?.material && animation.mesh.material.map === animation.attackTexture) {
+      animation.mesh.material.map = animation.sourceTexture || null
+      animation.mesh.material.needsUpdate = true
+    }
+    animation.object.scale.copy(animation.baseScale)
+    animation.object.rotation.z = animation.baseRotationZ
+    const baseY = animation.tileFace
+      ? animation.face.userData.baseY
+      : animation.object.userData.baseY || animation.object.position.y
+    const heldOffset = animation.tileFace
+      ? (animation.face.userData.lift || 0) + (animation.face.userData.press || 0)
+      : (animation.face.userData.press || 0)
+    animation.object.position.y = baseY + heldOffset
+    animation.attackTexture?.dispose()
+    this.attackAnimation = null
+    if (continueQueue) {
+      this._drainAnimationQueue()
+      this._emitMoveCompleteIfIdle()
+    }
+  }
+
   _clearMovementAnimation() {
     const animation = this.movementAnimation
     if (!animation) return
@@ -1254,6 +1420,20 @@ export class GameScene {
     this.roomGroup.remove(this.playerMarker)
     disposeObject(this.playerMarker)
     this.playerMarker = null
+  }
+
+  _releaseFootprints() {
+    this.depressedTileKeys.clear()
+    this.lastFootprintKey = null
+    this.lastFootprintTurn = 0
+  }
+
+  _landFootprint(position) {
+    const key = tileKey(position)
+    if (this.lastFootprintKey && this.lastFootprintKey !== key) this.depressedTileKeys.delete(this.lastFootprintKey)
+    this.depressedTileKeys.add(key)
+    this.lastFootprintKey = key
+    this.lastFootprintTurn = this.run.turns.globalTurn
   }
 
   _updateMovementAnimation(delta) {
@@ -1284,17 +1464,24 @@ export class GameScene {
         CARD_THICKNESS / 2 + 0.006 + Math.sin(progress * Math.PI) * 0.13,
         THREE.MathUtils.lerp(start.z, end.z, ratio),
       )
+      const marker = animation.group.children[0]
+      if (marker) marker.renderOrder = tileRenderOrder({ r: from.r + (to.r - from.r) * ratio }, 8)
     }
     if (progress < 1) return
     this.movementAnimation = null
     this.playerMarker = animation.group
+    const landed = animation.route.at(-1)
+    if (landed) {
+      this.playerMarker.userData.footprintKey = tileKey(landed)
+      this._landFootprint(landed)
+    }
     this.moveCompletionPending = true
     this._drainAnimationQueue()
     this._emitMoveCompleteIfIdle()
   }
 
   _emitMoveCompleteIfIdle() {
-    if (!this.moveCompletionPending || this.movementAnimation || this.flipAnimations.length || this.animationQueue.length) return
+    if (!this.moveCompletionPending || this.movementAnimation || this.attackAnimation || this.flipAnimations.length || this.animationQueue.length) return
     this.moveCompletionPending = false
     this.run.bus?.emit('animate:move-complete')
   }
@@ -1421,8 +1608,12 @@ export class GameScene {
       const canLift = face.visible && key === this.hoveredTileKey && this.run.tileCanBeFlipped(position)
       const target = canLift ? 0.16 : 0
       face.userData.lift += (target - face.userData.lift) * 0.22
-      face.position.y = face.userData.baseY + face.userData.lift
-      face.userData.body.position.y = (face.userData.body.userData.baseY || 0) + face.userData.lift
+      const pressTarget = this.depressedTileKeys.has(key) ? -FOOTPRINT_PRESS_DEPTH : 0
+      face.userData.press = (face.userData.press || 0) + (pressTarget - (face.userData.press || 0)) * 0.2
+      const offset = face.userData.lift + face.userData.press
+      face.position.y = face.userData.baseY + offset
+      face.userData.body.position.y = (face.userData.body.userData.baseY || 0) + offset
+      if (key === this.playerMarker?.userData?.footprintKey) this.playerMarker.position.y = (this.playerMarker.userData.baseY || 0) + face.userData.press
     }
   }
 
@@ -1463,6 +1654,16 @@ export class GameScene {
       this._drainAnimationQueue()
       this._emitMoveCompleteIfIdle()
     }
+  }
+
+  _updateAttackAnimation(delta) {
+    const animation = this.attackAnimation
+    if (!animation) return
+    animation.elapsed += delta
+    const progress = Math.min(1, animation.elapsed / animation.duration)
+    this._setAttackPose(animation, progress)
+    if (progress < 1) return
+    this._clearAttackAnimation({ continueQueue: true })
   }
 
   _backAttributeFor(room, position) {
@@ -1650,7 +1851,7 @@ export class GameScene {
     const halfDepth = Math.max(Math.abs(bounds.minZ), Math.abs(bounds.maxZ)) + 0.75
     const widthDistance = halfWidth / Math.tan(horizontalFov / 2)
     const depthDistance = halfDepth / Math.tan(verticalFov / 2)
-    this.baseCameraDistance = Math.max(widthDistance, depthDistance) * 0.64
+    this.baseCameraDistance = Math.max(widthDistance, depthDistance) * 0.68
     if (resetView) {
       this.zoom = DEFAULT_ZOOM
       const playerPoint = this._gridPosition(room, this.run.player.pos)
@@ -1864,7 +2065,7 @@ export class GameScene {
       this.lastDragMoved = false
       return
     }
-    if (this.movementAnimation || this.flipAnimations.length || this.animationQueue.length) return
+    if (this.movementAnimation || this.attackAnimation || this.flipAnimations.length || this.animationQueue.length) return
     const door = this._pickDoor(event)
     if (door?.userData?.doorId) {
       const doorId = door.userData.doorId
@@ -1914,6 +2115,7 @@ export class GameScene {
     this._updateFlipAnimations(delta)
     this._updateItemSprites(delta)
     this._updateHoverLift()
+    this._updateAttackAnimation(delta)
     this.renderer.render(this.scene, this.camera)
     this._frame = requestAnimationFrame(this._animate)
   }
@@ -1933,7 +2135,9 @@ export class GameScene {
     this.renderer.domElement.removeEventListener('wheel', this._onWheel)
     this.flipUnsubscribe?.()
     this.flipBatchUnsubscribe?.()
+    this.attackUnsubscribe?.()
     this._clearPathPreview()
+    this._clearAttackAnimation()
     this._clearMovementAnimation()
     this._clearPlayerMarker()
     disposeObject(this.roomGroup)

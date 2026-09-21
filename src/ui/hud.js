@@ -564,7 +564,7 @@ export class HUD {
       // Make the sprite itself a reliable hit target. Its data index always
       // points at the first occupied cell, so transparent corners on L/T
       // shaped items cannot select a neighboring item.
-      const sprite = spriteSources ? `<img class="bag-sprite" data-bag-item="${originIndex}" data-sprite-medium="${spriteSources.medium}" data-sprite-high="${spriteSources.high}" src="${spriteSources.small}" alt="" aria-hidden="true" decoding="async" fetchpriority="low" style="width:${spriteWidth};height:${spriteHeight};transform:translate(-50%,-50%) rotate(${placement.rotation * 90}deg)">` : ''
+       const sprite = spriteSources ? `<img class="bag-sprite" data-bag-item="${originIndex}" data-sprite-medium="${spriteSources.medium}" src="${spriteSources.small}" alt="" aria-hidden="true" decoding="async" fetchpriority="low" style="width:${spriteWidth};height:${spriteHeight};transform:translate(-50%,-50%) rotate(${placement.rotation * 90}deg)">` : ''
       return `<div class="${itemClasses.join(' ')}" style="grid-column:${placement.x + 1} / span ${shape[0].length};grid-row:${placement.y + 1} / span ${shape.length}"><span class="bag-shape" style="grid-template-columns:repeat(${shape[0].length},1fr);grid-template-rows:repeat(${shape.length},1fr)">${sprite}${shapeCells}${labels}</span></div>`
     }).join('')
     backpack.innerHTML = `${cells}${items}`
@@ -582,7 +582,7 @@ export class HUD {
 
   _upgradeBagSprites() {
     this.root.querySelectorAll('.bag-sprite[data-sprite-medium]').forEach((sprite) => {
-      this._queueSpriteUpgrade(sprite, sprite.dataset.spriteMedium, sprite.dataset.spriteHigh, 80)
+       this._queueSpriteUpgrade(sprite, sprite.dataset.spriteMedium, '', 80)
     })
   }
 

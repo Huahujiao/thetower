@@ -69,7 +69,17 @@ const merchantTabs = computed(() => [merchant.value?.services?.includes('stock')
 const merchantOffers = computed(() => (merchant.value?.relicOfferResolved ? [] : (merchant.value?.relicChoices || []).map((id) => getRelicDefinition(id)).filter(Boolean)))
 const craftRows = computed(() => { state.value; return run.availableRecipes() })
 const talentGraph = computed(() => { state.value; return run.talentGraph() })
-const statusCount = computed(() => { state.value; return run.itemRules.statusLines().length })
+const statusEntries = computed(() => {
+  const current = state.value
+  const entries = []
+  if (current.player.poisonedTurns > 0) entries.push({ id: 'poison', name: 'POISONED', glyph: 'P', badge: String(current.player.poisonedTurns), description: `POISONED: ${current.player.poisonedTurns} TURN(S) REMAINING.` })
+  if (current.player.burningTurns > 0) entries.push({ id: 'burning', name: 'BURNING', glyph: 'B', badge: String(current.player.burningTurns), description: `BURNING: ${current.player.burningTurns} TURN(S) REMAINING.` })
+  for (const [id, buff] of Object.entries(current.player.itemState?.buffs || {})) {
+    if (id.startsWith('r-') || (id === 'spring' && !run.itemRules.has(id))) continue
+    entries.push({ id: `buff-${id}`, name: 'ACTIVE BUFF', glyph: 'B', badge: buff.flat ? `+${buff.flat}` : buff.discount ? `-${buff.discount}` : '', description: 'A temporary consumable, combat, or talent effect is active.' })
+  }
+  return entries
+})
 const detailTitle = computed(() => detailPanel.value ? String(detailPanel.value.type || 'DETAIL').toUpperCase() : '')
 const detailLines = computed(() => detailPanel.value ? [`TARGET TYPE: ${String(detailPanel.value.type || 'OBJECT').toUpperCase()}`, `DATA LINES: ${(detailPanel.value.lines || []).length}`, 'INTERACTION DETAIL AVAILABLE'] : [])
 const detailDescription = computed(() => detailPanel.value ? 'The same gameplay detail is open in the debug skin.' : '')
@@ -125,6 +135,9 @@ function cancelLongPress() {
 function showItemDetail(item) {
   return run.showItemDetail(item)
 }
+function showStatusDetail(entry) {
+  return run._showDetail({ position: 'top', title: entry.name, type: 'STATUS', icon: 'item', lines: entry.badge ? [entry.badge] : [], description: entry.description })
+}
 function detailActionFor(target, event = null) {
   if (!(target instanceof Element)) return null
   const candidates = []
@@ -165,6 +178,9 @@ function onInventoryTouchStart(index, event) {
   const item = run.backpack.placementForCellIndex(index)?.item
   if (item) startLongPress(() => showItemDetail(item), event)
 }
+function onStatusTouchStart(entry, event) {
+  startLongPress(() => showStatusDetail(entry), event)
+}
 function onTouchMove(event) {
   const current = hold.value
   const point = touchPoint(event, current?.identifier)
@@ -191,8 +207,6 @@ function onAction(action) {
   if (Date.now() < ignoreClicksUntil) return
   if (action === 'craft-open' && craftAvailable.value) craftOpen.value = true
   if (action === 'craft-close') craftOpen.value = false
-  if (action === 'build-status') togglePanel('status')
-  if (action === 'build-status-close') panel.value = null
   if (action === 'help') { panel.value = null; helpOpen.value = true }
   if (action === 'close-help') helpOpen.value = false
   if (action === 'character') togglePanel('character')
@@ -248,17 +262,19 @@ onBeforeUnmount(() => {
     <header class="wl-header">
       <div class="wl-title">WHITE LINE DEBUG</div>
       <div class="wl-stats"><span>FLOOR {{ room?.floor || '' }}</span><span>HP {{ state.player.hp }}/{{ state.player.maxHp }}</span><span>ARMOR {{ state.player.armor }}</span><span>ENERGY {{ state.player.energy }}/{{ state.player.maxEnergy }}</span><span>GOLD {{ state.player.gold }}</span><span>TURN {{ state.turn }}</span></div>
-      <nav class="wl-nav"><button data-action="craft-open" :disabled="!craftAvailable" @click="onAction('craft-open')">CRAFT</button><button data-action="build-status" @click="onAction('build-status')">STATUS</button><button data-action="talents" @click="onAction('talents')">TALENTS</button><button data-action="character" @click="onAction('character')">CHARACTER</button><button data-action="help" @click="onAction('help')">HELP</button><button data-action="settings" @click="onAction('settings')">SETTINGS</button><button data-action="log" @click="onAction('log')">LOG</button></nav>
+      <nav class="wl-nav"><button data-action="craft-open" :disabled="!craftAvailable" @click="onAction('craft-open')">CRAFT</button><button data-action="talents" @click="onAction('talents')">TALENTS</button><button data-action="character" @click="onAction('character')">CHARACTER</button><button data-action="help" @click="onAction('help')">HELP</button><button data-action="settings" @click="onAction('settings')">SETTINGS</button><button data-action="log" @click="onAction('log')">LOG</button></nav>
     </header>
-    <div class="wl-emotion">{{ state.itemTargeting ? 'TARGETING ACTIVE' : 'SELECT A WEAPON, THEN ACT ON THE BOARD.' }}</div>
     <div class="wl-experience">EXPERIENCE {{ state.player.experience }}/{{ state.player.experienceToNext }}</div>
-    <div id="app" ref="sceneContainer" aria-label="game board"></div>
+    <div id="app" ref="sceneContainer" aria-label="game board">
+      <section v-if="statusEntries.length" class="wl-scene-status" aria-label="STATUS">
+        <button v-for="entry in statusEntries" :key="entry.id" :aria-label="entry.name" @touchstart.stop.prevent="onStatusTouchStart(entry, $event)" @touchmove.stop="onTouchMove" @touchend.stop="onTouchEnd" @touchcancel.stop="onTouchCancel" @contextmenu.prevent><span>{{ entry.glyph }}</span><b v-if="entry.badge">{{ entry.badge }}</b></button>
+      </section>
+    </div>
     <div class="wl-bottom">
       <div class="wl-toolbar"><button data-action="discard" :hidden="!selectedItem" :disabled="!selectedItem" @click="onAction('discard')">DISCARD</button><span>ARMOR {{ state.player.armor }}</span><span>HP {{ state.player.hp }}/{{ state.player.maxHp }} | ENERGY {{ state.player.energy }}/{{ state.player.maxEnergy }}</span><button data-action="use" :hidden="!selectedUsable" :disabled="!selectedUsable" @click="onAction('use')">USE</button><button data-action="rotate" :disabled="!selectedRotatable" @click="onAction('rotate')">ROTATE</button></div>
       <section class="wl-inventory-panel"><div class="wl-inventory" :style="{ '--wl-cols': INVENTORY_COLUMNS, '--wl-rows': INVENTORY_ROWS }"><button v-for="cell in inventoryCells" :key="cell.index" class="wl-inventory-cell" :class="{ occupied: cell.placement, selected: cell.selected, valid: cell.action === 'move', blocked: cell.action === 'blocked' }" :data-inventory-cell="cell.index" :aria-label="cellLabel(cell)" @click="onActionValue('inventory-cell', cell.index)" @touchstart.stop="onInventoryTouchStart(cell.index, $event)" @touchmove.stop="onTouchMove($event)" @touchend.stop="onTouchEnd($event)" @touchcancel.stop="onTouchCancel($event)"><span v-if="cell.origin === cell.index">{{ itemToken(cell.placement.item) }}</span><small>{{ cell.index + 1 }}</small></button></div></section>
     </div>
 
-    <section v-if="panel === 'status'" class="wl-overlay-panel"><header><b>BUILD STATUS</b><button data-action="build-status-close" @click="onAction('build-status-close')">CLOSE</button></header><p v-if="statusCount">{{ statusCount }} ACTIVE EFFECT(S)</p><p v-else>NO ACTIVE EFFECTS.</p></section>
     <section v-if="panel === 'character'" class="wl-overlay-panel"><header><b>CHARACTER</b><button data-action="character" @click="onAction('character')">CLOSE</button></header><p>LEVEL {{ state.player.level }}</p><p>EXPERIENCE {{ state.player.experience }}/{{ state.player.experienceToNext }}</p><p>HEALTH {{ state.player.hp }}/{{ state.player.maxHp }}</p><p>TALENTS {{ state.player.talents.length }}</p><p>BODY STRENGTH {{ state.player.talentRuntime?.bodyStrength || 0 }}</p></section>
     <section v-if="panel === 'talents'" class="wl-overlay-panel wl-scroll"><header><b>TALENT GRAPH</b><button data-action="talents" @click="onAction('talents')">CLOSE</button></header><p v-for="node in talentGraph" :key="node.id" :class="`talent-${node.state}`">{{ node.id.toUpperCase() }} / {{ node.state.toUpperCase() }}</p></section>
     <section v-if="panel === 'settings'" class="wl-overlay-panel"><header><b>SETTINGS</b><button data-action="settings" @click="onAction('settings')">CLOSE</button></header><label><input v-model="reveal" type="checkbox" @change="updateReveal"> REVEAL DEBUG CONTENT</label><button data-action="restart-settings" @click="onAction('restart-settings')">RESTART RUN</button></section>

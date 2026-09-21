@@ -42,8 +42,21 @@ export function makeItem(definition, _random = Math.random) {
   const item = { ...definition, shape: cloneShape(definition.shape), uid: nextEntityId('item') }
   if (item.type === 'weapon') {
     item.energyCost = WEAPON_ENERGY_COSTS[item.weaponClass] || 3
+    item.tier = weaponTier(item)
   }
   return item
+}
+
+// Base weapons are tier I; crafted definitions are tier II. Keep the value on
+// the runtime item so saved runs and UI projections can render the same tier.
+export function weaponTier(item) {
+  if (item?.type !== 'weapon') return 0
+  const fallback = item.crafted ? 2 : 1
+  return Math.max(1, Math.min(3, Number(item.tier) || fallback))
+}
+
+export function weaponTierRoman(item) {
+  return ['', 'I', 'II', 'III'][weaponTier(item)] || 'I'
 }
 
 export function getItemDefinition(id) { return ITEM_BY_ID.get(id) || null }
@@ -88,7 +101,7 @@ export function randomConsumableDefinition(floor, random = Math.random) {
 }
 
 export function randomItem(floor, random = Math.random) {
-  const weaponPool = [...WEAPONS.filter((weapon) => !weapon.crafted), ...DEFENSES]
+  const weaponPool = WEAPONS.filter((weapon) => !weapon.crafted)
   if (random() < 0.42) return makeItem(weaponPool[Math.floor(random() * weaponPool.length)])
   return makeItem(randomConsumableDefinition(floor, random))
 }

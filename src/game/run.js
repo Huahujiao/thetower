@@ -2,7 +2,7 @@ import { createEmitter } from './core/emitter.js'
 import { chebyshev, combatDistance, manhattan, neighbors8 } from './core/geometry.js'
 import { TURN_KINDS, TurnLedger } from './core/turns.js'
 import { attributeLabel } from './data/attributes.js'
-import { createLootEntity, createMinion, getItemDefinition, makeItemById, makeRelicItem, starterWeapon, synchronizeEntityIds } from './data/content.js'
+import { createLootEntity, createMinion, getItemDefinition, makeItemById, makeRelicItem, starterWeapon, synchronizeEntityIds, weaponTier, weaponTierRoman } from './data/content.js'
 import { enemyBehaviorLabel, enemyFeatureLabel } from './data/enemy-features.js'
 import { getMerchantDefinition, merchantSellPrice, refreshMerchantSlot, refreshMerchantStock } from './data/merchants.js'
 import { buildRelicChoices, getRelicDefinition } from './data/relics.js'
@@ -27,6 +27,7 @@ export const INVENTORY_ROWS = 4
 export const INVENTORY_CAPACITY = INVENTORY_COLUMNS * INVENTORY_ROWS
 export const RELIC_SOFT_LIMIT = Infinity
 export const ENERGY_MAX = 10
+export const TELEPORT_RANGE = 6
 export const SAVE_KEY = 'grid_flip_adventure_v2'
 // Enemy health is rebalanced in this release, so old combat state is intentionally discarded.
 export const SAVE_VERSION = 25
@@ -55,6 +56,7 @@ const DETAIL_LABELS = Object.freeze({
   key: '\u5f00\u95e8\u673a\u5173',
   merchant: '\u5546\u4eba',
   attack: '\u653b\u51fb',
+  level: '\u7b49\u7ea7',
   range: '\u5c04\u7a0b',
   weaponClass: '\u7c7b\u522b',
   health: '\u751f\u547d',
@@ -133,8 +135,9 @@ const MERCHANT_SERVICE_LABELS = Object.freeze({
 function detailForItem(item, player = null) {
   const type = DETAIL_LABELS[item?.type] || '\u7269\u54c1'
   const lines = []
-  const badges = item?.attribute ? [attributeLabel(item.attribute)] : []
+  const badges = item?.type === 'weapon' && item?.attribute ? [attributeLabel(item.attribute)] : []
   if (item?.type === 'weapon') {
+    lines.push(`${DETAIL_LABELS.level} ${weaponTierRoman(item)}`)
     lines.push(`${DETAIL_LABELS.attack} ${item.attack || 0}`)
     lines.push(`${DETAIL_LABELS.range} ${weaponAttackRange(item, player)}`)
     lines.push(`\u4f53\u529b\u6d88\u8017 ${weaponEnergyCost(item)}`)
@@ -151,7 +154,7 @@ function detailForItem(item, player = null) {
   }
   const description = item?.description || ''
   lines.push(`占格 ${item?.shape?.flat().filter(Boolean).length || 1}`)
-  return { title: item?.name || type, type, icon: item?.type || 'item', badges, lines, description }
+  return { title: item?.name || type, type, icon: item?.type || 'item', itemId: item?.id || item?.relicId || null, badges, lines, description }
 }
 
 export class GameRun {
@@ -429,6 +432,9 @@ export class GameRun {
       detail.lines[1] = `当前射程 ${this.weaponRange(item)}`
       detail.lines[2] = `当前体力消耗 ${this.weaponEnergyCost(item)}`
       detail.lines.push(...this.itemRules.weaponLines(item))
+      detail.lines[1] = `${DETAIL_LABELS.attack} ${item.attack || 0}`
+      detail.lines[2] = `\u5f53\u524d\u5c04\u7a0b ${this.weaponRange(item)}`
+      detail.lines[3] = `\u5f53\u524d\u4f53\u529b\u6d88\u8017 ${this.weaponEnergyCost(item)}`
     }
     if (item.type === 'weapon') {
       const growth = this.weaponGrowth(item)
@@ -449,6 +455,7 @@ export class GameRun {
       title: definition.name,
       type: DETAIL_LABELS.relic,
       icon: 'relic',
+      itemId: definition.id,
       description: definition.description,
       lines: ['\u5360\u7528\u80cc\u5305 1 \u683c\uff0c\u6301\u6709\u65f6\u751f\u6548\u3002'],
     })
@@ -763,7 +770,7 @@ export class GameRun {
     if (!item || !this._canAct() || !['potion', 'armor', 'energy', 'buff', 'cleanse', 'teleport'].includes(item.type)) return false
     if (item.type === 'teleport') {
       this.itemTargeting = true
-      this._log('选择距离3以内的已翻开空格；点击使用可继续选取，取消选择可退出。')
+      this._log(`\u9009\u62e9\u8ddd\u79bb${TELEPORT_RANGE}\u4ee5\u5185\u7684\u5df2\u7ffb\u5f00\u7a7a\u683c\uff1b\u70b9\u51fb\u4f7f\u7528\u53ef\u7ee7\u7eed\u9009\u53d6\uff0c\u53d6\u6d88\u9009\u62e9\u53ef\u9000\u51fa\u3002`)
       this._changed()
       return true
     }
@@ -794,7 +801,7 @@ export class GameRun {
     const item = this.selectedItem
     const room = this.currentRoom
     if (item?.type !== 'teleport' || !room.isRevealed(position) || !room.isEmpty(position) ||
-        manhattan(this.player.pos, position) > 3 || manhattan(this.player.pos, position) === 0) return this._reject('换位目标必须是距离3以内已翻开的其他空格。')
+        manhattan(this.player.pos, position) > TELEPORT_RANGE || manhattan(this.player.pos, position) === 0) return this._reject(`\u6362\u4f4d\u76ee\u6807\u5fc5\u987b\u662f\u8ddd\u79bb${TELEPORT_RANGE}\u4ee5\u5185\u5df2\u7ffb\u5f00\u7684\u5176\u4ed6\u7a7a\u683c\u3002`)
     this.player.pos = { ...position }
     this.backpack.removeByUid(item.uid)
     this.selectedInventoryIndex = null
@@ -1213,6 +1220,11 @@ export class GameRun {
     this.itemRules.afterAttack(weapon, enemy, hit, context)
     this._log(`${weapon.name} 对 ${enemy.name} 造成 ${hit.damage} 伤害。`, { insertAt: this._logSequence - logSequence })
     this._roomRuntime().firstAttackUsed = true
+    this.bus.emit('animate:attack', {
+      roomId: this.currentRoom?.id,
+      actor: 'player',
+      position: { ...this.player.pos },
+    })
     this._endTurn({ turnKind: TURN_KINDS.ATTACK })
     this._changed()
     return true
@@ -1291,9 +1303,17 @@ export class GameRun {
     this._emitTurnEvent('turn:ended', turnContext)
   }
 
-  _enemyAttack(enemy, multiplier = 1) {
+  _enemyAttack(enemy, multiplier = 1, { animate = true } = {}) {
     if (!enemy || enemy.attack <= 0) return { healthDamage: 0 }
     enemy.hasActed = true
+    if (animate) {
+      this.bus.emit('animate:attack', {
+        roomId: this.currentRoom?.id,
+        actor: 'enemy',
+        enemyId: enemy.id,
+        position: { ...enemy.pos },
+      })
+    }
     const rawDamage = Math.max(0, Math.max(1, Math.floor(enemy.attack * multiplier)) - (enemy.nextAttackReduction || 0))
     enemy.nextAttackReduction = 0
     const result = this._damagePlayer(rawDamage, { source: 'enemy:attack', enemy })
@@ -1398,7 +1418,9 @@ export class GameRun {
       ? Math.max(0, Number(dropRule.chance) || 0)
       : 0
     if (itemDropChance > 0 && this.random() < itemDropChance) {
-      const drop = makeItemById(dropRule?.itemId, this.random)
+      const itemIds = (Array.isArray(dropRule?.itemIds) ? dropRule.itemIds : [dropRule?.itemId]).filter(Boolean)
+      const itemId = itemIds[Math.floor(this.random() * itemIds.length)]
+      const drop = makeItemById(itemId, this.random)
       if (drop) {
         this.currentRoom.addEntity(createLootEntity(drop, enemy.pos))
         this._log(`${enemy.name} \u6389\u843d\u4e86 ${drop.name}\u3002`)
@@ -1621,19 +1643,28 @@ export class GameRun {
       .filter((entity) => entity.kind === 'enemy' && entity.behavior === 'ambush' && !room.isRevealed(entity.pos))
       .filter((entity) => playerNeighborhood.some((candidate) => candidate.c === entity.pos.c && candidate.r === entity.pos.r))
     const flips = []
+    const delayedAttacks = []
     for (const enemy of ambushers) {
       const wasFlippable = this.tileCanBeFlipped(enemy.pos)
       room.reveal(enemy.pos)
       flips.push({ position: enemy.pos, backUnflippable: !wasFlippable })
       this._log(`${enemy.name}\u4ece\u4f0f\u51fb\u4e2d\u73b0\u8eab\u3002`)
       if (normalizedCounter(enemy.actionDelay) === 0 && normalizedCounter(enemy.attackCooldown) === 0) {
-        this._enemyAttack(enemy)
+        this._enemyAttack(enemy, 1, { animate: false })
+        delayedAttacks.push({ enemyId: enemy.id, position: { ...enemy.pos } })
         this._onEnemyAction(enemy)
         enemy.attackCooldown = cooldownWaitTurns(enemy.attackCooldownMax)
       }
       if (this.gameOver) break
     }
     this._animateEnemyRevealBatch(room, flips)
+    for (const attack of delayedAttacks) {
+      this.bus.emit('animate:attack', {
+        roomId: room.id,
+        actor: 'enemy',
+        ...attack,
+      })
+    }
     return ambushers.length > 0
   }
 
@@ -1747,6 +1778,7 @@ export class GameRun {
       // Refresh authored descriptions without resetting the run or its used charges.
       const refreshDescription = item => {
         const definition = getItemDefinition(item?.id || item?.relicId)
+        if (item?.type === 'weapon') item.tier = weaponTier(item)
         if (definition) item.description = definition.description || ''
       }
       this.backpack.items.forEach(refreshDescription)
