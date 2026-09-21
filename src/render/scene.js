@@ -1415,7 +1415,7 @@ export class GameScene {
     animation.object.rotation.z = animation.baseRotationZ + (animation.actor === 'enemy' ? sway * 0.045 : Math.sin(progress * Math.PI * 2) * 0.035)
   }
 
-  _clearAttackAnimation({ continueQueue = false } = {}) {
+  _clearAttackAnimation({ continueQueue = false, completed = false } = {}) {
     const animation = this.attackAnimation
     if (!animation) return
     if (animation.mesh?.material && animation.mesh.material.map === animation.attackTexture) {
@@ -1434,6 +1434,14 @@ export class GameScene {
     animation.attackTexture?.dispose()
     this._applyAttackTargetStatus(animation.targetStatus)
     this.attackAnimation = null
+    if (completed && animation.actor === 'player') {
+      // The model intentionally has not entered the enemy phase yet. Refresh
+      // this settled player-hit state (including killed or displaced targets)
+      // before GameRun is allowed to enqueue the next enemy action.
+      const room = this.run.currentRoom
+      if (room?.id === this.framedRoomId) this._refreshRoom(room)
+      this.run.bus?.emit('animate:attack-complete', { actor: 'player', roomId: room?.id })
+    }
     if (continueQueue) {
       this._drainAnimationQueue()
       this._emitMoveCompleteIfIdle()
@@ -1705,7 +1713,7 @@ export class GameScene {
     const progress = Math.min(1, animation.elapsed / animation.duration)
     this._setAttackPose(animation, progress)
     if (progress < 1) return
-    this._clearAttackAnimation({ continueQueue: true })
+    this._clearAttackAnimation({ continueQueue: true, completed: true })
   }
 
   _backAttributeFor(room, position) {

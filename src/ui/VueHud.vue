@@ -641,11 +641,11 @@ const cameraAngles = computed(() => {
 const selectedItem = computed(() => state.value.selectedItem)
 const actionsAvailable = computed(() => {
   const current = state.value
-  return current.phase === 'explore' && !current.gameOver && current.initialRelicChoices.length === 0 && !current.merchantEntering && !current.roomEntering
+  return current.phase === 'explore' && !current.gameOver && current.initialRelicChoices.length === 0 && !current.merchantEntering && !current.roomEntering && !current.combatResolving
 })
 const craftAvailable = computed(() => {
   const current = state.value
-  return !current.gameOver && current.initialRelicChoices.length === 0 && ['explore', 'merchant'].includes(current.phase) && !current.itemTargeting && !current.merchantEntering && !current.roomEntering
+  return !current.gameOver && current.initialRelicChoices.length === 0 && ['explore', 'merchant'].includes(current.phase) && !current.itemTargeting && !current.merchantEntering && !current.roomEntering && !current.combatResolving
 })
 const selectedUsable = computed(() => {
   const item = selectedItem.value

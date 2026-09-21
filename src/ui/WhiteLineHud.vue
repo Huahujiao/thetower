@@ -81,8 +81,8 @@ const draggedItemView = computed(() => {
   return { item: gesture.item, style: { left: `${gesture.pointerX}px`, top: `${gesture.pointerY}px` } }
 })
 const selectedItem = computed(() => state.value.selectedItem)
-const actionsAvailable = computed(() => state.value.phase === 'explore' && !state.value.gameOver && !state.value.initialRelicChoices.length && !state.value.merchantEntering && !state.value.roomEntering)
-const craftAvailable = computed(() => !state.value.gameOver && !state.value.initialRelicChoices.length && ['explore', 'merchant'].includes(state.value.phase) && !state.value.itemTargeting && !state.value.merchantEntering && !state.value.roomEntering)
+const actionsAvailable = computed(() => state.value.phase === 'explore' && !state.value.gameOver && !state.value.initialRelicChoices.length && !state.value.merchantEntering && !state.value.roomEntering && !state.value.combatResolving)
+const craftAvailable = computed(() => !state.value.gameOver && !state.value.initialRelicChoices.length && ['explore', 'merchant'].includes(state.value.phase) && !state.value.itemTargeting && !state.value.merchantEntering && !state.value.roomEntering && !state.value.combatResolving)
 const selectedUsable = computed(() => actionsAvailable.value && ['potion', 'armor', 'energy', 'buff', 'cleanse', 'teleport'].includes(selectedItem.value?.type))
 const initialRelics = computed(() => state.value.initialRelicChoices.map((id) => getRelicDefinition(id)).filter(Boolean))
 const roomRewardOpen = computed(() => state.value.phase === 'reward' && !!state.value.roomReward && !state.value.roomEntering)

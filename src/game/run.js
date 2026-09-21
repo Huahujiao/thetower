@@ -181,10 +181,17 @@ export class GameRun {
     this._logRevealAnchor = null
     this.merchantEntering = false
     this.roomEntering = false
+    this.combatResolving = false
     this.moveCompleteUnsubscribe = this.on('animate:move-complete', () => {
       if (!this.merchantEntering && !this.roomEntering) return
       this.merchantEntering = false
       this.roomEntering = false
+      this._changed()
+    })
+    this.attackCompleteUnsubscribe = this.on('animate:attack-complete', ({ actor } = {}) => {
+      if (actor !== 'player' || !this.combatResolving) return
+      this.combatResolving = false
+      this._endTurn({ turnKind: TURN_KINDS.ATTACK })
       this._changed()
     })
     this.random = random
@@ -243,6 +250,7 @@ export class GameRun {
     this.merchant = null
     this.merchantEntering = false
     this.roomEntering = false
+    this.combatResolving = false
     this.roomReward = null
     this.roomRewardBag = shuffled(['supply', 'supply', 'supply', 'relic'], this.random)
     this.levelUp = null
@@ -1336,7 +1344,10 @@ export class GameRun {
         enemy: enemyStatusSnapshot(enemy),
       },
     })
-    this._endTurn({ turnKind: TURN_KINDS.ATTACK })
+    // The renderer confirms the player pose before this turn advances. This
+    // keeps enemy actions out of both the model and the animation queue until
+    // the player hit (including a kill) is visibly settled.
+    this.combatResolving = true
     this._changed()
     return true
   }
@@ -1801,11 +1812,11 @@ export class GameRun {
   }
 
   _canAct() {
-    return this.phase === 'explore' && !this.gameOver && this.initialRelicChoices.length === 0 && !this.merchantEntering && !this.roomEntering
+    return this.phase === 'explore' && !this.gameOver && this.initialRelicChoices.length === 0 && !this.merchantEntering && !this.roomEntering && !this.combatResolving
   }
 
   _canOrganizeBackpack() {
-    return !this.gameOver && this.initialRelicChoices.length === 0 && ['explore', 'merchant'].includes(this.phase) && !this.merchantEntering && !this.roomEntering
+    return !this.gameOver && this.initialRelicChoices.length === 0 && ['explore', 'merchant'].includes(this.phase) && !this.merchantEntering && !this.roomEntering && !this.combatResolving
   }
 
   _reject(message) {
@@ -1944,6 +1955,7 @@ export class GameRun {
       this.merchant = data.merchant && typeof data.merchant.entityId === 'string' ? { entityId: data.merchant.entityId } : null
       this.merchantEntering = false
       this.roomEntering = false
+      this.combatResolving = false
       this.roomReward = data.roomReward?.roomId && Array.isArray(data.roomReward.choices) ? clone(data.roomReward) : null
       this.roomRewardBag = Array.isArray(data.roomRewardBag) && data.roomRewardBag.every((type) => type === 'supply' || type === 'relic')
         ? [...data.roomRewardBag]
