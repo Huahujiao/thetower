@@ -78,8 +78,10 @@ function makeCanvasTexture(draw, { width = 480, height = 480, scale = 3 } = {}) 
   canvas.width = width
   canvas.height = height
   const context = canvas.getContext('2d')
+  context.save()
   context.scale(scale, scale)
   draw(context)
+  context.restore()
   const texture = new THREE.CanvasTexture(canvas)
   texture.colorSpace = THREE.SRGBColorSpace
   texture.anisotropy = 4
@@ -90,10 +92,13 @@ function redrawCanvasTexture(texture, draw, { width = 160, height = 160 } = {}) 
   const canvas = texture?.image
   const context = canvas?.getContext?.('2d')
   if (!context) return false
-  const scale = canvas.width / width
-  context.clearRect(0, 0, canvas.width, canvas.height)
   context.save()
-  context.scale(scale, scale)
+  // Always redraw from an identity transform. Canvas transforms are
+  // persistent; accumulating the previous scale would zoom the attack pose
+  // until only a corner of the character remained visible.
+  context.setTransform(1, 0, 0, 1, 0, 0)
+  context.clearRect(0, 0, canvas.width, canvas.height)
+  context.scale(canvas.width / width, canvas.height / height)
   draw(context)
   context.restore()
   texture.needsUpdate = true

@@ -54,6 +54,10 @@ The project lint policy is defined in `eslint.config.js` and runs with `npm.cmd 
 
 ## Vue HUD interaction notes
 
+## Inventory staging notes
+
+The production and white-line skins share the same 300 ms hold, 18 px movement tolerance, shape-anchor placement, green/yellow/red drop preview, free-form staging canvas, discard zone, and multi-touch clockwise rotation. Staged items are serialized with the run, remain visible while the canvas is non-empty, and are resolved before scene interaction resumes. The `/wiki` reference should describe these controls as touch-only and should not document the removed discard or rotate toolbar buttons.
+
 The game HUD is mounted by Vue 3 while the board remains Three.js. Because `GameRun` is intentionally a plain event-driven model, all mutable HUD projections subscribe through the shared revision tick. This keeps initial relic selection, room rewards, level-up choices, merchant stock, backpack movement, action visibility, and status panels synchronized after each model change.
 
 Long-press detail uses a separate detail update and preserves keyed inventory sprite nodes. The complete backpack grid suppresses the browser context menu, so inspecting a textured item does not open native browser actions or flash unrelated equipment.
@@ -102,4 +106,4 @@ The backpack has no outer frame; only its cells and item outlines remain visible
 
 ## Combat animation
 
-Player and enemy attacks use a short 0.5-second presentation animation. The player raises both arms and briefly narrows the stance; an enemy lifts its round head and sways its triangular body twice. Attack events share the Three.js FIFO queue with movement and card flips, so attacks in one turn play one after another instead of simultaneously. The animation is visual-only and does not change damage, turn order, or enemy rules.
+Player and enemy attacks use a short 0.5-second presentation animation. The player raises both arms and briefly narrows the stance; an enemy lifts its round head and sways its triangular body twice. Attack events share the Three.js FIFO queue with movement and card flips, so attacks in one turn play one after another instead of simultaneously. The animation is visual-only and does not change damage, turn order, or enemy rules. The temporary pose texture is redrawn from a reset canvas transform, preserving the normal character size throughout the animation instead of accumulating scale and showing only a cropped corner.

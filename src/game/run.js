@@ -213,6 +213,7 @@ export class GameRun {
       burningDamage: 0,
     }
     this.backpack = new BackpackGrid(INVENTORY_COLUMNS, INVENTORY_ROWS)
+    this.inventoryStash = []
     const starter = starterWeapon()
     if (!this.backpack.add(starter)) throw new Error('Unable to add starter weapon to backpack')
     this.relics = new RelicCollection()
@@ -552,15 +553,21 @@ export class GameRun {
     this.bus.emit('change')
   }
 
-  acquireRelic(id, { notify = true } = {}) {
+  acquireRelic(id, { notify = true, allowStash = false } = {}) {
     const definition = getRelicDefinition(id)
     if (!definition) return this._reject('\u672a\u77e5\u5723\u9057\u7269\u3002')
     if (this.relics.has(id)) return this._reject('\u6b64\u5723\u9057\u7269\u5df2\u5728\u80cc\u5305\u4e2d\u3002')
     const item = makeRelicItem(definition)
-    if (!item || !this.backpack.add(item)) return this._reject('\u80cc\u5305\u6ca1\u6709\u8db3\u591f\u7a7a\u95f4\u3002')
+    if (!item) return this._reject('\u65e0\u6cd5\u521b\u5efa\u5723\u9057\u7269\u3002')
+    const placement = this.backpack.add(item)
+    if (!placement) {
+      if (!allowStash) return this._reject('\u80cc\u5305\u6ca1\u6709\u8db3\u591f\u7a7a\u95f4\u3002')
+      this.inventoryStash.push(item)
+    }
     const entry = this.relics.acquire(id, { uid: item.uid })
     if (!entry) {
       this.backpack.removeByUid(item.uid)
+      this.inventoryStash = this.inventoryStash.filter((stashed) => stashed.uid !== item.uid)
       return this._reject('\u6b64\u5723\u9057\u7269\u5df2\u5728\u80cc\u5305\u4e2d\u3002')
     }
     this._log(`\u83b7\u5f97 ${definition.name}\u3002`)
@@ -613,7 +620,6 @@ export class GameRun {
       return route ? this._pathPreview('merchant', target, route.path) : null
     }
     if (entity.kind === 'trap') return null
-    if (entity.kind === 'item' && !this.backpack.canFit(entity.item)) return null
     const path = findPath(room, this.player.pos, target, { allowGoalOccupied: true })
     return path ? this._pathPreview('pickup', target, path) : null
   }
@@ -665,8 +671,9 @@ export class GameRun {
     const item = this.backpack.placementOf(itemUid)?.item
     if (!item) return false
     const placement = this.backpack.placementOf(item.uid)
-    if (placement.x === index % INVENTORY_COLUMNS && placement.y === Math.floor(index / INVENTORY_COLUMNS)) return false
-    const moved = this.backpack.move(item.uid, index % INVENTORY_COLUMNS, Math.floor(index / INVENTORY_COLUMNS))
+    const preview = this.previewInventoryDrop(item.uid, index, { rotation: placement.rotation })
+    if (!preview || preview.status !== 'move' || (preview.x === placement.x && preview.y === placement.y)) return false
+    const moved = this.backpack.move(item.uid, preview.x, preview.y, preview.rotation)
     if (!moved) return false
     this._endTurn({ recoverEnergy: false, action: 'organize' })
     this.selectedInventoryIndex = this.backpack.originIndex(this.backpack.placementOf(item.uid))
@@ -688,9 +695,95 @@ export class GameRun {
     const targetPlacement = this.backpack.placementForCellIndex(index)
     if (!selectedPlacement) return null
     if (targetPlacement) return targetPlacement.item.uid === selected.uid ? 'cancel' : 'select'
-    return this.backpack.canPlace(selected, index % INVENTORY_COLUMNS, Math.floor(index / INVENTORY_COLUMNS), selectedPlacement.rotation, selected.uid)
-      ? 'move'
-      : 'blocked'
+    return this.previewInventoryDrop(selected.uid, index, { rotation: selectedPlacement.rotation })?.status === 'move' ? 'move' : 'blocked'
+  }
+
+  previewInventoryDrop(itemOrUid, index, { rotation = null } = {}) {
+    if (!Number.isInteger(index)) return null
+    const item = typeof itemOrUid === 'object' ? itemOrUid : this.backpack.placementOf(itemOrUid)?.item
+    if (!item) return null
+    const placement = this.backpack.placementOf(item.uid)
+    const nextRotation = rotation == null ? placement?.rotation || 0 : ((rotation % 4) + 4) % 4
+    if (index < 0 || index >= INVENTORY_CAPACITY) return { status: 'blocked', conflicts: [], item, index, rotation: nextRotation }
+    const origin = this.backpack.originForAnchorCell(item, index, nextRotation)
+    if (!origin) return { status: 'blocked', conflicts: [], item, index, rotation: nextRotation }
+    const shape = this.backpack.shapeFor(item, nextRotation)
+    const cells = this.backpack.cellsFor(item, origin.x, origin.y, nextRotation)
+    const inBounds = origin.x >= 0 && origin.y >= 0 && origin.x + shape[0].length <= INVENTORY_COLUMNS && origin.y + shape.length <= INVENTORY_ROWS
+    if (!inBounds) return { status: 'blocked', conflicts: [], item, index, x: origin.x, y: origin.y, rotation: nextRotation, cells }
+    const conflicts = this.backpack.placements.filter((candidate) => candidate.item?.uid !== item.uid
+      && this.backpack.cellsForPlacement(candidate).some((occupied) => cells.some((cell) => cell.x === occupied.x && cell.y === occupied.y)))
+    return {
+      status: conflicts.length ? 'replace' : 'move',
+      conflicts,
+      item,
+      index,
+      x: origin.x,
+      y: origin.y,
+      rotation: nextRotation,
+      cells,
+    }
+  }
+
+  applyInventoryDrop(itemOrUid, index, { rotation = null, replace = false } = {}) {
+    if (!this._canOrganizeBackpack()) return null
+    const preview = this.previewInventoryDrop(itemOrUid, index, { rotation })
+    if (!preview || preview.status === 'blocked' || (!replace && preview.conflicts.length)) return null
+    const item = preview.item
+    const conflicts = preview.conflicts.map((placement) => placement.item)
+    const originalPlacements = this.backpack.placements.map((placement) => ({ ...placement }))
+    for (const conflict of conflicts) this.backpack.removeByUid(conflict.uid)
+    const placement = this.backpack.placementOf(item.uid)
+    if (placement) {
+      if (!this.backpack.move(item.uid, preview.x, preview.y, preview.rotation)) {
+        this.backpack.placements = originalPlacements
+        return null
+      }
+    } else {
+      this.unstageInventoryItem(item, { notify: false })
+      this.backpack.placements.push({ item, x: preview.x, y: preview.y, rotation: preview.rotation })
+      item.bagRotation = preview.rotation
+    }
+    return { item, conflicts, preview }
+  }
+
+  inventoryChanged({ advanceTurn = false } = {}) {
+    if (!this._canOrganizeBackpack()) return false
+    if (advanceTurn) this._endTurn({ recoverEnergy: false, action: 'organize' })
+    this.selectedInventoryIndex = null
+    this.itemTargeting = false
+    this._changed()
+    return true
+  }
+
+  stageInventoryItem(item, { notify = true } = {}) {
+    if (!item?.uid || this.inventoryStash.some((stashed) => stashed.uid === item.uid)) return false
+    this.inventoryStash.push(item)
+    if (notify) this._changed()
+    return true
+  }
+
+  unstageInventoryItem(itemOrUid, { notify = true } = {}) {
+    const uid = typeof itemOrUid === 'object' ? itemOrUid?.uid : itemOrUid
+    const index = this.inventoryStash.findIndex((item) => item?.uid === uid)
+    if (index < 0) return null
+    const [item] = this.inventoryStash.splice(index, 1)
+    if (notify) this._changed()
+    return item
+  }
+
+  discardInventoryItem(itemOrUid, { notify = true } = {}) {
+    const uid = typeof itemOrUid === 'object' ? itemOrUid?.uid : itemOrUid
+    const item = this.inventoryStash.find((stashed) => stashed?.uid === uid)
+      || this.backpack.placementOf(uid)?.item
+    if (!item) return false
+    this.inventoryStash = this.inventoryStash.filter((stashed) => stashed.uid !== uid)
+    this.backpack.removeByUid(uid)
+    this.itemRules.discarded(item)
+    if (item.type === 'relic') this.relics.remove(item.uid) || this.relics.remove(item.relicId)
+    this._log(`\u4e22\u5f03 ${item.name}\u3002`)
+    if (notify) this._changed()
+    return true
   }
 
   clickInventoryCell(index) {
@@ -1078,7 +1171,6 @@ export class GameRun {
 
   _pickUp(entity) {
     const room = this.currentRoom
-    if (entity.kind === 'item' && !this.backpack.canFit(entity.item)) return this._reject('\u80cc\u5305\u6ca1\u6709\u8db3\u591f\u7a7a\u95f4\uff0c\u65e0\u6cd5\u5f00\u59cb\u79fb\u52a8\u3002')
     if (entity.kind === 'item' && entity.item?.type === 'relic' && !getRelicDefinition(entity.item.relicId)) return this._reject('\u65e0\u6cd5\u8bc6\u522b\u8fd9\u4ef6\u5723\u9057\u7269\u3002')
     const route = findPath(room, this.player.pos, entity.pos, { allowGoalOccupied: true })
     if (!route) return this._reject('\u76ee\u6807\u4e0d\u53ef\u8fbe\u3002')
@@ -1086,15 +1178,15 @@ export class GameRun {
     if (!movement.stopped) {
       if (entity.kind === 'item') {
         if (entity.item?.type === 'relic') {
-          const entry = this.acquireRelic(entity.item.relicId, { notify: false })
+          const entry = this.acquireRelic(entity.item.relicId, { notify: false, allowStash: true })
           if (entry) {
             room.removeEntity(entity.id)
-            const item = this.backpack.placementOf(entry.uid)?.item
+            const item = this.backpack.placementOf(entry.uid)?.item || this.inventoryStash.find((stashed) => stashed.uid === entry.uid)
             this._emitRelicEvent('item:collected', { item })
           } else this._log(`\u5723\u9057\u7269\u5df2\u88ab\u83b7\u5f97\uff0c\u65e0\u6cd5\u91cd\u590d\u6536\u96c6\u3002`)
         } else {
           room.removeEntity(entity.id)
-          this._putInInventory(entity.item)
+          if (!this._putInInventory(entity.item)) this.stageInventoryItem(entity.item, { notify: false })
           this._log(`\u83b7\u5f97 ${entity.item.name}\u3002`)
           this._emitRelicEvent('item:collected', { item: entity.item })
         }
@@ -1736,6 +1828,7 @@ export class GameRun {
       dungeon: this.dungeon.serialize(),
       player: clone(this.player),
       backpack: this.backpack.serialize(clone),
+      inventoryStash: this.inventoryStash.map(clone),
       initialRelicChoices: [...this.initialRelicChoices],
       turn: this.turn,
       turnCounters: this.turns.serialize(),
@@ -1775,6 +1868,7 @@ export class GameRun {
         delete this.player.itemState.buffs['r-scales']
       }
       this.backpack = BackpackGrid.hydrate(data.backpack)
+      this.inventoryStash = Array.isArray(data.inventoryStash) ? data.inventoryStash.filter((item) => item?.uid) : []
       // Refresh authored descriptions without resetting the run or its used charges.
       const refreshDescription = item => {
         const definition = getItemDefinition(item?.id || item?.relicId)
@@ -1782,6 +1876,7 @@ export class GameRun {
         if (definition) item.description = definition.description || ''
       }
       this.backpack.items.forEach(refreshDescription)
+      this.inventoryStash.forEach(refreshDescription)
       for (const room of this.dungeon.rooms.values()) {
         for (const entity of room.entities.values()) {
           if (entity.item) refreshDescription(entity.item)
@@ -1808,8 +1903,9 @@ export class GameRun {
       this.player.burningDamage = this.player.burningTurns > 0
         ? Math.max(1, Math.floor(Number(this.player.burningDamage) || 1))
         : 0
-      this.relics = RelicCollection.fromItems(this.backpack.items)
-      this.relics.entries = this.relics.entries.filter((entry) => !!getRelicDefinition(entry.id) && this.backpack.placementOf(entry.uid))
+      this.relics = RelicCollection.fromItems([...this.backpack.items, ...this.inventoryStash])
+      this.relics.entries = this.relics.entries.filter((entry) => !!getRelicDefinition(entry.id)
+        && (this.backpack.placementOf(entry.uid) || this.inventoryStash.some((item) => item.uid === entry.uid)))
       this.relicEngine = new RelicEngine(this.relics)
       this.initialRelicChoices = (Array.isArray(data.initialRelicChoices) ? data.initialRelicChoices : buildRelicChoices(this.relics, { random: this.random }).map((relic) => relic.id))
         .filter((id) => !!getRelicDefinition(id) && !this.relics.has(id))
@@ -1843,7 +1939,7 @@ export class GameRun {
       this.detailPanel = null
       this.log = Array.isArray(data.log) ? data.log : []
       this._logSequence = this.log.length
-      synchronizeEntityIds(this.backpack.items.map((item) => item?.uid))
+      synchronizeEntityIds([...this.backpack.items, ...this.inventoryStash].map((item) => item?.uid))
       if (!this.currentRoom?.contains(this.player.pos) || !this.currentRoom.isRevealed(this.player.pos)) return discard()
       if (this.gameOver || this.win) {
         this.gameOver = true

@@ -23,6 +23,15 @@ function itemShape(item) { return item?.shape || [[1]] }
 
 function shapeSignature(shape) { return shape.map((row) => row.join('')).join('/') }
 
+export function shapeAnchor(shape) {
+  for (let y = 0; y < shape.length; y += 1) {
+    for (let x = 0; x < shape[y].length; x += 1) {
+      if (shape[y][x]) return { x, y }
+    }
+  }
+  return { x: 0, y: 0 }
+}
+
 export class BackpackGrid {
   constructor(columns = BACKPACK_COLUMNS, rows = BACKPACK_ROWS) {
     if (!Number.isInteger(columns) || columns < 1) throw new TypeError('Backpack columns must be a positive integer')
@@ -52,6 +61,17 @@ export class BackpackGrid {
 
   cellsForPlacement(placement) {
     return this.cellsFor(placement.item, placement.x, placement.y, placement.rotation)
+  }
+
+  anchorFor(item, rotation = 0) { return shapeAnchor(this.shapeFor(item, rotation)) }
+
+  originForAnchorCell(item, index, rotation = 0) {
+    if (!Number.isInteger(index) || index < 0 || index >= this.capacity) return null
+    const anchor = this.anchorFor(item, rotation)
+    return {
+      x: index % this.columns - anchor.x,
+      y: Math.floor(index / this.columns) - anchor.y,
+    }
   }
 
   placementOf(itemOrUid) {
@@ -86,6 +106,11 @@ export class BackpackGrid {
       for (const cell of this.cellsForPlacement(placement)) occupied.add(`${cell.x},${cell.y}`)
     }
     return cells.every((cell) => !occupied.has(`${cell.x},${cell.y}`))
+  }
+
+  canPlaceAtCell(item, index, rotation = 0, ignoreUid = item?.uid) {
+    const origin = this.originForAnchorCell(item, index, rotation)
+    return !!origin && this.canPlace(item, origin.x, origin.y, rotation, ignoreUid)
   }
 
   _rotationOptions(item, preferredRotation = 0) {
@@ -132,6 +157,14 @@ export class BackpackGrid {
     placement.rotation = ((nextRotation % 4) + 4) % 4
     placement.item.bagRotation = placement.rotation
     return true
+  }
+
+  moveToCell(itemOrUid, index, rotation = null) {
+    const placement = this.placementOf(itemOrUid)
+    if (!placement) return false
+    const nextRotation = rotation == null ? placement.rotation : rotation
+    const origin = this.originForAnchorCell(placement.item, index, nextRotation)
+    return !!origin && this.move(placement.item.uid, origin.x, origin.y, nextRotation)
   }
 
   movePreferred(itemOrUid, x, y) {

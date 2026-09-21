@@ -259,6 +259,86 @@ button { font: inherit; }
   .relic-choice:not(.level-up) .relic-choice-card .relic-name { font-size: 12px; }
   .relic-choice:not(.level-up) .relic-choice-card .relic-desc { font-size: 9px; }
 }
+
+/* Inventory staging is a portrait-touch-only modal layer. It covers the title
+   and board, but stops exactly at the top edge of the backpack. */
+.inventory-staging {
+  position: fixed;
+  inset: 0 0 var(--hud-bottom-height);
+  z-index: 200;
+  display: grid;
+  grid-template-rows: 25% 75%;
+  pointer-events: auto;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.inventory-discard-zone,
+.inventory-stash-zone {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255,255,255,.16);
+  color: rgba(255,255,255,.86);
+  font-size: clamp(13px, 3.5vw, 18px);
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-shadow: 0 1px 3px rgba(0,0,0,.7);
+  touch-action: none;
+}
+.inventory-discard-zone {
+  background: rgba(132, 25, 34, .78);
+  border-color: rgba(255, 125, 130, .64);
+}
+.inventory-discard-zone.active { background: rgba(162, 25, 37, .86); }
+.inventory-stash-zone {
+  align-items: flex-start;
+  justify-content: flex-start;
+  background: rgba(25, 67, 125, .76);
+  border-color: rgba(118, 180, 255, .55);
+}
+.inventory-stash-zone.active { background: rgba(25, 77, 150, .84); }
+.inventory-zone-label {
+  position: absolute;
+  top: 8px;
+  left: 12px;
+  z-index: 1;
+  color: rgba(219,235,255,.7);
+  font-size: 10px;
+  letter-spacing: .1em;
+  pointer-events: none;
+}
+.stash-item {
+  position: absolute;
+  width: clamp(52px, 16vw, 84px);
+  height: clamp(52px, 16vw, 84px);
+  margin: 0;
+  transform: translate(-50%, -50%) scale(.96);
+  z-index: 2;
+  pointer-events: auto;
+  touch-action: none;
+}
+.stash-item-visual { border: 0; background: transparent; }
+.stash-item .bag-shape { inset: 0; }
+.inventory-drag-preview {
+  position: fixed;
+  z-index: 220;
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(1.08);
+  filter: drop-shadow(0 8px 12px rgba(0,0,0,.55));
+  opacity: .94;
+}
+.inventory-drag-preview .bag-shape { inset: 0; }
+.drag-source { opacity: .28; }
+.drop-valid { border-color: rgba(126, 238, 169, .92) !important; background: rgba(67, 158, 101, .3) !important; }
+.drop-replace { border-color: rgba(255, 224, 93, .96) !important; background: rgba(177, 137, 31, .34) !important; }
+.drop-blocked { border-color: rgba(255, 94, 94, .96) !important; background: rgba(163, 39, 45, .32) !important; }
+.drop-conflict { filter: saturate(.4) brightness(1.2); opacity: .72; }
+.inventory-staging .bag-shape .occupied { pointer-events: none; }
+.inventory-staging .bag-sprite { pointer-events: none; }
 @media(max-width:480px) { .craft-dialog { padding:12px; } .craft-row { gap:4px; } .craft-row button { padding:8px 5px; font-size:12px; } }
 .hud-top .hud-icon { width:30px; height:32px; flex-shrink:0; }
 .hud-top .hud-icon:disabled { opacity:.4; cursor:not-allowed; }

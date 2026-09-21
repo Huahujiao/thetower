@@ -80,6 +80,51 @@
         </button>
       </section>
     </div>
+    <section
+      v-if="inventoryStagingVisible" class="inventory-staging" :class="{ dragging: !!bagGesture?.dragging }"
+      aria-label="inventory staging area"
+    >
+      <div
+        ref="discardZone" class="inventory-discard-zone" :class="{ active: bagGesture?.dragging }"
+        @touchmove.stop.prevent="onStageTouchMove" @touchend.stop.prevent="onStageTouchEnd" @contextmenu.prevent
+      >{{ LABELS.discardZone }}</div>
+      <div
+        ref="stashZone" class="inventory-stash-zone" :class="{ active: bagGesture?.dragging }"
+        @touchmove.stop.prevent="onStageTouchMove" @touchend.stop.prevent="onStageTouchEnd" @contextmenu.prevent
+      >
+        <span class="inventory-zone-label">{{ LABELS.stashZone }}</span>
+        <div
+          v-for="entry in stashItems" :key="entry.item.uid" class="stash-item"
+          :class="entry.itemClasses" :style="entry.itemStyle"
+          @touchstart.stop.prevent="onStashTouchStart(entry.item, $event)"
+          @touchmove.stop.prevent="onStashTouchMove($event)"
+          @touchend.stop.prevent="onStashTouchEnd($event)"
+          @touchcancel.stop.prevent="onStashTouchCancel($event)" @contextmenu.prevent
+        >
+          <span class="bag-shape" :style="entry.shapeStyle">
+            <InventorySprite
+              v-if="entry.spriteSources" :sources="entry.spriteSources" :item-index="-1"
+              :style="entry.spriteStyle" @contextmenu.prevent
+            /><span
+              v-for="cell in entry.cells" :key="cell.index" class="occupied" :style="cell.style"
+            ></span>
+          </span>
+        </div>
+      </div>
+      <div
+        v-if="draggedItemView" class="inventory-drag-preview" :class="draggedItemView.itemClasses"
+        :style="draggedItemView.previewStyle"
+      >
+        <span class="bag-shape" :style="draggedItemView.shapeStyle">
+          <InventorySprite
+            v-if="draggedItemView.spriteSources" :sources="draggedItemView.spriteSources" :item-index="-1"
+            :style="draggedItemView.spriteStyle" @contextmenu.prevent
+          /><span
+            v-for="cell in draggedItemView.cells" :key="cell.index" class="occupied" :style="cell.style"
+          ></span>
+        </span>
+      </div>
+    </section>
     <section v-show="detailPanelVisible" class="detail-panel">
       <div class="detail-card" data-action="close-detail" @click="handleAction('close-detail')">
         <div class="detail-icon" aria-hidden="true">
@@ -359,16 +404,6 @@
 
     <div class="hud-bottom">
       <div class="backpack-toolbar" :aria-label="`${LABELS.health} ${LABELS.armor} ${LABELS.energy}`">
-        <div class="backpack-action-slot act-drop-slot">
-          <button
-            class="backpack-action act-drop" data-action="discard"
-            :hidden="!actionsAvailable || !state.selectedItem" :disabled="!actionsAvailable || !state.selectedItem"
-            @click="handleAction('discard')"
-          >
-            {{
-              LABELS.discard }}
-          </button>
-        </div>
         <div class="vital-armor" :title="LABELS.armor"><strong>{{ state.player.armor }}</strong></div>
         <div class="vital-bars">
           <div class="vital-health" :title="LABELS.health">
@@ -394,22 +429,17 @@
           >
             {{ LABELS.use }}
           </button>
-        </div><button
-          class="backpack-action bag-rotate" data-action="rotate-bag" :disabled="!selectedRotatable"
-          :title="LABELS.rotate" @click="handleAction('rotate-bag')"
-        >
-          ↻
-        </button>
+        </div>
       </div>
       <section class="backpack-panel">
         <div class="backpack-grid-wrap">
           <div
-            class="backpack-grid" data="backpack"
+            class="backpack-grid" data="backpack" ref="backpackGrid"
             :style="{ '--bag-columns': INVENTORY_COLUMNS, '--bag-rows': INVENTORY_ROWS }"
           >
             <button
               v-for="cell in backpackCells" :key="`cell-${cell.index}`" class="bag-cell"
-              :class="{ 'drop-valid': cell.action === 'move', 'selected-cell': cell.selected }"
+              :class="{ 'drop-valid': cell.action === 'move', 'drop-replace': cell.action === 'replace', 'drop-blocked': cell.action === 'blocked', 'drop-conflict': cell.action === 'replace-conflict', 'selected-cell': cell.selected }"
               :data-bag-cell="cell.index" :aria-label="cell.label"
               :style="{ gridColumn: cell.index % INVENTORY_COLUMNS + 1, gridRow: Math.floor(cell.index / INVENTORY_COLUMNS) + 1 }"
               @click.stop="onBagCellClick(cell.index)"
@@ -512,7 +542,7 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref, shallowRef, watch } from 'vue'
 import { merchantSellPrice } from '../game/data/merchants.js'
 import { getItemDefinition } from '../game/data/content.js'
 import { getRelicDefinition } from '../game/data/relics.js'
@@ -533,7 +563,7 @@ const LABELS = Object.freeze({
   close: '\u5173\u95ed', craft: '\u5408\u6210', status: '\u72b6\u6001', settings: '\u8bbe\u7f6e', camera: '\u89c6\u89d2', cameraAzimuth: '\u65cb\u8f6c\u89d2\u5ea6',
   cameraPitch: '\u4fef\u4ef0\u89d2\u5ea6', cameraPitchDecrease: '\u51cf\u5c0f\u4fef\u4ef0\u89d2\u5ea6', cameraPitchIncrease: '\u589e\u52a0\u4fef\u4ef0\u89d2\u5ea6',
   log: '\u65e5\u5fd7', copyLog: '\u590d\u5236\u65e5\u5fd7', copied: '\u5df2\u590d\u5236', copyFailed: '\u590d\u5236\u5931\u8d25',
-  reveal: '\u8c03\u8bd5\uff1a\u663e\u793a\u724c\u5185\u5bb9', discard: '\u4e22\u5f03', rotate: '\u65cb\u8f6c', use: '\u4f7f\u7528',
+  reveal: '\u8c03\u8bd5\uff1a\u663e\u793a\u724c\u5185\u5bb9', discard: '\u4e22\u5f03', discardZone: '\u4e22\u5f03', stashZone: '\u6682\u5b58', rotate: '\u65cb\u8f6c', use: '\u4f7f\u7528',
   empty: '\u7a7a', relics: '\u5723\u9057\u7269', relicOverload: '\u5723\u9057\u7269\u8d85\u8f7d', initialRelic: '\u9009\u62e9\u521d\u59cb\u5723\u9057\u7269',
   leaveMerchant: '\u79bb\u5f00', sold: '\u5df2\u552e\u7f44', buy: '\u8d2d\u4e70', merchantRelicsTab: '\u5723\u9057\u7269',
   noRelicsAvailable: '\u6682\u65e0\u53ef\u83b7\u5f97\u7684\u5723\u9057\u7269', relicChoice: '\u9009\u62e9\u4e00\u4ef6\u5723\u9057\u7269',
@@ -548,7 +578,7 @@ const TALENT_LINE_LABELS = Object.freeze({ flow: '\u6362\u52bf', guard: '\u5b88\
 const EDGE_NAMES = ['top', 'right', 'bottom', 'left']
 const HELP_SECTIONS = Object.freeze([
   { title: '\u884c\u52a8\u4e0e\u4f53\u529b', items: ['\u6bcf\u6b21\u79fb\u52a8\u3001\u7ffb\u724c\u3001\u62fe\u53d6\u548c\u666e\u901a\u4ea4\u4e92\u90fd\u4f1a\u63a8\u8fdb\u56de\u5408\u3002', '\u6b66\u5668\u653b\u51fb\u4f1a\u6d88\u8017\u4f53\u529b\uff0c\u4f7f\u7528\u7269\u54c1\u3001\u5408\u6210\u3001\u79fb\u52a8\u548c\u65cb\u8f6c\u4e5f\u53ef\u80fd\u63a8\u8fdb\u56de\u5408\u3002'] },
-  { title: '\u80cc\u5305\u4e0e\u5408\u6210', items: ['\u80cc\u5305\u662f 8 \u5217 4 \u884c\uff0c\u7269\u54c1\u6309\u5f62\u72b6\u5360\u683c\u3002', '\u70b9\u51fb\u9009\u62e9\u7269\u54c1\uff0c\u518d\u70b9\u51fb\u7a7a\u683c\u53ef\u79fb\u52a8\uff1b\u957f\u6309\u53ef\u67e5\u770b\u8be6\u60c5\u3002', '\u5408\u6210\u9762\u677f\u53ea\u663e\u793a\u5f53\u524d\u80cc\u5305\u53ef\u5408\u6210\u7684\u914d\u65b9\u3002'] },
+  { title: '\u80cc\u5305\u4e0e\u5408\u6210', items: ['\u80cc\u5305\u662f 8 \u5217 4 \u884c\uff0c\u7269\u54c1\u6309\u5f62\u72b6\u5360\u683c\u3002', '\u70b9\u6309\u7269\u54c1\u53ef\u9009\u4e2d\uff1b\u957f\u6309 300ms \u540e\u62d6\u52a8\u79fb\u52a8\uff0c\u4e0d\u518d\u7528\u70b9\u51fb\u7a7a\u683c\u79fb\u7269\u54c1\u3002', '\u62d6\u52a8\u65f6\u4f7f\u7528\u7ea2\u8272\u4e22\u5f03\u533a\u4e0e\u84dd\u8272\u6682\u5b58\u533a\uff0c\u7a7a\u6682\u5b58\u533a\u540e\u63a8\u8fdb\u4e00\u4e2a\u6574\u7406\u56de\u5408\u3002', '\u5408\u6210\u9762\u677f\u53ea\u663e\u793a\u5f53\u524d\u80cc\u5305\u53ef\u5408\u6210\u7684\u914d\u65b9\u3002'] },
   { title: '\u5929\u8d4b\u4e0e\u5723\u9057\u7269', items: ['\u5347\u7ea7\u65f6\u9009\u62e9\u5929\u8d4b\u8def\u7ebf\u6216\u5f3a\u5316\u4f53\u683c\u3002', '\u5723\u9057\u7269\u653e\u5728\u80cc\u5305\u4e2d\u5373\u53ef\u751f\u6548\uff0c\u79bb\u5f00\u623f\u95f4\u4e0d\u4f1a\u91cd\u7f6e\u3002'] },
   { title: '\u6218\u6597\u4e0e\u63a2\u7d22', items: ['\u9009\u62e9\u6b66\u5668\u540e\u70b9\u51fb\u654c\u4eba\u53d1\u8d77\u653b\u51fb\uff0c\u8fdc\u5904\u76ee\u6807\u4f1a\u5148\u9884\u89c8\u8def\u5f84\u3002', '\u957f\u6309\u68cb\u76d8\u6216\u80cc\u5305\u7269\u54c1\u67e5\u770b\u8be6\u60c5\uff0c\u8fde\u7eed\u79fb\u52a8\u89c6\u89d2\u53ef\u4f7f\u7528\u62d6\u62fd\u548c\u6eda\u8f6e\u7f29\u653e\u3002'] },
 ])
@@ -568,6 +598,13 @@ const reveal = ref(typeof localStorage !== 'undefined' && localStorage.getItem('
 // making the timer identity check incorrectly report every hold as stale.
 const hold = shallowRef(null)
 const LONG_PRESS_MS = 300
+const BAG_DRAG_TOLERANCE = 18
+const bagGesture = ref(null)
+const stashPositions = reactive({})
+const backpackGrid = ref(null)
+const discardZone = ref(null)
+const stashZone = ref(null)
+let bagGestureSequence = 0
 const detailPanelVisible = ref(false)
 let ignoreClicksUntil = 0
 const subscriptions = []
@@ -610,16 +647,6 @@ const craftAvailable = computed(() => {
 const selectedUsable = computed(() => {
   const item = selectedItem.value
   return actionsAvailable.value && !!item && ['potion', 'armor', 'energy', 'buff', 'cleanse', 'teleport'].includes(item.type)
-})
-const selectedRotatable = computed(() => {
-  const current = state.value
-  const item = selectedItem.value
-  if (!item || current.itemTargeting || !craftAvailable.value) return false
-  const placement = current.backpack.placementOf(item.uid)
-  if (!placement) return false
-  const shape = current.backpack.shapeFor(item, placement.rotation)
-  const nextShape = current.backpack.shapeFor(item, placement.rotation + 1)
-  return JSON.stringify(shape) !== JSON.stringify(nextShape)
 })
 /* Old top status text; replaced by the scene status tray. */
 /*
@@ -687,10 +714,36 @@ const talentLines = computed(() => {
     })),
   }))
 })
+const inventoryStagingVisible = computed(() => state.value.inventoryStash.length > 0 || !!bagGesture.value?.dragging)
+const dragPreview = computed(() => {
+  const gesture = bagGesture.value
+  if (!gesture?.dragging || !Number.isInteger(gesture.targetIndex)) return null
+  const preview = run.previewInventoryDrop(gesture.item, gesture.targetIndex, { rotation: gesture.rotation })
+  const validPreviewIndex = Number.isInteger(preview?.index) && preview.index >= 0 && preview.index < INVENTORY_COLUMNS * INVENTORY_ROWS
+  return preview?.status === 'blocked' && !validPreviewIndex
+    ? { ...preview, index: gesture.lastValidTargetIndex }
+    : preview
+})
 const backpackCells = computed(() => Array.from({ length: INVENTORY_COLUMNS * INVENTORY_ROWS }, (_, index) => {
   const current = state.value
   const placement = current.backpack.placementForCellIndex(index)
-  return { index, placement, action: run.previewInventoryCellAction(index), selected: placement?.item?.uid === selectedItem.value?.uid, label: placement?.item?.name || LABELS.empty }
+  const preview = dragPreview.value
+  const candidateCells = new Set((preview?.cells || []).map((cell) => cell.y * INVENTORY_COLUMNS + cell.x))
+  const conflictCells = new Set((preview?.conflicts || []).flatMap((conflict) => current.backpack.cellsForPlacement(conflict).map((cell) => cell.y * INVENTORY_COLUMNS + cell.x)))
+  const action = preview?.index === index
+    ? preview.status
+    : candidateCells.has(index)
+      ? preview?.status
+      : conflictCells.has(index)
+        ? 'replace-conflict'
+        : null
+  return {
+    index,
+    placement,
+    action,
+    selected: placement?.item?.uid === selectedItem.value?.uid,
+    label: placement?.item?.name || LABELS.empty,
+  }
 }))
 const backpackItems = computed(() => {
   const current = state.value
@@ -707,6 +760,8 @@ const backpackItems = computed(() => {
       style: { gridColumn: x + 1, gridRow: y + 1, borderWidth: edges.map((edge) => edge ? '1px' : '0').join(' ') },
     }))
     const oddRotation = placement.rotation % 2 === 1
+    const isDragging = bagGesture.value?.dragging && bagGesture.value.item?.uid === item.uid
+    const isConflict = dragPreview.value?.conflicts?.some((conflict) => conflict.item?.uid === item.uid)
     return {
       item,
       shape,
@@ -715,7 +770,7 @@ const backpackItems = computed(() => {
       originIndex,
       selected: current.selectedInventoryIndex === originIndex,
       spriteSources: itemSpriteSources(item),
-      itemClasses: ['bag-item', item.type, ...(itemSpriteSources(item) ? ['has-sprite'] : []), ...(item.attribute ? [`attribute-${item.attribute}`] : []), ...(item.type === 'relic' && run.relicOverload() > 0 ? ['overloaded'] : []), ...(current.selectedInventoryIndex === originIndex ? ['selected'] : [])],
+      itemClasses: ['bag-item', item.type, ...(itemSpriteSources(item) ? ['has-sprite'] : []), ...(item.attribute ? [`attribute-${item.attribute}`] : []), ...(item.type === 'relic' && run.relicOverload() > 0 ? ['overloaded'] : []), ...(current.selectedInventoryIndex === originIndex ? ['selected'] : []), ...(isDragging ? ['drag-source'] : []), ...(isConflict ? ['drop-conflict'] : [])],
       itemStyle: { gridColumn: `${placement.x + 1} / span ${shape[0].length}`, gridRow: `${placement.y + 1} / span ${shape.length}` },
       shapeStyle: { gridTemplateColumns: `repeat(${shape[0].length}, 1fr)`, gridTemplateRows: `repeat(${shape.length}, 1fr)` },
       nameStyle: layout.name ? { gridColumn: `${layout.name.x + 1} / span ${layout.name.width}`, gridRow: layout.name.y + 1 } : undefined,
@@ -723,6 +778,43 @@ const backpackItems = computed(() => {
       spriteStyle: { width: oddRotation ? `${shape.length / shape[0].length * 100}%` : '100%', height: oddRotation ? `${shape[0].length / shape.length * 100}%` : '100%', transform: `translate(-50%, -50%) rotate(${placement.rotation * 90}deg)` },
     }
   })
+})
+const stashItems = computed(() => state.value.inventoryStash.map((item, index) => {
+  const rotation = Number(item.bagRotation) || 0
+  const shape = run.backpack.shapeFor(item, rotation)
+  const layout = bagShapeLayout(shape)
+  const position = stashPositions[item.uid] || { x: 18 + (index % 3) * 27, y: 24 + Math.floor(index / 3) * 24 }
+  if (!stashPositions[item.uid]) stashPositions[item.uid] = position
+  return {
+    item,
+    cells: layout.cells.map(({ x, y, edges }) => ({ x, y, index: `${item.uid}-${x}-${y}`, style: { gridColumn: x + 1, gridRow: y + 1, borderWidth: edges.map((edge) => edge ? '1px' : '0').join(' ') } })),
+    shapeStyle: { gridTemplateColumns: `repeat(${shape[0].length}, 1fr)`, gridTemplateRows: `repeat(${shape.length}, 1fr)` },
+    spriteSources: itemSpriteSources(item),
+    spriteStyle: { width: rotation % 2 ? `${shape.length / shape[0].length * 100}%` : '100%', height: rotation % 2 ? `${shape[0].length / shape.length * 100}%` : '100%', transform: `translate(-50%, -50%) rotate(${rotation * 90}deg)` },
+    itemClasses: ['bag-item', 'stash-item-visual', item.type, ...(itemSpriteSources(item) ? ['has-sprite'] : []), ...(item.attribute ? [`attribute-${item.attribute}`] : [])],
+    itemStyle: { left: `${position.x}%`, top: `${position.y}%` },
+  }
+}))
+const draggedItemView = computed(() => {
+  const gesture = bagGesture.value
+  if (!gesture?.dragging) return null
+  const item = gesture.item
+  const shape = run.backpack.shapeFor(item, gesture.rotation)
+  const layout = bagShapeLayout(shape)
+  const rect = backpackGrid.value?.getBoundingClientRect?.()
+  const cellWidth = rect ? rect.width / INVENTORY_COLUMNS : 36
+  const cellHeight = rect ? rect.height / INVENTORY_ROWS : 36
+  return {
+    item,
+    cells: layout.cells.map(({ x, y, edges }) => ({ x, y, index: `${item.uid}-${x}-${y}`, style: { gridColumn: x + 1, gridRow: y + 1, borderWidth: edges.map((edge) => edge ? '1px' : '0').join(' ') } })),
+    shapeStyle: { gridTemplateColumns: `repeat(${shape[0].length}, 1fr)`, gridTemplateRows: `repeat(${shape.length}, 1fr)` },
+    spriteSources: itemSpriteSources(item),
+    spriteStyle: { width: gesture.rotation % 2 ? `${shape.length / shape[0].length * 100}%` : '100%', height: gesture.rotation % 2 ? `${shape[0].length / shape.length * 100}%` : '100%', transform: `translate(-50%, -50%) rotate(${gesture.rotation * 90}deg)` },
+    itemClasses: ['bag-item', 'drag-floating', item.type, ...(itemSpriteSources(item) ? ['has-sprite'] : []), ...(item.attribute ? [`attribute-${item.attribute}`] : [])],
+    previewStyle: {
+      left: `${gesture.pointerX}px`, top: `${gesture.pointerY}px`, width: `${cellWidth * shape[0].length}px`, height: `${cellHeight * shape.length}px`,
+    },
+  }
 })
 const initialRelics = computed(() => {
   const current = state.value
@@ -793,8 +885,9 @@ function chooseMerchantRelic(id) { run.chooseMerchantRelic(id) }
 function selectMerchantTab(tab) { merchantTab.value = tab }
 function onBagCellClick(index) {
   if (Date.now() < ignoreClicksUntil) return
-  if (run.itemTargeting) run.clearSelection()
-  else run.clickInventoryCell(index)
+  if (run.itemTargeting) return run.clearSelection()
+  const placement = run.backpack.placementForCellIndex(index)
+  if (placement) run.selectInventory(index)
 }
 function restartGame() {
   closeDetailPanel()
@@ -885,6 +978,9 @@ function touchPoint(event, identifier = null) {
   const points = [...(event.touches || []), ...(event.changedTouches || [])]
   return points.find((point) => identifier == null || point.identifier === identifier) || null
 }
+function changedTouch(event, identifier) {
+  return [...(event.changedTouches || [])].find((point) => point.identifier === identifier) || null
+}
 function cancelLongPress() {
   if (hold.value?.timer) window.clearTimeout(hold.value.timer)
   hold.value = null
@@ -902,15 +998,282 @@ function startLongPress(openDetail, event) {
   }, LONG_PRESS_MS)
   hold.value = nextHold
 }
+function refreshBagGesture(session) { bagGesture.value = { ...session } }
+function gridIndexAtPoint(x, y) {
+  const rect = backpackGrid.value?.getBoundingClientRect?.()
+  if (!rect || x < rect.left || x >= rect.right || y < rect.top || y >= rect.bottom) return null
+  const column = Math.floor((x - rect.left) / rect.width * INVENTORY_COLUMNS)
+  const row = Math.floor((y - rect.top) / rect.height * INVENTORY_ROWS)
+  if (column < 0 || row < 0 || column >= INVENTORY_COLUMNS || row >= INVENTORY_ROWS) return null
+  return row * INVENTORY_COLUMNS + column
+}
+function pointInZone(zone, x, y) {
+  const rect = zone.value?.getBoundingClientRect?.()
+  return !!rect && x >= rect.left && x < rect.right && y >= rect.top && y < rect.bottom
+}
+function stashPositionAtPoint(x, y) {
+  const rect = stashZone.value?.getBoundingClientRect?.()
+  if (!rect) return { x: 50, y: 50 }
+  return {
+    x: Math.max(16, Math.min(84, (x - rect.left) / Math.max(1, rect.width) * 100)),
+    y: Math.max(18, Math.min(82, (y - rect.top) / Math.max(1, rect.height) * 100)),
+  }
+}
+function clearBagGesture({ closeDetail = true } = {}) {
+  const session = bagGesture.value
+  if (session?.timer) window.clearTimeout(session.timer)
+  bagGesture.value = null
+  if (closeDetail && session?.detailOpened) closeDetailPanel()
+}
+function beginBagDrag(session, point = null) {
+  if (session.dragging) return
+  if (session.timer) window.clearTimeout(session.timer)
+  closeDetailPanel()
+  session.dragging = true
+  session.pointerX = point?.clientX ?? session.pointerX
+  session.pointerY = point?.clientY ?? session.pointerY
+  session.targetIndex = gridIndexAtPoint(session.pointerX, session.pointerY) ?? session.originIndex
+  session.lastValidTargetIndex = session.targetIndex
+  refreshBagGesture(session)
+}
+function rotationTargetIndex(session, nextRotation) {
+  if (!Number.isInteger(session.targetIndex)) return session.targetIndex
+  const currentShape = run.backpack.shapeFor(session.item, session.rotation)
+  const nextShape = run.backpack.shapeFor(session.item, nextRotation)
+  const currentOrigin = run.backpack.originForAnchorCell(session.item, session.targetIndex, session.rotation)
+  if (!currentOrigin) return session.targetIndex
+  const centerX = currentOrigin.x + (currentShape[0].length - 1) / 2
+  const centerY = currentOrigin.y + (currentShape.length - 1) / 2
+  const nextOrigin = {
+    x: Math.round(centerX - (nextShape[0].length - 1) / 2),
+    y: Math.round(centerY - (nextShape.length - 1) / 2),
+  }
+  const anchor = run.backpack.anchorFor(session.item, nextRotation)
+  return (nextOrigin.y + anchor.y) * INVENTORY_COLUMNS + nextOrigin.x + anchor.x
+}
+function rotateBagGesture() {
+  const session = bagGesture.value
+  if (!session || session.item?.rotatable === false || (!session.detailOpened && !session.dragging)) return
+  if (!session.dragging) beginBagDrag(session)
+  const nextRotation = (session.rotation + 1) % 4
+  session.targetIndex = rotationTargetIndex(session, nextRotation)
+  session.rotation = nextRotation
+  refreshBagGesture(session)
+}
 function onBagTouchStart(index, event) {
+  if (run.itemTargeting) return
+  const active = bagGesture.value
+  if (active && event.touches?.length > 1) {
+    event.preventDefault()
+    const secondary = [...event.touches].find((touch) => touch.identifier !== active.identifier)
+    if (!secondary || active.rotationTouch === secondary.identifier) return
+    active.rotationTouch = secondary.identifier
+    rotateBagGesture()
+    return
+  }
   const item = run.backpack.placementForCellIndex(index)?.item
   if (!item) return
-
   event.stopPropagation()
   event.preventDefault()
-  startLongPress(() => openItemDetail(item), event)
-  if (hold.value) hold.value.index = index
+  const point = touchPoint(event)
+  if (!point) return
+  clearBagGesture({ closeDetail: false })
+  const placement = run.backpack.placementOf(item.uid)
+  const session = {
+    token: ++bagGestureSequence,
+    identifier: point.identifier,
+    item,
+    source: 'backpack',
+    originIndex: run.backpack.originIndex(placement),
+    rotation: placement?.rotation || 0,
+    pointerX: point.clientX,
+    pointerY: point.clientY,
+    startX: point.clientX,
+    startY: point.clientY,
+    targetIndex: null,
+    moved: false,
+    detailOpened: false,
+    dragging: false,
+    timer: null,
+  }
+  session.timer = window.setTimeout(() => {
+    if (bagGesture.value?.token !== session.token) return
+    session.detailOpened = Boolean(openItemDetail(item))
+    refreshBagGesture(session)
+  }, LONG_PRESS_MS)
+  bagGesture.value = session
 }
+function onStashTouchStart(item, event) {
+  if (run.itemTargeting) return
+  const active = bagGesture.value
+  if (active && event.touches?.length > 1) {
+    event.preventDefault()
+    const secondary = [...event.touches].find((touch) => touch.identifier !== active.identifier)
+    if (!secondary || active.rotationTouch === secondary.identifier) return
+    active.rotationTouch = secondary.identifier
+    rotateBagGesture()
+    return
+  }
+  event.stopPropagation()
+  event.preventDefault()
+  const point = touchPoint(event)
+  if (!point) return
+  clearBagGesture({ closeDetail: false })
+  const session = {
+    token: ++bagGestureSequence,
+    identifier: point.identifier,
+    item,
+    source: 'stash',
+    originIndex: null,
+    rotation: Number(item.bagRotation) || 0,
+    pointerX: point.clientX,
+    pointerY: point.clientY,
+    startX: point.clientX,
+    startY: point.clientY,
+    targetIndex: null,
+    moved: false,
+    detailOpened: false,
+    dragging: false,
+    timer: null,
+  }
+  session.timer = window.setTimeout(() => {
+    if (bagGesture.value?.token !== session.token) return
+    session.detailOpened = Boolean(openItemDetail(item))
+    refreshBagGesture(session)
+  }, LONG_PRESS_MS)
+  bagGesture.value = session
+}
+function updateBagGesturePoint(point) {
+  const session = bagGesture.value
+  if (!session || !point || point.identifier !== session.identifier) return
+  session.pointerX = point.clientX
+  session.pointerY = point.clientY
+  session.targetIndex = gridIndexAtPoint(point.clientX, point.clientY)
+  if (Number.isInteger(session.targetIndex)) session.lastValidTargetIndex = session.targetIndex
+  refreshBagGesture(session)
+}
+function onBagTouchMove(event) {
+  const session = bagGesture.value
+  const point = touchPoint(event, session?.identifier)
+  if (!session || !point) return
+  const distance = Math.hypot(point.clientX - session.startX, point.clientY - session.startY)
+  if (!session.dragging) {
+    if (distance <= BAG_DRAG_TOLERANCE) return
+    session.moved = true
+    if (!session.detailOpened) {
+      clearBagGesture({ closeDetail: false })
+      return
+    }
+    beginBagDrag(session, point)
+  }
+  event.preventDefault()
+  updateBagGesturePoint(point)
+}
+function finishBagSession({ changed = false } = {}) {
+  if (changed) run.inventoryChanged({ advanceTurn: run.inventoryStash.length === 0 })
+  clearBagGesture()
+}
+function commitBagGesture() {
+  const session = bagGesture.value
+  if (!session?.dragging) return false
+  const { item } = session
+  const x = session.pointerX
+  const y = session.pointerY
+  const stashBefore = run.inventoryStash.length
+  if (pointInZone(discardZone, x, y)) {
+    const changed = run.discardInventoryItem(item.uid, { notify: false })
+    finishBagSession({ changed })
+    return changed
+  }
+  if (pointInZone(stashZone, x, y)) {
+    if (session.source === 'backpack') {
+      run.backpack.removeByUid(item.uid)
+      item.bagRotation = session.rotation
+      run.stageInventoryItem(item, { notify: false })
+      stashPositions[item.uid] = stashPositionAtPoint(x, y)
+    } else {
+      stashPositions[item.uid] = stashPositionAtPoint(x, y)
+      item.bagRotation = session.rotation
+    }
+    run.inventoryChanged({ advanceTurn: false })
+    clearBagGesture()
+    return true
+  }
+  const targetIndex = session.targetIndex
+  const preview = targetIndex == null ? null : run.previewInventoryDrop(item, targetIndex, { rotation: session.rotation })
+  if (!preview || preview.status === 'blocked') {
+    clearBagGesture()
+    return false
+  }
+  const result = run.applyInventoryDrop(item, targetIndex, { rotation: session.rotation, replace: true })
+  if (!result) {
+    clearBagGesture()
+    return false
+  }
+  for (const conflict of result.conflicts) {
+    run.stageInventoryItem(conflict, { notify: false })
+    stashPositions[conflict.uid] ||= stashPositionAtPoint(x, y)
+  }
+  const nextPlacement = run.backpack.placementOf(item.uid)
+  const moved = session.source === 'stash'
+    || !nextPlacement
+    || nextPlacement.x !== preview.x
+    || nextPlacement.y !== preview.y
+    || nextPlacement.rotation !== preview.rotation
+  run.inventoryChanged({ advanceTurn: moved && (stashBefore === 0 || run.inventoryStash.length === 0) })
+  clearBagGesture()
+  return moved
+}
+function onBagTouchEnd(event) {
+  const session = bagGesture.value
+  if (!session || !changedTouch(event, session.identifier)) return
+  if (session.timer) window.clearTimeout(session.timer)
+  if (session.dragging) {
+    ignoreClicksUntil = Date.now() + 250
+    commitBagGesture()
+    return
+  }
+  if (session.detailOpened) {
+    closeDetailPanel()
+    ignoreClicksUntil = Date.now() + 250
+  }
+  else if (!session.moved && session.source === 'backpack') {
+    onBagCellClick(session.originIndex)
+    ignoreClicksUntil = Date.now() + 250
+  }
+  clearBagGesture({ closeDetail: false })
+}
+function onBagTouchCancel() { clearBagGesture() }
+function onInteractionInterrupt() { onBagTouchCancel(); cancelLongPress() }
+function onStashTouchMove(event) { onBagTouchMove(event) }
+function onStashTouchEnd(event) { onBagTouchEnd(event) }
+function onStashTouchCancel() { onBagTouchCancel() }
+function onStageTouchMove(event) { onBagTouchMove(event) }
+function onStageTouchEnd(event) { onBagTouchEnd(event) }
+function onWindowTouchStart(event) {
+  const session = bagGesture.value
+  if (!session || (!session.detailOpened && !session.dragging) || event.touches?.length < 2) return
+  const secondary = [...event.touches].find((touch) => touch.identifier !== session.identifier)
+  if (!secondary || session.rotationTouch === secondary.identifier) return
+  event.preventDefault()
+  session.rotationTouch = secondary.identifier
+  rotateBagGesture()
+}
+function onWindowTouchMove(event) {
+  const session = bagGesture.value
+  if (!session?.dragging) return
+  const point = touchPoint(event, session.identifier)
+  if (!point) return
+  event.preventDefault()
+  updateBagGesturePoint(point)
+}
+function onWindowTouchEnd(event) {
+  const session = bagGesture.value
+  if (!session) return
+  if (session.rotationTouch != null && ![...(event.touches || [])].some((touch) => touch.identifier === session.rotationTouch)) session.rotationTouch = null
+  if (changedTouch(event, session.identifier)) onBagTouchEnd(event)
+}
+function onWindowTouchCancel() { onBagTouchCancel() }
 function onStatusTouchStart(entry, event) {
   startLongPress(() => openStatusDetail(entry), event)
 }
@@ -927,7 +1290,7 @@ function onTouchMove(event) {
 }
 function onTouchEnd(event) {
   const current = hold.value
-  if (!current || !touchPoint(event, current.identifier)) return
+  if (!current || !changedTouch(event, current.identifier)) return
   if (current.timer) window.clearTimeout(current.timer)
   hold.value = null
   if (!current.opened) {
@@ -939,13 +1302,9 @@ function onTouchEnd(event) {
 }
 function onTouchCancel(event) {
   const current = hold.value
-  if (!current || !touchPoint(event, current.identifier)) return
+  if (!current || !changedTouch(event, current.identifier)) return
   cancelLongPress()
 }
-function onBagTouchMove(event) { onTouchMove(event) }
-function onBagTouchEnd(event) { onTouchEnd(event) }
-function onBagTouchCancel(event) { onTouchCancel(event) }
-
 function handleAction(action, value = null) {
   if (Date.now() < ignoreClicksUntil) return
   if (action === 'craft-result') { run.craft(value); return }
@@ -962,8 +1321,6 @@ function handleAction(action, value = null) {
   if (action === 'craft-open') { if (craftAvailable.value) craftOpen.value = true; return }
   if (action === 'craft-close') { craftOpen.value = false; return }
   if (action === 'use') run.useSelected()
-  if (action === 'discard') run.discardSelected()
-  if (action === 'rotate-bag') run.rotateSelectedInventory()
   if (action === 'camera-pitch-minus') { scene.value?.adjustCameraPitch(-1); uiRevision.value++ }
   if (action === 'camera-pitch-plus') { scene.value?.adjustCameraPitch(1); uiRevision.value++ }
   if (action === 'restart') restartGame()
@@ -1013,10 +1370,23 @@ onMounted(() => {
   }))
   scene.value = new GameScene(run, sceneContainer.value)
   run.setDebugReveal(reveal.value)
+  window.addEventListener('touchstart', onWindowTouchStart, { passive: false, capture: true })
+  window.addEventListener('touchmove', onWindowTouchMove, { passive: false })
+  window.addEventListener('touchend', onWindowTouchEnd, { passive: false })
+  window.addEventListener('touchcancel', onWindowTouchCancel, { passive: false, capture: true })
+  window.addEventListener('blur', onInteractionInterrupt)
+  document.addEventListener('visibilitychange', onInteractionInterrupt)
 })
 onBeforeUnmount(() => {
+  window.removeEventListener('touchstart', onWindowTouchStart, true)
+  window.removeEventListener('touchmove', onWindowTouchMove)
+  window.removeEventListener('touchend', onWindowTouchEnd)
+  window.removeEventListener('touchcancel', onWindowTouchCancel, true)
+  window.removeEventListener('blur', onInteractionInterrupt)
+  document.removeEventListener('visibilitychange', onInteractionInterrupt)
   for (const unsubscribe of subscriptions) unsubscribe?.()
   cancelLongPress()
+  clearBagGesture()
   scene.value?.dispose()
 })
 </script>

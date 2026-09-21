@@ -48,6 +48,10 @@
 
 ## Mobile portrait input contract
 
+## Inventory staging interaction
+
+Backpack movement is touch-only. A 300 ms hold on an occupied item opens details; moving more than 18 px after the hold enters drag mode. Taps select an item for use or combat and never move it. The first occupied cell of the rotated shape is the placement anchor. Green, yellow, and red previews mean accepted, replace-to-staging, and illegal respectively. The red discard zone occupies 25 percent of the area above the backpack; the blue free-form staging canvas occupies the remaining 75 percent. Staging remains visible until empty, and clearing it advances one organize turn. A second touch rotates the dragged item clockwise by 90 degrees. Cancel, blur, visibility changes, and invalid release restore the original state.
+
 The product target is a portrait mobile phone with touch input only. Desktop, keyboard, mouse, stylus, and landscape layouts are outside the supported contract. Inventory long press uses the occupied-cell Vue touch handlers and a 300 ms threshold; do not add desktop pointer compatibility code to the inventory interaction path. For irregular L/T shapes, void cells and the sprite image are excluded from touch hit testing.
 
 ## Scene status tray
@@ -65,3 +69,6 @@ Every tile crossed during a movement path visibly depresses when the character l
 The backpack surface has no overall border. Weapon tiers use Roman numerals in the detail panel, with crafted results displayed as II. Details show the item sprite in the reserved icon slot when mapped, while ordinary items have no attribute badge. Relic selection uses a full-screen dimmer and borderless cards ordered name, image, and compact description; the description area starts at the top-left of its lower card section.
 
 右上角日志按钮打开日志面板。日志按最新事件在前显示；当玩家受到致命伤害时，“你倒下了（原因：……）”会被置于顶部，后续同一过程的事件排在其后。日志面板提供“复制日志”按钮，将当前显示的日志复制到系统剪贴板，不再提供发送或分享日志功能。胜败提示使用局部浮层，不遮挡日志按钮。
+## Combat animation rendering note
+
+Attack presentation stays within the original character/card plane size. Each frame redraws its temporary pose from an identity canvas transform, so the 0.5-second animation cannot accumulate bitmap scaling or crop the character to a corner.

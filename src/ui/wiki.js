@@ -14,8 +14,9 @@ const COPY = Object.freeze({
   statusNote: '\u72b6\u6001\u56fe\u6807\u951a\u5b9a\u4e8e\u4e09\u7ef4\u573a\u666f\u5de6\u4e0b\u89d2\uff0c\u4ece\u5de6\u5411\u53f3\u6392\u5217\uff1a\u5148\u4ee5\u72b6\u6001\u540d\u9996\u5b57\u8868\u793a\uff0c\u89d2\u6807\u663e\u793a\u5269\u4f59\u56de\u5408\u6216\u8ba1\u6570\uff0c\u957f\u6309\u67e5\u770b\u8be6\u60c5\u3002\u4ec5\u663e\u793a\u4e2d\u6bd2\u3001\u71c3\u70e7\u4e0e\u559d\u9152\u7b49\u4e34\u65f6 Buff/Debuff\uff1b\u5723\u9057\u7269\u3001\u6563\u4ef6\u5e38\u9a7b\u72b6\u6001\u4e0d\u663e\u793a\u3002',
   boundaryNote: '\u623f\u95f4\u56f4\u5899\u4e0d\u56e0\u89d2\u8272\u9760\u8fd1\u6216\u79bb\u5f00\u800c\u9690\u85cf\uff1b\u5357\u9762\u53ea\u56fa\u5b9a\u4e0d\u751f\u6210\u4e2d\u95f4\u67f1\u5b50\uff0c\u4e24\u7aef\u67f1\u5b50\u4fdd\u7559\u3002',
   footprintNote: '\u89d2\u8272\u79fb\u52a8\u65f6\uff0c\u8def\u5f84\u4e0a\u6bcf\u4e2a\u843d\u811a\u683c\u90fd\u4f1a\u4e0b\u6c89\uff1b\u5230\u8fbe\u4e0b\u4e00\u683c\u540e\uff0c\u524d\u4e00\u683c\u624d\u62ac\u8d77\uff0c\u6700\u540e\u4e00\u683c\u5219\u5728\u4e0b\u6b21\u63a8\u8fdb\u56de\u5408\u540e\u62ac\u8d77\u3002',
-  attackNote: '\u653b\u51fb\u52a8\u753b\u6682\u65f6\u8bbe\u4e3a 0.5 \u79d2\uff1a\u73a9\u5bb6\u62ac\u8d77\u53cc\u624b\u5e76\u6536\u62e2\u53cc\u811a\uff0c\u654c\u4eba\u62ac\u5934\u5e76\u5de6\u53f3\u6447\u52a8\u4e09\u89d2\u8eab\u4f53\u4e24\u6b21\uff1b\u540c\u4e00\u56de\u5408\u6309\u987a\u5e8f\u9010\u4e2a\u64ad\u653e\u3002',
+  attackNote: '\u653b\u51fb\u52a8\u753b\u6682\u65f6\u8bbe\u4e3a 0.5 \u79d2\uff1a\u73a9\u5bb6\u62ac\u8d77\u53cc\u624b\u5e76\u6536\u62e2\u53cc\u811a\uff0c\u654c\u4eba\u62ac\u5934\u5e76\u5de6\u53f3\u6447\u52a8\u4e09\u89d2\u8eab\u4f53\u4e24\u6b21\uff1b\u540c\u4e00\u56de\u5408\u6309\u987a\u5e8f\u9010\u4e2a\u64ad\u653e\u3002\u6bcf\u5e27\u91cd\u7f6e canvas \u53d8\u6362\u540e\u91cd\u7ed8\uff0c\u907f\u514d\u653b\u51fb\u65f6\u7f29\u653e\u7d2f\u79ef\u5bfc\u81f4\u88c1\u526a\u3002',
   spriteNote: '\u80cc\u5305\u4e0e\u5730\u9762\u7269\u54c1\u7cbe\u7075\u56fe\u5df2\u8986\u76d6\u5168\u90e844\u4ef6\u7269\u54c1\uff1a18\u628a\u6b66\u5668\u30018\u4ef6\u9632\u5177\u30016\u79cd\u6d88\u8017\u54c1\u30016\u79cd\u6750\u6599\u548c6\u4ef6\u5723\u9057\u7269\uff1b\u6309\u5360\u683c\u5f62\u72b6\u52a0\u8f7d\u900f\u660e small/medium \u8d44\u6e90\u3002',
+  inventoryNote: 'Inventory is touch-only: hold an occupied item for 300 ms, move more than 18 px to drag, and use a second touch for clockwise 90-degree rotation. Green, yellow, and red previews mean accept, replace-to-staging, and illegal. The red discard zone and blue free-form staging canvas cover the area above the backpack and remain until staging is empty.',
   implemented: '\u5df2\u5b9e\u88c5',
   back: '\u8fd4\u56de\u5730\u7262',
   enemies: '\u654c\u4eba',
@@ -108,7 +109,7 @@ const TABS = Object.freeze([
 
 const WEAPON_ENERGY_COSTS = Object.freeze({ dagger: 2, sword: 3, axe: 4, polearm: 4, bow: 4, heavy: 5 })
 const LINT_NOTE = 'ESLint status: clean.'
-const INPUT_NOTE = 'Supported device: portrait mobile touch only; click and long press handlers are bound to each target; inventory long press threshold: 300 ms; detail visibility follows the active hold; door confirmation accepts the door or its arrival marker and waits for queued movement and reveal animations to finish.'
+const INPUT_NOTE = 'Supported device: portrait mobile touch only; click and long press handlers are bound to each target; inventory uses a 300 ms hold, 18 px drag tolerance, shape anchors, staging, discard, and multi-touch rotation; detail visibility follows the active hold; door confirmation accepts the door or its arrival marker and waits for queued movement and reveal animations to finish.'
 
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[character]))
@@ -287,7 +288,7 @@ export class WikiPage {
     this.root.innerHTML = `<main class="wiki-shell">
       <header class="wiki-header">
         <a class="wiki-back" href="/" aria-label="${COPY.back}">\u2190</a>
-      <div><div class="wiki-kicker">${COPY.subtitle}</div><h1>${COPY.title}</h1><p class="wiki-summary">${COPY.summary}</p><p class="wiki-input-note">${COPY.statusNote}</p><p class="wiki-input-note">${COPY.boundaryNote}</p><p class="wiki-input-note">${COPY.footprintNote}</p><p class="wiki-input-note">${COPY.attackNote}</p><p class="wiki-input-note">${COPY.spriteNote}</p><p class="wiki-lint-note">${LINT_NOTE}</p><p class="wiki-input-note">${INPUT_NOTE}</p></div>
+      <div><div class="wiki-kicker">${COPY.subtitle}</div><h1>${COPY.title}</h1><p class="wiki-summary">${COPY.summary}</p><p class="wiki-input-note">${COPY.statusNote}</p><p class="wiki-input-note">${COPY.boundaryNote}</p><p class="wiki-input-note">${COPY.footprintNote}</p><p class="wiki-input-note">${COPY.attackNote}</p><p class="wiki-input-note">${COPY.spriteNote}</p><p class="wiki-input-note">${COPY.inventoryNote}</p><p class="wiki-lint-note">${LINT_NOTE}</p><p class="wiki-input-note">${INPUT_NOTE}</p></div>
       </header>
       <nav class="wiki-tabs" role="tablist">${TABS.map((tab) => `<button data-wiki-tab="${tab.id}" role="tab">${tab.label}</button>`).join('')}</nav>
       <section class="wiki-content" data-wiki-content></section>
