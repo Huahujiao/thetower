@@ -170,7 +170,7 @@ button { font: inherit; }
 }
 
 /* Lower HUD: eight backpack columns use nearly the full available width. */
-#hud { --hud-grid-cell: calc((100vw - 32px) / 8); --hud-toolbar-height: max(var(--hud-action-height), var(--hud-grid-cell)); --hud-bottom-height: calc(min(48dvh, 420px) + var(--hud-toolbar-height) + 22px + env(safe-area-inset-bottom)); }
+#hud { --hud-grid-cell: calc((100vw - 32px) / 8); --hud-toolbar-height: max(var(--hud-action-height), var(--hud-grid-cell)); --hud-backpack-height: calc((100vw - 16px) / 2); --hud-bottom-height: calc(var(--hud-toolbar-height) + var(--hud-backpack-height) + 18px + env(safe-area-inset-bottom)); }
 .hud-bottom { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); grid-template-rows: var(--hud-toolbar-height) auto; column-gap: 2px; row-gap: 5px; width: 100%; padding: 6px 8px calc(7px + env(safe-area-inset-bottom)); }
 .backpack-panel { grid-column: 1 / -1; grid-row: 2; display: block; min-width: 0; }
 .backpack-toolbar { position: relative; grid-column: 1 / -1; grid-row: 1; display: grid; grid-template-columns: 1.5fr 1fr 4fr 1.5fr 1fr; align-items: center; gap: 2px; width: 100%; height: var(--hud-toolbar-height); min-width: 0; min-height: var(--hud-toolbar-height); pointer-events: none; }
@@ -206,7 +206,7 @@ button { font: inherit; }
 .craft-dialog p { color:#b9bebf; font-size:13px; }
 .craft-row { display:grid; grid-template-columns:1fr auto 1fr auto 1fr auto; align-items:center; gap:7px; padding:12px 0; border-bottom:1px solid #ffffff20; }
 .craft-row .craft-item { padding:10px 5px; font-size:13px; touch-action:none; user-select:none; }
-.detail-panel { z-index:130; display: block; }
+.detail-panel { z-index: 240; display: block; }
 
 .bag-item.defense { --bag-fill:#485860; }
 .bag-item.material { --bag-fill:#65573d; }

@@ -56,7 +56,7 @@ The project lint policy is defined in `eslint.config.js` and runs with `npm.cmd 
 
 ## Inventory staging notes
 
-The production and white-line skins share the same 300 ms hold, 18 px movement tolerance, shape-anchor placement, green/yellow/red drop preview, free-form staging canvas, discard zone, and multi-touch clockwise rotation. Staged items are serialized with the run, remain visible while the canvas is non-empty, and are resolved before scene interaction resumes. The `/wiki` reference should describe these controls as touch-only and should not document the removed discard or rotate toolbar buttons.
+The production and white-line skins share the same 300 ms hold, 18 px movement tolerance, shape-anchor placement, green/yellow/red drop preview, free-form staging canvas, discard zone, and multi-touch clockwise rotation. The staging layer ends at the real top edge of the 8x4 backpack: its discard row fills the upper 25 percent and its stash row fills the remaining 75 percent of that whole available region. The detail panel is deliberately stacked above those two zones for inspection during cleanup. Staged items are serialized with the run, remain visible while the canvas is non-empty, and are resolved before scene interaction resumes. The `/wiki` reference should describe these controls as touch-only and should not document the removed discard or rotate toolbar buttons.
 
 The game HUD is mounted by Vue 3 while the board remains Three.js. Because `GameRun` is intentionally a plain event-driven model, all mutable HUD projections subscribe through the shared revision tick. This keeps initial relic selection, room rewards, level-up choices, merchant stock, backpack movement, action visibility, and status panels synchronized after each model change.
 
@@ -100,7 +100,7 @@ Room boundary walls do not respond to the player's nearby position. The south wa
 
 ## Movement footprints
 
-All crossed movement tiles now depress on arrival. A footprint remains pressed through the following movement turn before lifting, and the final landing tile lifts when a later action advances the global turn. This is visual feedback only and does not change movement range, route cost, or combat rules.
+All crossed movement tiles now depress on arrival. A footprint remains pressed through the following movement turn before lifting, and the final landing tile lifts when a later action advances the global turn. The camera-facing south boundary has a fixed layer above the southernmost tile row, so a pressed tile never jumps in front of the wall merely because its surface moved downward. This is visual feedback only and does not change movement range, route cost, or combat rules.
 
 The backpack has no outer frame; only its cells and item outlines remain visible. Weapon tiers use Roman numerals in the detail panel only (I for ordinary weapons, II for crafted weapons). The detail panel uses its icon slot for the matching item sprite when one exists, and ordinary items do not show weapon attribute badges. Relic selection is a borderless, full-screen dimmed overlay whose cards read from top to bottom as name, image, and compact description; the lower description area is top-left aligned.
 

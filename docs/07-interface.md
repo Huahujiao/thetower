@@ -50,7 +50,7 @@
 
 ## Inventory staging interaction
 
-Backpack movement is touch-only. A 300 ms hold on an occupied item opens details; moving more than 18 px after the hold enters drag mode. Taps select an item for use or combat and never move it. The first occupied cell of the rotated shape is the placement anchor. Green, yellow, and red previews mean accepted, replace-to-staging, and illegal respectively. The red discard zone occupies 25 percent of the area above the backpack; the blue free-form staging canvas occupies the remaining 75 percent. Staging remains visible until empty, and clearing it advances one organize turn. A second touch rotates the dragged item clockwise by 90 degrees. Cancel, blur, visibility changes, and invalid release restore the original state.
+Backpack movement is touch-only. A 300 ms hold on an occupied item opens details; moving more than 18 px after the hold enters drag mode. Taps select an item for use or combat and never move it. The first occupied cell of the rotated shape is the placement anchor. Green, yellow, and red previews mean accepted, replace-to-staging, and illegal respectively. The red discard zone occupies exactly 25 percent of the full viewport area above the backpack; the blue free-form staging canvas occupies the remaining 75 percent and meets the backpack without a gap. The detail panel is layered above both zones, so staged items can still be inspected. Staging remains visible until empty, and clearing it advances one organize turn. A second touch rotates the dragged item clockwise by 90 degrees. Cancel, blur, visibility changes, and invalid release restore the original state.
 
 The product target is a portrait mobile phone with touch input only. Desktop, keyboard, mouse, stylus, and landscape layouts are outside the supported contract. Inventory long press uses the occupied-cell Vue touch handlers and a 300 ms threshold; do not add desktop pointer compatibility code to the inventory interaction path. For irregular L/T shapes, void cells and the sprite image are excluded from touch hit testing.
 
@@ -64,7 +64,7 @@ The teleport talisman reaches a revealed empty cell within Manhattan distance 6.
 
 Room walls are fixed boundary geometry. Leaving a tile beside the south wall must not hide or replace that wall; the only south-side visibility exception is the permanent omission of interior pillars, while both corner pillars remain.
 
-Every tile crossed during a movement path visibly depresses when the character lands on it. The preceding footprint starts to rise only after the following movement turn lands, and the final footprint rises when a later global-turn-advancing action occurs.
+Every tile crossed during a movement path visibly depresses when the character lands on it. The preceding footprint starts to rise only after the following movement turn lands, and the final footprint rises when a later global-turn-advancing action occurs. A pressed tile keeps its fixed row-based visual ordering; the camera-facing south wall remains above the nearest row rather than being covered by a temporary downward offset.
 
 The backpack surface has no overall border. Weapon tiers use Roman numerals in the detail panel, with crafted results displayed as II. Details show the item sprite in the reserved icon slot when mapped, while ordinary items have no attribute badge. Relic selection uses a full-screen dimmer and borderless cards ordered name, image, and compact description; the description area starts at the top-left of its lower card section.
 

@@ -844,6 +844,7 @@ export class GameScene {
     const point = this._boundaryPosition(room, side, offset)
     const wall = createLowPolyWall({ horizontal, length: horizontal ? TILE_SIZE : TILE_SIZE, thickness: WALL_THICKNESS, height: WALL_HEIGHT })
     wall.position.set(point.x, 0, point.z)
+    if (side === 'bottom') this._setSouthBoundaryRenderLayer(room, wall)
     this.structureGroup.add(wall)
   }
 
@@ -855,7 +856,24 @@ export class GameScene {
     seen.add(key)
     const pillar = createLowPolyPillar({ height: WALL_HEIGHT + 0.28 })
     pillar.position.set(point.x, 0, point.z)
+    if (side === 'bottom') this._setSouthBoundaryRenderLayer(room, pillar)
     this.structureGroup.add(pillar)
+  }
+
+  _setSouthBoundaryRenderLayer(room, object) {
+    // The camera-facing boundary must remain in front of the nearest row.
+    // Its order is intentionally independent of a tile's temporary Y press,
+    // which otherwise changes the depth-buffer result while a footprint sinks.
+    const renderOrder = tileRenderOrder({ r: room.height }, TILE_RENDER_ORDER_ROW_STEP - 1)
+    object.traverse((child) => {
+      if (!child?.isMesh && !child?.isSprite) return
+      child.userData.southBoundaryFront = true
+      child.renderOrder = renderOrder
+      if (!child.material) return
+      child.material.depthTest = false
+      child.material.depthWrite = false
+      child.material.needsUpdate = true
+    })
   }
 
   _addBoundaryPillars(room, doors) {
@@ -906,6 +924,10 @@ export class GameScene {
     }
     const frame = createDoorFrame({ horizontal, width: TILE_SIZE * 0.68, depth: DOOR_DEPTH, height: WALL_HEIGHT + 0.18 })
     frame.position.set(point.x, 0, point.z)
+    if (door.side === 'bottom') {
+      this._setSouthBoundaryRenderLayer(room, frame)
+      this._setSouthBoundaryRenderLayer(room, mesh)
+    }
     this.structureGroup.add(frame)
     this._setDoorAppearance(mesh)
     this.doorMeshes.push(mesh)
@@ -946,6 +968,10 @@ export class GameScene {
       if (!child.isMesh) return
       const old = child.material
       child.material = new THREE.MeshBasicMaterial({ color: 0x888888, wireframe: true })
+      if (child.userData.southBoundaryFront) {
+        child.material.depthTest = false
+        child.material.depthWrite = false
+      }
       if (old && !Array.isArray(old)) old.dispose?.()
     })
   }
