@@ -116,7 +116,7 @@
 .wl-inventory-staging { color: #fff; }
 .wl-inventory-staging .inventory-discard-zone { color: #fff; background: rgba(72,0,0,.9); }
 .wl-inventory-staging .inventory-stash-zone { color: #fff; background: rgba(0,24,72,.9); }
-.wl-inventory-staging .stash-item { display: grid; place-items: center; min-width: 64px; min-height: 40px; padding: 5px; color: #fff; background: #090909; border: 1px solid #aaa; }
+.wl-inventory-staging .stash-item { display: grid; place-items: center; min-width: 0; min-height: 0; padding: 5px; color: #fff; background: #090909; border: 1px solid #aaa; }
 .wl-drag-preview { display: grid; min-width: 74px; min-height: 42px; place-items: center; padding: 8px; color: #fff; background: #090909; border: 1px solid #fff; }
 @media (max-width: 600px) {
   .wl-nav { gap: 2px; }

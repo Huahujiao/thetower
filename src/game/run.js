@@ -114,6 +114,21 @@ function damageReductionLog({ healthDamage = 0, absorbed = 0 } = {}) {
   return armor > 0 ? `\u51cf${health}\u8840\uff0c\u51cf${armor}\u7532` : `\u51cf${health}\u8840`
 }
 
+function enemyStatusSnapshot(enemy) {
+  return {
+    kind: 'enemy',
+    id: enemy?.id,
+    name: enemy?.name,
+    hp: Math.max(0, Number(enemy?.hp) || 0),
+    maxHp: Math.max(1, Number(enemy?.maxHp) || 1),
+    boss: enemy?.boss === true,
+    actionDelay: enemy?.actionDelay,
+    initialActionDelay: enemy?.initialActionDelay,
+    attackCooldown: enemy?.attackCooldown,
+    attackCooldownMax: enemy?.attackCooldownMax,
+  }
+}
+
 function playerDeathCause(context = {}) {
   const source = context.source || ''
   const enemyName = context.enemy?.name
@@ -1316,6 +1331,10 @@ export class GameRun {
       roomId: this.currentRoom?.id,
       actor: 'player',
       position: { ...this.player.pos },
+      targetStatus: hit.defeated ? null : {
+        position: { ...enemy.pos },
+        enemy: enemyStatusSnapshot(enemy),
+      },
     })
     this._endTurn({ turnKind: TURN_KINDS.ATTACK })
     this._changed()

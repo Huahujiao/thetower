@@ -87,7 +87,9 @@
       <div
         ref="discardZone" class="inventory-discard-zone" :class="{ active: bagGesture?.dragging }"
         @touchmove.stop.prevent="onStageTouchMove" @touchend.stop.prevent="onStageTouchEnd" @contextmenu.prevent
-      >{{ LABELS.discardZone }}</div>
+      >
+        {{ LABELS.discardZone }}
+      </div>
       <div
         ref="stashZone" class="inventory-stash-zone" :class="{ active: bagGesture?.dragging }"
         @touchmove.stop.prevent="onStageTouchMove" @touchend.stop.prevent="onStageTouchEnd" @contextmenu.prevent
@@ -434,7 +436,7 @@
       <section class="backpack-panel">
         <div class="backpack-grid-wrap">
           <div
-            class="backpack-grid" data="backpack" ref="backpackGrid"
+            ref="backpackGrid" class="backpack-grid" data="backpack"
             :style="{ '--bag-columns': INVENTORY_COLUMNS, '--bag-rows': INVENTORY_ROWS }"
           >
             <button
@@ -549,6 +551,7 @@ import { getRelicDefinition } from '../game/data/relics.js'
 import { INVENTORY_COLUMNS, INVENTORY_ROWS } from '../game/run.js'
 import { GameScene } from '../render/scene.js'
 import { bagShapeLayout } from './bag-shape.js'
+import { automaticStashPosition, inventoryDropAnchorAtCenter, inventoryItemLayout, stashPositionAtPoint as stashPositionForPoint } from './inventory-layout.js'
 import { itemSpriteSources } from './item-sprites.js'
 import InventorySprite from './InventorySprite.vue'
 
@@ -783,8 +786,8 @@ const stashItems = computed(() => state.value.inventoryStash.map((item, index) =
   const rotation = Number(item.bagRotation) || 0
   const shape = run.backpack.shapeFor(item, rotation)
   const layout = bagShapeLayout(shape)
-  const position = stashPositions[item.uid] || { x: 18 + (index % 3) * 27, y: 24 + Math.floor(index / 3) * 24 }
-  if (!stashPositions[item.uid]) stashPositions[item.uid] = position
+  const position = ensureAutoStashPosition(item, rotation, index)
+  const dimensions = inventoryItemLayout(run.backpack, item, rotation, backpackGrid.value?.getBoundingClientRect?.(), INVENTORY_COLUMNS, INVENTORY_ROWS)
   return {
     item,
     cells: layout.cells.map(({ x, y, edges }) => ({ x, y, index: `${item.uid}-${x}-${y}`, style: { gridColumn: x + 1, gridRow: y + 1, borderWidth: edges.map((edge) => edge ? '1px' : '0').join(' ') } })),
@@ -792,7 +795,7 @@ const stashItems = computed(() => state.value.inventoryStash.map((item, index) =
     spriteSources: itemSpriteSources(item),
     spriteStyle: { width: rotation % 2 ? `${shape.length / shape[0].length * 100}%` : '100%', height: rotation % 2 ? `${shape[0].length / shape.length * 100}%` : '100%', transform: `translate(-50%, -50%) rotate(${rotation * 90}deg)` },
     itemClasses: ['bag-item', 'stash-item-visual', item.type, ...(itemSpriteSources(item) ? ['has-sprite'] : []), ...(item.attribute ? [`attribute-${item.attribute}`] : [])],
-    itemStyle: { left: `${position.x}%`, top: `${position.y}%` },
+    itemStyle: { left: `${position.x}%`, top: `${position.y}%`, width: `${dimensions.pixelWidth}px`, height: `${dimensions.pixelHeight}px` },
   }
 }))
 const draggedItemView = computed(() => {
@@ -999,25 +1002,58 @@ function startLongPress(openDetail, event) {
   hold.value = nextHold
 }
 function refreshBagGesture(session) { bagGesture.value = { ...session } }
-function gridIndexAtPoint(x, y) {
-  const rect = backpackGrid.value?.getBoundingClientRect?.()
-  if (!rect || x < rect.left || x >= rect.right || y < rect.top || y >= rect.bottom) return null
-  const column = Math.floor((x - rect.left) / rect.width * INVENTORY_COLUMNS)
-  const row = Math.floor((y - rect.top) / rect.height * INVENTORY_ROWS)
-  if (column < 0 || row < 0 || column >= INVENTORY_COLUMNS || row >= INVENTORY_ROWS) return null
-  return row * INVENTORY_COLUMNS + column
-}
 function pointInZone(zone, x, y) {
   const rect = zone.value?.getBoundingClientRect?.()
   return !!rect && x >= rect.left && x < rect.right && y >= rect.top && y < rect.bottom
 }
-function stashPositionAtPoint(x, y) {
+function stashPositionAtPoint(x, y, item, rotation) {
   const rect = stashZone.value?.getBoundingClientRect?.()
-  if (!rect) return { x: 50, y: 50 }
-  return {
-    x: Math.max(16, Math.min(84, (x - rect.left) / Math.max(1, rect.width) * 100)),
-    y: Math.max(18, Math.min(82, (y - rect.top) / Math.max(1, rect.height) * 100)),
+  return stashPositionForPoint({
+    item,
+    rotation,
+    clientX: x,
+    clientY: y,
+    stashRect: rect,
+    gridRect: backpackGrid.value?.getBoundingClientRect?.(),
+    backpack: run.backpack,
+    columns: INVENTORY_COLUMNS,
+    rows: INVENTORY_ROWS,
+  })
+}
+function ensureAutoStashPosition(item, rotation, index) {
+  const current = stashPositions[item.uid]
+  if (current && !current.pendingAuto) return current
+  const position = automaticStashPosition({
+    item,
+    rotation,
+    stashItems: state.value.inventoryStash,
+    positions: stashPositions,
+    stashRect: stashZone.value?.getBoundingClientRect?.(),
+    gridRect: backpackGrid.value?.getBoundingClientRect?.(),
+    backpack: run.backpack,
+    columns: INVENTORY_COLUMNS,
+    rows: INVENTORY_ROWS,
+  })
+  if (position) {
+    const resolved = { ...position, pendingAuto: false }
+    stashPositions[item.uid] = resolved
+    return resolved
   }
+  const fallback = current || { x: 18 + (index % 3) * 27, y: 24 + Math.floor(index / 3) * 24, pendingAuto: true }
+  stashPositions[item.uid] = fallback
+  return fallback
+}
+function dragTargetIndexAtPoint(session, x, y) {
+  return inventoryDropAnchorAtCenter({
+    backpack: run.backpack,
+    item: session.item,
+    rotation: session.rotation,
+    gridRect: backpackGrid.value?.getBoundingClientRect?.(),
+    clientX: x,
+    clientY: y,
+    columns: INVENTORY_COLUMNS,
+    rows: INVENTORY_ROWS,
+  })
 }
 function clearBagGesture({ closeDetail = true } = {}) {
   const session = bagGesture.value
@@ -1032,7 +1068,7 @@ function beginBagDrag(session, point = null) {
   session.dragging = true
   session.pointerX = point?.clientX ?? session.pointerX
   session.pointerY = point?.clientY ?? session.pointerY
-  session.targetIndex = gridIndexAtPoint(session.pointerX, session.pointerY) ?? session.originIndex
+  session.targetIndex = dragTargetIndexAtPoint(session, session.pointerX, session.pointerY) ?? session.originIndex
   session.lastValidTargetIndex = session.targetIndex
   refreshBagGesture(session)
 }
@@ -1148,7 +1184,7 @@ function updateBagGesturePoint(point) {
   if (!session || !point || point.identifier !== session.identifier) return
   session.pointerX = point.clientX
   session.pointerY = point.clientY
-  session.targetIndex = gridIndexAtPoint(point.clientX, point.clientY)
+  session.targetIndex = dragTargetIndexAtPoint(session, point.clientX, point.clientY)
   if (Number.isInteger(session.targetIndex)) session.lastValidTargetIndex = session.targetIndex
   refreshBagGesture(session)
 }
@@ -1190,9 +1226,9 @@ function commitBagGesture() {
       run.backpack.removeByUid(item.uid)
       item.bagRotation = session.rotation
       run.stageInventoryItem(item, { notify: false })
-      stashPositions[item.uid] = stashPositionAtPoint(x, y)
+      stashPositions[item.uid] = stashPositionAtPoint(x, y, item, session.rotation)
     } else {
-      stashPositions[item.uid] = stashPositionAtPoint(x, y)
+      stashPositions[item.uid] = stashPositionAtPoint(x, y, item, session.rotation)
       item.bagRotation = session.rotation
     }
     run.inventoryChanged({ advanceTurn: false })
@@ -1212,7 +1248,7 @@ function commitBagGesture() {
   }
   for (const conflict of result.conflicts) {
     run.stageInventoryItem(conflict, { notify: false })
-    stashPositions[conflict.uid] ||= stashPositionAtPoint(x, y)
+    stashPositions[conflict.uid] = { pendingAuto: true }
   }
   const nextPlacement = run.backpack.placementOf(item.uid)
   const moved = session.source === 'stash'

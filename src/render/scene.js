@@ -1349,7 +1349,7 @@ export class GameScene {
     return true
   }
 
-  _startAttack({ roomId, actor = 'enemy', position } = {}) {
+  _startAttack({ roomId, actor = 'enemy', position, targetStatus = null } = {}) {
     const room = this.run.currentRoom
     if (!room || room.id !== roomId || room.id !== this.framedRoomId || !position) return false
     const face = this.tileMeshByKey.get(tileKey(position))
@@ -1377,6 +1377,7 @@ export class GameScene {
       tileFace: object === face,
       sourceTexture,
       attackTexture,
+      targetStatus: actor === 'player' ? targetStatus : null,
       baseScale: object.scale.clone(),
       baseRotationZ: object.rotation.z,
       elapsed: 0,
@@ -1431,11 +1432,21 @@ export class GameScene {
       : (animation.face.userData.press || 0)
     animation.object.position.y = baseY + heldOffset
     animation.attackTexture?.dispose()
+    this._applyAttackTargetStatus(animation.targetStatus)
     this.attackAnimation = null
     if (continueQueue) {
       this._drainAnimationQueue()
       this._emitMoveCompleteIfIdle()
     }
+  }
+
+  _applyAttackTargetStatus(targetStatus) {
+    const position = targetStatus?.position
+    const enemy = targetStatus?.enemy
+    if (!position || enemy?.kind !== 'enemy') return
+    const face = this.tileMeshByKey.get(tileKey(position))
+    if (!face?.userData?.groundFace) return
+    this._setEnemyStatusOverlay(face, face.userData.groundFace, enemy)
   }
 
   _clearMovementAnimation() {
