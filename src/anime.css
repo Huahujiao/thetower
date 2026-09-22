@@ -129,18 +129,32 @@ body.anime-body #hud { position: static; display: block; width: 100%; height: au
 }
 
 @media (max-width: 720px) {
-  .anime-topbar { position: static; align-items: flex-start; flex-direction: column; }
-  .anime-top-actions { width: 100%; justify-content: flex-start; }
-  .anime-editor-grid { display: flex; flex-direction: column; padding: 7px; }
-  .anime-library-panel { order: 2; }
-  .anime-workspace { order: 1; grid-template-rows: auto 68dvh auto; }
-  .anime-inspector { order: 3; display: block; }
-  .anime-layer-list { max-height: 230px; }
-  .anime-modebar { flex-wrap: wrap; }
+  html.anime-html { width: 100%; height: 100dvh; max-height: 100dvh; overflow: hidden; }
+  body.anime-body { width: 100%; height: 100dvh; min-height: 0; max-height: 100dvh; overflow: hidden; }
+  body.anime-body #hud { height: 100dvh; min-height: 0; max-height: 100dvh; overflow: hidden; }
+  .anime-editor-page { --anime-mobile-header-height: 16dvh; --anime-mobile-content-height: 84dvh; display: grid; grid-template-rows: var(--anime-mobile-header-height) var(--anime-mobile-content-height); width: 100%; height: 100dvh; min-height: 0; overflow: hidden; }
+  .anime-topbar { position: relative; min-height: 0; height: var(--anime-mobile-header-height); align-content: center; align-items: flex-start; flex-direction: column; justify-content: center; gap: 1dvh; padding: calc(1dvh + env(safe-area-inset-top)) 10px 1dvh; overflow: hidden; }
+  .anime-topbar h1 { font-size: clamp(14px, 2.2dvh, 18px); }
+  .anime-kicker { font-size: clamp(7px, 1.1dvh, 9px); }
+  .anime-top-actions { width: 100%; flex-wrap: nowrap; justify-content: flex-start; gap: 5px; overflow-x: auto; }
+  .anime-top-actions .anime-button { min-height: 3.8dvh; padding: .6dvh 8px; white-space: nowrap; }
+  .anime-save-state { min-width: 42px; }
+  .anime-editor-grid { display: flex; width: 100%; height: var(--anime-mobile-content-height); min-height: 0; flex-direction: column; gap: 7px; margin: 0; padding: 7px; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scroll-snap-type: y proximity; }
+  .anime-workspace,.anime-library-panel,.anime-inspector { width: 100%; height: calc(var(--anime-mobile-content-height) - 14px); min-height: calc(var(--anime-mobile-content-height) - 14px); max-height: calc(var(--anime-mobile-content-height) - 14px); flex: 0 0 calc(var(--anime-mobile-content-height) - 14px); scroll-snap-align: start; }
+  .anime-library-panel { order: 2; display: grid; grid-template-rows: auto auto auto minmax(0, 1fr) auto; }
+  .anime-workspace { order: 1; grid-template-rows: 14% 48% 38%; }
+  .anime-inspector { order: 3; display: block; overflow-y: auto; overscroll-behavior: contain; }
+  .anime-layer-list { min-height: 0; max-height: none; overflow-y: auto; overscroll-behavior: contain; }
+  .anime-stage-wrap { min-height: 0; }
+  .shadow-stage { height: 100%; min-height: 0; }
+  .anime-timeline { min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 1dvh 8px; }
+  .anime-animation-tabs button { min-height: 3.6dvh; }
+  .anime-playback-row { margin-top: .8dvh; }
+  .anime-scrubber { margin-top: .8dvh; }
+  .anime-modebar { min-height: 0; flex-wrap: wrap; gap: .5dvh 8px; padding: .7dvh 8px; overflow-y: auto; }
   .anime-mode-hint { width: 100%; margin-left: 0; }
   .anime-playback-row { flex-wrap: wrap; }
   .anime-playback-row > span { width: 100%; order: 3; }
-  .shadow-stage { min-height: 360px; }
   .anime-preview-content { padding: 7px; }
   .anime-preview-stage .shadow-stage { min-height: 68dvh; }
 }

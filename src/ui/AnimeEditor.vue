@@ -499,12 +499,14 @@ function loadPreset(preset) {
 }
 
 onMounted(() => {
+  document.documentElement.classList.add('anime-html')
   document.body.classList.add('anime-body')
   lastFrameTime = window.performance.now()
   animationFrame = window.requestAnimationFrame(frame)
 })
 
 onBeforeUnmount(() => {
+  document.documentElement.classList.remove('anime-html')
   document.body.classList.remove('anime-body')
   window.cancelAnimationFrame(animationFrame)
   clearTimeout(saveTimer)
