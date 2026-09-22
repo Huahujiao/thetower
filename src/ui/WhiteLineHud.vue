@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref, shallowRef } from 'vue'
-import { getItemDefinition } from '../game/data/content.js'
+import { getItemDefinition, upgradeRecipesForItem } from '../game/data/content.js'
 import { getRelicDefinition } from '../game/data/relics.js'
 import { INVENTORY_COLUMNS, INVENTORY_ROWS } from '../game/run.js'
 import { GameScene } from '../render/scene.js'
@@ -108,6 +108,7 @@ const statusEntries = computed(() => {
 const detailTitle = computed(() => detailPanel.value ? String(detailPanel.value.type || 'DETAIL').toUpperCase() : '')
 const detailLines = computed(() => detailPanel.value ? [`TARGET TYPE: ${String(detailPanel.value.type || 'OBJECT').toUpperCase()}`, `DATA LINES: ${(detailPanel.value.lines || []).length}`, 'INTERACTION DETAIL AVAILABLE'] : [])
 const detailDescription = computed(() => detailPanel.value ? 'The same gameplay detail is open in the debug skin.' : '')
+const detailUpgradeRoutes = computed(() => upgradeRecipesForItem(detailPanel.value?.itemId))
 
 function itemToken(item) { return String(item?.id || item?.type || 'ITEM').toUpperCase() }
 function cellLabel(cell) { return cell.placement ? `CELL ${cell.index}: ${itemToken(cell.placement.item)}` : `CELL ${cell.index}: EMPTY` }
@@ -537,7 +538,7 @@ onMounted(() => {
   run.setDebugReveal(reveal.value)
   window.addEventListener('touchstart', onWindowTouchStart, { passive: false, capture: true })
   window.addEventListener('touchmove', onWindowTouchMove, { passive: false })
-  window.addEventListener('touchend', onWindowTouchEnd, { passive: false })
+  window.addEventListener('touchend', onWindowTouchEnd, { passive: false, capture: true })
   window.addEventListener('touchcancel', onWindowTouchCancel, { passive: false, capture: true })
   window.addEventListener('blur', onInteractionInterrupt)
   document.addEventListener('visibilitychange', onInteractionInterrupt)
@@ -545,7 +546,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   window.removeEventListener('touchstart', onWindowTouchStart, true)
   window.removeEventListener('touchmove', onWindowTouchMove)
-  window.removeEventListener('touchend', onWindowTouchEnd)
+  window.removeEventListener('touchend', onWindowTouchEnd, true)
   window.removeEventListener('touchcancel', onWindowTouchCancel, true)
   window.removeEventListener('blur', onInteractionInterrupt)
   document.removeEventListener('visibilitychange', onInteractionInterrupt)
@@ -588,7 +589,7 @@ onBeforeUnmount(() => {
     <section v-if="panel === 'log'" class="wl-overlay-panel wl-scroll"><header><b>EVENT LOG</b><button data-action="log" @click="onAction('log')">CLOSE</button></header><button data-action="copy-log" @click="onAction('copy-log')">{{ copyLabel }}</button><p v-for="(_, index) in state.log.slice(0, 40)" :key="index">EVENT {{ index + 1 }}</p></section>
     <section v-if="helpOpen" class="wl-overlay-panel wl-help"><header><b>HELP</b><button data-action="close-help" @click="onAction('close-help')">CLOSE</button></header><p>CLICK A BOARD CELL TO MOVE, FLIP, ATTACK, OR INTERACT.</p><p>TAP AN INVENTORY ITEM TO SELECT IT; HOLD AND DRAG TO MOVE IT.</p><p>HOLD AN ITEM OR BOARD TARGET TO INSPECT IT.</p><p>ALL ACTIONS USE THE SAME GAME MODEL AS THE MAIN SKIN.</p></section>
 
-    <section v-show="detailPanelVisible" class="wl-detail"><header><b>{{ detailPanel ? detailTitle : 'DETAIL PANEL' }}</b><button data-action="close-detail" @click="onAction('close-detail')">CLOSE</button></header><p v-for="line in detailLines" :key="line">{{ line }}</p><p>{{ detailPanel ? detailDescription : 'LONG-PRESS AN ITEM TO INSPECT.' }}</p></section>
+    <section v-show="detailPanelVisible" class="wl-detail"><header><b>{{ detailPanel ? detailTitle : 'DETAIL PANEL' }}</b><button data-action="close-detail" @click="onAction('close-detail')">CLOSE</button></header><p v-for="line in detailLines" :key="line">{{ line }}</p><p>{{ detailPanel ? detailDescription : 'LONG-PRESS AN ITEM TO INSPECT.' }}</p><div v-if="detailUpgradeRoutes.length" class="wl-upgrade-routes" aria-label="UPGRADE ROUTES"><div v-for="recipe in detailUpgradeRoutes" :key="`${recipe.a}:${recipe.b}:${recipe.result}`" class="wl-upgrade-route"><i></i><b>+</b><i></i><b>-&gt;</b><i></i></div></div></section>
     <section v-if="initialRelics.length" class="wl-choice"><h2>CHOOSE AN INITIAL RELIC</h2><button v-for="relic in initialRelics" :key="relic.id" :data-relic-choice="relic.id" @click="onActionValue('relic-choice', relic.id)"><b>{{ relic.id.toUpperCase() }}</b><small>RELIC OPTION</small></button></section>
     <section v-if="roomRewardOpen" class="wl-choice"><h2>CHOOSE A ROOM REWARD</h2><button v-for="(choice, index) in state.roomReward.choices" :key="index" :data-room-reward="index" :data-disabled="roomRewardDisabled(choice) ? 'true' : 'false'" :disabled="roomRewardDisabled(choice)" @click="onActionValue('room-reward', index)"><b>{{ roomRewardToken(choice) }}</b><small>REWARD OPTION</small></button><button data-action="skip-reward" @click="onAction('skip-reward')">SKIP REWARD</button></section>
     <section v-if="levelUpOpen" class="wl-choice"><h2>CHOOSE GROWTH</h2><button v-for="choice in levelUpChoices" :key="choice.id" :data-level-up="choice.id" @click="onActionValue('level-up', choice.id)"><b>{{ choice.id.toUpperCase() }}</b><small>{{ choice.fixed ? 'FIXED GROWTH' : 'TALENT OPTION' }}</small></button></section>

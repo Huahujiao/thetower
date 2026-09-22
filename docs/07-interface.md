@@ -40,7 +40,7 @@
 
 ## 详情与弹窗
 
-长按棋盘对象或背包物品打开详情面板，显示其名称、类别、属性、数值和效果。角色面板显示等级、经验、生命上限和天赋数量；天赋面板显示 10 条主线的三层节点状态。帮助、角色、天赋、设置和日志都是独立面板，不向棋盘透传点击。圣遗物详情通过背包物品或掉落卡牌查看。
+长按棋盘对象或背包物品打开详情面板，显示其名称、类别、属性、数值和效果。武器的攻击、射程、体力消耗为独立数值行，其他效果另起一行；未生效的相邻关系不显示。弹簧触发后，除触发武器外的每把可用武器详情都显示“下一击体力消耗-1”，背包物品本身不增加角标。图片框固定为宽 2 格、高最多 3 格，精灵图以 `contain` 等比缩放，并由硬性尺寸、最大尺寸与裁切共同限制，不会越过图框。角色面板显示等级、经验、生命上限和天赋数量；天赋面板显示 10 条主线的三层节点状态。帮助、角色、天赋、设置和日志都是独立面板，不向棋盘透传点击。圣遗物详情通过背包物品或掉落卡牌查看。
 
 商人面板显示购买、出售和圣遗物购买服务。购买、出售、刷新货架及圣遗物购买均为即时操作，不推进回合；商人不再提供圣遗物配置。
 
@@ -52,15 +52,23 @@
 
 The staging label is centered and uses the same type scale as the discard label.
 
-Backpack movement is touch-only. A 300 ms hold on an occupied item opens details; moving more than 18 px after the hold enters drag mode. Taps select an item for use or combat and never move it. The first occupied cell of the rotated shape remains the model anchor, while dropping snaps the floating footprint center to the nearest target footprint center with a half-cell tolerance. Green, yellow, and red previews mean accepted, replace-to-staging, and illegal respectively. The red discard zone occupies exactly 25 percent of the full viewport area above the backpack; the blue free-form staging canvas occupies the remaining 75 percent and meets the backpack without a gap. Staged items preserve the backpack's cell size and rotated proportions; automatic arrivals seek a non-overlapping position before using the least-overlapping available position. The detail panel is layered above both zones, so staged items can still be inspected. Staging remains visible until empty, and clearing it advances one organize turn. A second touch rotates the dragged item clockwise by 90 degrees. Cancel, blur, visibility changes, and invalid release restore the original state.
+Backpack movement is touch-only. A 300 ms hold on an occupied item opens details; moving more than 18 px after the hold enters drag mode. Taps select an item for use or combat and never move it. The first occupied cell of the rotated shape remains the model anchor, while dropping snaps the floating footprint center to the nearest target footprint center with a half-cell tolerance. Green, yellow, and red previews mean accepted, replace-to-staging, and illegal respectively. The red discard zone occupies exactly 25 percent of the full viewport area above the backpack; the blue free-form staging canvas occupies the remaining 75 percent and meets the backpack without a gap. Staged items preserve the backpack's cell size and rotated proportions; automatic arrivals seek a non-overlapping position before using the least-overlapping available position. The detail panel is layered above both zones, so staged items can still be inspected. Staging remains visible until empty, and clearing it advances one organize turn. Each fresh second-finger touch rotates the dragged item clockwise by 90 degrees, so repeated taps rotate it repeatedly. Cancel, blur, visibility changes, and invalid release restore the original state.
 
 The product target is a portrait mobile phone with touch input only. Desktop, keyboard, mouse, stylus, and landscape layouts are outside the supported contract. Inventory long press uses the occupied-cell Vue touch handlers and a 300 ms threshold; do not add desktop pointer compatibility code to the inventory interaction path. For irregular L/T shapes, void cells and the sprite image are excluded from touch hit testing.
 
+Level-up talent cards keep the talent name and its route/type on one header row: the name is left-aligned and the type badge is right-aligned. The fixed option below the divider is named Strong Physique (`强健体魄`) and no longer has a redundant four-character category label above its card.
+
 ## Scene status tray
 
-The former text-only build-status row has been removed. The experience strip now follows the top HUD directly, giving the Three.js board the released vertical space. Active statuses appear in a compact tray anchored inside the board's lower-left edge and flow from left to right. Each entry currently uses the first character of its status name, with a corner badge for remaining global turns, a staged count, or a relic threshold. Holding an entry for 300 ms opens the normal detail overlay; releasing closes it.
+Each revealed enemy has a compact mechanics row above its name. Non-stationary behavior and combat-relevant traits use slightly enlarged symbols, while the final `🏹 number` token always shows the enemy's current attack range. Stationary behavior is omitted to keep the row readable on a portrait phone. Enemy details repeat each available symbol immediately before its matching behavior or feature name, providing an in-game legend for the overhead row.
+
+The former text-only build-status row has been removed. The experience strip now follows the top HUD directly, giving the Three.js board the released vertical space. Active statuses appear in a compact tray anchored inside the board's lower-left edge and flow from left to right. Poison, burning, rage wine, generic attack-up, and energy-discount states use dedicated transparent pictograms, with a corner badge for remaining global turns or the effect value. Holding an entry for 300 ms opens the normal detail overlay; releasing closes it.
 
 The tray includes only temporary effects: poison, burning, and active next-attack or next-weapon buffs such as the rage-wine effect. Relic counters, persistent equipment/talent conditions, defensive counters, and per-weapon adjacency/empty-space build checks remain in their corresponding details instead of occupying tray slots.
+
+Persistent build effects are readable directly in the backpack. Every accessory-to-beneficiary pair whose four-way adjacency effect currently applies is joined across one shared cell boundary by a very short green energy band. The band uses two transparent, differently timed flowing layers; one pair produces one band even when large shapes share several edges, and unrelated adjacent items produce none. These bands do not intercept touches and are hidden during an active drag so stale placement feedback never follows the lifted item.
+
+Relic sprites communicate readiness only through brightness. Three-Phase Wheel, Empty Casket Seal, Traveler Bone Domino, Blood Pact Bronze Mirror, and Broken-Blade Scales are dimmed while their current condition is unmet and return to normal brightness as soon as it is met. Relics without a trigger condition, such as Reverse Stone, remain bright. No badge or replacement DOM node is added, so the inventory image remains stable when state changes.
 
 The teleport talisman reaches a revealed empty cell within Manhattan distance 6. Its mapped inventory sprite is a paper talisman with an ink spatial seal and cyan portal motif; the former pendant artwork remains archived for a later item.
 
@@ -68,10 +76,18 @@ Room walls are fixed boundary geometry. Leaving a tile beside the south wall mus
 
 Every tile crossed during a movement path visibly depresses when the character lands on it. The preceding footprint starts to rise only after the following movement turn lands, and the final footprint rises when a later global-turn-advancing action occurs. A pressed tile keeps its fixed row-based visual ordering; the camera-facing south wall remains above the nearest row rather than being covered by a temporary downward offset.
 
-The backpack surface has no overall border. Weapon tiers use Roman numerals in the detail panel, with crafted results displayed as II. Details show the item sprite in the reserved icon slot when mapped, while ordinary items have no attribute badge. Relic selection uses a full-screen dimmer and borderless cards ordered name, image, and compact description; the description area starts at the top-left of its lower card section.
+The backpack surface has no overall border. Weapon and defense tiers use one to three stars in the detail header, with crafted weapons displayed as two stars. Details show the item sprite in the reserved icon slot when mapped, while ordinary items have no attribute badge. Relic selection uses a full-screen dimmer and borderless cards ordered name, image, and compact description; the description area starts at the top-left of its lower card section.
+
+An equipment detail with one or more forward crafting upgrades shows a compact route block below the normal detail content. Each recipe occupies its own row in the form square icon + square icon ➡ square result icon. The icons use existing small sprites inside neutral frames, contain no names, attribute-colored borders, detail gestures, or interactive targets, so the result's attribute is not disclosed before crafting. Routes are derived from recipe data and naturally expand to multiple rows when one equipment id gains several recipes.
+
+Every revealed, uncollected floor weapon places a compact translucent attribute glow on its tile: red for scorch, yellow for wither, and blue for drown. The plane spans 0.9 tile widths and no longer forms one filled polygon or scales as a whole. A soft center brightness gradient is overlaid with three sets of narrow star rays using different point counts, angular speeds, phases, and one reverse direction. The layers visibly drift through one another while a separate opacity pulse provides breathing, avoiding both a static puddle and a cartoon starfish silhouette. The glow remains above the floor and below the sprite; the item itself heading-rotates at 1.5 times its original speed.
+
+Weapon and defense detail headers place compact badges directly after the name. Weapons read attribute, weapon class, then one to three star tier marks; defenses omit the attribute badge and read their explicit shield/armor class, then tier stars. Weapon stat chips use sword, bow, and flexed-arm icons for attack, range, and energy cost respectively. Backpack footprint count is not shown in any item detail because the visible occupied shape already communicates it.
 
 右上角日志按钮打开日志面板。日志按最新事件在前显示；当玩家受到致命伤害时，“你倒下了（原因：……）”会被置于顶部，后续同一过程的事件排在其后。日志面板提供“复制日志”按钮，将当前显示的日志复制到系统剪贴板，不再提供发送或分享日志功能。胜败提示使用局部浮层，不遮挡日志按钮。
 ## Combat animation rendering note
+
+The craft control remains logically disabled while a flip or attack queue is active, but its visual treatment remains stable so the top HUD does not visibly dim or flicker. The lower backpack toolbar has no placeholder slots for removed discard and rotate controls: armor is flush left, health and energy bars fill the center, and Use is flush right.
 
 Only the last step of an action route is atomic with that action. Moving onto loot and collecting it is one atomic turn, and entering a weapon's final attack position and hitting are one atomic turn. Earlier steps on a long route remain ordinary movement turns and can be interrupted by an enemy.
 

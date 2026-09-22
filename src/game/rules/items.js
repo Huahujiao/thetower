@@ -12,13 +12,49 @@ export function adjacentItems(backpack, item) {
     .some(b => own.some(a => Math.abs(a.x - b.x) + Math.abs(a.y - b.y) === 1)))
 }
 
+const ADJACENCY_EFFECT_TARGETS = Object.freeze({
+  scope: (item) => item.type === 'weapon' && item.weaponClass === 'bow',
+  weight: (item) => item.type === 'weapon' && item.weaponClass === 'heavy',
+  chain: (item) => item.type === 'weapon' && item.weaponClass === 'polearm',
+  'venom-sac': (item) => item.type === 'weapon',
+  spring: (item) => item.type === 'weapon',
+  'shield-core': (item) => item.type === 'defense',
+})
+
+export function adjacencyEffectApplies(source, target) {
+  return !!ADJACENCY_EFFECT_TARGETS[source?.id]?.(target)
+}
+
+export function activeAdjacencyLinks(backpack) {
+  return backpack.items.flatMap((source) => {
+    if (!ADJACENCY_EFFECT_TARGETS[source.id]) return []
+    return adjacentItems(backpack, source)
+      .filter((target) => adjacencyEffectApplies(source, target))
+      .map((target) => ({ source, target }))
+  })
+}
+
 export class ItemRules {
   constructor(run) { this.run = run }
   get state() { return this.run.player.itemState ||= { buffs: {}, lastAction: null, steps: 0, travel: 0 } }
   get room() { return this.run._roomRuntime().items ||= {} }
   has(id) { return this.run.backpack.items.some(i => (i.id || i.relicId) === id) }
   talent(id) { return this.run.hasTalent(id) }
-  adjacent(item, id) { return adjacentItems(this.run.backpack, item).some(i => i.id === id) }
+  adjacent(item, id) {
+    return adjacentItems(this.run.backpack, item)
+      .some(source => source.id === id && adjacencyEffectApplies(source, item))
+  }
+  activeAdjacencyLinks() { return activeAdjacencyLinks(this.run.backpack) }
+  relicEffectActive(id) {
+    if (!this.has(id) || this.run.relicOverload() > 0) return false
+    const weapons = this.run.backpack.items.filter(item => item.type === 'weapon')
+    if (id === 'r-three') return new Set(weapons.map(item => item.attribute).filter(Boolean)).size === 3
+    if (id === 'r-empty') return this.run.backpack.capacity - this.run.backpack.usedCells >= 8
+    if (id === 'r-traveler') return this.run.player.itemState?.lastAction === 'movement'
+    if (id === 'r-blood') return this.run.player.hp <= this.run.player.maxHp / 2
+    if (id === 'r-scales') return weapons.length === 1
+    return true
+  }
   buff(key, value) { this.state.buffs[key] = value }
   armor(amount, defense = false, sourceId = null) {
     if (amount <= 0 || this.run.gameOver) return
@@ -134,8 +170,10 @@ export class ItemRules {
     if (hit.damage > 0 && !enemy.downed && run.currentRoom.entity(enemy.id) && this.adjacent(weapon, 'venom-sac')) {
       enemy.itemPoisonTurns = 2
     }
-    if (context.distance === 2 && ['ember-spear', 'soul-spear'].includes(weapon.id) && run.currentRoom.entity(enemy.id) && !enemy.downed) {
-      run._knockbackEnemy(enemy, 1, { collisionDamage: (weapon.id === 'soul-spear' ? 3 : 0) + (this.adjacent(weapon, 'chain') ? 2 : 0) })
+    const chainedPolearm = weapon.weaponClass === 'polearm' && this.adjacent(weapon, 'chain')
+    const polearmKnockback = ['ember-spear', 'soul-spear'].includes(weapon.id) || chainedPolearm
+    if (context.distance === 2 && polearmKnockback && run.currentRoom.entity(enemy.id) && !enemy.downed) {
+      run._knockbackEnemy(enemy, 1, { collisionDamage: (weapon.id === 'soul-spear' ? 3 : 0) + (chainedPolearm ? 2 : 0) })
     }
     if (hit.defeated) {
       if (weapon.id === 'bone-knife') run._recoverEnergy(1)
@@ -193,27 +231,26 @@ export class ItemRules {
     const buffs = weapon ? this.matchingBuffs(weapon) : Object.entries(this.state.buffs).filter(([key]) =>
       (!key.startsWith('r-') || this.has(key)) && (key !== 'spring' || this.has(key)))
     return buffs.map(([key, buff]) => {
-      const conditions = []
-      if (buff.other) conditions.push('换用其他武器')
-      if (buff.attribute) conditions.push(({ scorch: '灼热', wither: '枯萎', drown: '沉溺' })[buff.attribute] + '武器')
-      if (buff.otherAttribute) conditions.push('换用不同属性')
-      return `${this.sourceName(key)}：下一击${buff.flat ? `伤害+${buff.flat}` : ''}${buff.discount ? ` 体力-${buff.discount}` : ''}${conditions.length ? `（${conditions.join('、')}）` : ''}`
+      const effects = []
+      if (buff.flat) effects.push(`伤害+${buff.flat}`)
+      if (buff.discount) effects.push(`体力消耗-${buff.discount}`)
+      return `${this.sourceName(key)}：下一击${effects.join('、')}`
     })
   }
 
   weaponLines(weapon) {
     const adjacent = adjacentItems(this.run.backpack, weapon)
     const lines = []
-    if (weapon.id === 'silver-guard') lines.push(`防具邻接：${adjacent.some(i => i.type === 'defense') ? '已生效，攻击+1' : '未生效'}`)
-    if (weapon.id === 'mountain-maul') lines.push(`四向留白：${adjacent.length === 0 ? '已生效，攻击+4' : '未生效'}`)
+    if (weapon.id === 'silver-guard' && adjacent.some(i => i.type === 'defense')) lines.push('防具邻接：攻击+1')
+    if (weapon.id === 'mountain-maul' && adjacent.length === 0) lines.push('四向留白：攻击+4')
     for (const [id, valid, effect] of [
       ['scope', weapon.weaponClass === 'bow', '射程+1'],
-      ['weight', weapon.weaponClass === 'heavy', '攻击+2，体力+1'],
-      ['chain', ['ember-spear', 'soul-spear'].includes(weapon.id), '碰撞伤害+2'],
+      ['weight', weapon.weaponClass === 'heavy', '攻击+2，体力消耗+1'],
+      ['chain', weapon.weaponClass === 'polearm', '距离2命中击退1格，碰撞伤害+2'],
       ['venom-sac', true, '命中附毒并刷新至2回合'],
-      ['spring', true, '击杀后为其他武器蓄势'],
+      ['spring', true, '击杀后，下一击更换武器体力消耗-1'],
     ]) {
-      if (valid && this.has(id)) lines.push(`${this.sourceName(id)}：${adjacent.some(i => i.id === id) ? effect : '未相邻，不生效'}`)
+      if (valid && this.has(id) && adjacent.some(i => i.id === id)) lines.push(`${this.sourceName(id)}：${effect}`)
     }
     return [...lines, ...this.pendingLines(weapon)]
   }
@@ -223,9 +260,9 @@ export class ItemRules {
     if (this.run.player.parry) lines.push('锈蚀短剑：下一次近战普通攻击减伤30%')
     if (this.has('wood-shield')) lines.push(`木盾：下次是第${(this.state.enemyAttacks || 0) % 2 === 0 ? 1 : 2}次受击（第2次触发）`)
     if (this.talent('survival-energy')) lines.push(`续命：受生命伤害计数${(this.state.healthHits || 0) % 2}/2`)
-    if (this.has('r-empty')) lines.push(`空匣印：空格${this.run.backpack.capacity - this.run.backpack.usedCells}/8${this.run.backpack.capacity - this.run.backpack.usedCells >= 8 ? '，武器体力-1' : ''}`)
+    if (this.has('r-empty')) lines.push(`空匣印：空格${this.run.backpack.capacity - this.run.backpack.usedCells}/8${this.run.backpack.capacity - this.run.backpack.usedCells >= 8 ? '，武器体力消耗-1' : ''}`)
     if (this.has('r-three')) lines.push(`三相轮：武器属性${new Set(this.run.backpack.items.filter(i => i.type === 'weapon').map(i => i.attribute).filter(Boolean)).size}/3`)
-    if (this.has('r-traveler')) lines.push(`旅者骨牌：${this.state.lastAction === 'movement' ? '下一击体力-2' : this.state.lastAction === 'attack' ? '连续攻击体力+1' : '普通攻击费用'}`)
+    if (this.has('r-traveler')) lines.push(`旅者骨牌：${this.state.lastAction === 'movement' ? '下一击体力消耗-2' : this.state.lastAction === 'attack' ? '连续攻击体力消耗+1' : '普通攻击费用'}`)
     if (this.has('r-reverse')) lines.push('逆克石：武器克制关系已反转')
     if (this.has('r-blood')) lines.push(`血契铜镜：治疗减半；低血增伤${this.run.player.hp <= this.run.player.maxHp / 2 ? '已生效（+3）' : '未生效'}`)
     if (this.has('r-scales')) lines.push(`断刃秤：武器${this.run.backpack.items.filter(i => i.type === 'weapon').length}/1`)

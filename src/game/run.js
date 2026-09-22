@@ -2,8 +2,8 @@ import { createEmitter } from './core/emitter.js'
 import { chebyshev, combatDistance, manhattan, neighbors8 } from './core/geometry.js'
 import { TURN_KINDS, TurnLedger } from './core/turns.js'
 import { attributeLabel } from './data/attributes.js'
-import { createLootEntity, createMinion, getItemDefinition, makeItemById, makeRelicItem, starterWeapon, synchronizeEntityIds, weaponTier, weaponTierRoman } from './data/content.js'
-import { enemyBehaviorLabel, enemyFeatureLabel } from './data/enemy-features.js'
+import { createLootEntity, createMinion, getItemDefinition, makeItemById, makeRelicItem, starterWeapon, synchronizeEntityIds, weaponTier } from './data/content.js'
+import { enemyBehaviorDetailLabel, enemyFeatureDetailLabel } from './data/enemy-features.js'
 import { getMerchantDefinition, merchantSellPrice, refreshMerchantSlot, refreshMerchantStock } from './data/merchants.js'
 import { buildRelicChoices, getRelicDefinition } from './data/relics.js'
 import { buildRoomRewardChoices } from './data/rewards.js'
@@ -78,8 +78,15 @@ const DETAIL_LABELS = Object.freeze({
 const WEAPON_CLASS_LABELS = Object.freeze({
   sword: '\u5251', axe: '\u65a7', dagger: '\u5315\u9996', polearm: '\u957f\u67c4', heavy: '\u91cd\u6b66\u5668', bow: '\u5f13',
 })
+const DEFENSE_CLASS_LABELS = Object.freeze({ shield: '\u76fe\u724c', armor: '\u62a4\u7532' })
 
 function weaponClassLabel(value) { return WEAPON_CLASS_LABELS[value] || value || '\u6b66\u5668' }
+function defenseClassLabel(value) { return DEFENSE_CLASS_LABELS[value] || DEFENSE_CLASS_LABELS.armor }
+function itemTier(item) {
+  const fallback = item?.type === 'weapon' ? weaponTier(item) : 1
+  return Math.max(1, Math.min(3, Math.floor(Number(item?.tier) || fallback)))
+}
+function itemTierStars(item) { return '\u2605'.repeat(itemTier(item)) }
 
 function weaponAttackRange(weapon) { return Math.max(1, Number(weapon?.range) || 1) }
 
@@ -149,27 +156,39 @@ const MERCHANT_SERVICE_LABELS = Object.freeze({
 
 function detailForItem(item, player = null) {
   const type = DETAIL_LABELS[item?.type] || '\u7269\u54c1'
-  const lines = []
-  const badges = item?.type === 'weapon' && item?.attribute ? [attributeLabel(item.attribute)] : []
+  const statLines = []
+  const effectLines = []
+  const badges = []
   if (item?.type === 'weapon') {
-    lines.push(`${DETAIL_LABELS.level} ${weaponTierRoman(item)}`)
-    lines.push(`${DETAIL_LABELS.attack} ${item.attack || 0}`)
-    lines.push(`${DETAIL_LABELS.range} ${weaponAttackRange(item, player)}`)
-    lines.push(`\u4f53\u529b\u6d88\u8017 ${weaponEnergyCost(item)}`)
-    lines.push(`${DETAIL_LABELS.weaponClass}\uff1a${weaponClassLabel(item.weaponClass)}`)
+    if (item.attribute) badges.push(attributeLabel(item.attribute))
+    badges.push(weaponClassLabel(item.weaponClass), itemTierStars(item))
+    statLines.push(`\u2694 ${item.attack || 0}`)
+    statLines.push(`\u{1F3F9} ${weaponAttackRange(item, player)}`)
+    statLines.push(`\u{1F4AA} ${weaponEnergyCost(item)}`)
+  } else if (item?.type === 'defense') {
+    badges.push(defenseClassLabel(item.defenseClass), itemTierStars(item))
   } else if (item?.type === 'potion') {
-    lines.push(`${DETAIL_LABELS.health} +${item.heal || 0}`)
+    effectLines.push(`${DETAIL_LABELS.health} +${item.heal || 0}`)
   } else if (item?.type === 'armor') {
-    lines.push(`${DETAIL_LABELS.armorValue} +${item.armor || 0}`)
+    effectLines.push(`${DETAIL_LABELS.armorValue} +${item.armor || 0}`)
   } else if (item?.type === 'energy') {
-    lines.push(`${DETAIL_LABELS.energy} +${item.energy || 0}`)
+    effectLines.push(`${DETAIL_LABELS.energy} +${item.energy || 0}`)
   } else if (item?.type === 'buff') {
     const target = item.attackTarget === 'melee' ? '\u4e0b\u6b21\u8fd1\u6218\u653b\u51fb' : DETAIL_LABELS.nextAttack
-    lines.push(`${target} +${item.attackBonus || 0}`)
+    effectLines.push(`${target} +${item.attackBonus || 0}`)
   }
   const description = item?.description || ''
-  lines.push(`占格 ${item?.shape?.flat().filter(Boolean).length || 1}`)
-  return { title: item?.name || type, type, icon: item?.type || 'item', itemId: item?.id || item?.relicId || null, badges, lines, description }
+  return {
+    title: item?.name || type,
+    type,
+    icon: item?.type || 'item',
+    itemId: item?.id || item?.relicId || null,
+    badges,
+    statLines,
+    effectLines,
+    lines: [...statLines, ...effectLines],
+    description,
+  }
 }
 
 export class GameRun {
@@ -455,17 +474,16 @@ export class GameRun {
     if (!item) return false
     const detail = detailForItem(item, this.player)
     if (item.type === 'weapon' && this.backpack.placementOf(item.uid)) {
-      detail.lines[1] = `当前射程 ${this.weaponRange(item)}`
-      detail.lines[2] = `当前体力消耗 ${this.weaponEnergyCost(item)}`
-      detail.lines.push(...this.itemRules.weaponLines(item))
-      detail.lines[1] = `${DETAIL_LABELS.attack} ${item.attack || 0}`
-      detail.lines[2] = `\u5f53\u524d\u5c04\u7a0b ${this.weaponRange(item)}`
-      detail.lines[3] = `\u5f53\u524d\u4f53\u529b\u6d88\u8017 ${this.weaponEnergyCost(item)}`
+      detail.statLines[0] = `\u2694 ${item.attack || 0}`
+      detail.statLines[1] = `\u{1F3F9} ${this.weaponRange(item)}`
+      detail.statLines[2] = `\u{1F4AA} ${this.weaponEnergyCost(item)}`
+      detail.effectLines.push(...this.itemRules.weaponLines(item))
     }
     if (item.type === 'weapon') {
       const growth = this.weaponGrowth(item)
-      if (growth.talents) detail.lines.push(`\u5929\u8d4b ${growth.talents}`)
+      if (growth.talents) detail.effectLines.push(`\u5929\u8d4b ${growth.talents}`)
     }
+    detail.lines = [...detail.statLines, ...detail.effectLines]
     return this._showDetail({ position: 'top', ...detail })
   }
 
@@ -495,10 +513,10 @@ export class GameRun {
     if (!entity || entity.kind === 'stairs') return false
     if (entity.kind === 'item') return this._showDetail({ position: 'bottom', ...detailForItem(entity.item, this.player) })
     if (entity.kind === 'enemy') {
-      const features = enemyFeatureLabel(entity)
+      const features = enemyFeatureDetailLabel(entity)
       const lines = [
         `${DETAIL_LABELS.health} ${entity.hp}/${entity.maxHp}`,
-        `${DETAIL_LABELS.behavior} ${enemyBehaviorLabel(entity.behavior)}`,
+        `${DETAIL_LABELS.behavior} ${enemyBehaviorDetailLabel(entity.behavior)}`,
         `${DETAIL_LABELS.normalAttack} ${entity.attack} \u00b7 ${DETAIL_LABELS.range} ${entity.range || 1}`,
         `${DETAIL_LABELS.actionDelay} ${normalizedCounter(entity.actionDelay)}`,
         `${DETAIL_LABELS.normalAttackCooldown} ${cooldownStatus(entity.attackCooldown, entity.attackCooldownMax)}`,
@@ -550,7 +568,13 @@ export class GameRun {
   }
 
   _showDetail(detail) {
-    this.detailPanel = { ...detail, badges: [...(detail.badges || [])], lines: [...(detail.lines || [])] }
+    this.detailPanel = {
+      ...detail,
+      badges: [...(detail.badges || [])],
+      statLines: [...(detail.statLines || [])],
+      effectLines: [...(detail.effectLines || [])],
+      lines: [...(detail.lines || [])],
+    }
     this.bus.emit('detail')
     return true
   }
@@ -1328,6 +1352,10 @@ export class GameRun {
     if (movement.stopped || !this.currentRoom.entity(enemy.id)) { this._changed(); return true }
     const range = this.weaponRange(weapon)
     if (combatDistance(this.player.pos, enemy.pos, range) > range) return this._reject('敌人已经离开射程。')
+    // The deferred final step and this strike are one atomic turn. That step
+    // retains ordinary movement's recovery, then the attack pays its cost.
+    // A stationary strike has no final step and therefore receives no recovery.
+    if (route.path.length > 0) this._recoverEnergy(1)
     const context = this.itemRules.attackContext(weapon, enemy)
     if (!this._spendEnergy(this.weaponEnergyCost(weapon))) return this._reject('体力不足。')
     const damage = resolveDamage(weapon.attack, [
@@ -1924,6 +1952,7 @@ export class GameRun {
       const refreshDescription = item => {
         const definition = getItemDefinition(item?.id || item?.relicId)
         if (item?.type === 'weapon') item.tier = weaponTier(item)
+        if (item?.type === 'defense' && definition?.defenseClass) item.defenseClass = definition.defenseClass
         if (definition) item.description = definition.description || ''
       }
       this.backpack.items.forEach(refreshDescription)

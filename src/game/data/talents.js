@@ -1,4 +1,4 @@
-export const FIXED_GROWTH = Object.freeze({ id: 'body-strength', name: '强化体格', description: '最大生命+2，可重复选择。', fixed: true })
+export const FIXED_GROWTH = Object.freeze({ id: 'body-strength', name: '强健体魄', description: '最大生命+2，可重复选择。', fixed: true })
 
 export const TALENT_DEFS = Object.freeze([
   {
@@ -39,7 +39,7 @@ export const TALENT_DEFS = Object.freeze([
     "tier": 2,
     "slot": "2B",
     "name": "接力",
-    "description": "主攻击击杀后，下次用不同武器攻击体力-1，不叠加。",
+    "description": "主攻击击杀后，下次用不同武器攻击体力消耗-1，不叠加。",
     "prerequisites": [
       "flow-switch"
     ],

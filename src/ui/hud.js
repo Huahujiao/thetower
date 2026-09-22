@@ -23,7 +23,7 @@ const LABELS = Object.freeze({
   maxHealth: '\u751f\u547d\u4e0a\u9650',
   talents: '\u5929\u8d4b',
   talentGraph: '\u5929\u8d4b\u7f51',
-  fixedGrowth: '\u5f3a\u5316\u4f53\u683c',
+  fixedGrowth: '\u5f3a\u5065\u4f53\u9b44',
   help: '\u5e2e\u52a9',
   basicGameplay: '\u57fa\u672c\u73a9\u6cd5',
   close: '\u5173\u95ed',
@@ -56,7 +56,7 @@ const LABELS = Object.freeze({
   noRelicsAvailable: '\u6682\u65e0\u53ef\u83b7\u5f97\u7684\u5723\u9057\u7269',
   relicChoice: '\u9009\u62e9\u4e00\u4ef6\u5723\u9057\u7269',
   roomReward: '\u65b0\u623f\u95f4\u5956\u52b1',
-  growthChoice: '\u9009\u62e9\u5929\u8d4b\u6216\u5f3a\u5316\u4f53\u683c',
+  growthChoice: '\u9009\u62e9\u5929\u8d4b\u6216\u5f3a\u5065\u4f53\u9b44',
   skipReward: '\u8df3\u8fc7',
   sellSelected: '\u51fa\u552e\u6240\u9009',
   refreshStock: '\u5237\u65b0\u8d27\u67b6',
@@ -111,7 +111,7 @@ const HELP_SECTIONS = Object.freeze([
   {
     "title": "天赋与圣遗物",
     "items": [
-      "升级时选择换势、守御、调和、求生四条路线的天赋，也可重复强化体格。",
+      "升级时选择换势、守御、调和、求生四条路线的天赋，也可重复选择强健体魄。",
       "圣遗物没有超载限制，持有时生效。每房间次数不会因离开再进入或整理背包重置。"
     ]
   },
@@ -463,10 +463,10 @@ export class HUD {
     const fixed = choices.find((choice) => choice.fixed)
     this.q('leveluprow').innerHTML = talents.map((choice) => {
       const branch = TALENT_LINE_LABELS[choice.line] || choice.line
-      return `<button class="relic-choice-card talent-choice-card" data-level-up-choice="${choice.id}"><span class="talent-choice-branch">${escapeHtml(branch)}</span><span class="relic-name">${escapeHtml(choice.name)}</span><span class="relic-desc">${escapeHtml(choice.description)}</span></button>`
+      return `<button class="relic-choice-card talent-choice-card" data-level-up-choice="${choice.id}"><span class="talent-choice-head"><span class="relic-name">${escapeHtml(choice.name)}</span><span class="talent-choice-branch">${escapeHtml(branch)}</span></span><span class="relic-desc">${escapeHtml(choice.description)}</span></button>`
     }).join('')
     this.q('levelupfixed').innerHTML = fixed
-      ? `<div class="level-up-fixed-label">${escapeHtml(LABELS.fixedGrowth)}</div><button class="relic-choice-card level-up-fixed-choice" data-level-up-choice="${fixed.id}"><span class="relic-name">${escapeHtml(fixed.name)}</span><span class="relic-desc">${escapeHtml(fixed.description)}</span></button>`
+      ? `<button class="relic-choice-card level-up-fixed-choice" data-level-up-choice="${fixed.id}"><span class="relic-name">${escapeHtml(fixed.name)}</span><span class="relic-desc">${escapeHtml(fixed.description)}</span></button>`
       : ''
   }
 

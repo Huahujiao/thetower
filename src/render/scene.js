@@ -1,12 +1,12 @@
 import * as THREE from 'three'
 import { getAttributeDefinition } from '../game/data/attributes.js'
-import { enemyCardSubtitle } from '../game/data/enemy-features.js'
+import { enemyCardSubtitle, enemyOverheadHints } from '../game/data/enemy-features.js'
 import { isAdjacent8 } from '../game/core/geometry.js'
 import { BoardTextures } from './board-textures.js'
 import { DEFAULT_CAMERA_ELEVATION, panAzimuth } from './camera-view.js'
 import { cardBodyGeometry, styleCardBody, cardFaceY, CARD_FACE_CLEARANCE, HIDDEN_CARD_THICKNESS, HIDDEN_CARD_SCALE } from './card-body.js'
 import { boundaryPillarPoint, createDoorFrame, createLowPolyPillar, createLowPolyWall, evenPillarOffsets } from './wall-kit.js'
-import { itemSpriteSources } from '../ui/item-sprites.js'
+import { goldSpriteSources, itemSpriteSources } from '../ui/item-sprites.js'
 
 const TILE_SIZE = 1.14
 const CARD_SIZE = TILE_SIZE
@@ -34,14 +34,18 @@ const GHOST_ROOM_GAP = TILE_SIZE * 0.54
 const ENEMY_STATUS_LAYER_OFFSET = 0.012
 const ENEMY_STATUS_HEALTH_Y = CARD_SIZE * 0.46
 const ENEMY_STATUS_NAME_Y = CARD_SIZE * 0.58
+const ENEMY_STATUS_HINT_Y = CARD_SIZE * 0.72
 const ENEMY_STATUS_BOTTOM_Y = -CARD_SIZE * 0.43
 const ITEM_SPRITE_SIZE = CARD_SIZE * 0.7
 const ITEM_SPRITE_PITCH = -Math.PI / 4
 const ITEM_SPRITE_MIN_SPEED = 0.22
 const ITEM_SPRITE_SPEED_STEP = 0.025
 const ITEM_SPRITE_MAX_SPEED_VARIANT = 8
+const ITEM_SPRITE_ROTATION_SPEED_MULTIPLIER = 1.5
 const ITEM_SPRITE_FLOAT_AMPLITUDE = 0.018
 const ITEM_SPRITE_FLOAT_SPEED = 1.35
+const GROUND_WEAPON_GLOW_SIZE = CARD_SIZE * 0.9
+const GROUND_WEAPON_GLOW_OPACITY = 0.28
 const ATTACK_ANIMATION_DURATION = 0.5
 const PLAYER_ATTACK_LIFT = 0.045
 const ENEMY_ATTACK_LIFT = 0.075
@@ -541,13 +545,13 @@ export class GameScene {
     face.userData.visualKey = visual.key
     if (face.userData.groundFace) this.roomGroup.add(face.userData.groundFace)
     this.roomGroup.add(face)
-    this._attachItemSprite(face, card, point, position, revealed)
+    this._attachGroundSprite(face, card, point, position, revealed)
     this._setEnemyStatusOverlay(face, face.userData.groundFace, revealed && card?.type === 'monster' ? room.entityAt(position) : null)
     this.tileMeshes.push(face)
     this.tileMeshByKey.set(tileKey(position), face)
   }
 
-  _styleTileBody(body, room, position, { revealed, flippable }, options = {}) {
+  _styleTileBody(body, room, position, { revealed, flippable }) {
     if (this.skin === 'whiteline') {
       body.scale.set(revealed ? 1 : HIDDEN_CARD_SCALE, revealed ? 1 : HIDDEN_CARD_THICKNESS / CARD_THICKNESS, revealed ? 1 : HIDDEN_CARD_SCALE)
       body.userData.baseY = revealed ? 0 : (HIDDEN_CARD_THICKNESS - CARD_THICKNESS) / 2
@@ -558,7 +562,7 @@ export class GameScene {
       body.material.needsUpdate = true
       return
     }
-    const attribute = options.backAttribute === undefined ? this._backAttributeFor(room, position) : options.backAttribute
+    const attribute = this._backAttributeFor(room, position)
     styleCardBody(body, {
       hidden: !revealed, attribute, blocked: !flippable, baseThickness: CARD_THICKNESS,
       texture: this._makeBackTexture(attribute, { unflippable: !flippable }),
@@ -575,18 +579,104 @@ export class GameScene {
     face.userData.standing = standing
   }
 
-  _clearItemSprite(face) {
-    const sprite = face?.userData?.itemSprite
+  _clearGroundSprite(face, { preserveGlow = false } = {}) {
+    const sprite = face?.userData?.groundSprite
     if (sprite) {
       this.roomGroup.remove(sprite)
       disposeObject(sprite)
     }
-    face.userData.itemSprite = null
-    face.userData.itemSpriteState = null
-    face.userData.itemSpriteRequestKey = null
+    if (!preserveGlow) {
+      const glow = face?.userData?.groundWeaponGlow
+      if (glow) {
+        this.roomGroup.remove(glow)
+        disposeObject(glow)
+      }
+      face.userData.groundWeaponGlow = null
+    }
+    face.userData.groundSprite = null
+    face.userData.groundSpriteState = null
+    face.userData.groundSpriteRequestKey = null
   }
 
-  _itemSpriteMesh(face, texture, item, point, position, elapsed = 0) {
+  _groundItem(card, position) {
+    const entity = position ? this.run.currentRoom?.entityAt(position) : null
+    return card?.item || (entity?.kind === 'item' ? entity.item : null)
+  }
+
+  _groundSpriteDescriptor(card, position) {
+    const entity = position ? this.run.currentRoom?.entityAt(position) : null
+    const item = this._groundItem(card, position)
+    const itemSources = itemSpriteSources(item)
+    if (itemSources) return { sources: itemSources, key: item.uid || item.id, item }
+    const goldSources = entity?.kind === 'gold' ? goldSpriteSources(entity.amount) : null
+    if (goldSources) return { sources: goldSources, key: `gold:${entity.amount}:${entity.id}` }
+    return null
+  }
+
+  _addGroundWeaponGlow(face, item, point, position) {
+    const attribute = item?.type === 'weapon' ? getAttributeDefinition(item.attribute) : null
+    if (!attribute) return
+    const seed = stableHash(`${item.uid || item.id}:${position?.c || 0}:${position?.r || 0}:glow`)
+    const material = new THREE.ShaderMaterial({
+      uniforms: {
+        glowColor: { value: new THREE.Color(attribute.color) },
+        glowOpacity: { value: GROUND_WEAPON_GLOW_OPACITY },
+        edgePhase: { value: (seed % 6283) / 1000 },
+        glowTime: { value: 0 },
+      },
+      vertexShader: `
+        varying vec2 glowUv;
+        void main() {
+          glowUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform vec3 glowColor;
+        uniform float glowOpacity;
+        uniform float edgePhase;
+        uniform float glowTime;
+        varying vec2 glowUv;
+        float starRayLayer(float radius, float angle, float points, float rotation, float innerReach, float outerReach) {
+          float ray = pow(0.5 + 0.5 * cos((angle + rotation) * points), 10.0);
+          float reach = mix(innerReach, outerReach, ray);
+          float taperedRay = 1.0 - smoothstep(reach - 0.1, reach + 0.015, radius);
+          return taperedRay * ray * smoothstep(0.12, 0.34, radius);
+        }
+        void main() {
+          vec2 centered = (glowUv - 0.5) * 2.0;
+          float radius = length(centered);
+          float angle = atan(centered.y, centered.x);
+          float softCenter = exp(-4.2 * radius * radius) * 0.2;
+          float slowRays = starRayLayer(radius, angle, 9.0, glowTime * 0.18 + edgePhase, 0.34, 0.98) * 0.46;
+          float reverseRays = starRayLayer(radius, angle, 13.0, -glowTime * 0.27 - edgePhase * 0.63, 0.3, 0.84) * 0.32;
+          float quickRays = starRayLayer(radius, angle, 17.0, glowTime * 0.39 + edgePhase * 1.37, 0.26, 0.72) * 0.2;
+          float outerFade = 1.0 - smoothstep(0.86, 1.08, radius);
+          float alpha = (softCenter + slowRays + reverseRays + quickRays) * outerFade * glowOpacity;
+          gl_FragColor = vec4(glowColor, alpha);
+        }
+      `,
+      transparent: true,
+      depthTest: false,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      toneMapped: false,
+      side: THREE.DoubleSide,
+    })
+    const glow = new THREE.Mesh(new THREE.PlaneGeometry(GROUND_WEAPON_GLOW_SIZE, GROUND_WEAPON_GLOW_SIZE), material)
+    glow.rotation.x = -Math.PI / 2
+    glow.position.set(point.x, cardFaceY(false, CARD_THICKNESS) + 0.006, point.z)
+    glow.renderOrder = tileRenderOrder(position, 7)
+    glow.raycast = NO_RAYCAST
+    glow.userData.glowPulse = {
+      elapsed: (seed % 628) / 100,
+      speed: 1.35 + (seed % 5) * 0.12,
+    }
+    face.userData.groundWeaponGlow = glow
+    this.roomGroup.add(glow)
+  }
+
+  _groundSpriteMesh(face, texture, descriptor, point, position, elapsed = 0) {
     const image = texture.image
     const aspect = image?.width && image?.height ? image.width / image.height : 1
     const width = aspect >= 1 ? ITEM_SPRITE_SIZE : ITEM_SPRITE_SIZE * aspect
@@ -601,8 +691,9 @@ export class GameScene {
       side: THREE.DoubleSide,
     })
     const sprite = new THREE.Mesh(geometry, material)
-    const spinSeed = stableHash(`${item?.uid || item?.id || 'item'}:${position?.c || 0}:${position?.r || 0}`)
-    const speed = ITEM_SPRITE_MIN_SPEED + (spinSeed % (ITEM_SPRITE_MAX_SPEED_VARIANT + 1)) * ITEM_SPRITE_SPEED_STEP
+    const spinSeed = stableHash(`${descriptor.key}:${position?.c || 0}:${position?.r || 0}`)
+    const speed = (ITEM_SPRITE_MIN_SPEED + (spinSeed % (ITEM_SPRITE_MAX_SPEED_VARIANT + 1)) * ITEM_SPRITE_SPEED_STEP)
+      * ITEM_SPRITE_ROTATION_SPEED_MULTIPLIER
     // The mesh origin is the tile center, so the pitch rotates around the
     // image's half-height line and heading rotation stays centered on the tile.
     const groundY = cardFaceY(false, CARD_THICKNESS)
@@ -614,29 +705,29 @@ export class GameScene {
     sprite.rotation.set(ITEM_SPRITE_PITCH, this.cameraAzimuth, 0)
     sprite.renderOrder = tileRenderOrder(position, 8)
     sprite.raycast = NO_RAYCAST
-    sprite.userData.itemSprite = true
+    sprite.userData.groundSprite = true
     sprite.userData.position = position ? { ...position } : null
     sprite.userData.itemSpin = { angle: (elapsed * speed) % (Math.PI * 2), elapsed, speed, baseY: sprite.position.y }
-    face.userData.itemSprite = sprite
-    face.userData.itemSpriteState = { source: itemSpriteSources(item), position: position ? { ...position } : null }
+    face.userData.groundSprite = sprite
+    face.userData.groundSpriteState = { source: descriptor.sources, position: position ? { ...position } : null }
     this.roomGroup.add(sprite)
   }
 
-  _attachItemSprite(face, card, point, position, revealed = false) {
-    this._clearItemSprite(face)
+  _attachGroundSprite(face, card, point, position, revealed = false) {
+    this._clearGroundSprite(face)
     if (!revealed) return
-    const entity = position ? this.run.currentRoom?.entityAt(position) : null
-    const item = card?.item || (entity?.kind === 'item' ? entity.item : null)
-    if (this.skin === 'whiteline' || !item) return
-    const sources = itemSpriteSources(item)
-    if (!sources) return
+    if (this.skin === 'whiteline') return
+    this._addGroundWeaponGlow(face, this._groundItem(card, position), point, position)
+    const descriptor = this._groundSpriteDescriptor(card, position)
+    if (!descriptor) return
+    const { sources } = descriptor
     const sourceKey = sources.medium
     const startedAt = Date.now()
-    face.userData.itemSpriteRequestKey = sourceKey
+    face.userData.groundSpriteRequestKey = sourceKey
     const applyTexture = (texture) => {
-      if (!texture || !face.parent || face.userData.itemSpriteRequestKey !== sourceKey || face.userData.position?.c !== position?.c || face.userData.position?.r !== position?.r) return
-      this._clearItemSprite(face)
-      this._itemSpriteMesh(face, texture, item, point, position, Math.max(0, (Date.now() - startedAt) / 1000))
+      if (!texture || !face.parent || face.userData.groundSpriteRequestKey !== sourceKey || face.userData.position?.c !== position?.c || face.userData.position?.r !== position?.r) return
+      this._clearGroundSprite(face, { preserveGlow: true })
+      this._groundSpriteMesh(face, texture, descriptor, point, position, Math.max(0, (Date.now() - startedAt) / 1000))
     }
     const texture = itemSpriteTexture(sources, applyTexture)
     if (texture) applyTexture(texture)
@@ -670,6 +761,7 @@ export class GameScene {
     healthOverlay.raycast = NO_RAYCAST
     this._addEnemyHealthMeter(healthOverlay, enemy)
     this._addEnemyNameLabel(healthOverlay, enemy)
+    this._addEnemyHintLabel(healthOverlay, enemy)
     face.add(healthOverlay)
     face.userData.enemyHealthOverlay = healthOverlay
 
@@ -758,6 +850,45 @@ export class GameScene {
     nameLabel.raycast = NO_RAYCAST
     nameLabel.renderOrder = (overlay.userData.renderOrder || 1) + overlay.children.length * 0.001
     overlay.add(nameLabel)
+  }
+
+  _addEnemyHintLabel(overlay, enemy) {
+    const range = Math.max(1, turnCounter(enemy?.range))
+    const tokens = [
+      ...enemyOverheadHints(enemy).map((hint) => hint.icon),
+      `\u{1F3F9} ${range}`,
+    ]
+    const texture = makeCanvasTexture((context) => {
+      context.font = 'bold 21px "Segoe UI Symbol", "Noto Sans Symbols", sans-serif'
+      context.textAlign = 'left'
+      context.textBaseline = 'middle'
+      const gap = 7
+      const widths = tokens.map((token) => context.measureText(token).width)
+      const totalWidth = widths.reduce((sum, width) => sum + width, 0) + gap * Math.max(0, tokens.length - 1)
+      let x = 90 - totalWidth / 2
+      for (let index = 0; index < tokens.length; index += 1) {
+        context.lineWidth = 1
+        context.strokeStyle = 'rgba(4,7,12,.92)'
+        context.strokeText(tokens[index], x, 16)
+        context.fillStyle = index === tokens.length - 1 ? '#d9e9f0' : '#f0d8aa'
+        context.fillText(tokens[index], x, 16)
+        x += widths[index] + gap
+      }
+    }, { width: 540, height: 96 })
+    const hintLabel = new THREE.Mesh(
+      new THREE.PlaneGeometry(CARD_SIZE * 0.78, CARD_SIZE * 0.139),
+      new THREE.MeshBasicMaterial({
+        map: texture,
+        transparent: true,
+        depthTest: false,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+      }),
+    )
+    hintLabel.position.set(0, ENEMY_STATUS_HINT_Y, overlay.children.length * 0.0002)
+    hintLabel.raycast = NO_RAYCAST
+    hintLabel.renderOrder = (overlay.userData.renderOrder || 1) + overlay.children.length * 0.001
+    overlay.add(hintLabel)
   }
 
   _addEnemyTurnMeter(overlay, { axis, x, y, total, remaining, color }) {
@@ -1168,7 +1299,7 @@ export class GameScene {
     const visual = this._tileVisualState(room, position)
     const { revealed, peeked, flippable } = visual
     if (!force && face.visible && face.userData.visualKey === visual.key) return true
-    this._clearItemSprite(face)
+    this._clearGroundSprite(face)
     const oldTexture = face.material.map
     const card = revealed || peeked ? this._cardFaceData(room, position) : null
     const standing = revealed && (card?.type === 'monster' || card?.type === 'merchant' || card?.type === 'entry')
@@ -1198,7 +1329,7 @@ export class GameScene {
       this.roomGroup.add(face.userData.groundFace)
     }
     if (face.userData.groundFace) face.userData.groundFace.visible = emptyGround
-    this._attachItemSprite(face, card, this._gridPosition(room, position), position, revealed)
+    this._attachGroundSprite(face, card, this._gridPosition(room, position), position, revealed)
     this._setEnemyStatusOverlay(face, face.userData.groundFace, revealed && card?.type === 'monster' ? room.entityAt(position) : null)
     face.userData.visualKey = visual.key
     return true
@@ -1277,12 +1408,18 @@ export class GameScene {
     const card = this._cardFaceData(room, position)
     const flippingEnemy = card?.type === 'monster'
     const frontTexture = this._makeFrontTexture(card, position, true)
-    // Enemy identity is revealed by the front, not telegraphed by a colored
-    // wood-grain back during the flip. A neutral card back also avoids a
-    // queued snapshot from restoring the old attribute texture.
+    // The floor belongs to every grid cell, including the short interval in
+    // which its hidden card is replaced by an enemy reveal animation.
+    const flipGround = flippingEnemy ? this._makeEmptyGroundFace(point, position) : null
+    if (flipGround) {
+      flipGround.renderOrder = tileRenderOrder(position, 0)
+      this.roomGroup.add(flipGround)
+    }
+    // An enemy's flip is a transparent reveal of the figure. It is not a card
+    // with a substitute back: no back plane or textured body is created.
     if (flippingEnemy) sourceBackTexture?.dispose()
     const backTexture = flippingEnemy
-      ? this._makeBackTexture(null, { unflippable: backUnflippable })
+      ? null
       : sourceBackTexture || this._makeBackTexture(this._backAttributeFor(room, position), { unflippable: backUnflippable })
     const front = new THREE.Mesh(
       new THREE.PlaneGeometry(CARD_SIZE, CARD_SIZE),
@@ -1290,31 +1427,31 @@ export class GameScene {
     )
     front.rotation.x = -Math.PI / 2
     front.position.y = HIDDEN_CARD_THICKNESS / 2 + CARD_FACE_CLEARANCE
-    const back = new THREE.Mesh(
+    const back = flippingEnemy ? null : new THREE.Mesh(
       new THREE.PlaneGeometry(CARD_SIZE, CARD_SIZE),
       new THREE.MeshBasicMaterial({ map: backTexture, side: THREE.DoubleSide, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -4 }),
     )
-    back.rotation.x = Math.PI / 2
-    back.position.y = -HIDDEN_CARD_THICKNESS / 2 - CARD_FACE_CLEARANCE
-    const edge = new THREE.Mesh(cardBodyGeometry(CARD_SIZE, CARD_THICKNESS), new THREE.MeshStandardMaterial({ roughness: 0.9 }))
-    this._styleTileBody(
-      edge,
-      room,
-      position,
-      { revealed: false, flippable: !backUnflippable },
-      { backAttribute: flippingEnemy ? null : undefined },
-    )
-    edge.position.y = 0
-    edge.scale.x = edge.scale.z = 1
+    if (back) {
+      back.rotation.x = Math.PI / 2
+      back.position.y = -HIDDEN_CARD_THICKNESS / 2 - CARD_FACE_CLEARANCE
+    }
+    const edge = flippingEnemy ? null : new THREE.Mesh(cardBodyGeometry(CARD_SIZE, CARD_THICKNESS), new THREE.MeshStandardMaterial({ roughness: 0.9 }))
+    if (edge) {
+      this._styleTileBody(edge, room, position, { revealed: false, flippable: !backUnflippable })
+      edge.position.y = 0
+      edge.scale.x = edge.scale.z = 1
+    }
     const flipRenderOrder = tileRenderOrder(position, 2)
     front.renderOrder = flipRenderOrder
-    back.renderOrder = flipRenderOrder
-    edge.renderOrder = flipRenderOrder
-    group.add(front, back, edge)
+    if (back) back.renderOrder = flipRenderOrder
+    if (edge) edge.renderOrder = flipRenderOrder
+    group.add(front)
+    if (back) group.add(back)
+    if (edge) group.add(edge)
     face.visible = false
     face.userData.body.visible = false
     this.roomGroup.add(group)
-    this.flipAnimations.push({ key, group, front, back, edge, startY, frontTexture, backTexture, elapsed: 0, duration: 0.34 })
+    this.flipAnimations.push({ key, group, front, back, edge, ground: flipGround, startY, frontTexture, backTexture, elapsed: 0, duration: 0.34 })
     return true
   }
 
@@ -1753,7 +1890,15 @@ export class GameScene {
 
   _updateItemSprites(delta) {
     for (const face of this.tileMeshes) {
-      const sprite = face?.userData?.itemSprite
+      const glow = face?.userData?.groundWeaponGlow
+      const glowPulse = glow?.userData?.glowPulse
+      if (glow && glowPulse) {
+        glowPulse.elapsed += delta
+        const breath = (Math.sin(glowPulse.elapsed * glowPulse.speed) + 1) / 2
+        glow.material.uniforms.glowTime.value = glowPulse.elapsed
+        glow.material.uniforms.glowOpacity.value = GROUND_WEAPON_GLOW_OPACITY * (0.45 + breath * 0.55)
+      }
+      const sprite = face?.userData?.groundSprite
       const spin = sprite?.userData?.itemSpin
       if (!sprite || !spin) continue
       spin.elapsed += delta
@@ -1773,12 +1918,16 @@ export class GameScene {
       animation.group.position.y = THREE.MathUtils.lerp(animation.startY, CARD_THICKNESS / 2, eased) + Math.sin(eased * Math.PI) * 0.28
       const thickness = HIDDEN_CARD_THICKNESS * (1 - eased)
       animation.front.position.y = thickness / 2 + 0.002
-      animation.back.position.y = -thickness / 2 - 0.002
-      animation.edge.scale.y = Math.max(0.001, thickness / CARD_THICKNESS)
+      if (animation.back) animation.back.position.y = -thickness / 2 - 0.002
+      if (animation.edge) animation.edge.scale.y = Math.max(0.001, thickness / CARD_THICKNESS)
       animation.group.scale.x = animation.group.scale.z = THREE.MathUtils.lerp(HIDDEN_CARD_SCALE, 1, eased)
       if (progress < 1) continue
       this.roomGroup.remove(animation.group)
       disposeObject(animation.group)
+      if (animation.ground) {
+        this.roomGroup.remove(animation.ground)
+        disposeObject(animation.ground)
+      }
       this.flipAnimations.splice(index, 1)
       const room = this.run.currentRoom
       const face = this.tileMeshByKey.get(animation.key)
@@ -1822,9 +1971,7 @@ export class GameScene {
       const detail = card?.type === 'monster' ? `ATK ${card.attack || 0} / RANGE ${card.range || 1}` : card?.type === 'weapon' ? `ATK ${card.attack || 0} / RANGE ${card.range || 1}` : ''
       return makeCanvasTexture((context) => drawWhiteLineCard(context, { label, value, detail }))
     }
-    const entity = position ? this.run.currentRoom?.entityAt(position) : null
-    const item = card?.item || (entity?.kind === 'item' ? entity.item : null)
-    if (revealed && itemSpriteSources(item)) return this.boardTextures.floor(position)
+    if (revealed && this._groundSpriteDescriptor(card, position)) return this.boardTextures.floor(position)
     if (card.type === 'empty') return this.boardTextures.floor(position)
     return makeCanvasTexture((context) => {
       if (card.type === 'monster') {

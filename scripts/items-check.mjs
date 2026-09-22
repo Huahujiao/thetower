@@ -10,6 +10,22 @@ assert.equal(ALL_ITEM_DEFS.length, 44)
 assert.equal(makeItemById('short-sword'), null)
 for (let i = 0; i < 100; i++) assert.notEqual(randomItem(1, () => i / 100).type, 'material')
 
+// Detail identity is compact: shape is visible in the backpack, so it is not
+// repeated as text. Defense effect attributes remain internal and are not
+// presented as a defense identity badge.
+{
+  const run = fixture()
+  const weapon = add(run, 'rust-sword')
+  const defense = add(run, 'wood-shield')
+  assert(run.showItemDetail(weapon))
+  assert.deepEqual(run.detailPanel.badges, ['\u707c\u70ed', '\u5251', '\u2605'])
+  assert.deepEqual(run.detailPanel.lines.slice(0, 3), ['\u2694 3', '\u{1F3F9} 1', '\u{1F4AA} 3'])
+  assert.equal(run.detailPanel.lines.some((line) => line.includes('\u5360\u683c')), false)
+  assert(run.showItemDetail(defense))
+  assert.deepEqual(run.detailPanel.badges, ['\u76fe\u724c', '\u2605'])
+  assert.equal(run.detailPanel.lines.some((line) => line.includes('\u5360\u683c')), false)
+}
+
 // Consumables have an exact cost and never receive the exploration recovery.
 for (const id of ['health-potion', 'iron-powder', 'energy-potion', 'cleanse', 'rage-wine']) {
   const run = fixture(), item = add(run, id)

@@ -25,13 +25,19 @@ Defense cards in `/wiki` identify their exclusive acquisition channels: enemy dr
 
 The wiki now reflects complete sprite coverage: 18 weapons, 8 defenses, 6 consumables, 6 materials, and 6 relics. Each mapped item uses a transparent footprint-aware source with only small and medium runtime variants; vertical and irregular defenses keep their occupied-shape proportions.
 
-The relic sprite set now covers all six relic ids: Three-Phase Wheel (`r-three`), Empty Casket Seal (`r-empty`), Reverse Stone (`r-reverse`), Traveler Bone Domino (`r-traveler`), Blood Pact Bronze Mirror (`r-blood`), and Broken-Blade Scales (`r-scales`). Every relic occupies one backpack cell and uses a transparent staged sprite. Relic cells use a faint translucent purple backing behind their sprites, while weapon cells retain a low-opacity tint matching scorch, wither, or drown in addition to the colored outline. When a mapped weapon or item is revealed on the Three.js board, the same transparent sprite is fitted to 0.7 of the tile size, centered close to the ground over the shared empty-ground texture, lowered by the calculated 45-degree pitch lift, and slowly heading-rotated with an independent reveal-based start and speed.
+Revealed floor gold has its own transparent ancient-coin-pile artwork rather than an inventory-item mapping. The sprite exactly follows the ground entity's actual 3-to-7 coin amount, uses the same 0.7-tile pitched and independently rotating board treatment as other revealed artwork, and loads only the small/medium runtime variants. The full-resolution sources remain archived as backups.
+
+The relic sprite set now covers all six relic ids: Three-Phase Wheel (`r-three`), Empty Casket Seal (`r-empty`), Reverse Stone (`r-reverse`), Traveler Bone Domino (`r-traveler`), Blood Pact Bronze Mirror (`r-blood`), and Broken-Blade Scales (`r-scales`). Every relic occupies one backpack cell and uses a transparent staged sprite. Relic cells use a faint translucent purple backing behind their sprites, while weapon cells retain a low-opacity tint matching scorch, wither, or drown in addition to the colored outline. When a mapped weapon or item is revealed on the Three.js board, the same transparent sprite is fitted to 0.7 of the tile size, centered close to the ground over the shared empty-ground texture, lowered by the calculated 45-degree pitch lift, and heading-rotated with an independent reveal-based start and speed. Ground-item rotation is now 1.5 times faster. An uncollected floor weapon also casts a compact translucent star-edged glow onto its tile in the matching scorch-red, wither-yellow, or drown-blue attribute color; the glow remains below the sprite and vanishes on collection.
+
+The floor-weapon attribute glow spans about 0.9 tile widths. A faint center gradient sits beneath three narrow star-ray layers with different ray counts, phases, and rotation speeds; one layer turns in reverse. The layers pass through one another while their shared low-opacity envelope breathes, creating moving light rather than a filled disc, puddle, or single cartoon star shape. The plane itself no longer expands and contracts.
 
 The game HUD is mounted with Vue 3 while Three.js remains the board renderer. Vue owns the reactive panels, keyed backpack placements, detail overlay, and staged sprite component; `GameScene` still owns the canvas, camera, card meshes, walls, and animation loop. This boundary keeps UI updates from replacing the Three canvas or unrelated inventory images.
 
 Wall pillar tops use a smaller capital-and-cap profile, and the initial room framing starts slightly farther away for a less crowded view.
 
 Enemy cards show a doubled-size, lightly outlined name label above the health bar. It shares the health bar's status-group orientation and uses a matching wide texture, so its text remains readable rather than being vertically compressed; it is visual-only and does not intercept board touches.
+
+Above the enemy name, a compact, slightly enlarged symbol row exposes non-stationary behavior and combat-relevant traits such as chase, ambush, armor, regeneration, and self-destruction. The row always ends with `🏹 number` for attack range. Enemy detail panels prefix the corresponding behavior and feature names with those same symbols. `/wiki` includes the complete symbol legend, and stationary behavior intentionally has no symbol.
 
 The health bar is raised slightly toward the name label while the label keeps its existing height, reducing the gap without crowding the enemy head.
 
@@ -50,17 +56,19 @@ The project lint policy is defined in `eslint.config.js` and runs with `npm.cmd 
 
 图鉴卡片直接读取这些静态定义，不再混入未实装提案卡。武器图鉴额外展示按类别计算的体力消耗：匕首 2、剑 3、斧／长柄／弓 4、重武器 5；不展示已删除的耐久、最后一击或武器损毁信息。陷阱图鉴显示腐蚀陷阱的体力扣除和毒雾的全局回合效果。
 
-天赋卡片使用中文分支标签和节点位置，不直接展示内部 line ID。游戏内长按详情和图鉴使用同一套对象名称与效果描述；任何提案或历史设计应放在 `docs` 的历史文档中，不进入图鉴运行时数据。
+天赋卡片使用中文分支标签和节点位置，不直接展示内部 line ID。游戏内长按详情和图鉴使用同一套对象名称与效果描述；体力消耗修正统一写为“体力消耗±N”，以区别于恢复或失去体力。详情中的武器数值与其他效果分行，未生效的相邻关系不显示，图片框限定宽 2 格、高最多 3 格并以 `contain` 等比缩放和裁切；任何提案或历史设计应放在 `docs` 的历史文档中，不进入图鉴运行时数据。
 
 ## Vue HUD interaction notes
 
 ## Inventory staging notes
 
-The production and white-line skins share the same 300 ms hold, 18 px movement tolerance, shape-anchor placement, green/yellow/red drop preview, free-form staging canvas, discard zone, and multi-touch clockwise rotation. A floating item snaps by its visual footprint center to the nearest backpack footprint center, allowing a half-cell alignment tolerance rather than anchoring the touch to the item's upper-left cell. The staging layer ends at the real top edge of the 8x4 backpack: its discard row fills the upper 25 percent and its stash row fills the remaining 75 percent of that whole available region. Staged items retain the exact backpack-cell scale and rotation proportion; automatic arrivals search for a zero-overlap occupied-cell position, falling back to the least-overlap candidate only when needed. The detail panel is deliberately stacked above those two zones for inspection during cleanup. Staged items are serialized with the run, remain visible while the canvas is non-empty, and are resolved before scene interaction resumes. The `/wiki` reference should describe these controls as touch-only and should not document the removed discard or rotate toolbar buttons.
+The production and white-line skins share the same 300 ms hold, 18 px movement tolerance, shape-anchor placement, green/yellow/red drop preview, free-form staging canvas, discard zone, and multi-touch clockwise rotation. Each fresh second-finger tap rotates the held item again; its captured touch end releases the identifier before any component-level stopped handler can hide it. A floating item snaps by its visual footprint center to the nearest backpack footprint center, allowing a half-cell alignment tolerance rather than anchoring the touch to the item's upper-left cell. The staging layer ends at the real top edge of the 8x4 backpack: its discard row fills the upper 25 percent and its stash row fills the remaining 75 percent of that whole available region. Staged items retain the exact backpack-cell scale and rotation proportion; automatic arrivals search for a zero-overlap occupied-cell position, falling back to the least-overlap candidate only when needed. The detail panel is deliberately stacked above those two zones for inspection during cleanup. Staged items are serialized with the run, remain visible while the canvas is non-empty, and are resolved before scene interaction resumes. The `/wiki` reference should describe these controls as touch-only and should not document the removed discard or rotate toolbar buttons.
 
 The thorn spear's thin 1x4 sprite is alpha-trimmed at threshold 8 before its runtime small and medium variants are generated; its full uncropped source remains archived, and the trimmed art fills its intended footprint.
 
 The game HUD is mounted by Vue 3 while the board remains Three.js. Because `GameRun` is intentionally a plain event-driven model, all mutable HUD projections subscribe through the shared revision tick. This keeps initial relic selection, room rewards, level-up choices, merchant stock, backpack movement, action visibility, and status panels synchronized after each model change.
+
+Level-up talent cards show the talent name on the left and its type/route on the right of the same header row. The repeatable maximum-health option is uniformly named `强健体魄`; below the divider, only that option card is shown, without a duplicate four-character label.
 
 Long-press detail uses a separate detail update and preserves keyed inventory sprite nodes. The complete backpack grid suppresses the browser context menu, so inspecting a textured item does not open native browser actions or flash unrelated equipment.
 
@@ -88,7 +96,7 @@ After 300 ms, the corresponding detail panel is populated and shown through `det
 
 ## Scene status tray
 
-The main HUD no longer has a separate build-status text row. The experience strip sits directly below the top HUD, and the released space belongs to the Three.js board. Active statuses render inside the board's lower-left edge, flowing from left to right, as compact first-character cells with a badge for remaining turns, an active counter, or a relic threshold. Holding a cell uses the existing 300 ms detail gesture and releasing closes the detail overlay. The wiki header records this interaction alongside the current content reference.
+The main HUD no longer has a separate build-status text row. The experience strip sits directly below the top HUD, and the released space belongs to the Three.js board. Active statuses render inside the board's lower-left edge, flowing from left to right. Poison, burning, rage wine, generic attack-up, and reduced-energy-cost effects use dedicated transparent pictograms, while the corner badge keeps the remaining turns or effect value. Holding a cell uses the existing 300 ms detail gesture and releasing closes the detail overlay. The wiki header records this interaction alongside the current content reference.
 
 Current tray categories are poison, burning, and active temporary attack/weapon buffs such as rage wine. Relic counters, persistent equipment/talent conditions, defensive counters, and weapon adjacency or empty-space construction checks remain in the relevant details and are intentionally excluded from the compact tray.
 
@@ -98,7 +106,7 @@ The wiki item definition for the teleport talisman now states its Manhattan-dist
 
 ## Fixed south wall
 
-The front south-wall layer also occludes temporary flip planes. Enemy flip transitions use the neutral back, not an attribute-colored wood-grain back.
+The front south-wall layer also occludes temporary flip planes. Enemy flip transitions render the enemy figure over that cell's normal floor texture, with no card back or wood-grain body.
 
 Room boundary walls do not respond to the player's nearby position. The south wall remains visible as the player enters or leaves its adjacent tiles; only the fixed interior-pillar omission is used to preserve sightlines, while both corner pillars stay in place.
 
@@ -106,7 +114,15 @@ Room boundary walls do not respond to the player's nearby position. The south wa
 
 All crossed movement tiles now depress on arrival. A footprint remains pressed through the following movement turn before lifting, and the final landing tile lifts when a later action advances the global turn. The camera-facing south boundary has a fixed layer above the southernmost tile row, so a pressed tile never jumps in front of the wall merely because its surface moved downward. This is visual feedback only and does not change movement range, route cost, or combat rules.
 
-The backpack has no outer frame; only its cells and item outlines remain visible. Weapon tiers use Roman numerals in the detail panel only (I for ordinary weapons, II for crafted weapons). The detail panel uses its icon slot for the matching item sprite when one exists, and ordinary items do not show weapon attribute badges. Relic selection is a borderless, full-screen dimmed overlay whose cards read from top to bottom as name, image, and compact description; the lower description area is top-left aligned.
+The backpack has no outer frame; only its cells and item outlines remain visible. Its toolbar places armor at the far left, wider health and energy bars through the available center, and Use at the far right; removed discard and rotate controls leave no empty slots. Craft remains logically disabled during queued board animation without a visible dimming change. Weapon and defense tiers use star badges in the detail header (one star for ordinary equipment, two for crafted weapons). The detail panel uses its icon slot for the matching item sprite when one exists, and ordinary items do not show weapon attribute badges. Relic selection is a borderless, full-screen dimmed overlay whose cards read from top to bottom as name, image, and compact description; the lower description area is top-left aligned.
+
+Active accessory adjacency is shown inside the backpack by a short green flowing band crossing the actual shared cell edge. Only a beneficiary that satisfies that accessory's rule is connected, each accessory-item pair gets one band, and L/T-shaped footprints use occupied cells rather than their bounding rectangle. The bands are touch-transparent and temporarily hidden during dragging. Relic readiness is shown without badges: conditional relic sprites are dim while unmet and return to normal brightness when ready, while relics without a trigger remain bright.
+
+Weapon and defense details now place their compact identity badges beside the name. Weapons show attribute, class, and star tier; defenses show only their shield/armor class and star tier, never an attribute. The weapon stat row uses sword, bow, and flexed-arm icons for attack, range, and energy cost. Occupied-cell count is deliberately omitted because the inventory footprint is visible directly.
+
+Equipment with a forward crafting upgrade shows an additional visual recipe row below its details: square source icon + square ingredient icon ➡ square result icon. These neutral, non-interactive icons show no names or attribute colors. Each recipe is one row, so future branching upgrades appear as multiple rows without changing the panel structure; a crafted result does not show its old recipe as a forward upgrade.
+
+The final step into an attack position and the strike form one atomic turn. That step restores one energy before the weapon cost is paid, so an attack reached by movement has one less net energy cost than the same stationary attack; earlier route cells retain their normal independent turn resolution.
 
 ## Combat animation
 

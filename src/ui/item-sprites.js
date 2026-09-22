@@ -180,8 +180,38 @@ const ITEM_SPRITE_SOURCES = Object.freeze({
   },
 })
 
+// Gold is a room-floor entity rather than an inventory item.  Keep its
+// quantity-specific artwork in its own map so it cannot be confused with an
+// item id or accidentally enter the backpack sprite contract.
+const GOLD_SPRITE_SOURCES = Object.freeze({
+  3: {
+    small: new URL('../assets/inventory/gold-pile-3-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/gold-pile-3-v1-medium.png', import.meta.url).href,
+  },
+  4: {
+    small: new URL('../assets/inventory/gold-pile-4-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/gold-pile-4-v1-medium.png', import.meta.url).href,
+  },
+  5: {
+    small: new URL('../assets/inventory/gold-pile-5-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/gold-pile-5-v1-medium.png', import.meta.url).href,
+  },
+  6: {
+    small: new URL('../assets/inventory/gold-pile-6-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/gold-pile-6-v1-medium.png', import.meta.url).href,
+  },
+  7: {
+    small: new URL('../assets/inventory/gold-pile-7-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/gold-pile-7-v1-medium.png', import.meta.url).href,
+  },
+})
+
 export function itemSpriteSources(item) {
   return item?.id ? ITEM_SPRITE_SOURCES[item.id] || null : null
+}
+
+export function goldSpriteSources(amount) {
+  return GOLD_SPRITE_SOURCES[amount] || null
 }
 
 export function itemSpriteUrl(item) {

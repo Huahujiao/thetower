@@ -990,7 +990,7 @@
         ]
       ],
       "energyCost": 4,
-      "description": "主攻击击杀后，下一次用其他武器攻击伤害+2、体力-1；不可叠加。",
+      "description": "主攻击击杀后，下一次用其他武器攻击伤害+2、体力消耗-1；不可叠加。",
       "crafted": true
     },
     {
@@ -1197,7 +1197,7 @@
           1
         ]
       ],
-      "description": "相邻武器主攻击击杀后，下一次使用其他武器攻击体力-1；不叠加。",
+      "description": "相邻武器击杀后，下一击更换武器体力消耗-1；不叠加。",
       "dropOnly": true
     },
     {
@@ -1226,7 +1226,7 @@
           1
         ]
       ],
-      "description": "相邻长柄武器的击退碰撞伤害+2。",
+      "description": "相邻长柄武器距离2命中时，击退1格并造成碰撞伤害+2。",
       "dropOnly": true
     },
     {
@@ -1268,6 +1268,7 @@
       "id": "wood-shield",
       "name": "木盾",
       "type": "defense",
+      "defenseClass": "shield",
       "attribute": null,
       "shape": [
         [
@@ -1283,6 +1284,7 @@
       "id": "thorn-shield",
       "name": "棘盾",
       "type": "defense",
+      "defenseClass": "shield",
       "attribute": "wither",
       "shape": [
         [
@@ -1300,6 +1302,7 @@
       "id": "tide-shield",
       "name": "潮镜盾",
       "type": "defense",
+      "defenseClass": "shield",
       "attribute": "drown",
       "shape": [
         [
@@ -1318,6 +1321,7 @@
       "id": "red-shield",
       "name": "赤鳞盾",
       "type": "defense",
+      "defenseClass": "shield",
       "attribute": "scorch",
       "shape": [
         [
@@ -1335,6 +1339,7 @@
       "id": "light-armor",
       "name": "轻甲",
       "type": "defense",
+      "defenseClass": "armor",
       "attribute": null,
       "shape": [
         [
@@ -1352,6 +1357,7 @@
       "id": "red-armor",
       "name": "赤鳞甲",
       "type": "defense",
+      "defenseClass": "armor",
       "attribute": "scorch",
       "shape": [
         [
@@ -1370,6 +1376,7 @@
       "id": "vine-armor",
       "name": "腐藤甲",
       "type": "defense",
+      "defenseClass": "armor",
       "attribute": "wither",
       "shape": [
         [
@@ -1387,6 +1394,7 @@
       "id": "tide-cloak",
       "name": "潮行披风",
       "type": "defense",
+      "defenseClass": "armor",
       "attribute": "drown",
       "shape": [
         [

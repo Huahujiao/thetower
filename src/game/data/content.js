@@ -13,6 +13,11 @@ const MERCHANT_WEAPONS = Object.freeze(catalog.merchantWeapons || [])
 const BOSS = Object.freeze(catalog.boss)
 export const DEFENSES = Object.freeze(catalog.defenses)
 export const RECIPES = Object.freeze(catalog.recipes)
+
+export function upgradeRecipesForItem(itemOrId) {
+  const id = typeof itemOrId === 'object' ? itemOrId?.id : itemOrId
+  return id ? RECIPES.filter((recipe) => recipe.a === id) : []
+}
 export const ALL_ITEM_DEFS = Object.freeze([...WEAPONS, ...CONSUMABLES, ...DEFENSES, ...ENEMY_LOOT, ...MERCHANT_WEAPONS, ...RELIC_DEFS.map(r => ({ ...r, type: 'relic', relicId: r.id, shape: [[1]], rotatable: false }))])
 const ITEM_BY_ID = new Map(ALL_ITEM_DEFS.map((definition) => [definition.id, definition]))
 

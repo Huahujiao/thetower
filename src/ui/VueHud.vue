@@ -76,7 +76,10 @@
           @touchcancel.stop="onTouchCancel"
           @contextmenu.prevent
         >
-          <span>{{ entry.glyph }}</span><b v-if="entry.badge">{{ entry.badge }}</b>
+          <img
+            v-if="entry.icon" :src="entry.icon" alt="" aria-hidden="true"
+            draggable="false" decoding="async"
+          ><span v-else>{{ entry.glyph }}</span><b v-if="entry.badge">{{ entry.badge }}</b>
         </button>
       </section>
     </div>
@@ -128,7 +131,7 @@
       </div>
     </section>
     <section v-show="detailPanelVisible" class="detail-panel">
-      <div class="detail-card" data-action="close-detail" @click="handleAction('close-detail')">
+      <div class="detail-card" :class="{ 'has-detail-sprite': detailSpriteSources }" data-action="close-detail" @click="handleAction('close-detail')">
         <div class="detail-icon" aria-hidden="true">
           <img
             v-if="detailSpriteSources" class="detail-sprite" :src="detailSpriteSources.medium"
@@ -143,11 +146,23 @@
               }}</span>
             </div>
           </div>
-          <div class="detail-lines">
-            <div v-for="(line, index) in (detailPanel?.lines || [])" :key="`${index}-${line}`">{{ line }}</div>
+          <div v-if="detailPanel?.statLines?.length" class="detail-stat-lines">
+            <div v-for="(line, index) in detailPanel.statLines" :key="`stat-${index}-${line}`">{{ line }}</div>
+          </div>
+          <div v-if="detailPanel?.effectLines?.length || (!detailPanel?.statLines?.length && detailPanel?.lines?.length) || !detailPanel" class="detail-effect-lines">
+            <div v-for="(line, index) in (detailPanel?.effectLines?.length ? detailPanel.effectLines : (!detailPanel?.statLines?.length ? (detailPanel?.lines || []) : []))" :key="`effect-${index}-${line}`">{{ line }}</div>
             <div v-if="!detailPanel">LONG-PRESS AN ITEM TO INSPECT</div>
           </div>
           <div class="detail-description">{{ detailPanel?.description || '' }}</div>
+        </div>
+        <div v-if="detailUpgradeRoutes.length" class="detail-upgrade-routes" aria-hidden="true">
+          <div v-for="route in detailUpgradeRoutes" :key="route.key" class="detail-upgrade-route">
+            <span class="detail-upgrade-icon"><img v-if="route.a.src" :src="route.a.src" alt="" draggable="false"></span>
+            <span class="detail-upgrade-operator">+</span>
+            <span class="detail-upgrade-icon"><img v-if="route.b.src" :src="route.b.src" alt="" draggable="false"></span>
+            <span class="detail-upgrade-operator">{{ LABELS.upgradeArrow }}</span>
+            <span class="detail-upgrade-icon result"><img v-if="route.result.src" :src="route.result.src" alt="" draggable="false"></span>
+          </div>
         </div>
       </div>
     </section>
@@ -315,15 +330,15 @@
           v-for="choice in levelUpTalents" :key="choice.id"
           class="relic-choice-card talent-choice-card" :data-level-up-choice="choice.id" @click="handleAction('level-up-choice', choice.id)"
         >
-          <span
-            class="talent-choice-branch"
-          >{{ TALENT_LINE_LABELS[choice.line] || choice.line }}</span><span
+          <span class="talent-choice-head"><span
             class="relic-name"
-          >{{ choice.name }}</span><span class="relic-desc">{{ choice.description }}</span>
+          >{{ choice.name }}</span><span
+            class="talent-choice-branch"
+          >{{ TALENT_LINE_LABELS[choice.line] || choice.line }}</span></span><span class="relic-desc">{{ choice.description }}</span>
         </button>
       </div>
       <div class="level-up-fixed-row">
-        <div v-if="levelUpFixed" class="level-up-fixed-label">{{ LABELS.fixedGrowth }}</div><button
+        <button
           v-if="levelUpFixed"
           class="relic-choice-card level-up-fixed-choice" :data-level-up-choice="levelUpFixed.id" @click="handleAction('level-up-choice', levelUpFixed.id)"
         >
@@ -480,6 +495,12 @@
                 >{{ entry.detail }}</small>
               </span>
             </div>
+            <div v-if="backpackAdjacencyLinks.length" class="bag-adjacency-links" aria-hidden="true">
+              <i
+                v-for="link in backpackAdjacencyLinks" :key="link.key"
+                class="bag-adjacency-flow" :class="link.orientation" :style="link.style"
+              ></i>
+            </div>
           </div>
         </div>
       </section>
@@ -546,13 +567,14 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref, shallowRef, watch } from 'vue'
 import { merchantSellPrice } from '../game/data/merchants.js'
-import { getItemDefinition } from '../game/data/content.js'
+import { getItemDefinition, upgradeRecipesForItem } from '../game/data/content.js'
 import { getRelicDefinition } from '../game/data/relics.js'
 import { INVENTORY_COLUMNS, INVENTORY_ROWS } from '../game/run.js'
 import { GameScene } from '../render/scene.js'
 import { bagShapeLayout } from './bag-shape.js'
 import { automaticStashPosition, inventoryDropAnchorAtCenter, inventoryItemLayout, stashPositionAtPoint as stashPositionForPoint } from './inventory-layout.js'
 import { itemSpriteSources } from './item-sprites.js'
+import { statusIconSource } from './status-icons.js'
 import InventorySprite from './InventorySprite.vue'
 
 const props = defineProps({ run: { type: Object, required: true } })
@@ -562,15 +584,15 @@ const LABELS = Object.freeze({
   floor: '\u697c\u5c42', health: '\u751f\u547d', armor: '\u62a4\u7532', energy: '\u4f53\u529b', gold: '\u91d1\u5e01',
   turn: '\u5168\u5c40\u56de\u5408', poison: '\u4e2d\u6bd2', burning: '\u71c3\u70e7', level: '\u7b49\u7ea7', experience: '\u7ecf\u9a8c',
   character: '\u89d2\u8272', characterGrowth: '\u89d2\u8272\u6210\u957f', maxHealth: '\u751f\u547d\u4e0a\u9650', talents: '\u5929\u8d4b',
-  talentGraph: '\u5929\u8d4b\u7f51', fixedGrowth: '\u5f3a\u5316\u4f53\u683c', help: '\u5e2e\u52a9', basicGameplay: '\u57fa\u672c\u73a9\u6cd5',
+  talentGraph: '\u5929\u8d4b\u7f51', fixedGrowth: '\u5f3a\u5065\u4f53\u9b44', help: '\u5e2e\u52a9', basicGameplay: '\u57fa\u672c\u73a9\u6cd5',
   close: '\u5173\u95ed', craft: '\u5408\u6210', status: '\u72b6\u6001', settings: '\u8bbe\u7f6e', camera: '\u89c6\u89d2', cameraAzimuth: '\u65cb\u8f6c\u89d2\u5ea6',
   cameraPitch: '\u4fef\u4ef0\u89d2\u5ea6', cameraPitchDecrease: '\u51cf\u5c0f\u4fef\u4ef0\u89d2\u5ea6', cameraPitchIncrease: '\u589e\u52a0\u4fef\u4ef0\u89d2\u5ea6',
   log: '\u65e5\u5fd7', copyLog: '\u590d\u5236\u65e5\u5fd7', copied: '\u5df2\u590d\u5236', copyFailed: '\u590d\u5236\u5931\u8d25',
   reveal: '\u8c03\u8bd5\uff1a\u663e\u793a\u724c\u5185\u5bb9', discard: '\u4e22\u5f03', discardZone: '\u4e22\u5f03', stashZone: '\u6682\u5b58', rotate: '\u65cb\u8f6c', use: '\u4f7f\u7528',
   empty: '\u7a7a', relics: '\u5723\u9057\u7269', relicOverload: '\u5723\u9057\u7269\u8d85\u8f7d', initialRelic: '\u9009\u62e9\u521d\u59cb\u5723\u9057\u7269',
-  leaveMerchant: '\u79bb\u5f00', sold: '\u5df2\u552e\u7f44', buy: '\u8d2d\u4e70', merchantRelicsTab: '\u5723\u9057\u7269',
+  leaveMerchant: '\u79bb\u5f00', sold: '\u5df2\u552e\u7f44', buy: '\u8d2d\u4e70', merchantRelicsTab: '\u5723\u9057\u7269', upgradeArrow: '\u27a1\ufe0f',
   noRelicsAvailable: '\u6682\u65e0\u53ef\u83b7\u5f97\u7684\u5723\u9057\u7269', relicChoice: '\u9009\u62e9\u4e00\u4ef6\u5723\u9057\u7269',
-  roomReward: '\u65b0\u623f\u95f4\u5956\u52b1', growthChoice: '\u9009\u62e9\u5929\u8d4b\u6216\u5f3a\u5316\u4f53\u683c', skipReward: '\u8df3\u8fc7',
+  roomReward: '\u65b0\u623f\u95f4\u5956\u52b1', growthChoice: '\u9009\u62e9\u5929\u8d4b\u6216\u5f3a\u5065\u4f53\u9b44', skipReward: '\u8df3\u8fc7',
   sellSelected: '\u51fa\u552e\u6240\u9009', refreshStock: '\u5237\u65b0\u8d27\u67b6', weaponClass: '\u7c7b\u522b', restart: '\u91cd\u65b0\u5f00\u59cb',
   restartConfirm: '\u786e\u5b9a\u8981\u91cd\u65b0\u5f00\u59cb\u5417\uff1f\u5f53\u524d\u8fdb\u5ea6\u5c06\u88ab\u6e05\u9664\u3002',
   win: '\u9003\u51fa\u5730\u7262', lose: '\u4f60\u5df2\u9668\u843d', winMessage: '\u4f60\u51fb\u8d25\u4e86\u76d1\u89c6\u8005\u3002', loseMessage: '\u751f\u547d\u5f52\u96f6\u3002\u53ef\u4ee5\u91cd\u65b0\u5f00\u59cb\u6311\u6218\u3002',
@@ -671,14 +693,14 @@ const statusEntries = computed(() => {
   const entries = []
   if (current.player.poisonedTurns > 0) {
     entries.push({
-      id: 'poison', name: LABELS.poison, glyph: Array.from(LABELS.poison)[0],
+      id: 'poison', name: LABELS.poison, glyph: Array.from(LABELS.poison)[0], icon: statusIconSource('poison'),
       badge: String(current.player.poisonedTurns), tone: 'poison',
       description: `${LABELS.poison} ${current.player.poisonedTurns}${LABELS.turn}`,
     })
   }
   if (current.player.burningTurns > 0) {
     entries.push({
-      id: 'burning', name: LABELS.burning, glyph: Array.from(LABELS.burning)[0],
+      id: 'burning', name: LABELS.burning, glyph: Array.from(LABELS.burning)[0], icon: statusIconSource('burning'),
       badge: String(current.player.burningTurns), tone: 'burning',
       description: `${LABELS.burning} ${current.player.burningTurns}${LABELS.turn}`,
     })
@@ -689,7 +711,7 @@ const statusEntries = computed(() => {
     if (id.startsWith('r-') || (id === 'spring' && !run.itemRules.has(id))) continue
     const name = run.itemRules.sourceName(id)
     entries.push({
-      id: `buff-${id}`, name, glyph: Array.from(name)[0] || '?',
+      id: `buff-${id}`, name, glyph: Array.from(name)[0] || '?', icon: statusIconSource(id, buff),
       badge: buff.flat ? `+${buff.flat}` : buff.discount ? `-${buff.discount}` : '', tone: 'neutral',
       description: pendingLines.find((line) => line.startsWith(name)) || name,
     })
@@ -750,6 +772,7 @@ const backpackCells = computed(() => Array.from({ length: INVENTORY_COLUMNS * IN
 }))
 const backpackItems = computed(() => {
   const current = state.value
+  const itemRules = run.itemRules
   return current.backpack.placements.map((placement) => {
     const item = placement.item
     const shape = current.backpack.shapeFor(item, placement.rotation)
@@ -765,6 +788,9 @@ const backpackItems = computed(() => {
     const oddRotation = placement.rotation % 2 === 1
     const isDragging = bagGesture.value?.dragging && bagGesture.value.item?.uid === item.uid
     const isConflict = dragPreview.value?.conflicts?.some((conflict) => conflict.item?.uid === item.uid)
+    const relicStateClass = item.type === 'relic'
+      ? (itemRules.relicEffectActive(item.id || item.relicId) ? 'relic-active' : 'relic-inactive')
+      : null
     return {
       item,
       shape,
@@ -773,7 +799,7 @@ const backpackItems = computed(() => {
       originIndex,
       selected: current.selectedInventoryIndex === originIndex,
       spriteSources: itemSpriteSources(item),
-      itemClasses: ['bag-item', item.type, ...(itemSpriteSources(item) ? ['has-sprite'] : []), ...(item.attribute ? [`attribute-${item.attribute}`] : []), ...(item.type === 'relic' && run.relicOverload() > 0 ? ['overloaded'] : []), ...(current.selectedInventoryIndex === originIndex ? ['selected'] : []), ...(isDragging ? ['drag-source'] : []), ...(isConflict ? ['drop-conflict'] : [])],
+      itemClasses: ['bag-item', item.type, ...(itemSpriteSources(item) ? ['has-sprite'] : []), ...(item.attribute ? [`attribute-${item.attribute}`] : []), ...(relicStateClass ? [relicStateClass] : []), ...(item.type === 'relic' && run.relicOverload() > 0 ? ['overloaded'] : []), ...(current.selectedInventoryIndex === originIndex ? ['selected'] : []), ...(isDragging ? ['drag-source'] : []), ...(isConflict ? ['drop-conflict'] : [])],
       itemStyle: { gridColumn: `${placement.x + 1} / span ${shape[0].length}`, gridRow: `${placement.y + 1} / span ${shape.length}` },
       shapeStyle: { gridTemplateColumns: `repeat(${shape[0].length}, 1fr)`, gridTemplateRows: `repeat(${shape.length}, 1fr)` },
       nameStyle: layout.name ? { gridColumn: `${layout.name.x + 1} / span ${layout.name.width}`, gridRow: layout.name.y + 1 } : undefined,
@@ -781,6 +807,42 @@ const backpackItems = computed(() => {
       spriteStyle: { width: oddRotation ? `${shape.length / shape[0].length * 100}%` : '100%', height: oddRotation ? `${shape[0].length / shape.length * 100}%` : '100%', transform: `translate(-50%, -50%) rotate(${placement.rotation * 90}deg)` },
     }
   })
+})
+function adjacencyBoundary(backpack, source, target) {
+  const sourcePlacement = backpack.placementOf(source.uid)
+  const targetPlacement = backpack.placementOf(target.uid)
+  if (!sourcePlacement || !targetPlacement) return null
+  const sourceCells = backpack.cellsForPlacement(sourcePlacement)
+  const targetCells = backpack.cellsForPlacement(targetPlacement)
+  const contacts = []
+  for (const sourceCell of sourceCells) {
+    for (const targetCell of targetCells) {
+      if (Math.abs(sourceCell.x - targetCell.x) + Math.abs(sourceCell.y - targetCell.y) !== 1) continue
+      contacts.push({
+        orientation: sourceCell.x !== targetCell.x ? 'horizontal' : 'vertical',
+        x: (sourceCell.x + targetCell.x + 1) / 2,
+        y: (sourceCell.y + targetCell.y + 1) / 2,
+      })
+    }
+  }
+  if (!contacts.length) return null
+  return contacts[Math.floor((contacts.length - 1) / 2)]
+}
+const backpackAdjacencyLinks = computed(() => {
+  const current = state.value
+  if (bagGesture.value?.dragging) return []
+  return run.itemRules.activeAdjacencyLinks().map(({ source, target }) => {
+    const boundary = adjacencyBoundary(current.backpack, source, target)
+    if (!boundary) return null
+    return {
+      key: `${source.uid}:${target.uid}`,
+      orientation: boundary.orientation,
+      style: {
+        '--link-x': `${boundary.x / INVENTORY_COLUMNS * 100}%`,
+        '--link-y': `${boundary.y / INVENTORY_ROWS * 100}%`,
+      },
+    }
+  }).filter(Boolean)
 })
 const stashItems = computed(() => state.value.inventoryStash.map((item, index) => {
   const rotation = Number(item.bagRotation) || 0
@@ -858,6 +920,12 @@ const detailSpriteSources = computed(() => {
   const itemId = detailPanel.value?.itemId
   return itemId ? itemSpriteSources({ id: itemId }) : null
 })
+const detailUpgradeRoutes = computed(() => upgradeRecipesForItem(detailPanel.value?.itemId).map((recipe) => ({
+  key: `${recipe.a}:${recipe.b}:${recipe.result}`,
+  a: { id: recipe.a, src: itemSpriteSources({ id: recipe.a })?.small || null },
+  b: { id: recipe.b, src: itemSpriteSources({ id: recipe.b })?.small || null },
+  result: { id: recipe.result, src: itemSpriteSources({ id: recipe.result })?.small || null },
+})))
 
 watch(merchantTabs, (tabs) => {
   if (!tabs.includes(merchantTab.value)) merchantTab.value = tabs[0] || 'stock'
@@ -1408,7 +1476,7 @@ onMounted(() => {
   run.setDebugReveal(reveal.value)
   window.addEventListener('touchstart', onWindowTouchStart, { passive: false, capture: true })
   window.addEventListener('touchmove', onWindowTouchMove, { passive: false })
-  window.addEventListener('touchend', onWindowTouchEnd, { passive: false })
+  window.addEventListener('touchend', onWindowTouchEnd, { passive: false, capture: true })
   window.addEventListener('touchcancel', onWindowTouchCancel, { passive: false, capture: true })
   window.addEventListener('blur', onInteractionInterrupt)
   document.addEventListener('visibilitychange', onInteractionInterrupt)
@@ -1416,7 +1484,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   window.removeEventListener('touchstart', onWindowTouchStart, true)
   window.removeEventListener('touchmove', onWindowTouchMove)
-  window.removeEventListener('touchend', onWindowTouchEnd)
+  window.removeEventListener('touchend', onWindowTouchEnd, true)
   window.removeEventListener('touchcancel', onWindowTouchCancel, true)
   window.removeEventListener('blur', onInteractionInterrupt)
   document.removeEventListener('visibilitychange', onInteractionInterrupt)

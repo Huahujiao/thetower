@@ -29,6 +29,7 @@
 .wl-stats { display: flex; flex-wrap: wrap; gap: 6px 18px; color: #ccc; }
 .wl-stats span { white-space: nowrap; }
 .wl-nav { display: flex; flex-wrap: wrap; gap: 6px; }
+.wl-nav button[data-action='craft-open']:disabled { color: #f4f4f4; background: #090909; border-color: #777; opacity: 1; cursor: default; }
 .wl-main { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; max-width: 1300px; margin: 0 auto; }
 .wl-board-panel, .wl-panel { border: 1px solid #777; background: #080808; }
 .wl-section-head { display: flex; justify-content: space-between; gap: 12px; padding: 8px 10px; color: #fff; border-bottom: 1px solid #555; font-weight: 700; }
@@ -69,6 +70,10 @@
 .wl-scroll { max-height: calc(100vh - 48px); }
 .wl-help { width: min(680px, calc(100vw - 32px)); }
 .wl-detail { top: auto; bottom: 18px; transform: translateX(-50%); }
+.wl-upgrade-routes { display: grid; gap: 6px; margin-top: 10px; padding-top: 9px; border-top: 1px solid #777; }
+.wl-upgrade-route { display: flex; align-items: center; justify-content: center; gap: 8px; }
+.wl-upgrade-route i { display: block; width: 34px; aspect-ratio: 1; border: 1px solid #ddd; }
+.wl-upgrade-route b { color: #eee; font-size: 13px; }
 .wl-choice { text-align: center; }
 .wl-choice h2 { margin: 0 0 14px; font-size: 15px; }
 .wl-choice button { display: inline-flex; flex-direction: column; gap: 4px; min-width: 145px; margin: 4px; text-align: left; }

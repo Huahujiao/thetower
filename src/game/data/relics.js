@@ -20,7 +20,7 @@ export const RELIC_DEFS = Object.freeze([
   {
     "id": "r-traveler",
     "name": "旅者骨牌",
-    "description": "移动后立即进行的武器攻击体力-2；连续攻击时体力消耗+1。",
+    "description": "移动后立即进行的武器攻击体力消耗-2；连续攻击时体力消耗+1。",
     "attribute": null
   },
   {
