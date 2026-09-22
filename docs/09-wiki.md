@@ -110,6 +110,8 @@ The backpack has no outer frame; only its cells and item outlines remain visible
 
 ## Combat animation
 
+Only an action route's final step is atomic with its action. Arriving at loot and collecting it, or arriving at a weapon's attack position and striking, completes before enemy actions begin. Earlier cells on a long route can still be interrupted by enemy attacks.
+
 Long routes end when an enemy attacks the player. A pursuing enemy visibly completes its smooth move before its attack begins; moves, flips, and attacks use the same serialized queue and do not overlap. A multi-card reveal is displayed one card at a time.
 
 Player and enemy attacks use a short 0.5-second presentation animation. The player raises both arms and briefly narrows the stance; an enemy lifts its round head and sways its triangular body twice. Attack routes are emitted one cell at a time, so a long-range enemy that reaches the player at an intermediate cell interrupts visually there before the route proceeds. Attack events share the Three.js FIFO queue with movement and card flips, so attacks in one turn play one after another instead of simultaneously. A player attack keeps the turn at a resolution barrier: its health loss, death, displacement, and other hit effects are refreshed first; the enemy phase is not calculated or animated until that display is complete. The temporary pose texture is redrawn from a reset canvas transform, preserving the normal character size throughout the animation instead of accumulating scale and showing only a cropped corner.

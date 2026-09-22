@@ -136,9 +136,13 @@ Long-press detail is visible while the hold is active and closes on touch releas
 
 ## Inventory drag state machine
 
-The fixed south-boundary front pass retains depth writing, so transparent temporary flip planes cannot appear over the wall. Enemy flip backs use the neutral card back rather than attribute-colored wood grain.
+The fixed south-boundary front layer uses the transparent pass with depth testing and writing disabled, then renders after temporary flip planes. This makes the wall mask those planes even on their first flip frame. Enemy flip backs use the neutral card back rather than attribute-colored wood grain.
 
 ## Sequential combat motion
+
+`_pickUp` and `_attack` call `_walk` with `deferFinalTurn`. They keep only the final arrival together with collection or the player's hit; every earlier path cell still closes a normal movement turn and can be interrupted. Pickup removes or acquires the target before its one action turn advances, while an attack resolves the player hit before its attack turn advances.
+
+The south-boundary foreground layer is deliberately rendered in the transparent pass after temporary flip planes, with depth testing disabled, so it masks those planes from the first flip frame. The enemy flip edge passes an explicit neutral back attribute into `styleCardBody`; this covers the body material as well as the visible flip-back plane and avoids any attribute wood-grain flash.
 
 `GameRun._walk` clears any remaining route after the first enemy attack during a long movement. Enemy movement emits `animate:enemy-move` after the model move, and `GameScene` temporarily interpolates the standing source face before refreshing origin and destination. The shared FIFO queue starts the following attack only when that movement action completes, so chase movement and attack presentation cannot overlap. Reveal batches are expanded into one flip action per card in the same queue instead of being animated concurrently.
 

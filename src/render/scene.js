@@ -547,7 +547,7 @@ export class GameScene {
     this.tileMeshByKey.set(tileKey(position), face)
   }
 
-  _styleTileBody(body, room, position, { revealed, flippable }) {
+  _styleTileBody(body, room, position, { revealed, flippable }, options = {}) {
     if (this.skin === 'whiteline') {
       body.scale.set(revealed ? 1 : HIDDEN_CARD_SCALE, revealed ? 1 : HIDDEN_CARD_THICKNESS / CARD_THICKNESS, revealed ? 1 : HIDDEN_CARD_SCALE)
       body.userData.baseY = revealed ? 0 : (HIDDEN_CARD_THICKNESS - CARD_THICKNESS) / 2
@@ -558,7 +558,7 @@ export class GameScene {
       body.material.needsUpdate = true
       return
     }
-    const attribute = this._backAttributeFor(room, position)
+    const attribute = options.backAttribute === undefined ? this._backAttributeFor(room, position) : options.backAttribute
     styleCardBody(body, {
       hidden: !revealed, attribute, blocked: !flippable, baseThickness: CARD_THICKNESS,
       texture: this._makeBackTexture(attribute, { unflippable: !flippable }),
@@ -872,10 +872,12 @@ export class GameScene {
       child.userData.southBoundaryFront = true
       child.renderOrder = renderOrder
       if (!child.material) return
+      // Use the transparent pass so the fixed foreground boundary is rendered
+      // after a newly-created transparent flip plane on its first frame.
+      child.material.transparent = true
+      child.material.opacity = 1
       child.material.depthTest = false
-      // The boundary is the fixed front-most layer. Keeping its depth write
-      // lets it also occlude transparent, temporary flip planes.
-      child.material.depthWrite = true
+      child.material.depthWrite = false
       child.material.needsUpdate = true
     })
   }
@@ -973,8 +975,14 @@ export class GameScene {
       const old = child.material
       child.material = new THREE.MeshBasicMaterial({ color: 0x888888, wireframe: true })
       if (child.userData.southBoundaryFront) {
+        // Keep the foreground boundary in the same final transparent pass in
+        // the diagnostic skin. Otherwise the replacement material would put
+        // it back into the opaque pass and reintroduce a one-frame flip leak.
+        child.material.transparent = true
+        child.material.opacity = 1
         child.material.depthTest = false
         child.material.depthWrite = false
+        child.material.needsUpdate = true
       }
       if (old && !Array.isArray(old)) old.dispose?.()
     })
@@ -1289,7 +1297,13 @@ export class GameScene {
     back.rotation.x = Math.PI / 2
     back.position.y = -HIDDEN_CARD_THICKNESS / 2 - CARD_FACE_CLEARANCE
     const edge = new THREE.Mesh(cardBodyGeometry(CARD_SIZE, CARD_THICKNESS), new THREE.MeshStandardMaterial({ roughness: 0.9 }))
-    this._styleTileBody(edge, room, position, { revealed: false, flippable: !backUnflippable })
+    this._styleTileBody(
+      edge,
+      room,
+      position,
+      { revealed: false, flippable: !backUnflippable },
+      { backAttribute: flippingEnemy ? null : undefined },
+    )
     edge.position.y = 0
     edge.scale.x = edge.scale.z = 1
     const flipRenderOrder = tileRenderOrder(position, 2)

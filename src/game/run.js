@@ -1199,7 +1199,7 @@ export class GameRun {
     if (entity.kind === 'item' && entity.item?.type === 'relic' && !getRelicDefinition(entity.item.relicId)) return this._reject('\u65e0\u6cd5\u8bc6\u522b\u8fd9\u4ef6\u5723\u9057\u7269\u3002')
     const route = findPath(room, this.player.pos, entity.pos, { allowGoalOccupied: true })
     if (!route) return this._reject('\u76ee\u6807\u4e0d\u53ef\u8fbe\u3002')
-    const movement = this._walk(route)
+    const movement = this._walk(route, { deferFinalTurn: true })
     if (!movement.stopped) {
       if (entity.kind === 'item') {
         if (entity.item?.type === 'relic') {
@@ -1320,7 +1320,11 @@ export class GameRun {
     const route = this._weaponRoute(weapon, enemy)
     if (!route) return this._reject('没有可达的攻击位置。')
     if (this.energyAfterMovement(route.path.length) < this.itemRules.cost(weapon, route.path.length)) return this._reject('体力不足。')
-    const movement = this._walk(route.path)
+    // Intermediate steps remain ordinary movement turns and can be stopped by
+    // a ranged enemy. The final landing is paired with the selected attack:
+    // it must not open an enemy phase between entering weapon range and
+    // resolving the player's hit.
+    const movement = this._walk(route.path, { deferFinalTurn: true })
     if (movement.stopped || !this.currentRoom.entity(enemy.id)) { this._changed(); return true }
     const range = this.weaponRange(weapon)
     if (combatDistance(this.player.pos, enemy.pos, range) > range) return this._reject('敌人已经离开射程。')
@@ -1354,10 +1358,11 @@ export class GameRun {
     return true
   }
 
-  _walk(path) {
+  _walk(path, { deferFinalTurn = false } = {}) {
     const roomId = this.currentRoom?.id
     const startingPhase = this.phase
-    for (const step of path) {
+    for (let index = 0; index < path.length; index += 1) {
+      const step = path[index]
       this.enemyAttackInterruptedRoute = false
       const previous = { ...this.player.pos }
       if (roomId) {
@@ -1371,6 +1376,7 @@ export class GameRun {
       this.itemRules.move()
       this._discoverNearbyExitDoors()
       this._triggerAmbushes(step)
+      if (deferFinalTurn && index === path.length - 1 && !this.gameOver) continue
       if (this.gameOver) {
         this._endTurn({ turnKind: TURN_KINDS.MOVEMENT })
         return { stopped: true }
