@@ -499,7 +499,11 @@
               <i
                 v-for="link in backpackAdjacencyLinks" :key="link.key"
                 class="bag-adjacency-flow" :class="link.orientation" :style="link.style"
-              ></i>
+              >
+                <span class="bag-adjacency-layer back"></span>
+                <span class="bag-adjacency-layer mid"></span>
+                <span class="bag-adjacency-layer front"></span>
+              </i>
             </div>
           </div>
         </div>

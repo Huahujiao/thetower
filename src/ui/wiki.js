@@ -211,7 +211,13 @@ function weaponCards() {
 }
 
 function relicCards() {
-  const system = card({ tone: 'tone-relic', tag: COPY.relic, title: '圣遗物与背包', description: '背包内持有时生效，同名不叠加；无数量超载限制。通过开局选择、房间奖励和商店获得。', stats: [] })
+  const system = card({
+    tone: 'tone-relic',
+    tag: COPY.relic,
+    title: '\u5723\u9057\u7269\u4e0e\u80cc\u5305',
+    description: '\u80cc\u5305\u5185\u6301\u6709\u65f6\u751f\u6548\uff0c\u540c\u540d\u4e0d\u53e0\u52a0\uff1b\u65e0\u6570\u91cf\u8d85\u8f7d\u9650\u5236\u3002\u901a\u8fc7\u5f00\u5c40\u9009\u62e9\u3001\u623f\u95f4\u5956\u52b1\u548c\u5546\u5e97\u83b7\u5f97\u3002\u6563\u4ef6\u7684\u76f8\u90bb\u6548\u679c\u751f\u6548\u65f6\uff0c\u4f1a\u5728\u53cc\u65b9\u683c\u7ebf\u5904\u663e\u793a\u7eff\u8272\u6d41\u52a8\u77ed\u5149\u5e26\u3002',
+    stats: [],
+  })
   return system + RELIC_DEFS.map((relic) => card({
     tone: 'tone-relic',
     tag: COPY.relic,
