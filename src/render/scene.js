@@ -218,38 +218,6 @@ function drawEmptyCardBase(context) {
   context.strokeRect(4, 4, 152, 152)
 }
 
-const WHITE_LINE_CARD_LABELS = Object.freeze({
-  monster: 'ENEMY', merchant: 'MERCHANT', entry: 'PLAYER', weapon: 'WEAPON', potion: 'POTION',
-  armor: 'ARMOR', energy: 'ENERGY', buff: 'BUFF', relic: 'RELIC', trap: 'TRAP', gold: 'GOLD',
-  key: 'KEY', door: 'DOOR', item: 'ITEM', empty: 'EMPTY',
-})
-
-function drawWhiteLineCard(context, { label = 'OBJECT', value = '', detail = '', back = false } = {}) {
-  context.clearRect(0, 0, 160, 160)
-  context.fillStyle = '#050505'
-  context.fillRect(0, 0, 160, 160)
-  context.strokeStyle = '#f4f4f4'
-  context.lineWidth = 3
-  context.strokeRect(5, 5, 150, 150)
-  context.strokeStyle = '#777'
-  context.lineWidth = 1
-  context.strokeRect(12, 12, 136, 136)
-  context.fillStyle = '#f4f4f4'
-  context.textAlign = 'center'
-  context.textBaseline = 'middle'
-  context.font = 'bold 17px monospace'
-  context.fillText(back ? (label === 'BLOCKED' ? 'BLOCKED' : 'HIDDEN') : label, 80, 48)
-  if (value) {
-    context.font = 'bold 25px monospace'
-    context.fillText(String(value), 80, 86)
-  }
-  if (detail) {
-    context.font = '11px monospace'
-    context.fillStyle = '#bbb'
-    context.fillText(String(detail).slice(0, 22), 80, 121)
-  }
-}
-
 function drawStandingToken(context, card, { headLift = 0, bodySway = 0 } = {}) {
   context.clearRect(0, 0, 160, 160)
   const merchant = card.type === 'merchant'
@@ -325,11 +293,10 @@ function disposeObject(object) {
 }
 
 export class GameScene {
-  constructor(run, container, { skin = 'default' } = {}) {
+  constructor(run, container) {
     this.run = run
-    this.skin = skin
     this.container = container
-    this.boardTextures = skin === 'whiteline' ? null : new BoardTextures()
+    this.boardTextures = new BoardTextures()
     this.raycaster = new THREE.Raycaster()
     this.pointer = new THREE.Vector2()
     this.groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0)
@@ -363,13 +330,13 @@ export class GameScene {
     this.lastDragMoved = false
     this.boardHold = null
     this.scene = new THREE.Scene()
-    this.scene.background = new THREE.Color(skin === 'whiteline' ? 0x050505 : 0x111722)
+    this.scene.background = new THREE.Color(0x111722)
     this.baseCameraDistance = 12
     this.sceneBounds = null
     this.camera = new THREE.PerspectiveCamera(CAMERA_FOV, 1, CAMERA_NEAR, CAMERA_FAR)
     this.renderer = new THREE.WebGLRenderer({ antialias: true })
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
-    this.renderer.shadowMap.enabled = skin !== 'whiteline'
+    this.renderer.shadowMap.enabled = true
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap
     Object.assign(this.renderer.domElement.style, { position: 'absolute', inset: '0', zIndex: '0' })
     this.container.appendChild(this.renderer.domElement)
@@ -497,11 +464,7 @@ export class GameScene {
     const visual = this._tileVisualState(room, position)
     const { revealed, peeked, flippable } = visual
     const geometry = cardBodyGeometry(CARD_SIZE, CARD_THICKNESS)
-    const material = new THREE.MeshStandardMaterial({
-      color: this.skin === 'whiteline' ? 0x666666 : 0x262a36,
-      roughness: 0.9,
-      wireframe: this.skin === 'whiteline',
-    })
+    const material = new THREE.MeshStandardMaterial({ color: 0x262a36, roughness: 0.9 })
     const mesh = new THREE.Mesh(geometry, material)
     const point = this._gridPosition(room, position)
     mesh.position.set(point.x, 0, point.z)
@@ -552,16 +515,6 @@ export class GameScene {
   }
 
   _styleTileBody(body, room, position, { revealed, flippable }) {
-    if (this.skin === 'whiteline') {
-      body.scale.set(revealed ? 1 : HIDDEN_CARD_SCALE, revealed ? 1 : HIDDEN_CARD_THICKNESS / CARD_THICKNESS, revealed ? 1 : HIDDEN_CARD_SCALE)
-      body.userData.baseY = revealed ? 0 : (HIDDEN_CARD_THICKNESS - CARD_THICKNESS) / 2
-      body.position.y = body.userData.baseY
-      body.material.map = null
-      body.material.color.setHex(revealed ? 0x666666 : (flippable ? 0xaaaaaa : 0x444444))
-      body.material.wireframe = true
-      body.material.needsUpdate = true
-      return
-    }
     const attribute = this._backAttributeFor(room, position)
     styleCardBody(body, {
       hidden: !revealed, attribute, blocked: !flippable, baseThickness: CARD_THICKNESS,
@@ -716,7 +669,6 @@ export class GameScene {
   _attachGroundSprite(face, card, point, position, revealed = false) {
     this._clearGroundSprite(face)
     if (!revealed) return
-    if (this.skin === 'whiteline') return
     this._addGroundWeaponGlow(face, this._groundItem(card, position), point, position)
     const descriptor = this._groundSpriteDescriptor(card, position)
     if (!descriptor) return
@@ -736,7 +688,7 @@ export class GameScene {
   _makeEmptyGroundFace(point, position = null) {
     const groundFace = new THREE.Mesh(
       new THREE.PlaneGeometry(CARD_SIZE, CARD_SIZE),
-      new THREE.MeshBasicMaterial({ map: this.skin === 'whiteline' ? this._makeFrontTexture({ type: 'empty' }, position) : this.boardTextures.floor(position), side: THREE.DoubleSide }),
+      new THREE.MeshBasicMaterial({ map: this.boardTextures.floor(position), side: THREE.DoubleSide }),
     )
     groundFace.rotation.x = -Math.PI / 2
     groundFace.position.set(point.x, CARD_THICKNESS / 2 + 0.003, point.z)
@@ -1034,7 +986,7 @@ export class GameScene {
   _setDoorAppearance(mesh) {
     const door = this.run.dungeon.door(mesh.userData.doorId)
     const locked = this.run.isDoorLocked(door)
-    mesh.material.color.setHex(this.skin === 'whiteline' ? (locked ? 0x555555 : 0xbbbbbb) : (locked ? 0x5a341d : 0x9a6533))
+    mesh.material.color.setHex(locked ? 0x5a341d : 0x9a6533)
     mesh.material.emissive?.setHex(locked ? 0x1c0e05 : 0x2b1608)
     mesh.userData.lockIndicator.visible = locked
   }
@@ -1050,15 +1002,11 @@ export class GameScene {
     mesh.castShadow = true
     mesh.receiveShadow = true
     mesh.userData.doorId = door.id
-    if (this.skin !== 'whiteline') {
-      const lockIndicator = new THREE.Sprite(new THREE.SpriteMaterial({ map: makeLockIndicatorTexture(), transparent: true, depthTest: false }))
-      lockIndicator.position.set(0, WALL_HEIGHT * 0.48, 0)
-      lockIndicator.scale.set(0.44, 0.44, 1)
-      mesh.userData.lockIndicator = lockIndicator
-      mesh.add(lockIndicator)
-    } else {
-      mesh.userData.lockIndicator = { visible: false }
-    }
+    const lockIndicator = new THREE.Sprite(new THREE.SpriteMaterial({ map: makeLockIndicatorTexture(), transparent: true, depthTest: false }))
+    lockIndicator.position.set(0, WALL_HEIGHT * 0.48, 0)
+    lockIndicator.scale.set(0.44, 0.44, 1)
+    mesh.userData.lockIndicator = lockIndicator
+    mesh.add(lockIndicator)
     const frame = createDoorFrame({ horizontal, width: TILE_SIZE * 0.68, depth: DOOR_DEPTH, height: WALL_HEIGHT + 0.18 })
     frame.position.set(point.x, 0, point.z)
     if (door.side === 'bottom') {
@@ -1094,29 +1042,6 @@ export class GameScene {
     this.doorMeshes = []
     this._addRoomBoundary(room)
     this._addExploredRoomGhosts(room)
-    if (this.skin === 'whiteline') {
-      this._lineifyStructure()
-      this._refreshDoors()
-    }
-  }
-
-  _lineifyStructure() {
-    this.structureGroup?.traverse((child) => {
-      if (!child.isMesh) return
-      const old = child.material
-      child.material = new THREE.MeshBasicMaterial({ color: 0x888888, wireframe: true })
-      if (child.userData.southBoundaryFront) {
-        // Keep the foreground boundary in the same final transparent pass in
-        // the diagnostic skin. Otherwise the replacement material would put
-        // it back into the opaque pass and reintroduce a one-frame flip leak.
-        child.material.transparent = true
-        child.material.opacity = 1
-        child.material.depthTest = false
-        child.material.depthWrite = false
-        child.material.needsUpdate = true
-      }
-      if (old && !Array.isArray(old)) old.dispose?.()
-    })
   }
 
   _resetSceneBounds(room) {
@@ -1554,11 +1479,9 @@ export class GameScene {
     if (!object.visible || !mesh?.material) return false
 
     const sourceTexture = mesh.material.map
-    const attackTexture = this.skin === 'whiteline'
-      ? null
-      : makeCanvasTexture((context) => actor === 'player'
-        ? drawStickFigure(context, { armLift: 0, legSpread: 1 })
-        : drawStandingToken(context, this._cardFaceData(room, position), { headLift: 0, bodySway: 0 }))
+    const attackTexture = makeCanvasTexture((context) => actor === 'player'
+      ? drawStickFigure(context, { armLift: 0, legSpread: 1 })
+      : drawStandingToken(context, this._cardFaceData(room, position), { headLift: 0, bodySway: 0 }))
     if (attackTexture) {
       mesh.material.map = attackTexture
       mesh.material.needsUpdate = true
@@ -1957,20 +1880,10 @@ export class GameScene {
   }
 
   _makeBackTexture(attribute, { unflippable = false } = {}) {
-    if (this.skin === 'whiteline') {
-      return makeCanvasTexture((context) => drawWhiteLineCard(context, { label: unflippable ? 'BLOCKED' : 'CARD', back: true }))
-    }
     return this.boardTextures.back(attribute, unflippable)
   }
 
   _makeFrontTexture(card, position = null, revealed = false) {
-    if (this.skin === 'whiteline') {
-      const label = WHITE_LINE_CARD_LABELS[card?.type] || 'OBJECT'
-      const rawValue = card?.type === 'monster' && Number.isFinite(card.maxValue) ? `${card.value}/${card.maxValue}` : card?.value || ''
-      const value = /^[\x20-\x7e]+$/.test(String(rawValue)) ? rawValue : ''
-      const detail = card?.type === 'monster' ? `ATK ${card.attack || 0} / RANGE ${card.range || 1}` : card?.type === 'weapon' ? `ATK ${card.attack || 0} / RANGE ${card.range || 1}` : ''
-      return makeCanvasTexture((context) => drawWhiteLineCard(context, { label, value, detail }))
-    }
     if (revealed && this._groundSpriteDescriptor(card, position)) return this.boardTextures.floor(position)
     if (card.type === 'empty') return this.boardTextures.floor(position)
     return makeCanvasTexture((context) => {
