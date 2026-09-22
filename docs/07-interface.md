@@ -50,6 +50,8 @@
 
 ## Inventory staging interaction
 
+The staging label is centered and uses the same type scale as the discard label.
+
 Backpack movement is touch-only. A 300 ms hold on an occupied item opens details; moving more than 18 px after the hold enters drag mode. Taps select an item for use or combat and never move it. The first occupied cell of the rotated shape remains the model anchor, while dropping snaps the floating footprint center to the nearest target footprint center with a half-cell tolerance. Green, yellow, and red previews mean accepted, replace-to-staging, and illegal respectively. The red discard zone occupies exactly 25 percent of the full viewport area above the backpack; the blue free-form staging canvas occupies the remaining 75 percent and meets the backpack without a gap. Staged items preserve the backpack's cell size and rotated proportions; automatic arrivals seek a non-overlapping position before using the least-overlapping available position. The detail panel is layered above both zones, so staged items can still be inspected. Staging remains visible until empty, and clearing it advances one organize turn. A second touch rotates the dragged item clockwise by 90 degrees. Cancel, blur, visibility changes, and invalid release restore the original state.
 
 The product target is a portrait mobile phone with touch input only. Desktop, keyboard, mouse, stylus, and landscape layouts are outside the supported contract. Inventory long press uses the occupied-cell Vue touch handlers and a 300 ms threshold; do not add desktop pointer compatibility code to the inventory interaction path. For irregular L/T shapes, void cells and the sprite image are excluded from touch hit testing.
@@ -70,5 +72,7 @@ The backpack surface has no overall border. Weapon tiers use Roman numerals in t
 
 右上角日志按钮打开日志面板。日志按最新事件在前显示；当玩家受到致命伤害时，“你倒下了（原因：……）”会被置于顶部，后续同一过程的事件排在其后。日志面板提供“复制日志”按钮，将当前显示的日志复制到系统剪贴板，不再提供发送或分享日志功能。胜败提示使用局部浮层，不遮挡日志按钮。
 ## Combat animation rendering note
+
+Long-distance movement stops at the first enemy attack, so the selected target is not attacked after an interruption. A chasing enemy completes its smooth move before its attack animation. Movement, flips, player attacks, and enemy attacks are FIFO actions and never overlap.
 
 Attack presentation stays within the original character/card plane size. Each frame redraws its temporary pose from an identity canvas transform, so the 0.5-second animation cannot accumulate bitmap scaling or crop the character to a corner. An attack route is presented as atomic one-cell moves: if a long-range enemy gains range at an intermediate landing, the player visibly stops there for that enemy action before the route continues. A player hit, including death or displacement, is refreshed on the board before the attack turn advances; only then can the enemy phase and its next pose begin.

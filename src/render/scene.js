@@ -382,6 +382,7 @@ export class GameScene {
     this._onFlip = (payload) => this._queueAnimation('flip', payload)
     this._onFlipBatch = (payload) => this._queueAnimation('flip-batch', payload)
     this._onMove = (payload) => this._queueAnimation('move', payload)
+    this._onEnemyMove = (payload) => this._queueAnimation('enemy-move', payload)
     this._onAttack = (payload) => this._queueAnimation('attack', payload)
     window.addEventListener('resize', this._onResize)
     this.renderer.domElement.addEventListener('pointerdown', this._onPointerDown)
@@ -399,6 +400,7 @@ export class GameScene {
     this.flipUnsubscribe = this.run.on('animate:flip', this._onFlip)
     this.flipBatchUnsubscribe = this.run.on('animate:flip-batch', this._onFlipBatch)
     this.moveUnsubscribe = this.run.on('animate:move', this._onMove)
+    this.enemyMoveUnsubscribe = this.run.on('animate:enemy-move', this._onEnemyMove)
     this.attackUnsubscribe = this.run.on('animate:attack', this._onAttack)
     this.rebuild()
     this._resize(true)
@@ -871,7 +873,9 @@ export class GameScene {
       child.renderOrder = renderOrder
       if (!child.material) return
       child.material.depthTest = false
-      child.material.depthWrite = false
+      // The boundary is the fixed front-most layer. Keeping its depth write
+      // lets it also occlude transparent, temporary flip planes.
+      child.material.depthWrite = true
       child.material.needsUpdate = true
     })
   }
@@ -1230,6 +1234,8 @@ export class GameScene {
       const animation = this.animationQueue.shift()
       const started = animation.type === 'move'
         ? this._startMove(animation.payload)
+        : animation.type === 'enemy-move'
+          ? this._startEnemyMove(animation.payload)
         : animation.type === 'flip-batch'
           ? this._startFlipBatch(animation.payload, animation.sourceBackTextures)
           : animation.type === 'attack'
@@ -1260,8 +1266,16 @@ export class GameScene {
     group.position.set(point.x, startY, point.z)
     group.scale.set(HIDDEN_CARD_SCALE, 1, HIDDEN_CARD_SCALE)
     group.rotation.x = Math.PI
-    const frontTexture = this._makeFrontTexture(this._cardFaceData(room, position), position, true)
-    const backTexture = sourceBackTexture || this._makeBackTexture(this._backAttributeFor(room, position), { unflippable: backUnflippable })
+    const card = this._cardFaceData(room, position)
+    const flippingEnemy = card?.type === 'monster'
+    const frontTexture = this._makeFrontTexture(card, position, true)
+    // Enemy identity is revealed by the front, not telegraphed by a colored
+    // wood-grain back during the flip. A neutral card back also avoids a
+    // queued snapshot from restoring the old attribute texture.
+    if (flippingEnemy) sourceBackTexture?.dispose()
+    const backTexture = flippingEnemy
+      ? this._makeBackTexture(null, { unflippable: backUnflippable })
+      : sourceBackTexture || this._makeBackTexture(this._backAttributeFor(room, position), { unflippable: backUnflippable })
     const front = new THREE.Mesh(
       new THREE.PlaneGeometry(CARD_SIZE, CARD_SIZE),
       new THREE.MeshBasicMaterial({ map: frontTexture, side: THREE.DoubleSide, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -4 }),
@@ -1278,6 +1292,10 @@ export class GameScene {
     this._styleTileBody(edge, room, position, { revealed: false, flippable: !backUnflippable })
     edge.position.y = 0
     edge.scale.x = edge.scale.z = 1
+    const flipRenderOrder = tileRenderOrder(position, 2)
+    front.renderOrder = flipRenderOrder
+    back.renderOrder = flipRenderOrder
+    edge.renderOrder = flipRenderOrder
     group.add(front, back, edge)
     face.visible = false
     face.userData.body.visible = false
@@ -1288,13 +1306,20 @@ export class GameScene {
 
   _startFlipBatch({ roomId, flips } = {}, sourceBackTextures = []) {
     if (!Array.isArray(flips) || flips.length === 0) return false
-    let started = false
-    for (let index = 0; index < flips.length; index += 1) {
-      const flip = flips[index]
-      const didStart = this._startFlip({ roomId, ...flip }, sourceBackTextures[index])
-      if (didStart) started = true
-      else sourceBackTextures[index]?.dispose()
+    const [first, ...remaining] = flips
+    const [firstTexture, ...remainingTextures] = sourceBackTextures
+    // A reveal batch is still one logical game event, but its visual actions
+    // must remain serialized with all movement and attacks.
+    for (let index = remaining.length - 1; index >= 0; index -= 1) {
+      this.animationQueue.unshift({
+        type: 'flip',
+        payload: { roomId, ...remaining[index] },
+        sourceBackTexture: remainingTextures[index],
+      })
     }
+    sourceBackTextures.length = 0
+    const started = this._startFlip({ roomId, ...first }, firstTexture)
+    if (!started) firstTexture?.dispose()
     return started
   }
 
@@ -1345,6 +1370,24 @@ export class GameScene {
       totalDistance,
       elapsed: 0,
       duration: Math.max(0.18, totalDistance * 0.16),
+    }
+    return true
+  }
+
+  _startEnemyMove({ roomId, from, to } = {}) {
+    const room = this.run.currentRoom
+    if (!room || room.id !== roomId || room.id !== this.framedRoomId || !from || !to) return false
+    const face = this.tileMeshByKey.get(tileKey(from))
+    if (!face?.visible || !face.userData?.standing) return false
+    this.movementAnimation = {
+      actor: 'enemy',
+      face,
+      room,
+      from: { ...from },
+      to: { ...to },
+      baseY: face.userData.baseY,
+      elapsed: 0,
+      duration: 0.24,
     }
     return true
   }
@@ -1460,6 +1503,15 @@ export class GameScene {
   _clearMovementAnimation() {
     const animation = this.movementAnimation
     if (!animation) return
+    if (animation.actor === 'enemy') {
+      const room = animation.room
+      if (room?.id === this.framedRoomId) {
+        this._refreshTile(room, animation.from, { force: true })
+        this._refreshTile(room, animation.to, { force: true })
+      }
+      this.movementAnimation = null
+      return
+    }
     this.roomGroup.remove(animation.group)
     disposeObject(animation.group)
     this.movementAnimation = null
@@ -1491,6 +1543,24 @@ export class GameScene {
     if (!animation) return
     animation.elapsed += delta
     const progress = Math.min(1, animation.elapsed / animation.duration)
+    if (animation.actor === 'enemy') {
+      const eased = 1 - Math.pow(1 - progress, 3)
+      const start = this._gridPosition(animation.room, animation.from)
+      const end = this._gridPosition(animation.room, animation.to)
+      animation.face.position.set(
+        THREE.MathUtils.lerp(start.x, end.x, eased),
+        animation.baseY,
+        THREE.MathUtils.lerp(start.z, end.z, eased),
+      )
+      animation.face.renderOrder = tileRenderOrder({ r: animation.from.r + (animation.to.r - animation.from.r) * eased }, 4)
+      if (progress < 1) return
+      this.movementAnimation = null
+      this._refreshTile(animation.room, animation.from, { force: true })
+      this._refreshTile(animation.room, animation.to, { force: true })
+      this._drainAnimationQueue()
+      this._emitMoveCompleteIfIdle()
+      return
+    }
     const travelled = animation.totalDistance * progress
     let accumulated = 0
     let segmentIndex = animation.distances.length - 1
@@ -2175,6 +2245,7 @@ export class GameScene {
     this._cancelBoardHold({ close: true })
     this.unsubscribe?.()
     this.moveUnsubscribe?.()
+    this.enemyMoveUnsubscribe?.()
     window.removeEventListener('resize', this._onResize)
     this.renderer.domElement.removeEventListener('pointerdown', this._onPointerDown)
     this.renderer.domElement.removeEventListener('pointermove', this._onPointerMove)

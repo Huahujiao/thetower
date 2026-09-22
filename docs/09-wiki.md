@@ -58,6 +58,8 @@ The project lint policy is defined in `eslint.config.js` and runs with `npm.cmd 
 
 The production and white-line skins share the same 300 ms hold, 18 px movement tolerance, shape-anchor placement, green/yellow/red drop preview, free-form staging canvas, discard zone, and multi-touch clockwise rotation. A floating item snaps by its visual footprint center to the nearest backpack footprint center, allowing a half-cell alignment tolerance rather than anchoring the touch to the item's upper-left cell. The staging layer ends at the real top edge of the 8x4 backpack: its discard row fills the upper 25 percent and its stash row fills the remaining 75 percent of that whole available region. Staged items retain the exact backpack-cell scale and rotation proportion; automatic arrivals search for a zero-overlap occupied-cell position, falling back to the least-overlap candidate only when needed. The detail panel is deliberately stacked above those two zones for inspection during cleanup. Staged items are serialized with the run, remain visible while the canvas is non-empty, and are resolved before scene interaction resumes. The `/wiki` reference should describe these controls as touch-only and should not document the removed discard or rotate toolbar buttons.
 
+The thorn spear's thin 1x4 sprite is alpha-trimmed at threshold 8 before its runtime small and medium variants are generated; its full uncropped source remains archived, and the trimmed art fills its intended footprint.
+
 The game HUD is mounted by Vue 3 while the board remains Three.js. Because `GameRun` is intentionally a plain event-driven model, all mutable HUD projections subscribe through the shared revision tick. This keeps initial relic selection, room rewards, level-up choices, merchant stock, backpack movement, action visibility, and status panels synchronized after each model change.
 
 Long-press detail uses a separate detail update and preserves keyed inventory sprite nodes. The complete backpack grid suppresses the browser context menu, so inspecting a textured item does not open native browser actions or flash unrelated equipment.
@@ -96,6 +98,8 @@ The wiki item definition for the teleport talisman now states its Manhattan-dist
 
 ## Fixed south wall
 
+The front south-wall layer also occludes temporary flip planes. Enemy flip transitions use the neutral back, not an attribute-colored wood-grain back.
+
 Room boundary walls do not respond to the player's nearby position. The south wall remains visible as the player enters or leaves its adjacent tiles; only the fixed interior-pillar omission is used to preserve sightlines, while both corner pillars stay in place.
 
 ## Movement footprints
@@ -105,5 +109,7 @@ All crossed movement tiles now depress on arrival. A footprint remains pressed t
 The backpack has no outer frame; only its cells and item outlines remain visible. Weapon tiers use Roman numerals in the detail panel only (I for ordinary weapons, II for crafted weapons). The detail panel uses its icon slot for the matching item sprite when one exists, and ordinary items do not show weapon attribute badges. Relic selection is a borderless, full-screen dimmed overlay whose cards read from top to bottom as name, image, and compact description; the lower description area is top-left aligned.
 
 ## Combat animation
+
+Long routes end when an enemy attacks the player. A pursuing enemy visibly completes its smooth move before its attack begins; moves, flips, and attacks use the same serialized queue and do not overlap. A multi-card reveal is displayed one card at a time.
 
 Player and enemy attacks use a short 0.5-second presentation animation. The player raises both arms and briefly narrows the stance; an enemy lifts its round head and sways its triangular body twice. Attack routes are emitted one cell at a time, so a long-range enemy that reaches the player at an intermediate cell interrupts visually there before the route proceeds. Attack events share the Three.js FIFO queue with movement and card flips, so attacks in one turn play one after another instead of simultaneously. A player attack keeps the turn at a resolution barrier: its health loss, death, displacement, and other hit effects are refreshed first; the enemy phase is not calculated or animated until that display is complete. The temporary pose texture is redrawn from a reset canvas transform, preserving the normal character size throughout the animation instead of accumulating scale and showing only a cropped corner.

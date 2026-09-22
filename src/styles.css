@@ -295,20 +295,17 @@ button { font: inherit; }
 }
 .inventory-discard-zone.active { background: rgba(162, 25, 37, .86); }
 .inventory-stash-zone {
-  align-items: flex-start;
-  justify-content: flex-start;
   background: rgba(25, 67, 125, .76);
   border-color: rgba(118, 180, 255, .55);
 }
 .inventory-stash-zone.active { background: rgba(25, 77, 150, .84); }
 .inventory-zone-label {
-  position: absolute;
-  top: 8px;
-  left: 12px;
+  position: relative;
   z-index: 1;
-  color: rgba(219,235,255,.7);
-  font-size: 10px;
-  letter-spacing: .1em;
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
   pointer-events: none;
 }
 .stash-item {

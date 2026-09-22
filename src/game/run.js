@@ -182,6 +182,7 @@ export class GameRun {
     this.merchantEntering = false
     this.roomEntering = false
     this.combatResolving = false
+    this.enemyAttackInterruptedRoute = false
     this.moveCompleteUnsubscribe = this.on('animate:move-complete', () => {
       if (!this.merchantEntering && !this.roomEntering) return
       this.merchantEntering = false
@@ -251,6 +252,7 @@ export class GameRun {
     this.merchantEntering = false
     this.roomEntering = false
     this.combatResolving = false
+    this.enemyAttackInterruptedRoute = false
     this.roomReward = null
     this.roomRewardBag = shuffled(['supply', 'supply', 'supply', 'relic'], this.random)
     this.levelUp = null
@@ -1356,6 +1358,7 @@ export class GameRun {
     const roomId = this.currentRoom?.id
     const startingPhase = this.phase
     for (const step of path) {
+      this.enemyAttackInterruptedRoute = false
       const previous = { ...this.player.pos }
       if (roomId) {
         this.bus.emit('animate:move', {
@@ -1373,6 +1376,9 @@ export class GameRun {
         return { stopped: true }
       }
       this._endTurn({ turnKind: TURN_KINDS.MOVEMENT })
+      // A long route ends at the first enemy attack. The player does not
+      // continue toward an already-selected target after being interrupted.
+      if (this.enemyAttackInterruptedRoute) return { stopped: true, interrupted: true }
       if (this.gameOver) return { stopped: true }
       if (this.phase !== startingPhase) {
         this._log('行动已暂停，请先完成当前选择，再重新指定目的地。')
@@ -1427,6 +1433,7 @@ export class GameRun {
 
   _enemyAttack(enemy, multiplier = 1, { animate = true } = {}) {
     if (!enemy || enemy.attack <= 0) return { healthDamage: 0 }
+    this.enemyAttackInterruptedRoute = true
     enemy.hasActed = true
     if (animate) {
       this.bus.emit('animate:attack', {
@@ -1568,7 +1575,15 @@ export class GameRun {
   _moveEnemy(enemy, position) {
     const room = this.currentRoom
     if (!room?.isRevealed(position) || !room.isEmpty(position)) return false
-    return room.moveEntity(enemy.id, position)
+    const from = { ...enemy.pos }
+    if (!room.moveEntity(enemy.id, position)) return false
+    this.bus.emit('animate:enemy-move', {
+      roomId: room.id,
+      enemyId: enemy.id,
+      from,
+      to: { ...position },
+    })
+    return true
   }
 
   _applyEnemyTraits(enemy) {
@@ -1956,6 +1971,7 @@ export class GameRun {
       this.merchantEntering = false
       this.roomEntering = false
       this.combatResolving = false
+      this.enemyAttackInterruptedRoute = false
       this.roomReward = data.roomReward?.roomId && Array.isArray(data.roomReward.choices) ? clone(data.roomReward) : null
       this.roomRewardBag = Array.isArray(data.roomRewardBag) && data.roomRewardBag.every((type) => type === 'supply' || type === 'relic')
         ? [...data.roomRewardBag]
