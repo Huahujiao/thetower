@@ -158,9 +158,9 @@
         <div v-if="detailUpgradeRoutes.length" class="detail-upgrade-routes" aria-hidden="true">
           <div v-for="route in detailUpgradeRoutes" :key="route.key" class="detail-upgrade-route">
             <span class="detail-upgrade-icon"><img v-if="route.a.src" :src="route.a.src" alt="" draggable="false"></span>
-            <span class="detail-upgrade-operator">+</span>
+            <span class="detail-upgrade-plus" aria-hidden="true"></span>
             <span class="detail-upgrade-icon"><img v-if="route.b.src" :src="route.b.src" alt="" draggable="false"></span>
-            <span class="detail-upgrade-operator">{{ LABELS.upgradeArrow }}</span>
+            <span class="detail-upgrade-arrow" aria-hidden="true"></span>
             <span class="detail-upgrade-icon result"><img v-if="route.result.src" :src="route.result.src" alt="" draggable="false"></span>
           </div>
         </div>
@@ -594,7 +594,7 @@ const LABELS = Object.freeze({
   log: '\u65e5\u5fd7', copyLog: '\u590d\u5236\u65e5\u5fd7', copied: '\u5df2\u590d\u5236', copyFailed: '\u590d\u5236\u5931\u8d25',
   reveal: '\u8c03\u8bd5\uff1a\u663e\u793a\u724c\u5185\u5bb9', discard: '\u4e22\u5f03', discardZone: '\u4e22\u5f03', stashZone: '\u6682\u5b58', rotate: '\u65cb\u8f6c', use: '\u4f7f\u7528',
   empty: '\u7a7a', relics: '\u5723\u9057\u7269', relicOverload: '\u5723\u9057\u7269\u8d85\u8f7d', initialRelic: '\u9009\u62e9\u521d\u59cb\u5723\u9057\u7269',
-  leaveMerchant: '\u79bb\u5f00', sold: '\u5df2\u552e\u7f44', buy: '\u8d2d\u4e70', merchantRelicsTab: '\u5723\u9057\u7269', upgradeArrow: '\u27a1\ufe0f',
+  leaveMerchant: '\u79bb\u5f00', sold: '\u5df2\u552e\u7f44', buy: '\u8d2d\u4e70', merchantRelicsTab: '\u5723\u9057\u7269',
   noRelicsAvailable: '\u6682\u65e0\u53ef\u83b7\u5f97\u7684\u5723\u9057\u7269', relicChoice: '\u9009\u62e9\u4e00\u4ef6\u5723\u9057\u7269',
   roomReward: '\u65b0\u623f\u95f4\u5956\u52b1', growthChoice: '\u9009\u62e9\u5929\u8d4b\u6216\u5f3a\u5065\u4f53\u9b44', skipReward: '\u8df3\u8fc7',
   sellSelected: '\u51fa\u552e\u6240\u9009', refreshStock: '\u5237\u65b0\u8d27\u67b6', weaponClass: '\u7c7b\u522b', restart: '\u91cd\u65b0\u5f00\u59cb',

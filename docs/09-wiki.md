@@ -122,7 +122,7 @@ Active accessory adjacency is shown inside the backpack by a short green flowing
 
 Weapon and defense details now place their compact identity badges beside the name. Weapons show attribute, class, and star tier; defenses show only their shield/armor class and star tier, never an attribute. The weapon stat row uses sword, bow, and flexed-arm icons for attack, range, and energy cost. Occupied-cell count is deliberately omitted because the inventory footprint is visible directly.
 
-Equipment with a forward crafting upgrade shows an additional visual recipe row below its details: square source icon + square ingredient icon ➡ square result icon. These neutral, non-interactive icons show no names or attribute colors. Each recipe is one row, so future branching upgrades appear as multiple rows without changing the panel structure; a crafted result does not show its old recipe as a forward upgrade.
+Equipment with a forward crafting upgrade shows an additional visual recipe row below its details: square contain-fitted source icon + square contain-fitted ingredient icon ➡ square contain-fitted result icon. These frameless, background-free, non-interactive icons show no names or attribute colors; the plus and arrow are CSS marks. Each recipe is one row, so future branching upgrades appear as multiple rows without changing the panel structure; a crafted result does not show its old recipe as a forward upgrade.
 
 The final step into an attack position and the strike form one atomic turn. That step restores one energy before the weapon cost is paid, so an attack reached by movement has one less net energy cost than the same stationary attack; earlier route cells retain their normal independent turn resolution.
 

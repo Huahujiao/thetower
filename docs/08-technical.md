@@ -31,7 +31,9 @@ Room card grids are now one row and one column smaller per floor: 6x6, 7x7, 8x8,
 
 `GameRun` 维护地牢、玩家生命／护甲／体力、4×8 背包、角色成长、圣遗物、商人、奖励、状态效果、敌人状态和日志。圣遗物以 `type: 'relic'` 的 1×1 背包物品保存；`RelicCollection` 是由背包物品同步出的效果索引。普通探索操作回复1体力；消耗品、整理与合成不自动回复。攻击推进攻击计数和全局回合，实际费用包含物品与天赋修正且最低1。接近路径中的每格移动也是独立的非攻击回合。
 
-背包散件光带由 `ItemRules.activeAdjacencyLinks()` 提供真实相邻关系，Vue 只为每条边界渲染一个稳定容器及三个固定纹理层，不重建物品节点。`scripts/process-lightband-assets.py` 从 `ref/lightband.html` 提取三张 base64 原图，将原图保存到 `src/assets/ui/backup/source/`，再按 alpha 内容裁掉上下空白并缩放为 256px 宽的运行时 PNG；游戏仅加载 `src/assets/ui/lightband-*.png`。横向和纵向复用相同纹理，纵向仅旋转容器。
+背包散件光带由 `ItemRules.activeAdjacencyLinks()` 提供真实相邻关系，Vue 只为每条边界渲染一个稳定容器及三个固定纹理层，不重建物品节点。`scripts/process-lightband-assets.py` 从 `ref/lightband.html` 提取三张 base64 原图，将原图保存到 `src/assets/ui/backup/source/`，再按 alpha 内容裁掉上下空白并缩放为 256px 宽的运行时 PNG；游戏仅加载 `src/assets/ui/lightband-*.png`。横向和纵向复用相同纹理，纵向仅旋转容器。容器额外使用左右端点渐隐遮罩，使光带在共享边界两端自然消失，不产生硬切边。
+
+装备详情的前向合成路线继续读取 `upgradeRecipesForItem()`，每个素材图标使用固定方形容器与 `object-fit: contain`，不附加边框、底色或可交互层；加号和箭头由 CSS 线段绘制，避免字体字形、emoji 和基线差异导致裁切或闪动。
 
 回合计数只有 `attackCount` 和 `globalTurn`；`turn` 是全局回合的兼容别名。背包整理与合成成功推进1回合；丢弃、奖励/升级选择与购买/出售不推进计数。运行时不存在左右手、装备栏、行动计数、武器耐久、磨刀石、最后一击、武器损毁或拦截机制。圣遗物无数量超载限制。`ItemRules` 统一处理新版武器、防具、材料、圣遗物与天赋的交叉效果。
 
