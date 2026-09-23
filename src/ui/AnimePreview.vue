@@ -17,6 +17,7 @@
         <ShadowPuppetStage
           :project="project" :animation-id="animationId" :time="time"
           :show-bones="showBones" :show-grid="false"
+          :joint-interactive="false" :bone-interactive="false" :part-interactive="false" interactive
         />
       </div>
       <div class="anime-preview-controls">

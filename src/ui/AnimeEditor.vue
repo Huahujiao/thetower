@@ -65,7 +65,8 @@
           <label class="rig-joint-name"><span>{{ COPY.name }}</span><input :value="selectedJoint.name" @input="selectedJoint.name = $event.target.value"></label>
           <label><span>X</span><input :value="round(selectedJoint.x)" type="number" @input="setRestNumber(selectedJoint, 'x', $event.target.value)"></label>
           <label><span>Y</span><input :value="round(selectedJoint.y)" type="number" @input="setRestNumber(selectedJoint, 'y', $event.target.value)"></label>
-          <label><span>{{ COPY.rotation }}</span><input :value="round(selectedJoint.rotation)" type="number" @input="setRestNumber(selectedJoint, 'rotation', $event.target.value)"></label>
+          <label><span>Z</span><input :value="round(selectedJoint.z)" type="number" @input="setRestNumber(selectedJoint, 'z', $event.target.value)"></label>
+          <label v-for="axis in ['X', 'Y', 'Z']" :key="axis"><span>R{{ axis }}</span><input :value="round(selectedJoint[`rotation${axis}`])" type="number" @input="setRestNumber(selectedJoint, `rotation${axis}`, $event.target.value)"></label>
         </div>
         <div v-else-if="selectedBone" class="rig-field-strip rig-bone-field-strip">
           <label class="field-grow"><span>{{ COPY.name }}</span><input :value="selectedBone.name" @input="selectedBone.name = $event.target.value"></label>
@@ -99,18 +100,21 @@
           </button>
         </div>
         <div v-if="selectedPart" class="rig-part-fields">
+          <div class="rig-axis-tabs"><button v-for="mode in ['size', 'position', 'rotation']" :key="mode" type="button" :class="{ active: partFieldMode === mode }" @click="partFieldMode = mode">{{ COPY[mode] }}</button></div>
           <div class="rig-part-field-row">
             <label><span>{{ COPY.bind }}</span><select :value="selectedPart.attachment.type" @change="setAttachmentType($event.target.value)"><option value="free">{{ COPY.free }}</option><option value="joint">{{ COPY.joint }}</option><option value="bone">{{ COPY.bone }}</option></select></label>
             <label v-if="selectedPart.attachment.type !== 'free'"><span>{{ COPY.target }}</span><select :value="selectedPart.attachment.targetId || ''" @change="setAttachmentTarget($event.target.value)"><option v-for="target in attachmentTargets" :key="target.id" :value="target.id">{{ target.name }}</option></select></label>
             <label v-if="selectedPart.attachment.type === 'bone'"><span>{{ COPY.position }}</span><input :value="selectedPart.attachment.t" type="range" min="0" max="1" step=".01" @input="selectedPart.attachment.t = Number($event.target.value)"></label>
           </div>
-          <div class="rig-part-field-row">
+          <div v-if="partFieldMode === 'size'" class="rig-part-field-row">
             <label><span>{{ COPY.width }}</span><input :value="round(selectedPart.width)" type="number" min="4" @input="setRestNumber(selectedPart, 'width', $event.target.value, 4)"></label>
             <label><span>{{ COPY.height }}</span><input :value="round(selectedPart.height)" type="number" min="4" @input="setRestNumber(selectedPart, 'height', $event.target.value, 4)"></label>
-            <label><span>{{ COPY.rotation }}</span><input :value="round(selectedPart.rotation)" type="number" @input="setRestNumber(selectedPart, 'rotation', $event.target.value)"></label>
+            <label><span>{{ COPY.layer }}</span><input :value="selectedPart.layer" type="number" @input="setRestNumber(selectedPart, 'layer', $event.target.value)"></label>
+          </div>
+          <div v-else class="rig-part-field-row">
+            <label v-for="axis in ['X', 'Y', 'Z']" :key="axis"><span>{{ axis }}</span><input :value="round(selectedPart[partFieldMode === 'position' ? axis.toLowerCase() : `rotation${axis}`])" type="number" @input="setRestNumber(selectedPart, partFieldMode === 'position' ? axis.toLowerCase() : `rotation${axis}`, $event.target.value)"></label>
           </div>
           <div class="rig-part-field-row">
-            <label><span>{{ COPY.layer }}</span><input :value="selectedPart.z" type="number" @input="setRestNumber(selectedPart, 'z', $event.target.value)"></label>
             <label><span>{{ COPY.fill }}</span><input v-model="selectedPart.fill" type="color"></label>
             <label><span>{{ COPY.stroke }}</span><input v-model="selectedPart.stroke" type="color"></label>
           </div>
@@ -149,13 +153,10 @@
           <button type="button" :disabled="!animationTargetKeys.length" @click="recordCurrentKey">{{ COPY.recordKey }}</button>
           <button type="button" :disabled="!hasCurrentKey" @click="deleteCurrentKey">{{ COPY.deleteKey }}</button>
         </div>
+        <div class="rig-axis-tabs"><button v-for="mode in ['position', 'rotation', 'scale']" :key="mode" type="button" :class="{ active: poseFieldMode === mode }" @click="poseFieldMode = mode">{{ COPY[mode] }}</button></div>
         <div class="rig-animation-fields" role="group" :aria-label="selectedAnimationLabel">
           <template v-if="selectedTargetKey">
-            <label><span>ΔX</span><input :value="round(selectedPose.dx)" type="number" @input="setPoseNumber('dx', $event.target.value)"></label>
-            <label><span>ΔY</span><input :value="round(selectedPose.dy)" type="number" @input="setPoseNumber('dy', $event.target.value)"></label>
-            <label><span>{{ COPY.rotation }}</span><input :value="round(selectedPose.rotation)" type="number" @input="setPoseNumber('rotation', $event.target.value)"></label>
-            <label><span>Scale X</span><input :value="round(selectedPose.scaleX)" type="number" min=".05" step=".05" @input="setPoseNumber('scaleX', $event.target.value, .05)"></label>
-            <label><span>Scale Y</span><input :value="round(selectedPose.scaleY)" type="number" min=".05" step=".05" @input="setPoseNumber('scaleY', $event.target.value, .05)"></label>
+            <label v-for="axis in ['X', 'Y', 'Z']" :key="axis"><span>{{ axis }}</span><input :value="round(selectedPose[poseField(axis)])" type="number" :step="poseFieldMode === 'scale' ? .05 : 1" @input="setPoseNumber(poseField(axis), $event.target.value, poseFieldMode === 'scale' ? .05 : null)"></label>
             <label><span>{{ COPY.opacity }}</span><input :value="round(selectedPose.opacity)" type="number" min="0" max="1" step=".05" @input="setPoseNumber('opacity', $event.target.value, 0, 1)"></label>
           </template>
         </div>
@@ -166,6 +167,7 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { Matrix4 } from 'three'
 import {
   SHADOW_ANIMATION_TYPES,
   SHADOW_SHAPES,
@@ -176,13 +178,14 @@ import {
   createShadowPart,
   defaultShadowPose,
   evaluateShadowProject,
-  inverseShadowPoint,
   inverseShadowVector,
   loadShadowRoster,
   normalizeShadowProject,
   sampleShadowTrack,
   saveShadowRoster,
-  shadowMatrixRotation,
+  shadowBoneAttachmentMatrix,
+  shadowMatrixEuler,
+  shadowMatrixPosition,
   shadowTargetKey,
   upsertShadowKeyframe,
 } from '../animation/shadow-rig.js'
@@ -191,6 +194,7 @@ import '../anime.css'
 
 const COPY = Object.freeze({
   partName: '\u90e8\u4ef6\u540d\u79f0',
+  size: '\u5c3a\u5bf8', scale: '\u7f29\u653e',
   resetAnimation: '\u91cd\u7f6e',
   resetAnimationConfirm: '\u6e05\u7a7a\u5f53\u524d\u52a8\u4f5c\u7684\u6240\u6709\u5173\u952e\u5e27\uff0c\u6062\u590d\u9aa8\u67b6\u548c\u90e8\u4ef6\u7684\u521d\u59cb\u59ff\u6001\uff1f',
   back: '\u8fd4\u56de\u6e38\u620f', openPreview: '\u9884\u89c8', character: '\u89d2\u8272', characterName: '\u89d2\u8272\u540d\u79f0', add: '\u65b0\u5efa', duplicate: '\u590d\u5236', deleteCharacter: '\u5220\u9664', editorMode: '\u7f16\u8f91\u6a21\u5f0f', skeleton: '\u9aa8\u67b6', parts: '\u90e8\u4ef6', animation: '\u52a8\u4f5c', bones: '\u9aa8\u67b6', grid: '\u7f51\u683c', select: '\u9009\u62e9', addJoint: '\u6dfb\u52a0\u5173\u8282', connect: '\u8fde\u63a5', deleteSelected: '\u5220\u9664', name: '\u540d\u79f0', rotation: '\u65cb\u8f6c', tapToAddJoint: '\u70b9\u51fb\u753b\u5e03\u521b\u5efa\u72ec\u7acb\u5173\u8282', connectFirst: '\u8bf7\u5148\u70b9\u51fb\u8d77\u70b9\u5173\u8282', connectSecond: '\u8bf7\u70b9\u51fb\u7ec8\u70b9\u5173\u8282', invalidConnection: '\u65e0\u6cd5\u521b\u5efa\u5faa\u73af\u9aa8\u67b6', selectPart: '\u9009\u62e9\u90e8\u4ef6', bind: '\u7ed1\u5b9a', free: '\u81ea\u7531', joint: '\u5173\u8282', bone: '\u9aa8\u9abc\u7ebf', target: '\u76ee\u6807', position: '\u4f4d\u7f6e', width: '\u5bbd', height: '\u9ad8', layer: '\u5c42\u7ea7', fill: '\u586b\u8272', stroke: '\u8f6e\u5ed3', play: '\u64ad\u653e', pause: '\u6682\u505c', rewind: '\u5f52\u96f6', duration: '\u65f6\u957f', loop: '\u5faa\u73af', opacity: '\u900f\u660e\u5ea6', recordKey: '\u8bb0\u5f55\u5e27', deleteKey: '\u5220\u9664\u5e27', selectAnimationTarget: '\u8bf7\u5728\u753b\u5e03\u4e0a\u9009\u62e9\u5173\u8282\u6216\u90e8\u4ef6', newCharacter: '\u65b0\u89d2\u8272', duplicateSuffix: '\u526f\u672c', deleteCharacterConfirm: '\u5220\u9664\u5f53\u524d\u89d2\u8272\u53ca\u5176\u5168\u90e8\u52a8\u4f5c\uff1f',
@@ -212,6 +216,8 @@ const selectedId = ref(null)
 const connectFromId = ref(null)
 const notice = ref('')
 const pendingShape = ref(null)
+const partFieldMode = ref('size')
+const poseFieldMode = ref('position')
 const showBones = ref(true)
 const showMesh = ref(true)
 const animationId = ref('idle')
@@ -223,11 +229,14 @@ let lastFrameTime = 0
 let localIdSequence = 0
 
 const currentAnimation = computed(() => project.value.animations[animationId.value])
-const evaluation = computed(() => evaluateShadowProject(project.value, editorMode.value === 'animation' ? animationId.value : null, time.value))
 const selectedJoint = computed(() => selectedKind.value === 'joint' ? project.value.joints.find((entry) => entry.id === selectedId.value) || null : null)
 const selectedBone = computed(() => selectedKind.value === 'bone' ? project.value.bones.find((entry) => entry.id === selectedId.value) || null : null)
 const selectedPart = computed(() => selectedKind.value === 'part' ? project.value.parts.find((entry) => entry.id === selectedId.value) || null : null)
-const orderedParts = computed(() => [...project.value.parts].sort((left, right) => right.z - left.z || left.name.localeCompare(right.name)))
+const orderedParts = computed(() => [...project.value.parts].sort((left, right) => right.layer - left.layer || left.name.localeCompare(right.name)))
+
+function poseField(axis) {
+  return poseFieldMode.value === 'position' ? `d${axis.toLowerCase()}` : `${poseFieldMode.value}${axis}`
+}
 const attachmentTargets = computed(() => selectedPart.value?.attachment.type === 'joint'
   ? project.value.joints
   : project.value.bones)
@@ -375,7 +384,7 @@ function onCanvasTap(point) {
       shape: pendingShape.value,
       x: point.x,
       y: point.y,
-      z: Math.max(0, ...project.value.parts.map((entry) => entry.z + 1)),
+      layer: Math.max(0, ...project.value.parts.map((entry) => entry.layer + 1)),
     })
     project.value.parts.push(part)
     selectedKind.value = 'part'
@@ -412,12 +421,16 @@ function createsCycle(fromJointId, toJointId) {
   return false
 }
 
+function setRestFromMatrix(target, matrix) {
+  const position = shadowMatrixPosition(matrix)
+  const rotation = shadowMatrixEuler(matrix)
+  Object.assign(target, position, rotation)
+}
+
 function makePartFree(part, evaluatedPart) {
   if (!evaluatedPart) return
   part.attachment = { type: 'free', targetId: null, t: 0.5, followRotation: true }
-  part.x = evaluatedPart.matrix.e
-  part.y = evaluatedPart.matrix.f
-  part.rotation = shadowMatrixRotation(evaluatedPart.matrix)
+  setRestFromMatrix(part, evaluatedPart.matrix)
 }
 
 function connectJoints(fromJointId, toJointId) {
@@ -440,10 +453,7 @@ function connectJoints(fromJointId, toJointId) {
     }
     project.value.bones = project.value.bones.filter((entry) => entry.id !== oldIncoming.id)
   }
-  const local = inverseShadowPoint(parentEntry.matrix, childEntry.matrix.e, childEntry.matrix.f)
-  child.x = local.x
-  child.y = local.y
-  child.rotation = shadowMatrixRotation(childEntry.matrix) - shadowMatrixRotation(parentEntry.matrix)
+  setRestFromMatrix(child, parentEntry.matrix.clone().invert().multiply(childEntry.matrix))
   const bone = createShadowBone({
     id: nextLocalId('bone'),
     name: `${COPY.bone} ${project.value.bones.length + 1}`,
@@ -467,9 +477,7 @@ function deleteSelectedSkeleton() {
     const child = project.value.joints.find((entry) => entry.id === bone.toJointId)
     const childWorld = before.jointsById.get(bone.toJointId)
     if (child && childWorld) {
-      child.x = childWorld.matrix.e
-      child.y = childWorld.matrix.f
-      child.rotation = shadowMatrixRotation(childWorld.matrix)
+      setRestFromMatrix(child, childWorld.matrix)
     }
     for (const part of project.value.parts) {
       if (part.attachment.type === 'bone' && part.attachment.targetId === bone.id) {
@@ -485,9 +493,7 @@ function deleteSelectedSkeleton() {
       const child = project.value.joints.find((entry) => entry.id === bone.toJointId)
       const childWorld = before.jointsById.get(bone.toJointId)
       if (child && childWorld) {
-        child.x = childWorld.matrix.e
-        child.y = childWorld.matrix.f
-        child.rotation = shadowMatrixRotation(childWorld.matrix)
+        setRestFromMatrix(child, childWorld.matrix)
       }
     }
     for (const part of project.value.parts) {
@@ -521,7 +527,7 @@ function duplicateSelectedPart() {
   copy.name = `${copy.name} ${COPY.duplicateSuffix}`
   copy.x += 18
   copy.y += 18
-  copy.z += 1
+  copy.layer += 1
   project.value.parts.push(copy)
   selectedId.value = copy.id
 }
@@ -534,34 +540,24 @@ function deleteSelectedPart() {
   resetSelection()
 }
 
-function boneAttachmentMatrix(boneEntry, t, followRotation) {
-  const ratio = Math.min(1, Math.max(0, Number(t) || 0))
-  const x = boneEntry.x1 + (boneEntry.x2 - boneEntry.x1) * ratio
-  const y = boneEntry.y1 + (boneEntry.y2 - boneEntry.y1) * ratio
-  const radians = (followRotation ? boneEntry.angle : 0) * Math.PI / 180
-  return { a: Math.cos(radians), b: Math.sin(radians), c: -Math.sin(radians), d: Math.cos(radians), e: x, f: y }
-}
-
 function attachmentBaseMatrix(type, targetId, t = 0.5, followRotation = true) {
-  if (type === 'joint') return evaluation.value.jointsById.get(targetId)?.matrix || { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 }
+  const rest = evaluateShadowProject(project.value)
+  if (type === 'joint') return rest.jointsById.get(targetId)?.matrix || new Matrix4()
   if (type === 'bone') {
-    const bone = evaluation.value.bonesById.get(targetId)
-    if (bone) return boneAttachmentMatrix(bone, t, followRotation)
+    const bone = rest.bonesById.get(targetId)
+    if (bone) return shadowBoneAttachmentMatrix(bone, t, followRotation)
   }
-  return { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 }
+  return new Matrix4()
 }
 
 function rebindSelectedPart(type, targetId) {
   if (!selectedPart.value) return
-  const evaluated = evaluation.value.parts.find((entry) => entry.part.id === selectedPart.value.id)
+  const evaluated = evaluateShadowProject(project.value).parts.find((entry) => entry.part.id === selectedPart.value.id)
   if (!evaluated) return
   const t = selectedPart.value.attachment.t ?? 0.5
   const followRotation = selectedPart.value.attachment.followRotation !== false
   const base = attachmentBaseMatrix(type, targetId, t, followRotation)
-  const local = inverseShadowPoint(base, evaluated.matrix.e, evaluated.matrix.f)
-  selectedPart.value.x = local.x
-  selectedPart.value.y = local.y
-  selectedPart.value.rotation = shadowMatrixRotation(evaluated.matrix) - shadowMatrixRotation(base)
+  setRestFromMatrix(selectedPart.value, base.clone().invert().multiply(evaluated.matrix))
   selectedPart.value.attachment = { type, targetId: type === 'free' ? null : targetId, t, followRotation }
 }
 
@@ -592,6 +588,7 @@ function onStageDrag({ kind, id, previous, current }) {
   selectedId.value = id
   const dx = current.x - previous.x
   const dy = current.y - previous.y
+  const dz = current.z - previous.z
   const currentEvaluation = evaluateShadowProject(project.value, editorMode.value === 'animation' ? animationId.value : null, time.value)
   if (editorMode.value === 'animation') {
     const targetKey = shadowTargetKey(kind, id)
@@ -599,10 +596,11 @@ function onStageDrag({ kind, id, previous, current }) {
       ? currentEvaluation.jointsById.get(id)
       : currentEvaluation.parts.find((candidate) => candidate.part.id === id)
     if (!entry) return
-    const localDelta = inverseShadowVector(kind === 'joint' ? entry.parentMatrix : entry.baseMatrix, dx, dy)
+    const localDelta = inverseShadowVector(kind === 'joint' ? entry.parentMatrix : entry.baseMatrix, dx, dy, dz)
     const pose = sampleShadowTrack(currentAnimation.value, targetKey, time.value)
     pose.dx += localDelta.x
     pose.dy += localDelta.y
+    pose.dz += localDelta.z
     upsertShadowKeyframe(project.value, animationId.value, targetKey, time.value, pose)
     return
   }
@@ -610,16 +608,18 @@ function onStageDrag({ kind, id, previous, current }) {
     const joint = project.value.joints.find((entry) => entry.id === id)
     const evaluated = currentEvaluation.jointsById.get(id)
     if (!joint || !evaluated) return
-    const localDelta = inverseShadowVector(evaluated.parentMatrix, dx, dy)
+    const localDelta = inverseShadowVector(evaluated.parentMatrix, dx, dy, dz)
     joint.x += localDelta.x
     joint.y += localDelta.y
+    joint.z += localDelta.z
   } else if (kind === 'part') {
     const part = project.value.parts.find((entry) => entry.id === id)
     const evaluated = currentEvaluation.parts.find((entry) => entry.part.id === id)
     if (!part || !evaluated) return
-    const localDelta = inverseShadowVector(evaluated.baseMatrix, dx, dy)
+    const localDelta = inverseShadowVector(evaluated.baseMatrix, dx, dy, dz)
     part.x += localDelta.x
     part.y += localDelta.y
+    part.z += localDelta.z
   }
 }
 

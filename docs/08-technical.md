@@ -5,7 +5,7 @@
 - `src/main.js` 是应用入口。
 - `/` 创建 `GameRun`、HUD 和 Three.js 场景。
 - `/wiki` 创建独立图鉴页面，不初始化游戏场景。
-- `/animeedit` 挂载二维皮影骨架与关键帧编辑器；`/animepreview` 挂载共享工程的只读播放器。两个工具页都不创建 `GameRun` 或 Three.js 场景。
+- `/animeedit` 挂载三维骨架与关键帧编辑器；`/animepreview` 挂载共享工程的只读播放器。两个工具页不创建 `GameRun`，使用独立的 Three.js 舞台。
 - Vite 用于开发和生产构建。
 
 ## 模块边界
@@ -149,11 +149,13 @@ Long-press detail is visible while the hold is active and closes on touch releas
 
 ## Shadow-puppet animation tools
 
-`src/animation/shadow-rig.js` owns the version-2 serializable rig. Its three structural collections are deliberately separate: `joints` contains independent transform points, `bones` contains directed `fromJointId -> toJointId` links, and `parts` contains rendered geometry. A joint may remain disconnected; each child joint has at most one incoming bone. A part attachment is `free`, `joint`, or `bone`; bone attachments store the normalized line position `t` and whether the part follows bone rotation. Forward-kinematic world matrices are evaluated from the joint graph, while bound parts receive a separate attachment matrix. Reparenting or deleting a bone converts affected rest transforms so visible world positions are preserved.
+`src/animation/shadow-rig.js` owns the version-3 serializable rig. Its separate collections are `joints` (XYZ position and Euler rotation), directed `bones`, and geometric `parts` (XYZ position, Euler rotation, and an independent draw-order `layer`). A joint may remain disconnected; each child has at most one incoming bone. Part attachments remain `free`, `joint`, or `bone`. Three.js `Matrix4` forward kinematics evaluates the hierarchy in 3D; changing or deleting links converts local rest transforms to preserve world position and orientation. Version-2 parts' old `z` draw order migrates to `layer`, while their spatial Z defaults to zero.
 
-Animation tracks address `joint:<id>` or `part:<id>` targets and store position offsets, rotation, scale, and opacity. The fixed animation slots remain `idle`, `attack`, `hit`, `death`, and `move`, with editable duration and loop mode. `ShadowPuppetStage.vue` is the shared SVG renderer: guide grid, bones, parts, and joints are separate layers, and joints render last. The editor's Grid checkbox passes the same visibility state to `showGrid` and `showParts`; disabling it therefore leaves only joints and bone links, while the preview keeps parts visible independently. `/animeedit` keeps the stage mounted while switching its lower context tools among Skeleton, Parts, and Animation; `/animepreview` reads and plays the active project without editing controls. Neither route initializes or modifies Three.js.
+Animation tracks address `joint:<id>` or `part:<id>` targets and store XYZ offsets, XYZ Euler rotations, XYZ scale, and opacity. The fixed slots remain `idle`, `attack`, `hit`, `death`, and `move`. `ShadowPuppetStage.vue` is a shared, stable Three.js canvas with a front-facing orthographic camera, touch pan/pinch zoom, and optional orbit view; geometry, bones, and joints are separate objects, with joints rendered on top. The editor's Grid checkbox also toggles parts, leaving only joints and links when off. The preview uses the same renderer but disables target editing. Neither tool route instantiates `GameRun` or modifies the gameplay scene.
 
-The version-2 roster uses fresh `project-v2` and `roster-v2` local-storage keys so the removed sample roster cannot repopulate the editor. First load creates one empty character; there are no built-in examples or example controls. Add, rename, duplicate, delete, and switch operations preserve characters independently, and deleting the final entry creates a blank replacement. The character dropdown and four icon actions share the top row with Back and Preview; Rename uses a prompt and Delete requires confirmation. Edits are debounced and saved automatically, with no manual save, import, or export controls. The active project is mirrored to the v2 project key for `/animepreview` and cross-tab updates. The normalizer can still convert an explicitly supplied version-1 project, but old sample storage is not loaded automatically. It also removes the obsolete generated `·皮影` suffix.
+The version-3 roster uses `project-v3` and `roster-v3` local-storage keys, reading v2 data once if no v3 data exists. First load creates one empty character; there are no built-in examples. Add, rename, duplicate, delete, and switch operations preserve characters independently. Edits are debounced and saved automatically. The active project is mirrored to the v3 project key for `/animepreview` and cross-tab updates. The normalizer also removes the obsolete generated `·皮影` suffix.
+
+`npm run check:animation` checks v2 migration, three-dimensional parent/child transforms, part attachment, and XYZ keyframe interpolation.
 
 Parts currently expose geometry only. Their persisted `visual` object already reserves `type: 'shape' | 'texture'`, `texture`, and `textureFit`, but `/animeedit` intentionally has no texture-mode controls yet.
 

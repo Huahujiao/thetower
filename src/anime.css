@@ -30,8 +30,11 @@ body.anime-body #hud { position: static; display: block; pointer-events: auto; }
 .anime-stage-wrap { position: relative; min-height: 0; overflow: hidden; flex: 1 1 0; border: 1px solid var(--anime-line); border-radius: 9px 9px 0 0; background: #0d141c; }
 .rig-stage-options { position: absolute; top: 6px; right: 6px; z-index: 6; display: flex; gap: 7px; padding: 4px 6px; border: 1px solid rgba(143,174,198,.2); border-radius: 6px; background: rgba(9,15,22,.78); color: #9fb4c3; font-size: 9px; pointer-events: auto; }
 .rig-stage-options label { display: flex; align-items: center; gap: 3px; }
-.shadow-stage { display: block; width: 100%; height: 100%; min-height: 0; background: #111a23; }
+.shadow-stage { position: relative; display: block; width: 100%; height: 100%; min-height: 0; background: #111a23; }
 .shadow-stage.interactive { touch-action: none; }
+.shadow-stage canvas { display: block; width: 100%; height: 100%; }
+.shadow-view-controls { position: absolute; z-index: 5; top: 6px; left: 6px; display: flex; gap: 4px; }
+.shadow-view-controls button { min-width: 31px; height: 25px; padding: 2px 5px; background: rgba(12, 22, 31, .83); color: #b7cfdd; font-size: 9px; }
 .shadow-stage-paper { fill: #182431; }
 .shadow-grid-layer { pointer-events: none; }
 .shadow-part { filter: url(#shadow-part-shadow); }
@@ -47,8 +50,8 @@ body.anime-body #hud { position: static; display: block; pointer-events: auto; }
 .shadow-joint { fill: #e2b967; stroke: #6b302a; stroke-width: 3; vector-effect: non-scaling-stroke; pointer-events: none; }
 .shadow-joint-selection { fill: none; stroke: #8fd1ff; stroke-width: 3; vector-effect: non-scaling-stroke; pointer-events: none; }
 
-/* Selected part: 28 + 5 + 29 + 5 + 3*27 + 2*4 + 2*7 + 1 = 171px. */
-.rig-context-panel { min-height: 0; height: 171px; overflow-y: auto; flex: 0 0 171px; padding: 7px 8px; border: 1px solid var(--anime-line); border-top: 0; border-radius: 0 0 9px 9px; background: #101923; overscroll-behavior: contain; }
+/* Three-axis controls use the same fixed-height panel in all three tabs. */
+.rig-context-panel { min-height: 0; height: 204px; overflow: hidden; flex: 0 0 204px; padding: 7px 8px; border: 1px solid var(--anime-line); border-top: 0; border-radius: 0 0 9px 9px; background: #101923; overscroll-behavior: contain; }
 .rig-tool-row,.rig-shape-row,.rig-part-select-row,.anime-playback-row,.rig-animation-fields { display: flex; min-width: 0; align-items: center; gap: 5px; }
 .rig-tool-row button { flex: 1; min-height: 29px; padding: 4px; font-size: 9px; }
 .rig-context-status { min-height: 18px; padding: 4px 2px; overflow: hidden; color: #7892a5; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
@@ -56,7 +59,7 @@ body.anime-body #hud { position: static; display: block; pointer-events: auto; }
 .rig-field-strip label,.rig-animation-fields label { display: grid; min-width: 0; gap: 3px; color: #8199aa; font-size: 8px; }
 .rig-field-strip input,.rig-part-fields input,.rig-part-fields select,.rig-animation-fields input { min-width: 0; width: 100%; height: 27px; padding: 3px 5px; }
 .rig-field-strip > span { color: #91a9ba; font-size: 10px; }
-.rig-field-strip.rig-joint-field-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 8px; row-gap: 10px; margin-top: 8px; }
+.rig-field-strip.rig-joint-field-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 5px; row-gap: 4px; margin-top: 4px; }
 .rig-joint-name { grid-column: 1 / -1; }
 .rig-bone-field-strip .field-grow,.rig-bone-connection { grid-column: 1 / -1; }
 .rig-bone-connection { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -67,6 +70,8 @@ body.anime-body #hud { position: static; display: block; pointer-events: auto; }
 .rig-part-select-row button { min-height: 29px; padding: 3px 6px; font-size: 9px; }
 .rig-part-select-row .anime-icon-button { width: 29px; height: 29px; flex: 0 0 29px; padding: 4px; }
 .rig-part-fields { display: grid; gap: 4px; margin-top: 5px; }
+.rig-axis-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; margin-top: 4px; }
+.rig-axis-tabs button { min-height: 21px; padding: 2px; font-size: 9px; }
 .rig-part-field-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
 .rig-part-fields label { display: flex; min-width: 0; height: 27px; align-items: center; gap: 3px; color: #8199aa; font-size: 8px; }
 .rig-part-fields label span { width: 20px; flex: 0 0 20px; white-space: nowrap; }
@@ -93,7 +98,7 @@ body.anime-body #hud { position: static; display: block; pointer-events: auto; }
 .anime-scrubber > button { min-width: 0; min-height: 27px; padding: 3px 2px; font-size: 8px; white-space: nowrap; }
 .anime-key-markers { position: absolute; z-index: 2; right: var(--scrubber-thumb-half); bottom: 1px; left: var(--scrubber-thumb-half); height: 7px; pointer-events: none; }
 .anime-key-markers button { position: absolute; width: 7px; height: 7px; padding: 0; border: 1px solid #a8d8f7; border-radius: 1px; background: #477b9d; pointer-events: auto; transform: translateX(-50%) rotate(45deg); }
-.rig-animation-fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px 5px; margin-top: 2px; }
+.rig-animation-fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px 5px; margin-top: 3px; }
 .rig-animation-fields label { display: flex; min-width: 0; height: 27px; align-items: center; gap: 3px; }
 .rig-animation-fields label span { width: 39px; flex: 0 0 39px; white-space: nowrap; }
 .rig-animation-fields label input { width: 0; min-width: 0; flex: 1 1 0; }

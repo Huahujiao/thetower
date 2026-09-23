@@ -310,7 +310,7 @@ function migrateLegacyProject(source) {
     }
   }
   return {
-    version: 2,
+    version: 3,
     name: normalizeProjectName(legacy.name, '\u65b0\u89d2\u8272'),
     stage: {
       width: Math.max(200, finite(legacy.stage?.width, 600)),
