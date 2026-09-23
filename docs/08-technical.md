@@ -159,6 +159,8 @@ The version-3 roster uses `project-v3` and `roster-v3` local-storage keys, readi
 
 Parts currently expose geometry only. Their persisted `visual` object already reserves `type: 'shape' | 'texture'`, `texture`, and `textureFit`, but `/animeedit` intentionally has no texture-mode controls yet.
 
+The animation stage maintains separate cameras: an orthographic front camera for flat editing and a 48-degree perspective camera for 3D preview. The flat camera takes the first root joint's rest-pose local negative-Z forward vector, ignoring vertical tilt, to face the character without changing its stored rotation. The preview uses Three.js `OrbitControls` on the canvas (one-finger orbit, two-finger dolly/rotate), with panning disabled. Its character group is scaled and centered from the rest-pose joint/part bounds to fit within one 150-unit floor tile; this is a presentation transform only and is not saved to the rig. The floor stays beneath the rest-pose low point.
+
 On portrait phones the editor root never scrolls. Header and mode menu use 8% and 6% of dynamic viewport height; the stage takes the remaining workspace above a fixed 204px context panel. The Parts selector has Rename, Duplicate, temporary Hide/Show, and Delete icons. Front-view guides and joint markers render above parts, while 3D mode replaces the guide grid with the shared floor artwork and hides edit overlays.
 
 Skeleton Select exposes a full-width name row, XYZ position, and XYZ Euler rotation. Parts controls switch among size/layer, XYZ position, and XYZ rotation. The shared bottom panel is fixed at 204px without moving the stage when an object is selected.

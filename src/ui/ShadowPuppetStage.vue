@@ -9,7 +9,8 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { BufferGeometry, Color, DoubleSide, EdgesGeometry, Group, Line, LineBasicMaterial, LineSegments, Mesh, MeshBasicMaterial, OrthographicCamera, PlaneGeometry, Raycaster, Scene, Shape, ShapeGeometry, SphereGeometry, SRGBColorSpace, TextureLoader, Vector2, Vector3, WebGLRenderer } from 'three'
+import { BufferGeometry, Color, DoubleSide, EdgesGeometry, Group, Line, LineBasicMaterial, LineSegments, Mesh, MeshBasicMaterial, OrthographicCamera, PerspectiveCamera, PlaneGeometry, Raycaster, Scene, Shape, ShapeGeometry, SphereGeometry, SRGBColorSpace, TextureLoader, TOUCH, Vector2, Vector3, WebGLRenderer } from 'three'
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { evaluateShadowProject, shadowMatrixPosition } from '../animation/shadow-rig.js'
 import { FLOOR_URLS, floorTextureIndex } from '../render/board-textures.js'
 
@@ -34,8 +35,10 @@ const orbitMode = ref(false)
 const evaluation = computed(() => evaluateShadowProject(props.project, props.animationId, props.time))
 const scene = new Scene()
 scene.background = new Color('#182431')
-const camera = new OrthographicCamera()
-camera.up.set(0, -1, 0)
+const frontCamera = new OrthographicCamera()
+const previewCamera = new PerspectiveCamera(48, 1, 1, 5000)
+frontCamera.up.set(0, -1, 0)
+previewCamera.up.set(0, -1, 0)
 const raycaster = new Raycaster()
 raycaster.params.Line.threshold = 10
 const textureLoader = new TextureLoader()
@@ -43,24 +46,38 @@ const textureCache = new Map()
 const floorGroup = new Group()
 floorGroup.visible = false
 scene.add(floorGroup)
+const figureGroup = new Group()
+scene.add(figureGroup)
 const activePointers = new Map()
 const objects = []
 let renderer = null
+let orbitControls = null
 let observer = null
 let center = new Vector3()
 let zoom = 1
-let yaw = 0
-let pitch = 0
 let drag = null
 let pinch = null
+let framedProject = null
+
+function clearPointerGesture() {
+  if (drag) emit('drag-end', { kind: drag.kind, id: drag.id, cancelled: true })
+  drag = null
+  pinch = null
+  for (const pointerId of activePointers.keys()) {
+    if (host.value?.hasPointerCapture(pointerId)) host.value.releasePointerCapture(pointerId)
+  }
+  activePointers.clear()
+}
 
 function resetView() {
+  clearPointerGesture()
   center = new Vector3()
   zoom = 1
-  yaw = 0
-  pitch = 0
   orbitMode.value = false
+  if (orbitControls) orbitControls.enabled = false
   floorGroup.visible = false
+  figureGroup.position.set(0, 0, 0)
+  figureGroup.scale.setScalar(1)
   emit('view-mode-change', false)
   updateCamera()
   drawScene()
@@ -93,15 +110,59 @@ function toggle3D() {
     resetView()
     return
   }
+  clearPointerGesture()
   ensureFloor()
   orbitMode.value = true
   floorGroup.visible = true
-  center = new Vector3(0, 42, 0)
-  yaw = 0
-  pitch = -.42
+  framePreview()
+  orbitControls.enabled = true
   emit('view-mode-change', true)
   updateCamera()
   drawScene()
+}
+
+function fitFigureToTile() {
+  const rest = evaluateShadowProject(props.project)
+  let minX = Infinity
+  let maxX = -Infinity
+  let minY = Infinity
+  let maxY = -Infinity
+  let minZ = Infinity
+  let maxZ = -Infinity
+  const include = (point) => {
+    minX = Math.min(minX, point.x)
+    maxX = Math.max(maxX, point.x)
+    minY = Math.min(minY, point.y)
+    maxY = Math.max(maxY, point.y)
+    minZ = Math.min(minZ, point.z)
+    maxZ = Math.max(maxZ, point.z)
+  }
+  for (const entry of rest.joints) include(shadowMatrixPosition(entry.matrix))
+  for (const entry of rest.parts) {
+    const part = entry.part
+    const left = -part.width * part.pivotX
+    const top = -part.height * part.pivotY
+    for (const x of [left, left + part.width]) {
+      for (const y of [top, top + part.height]) include(new Vector3(x, y, 0).applyMatrix4(entry.matrix))
+    }
+  }
+  if (!Number.isFinite(minX)) {
+    minX = maxX = minY = maxY = minZ = maxZ = 0
+  }
+  const scale = Math.min(1, 120 / Math.max(1, maxX - minX, maxZ - minZ))
+  figureGroup.scale.setScalar(scale)
+  figureGroup.position.set(-(minX + maxX) * scale / 2, 0, -(minZ + maxZ) * scale / 2)
+  floorGroup.position.y = maxY * scale + (props.project.stage.floorOffset ?? 8) * scale
+  return { height: (maxY - minY) * scale }
+}
+
+function framePreview() {
+  const { height } = fitFigureToTile()
+  const targetY = floorGroup.position.y - height * .48
+  orbitControls.target.set(0, targetY, 0)
+  previewCamera.position.set(0, targetY - 210, -400)
+  orbitControls.update()
+  framedProject = props.project
 }
 
 function updateCamera() {
@@ -109,18 +170,27 @@ function updateCamera() {
   const width = Math.max(1, host.value.clientWidth)
   const height = Math.max(1, host.value.clientHeight)
   const span = Math.max(props.project.stage.width / width, props.project.stage.height / height) / zoom
-  camera.left = -width * span / 2
-  camera.right = width * span / 2
-  camera.top = height * span / 2
-  camera.bottom = -height * span / 2
-  camera.position.set(center.x + Math.sin(yaw) * Math.cos(pitch) * 1000, center.y + Math.sin(pitch) * 1000, center.z - Math.cos(yaw) * Math.cos(pitch) * 1000)
-  camera.lookAt(center)
-  camera.updateProjectionMatrix()
-  camera.updateMatrixWorld()
+  frontCamera.left = -width * span / 2
+  frontCamera.right = width * span / 2
+  frontCamera.top = height * span / 2
+  frontCamera.bottom = -height * span / 2
+  const rest = evaluateShadowProject(props.project)
+  const childIds = new Set(props.project.bones.map((bone) => bone.toJointId))
+  const root = rest.joints.find(({ joint }) => !childIds.has(joint.id))
+  const forward = root ? new Vector3(0, 0, -1).transformDirection(root.matrix) : new Vector3(0, 0, -1)
+  forward.y = 0
+  if (forward.lengthSq() < 1e-6) forward.set(0, 0, -1)
+  forward.normalize()
+  frontCamera.position.copy(center).addScaledVector(forward, 1000)
+  frontCamera.lookAt(center)
+  frontCamera.updateProjectionMatrix()
+  frontCamera.updateMatrixWorld()
+  previewCamera.aspect = width / height
+  previewCamera.updateProjectionMatrix()
   renderer?.setSize(width, height, false)
 }
 
-function render() { renderer?.render(scene, camera) }
+function render() { renderer?.render(scene, orbitMode.value ? previewCamera : frontCamera) }
 
 function shapeGeometry(part) {
   const width = part.width
@@ -164,13 +234,13 @@ function shapeGeometry(part) {
 
 function addObject(object, kind = null, id = null) {
   object.userData = { kind, id }
-  scene.add(object)
+  figureGroup.add(object)
   objects.push(object)
 }
 
 function clearObjects() {
   for (const object of objects) {
-    scene.remove(object)
+    figureGroup.remove(object)
     object.geometry?.dispose()
     if (Array.isArray(object.material)) object.material.forEach((material) => material.dispose())
     else object.material?.dispose()
@@ -188,10 +258,7 @@ function line(start, end, color, kind = null, id = null, order = 0) {
 
 function drawScene() {
   clearObjects()
-  if (orbitMode.value) {
-    const rest = evaluateShadowProject(props.project)
-    floorGroup.position.y = Math.max(0, ...rest.joints.map((entry) => shadowMatrixPosition(entry.matrix).y)) + (props.project.stage.floorOffset ?? 8)
-  }
+  if (orbitMode.value) fitFigureToTile()
   if (props.showGrid && !orbitMode.value) {
     const halfWidth = props.project.stage.width / 2
     const halfHeight = props.project.stage.height / 2
@@ -239,7 +306,7 @@ function drawScene() {
 
 function screenRay(x, y) {
   const rect = host.value.getBoundingClientRect()
-  raycaster.setFromCamera(new Vector2((x - rect.left) / rect.width * 2 - 1, -(y - rect.top) / rect.height * 2 + 1), camera)
+  raycaster.setFromCamera(new Vector2((x - rect.left) / rect.width * 2 - 1, -(y - rect.top) / rect.height * 2 + 1), frontCamera)
   return raycaster.ray
 }
 
@@ -263,9 +330,9 @@ function snapshot() {
 }
 
 function pointerDown(event) {
-  if (!props.interactive) return
+  if (!props.interactive || orbitMode.value) return
   event.preventDefault()
-  const target = orbitMode.value ? null : hitTest(event.clientX, event.clientY)
+  const target = hitTest(event.clientX, event.clientY)
   const pointer = { x: event.clientX, y: event.clientY, startX: event.clientX, startY: event.clientY, moved: false, suppressTap: false, target }
   activePointers.set(event.pointerId, pointer)
   host.value.setPointerCapture(event.pointerId)
@@ -276,11 +343,12 @@ function pointerDown(event) {
     pinch = snapshot()
   } else if (target) {
     emit('select', target)
-    if (target.kind !== 'bone' && !orbitMode.value) drag = { ...target, pointerId: event.pointerId, z: target.kind === 'joint' ? shadowMatrixPosition(evaluation.value.jointsById.get(target.id).matrix).z : shadowMatrixPosition(evaluation.value.parts.find((entry) => entry.part.id === target.id).matrix).z }
+    if (target.kind !== 'bone') drag = { ...target, pointerId: event.pointerId, z: target.kind === 'joint' ? shadowMatrixPosition(evaluation.value.jointsById.get(target.id).matrix).z : shadowMatrixPosition(evaluation.value.parts.find((entry) => entry.part.id === target.id).matrix).z }
   }
 }
 
 function pointerMove(event) {
+  if (orbitMode.value) return
   const pointer = activePointers.get(event.pointerId)
   if (!pointer) return
   const oldX = pointer.x
@@ -293,10 +361,6 @@ function pointerMove(event) {
     if (pinch && next) zoom = Math.min(8, Math.max(.3, zoom * next.distance / pinch.distance))
     pinch = next
     updateCamera()
-  } else if (orbitMode.value) {
-    yaw += (pointer.x - oldX) * .008
-    pitch = Math.max(-1.3, Math.min(1.3, pitch + (pointer.y - oldY) * .008))
-    updateCamera()
   } else if (drag?.pointerId === event.pointerId) {
     emit('drag', { kind: drag.kind, id: drag.id, previous: planePoint(oldX, oldY, drag.z), current: planePoint(pointer.x, pointer.y, drag.z) })
   } else {
@@ -307,9 +371,10 @@ function pointerMove(event) {
 }
 
 function pointerEnd(event, cancelled = false) {
+  if (orbitMode.value) return
   const pointer = activePointers.get(event.pointerId)
   if (!pointer) return
-  if (!cancelled && !orbitMode.value && activePointers.size === 1 && !pointer.target && !pointer.moved && !pointer.suppressTap) emit('canvas-tap', planePoint(event.clientX, event.clientY))
+  if (!cancelled && activePointers.size === 1 && !pointer.target && !pointer.moved && !pointer.suppressTap) emit('canvas-tap', planePoint(event.clientX, event.clientY))
   if (drag?.pointerId === event.pointerId) {
     emit('drag-end', { kind: drag.kind, id: drag.id, cancelled })
     drag = null
@@ -321,6 +386,7 @@ function pointerEnd(event, cancelled = false) {
 }
 
 watch(() => [props.project, props.animationId, props.time, props.selectedKind, props.selectedId, props.showBones, props.showGrid, props.showParts, props.hiddenPartIds], () => {
+  if (orbitMode.value && framedProject !== props.project) framePreview()
   updateCamera()
   drawScene()
 }, { deep: true })
@@ -329,6 +395,16 @@ onMounted(() => {
   renderer = new WebGLRenderer({ antialias: true, alpha: false })
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
   host.value.appendChild(renderer.domElement)
+  orbitControls = new OrbitControls(previewCamera, renderer.domElement)
+  orbitControls.enabled = false
+  orbitControls.enablePan = false
+  orbitControls.minDistance = 220
+  orbitControls.maxDistance = 1300
+  orbitControls.minPolarAngle = .1
+  orbitControls.maxPolarAngle = Math.PI / 2 - .05
+  orbitControls.touches.ONE = TOUCH.ROTATE
+  orbitControls.touches.TWO = TOUCH.DOLLY_ROTATE
+  orbitControls.addEventListener('change', render)
   host.value.addEventListener('pointerdown', pointerDown)
   host.value.addEventListener('pointermove', pointerMove)
   host.value.addEventListener('pointerup', pointerEnd)
@@ -342,6 +418,8 @@ onMounted(() => {
 function onPointerCancel(event) { pointerEnd(event, true) }
 
 onBeforeUnmount(() => {
+  orbitControls?.removeEventListener('change', render)
+  orbitControls?.dispose()
   observer?.disconnect()
   host.value?.removeEventListener('pointerdown', pointerDown)
   host.value?.removeEventListener('pointermove', pointerMove)

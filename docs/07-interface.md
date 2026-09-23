@@ -53,6 +53,10 @@
 
 ## 日志与结算
 
+## Enemy animation editor cameras
+
+The flat editing view looks along the character's rest-pose forward direction (local negative Z), so a rotated character is still seen from its front. The 3D toggle uses a perspective camera and Three.js OrbitControls for one-finger orbit and two-finger zoom. The preview sizes and centers each character so its resting X/Z footprint fits inside one 150-unit floor tile. These view settings do not alter saved joints, parts, or animation data.
+
 ## Mobile portrait input contract
 
 ## Inventory staging interaction
