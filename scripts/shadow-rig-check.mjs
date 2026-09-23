@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { createShadowExampleProjects, installInitialShadowExamples } from '../src/animation/shadow-examples.js'
 import {
   createDefaultShadowProject,
   createShadowBone,
@@ -6,6 +7,7 @@ import {
   createShadowPart,
   evaluateShadowProject,
   normalizeShadowProject,
+  normalizeShadowRoster,
   sampleShadowTrack,
   shadowMatrixPosition,
   shadowTargetKey,
@@ -58,5 +60,47 @@ const halfway = sampleShadowTrack(rig.animations.idle, key, 350)
 near(halfway.dz, 20)
 near(halfway.rotationX, 40)
 near(shadowMatrixPosition(evaluateShadowProject(rig, 'idle', 350).jointsById.get('child').matrix).x, 30)
+
+const examples = createShadowExampleProjects()
+assert.deepEqual(examples.map((project) => project.name), ['\u788e\u94c3\u884c\u50e7', '\u6f6e\u773c\u86db\u6bcd', '\u7f1d\u8179\u706f\u86fe'])
+for (const example of examples) {
+  assert.equal(example.joints[0].rotationY, 45)
+  assert.ok(example.joints.some((entry) => entry.z !== 0))
+  assert.ok(example.parts.some((entry) => entry.z !== 0))
+  const jointIds = new Set(example.joints.map((entry) => entry.id))
+  const boneIds = new Set(example.bones.map((entry) => entry.id))
+  for (const bone of example.bones) {
+    assert.ok(jointIds.has(bone.fromJointId) && jointIds.has(bone.toJointId))
+  }
+  for (const entry of example.parts) {
+    assert.ok((entry.attachment.type === 'joint' ? jointIds : boneIds).has(entry.attachment.targetId))
+  }
+  for (const action of ['idle', 'attack', 'hit', 'death', 'move']) {
+    const animation = example.animations[action]
+    assert.ok(Object.keys(animation.tracks).length >= 3, `${example.name}: ${action}`)
+    assert.ok(Object.values(animation.tracks).flat().some((frame) => frame.dz !== 0 || frame.rotationX !== 0 || frame.rotationY !== 0), `${example.name}: ${action} has no depth animation`)
+    for (const fraction of [0, .5, 1]) {
+      const evaluation = evaluateShadowProject(example, action, animation.duration * fraction)
+      assert.equal(evaluation.joints.length, example.joints.length)
+      assert.equal(evaluation.parts.length, example.parts.length)
+      for (const entry of evaluation.parts) assert.ok(entry.matrix.elements.every(Number.isFinite))
+    }
+  }
+}
+
+const roster = normalizeShadowRoster({ characters: [{ id: 'personal', project: createDefaultShadowProject() }], activeCharacterId: 'personal' })
+assert.equal(installInitialShadowExamples(roster), true)
+assert.equal(roster.characters.length, 4)
+assert.notEqual(roster.activeCharacterId, 'personal')
+const persistedRoster = normalizeShadowRoster(roster)
+assert.equal(installInitialShadowExamples(persistedRoster), false)
+assert.equal(persistedRoster.characters.length, 4)
+persistedRoster.characters.splice(1, 1)
+assert.equal(installInitialShadowExamples(persistedRoster), false)
+assert.equal(persistedRoster.characters.length, 3)
+const personal = normalizeShadowRoster({ characters: [{ id: 'personal', project: rig }], activeCharacterId: 'personal' })
+assert.equal(installInitialShadowExamples(personal), true)
+assert.equal(personal.activeCharacterId, 'personal')
+assert.equal(personal.characters[0].project.joints.length, rig.joints.length)
 
 console.log('Shadow rig 3D checks passed')

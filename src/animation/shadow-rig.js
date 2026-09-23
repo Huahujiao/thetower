@@ -378,7 +378,7 @@ export function normalizeShadowRoster(source) {
   if (!characters.length) characters.push(createShadowCharacter())
   const requested = typeof source?.activeCharacterId === 'string' ? source.activeCharacterId : null
   const activeCharacterId = characters.some((entry) => entry.id === requested) ? requested : characters[0].id
-  return { version: 3, activeCharacterId, characters }
+  return { version: 3, examplePackVersion: Math.max(0, finite(source?.examplePackVersion, 0)), activeCharacterId, characters }
 }
 
 export function loadShadowProject() {

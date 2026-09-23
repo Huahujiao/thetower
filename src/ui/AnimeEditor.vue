@@ -168,6 +168,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { Matrix4 } from 'three'
+import { installInitialShadowExamples } from '../animation/shadow-examples.js'
 import {
   SHADOW_ANIMATION_TYPES,
   SHADOW_SHAPES,
@@ -200,7 +201,11 @@ const COPY = Object.freeze({
   back: '\u8fd4\u56de\u6e38\u620f', openPreview: '\u9884\u89c8', character: '\u89d2\u8272', characterName: '\u89d2\u8272\u540d\u79f0', add: '\u65b0\u5efa', duplicate: '\u590d\u5236', deleteCharacter: '\u5220\u9664', editorMode: '\u7f16\u8f91\u6a21\u5f0f', skeleton: '\u9aa8\u67b6', parts: '\u90e8\u4ef6', animation: '\u52a8\u4f5c', bones: '\u9aa8\u67b6', grid: '\u7f51\u683c', select: '\u9009\u62e9', addJoint: '\u6dfb\u52a0\u5173\u8282', connect: '\u8fde\u63a5', deleteSelected: '\u5220\u9664', name: '\u540d\u79f0', rotation: '\u65cb\u8f6c', tapToAddJoint: '\u70b9\u51fb\u753b\u5e03\u521b\u5efa\u72ec\u7acb\u5173\u8282', connectFirst: '\u8bf7\u5148\u70b9\u51fb\u8d77\u70b9\u5173\u8282', connectSecond: '\u8bf7\u70b9\u51fb\u7ec8\u70b9\u5173\u8282', invalidConnection: '\u65e0\u6cd5\u521b\u5efa\u5faa\u73af\u9aa8\u67b6', selectPart: '\u9009\u62e9\u90e8\u4ef6', bind: '\u7ed1\u5b9a', free: '\u81ea\u7531', joint: '\u5173\u8282', bone: '\u9aa8\u9abc\u7ebf', target: '\u76ee\u6807', position: '\u4f4d\u7f6e', width: '\u5bbd', height: '\u9ad8', layer: '\u5c42\u7ea7', fill: '\u586b\u8272', stroke: '\u8f6e\u5ed3', play: '\u64ad\u653e', pause: '\u6682\u505c', rewind: '\u5f52\u96f6', duration: '\u65f6\u957f', loop: '\u5faa\u73af', opacity: '\u900f\u660e\u5ea6', recordKey: '\u8bb0\u5f55\u5e27', deleteKey: '\u5220\u9664\u5e27', selectAnimationTarget: '\u8bf7\u5728\u753b\u5e03\u4e0a\u9009\u62e9\u5173\u8282\u6216\u90e8\u4ef6', newCharacter: '\u65b0\u89d2\u8272', duplicateSuffix: '\u526f\u672c', deleteCharacterConfirm: '\u5220\u9664\u5f53\u524d\u89d2\u8272\u53ca\u5176\u5168\u90e8\u52a8\u4f5c\uff1f',
 })
 
-const roster = ref(loadShadowRoster())
+const initialRoster = loadShadowRoster()
+if (installInitialShadowExamples(initialRoster)) {
+  try { saveShadowRoster(initialRoster) } catch { /* Keep the examples usable when storage is unavailable. */ }
+}
+const roster = ref(initialRoster)
 const activeCharacterId = ref(roster.value.activeCharacterId)
 const project = computed({
   get: () => roster.value.characters.find((entry) => entry.id === activeCharacterId.value)?.project || roster.value.characters[0].project,
