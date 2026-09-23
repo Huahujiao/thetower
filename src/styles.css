@@ -448,3 +448,7 @@ button { font: inherit; }
   .hud-top .hud-btns { gap:2px; }
   .hud-top .hud-icon { width:26px; height:30px; }
 }
+
+/* All item, enemy, and status details share this translucent surface. */
+.detail-card { background: rgba(0, 0, 0, .62); }
+.detail-card::after { display: none; }

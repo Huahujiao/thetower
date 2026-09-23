@@ -450,79 +450,16 @@
       </div>
       <section class="backpack-panel">
         <div class="backpack-grid-wrap">
-          <div
-            ref="backpackGrid" class="backpack-grid" data="backpack"
-            :style="{ '--bag-columns': INVENTORY_COLUMNS, '--bag-rows': INVENTORY_ROWS }"
-          >
-            <button
-              v-for="cell in backpackCells" :key="`cell-${cell.index}`" class="bag-cell"
-              :class="{ 'drop-valid': cell.action === 'move', 'drop-replace': cell.action === 'replace', 'drop-blocked': cell.action === 'blocked', 'drop-conflict': cell.action === 'replace-conflict', 'selected-cell': cell.selected }"
-              :data-bag-cell="cell.index" :aria-label="cell.label"
-              :style="{ gridColumn: cell.index % INVENTORY_COLUMNS + 1, gridRow: Math.floor(cell.index / INVENTORY_COLUMNS) + 1 }"
-              @click.stop="onBagCellClick(cell.index)"
-            ></button>
-            <div
-              v-for="entry in backpackItems" :key="entry.item.uid" :class="entry.itemClasses"
-              :data-bag-item="entry.originIndex" :style="entry.itemStyle"
-              @touchstart.stop="onBagTouchStart(entry.originIndex, $event)"
-              @touchmove.stop="onBagTouchMove($event)"
-              @touchend.stop="onBagTouchEnd($event)"
-              @touchcancel.stop="onBagTouchCancel($event)"
-              @contextmenu.prevent
-            >
-              <span
-                class="bag-shape"
-                :style="entry.shapeStyle"
-              >
-                <InventorySprite
-                  v-if="entry.spriteSources" :sources="entry.spriteSources"
-                  :item-index="entry.originIndex" :style="entry.spriteStyle"
-                  @click.stop="onBagCellClick(entry.originIndex)"
-                  @contextmenu.prevent
-                /><span
-                  v-for="cell in entry.cells" :key="cell.index"
-                  class="occupied" :data-bag-item="cell.index" :style="cell.style"
-                  @click.stop="onBagCellClick(cell.index)"
-                ><i
-                  v-for="edge in cell.edgeNames" :key="edge"
-                  class="shape-edge" :class="`edge-${edge}`" aria-hidden="true"
-                ></i></span><b
-                  v-if="entry.nameStyle"
-                  class="bag-name" :style="entry.nameStyle"
-                >{{ entry.item.name }}</b><small
-                  v-if="entry.detailStyle"
-                  class="bag-detail" :style="entry.detailStyle"
-                >{{ entry.detail }}</small>
-              </span>
-            </div>
-            <div v-if="backpackAdjacencyLinks.length" class="bag-adjacency-links" aria-hidden="true">
-              <i
-                v-for="link in backpackAdjacencyLinks" :key="link.key"
-                class="bag-adjacency-flow" :class="link.orientation" :style="link.style"
-              >
-                <span class="bag-adjacency-layer back"></span>
-                <span class="bag-adjacency-layer mid"></span>
-                <span class="bag-adjacency-layer front"></span>
-              </i>
-            </div>
-          </div>
+          <BackpackGrid
+            ref="backpackGrid" :columns="INVENTORY_COLUMNS" :rows="INVENTORY_ROWS"
+            :cells="backpackCells" :items="backpackItems" :links="backpackAdjacencyLinks"
+            @cell-click="onBagCellClick" @item-touchstart="onBagTouchStart"
+            @item-touchmove="onBagTouchMove" @item-touchend="onBagTouchEnd"
+            @item-touchcancel="onBagTouchCancel"
+          />
         </div>
       </section>
     </div>
-
-    <!-- Legacy status dialog intentionally removed: status details now open from the scene tray. -->
-    <!--
-      <header>
-        <strong>{{ LABELS.buildStatus }}</strong><button data-action="build-status-close" @click="handleAction('build-status-close')">
-          {{ LABELS.close
-          }}
-        </button>
-      </header>
-      <div>
-        <p v-for="line in statusLines" :key="line">{{ line }}</p>
-        <p v-if="!statusLines.length">当前没有待用增益或次数效果。</p>
-      </div>
-    -->
     <section class="craft-panel" :hidden="!craftOpen">
       <div class="craft-dialog">
         <header>
@@ -580,6 +517,7 @@ import { automaticStashPosition, inventoryDropAnchorAtCenter, inventoryItemLayou
 import { itemSpriteSources } from './item-sprites.js'
 import { statusIconSource } from './status-icons.js'
 import InventorySprite from './InventorySprite.vue'
+import BackpackGrid from './BackpackGrid.vue'
 
 const props = defineProps({ run: { type: Object, required: true } })
 const run = props.run
@@ -677,21 +615,6 @@ const selectedUsable = computed(() => {
   const item = selectedItem.value
   return actionsAvailable.value && !!item && ['potion', 'armor', 'energy', 'buff', 'cleanse', 'teleport'].includes(item.type)
 })
-/* Old top status text; replaced by the scene status tray. */
-/*
-const hints = computed(() => {
-  const current = state.value
-  const item = selectedItem.value?.type === 'weapon' ? selectedItem.value : null
-  const lines = [...run.itemRules.pendingLines(item)]
-  if (current.player.poisonedTurns > 0) lines.push(`${LABELS.poison} ${current.player.poisonedTurns}${LABELS.turn}`)
-  if (current.player.burningTurns > 0) lines.push(`${LABELS.burning} ${current.player.burningTurns}${LABELS.turn}`)
-  return lines.join(' · ')
-})
-const statusLines = computed(() => {
-  state.value
-  return run.itemRules.statusLines()
-})
-*/
 const statusEntries = computed(() => {
   const current = state.value
   const entries = []
@@ -753,12 +676,13 @@ const dragPreview = computed(() => {
     ? { ...preview, index: gesture.lastValidTargetIndex }
     : preview
 })
-const backpackCells = computed(() => Array.from({ length: INVENTORY_COLUMNS * INVENTORY_ROWS }, (_, index) => {
+const backpackCells = computed(() => {
   const current = state.value
-  const placement = current.backpack.placementForCellIndex(index)
   const preview = dragPreview.value
   const candidateCells = new Set((preview?.cells || []).map((cell) => cell.y * INVENTORY_COLUMNS + cell.x))
   const conflictCells = new Set((preview?.conflicts || []).flatMap((conflict) => current.backpack.cellsForPlacement(conflict).map((cell) => cell.y * INVENTORY_COLUMNS + cell.x)))
+  return Array.from({ length: INVENTORY_COLUMNS * INVENTORY_ROWS }, (_, index) => {
+  const placement = current.backpack.placementForCellIndex(index)
   const action = preview?.index === index
     ? preview.status
     : candidateCells.has(index)
@@ -773,7 +697,8 @@ const backpackCells = computed(() => Array.from({ length: INVENTORY_COLUMNS * IN
     selected: placement?.item?.uid === selectedItem.value?.uid,
     label: placement?.item?.name || LABELS.empty,
   }
-}))
+  })
+})
 const backpackItems = computed(() => {
   const current = state.value
   const itemRules = run.itemRules
@@ -1131,11 +1056,13 @@ function clearBagGesture({ closeDetail = true } = {}) {
   const session = bagGesture.value
   if (session?.timer) window.clearTimeout(session.timer)
   bagGesture.value = null
+  scene.value?.clearWeaponRange()
   if (closeDetail && session?.detailOpened) closeDetailPanel()
 }
 function beginBagDrag(session, point = null) {
   if (session.dragging) return
   if (session.timer) window.clearTimeout(session.timer)
+  scene.value?.clearWeaponRange()
   closeDetailPanel()
   session.dragging = true
   session.pointerX = point?.clientX ?? session.pointerX
@@ -1207,6 +1134,7 @@ function onBagTouchStart(index, event) {
   session.timer = window.setTimeout(() => {
     if (bagGesture.value?.token !== session.token) return
     session.detailOpened = Boolean(openItemDetail(item))
+    if (session.detailOpened && item.type === 'weapon') scene.value?.showWeaponRange(item.uid)
     refreshBagGesture(session)
   }, LONG_PRESS_MS)
   bagGesture.value = session
@@ -1277,33 +1205,31 @@ function onBagTouchMove(event) {
   event.preventDefault()
   updateBagGesturePoint(point)
 }
-function finishBagSession({ changed = false } = {}) {
-  if (changed) run.inventoryChanged({ advanceTurn: run.inventoryStash.length === 0 })
-  clearBagGesture()
-}
 function commitBagGesture() {
   const session = bagGesture.value
   if (!session?.dragging) return false
   const { item } = session
   const x = session.pointerX
   const y = session.pointerY
-  const stashBefore = run.inventoryStash.length
   if (pointInZone(discardZone, x, y)) {
-    const changed = run.discardInventoryItem(item.uid, { notify: false })
-    finishBagSession({ changed })
+    const changed = run.discardInventoryItem(item.uid)
+    clearBagGesture()
     return changed
   }
   if (pointInZone(stashZone, x, y)) {
     if (session.source === 'backpack') {
-      run.backpack.removeByUid(item.uid)
-      item.bagRotation = session.rotation
-      run.stageInventoryItem(item, { notify: false })
+      if (!run.moveInventoryToStash(item.uid, { rotation: session.rotation })) {
+        clearBagGesture()
+        return false
+      }
       stashPositions[item.uid] = stashPositionAtPoint(x, y, item, session.rotation)
     } else {
+      if (!run.setStashedInventoryRotation(item.uid, session.rotation)) {
+        clearBagGesture()
+        return false
+      }
       stashPositions[item.uid] = stashPositionAtPoint(x, y, item, session.rotation)
-      item.bagRotation = session.rotation
     }
-    run.inventoryChanged({ advanceTurn: false })
     clearBagGesture()
     return true
   }
@@ -1313,24 +1239,16 @@ function commitBagGesture() {
     clearBagGesture()
     return false
   }
-  const result = run.applyInventoryDrop(item, targetIndex, { rotation: session.rotation, replace: true })
+  const result = run.commitInventoryDrop(item, targetIndex, { rotation: session.rotation })
   if (!result) {
     clearBagGesture()
     return false
   }
   for (const conflict of result.conflicts) {
-    run.stageInventoryItem(conflict, { notify: false })
     stashPositions[conflict.uid] = { pendingAuto: true }
   }
-  const nextPlacement = run.backpack.placementOf(item.uid)
-  const moved = session.source === 'stash'
-    || !nextPlacement
-    || nextPlacement.x !== preview.x
-    || nextPlacement.y !== preview.y
-    || nextPlacement.rotation !== preview.rotation
-  run.inventoryChanged({ advanceTurn: moved && (stashBefore === 0 || run.inventoryStash.length === 0) })
   clearBagGesture()
-  return moved
+  return true
 }
 function onBagTouchEnd(event) {
   const session = bagGesture.value

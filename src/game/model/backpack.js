@@ -187,16 +187,6 @@ export class BackpackGrid {
     return uniqueRotations.some((rotation) => this.move(placement.item.uid, x, y, rotation))
   }
 
-  rotate(itemOrUid) {
-    const placement = this.placementOf(itemOrUid)
-    if (!placement || placement.item?.rotatable === false) return false
-    const nextRotation = (placement.rotation + 1) % 4
-    if (!this.canPlace(placement.item, placement.x, placement.y, nextRotation, placement.item.uid)) return false
-    placement.rotation = nextRotation
-    placement.item.bagRotation = nextRotation
-    return true
-  }
-
   removeByUid(uid) {
     const index = this.placements.findIndex((placement) => placement.item?.uid === uid)
     return index < 0 ? null : this.placements.splice(index, 1)[0].item

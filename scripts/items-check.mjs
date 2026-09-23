@@ -4,11 +4,61 @@ import { GameRun, SAVE_KEY } from '../src/game/run.js'
 import { ALL_ITEM_DEFS, RECIPES, randomItem, makeItemById } from '../src/game/data/content.js'
 import { createMerchantEntity, buildMerchantStock, refreshMerchantSlot } from '../src/game/data/merchants.js'
 import { adjacentItems } from '../src/game/rules/items.js'
-import { HUD } from '../src/ui/hud.js'
+import { attackRangeCells, enemyThreatCells, weaponTargetCells } from '../src/game/rules/attack-range.js'
+import { rangePulse } from '../src/render/attack-range-overlay.js'
 
 assert.equal(ALL_ITEM_DEFS.length, 44)
 assert.equal(makeItemById('short-sword'), null)
 for (let i = 0; i < 100; i++) assert.notEqual(randomItem(1, () => i / 100).type, 'material')
+
+// Backpack changes spend one turn; repositioning on the free-form staging canvas is free.
+{
+  const run = fixture()
+  const a = add(run, 'r-three', 0, 0)
+  const b = add(run, 'r-empty', 1, 0)
+  const c = add(run, 'r-reverse', 2, 0)
+  assert(run.commitInventoryDrop(a.uid, 8))
+  assert.equal(run.globalTurn, 1)
+  assert.equal(run.commitInventoryDrop(a.uid, 8), null)
+  assert.equal(run.globalTurn, 1)
+  const replaced = run.commitInventoryDrop(a.uid, 1)
+  assert.deepEqual(replaced.conflicts.map((item) => item.uid), [b.uid])
+  assert(run.inventoryStash.some((item) => item.uid === b.uid))
+  assert.equal(run.globalTurn, 2)
+  assert(run.moveInventoryToStash(c.uid))
+  assert.equal(run.globalTurn, 3)
+  assert(run.setStashedInventoryRotation(c.uid, 1))
+  assert.equal(c.bagRotation, 1)
+  assert.equal(run.globalTurn, 3)
+  assert(run.discardInventoryItem(a.uid))
+  assert.equal(run.globalTurn, 4)
+  assert(run.discardInventoryItem(b.uid))
+  assert.equal(run.globalTurn, 5)
+}
+
+// Range overlays follow the same mixed distance rule as combat and conceal unrevealed cells.
+{
+  const run = fixture()
+  const room = run.currentRoom
+  const origin = { c: 3, r: 3 }
+  assert.equal(attackRangeCells(room, origin, 1).length, 8)
+  assert.equal(attackRangeCells(room, origin, 2).length, 12)
+  room.tile({ c: 3, r: 2 }).revealed = false
+  assert.equal(attackRangeCells(room, origin, 1).length, 7)
+  const near = enemy(run, { pos: { c: 4, r: 3 }, attack: 2, range: 1 })
+  enemy(run, { pos: { c: 5, r: 3 }, attack: 2, range: 1 })
+  assert.deepEqual(weaponTargetCells(room, origin, 1), [near.pos])
+  assert.equal(weaponTargetCells(room, origin, 2).length, 2)
+  assert.equal(enemyThreatCells(room, near, origin).length, 6)
+  assert(enemyThreatCells(room, near, origin).some(({ c, r }) => c === origin.c && r === origin.r))
+  near.downed = true
+  assert.deepEqual(enemyThreatCells(room, near, origin), [])
+}
+
+assert.deepEqual(rangePulse(0), { scale: 1, opacity: 1 })
+assert.deepEqual(rangePulse(1.2), { scale: 0.5, opacity: 0 })
+assert.deepEqual(rangePulse(2), { scale: 1, opacity: 1 })
+assert(rangePulse(1.6).scale > rangePulse(1.2).scale)
 
 // Detail identity is compact: shape is visible in the backpack, so it is not
 // repeated as text. Defense effect attributes remain internal and are not
@@ -203,14 +253,24 @@ for(const id of ['ember-spear','soul-spear']) {
   run._endTurn();assert.equal(e.hp,96)
   attack(run,w,e);assert.equal(e.hp,93)
 }
-// Movement/rotation cost an enemy phase, no stamina; failures and no-ops are free.
+// Rotation preview is free; placing the rotated item costs one enemy phase.
 {
   const run=fixture(),w=add(run,'rust-sword'),e=enemy(run,{attack:2,actionDelay:0})
   run.player.energy=5;select(run,w)
   assert(run.moveInventory(w.uid,2));assert.equal(run.globalTurn,1);assert.equal(run.player.hp,18)
   assert.equal(run.player.energy,5)
   assert.equal(run.moveInventory(w.uid,2),false);assert.equal(run.globalTurn,1)
-  assert(run.rotateSelectedInventory());assert.equal(run.globalTurn,2);assert.equal(run.player.hp,16)
+  const placement = run.backpack.placementOf(w.uid)
+  const anchor = run.backpack.originIndex(placement)
+  const rotation = (placement.rotation + 1) % 4
+  assert.notEqual(run.previewInventoryDrop(w.uid, anchor, { rotation })?.status, 'blocked')
+  assert.equal(run.globalTurn,1)
+  assert.equal(run.backpack.placementOf(w.uid).rotation,placement.rotation)
+  assert.equal(run.commitInventoryDrop(w.uid,32,{ rotation }),null)
+  assert.equal(run.globalTurn,1)
+  assert.equal(run.backpack.placementOf(w.uid).rotation,placement.rotation)
+  assert(run.commitInventoryDrop(w.uid,anchor,{ rotation }));assert.equal(run.globalTurn,2);assert.equal(run.player.hp,16)
+  assert.equal(run.commitInventoryDrop(w.uid,anchor,{ rotation }),null);assert.equal(run.globalTurn,2)
   assert.equal(run.moveInventory(w.uid,32),false);assert.equal(run.globalTurn,2)
   assert(e)
 }
@@ -266,6 +326,23 @@ for(const recipe of RECIPES) {
 }
 // Save state survives reload including zero energy and consumed room charges.
 {
+  const run=fixture(), weapon=add(run,'rust-sword'), target=enemy(run,{hp:30})
+  select(run,weapon)
+  assert(run._attack(target))
+  assert.equal(run.globalTurn,0)
+  const saved=JSON.stringify(run.serialize()),previous=globalThis.localStorage
+  let stored=saved
+  globalThis.localStorage={getItem:key=>key===SAVE_KEY?stored:null,setItem:(_key,value)=>{stored=value},removeItem(){}}
+  try {
+    const loaded=new GameRun()
+    assert.equal(loaded.globalTurn,1)
+    assert.equal(loaded.attackCount,1)
+    assert.equal(loaded.serialize().pendingAttackTurn,false)
+    assert.equal(JSON.parse(stored).pendingAttackTurn,false)
+    assert.equal(loaded.currentRoom.entity(target.id).hp,target.hp)
+  } finally { globalThis.localStorage=previous }
+}
+{
   const run=fixture();add(run,'wood-shield');run.player.energy=0
   const cloak=add(run,'tide-cloak');cloak.description='obsolete description'
   const merchant=createMerchantEntity('merchant',{c:1,r:1},{floor:1,random:()=>0.5})
@@ -285,17 +362,13 @@ for(const recipe of RECIPES) {
     assert.equal(makeItemById(loaded.currentRoom.entity(merchant.id).stock[3].itemId).type,'material')
   } finally { globalThis.localStorage=previous }
 }
-// Exercise formula rendering and long-press detail routing without a browser.
+// Craft choices and their details use the same data as the Vue panel.
 {
   const run=fixture();add(run,'silver-guard');add(run,'shield-core')
-  const elements={craftpanel:{},craftrows:{}}
-  const hud=Object.create(HUD.prototype)
-  hud.run=run;hud.craftOpen=true;hud.q=key=>elements[key];hud.root={querySelector:()=>({})}
-  hud._renderCraft()
-  assert(elements.craftrows.innerHTML.includes('data-craft-result="wall-sword"'))
+  assert(run.availableRecipes().some((recipe) => recipe.result === 'wall-sword' && recipe.canFit))
   for(const id of ['silver-guard','shield-core','wall-sword']) {
-    const fn=hud._detailActionFor({closest:selector=>selector==='[data-craft-item]'?{dataset:{craftItem:id}}:null})
-    assert(fn());assert.equal(run.detailPanel.title,makeItemById(id).name)
+    assert(run.showItemDetail(makeItemById(id)))
+    assert.equal(run.detailPanel.title,makeItemById(id).name)
     assert(run.detailPanel.description)
   }
 }

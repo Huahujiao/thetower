@@ -25,7 +25,7 @@ const nodeGlobals = {
 
 export default [
   {
-    ignores: ['dist/**', 'src/legacy/**', 'node_modules/**'],
+    ignores: ['dist/**', 'node_modules/**'],
   },
   js.configs.recommended,
   ...vue.configs['flat/recommended'],
@@ -46,7 +46,7 @@ export default [
     },
   },
   {
-    files: ['scripts/**/*.mjs', 'smoke-test.mjs', 'tools/**/*.mjs'],
+    files: ['scripts/**/*.mjs', 'tools/**/*.mjs'],
     languageOptions: {
       globals: nodeGlobals,
     },

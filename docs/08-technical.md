@@ -16,10 +16,10 @@ src/
 │  ├─ core/       事件、坐标、几何与两层回合计数
 │  ├─ data/       敌人、物品、商人、奖励、陷阱、天赋和圣遗物定义
 │  ├─ model/      地牢、房间、4×8 背包、圣遗物持有索引
-│  ├─ rules/      寻路、伤害、敌人、地形与圣遗物规则
+│  ├─ rules/      寻路、攻击范围、伤害、敌人、地形与圣遗物规则
 │  └─ run.js      一局游戏的状态机、动作和持久化
-├─ render/        Three.js 卡牌场景、相机与交互
-├─ ui/            游戏 HUD 与 Wiki 页面
+├─ render/        Three.js 卡牌场景、攻击范围覆盖层、相机与交互
+├─ ui/            Vue HUD、背包网格与 Wiki 页面
 ├─ styles.css     游戏页面样式
 └─ wiki.css       图鉴页面样式
 ```
@@ -36,19 +36,21 @@ Room card grids are now one row and one column smaller per floor: 6x6, 7x7, 8x8,
 
 装备详情的前向合成路线继续读取 `upgradeRecipesForItem()`，每个素材图标使用固定方形容器与 `object-fit: contain`，不附加边框、底色或可交互层；加号和箭头由 CSS 线段绘制，避免字体字形、emoji 和基线差异导致裁切或闪动。
 
-回合计数只有 `attackCount` 和 `globalTurn`；`turn` 是全局回合的兼容别名。背包整理与合成成功推进1回合；丢弃、奖励/升级选择与购买/出售不推进计数。运行时不存在左右手、装备栏、行动计数、武器耐久、磨刀石、最后一击、武器损毁或拦截机制。圣遗物无数量超载限制。`ItemRules` 统一处理新版武器、防具、材料、圣遗物与天赋的交叉效果。
+回合计数只有 `attackCount` 和 `globalTurn`；`turn` 是全局回合的兼容别名。每次成功将物品放入背包、移入暂存区或丢弃物品，以及合成，均推进1回合；拖拽时旋转只是预览，成功放下时才结算一次。替换造成的自动暂存不另计回合，暂存区自由画布内移动或旋转不计回合。奖励/升级选择与购买/出售不推进计数。运行时不存在左右手、装备栏、行动计数、武器耐久、磨刀石、最后一击、武器损毁或拦截机制。圣遗物无数量超载限制。`ItemRules` 统一处理新版武器、防具、材料、圣遗物与天赋的交叉效果。
 
 ## 存档
 
-状态变化后自动保存到 `localStorage`。存档包括地牢、已翻开卡牌、背包位置与旋转、玩家成长和资源、背包中的圣遗物物品、商人货架、奖励袋、`attackCount`／`globalTurn`、中毒与燃烧、敌人自身行动计数、已触发陷阱的延迟移除状态、日志和结算状态。没有装备栏或武器耐久字段。
+状态变化后自动保存到 `localStorage`。存档包括地牢、已翻开卡牌、背包位置与旋转、玩家成长和资源、背包中的圣遗物物品、商人货架、奖励袋、`attackCount`／`globalTurn`、中毒与燃烧、敌人自身行动计数、已触发陷阱的延迟移除状态、日志和结算状态。玩家攻击动画期间保存待结算回合标记；读档会完成该回合和敌人阶段。没有装备栏或武器耐久字段。
 
-当前存档版本为 **25**。版本号不匹配、结构无效或玩家位置无效时会删除存档并创建新局；存档同时保留 `turn` 作为全局回合兼容字段。旧的独立圣遗物收藏存档不迁移。
+当前存档版本为 **26**。版本号不匹配、结构无效或玩家位置无效时会删除存档并创建新局；存档同时保留 `turn` 作为全局回合兼容字段。旧的独立圣遗物收藏存档不迁移。
 
 ## 验证要求
 
 规则、数据或界面变更后运行：
 
 ## Renderer stability
+
+The Three.js scene continues rendering on every animation frame, including while the board is otherwise idle, so future world animations can run without changing the render loop. Container size changes are handled by `ResizeObserver` and the window resize event instead of measuring layout every frame. `AttackRangeOverlay` owns two blurred aiming-reticle canvas textures, one shared plane geometry, and one material per mode independently of room meshes; it follows the board's pan position on each frame. Holding a backpack weapon displays a soft blue circle and four short aiming ticks only below revealed enemies within its range from the player's current position. Holding a revealed enemy displays the same shape in red on empty revealed cells within its attack range, including the player's cell. Both use the combat distance rule. A smooth two-second pulse shrinks and fades the reticles to half size over 1.2 seconds, then grows and fades them in over 0.8 seconds; textures are not redrawn per frame. `game/core/inventory-actions.js` commits backpack gestures and their single turn cost.
 
 The Three.js scene keeps tile meshes separate from room structure. Revealing a door now rebuilds only walls, doors, and explored-room outlines; card faces retain explicit depth clearance, polygon offset, and non-writing face depth to prevent camera-angle flicker. Unflippable cards share a dedicated charcoal-gray card-back texture, independent of hidden attributes. Door confirmation retains the path-preview interaction and accepts either the door mesh or its arrival marker. Movement completion is emitted only after the movement and any queued ambush flip animations are both idle, so entering through a door cannot leave `roomEntering` stuck.
 
@@ -66,7 +68,7 @@ Grid visual layers use a row-based render order: larger row indices are farther 
 
 ## Enemy baseline
 
-Runtime enemy health is `catalog.json` health multiplied by `ENEMY_HP_MULTIPLIER` (currently `2`). This applies to natural enemies, spawned minions, and the boss; `/wiki` uses the same multiplier. The `heavy-armor` trait reduces every received damage instance by 1 after any shield limit, including damage otherwise marked as ignoring defense. Save version 25 deliberately starts a fresh run so persisted room dimensions and enemy values cannot retain the former layout.
+Runtime enemy health is `catalog.json` health multiplied by `ENEMY_HP_MULTIPLIER` (currently `2`). This applies to natural enemies, spawned minions, and the boss; `/wiki` uses the same multiplier. The `heavy-armor` trait reduces every received damage instance by 1 after any shield limit, including damage otherwise marked as ignoring defense. Save version 26 starts a fresh run so persisted player attacks always have a recoverable pending-turn marker.
 
 ## Inventory sprite workflow
 
@@ -94,11 +96,11 @@ The floor-weapon glow plane spans 0.9 tile widths and has a peak opacity of `0.2
 
 ## UI framework boundary
 
-The runtime HUD is now mounted by Vue 3 (`src/ui/VueHud.vue`) with keyed reactive inventory placements and a small `InventorySprite.vue` component for staged image loading. The game model remains the source of truth and emits `change`/`detail` events; Vue invalidates the relevant view without rebuilding unrelated DOM nodes. The default `GameScene` renderer receives the same `#app` container. The old `src/ui/hud.js` file is retained only as a compatibility surface for existing logic checks while the runtime entry point uses Vue.
+The runtime HUD is mounted by Vue 3 (`src/ui/VueHud.vue`) with keyed reactive inventory placements, a `BackpackGrid.vue` component, and `InventorySprite.vue` for staged image loading. The game model remains the source of truth and emits `change`/`detail` events; Vue invalidates the relevant view without rebuilding unrelated DOM nodes. The default `GameScene` renderer receives the same `#app` container. The root route loads its game modules independently of the wiki and animation tool routes.
 
 ## ESLint
 
-The repository uses ESLint flat configuration in `eslint.config.js`. `npm.cmd run lint` checks JavaScript, Vue single-file components, Node scripts, the smoke test, and the log server. Browser and Node globals are scoped separately, and unused variables are errors; intentionally unused bindings must use an underscore prefix. Formatting-only Vue rules that conflict with the existing compact templates are disabled, while structural, undefined-variable, duplicate-key, and duplicate-attribute checks remain enabled. The lint command completes with zero errors and zero warnings.
+The repository uses ESLint flat configuration in `eslint.config.js`. `npm.cmd run lint` checks JavaScript, Vue single-file components, current Node checks, and the log server. Browser and Node globals are scoped separately, and unused variables are errors; intentionally unused bindings must use an underscore prefix. Formatting-only Vue rules that conflict with the existing compact templates are disabled, while structural, undefined-variable, duplicate-key, and duplicate-attribute checks remain enabled. The lint command completes with zero errors and zero warnings.
 
 ```powershell
 npm.cmd run lint
@@ -114,7 +116,7 @@ npm.cmd run build
 - `check:rules` 覆盖背包、寻路、翻牌、门、奖励、商人、圣遗物和战斗。
 - `check:turns` 覆盖两层回合计数、逐格移动和武器体力费用。
 - `check:traps` 覆盖四种陷阱、体力扣除、毒雾和到期清理。
-- `check:items` 覆盖新版武器、防具、材料、圣遗物、消耗品、合成事务、行为序列、存档与面板交互契约。
+- `check:items` 覆盖新版物品、背包操作计费、攻击范围计算、合成、行为序列与攻击中途读档结算。
 - `check:enemies` 覆盖敌人数据、生成池及敌人特性。
 - `check:talents` 覆盖 20个通用天赋节点、前置关系及其效果。
 - `build` 确认生产构建可完成。
@@ -147,9 +149,23 @@ Long-press detail is visible while the hold is active and closes on touch releas
 
 ## Shadow-puppet animation tools
 
-`src/animation/shadow-puppet.js` owns the serializable 2D rig, the five fixed animation slots (`idle`, `attack`, `hit`, `death`, `move`), keyframe interpolation, affine parent transforms, persistence, normalization, and the built-in enemy presets. The presets currently cover Gnawer, Emberwing Moth, Nest Spider, Shellguard, and Whirlpool Eye Sac; every preset provides a complete rig and all five animation slots, and loading one returns an independent editable project. `ShadowPuppetStage.vue` is the shared SVG renderer used by both tool routes. `/animeedit` edits primitive parts, hierarchy, pivot, draw order, independent textures, animation duration, loop mode, and per-part transform/opacity keys; its preset picker asks before replacing the current project. `/animepreview` reads and plays the same `localStorage` project without editor controls. Rig transforms are local to the parent bone, animation transforms are offsets from the rest rig, and all child world matrices are evaluated from the hierarchy each frame. JSON import/export provides a portable handoff format. These tools are flat 2D authoring surfaces and do not initialize or modify Three.js.
+`src/animation/shadow-rig.js` owns the version-2 serializable rig. Its three structural collections are deliberately separate: `joints` contains independent transform points, `bones` contains directed `fromJointId -> toJointId` links, and `parts` contains rendered geometry. A joint may remain disconnected; each child joint has at most one incoming bone. A part attachment is `free`, `joint`, or `bone`; bone attachments store the normalized line position `t` and whether the part follows bone rotation. Forward-kinematic world matrices are evaluated from the joint graph, while bound parts receive a separate attachment matrix. Reparenting or deleting a bone converts affected rest transforms so visible world positions are preserved.
 
-On portrait phones the editor temporarily marks the root element with `anime-html` so the game shell's fixed, clipped root layout cannot hide tool content. The header uses 16% of the dynamic viewport height and the scrollable editor deck uses 84%. Workspace rows are percentage-based and remove the SVG stage's desktop minimum height. Workspace, library, and inspector are viewport-sized vertical panels with nested scrolling for the timeline, layer list, and inspector controls.
+Animation tracks address `joint:<id>` or `part:<id>` targets and store position offsets, rotation, scale, and opacity. The fixed animation slots remain `idle`, `attack`, `hit`, `death`, and `move`, with editable duration and loop mode. `ShadowPuppetStage.vue` is the shared SVG renderer: guide grid, bones, parts, and joints are separate layers, and joints render last. The editor's Grid checkbox passes the same visibility state to `showGrid` and `showParts`; disabling it therefore leaves only joints and bone links, while the preview keeps parts visible independently. `/animeedit` keeps the stage mounted while switching its lower context tools among Skeleton, Parts, and Animation; `/animepreview` reads and plays the active project without editing controls. Neither route initializes or modifies Three.js.
+
+The version-2 roster uses fresh `project-v2` and `roster-v2` local-storage keys so the removed sample roster cannot repopulate the editor. First load creates one empty character; there are no built-in examples or example controls. Add, rename, duplicate, delete, and switch operations preserve characters independently, and deleting the final entry creates a blank replacement. The character dropdown and four icon actions share the top row with Back and Preview; Rename uses a prompt and Delete requires confirmation. Edits are debounced and saved automatically, with no manual save, import, or export controls. The active project is mirrored to the v2 project key for `/animepreview` and cross-tab updates. The normalizer can still convert an explicitly supplied version-1 project, but old sample storage is not loaded automatically. It also removes the obsolete generated `·皮影` suffix.
+
+Parts currently expose geometry only. Their persisted `visual` object already reserves `type: 'shape' | 'texture'`, `texture`, and `textureFit`, but `/animeedit` intentionally has no texture-mode controls yet.
+
+On portrait phones the editor temporarily marks the root element with `anime-html` so the game shell's fixed, clipped root layout cannot hide tool content. The title block is omitted. Header and mode menu use 8% and 6% of dynamic viewport height; the workspace fills the remaining height. The root page never scrolls. The workspace is a vertical flex container: the SVG stage is always present as `flex: 1 1 0` with `min-height: 0`. All three context panels have the same fixed `171px` height and flex basis, derived from the fully populated Parts panel: a 28px shape row, 5px gap, 29px selector row, 5px gap, three 27px field rows with two 4px gaps, 14px vertical padding, and a 1px bottom border. The mobile 6px padding leaves 2px spare. Switching tabs or selecting a part cannot move the stage/panel boundary. Any content exceeding the fixed height can scroll inside its panel. The Parts selector puts prompt-based Rename, Duplicate, and Delete icon buttons in that order; the latter two retain accessible labels. Its fields occupy three compact rows (attachment/target/optional bone position labeled Position; width/height/rotation; layer/fill/stroke). Every Parts label is a fixed 20px wide and sits inline before its control, aligning the controls across rows. The stage uses a flat blue-gray fill. Its optional grid is a dedicated `v-show` layer. Joint circles render in a final SVG group after every part, so part ordering and the grid cannot occlude them.
+
+In Skeleton Select mode, `skeletonStatus` is empty and the status node is not rendered; Add Joint, Connect, and error notices still render normally. A selected joint uses a dedicated three-column property grid: its name spans the first row, and X, Y, and rotation fill the second row, with an 8px top margin and 10px row gap. The more relaxed layout still fits the shared 171px panel, even when an Add Joint or Connect status is visible. When a bone is selected, both its name field and directed joint relationship span the full four-column property grid. The relationship occupies a separate line with `white-space: nowrap` and ellipsis only for names longer than the available panel width.
+
+The Animation playback row uses five CSS grid columns: 38px Play, 38px Rewind, 86px time readout, `minmax(0, 1fr)` Duration, and 38px Loop. The fixed items stay on one line; only the Duration column absorbs width changes, and its number input flexes within that column. The scrubber has a flexible track plus 44px Record Frame and Delete Frame buttons on its right. Record samples every joint and part track at the current time and upserts a key for each, regardless of selection; Delete removes keys at that time (within the existing 8ms selection tolerance) across all tracks. Playback stops before either edit. Scrubber markers are the sorted union of all active-animation key times; bones have no independent track and follow their joints. The six transform fields are a three-column, two-row grid with inline 39px labels and flexible inputs. The formerly separate selected-target caption is removed from the visual layout; the canvas still highlights the target and the field group retains its accessible name. Tabs (29px), playback (27px plus 6px gap), scrubber (27px plus 5px gap), and two 27px field rows (4px gap, 2px top margin) total 154px before panel padding/border, fitting within 171px without internal scrolling. A Reset button at the end of the animation-type row clears only the active animation's `tracks`, stops playback, and sets the timeline to zero. It confirms before deleting nonempty tracks; duration, loop mode, rest rig, and other animations are untouched. Empty tracks simply reset playback/time without a confirmation.
+
+The animation scrubber removes native range margins/borders and defines a 16px thumb for WebKit and Firefox. The visible progress track and frame markers share the same travel interval, inset 8px from each end of the input (half the thumb size), with progress color and marker positions calculated from `time / duration`. The range's native track is transparent; the shared inset track is rendered behind it. This aligns marker centers and progress color with the thumb center at matching timestamps, including the endpoints.
+
+The editor stage keeps view center and zoom as transient component state. Its reactive SVG viewBox supports single pointer panning over blank canvas and two pointer pinch scaling from 0.4 to 6 times the base view. Pinch updates the center to keep the same world point under the moving midpoint. Target drags continue editing joint or part coordinates; a second pointer cancels that drag and starts a pinch. A blank canvas tap is emitted on pointer release only if travel stayed within six screen pixels and no pinch occurred. The background hit area follows the viewBox, so panning still works after the original stage bounds move off screen. Camera gestures do not change the saved rig.
 
 ## Device and input contract
 
@@ -167,7 +183,7 @@ The south-boundary foreground layer is deliberately rendered in the transparent 
 
 `GameRun._walk` clears any remaining route after the first enemy attack during a long movement. Enemy movement emits `animate:enemy-move` after the model move, and `GameScene` temporarily interpolates the standing source face before refreshing origin and destination. The shared FIFO queue starts the following attack only when that movement action completes, so chase movement and attack presentation cannot overlap. Reveal batches are expanded into one flip action per card in the same queue instead of being animated concurrently.
 
-`VueHud.vue` binds touch handlers directly to occupied inventory cells and staged items. The session keeps source (`backpack` or `stash`), anchor, rotation, active touch id, drag threshold, and preview target. The floating item is centered below the active touch; `inventoryDropAnchorAtCenter` snaps that footprint center to the closest backpack placement center, producing a half-cell drop tolerance while preserving the model's first-occupied-cell anchor. `GameRun.previewInventoryDrop` is the pure placement check; `applyInventoryDrop` performs the atomic move and returns conflicts. Conflicting placements are staged before the single `inventoryChanged` notification. Staged views use measured backpack cell dimensions, and `automaticStashPosition` scores occupied-cell overlap across candidate canvas positions to prefer an in-bounds zero-overlap location. The staging layer derives its lower inset from the actual toolbar and 8x4 backpack geometry, so its 25/75 discard/stash rows fill every pixel above the backpack. Detail panels use a higher stacking layer than staging and drag previews. A staging session advances `organize` only when the staging list becomes empty. Window blur, visibility changes, and `touchcancel` clear the session without mutating the model. No mouse, pointer, keyboard, stylus, or landscape compatibility layer is part of this path. See [04-inventory-interaction.md](./04-inventory-interaction.md) for the player-facing rules.
+`VueHud.vue` binds touch handlers to occupied inventory cells and staged items through `BackpackGrid.vue`. The session keeps source (`backpack` or `stash`), anchor, rotation, active touch id, drag threshold, and preview target. The floating item is centered below the active touch; `inventoryDropAnchorAtCenter` snaps that footprint center to the closest backpack placement center, producing a half-cell drop tolerance while preserving the model's first-occupied-cell anchor. `GameRun.previewInventoryDrop` is the pure placement check. `commitInventoryDrop` performs a move or replacement, stages displaced items, and advances exactly one turn. `moveInventoryToStash` and `discardInventoryItem` also advance one turn for each successful player gesture. Repositioning an item within the free-form staging canvas changes only its UI position; rotation there updates its saved orientation through `setStashedInventoryRotation`, with no turn cost. Staged views use measured backpack cell dimensions, and `automaticStashPosition` scores occupied-cell overlap across candidate canvas positions to prefer an in-bounds zero-overlap location. The staging layer derives its lower inset from the actual toolbar and 8x4 backpack geometry, so its 25/75 discard/stash rows fill every pixel above the backpack. Detail panels use a higher stacking layer than staging and drag previews. Window blur, visibility changes, and `touchcancel` clear the session without mutating the model. No mouse, pointer, keyboard, stylus, or landscape compatibility layer is part of this path. See [04-inventory-interaction.md](./04-inventory-interaction.md) for the player-facing rules.
 
 The supported product target is a portrait mobile phone only. There is no desktop, keyboard, mouse, stylus, or landscape-layout compatibility requirement. HUD long press is implemented with Vue `touchstart`, `touchmove`, `touchend`, and `touchcancel` handlers on the rendered inventory occupied cell; the Three.js board detail hold uses the same 300 ms threshold. Pointer-event compatibility code must not be reintroduced for inventory gestures. Three.js remains responsible for the board renderer and its mobile touch camera interaction.
 

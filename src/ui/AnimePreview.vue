@@ -42,7 +42,7 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { SHADOW_ANIMATION_TYPES, SHADOW_PUPPET_STORAGE_KEY, loadShadowProject } from '../animation/shadow-puppet.js'
+import { SHADOW_ANIMATION_TYPES, SHADOW_PUPPET_STORAGE_KEY, loadShadowProject } from '../animation/shadow-rig.js'
 import ShadowPuppetStage from './ShadowPuppetStage.vue'
 import '../anime.css'
 

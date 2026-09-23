@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import { getAttributeDefinition } from '../game/data/attributes.js'
 import { enemyCardSubtitle, enemyOverheadHints } from '../game/data/enemy-features.js'
 import { isAdjacent8 } from '../game/core/geometry.js'
+import { AttackRangeOverlay } from './attack-range-overlay.js'
 import { BoardTextures } from './board-textures.js'
 import { DEFAULT_CAMERA_ELEVATION, panAzimuth } from './camera-view.js'
 import { cardBodyGeometry, styleCardBody, cardFaceY, CARD_FACE_CLEARANCE, HIDDEN_CARD_THICKNESS, HIDDEN_CARD_SCALE } from './card-body.js'
@@ -282,14 +283,21 @@ function turnCounter(value) {
 }
 
 function disposeObject(object) {
+  const geometries = new Set()
+  const materialsSeen = new Set()
+  const textures = new Set()
   object.traverse((child) => {
-    child.geometry?.dispose?.()
+    if (child.geometry) geometries.add(child.geometry)
     const materials = Array.isArray(child.material) ? child.material : [child.material]
     for (const material of materials) {
-      if (material?.map && !material.map.userData.boardShared) material.map.dispose?.()
-      material?.dispose?.()
+      if (!material) continue
+      if (material.map && !material.map.userData.boardShared) textures.add(material.map)
+      materialsSeen.add(material)
     }
   })
+  for (const texture of textures) texture.dispose()
+  for (const material of materialsSeen) material.dispose()
+  for (const geometry of geometries) geometry.dispose()
 }
 
 export class GameScene {
@@ -342,8 +350,11 @@ export class GameScene {
     this.container.appendChild(this.renderer.domElement)
     this.roomGroup = new THREE.Group()
     this.scene.add(this.roomGroup)
+    this.attackRangeOverlay = new AttackRangeOverlay(this.scene, this.roomGroup, run, (room, position) => this._gridPosition(room, position), CARD_SIZE, CARD_THICKNESS)
     this._addLights()
     this._onResize = () => this._resize()
+    this.resizeObserver = typeof window.ResizeObserver === 'undefined' ? null : new window.ResizeObserver(this._onResize)
+    this.resizeObserver?.observe(this.container)
     this._onPointerDown = (event) => this._handlePointerDown(event)
     this._onPointerMove = (event) => this._handlePointerMove(event)
     this._onPointerUp = (event) => this._handlePointerUp(event)
@@ -367,6 +378,7 @@ export class GameScene {
       if (!this.movementAnimation && !this.attackAnimation && !this.animationQueue.length && this.lastFootprintKey && this.run.turns.globalTurn > this.lastFootprintTurn) this._releaseFootprints()
       this._clearPathPreview()
       this.rebuild()
+      this.attackRangeOverlay.refresh()
     })
     this.flipUnsubscribe = this.run.on('animate:flip', this._onFlip)
     this.flipBatchUnsubscribe = this.run.on('animate:flip-batch', this._onFlipBatch)
@@ -374,6 +386,7 @@ export class GameScene {
     this.enemyMoveUnsubscribe = this.run.on('animate:enemy-move', this._onEnemyMove)
     this.attackUnsubscribe = this.run.on('animate:attack', this._onAttack)
     this.rebuild()
+    this.attackRangeOverlay.refresh()
     this._resize(true)
     this._animate = this._animate.bind(this)
     this._frame = requestAnimationFrame(this._animate)
@@ -396,6 +409,14 @@ export class GameScene {
       x: (position.c - (room.width - 1) / 2) * TILE_SIZE,
       z: (position.r - (room.height - 1) / 2) * TILE_SIZE,
     }
+  }
+
+  showWeaponRange(uid) {
+    this.attackRangeOverlay.showWeapon(uid)
+  }
+
+  clearWeaponRange() {
+    this.attackRangeOverlay.clearWeapon()
   }
 
   _visibleDoorKey(room) {
@@ -2172,6 +2193,10 @@ export class GameScene {
       if (this.boardHold !== hold || this.drag?.moved || this.pinch) return
       hold.triggered = true
       hold.opened = this.run.showBoardDetail(hold.position)
+      const enemy = hold.opened ? this.run.currentRoom?.entityAt(hold.position) : null
+      if (enemy?.kind === 'enemy') {
+        this.attackRangeOverlay.showEnemy(this.run.currentRoom.id, enemy.id)
+      }
     }, LONG_PRESS_MS)
     this.boardHold = hold
   }
@@ -2182,6 +2207,7 @@ export class GameScene {
     window.clearTimeout(hold.timer)
     this.boardHold = null
     if (close && hold.opened) this.run.closeDetail()
+    this.attackRangeOverlay.clearEnemy()
     return hold.triggered
   }
 
@@ -2301,7 +2327,6 @@ export class GameScene {
   }
 
   _animate() {
-    this._resize()
     const now = Date.now()
     const delta = Math.min(0.05, Math.max(0, (now - (this.lastFrameTime || now)) / 1000))
     this.lastFrameTime = now
@@ -2310,6 +2335,8 @@ export class GameScene {
     this._updateItemSprites(delta)
     this._updateHoverLift()
     this._updateAttackAnimation(delta)
+    this.attackRangeOverlay.syncPosition()
+    this.attackRangeOverlay.update(delta)
     this.renderer.render(this.scene, this.camera)
     this._frame = requestAnimationFrame(this._animate)
   }
@@ -2321,6 +2348,7 @@ export class GameScene {
     this.moveUnsubscribe?.()
     this.enemyMoveUnsubscribe?.()
     window.removeEventListener('resize', this._onResize)
+    this.resizeObserver?.disconnect()
     this.renderer.domElement.removeEventListener('pointerdown', this._onPointerDown)
     this.renderer.domElement.removeEventListener('pointermove', this._onPointerMove)
     this.renderer.domElement.removeEventListener('pointerup', this._onPointerUp)
@@ -2332,6 +2360,7 @@ export class GameScene {
     this.flipBatchUnsubscribe?.()
     this.attackUnsubscribe?.()
     this._clearPathPreview()
+    this.attackRangeOverlay.dispose()
     this._clearAttackAnimation()
     this._clearMovementAnimation()
     this._clearPlayerMarker()

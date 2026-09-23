@@ -32,4 +32,9 @@ export function enemy(run, { hp = 100, pos = { c: 4, r: 3 }, attribute = null, a
   run.currentRoom.addEntity(e)
   return e
 }
-export function attack(run, weapon, target) { select(run, weapon); run.player.energy = 10; assert(run._attack(target)) }
+export function attack(run, weapon, target) {
+  select(run, weapon)
+  run.player.energy = 10
+  assert(run._attack(target))
+  run.bus.emit('animate:attack-complete', { actor: 'player' })
+}

@@ -1,6 +1,7 @@
 import { createEmitter } from './core/emitter.js'
 import { chebyshev, combatDistance, manhattan, neighbors8 } from './core/geometry.js'
 import { TURN_KINDS, TurnLedger } from './core/turns.js'
+import { commitInventoryDrop, moveInventoryToStash, discardInventoryItem } from './core/inventory-actions.js'
 import { attributeLabel } from './data/attributes.js'
 import { createLootEntity, createMinion, getItemDefinition, makeItemById, makeRelicItem, starterWeapon, synchronizeEntityIds, weaponTier } from './data/content.js'
 import { enemyBehaviorDetailLabel, enemyFeatureDetailLabel } from './data/enemy-features.js'
@@ -29,8 +30,8 @@ export const RELIC_SOFT_LIMIT = Infinity
 export const ENERGY_MAX = 10
 export const TELEPORT_RANGE = 6
 export const SAVE_KEY = 'grid_flip_adventure_v2'
-// Enemy health is rebalanced in this release, so old combat state is intentionally discarded.
-export const SAVE_VERSION = 25
+// Pending attack turns must be recoverable in every accepted save.
+export const SAVE_VERSION = 26
 
 function clone(value) { return JSON.parse(JSON.stringify(value)) }
 
@@ -196,6 +197,7 @@ export class GameRun {
     this.bus = createEmitter()
     this.on = this.bus.on
     this.off = this.bus.off
+    this._itemRules = new ItemRules(this)
     this.turns = new TurnLedger()
     this._logRevealAnchor = null
     this.merchantEntering = false
@@ -307,7 +309,7 @@ export class GameRun {
   relicOverload() { return Math.max(0, this.relicCount() - RELIC_SOFT_LIMIT) }
   canFitRelic(id) { return !!getRelicDefinition(id) && this.backpack.usedCells < this.backpack.capacity }
 
-  get itemRules() { return new ItemRules(this) }
+  get itemRules() { return this._itemRules }
   weaponRange(weapon, position) { return this.itemRules.range(weapon, position) }
   weaponEnergyCost(weapon) { return this.itemRules.cost(weapon) }
   energyAfterMovement(steps = 0) {
@@ -774,7 +776,7 @@ export class GameRun {
     }
   }
 
-  applyInventoryDrop(itemOrUid, index, { rotation = null, replace = false } = {}) {
+  _applyInventoryDrop(itemOrUid, index, { rotation = null, replace = false } = {}) {
     if (!this._canOrganizeBackpack()) return null
     const preview = this.previewInventoryDrop(itemOrUid, index, { rotation })
     if (!preview || preview.status === 'blocked' || (!replace && preview.conflicts.length)) return null
@@ -796,9 +798,30 @@ export class GameRun {
     return { item, conflicts, preview }
   }
 
-  inventoryChanged({ advanceTurn = false } = {}) {
+  commitInventoryDrop(itemOrUid, index, { rotation = null } = {}) {
+    return commitInventoryDrop(this, itemOrUid, index, { rotation })
+  }
+
+  moveInventoryToStash(itemOrUid, { rotation = null } = {}) {
+    return moveInventoryToStash(this, itemOrUid, { rotation })
+  }
+
+  setStashedInventoryRotation(itemOrUid, rotation) {
+    if (!this._canOrganizeBackpack() || this.itemTargeting || !Number.isInteger(rotation)) return false
+    const uid = typeof itemOrUid === 'object' ? itemOrUid?.uid : itemOrUid
+    const item = this.inventoryStash.find((candidate) => candidate?.uid === uid)
+    if (!item) return false
+    const nextRotation = ((rotation % 4) + 4) % 4
+    if (((Number(item.bagRotation) || 0) % 4 + 4) % 4 !== nextRotation) {
+      item.bagRotation = nextRotation
+      this._changed()
+    }
+    return true
+  }
+
+  _finishInventoryAction() {
     if (!this._canOrganizeBackpack()) return false
-    if (advanceTurn) this._endTurn({ recoverEnergy: false, action: 'organize' })
+    this._endTurn({ recoverEnergy: false, action: 'organize' })
     this.selectedInventoryIndex = null
     this.itemTargeting = false
     this._changed()
@@ -822,17 +845,7 @@ export class GameRun {
   }
 
   discardInventoryItem(itemOrUid, { notify = true } = {}) {
-    const uid = typeof itemOrUid === 'object' ? itemOrUid?.uid : itemOrUid
-    const item = this.inventoryStash.find((stashed) => stashed?.uid === uid)
-      || this.backpack.placementOf(uid)?.item
-    if (!item) return false
-    this.inventoryStash = this.inventoryStash.filter((stashed) => stashed.uid !== uid)
-    this.backpack.removeByUid(uid)
-    this.itemRules.discarded(item)
-    if (item.type === 'relic') this.relics.remove(item.uid) || this.relics.remove(item.relicId)
-    this._log(`\u4e22\u5f03 ${item.name}\u3002`)
-    if (notify) this._changed()
-    return true
+    return discardInventoryItem(this, itemOrUid, { notify })
   }
 
   clickInventoryCell(index) {
@@ -845,30 +858,10 @@ export class GameRun {
     return this.selectInventory(index)
   }
 
-  rotateSelectedInventory() {
-    const item = this.selectedItem
-    if (!this._canOrganizeBackpack() || this.itemTargeting || !item) return false
-    const currentShape = this.backpack.shapeFor(item, this.backpack.placementOf(item.uid).rotation)
-    const nextShape = this.backpack.shapeFor(item, this.backpack.placementOf(item.uid).rotation + 1)
-    if (JSON.stringify(currentShape) === JSON.stringify(nextShape) || !this.backpack.rotate(item.uid)) return false
-    this._endTurn({ recoverEnergy: false, action: 'organize' })
-    this.selectedInventoryIndex = this.backpack.originIndex(this.backpack.placementOf(item.uid))
-    this._changed()
-    return true
-  }
-
   discardSelected() {
-    if (!this._canOrganizeBackpack()) return false
     const item = this.selectedItem
-    if (item) {
-      this.itemRules.discarded(item)
-      this.backpack.removeByUid(item.uid)
-      if (item.type === 'relic') this.relics.remove(item.uid) || this.relics.remove(item.relicId)
-      this._log(`\u4e22\u5f03 ${item.name}\u3002`)
-
-
-      this.selectedInventoryIndex = null
-    } else return false
+    if (!item || !this.discardInventoryItem(item, { notify: false })) return false
+    this.selectedInventoryIndex = null
     this.itemTargeting = false
     this._changed()
     return true
@@ -1916,6 +1909,7 @@ export class GameRun {
       win: this.win,
       selectedInventoryIndex: this.selectedInventoryIndex,
       itemTargeting: this.itemTargeting,
+      pendingAttackTurn: this.combatResolving,
       merchant: this.merchant ? { ...this.merchant } : null,
       roomReward: this.roomReward ? clone(this.roomReward) : null,
       roomRewardBag: [...this.roomRewardBag],
@@ -2041,6 +2035,10 @@ export class GameRun {
         this.phase = 'explore'
         this.levelUp = null
       } else if (this.phase === 'explore') this._queueLevelUp()
+      if (data.pendingAttackTurn === true) {
+        this._endTurn({ turnKind: TURN_KINDS.ATTACK })
+        this._persist()
+      }
       return true
     } catch {
       return discard()

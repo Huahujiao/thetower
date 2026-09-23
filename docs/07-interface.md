@@ -13,25 +13,23 @@
 
 ## 二维皮影动画工具
 
-`/animeedit` 是独立的平面敌人动画编辑器，采用部件列表、SVG 舞台、时间轴和属性面板四区布局。左栏内置猩鬼、烬翅蛾、伏巢蜘蛛、重甲卫士、涡眼浮囊五套可继续编辑的敌人皮影示例，切换示例前会确认是否覆盖当前工程。骨架模式用于创建圆形、长方形、三角形、椭圆、胶囊形和菱形部件，绑定父骨骼并设置轴心、层级、颜色、透明度与独立贴图；动画模式用于编辑待机、攻击、受攻击、死亡和移动五种动作的位移、旋转、缩放与透明度关键帧。拖动部件会按当前模式修改静态骨架或写入当前时刻关键帧。`/animepreview` 使用同一工程进行只读播放，支持动作切换、倍速、重播与骨骼显示。两页都只渲染二维 SVG，不创建 Three.js 场景。
+`/animeedit` 是独立的二维敌人动画编辑器。角色库通过下拉框切换角色，并可新增、重命名、复制和删除；删除最后一个角色后会立即补充一个空白角色。每个角色的关节、骨骼线、几何部件及五套动作都自动保存到 `localStorage`，页面不提供手动保存、导入或导出。编辑器不再内置或自动载入示例角色，首次进入只创建一个没有关节、骨骼线、部件和关键帧的空白角色。角色名称只使用本名，不附加“皮影”后缀。
 
-手机竖屏下，编辑页按视口高度布局：顶部工具栏占 16%，其余编辑区占 84%。工作区内部按比例分配模式栏、舞台和时间轴，舞台不再使用固定最小高度；工作区、部件库和属性面板各占一个编辑区高度，纵向滑动切换，部件列表、时间轴和属性面板可在各自区域内滚动，因此末尾操作按钮始终可以到达。
+标准制作顺序是：在“骨架”模式点击画布创建关节点；切换“连接”后依次点击起点和终点关节创建有方向的骨骼线，关节也可以保持不连接；在“部件”模式选择圆形、长方形、三角形等几何形状并点击画布放置，再将部件设为自由、绑定关节或绑定骨骼线；最后在“动作”模式选择待机、攻击、受攻击、死亡或移动，在时间轴位置拖动关节／部件或输入变换值来记录关键帧。骨骼、关节和显示部件是三个独立的数据层，部件不会兼任关节。当前只开放几何部件编辑；数据中的 `visual.type`、`texture` 和 `textureFit` 只为以后使用贴图替代几何图形预留，当前界面不提供贴图模式。`/animepreview` 播放角色库中当前选中的角色，两页都只渲染二维 SVG，不创建 Three.js 场景。
+
+编辑页顶部不显示页面标题。返回、角色下拉框、改名、新建、复制、删除、预览全部位于同一行；四项角色操作使用图标，改名弹出输入对话框，删除前需要确认。手机竖屏下，顶部栏、模式菜单和工作区分别占视口高度的 8%、6% 和剩余高度；页面本身禁止滚动。画布在“骨架／部件／动作”三种模式中始终保留，只切换下方的上下文工具。工作区使用纵向 flex；底部工具区按部件页选中部件时的五行内容计算，高度固定为 171px，骨架、部件、动作三个模式共用，画布占据剩余高度，切换模式或选中对象不会改变分界线。这个高度包含形状行 28px、部件选择行 29px、三行字段各 27px，以及行距、内边距和边框。部件工具区中，改名、复制和删除都使用图标，改名图标位于复制、删除之前，点击后弹出输入框；绑定／目标／可选的“位置”为一行，宽／高／旋转为一行，层级／填色／描边为一行。所有标签固定宽度 20px，与控件同行并对齐。画布空白处单指拖动可平移，双指捏合可缩放；直接拖动关节或部件仍会修改其位置，轻点空白处仍可按当前工具创建对象。视图平移与缩放只影响编辑显示，不修改角色数据。画布使用深蓝灰背景；取消勾选“网格”会同时隐藏几何部件和背景辅助格，只留下关节点与骨骼连线。关节点最后绘制并始终位于骨骼线、辅助格和部件之前。
+
+骨架页在“选择”工具下不显示“点击关节或骨骼进行编辑名称”的提示，也不保留空白提示行；创建关节、连接和错误状态仍显示各自提示。选中关节点时，名称占第一行完整宽度，X、Y、旋转在第二行分为三列，两行之间留出间距，不必挤在一行。选中骨骼线时，连接关系占据名称输入框下方的完整一行，不换行；极长名称会在面板边缘省略，避免挤压布局。
+
+动作页的播放控制行按“播放、归零、时间读数、时长、循环”排列。播放、归零、时间读数和循环占固定宽度且不换行；时长输入框独占剩余宽度，随手机宽度伸缩，不再挤压其他按钮。进度条右侧是“记录帧”和“删除帧”：它们作用于当前时间点的全部关节和部件，不依赖当前选中对象；进度条标记汇总整个动作的所有关键帧时间。骨骼线由关节姿态推导，不单独记录。六个变换字段采用三列、两行布局，每个字段的标签与输入框同行，标签固定宽度；不再为选中对象名称单独占一行，选中对象仍在画布中高亮并作为表单的无障碍名称。这样动作工具区共五行，完整放进固定的 171px 面板，不需要内部滚动。动作选择行末尾有“重置”按钮：若当前动作已有关键帧，确认后只清空该动作的关节和部件轨道，停止播放并将时间归零，回到骨架与部件的初始姿态；其他动作、基础摆放、时长和循环设置保持不变。
+
+动作进度条的滑块固定为 16px，轨道输入框不再使用浏览器默认外边距；可见轨道和下方帧标记的左右端都内缩 8px，与滑块中心从最小值到最大值的实际行程一致。因此滑块、轨道着色端点和帧标记在相同时间点水平对齐。
 
 ## 底部面板布局
 
-底部操作栏按下方 9 列网格划分：
+底部操作栏从左到右显示护甲、生命／体力条和按需出现的“使用”按钮；丢弃与旋转通过背包拖动手势完成。生命条和体力条之间保持 4px 间距，体力条使用黄色。
 
-| 位置 | 占位 | 内容 |
-| --- | ---: | --- |
-| 第 1–1.5 格 | 1.5 格 | 丢弃按钮，按需显示；按钮本体靠左，容器始终保留。 |
-| 第 1.5–2.5 格 | 1 格 | 护甲图标和护甲数值。 |
-| 第 2.5–6.5 格 | 4 格 | 上方生命条，下方黄色体力条；两条之间保持 4px 间距。 |
-| 第 6.5–8 格 | 1.5 格 | 使用按钮，按需显示；按钮本体靠右，容器始终保留。 |
-| 第 8–9 格 | 1 格 | 与背包格同尺寸的正方形旋转按钮，选中可旋转物品时启用。 |
-
-丢弃和使用按钮隐藏时仍保留各自 1.5 格的布局空间，因此生命、体力、护甲和旋转按钮不会随按钮显隐跳动。生命条和体力条总容器高度为 32px，两条实际高度各 14px，间距为 4px。体力条使用黄色，不再使用“气力”文字。
-
-点击背包物品可选中它。选中非武器物品后使用按钮出现；选中任意物品后丢弃按钮出现。武器直接从背包选中，再点击棋盘敌人进行攻击；不再有左右手区域或“卸下”按钮。
+点击背包物品可选中它。选中可使用物品后出现“使用”按钮。武器直接从背包选中，再点击棋盘敌人进行攻击；不设装备栏。
 
 散件的相邻效果生效时，只在散件与受益装备实际接触的格线处显示一条绿色短光带。短光带由后、中、前三张透明纹理叠加，使用不同的流动与局部明暗周期，横边和竖边保持同一长度与节奏；拖动物品期间隐藏，避免干扰落点判断。
 
@@ -44,11 +42,12 @@
 - 武器正面显示名称、类别、攻击、射程、属性和占格，不显示耐久。
 - 角色和敌人脚下使用与空地一致的地面格；敌人生命条显示在立牌上方，行动延迟或普通攻击冷却显示在脚下。
 - 第一次点击远处目标显示路径预览，再次点击同一目标才确认。门也使用相同的两步确认，点击门或门前预览标记均可确认；路径中的每一格都会按移动规则单独结算，确认进门后会等待门前移动及途中翻牌动画完成。
+- 长按背包中的武器时，仅在当前位置射程内的已翻开敌人脚下显示淡蓝色模糊瞄准星，由圆圈和四条短线组成；空格不显示。长按已翻开的敌人时，在它射程内的已翻开空格及玩家所在格显示同形状的红色模糊瞄准星。两种特效从略小于格子的尺寸开始，较慢地缩至约一半并淡出，再较快地放大淡入到初始状态，连续循环。射程 1 按八邻域、射程 2 以上按曼哈顿距离，不检查遮挡。
 - 陷阱翻开后显示“已触发”，保留两个后续全局回合后移除，期间不会重复触发。
 
 ## 详情与弹窗
 
-长按棋盘对象或背包物品打开详情面板，显示其名称、类别、属性、数值和效果。武器的攻击、射程、体力消耗为独立数值行，其他效果另起一行；未生效的相邻关系不显示。弹簧触发后，除触发武器外的每把可用武器详情都显示“下一击体力消耗-1”，背包物品本身不增加角标。图片框固定为宽 2 格、高最多 3 格，精灵图以 `contain` 等比缩放，并由硬性尺寸、最大尺寸与裁切共同限制，不会越过图框。角色面板显示等级、经验、生命上限和天赋数量；天赋面板显示 10 条主线的三层节点状态。帮助、角色、天赋、设置和日志都是独立面板，不向棋盘透传点击。圣遗物详情通过背包物品或掉落卡牌查看。
+长按棋盘对象或背包物品打开详情面板，显示其名称、类别、属性、数值和效果。所有长按详情共用黑色半透明背景，可透出部分三维场景；文字和数值标签保持浅色以保证可读。武器的攻击、射程、体力消耗为独立数值行，其他效果另起一行；未生效的相邻关系不显示。弹簧触发后，除触发武器外的每把可用武器详情都显示“下一击体力消耗-1”，背包物品本身不增加角标。图片框固定为宽 2 格、高最多 3 格，精灵图以 `contain` 等比缩放，并由硬性尺寸、最大尺寸与裁切共同限制，不会越过图框。角色面板显示等级、经验、生命上限和天赋数量；天赋面板显示四条路线的节点状态。帮助、角色、天赋、设置和日志都是独立面板，不向棋盘透传点击。圣遗物详情通过背包物品或掉落卡牌查看。
 
 商人面板显示购买、出售和圣遗物购买服务。购买、出售、刷新货架及圣遗物购买均为即时操作，不推进回合；商人不再提供圣遗物配置。
 
@@ -60,7 +59,7 @@
 
 The staging label is centered and uses the same type scale as the discard label.
 
-Backpack movement is touch-only. A 300 ms hold on an occupied item opens details; moving more than 18 px after the hold enters drag mode. Taps select an item for use or combat and never move it. The first occupied cell of the rotated shape remains the model anchor, while dropping snaps the floating footprint center to the nearest target footprint center with a half-cell tolerance. Green, yellow, and red previews mean accepted, replace-to-staging, and illegal respectively. The red discard zone occupies exactly 25 percent of the full viewport area above the backpack; the blue free-form staging canvas occupies the remaining 75 percent and meets the backpack without a gap. Staged items preserve the backpack's cell size and rotated proportions; automatic arrivals seek a non-overlapping position before using the least-overlapping available position. The detail panel is layered above both zones, so staged items can still be inspected. Staging remains visible until empty, and clearing it advances one organize turn. Each fresh second-finger touch rotates the dragged item clockwise by 90 degrees, so repeated taps rotate it repeatedly. Cancel, blur, visibility changes, and invalid release restore the original state.
+Backpack movement is touch-only. A 300 ms hold on an occupied item opens details; moving more than 18 px after the hold enters drag mode. Taps select an item for use or combat and never move it. The first occupied cell of the rotated shape remains the model anchor, while dropping snaps the floating footprint center to the nearest target footprint center with a half-cell tolerance. Green, yellow, and red previews mean accepted, replace-to-staging, and illegal respectively. The red discard zone occupies exactly 25 percent of the full viewport area above the backpack; the blue free-form staging canvas occupies the remaining 75 percent and meets the backpack without a gap. Staged items preserve the backpack's cell size and rotated proportions; automatic arrivals seek a non-overlapping position before using the least-overlapping available position. The detail panel is layered above both zones, so staged items can still be inspected. Rotation during a drag is a free preview. Each successful drop into the backpack, move into staging, or discard advances one turn; a rotated drop costs one turn in total, and automatically displaced items enter staging without an additional turn. Movement and rotation inside the free-form staging canvas cost no turn. Emptying staging has no separate charge. Each fresh second-finger touch rotates the dragged item clockwise by 90 degrees, so repeated taps rotate it repeatedly. Cancel, blur, visibility changes, and invalid release restore the original state.
 
 The product target is a portrait mobile phone with touch input only. Desktop, keyboard, mouse, stylus, and landscape layouts are outside the supported contract. Inventory long press uses the occupied-cell Vue touch handlers and a 300 ms threshold; do not add desktop pointer compatibility code to the inventory interaction path. For irregular L/T shapes, void cells and the sprite image are excluded from touch hit testing.
 
