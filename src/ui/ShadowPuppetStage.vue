@@ -1,7 +1,7 @@
 <template>
   <div ref="host" class="shadow-stage" :class="{ interactive }" :aria-label="project.name">
     <div class="shadow-view-controls" @pointerdown.stop>
-      <button type="button" :class="{ active: orbitMode }" @click="orbitMode = !orbitMode">3D</button>
+      <button type="button" :class="{ active: orbitMode }" @click="toggle3D">3D</button>
       <button type="button" @click="resetView">{{ '\u6b63\u9762' }}</button>
     </div>
   </div>
@@ -9,8 +9,9 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { BufferGeometry, Color, DoubleSide, EdgesGeometry, Line, LineBasicMaterial, LineSegments, Mesh, MeshBasicMaterial, OrthographicCamera, Raycaster, Scene, Shape, ShapeGeometry, SphereGeometry, TextureLoader, Vector2, Vector3, WebGLRenderer } from 'three'
+import { BufferGeometry, Color, DoubleSide, EdgesGeometry, Group, Line, LineBasicMaterial, LineSegments, Mesh, MeshBasicMaterial, OrthographicCamera, PlaneGeometry, Raycaster, Scene, Shape, ShapeGeometry, SphereGeometry, SRGBColorSpace, TextureLoader, Vector2, Vector3, WebGLRenderer } from 'three'
 import { evaluateShadowProject, shadowMatrixPosition } from '../animation/shadow-rig.js'
+import { FLOOR_URLS, floorTextureIndex } from '../render/board-textures.js'
 
 const props = defineProps({
   project: { type: Object, required: true },
@@ -25,8 +26,9 @@ const props = defineProps({
   jointInteractive: { type: Boolean, default: true },
   boneInteractive: { type: Boolean, default: true },
   partInteractive: { type: Boolean, default: true },
+  hiddenPartIds: { type: Array, default: () => [] },
 })
-const emit = defineEmits(['select', 'drag', 'drag-end', 'canvas-tap'])
+const emit = defineEmits(['select', 'drag', 'drag-end', 'canvas-tap', 'view-mode-change'])
 const host = ref(null)
 const orbitMode = ref(false)
 const evaluation = computed(() => evaluateShadowProject(props.project, props.animationId, props.time))
@@ -38,6 +40,9 @@ const raycaster = new Raycaster()
 raycaster.params.Line.threshold = 10
 const textureLoader = new TextureLoader()
 const textureCache = new Map()
+const floorGroup = new Group()
+floorGroup.visible = false
+scene.add(floorGroup)
 const activePointers = new Map()
 const objects = []
 let renderer = null
@@ -55,8 +60,48 @@ function resetView() {
   yaw = 0
   pitch = 0
   orbitMode.value = false
+  floorGroup.visible = false
+  emit('view-mode-change', false)
   updateCamera()
-  render()
+  drawScene()
+}
+
+function ensureFloor() {
+  if (floorGroup.children.length) return
+  const floorTextures = FLOOR_URLS.map((url) => {
+    const texture = textureLoader.load(url, render)
+    texture.colorSpace = SRGBColorSpace
+    texture.anisotropy = 4
+    return texture
+  })
+  for (let row = -2; row <= 2; row += 1) {
+    for (let column = -2; column <= 2; column += 1) {
+      const tile = new Mesh(
+        new PlaneGeometry(150, 150),
+        new MeshBasicMaterial({ map: floorTextures[floorTextureIndex({ c: column + 2, r: row + 2 })], side: DoubleSide }),
+      )
+      tile.rotation.x = -Math.PI / 2
+      tile.position.set(column * 150, 0, row * 150)
+      tile.renderOrder = -10
+      floorGroup.add(tile)
+    }
+  }
+}
+
+function toggle3D() {
+  if (orbitMode.value) {
+    resetView()
+    return
+  }
+  ensureFloor()
+  orbitMode.value = true
+  floorGroup.visible = true
+  center = new Vector3(0, 42, 0)
+  yaw = 0
+  pitch = -.42
+  emit('view-mode-change', true)
+  updateCamera()
+  drawScene()
 }
 
 function updateCamera() {
@@ -143,16 +188,21 @@ function line(start, end, color, kind = null, id = null, order = 0) {
 
 function drawScene() {
   clearObjects()
-  if (props.showGrid) {
+  if (orbitMode.value) {
+    const rest = evaluateShadowProject(props.project)
+    floorGroup.position.y = Math.max(0, ...rest.joints.map((entry) => shadowMatrixPosition(entry.matrix).y)) + (props.project.stage.floorOffset ?? 8)
+  }
+  if (props.showGrid && !orbitMode.value) {
     const halfWidth = props.project.stage.width / 2
     const halfHeight = props.project.stage.height / 2
     for (let x = -halfWidth; x <= halfWidth; x += 25) line(new Vector3(x, -halfHeight, 200), new Vector3(x, halfHeight, 200), '#324454')
     for (let y = -halfHeight; y <= halfHeight; y += 25) line(new Vector3(-halfWidth, y, 200), new Vector3(halfWidth, y, 200), '#324454')
   }
-  if (props.showParts) for (const entry of evaluation.value.parts) {
+  if (props.showParts || orbitMode.value) for (const entry of evaluation.value.parts) {
     const part = entry.part
+    if (props.hiddenPartIds.includes(part.id)) continue
     const geometry = shapeGeometry(part)
-    const material = new MeshBasicMaterial({ color: part.fill, side: DoubleSide, transparent: true, opacity: entry.opacity, depthWrite: false })
+    const material = new MeshBasicMaterial({ color: part.fill, side: DoubleSide, transparent: true, opacity: entry.opacity, depthWrite: orbitMode.value })
     if (part.visual.type === 'texture' && part.visual.texture) {
       if (!textureCache.has(part.visual.texture)) textureCache.set(part.visual.texture, textureLoader.load(part.visual.texture, render))
       material.map = textureCache.get(part.visual.texture)
@@ -161,15 +211,16 @@ function drawScene() {
     const mesh = new Mesh(geometry, material)
     mesh.matrixAutoUpdate = false
     mesh.matrix.copy(entry.matrix)
-    mesh.renderOrder = 10 + entry.order
+    mesh.renderOrder = orbitMode.value ? 1 : 10 + entry.order
     addObject(mesh, 'part', part.id)
     const outline = new LineSegments(new EdgesGeometry(geometry), new LineBasicMaterial({ color: props.selectedKind === 'part' && props.selectedId === part.id ? '#8fd1ff' : part.stroke, depthTest: false }))
     outline.matrixAutoUpdate = false
     outline.matrix.copy(entry.matrix)
     outline.renderOrder = 30 + entry.order
+    outline.visible = !orbitMode.value
     addObject(outline)
   }
-  if (props.showBones) {
+  if (props.showBones && !orbitMode.value) {
     for (const entry of evaluation.value.bones) {
       line(new Vector3(entry.x1, entry.y1, entry.z1), new Vector3(entry.x2, entry.y2, entry.z2), props.selectedKind === 'bone' && props.selectedId === entry.bone.id ? '#8fd1ff' : '#bd5b50', 'bone', entry.bone.id, 80)
     }
@@ -214,7 +265,7 @@ function snapshot() {
 function pointerDown(event) {
   if (!props.interactive) return
   event.preventDefault()
-  const target = hitTest(event.clientX, event.clientY)
+  const target = orbitMode.value ? null : hitTest(event.clientX, event.clientY)
   const pointer = { x: event.clientX, y: event.clientY, startX: event.clientX, startY: event.clientY, moved: false, suppressTap: false, target }
   activePointers.set(event.pointerId, pointer)
   host.value.setPointerCapture(event.pointerId)
@@ -269,7 +320,7 @@ function pointerEnd(event, cancelled = false) {
   for (const remaining of activePointers.values()) remaining.suppressTap = true
 }
 
-watch(() => [props.project, props.animationId, props.time, props.selectedKind, props.selectedId, props.showBones, props.showGrid, props.showParts], () => {
+watch(() => [props.project, props.animationId, props.time, props.selectedKind, props.selectedId, props.showBones, props.showGrid, props.showParts, props.hiddenPartIds], () => {
   updateCamera()
   drawScene()
 }, { deep: true })
@@ -297,6 +348,11 @@ onBeforeUnmount(() => {
   host.value?.removeEventListener('pointerup', pointerEnd)
   host.value?.removeEventListener('pointercancel', onPointerCancel)
   clearObjects()
+  for (const tile of floorGroup.children) {
+    tile.geometry.dispose()
+    tile.material.dispose()
+  }
+  for (const texture of new Set(floorGroup.children.map((tile) => tile.material.map))) texture.dispose()
   for (const texture of textureCache.values()) texture.dispose()
   renderer?.dispose()
   renderer?.domElement.remove()

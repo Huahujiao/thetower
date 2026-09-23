@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { DETAIL_HOLD_MS } from '../interaction-timing.js'
 import { getAttributeDefinition } from '../game/data/attributes.js'
 import { enemyCardSubtitle, enemyOverheadHints } from '../game/data/enemy-features.js'
 import { isAdjacent8 } from '../game/core/geometry.js'
@@ -21,7 +22,6 @@ const DEFAULT_ZOOM = 1
 const MIN_ZOOM = 0.66
 const MAX_ZOOM = 3.2
 const DRAG_THRESHOLD = 8
-const LONG_PRESS_MS = 300
 const CAMERA_FOV = 45
 const CAMERA_NEAR = 0.1
 const CAMERA_FAR = 80
@@ -2197,7 +2197,7 @@ export class GameScene {
       if (enemy?.kind === 'enemy') {
         this.attackRangeOverlay.showEnemy(this.run.currentRoom.id, enemy.id)
       }
-    }, LONG_PRESS_MS)
+    }, DETAIL_HOLD_MS)
     this.boardHold = hold
   }
 

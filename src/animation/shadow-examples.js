@@ -9,6 +9,7 @@ import {
 } from './shadow-rig.js'
 
 export const SHADOW_EXAMPLE_PACK_VERSION = 1
+export const SHADOW_EXAMPLE_REPAIR_VERSION = 2
 
 function newProject(name) {
   const project = createDefaultShadowProject()
@@ -40,7 +41,7 @@ function keys(project, action, targetId, frames, kind = 'joint') {
 
 function bellPilgrim() {
   const project = newProject('\u788e\u94c3\u884c\u50e7')
-  joint(project, 'root', '\u810a\u67f1', 0, 0, 0, null, 45)
+  joint(project, 'root', '\u810a\u67f1', 0, 0, 0, null, -45)
   joint(project, 'head', '\u949f\u5934', -8, -91, -28, 'root')
   joint(project, 'jaw', '\u88c2\u989a', -10, 39, -23, 'head')
   joint(project, 'left-shoulder', '\u5de6\u80a9', -47, -43, -14, 'root')
@@ -94,7 +95,7 @@ function bellPilgrim() {
 
 function tideSpider() {
   const project = newProject('\u6f6e\u773c\u86db\u6bcd')
-  joint(project, 'root', '\u8179\u90e8', 0, 7, 0, null, 45)
+  joint(project, 'root', '\u8179\u90e8', 0, 7, 0, null, -45)
   joint(project, 'head', '\u591a\u773c\u989d', -13, -31, -72, 'root')
   joint(project, 'abdomen', '\u540e\u8179', 18, 9, 85, 'root')
   part(project, 'body', '\u7532\u58f3', 'ellipse', 'root', 118, 88, '#334e58', { z: -5, layer: 2 })
@@ -146,7 +147,8 @@ function tideSpider() {
 
 function lanternMoth() {
   const project = newProject('\u7f1d\u8179\u706f\u86fe')
-  joint(project, 'root', '\u80f8\u8282', 0, 0, 0, null, 45)
+  project.stage.floorOffset = 44
+  joint(project, 'root', '\u80f8\u8282', 0, 0, 0, null, -45)
   joint(project, 'head', '\u706f\u5934', -8, -69, -42, 'root')
   joint(project, 'left-wing', '\u5de6\u7fc5\u67a2', -41, -38, -13, 'root')
   joint(project, 'right-wing', '\u53f3\u7fc5\u67a2', 42, -36, 17, 'root')
@@ -203,5 +205,35 @@ export function installInitialShadowExamples(roster) {
   roster.characters.push(...examples)
   if (wasEmpty) roster.activeCharacterId = examples[0].id
   roster.examplePackVersion = SHADOW_EXAMPLE_PACK_VERSION
+  return true
+}
+
+function matchingExample(project, templates) {
+  if (!project.joints.some((entry) => entry.id === 'root')) return null
+  if (project.joints.some((entry) => entry.id === 'jaw' && entry.name === '\u88c2\u989a')) return templates[0]
+  if (project.joints.some((entry) => entry.id === 'left-2-knee')) return templates[1]
+  if (project.joints.some((entry) => entry.id === 'tail-tip' && entry.name === '\u5c3e\u706f')) return templates[2]
+  return null
+}
+
+export function repairInitialShadowExamples(roster) {
+  if (roster.examplePackVersion < SHADOW_EXAMPLE_PACK_VERSION || roster.examplePackVersion >= SHADOW_EXAMPLE_REPAIR_VERSION) return false
+  const templates = createShadowExampleProjects()
+  for (const { project } of roster.characters) {
+    const template = matchingExample(project, templates)
+    if (!template) continue
+    const existing = new Set(project.parts.map((entry) => entry.id))
+    const jointIds = new Set(project.joints.map((entry) => entry.id))
+    const boneIds = new Set(project.bones.map((entry) => entry.id))
+    for (const entry of template.parts) {
+      if (existing.has(entry.id)) continue
+      const targets = entry.attachment.type === 'bone' ? boneIds : jointIds
+      if (targets.has(entry.attachment.targetId)) project.parts.push(JSON.parse(JSON.stringify(entry)))
+    }
+    const root = project.joints.find((entry) => entry.id === 'root')
+    if (root?.rotationY === 45) root.rotationY = -45
+    if (template.stage.floorOffset !== 8 && project.stage.floorOffset === 8) project.stage.floorOffset = template.stage.floorOffset
+  }
+  roster.examplePackVersion = SHADOW_EXAMPLE_REPAIR_VERSION
   return true
 }

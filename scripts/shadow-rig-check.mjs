@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
-import { createShadowExampleProjects, installInitialShadowExamples } from '../src/animation/shadow-examples.js'
+import { createShadowExampleProjects, installInitialShadowExamples, repairInitialShadowExamples } from '../src/animation/shadow-examples.js'
+import { ShadowHistory } from '../src/animation/shadow-history.js'
 import {
   createDefaultShadowProject,
   createShadowBone,
@@ -64,7 +65,7 @@ near(shadowMatrixPosition(evaluateShadowProject(rig, 'idle', 350).jointsById.get
 const examples = createShadowExampleProjects()
 assert.deepEqual(examples.map((project) => project.name), ['\u788e\u94c3\u884c\u50e7', '\u6f6e\u773c\u86db\u6bcd', '\u7f1d\u8179\u706f\u86fe'])
 for (const example of examples) {
-  assert.equal(example.joints[0].rotationY, 45)
+  assert.equal(example.joints[0].rotationY, -45)
   assert.ok(example.joints.some((entry) => entry.z !== 0))
   assert.ok(example.parts.some((entry) => entry.z !== 0))
   const jointIds = new Set(example.joints.map((entry) => entry.id))
@@ -102,5 +103,39 @@ const personal = normalizeShadowRoster({ characters: [{ id: 'personal', project:
 assert.equal(installInitialShadowExamples(personal), true)
 assert.equal(personal.activeCharacterId, 'personal')
 assert.equal(personal.characters[0].project.joints.length, rig.joints.length)
+
+const damaged = normalizeShadowRoster({
+  characters: [{ id: 'sample', project: examples[0] }], activeCharacterId: 'sample', examplePackVersion: 1,
+})
+damaged.characters[0].project.parts.find((entry) => entry.id === 'robe').fill = '#123456'
+damaged.characters[0].project.parts = damaged.characters[0].project.parts.filter((entry) => entry.id !== 'bell')
+damaged.characters[0].project.joints[0].rotationY = 45
+assert.equal(repairInitialShadowExamples(damaged), true)
+assert.equal(damaged.characters[0].project.parts.find((entry) => entry.id === 'robe').fill, '#123456')
+assert.ok(damaged.characters[0].project.parts.some((entry) => entry.id === 'bell'))
+assert.equal(damaged.characters[0].project.joints[0].rotationY, -45)
+assert.equal(examples[2].stage.floorOffset, 44)
+damaged.characters[0].project.parts = damaged.characters[0].project.parts.filter((entry) => entry.id !== 'bell')
+assert.equal(repairInitialShadowExamples(damaged), false)
+assert.ok(!damaged.characters[0].project.parts.some((entry) => entry.id === 'bell'))
+
+const editState = { parts: [{ id: 'p', x: 0 }], name: 'first' }
+const history = new ShadowHistory(editState)
+history.begin(editState)
+editState.parts[0].x = 10
+history.record(editState)
+editState.parts[0].x = 20
+history.end(editState)
+assert.equal(history.stack.length, 1)
+assert.equal(history.undo(editState).parts[0].x, 0)
+editState.name = 'second'
+history.record(editState)
+assert.equal(history.undo(editState).name, 'first')
+const rosterHistory = new ShadowHistory(damaged, 80, normalizeShadowRoster)
+damaged.characters[0].project.name = 'changed'
+rosterHistory.record(damaged)
+const undoneRoster = normalizeShadowRoster(rosterHistory.undo(damaged))
+rosterHistory.record(undoneRoster)
+assert.equal(rosterHistory.stack.length, 0)
 
 console.log('Shadow rig 3D checks passed')

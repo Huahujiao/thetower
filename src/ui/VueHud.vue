@@ -512,6 +512,7 @@ import { getItemDefinition, upgradeRecipesForItem } from '../game/data/content.j
 import { getRelicDefinition } from '../game/data/relics.js'
 import { INVENTORY_COLUMNS, INVENTORY_ROWS } from '../game/run.js'
 import { GameScene } from '../render/scene.js'
+import { DETAIL_HOLD_MS } from '../interaction-timing.js'
 import { bagShapeLayout } from './bag-shape.js'
 import { automaticStashPosition, inventoryDropAnchorAtCenter, inventoryItemLayout, stashPositionAtPoint as stashPositionForPoint } from './inventory-layout.js'
 import { itemSpriteSources } from './item-sprites.js'
@@ -545,7 +546,7 @@ const TALENT_LINE_LABELS = Object.freeze({ flow: '\u6362\u52bf', guard: '\u5b88\
 const EDGE_NAMES = ['top', 'right', 'bottom', 'left']
 const HELP_SECTIONS = Object.freeze([
   { title: '\u884c\u52a8\u4e0e\u4f53\u529b', items: ['\u6bcf\u6b21\u79fb\u52a8\u3001\u7ffb\u724c\u3001\u62fe\u53d6\u548c\u666e\u901a\u4ea4\u4e92\u90fd\u4f1a\u63a8\u8fdb\u56de\u5408\u3002', '\u6b66\u5668\u653b\u51fb\u4f1a\u6d88\u8017\u4f53\u529b\uff0c\u4f7f\u7528\u7269\u54c1\u3001\u5408\u6210\u3001\u79fb\u52a8\u548c\u65cb\u8f6c\u4e5f\u53ef\u80fd\u63a8\u8fdb\u56de\u5408\u3002'] },
-  { title: '\u80cc\u5305\u4e0e\u5408\u6210', items: ['\u80cc\u5305\u662f 8 \u5217 4 \u884c\uff0c\u7269\u54c1\u6309\u5f62\u72b6\u5360\u683c\u3002', '\u70b9\u6309\u7269\u54c1\u53ef\u9009\u4e2d\uff1b\u957f\u6309 300ms \u540e\u62d6\u52a8\u79fb\u52a8\uff0c\u4e0d\u518d\u7528\u70b9\u51fb\u7a7a\u683c\u79fb\u7269\u54c1\u3002', '\u62d6\u52a8\u65f6\u4f7f\u7528\u7ea2\u8272\u4e22\u5f03\u533a\u4e0e\u84dd\u8272\u6682\u5b58\u533a\uff0c\u7a7a\u6682\u5b58\u533a\u540e\u63a8\u8fdb\u4e00\u4e2a\u6574\u7406\u56de\u5408\u3002', '\u5408\u6210\u9762\u677f\u53ea\u663e\u793a\u5f53\u524d\u80cc\u5305\u53ef\u5408\u6210\u7684\u914d\u65b9\u3002'] },
+  { title: '\u80cc\u5305\u4e0e\u5408\u6210', items: ['\u80cc\u5305\u662f 8 \u5217 4 \u884c\uff0c\u7269\u54c1\u6309\u5f62\u72b6\u5360\u683c\u3002', '\u70b9\u6309\u7269\u54c1\u53ef\u9009\u4e2d\uff1b\u957f\u6309 150ms \u540e\u62d6\u52a8\u79fb\u52a8\uff0c\u4e0d\u518d\u7528\u70b9\u51fb\u7a7a\u683c\u79fb\u7269\u54c1\u3002', '\u62d6\u52a8\u65f6\u4f7f\u7528\u7ea2\u8272\u4e22\u5f03\u533a\u4e0e\u84dd\u8272\u6682\u5b58\u533a\uff0c\u7a7a\u6682\u5b58\u533a\u540e\u63a8\u8fdb\u4e00\u4e2a\u6574\u7406\u56de\u5408\u3002', '\u5408\u6210\u9762\u677f\u53ea\u663e\u793a\u5f53\u524d\u80cc\u5305\u53ef\u5408\u6210\u7684\u914d\u65b9\u3002'] },
   { title: '\u5929\u8d4b\u4e0e\u5723\u9057\u7269', items: ['\u5347\u7ea7\u65f6\u9009\u62e9\u5929\u8d4b\u8def\u7ebf\u6216\u5f3a\u5316\u4f53\u683c\u3002', '\u5723\u9057\u7269\u653e\u5728\u80cc\u5305\u4e2d\u5373\u53ef\u751f\u6548\uff0c\u79bb\u5f00\u623f\u95f4\u4e0d\u4f1a\u91cd\u7f6e\u3002'] },
   { title: '\u6218\u6597\u4e0e\u63a2\u7d22', items: ['\u9009\u62e9\u6b66\u5668\u540e\u70b9\u51fb\u654c\u4eba\u53d1\u8d77\u653b\u51fb\uff0c\u8fdc\u5904\u76ee\u6807\u4f1a\u5148\u9884\u89c8\u8def\u5f84\u3002', '\u957f\u6309\u68cb\u76d8\u6216\u80cc\u5305\u7269\u54c1\u67e5\u770b\u8be6\u60c5\uff0c\u8fde\u7eed\u79fb\u52a8\u89c6\u89d2\u53ef\u4f7f\u7528\u62d6\u62fd\u548c\u6eda\u8f6e\u7f29\u653e\u3002'] },
 ])
@@ -564,7 +565,6 @@ const reveal = ref(typeof localStorage !== 'undefined' && localStorage.getItem('
 // Keep the gesture token as a raw object. A deep ref would proxy nextHold,
 // making the timer identity check incorrectly report every hold as stale.
 const hold = shallowRef(null)
-const LONG_PRESS_MS = 300
 const BAG_DRAG_TOLERANCE = 18
 const bagGesture = ref(null)
 const stashPositions = reactive({})
@@ -995,7 +995,7 @@ function startLongPress(openDetail, event) {
   nextHold.timer = window.setTimeout(() => {
     if (hold.value !== nextHold) return
     nextHold.opened = Boolean(openDetail())
-  }, LONG_PRESS_MS)
+  }, DETAIL_HOLD_MS)
   hold.value = nextHold
 }
 function refreshBagGesture(session) { bagGesture.value = { ...session } }
@@ -1136,7 +1136,7 @@ function onBagTouchStart(index, event) {
     session.detailOpened = Boolean(openItemDetail(item))
     if (session.detailOpened && item.type === 'weapon') scene.value?.showWeaponRange(item.uid)
     refreshBagGesture(session)
-  }, LONG_PRESS_MS)
+  }, DETAIL_HOLD_MS)
   bagGesture.value = session
 }
 function onStashTouchStart(item, event) {
@@ -1176,7 +1176,7 @@ function onStashTouchStart(item, event) {
     if (bagGesture.value?.token !== session.token) return
     session.detailOpened = Boolean(openItemDetail(item))
     refreshBagGesture(session)
-  }, LONG_PRESS_MS)
+  }, DETAIL_HOLD_MS)
   bagGesture.value = session
 }
 function updateBagGesturePoint(point) {

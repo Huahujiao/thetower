@@ -235,7 +235,7 @@ function createBlankProject(name = '\u65b0\u89d2\u8272 1') {
   return {
     version: 3,
     name,
-    stage: { width: 600, height: 600, depth: 600 },
+    stage: { width: 600, height: 600, depth: 600, floorOffset: 8 },
     joints: [],
     bones: [],
     parts: [],
@@ -350,6 +350,7 @@ export function normalizeShadowProject(source) {
       width: Math.max(200, finite(source.stage?.width, 600)),
       height: Math.max(200, finite(source.stage?.height, 600)),
       depth: Math.max(200, finite(source.stage?.depth, 600)),
+      floorOffset: Math.max(0, finite(source.stage?.floorOffset, 8)),
     },
     joints,
     bones,

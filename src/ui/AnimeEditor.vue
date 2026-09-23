@@ -1,5 +1,5 @@
 <template>
-  <main class="anime-page anime-editor-page">
+  <main class="anime-page anime-editor-page" @focusin="beginInputHistory" @focusout="endInputHistory">
     <header class="anime-topbar anime-editor-topbar">
       <a class="anime-back" href="/" :aria-label="COPY.back">←</a>
       <div class="anime-character-controls">
@@ -19,7 +19,9 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3m3 0-1 13H7L6 7m4 4v6m4-6v6" /></svg>
         </button>
       </div>
-      <a class="anime-button primary anime-preview-link" href="/animepreview">{{ COPY.openPreview }}</a>
+      <button class="anime-icon-button" type="button" :disabled="!undoCount" :aria-label="COPY.undo" :title="COPY.undo" @click="undoEdit">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6 4 11l5 5M4 11h11a5 5 0 0 1 0 10" /></svg>
+      </button>
     </header>
 
     <nav class="anime-editor-menu" :aria-label="COPY.editorMode">
@@ -30,7 +32,7 @@
 
     <section class="rig-editor-workspace">
       <div class="anime-stage-wrap">
-        <div class="rig-stage-options">
+        <div v-if="!stage3D" class="rig-stage-options">
           <label><input v-model="showBones" type="checkbox">{{ COPY.bones }}</label>
           <label><input v-model="showMesh" type="checkbox">{{ COPY.grid }}</label>
         </div>
@@ -43,6 +45,7 @@
           :show-bones="showBones"
           :show-grid="showMesh"
           :show-parts="showMesh"
+          :hidden-part-ids="hiddenPartIds"
           :joint-interactive="editorMode !== 'parts'"
           :bone-interactive="editorMode === 'skeleton'"
           :part-interactive="editorMode !== 'skeleton'"
@@ -50,6 +53,8 @@
           @select="onStageSelect"
           @canvas-tap="onCanvasTap"
           @drag="onStageDrag"
+          @drag-end="endStageDrag"
+          @view-mode-change="stage3D = $event"
         />
       </div>
 
@@ -94,6 +99,9 @@
           </button>
           <button class="anime-icon-button" type="button" :disabled="!selectedPart" :aria-label="COPY.duplicate" :title="COPY.duplicate" @click="duplicateSelectedPart">
             <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="1" /><path d="M16 8V4H4v12h4" /></svg>
+          </button>
+          <button class="anime-icon-button" :class="{ active: selectedPartHidden }" type="button" :disabled="!selectedPart" :aria-label="selectedPartHidden ? COPY.showPart : COPY.hidePart" :title="selectedPartHidden ? COPY.showPart : COPY.hidePart" @click="toggleSelectedPartHidden">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12c2.5-4 5.8-6 10-6s7.5 2 10 6c-2.5 4-5.8 6-10 6s-7.5-2-10-6Z" /><circle cx="12" cy="12" r="3" /><path v-if="selectedPartHidden" d="M3 21 21 3" /></svg>
           </button>
           <button class="anime-icon-button" type="button" :disabled="!selectedPart" :aria-label="COPY.deleteSelected" :title="COPY.deleteSelected" @click="deleteSelectedPart">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3m3 0-1 13H7L6 7m4 4v6m4-6v6" /></svg>
@@ -168,7 +176,8 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { Matrix4 } from 'three'
-import { installInitialShadowExamples } from '../animation/shadow-examples.js'
+import { installInitialShadowExamples, repairInitialShadowExamples } from '../animation/shadow-examples.js'
+import { ShadowHistory } from '../animation/shadow-history.js'
 import {
   SHADOW_ANIMATION_TYPES,
   SHADOW_SHAPES,
@@ -182,6 +191,7 @@ import {
   inverseShadowVector,
   loadShadowRoster,
   normalizeShadowProject,
+  normalizeShadowRoster,
   sampleShadowTrack,
   saveShadowRoster,
   shadowBoneAttachmentMatrix,
@@ -194,18 +204,23 @@ import ShadowPuppetStage from './ShadowPuppetStage.vue'
 import '../anime.css'
 
 const COPY = Object.freeze({
+  undo: '\u64a4\u56de', hidePart: '\u6682\u65f6\u9690\u85cf\u90e8\u4ef6', showPart: '\u663e\u793a\u90e8\u4ef6',
   partName: '\u90e8\u4ef6\u540d\u79f0',
   size: '\u5c3a\u5bf8', scale: '\u7f29\u653e',
   resetAnimation: '\u91cd\u7f6e',
   resetAnimationConfirm: '\u6e05\u7a7a\u5f53\u524d\u52a8\u4f5c\u7684\u6240\u6709\u5173\u952e\u5e27\uff0c\u6062\u590d\u9aa8\u67b6\u548c\u90e8\u4ef6\u7684\u521d\u59cb\u59ff\u6001\uff1f',
-  back: '\u8fd4\u56de\u6e38\u620f', openPreview: '\u9884\u89c8', character: '\u89d2\u8272', characterName: '\u89d2\u8272\u540d\u79f0', add: '\u65b0\u5efa', duplicate: '\u590d\u5236', deleteCharacter: '\u5220\u9664', editorMode: '\u7f16\u8f91\u6a21\u5f0f', skeleton: '\u9aa8\u67b6', parts: '\u90e8\u4ef6', animation: '\u52a8\u4f5c', bones: '\u9aa8\u67b6', grid: '\u7f51\u683c', select: '\u9009\u62e9', addJoint: '\u6dfb\u52a0\u5173\u8282', connect: '\u8fde\u63a5', deleteSelected: '\u5220\u9664', name: '\u540d\u79f0', rotation: '\u65cb\u8f6c', tapToAddJoint: '\u70b9\u51fb\u753b\u5e03\u521b\u5efa\u72ec\u7acb\u5173\u8282', connectFirst: '\u8bf7\u5148\u70b9\u51fb\u8d77\u70b9\u5173\u8282', connectSecond: '\u8bf7\u70b9\u51fb\u7ec8\u70b9\u5173\u8282', invalidConnection: '\u65e0\u6cd5\u521b\u5efa\u5faa\u73af\u9aa8\u67b6', selectPart: '\u9009\u62e9\u90e8\u4ef6', bind: '\u7ed1\u5b9a', free: '\u81ea\u7531', joint: '\u5173\u8282', bone: '\u9aa8\u9abc\u7ebf', target: '\u76ee\u6807', position: '\u4f4d\u7f6e', width: '\u5bbd', height: '\u9ad8', layer: '\u5c42\u7ea7', fill: '\u586b\u8272', stroke: '\u8f6e\u5ed3', play: '\u64ad\u653e', pause: '\u6682\u505c', rewind: '\u5f52\u96f6', duration: '\u65f6\u957f', loop: '\u5faa\u73af', opacity: '\u900f\u660e\u5ea6', recordKey: '\u8bb0\u5f55\u5e27', deleteKey: '\u5220\u9664\u5e27', selectAnimationTarget: '\u8bf7\u5728\u753b\u5e03\u4e0a\u9009\u62e9\u5173\u8282\u6216\u90e8\u4ef6', newCharacter: '\u65b0\u89d2\u8272', duplicateSuffix: '\u526f\u672c', deleteCharacterConfirm: '\u5220\u9664\u5f53\u524d\u89d2\u8272\u53ca\u5176\u5168\u90e8\u52a8\u4f5c\uff1f',
+  back: '\u8fd4\u56de\u6e38\u620f', character: '\u89d2\u8272', characterName: '\u89d2\u8272\u540d\u79f0', add: '\u65b0\u5efa', duplicate: '\u590d\u5236', deleteCharacter: '\u5220\u9664', editorMode: '\u7f16\u8f91\u6a21\u5f0f', skeleton: '\u9aa8\u67b6', parts: '\u90e8\u4ef6', animation: '\u52a8\u4f5c', bones: '\u9aa8\u67b6', grid: '\u7f51\u683c', select: '\u9009\u62e9', addJoint: '\u6dfb\u52a0\u5173\u8282', connect: '\u8fde\u63a5', deleteSelected: '\u5220\u9664', name: '\u540d\u79f0', rotation: '\u65cb\u8f6c', tapToAddJoint: '\u70b9\u51fb\u753b\u5e03\u521b\u5efa\u72ec\u7acb\u5173\u8282', connectFirst: '\u8bf7\u5148\u70b9\u51fb\u8d77\u70b9\u5173\u8282', connectSecond: '\u8bf7\u70b9\u51fb\u7ec8\u70b9\u5173\u8282', invalidConnection: '\u65e0\u6cd5\u521b\u5efa\u5faa\u73af\u9aa8\u67b6', selectPart: '\u9009\u62e9\u90e8\u4ef6', bind: '\u7ed1\u5b9a', free: '\u81ea\u7531', joint: '\u5173\u8282', bone: '\u9aa8\u9abc\u7ebf', target: '\u76ee\u6807', position: '\u4f4d\u7f6e', width: '\u5bbd', height: '\u9ad8', layer: '\u5c42\u7ea7', fill: '\u586b\u8272', stroke: '\u8f6e\u5ed3', play: '\u64ad\u653e', pause: '\u6682\u505c', rewind: '\u5f52\u96f6', duration: '\u65f6\u957f', loop: '\u5faa\u73af', opacity: '\u900f\u660e\u5ea6', recordKey: '\u8bb0\u5f55\u5e27', deleteKey: '\u5220\u9664\u5e27', selectAnimationTarget: '\u8bf7\u5728\u753b\u5e03\u4e0a\u9009\u62e9\u5173\u8282\u6216\u90e8\u4ef6', newCharacter: '\u65b0\u89d2\u8272', duplicateSuffix: '\u526f\u672c', deleteCharacterConfirm: '\u5220\u9664\u5f53\u524d\u89d2\u8272\u53ca\u5176\u5168\u90e8\u52a8\u4f5c\uff1f',
 })
 
 const initialRoster = loadShadowRoster()
-if (installInitialShadowExamples(initialRoster)) {
+const examplesInstalled = installInitialShadowExamples(initialRoster)
+const examplesRepaired = repairInitialShadowExamples(initialRoster)
+if (examplesInstalled || examplesRepaired) {
   try { saveShadowRoster(initialRoster) } catch { /* Keep the examples usable when storage is unavailable. */ }
 }
 const roster = ref(initialRoster)
+const history = new ShadowHistory(initialRoster, 80, normalizeShadowRoster)
+const undoCount = ref(0)
 const activeCharacterId = ref(roster.value.activeCharacterId)
 const project = computed({
   get: () => roster.value.characters.find((entry) => entry.id === activeCharacterId.value)?.project || roster.value.characters[0].project,
@@ -225,6 +240,9 @@ const partFieldMode = ref('size')
 const poseFieldMode = ref('position')
 const showBones = ref(true)
 const showMesh = ref(true)
+const stage3D = ref(false)
+const hiddenParts = ref({})
+const hiddenPartIds = computed(() => Object.entries(hiddenParts.value[activeCharacterId.value] || {}).filter(([, hidden]) => hidden).map(([id]) => id))
 const animationId = ref('idle')
 const time = ref(0)
 const playing = ref(false)
@@ -232,11 +250,13 @@ let saveTimer = null
 let animationFrame = 0
 let lastFrameTime = 0
 let localIdSequence = 0
+let stageDragGrouped = false
 
 const currentAnimation = computed(() => project.value.animations[animationId.value])
 const selectedJoint = computed(() => selectedKind.value === 'joint' ? project.value.joints.find((entry) => entry.id === selectedId.value) || null : null)
 const selectedBone = computed(() => selectedKind.value === 'bone' ? project.value.bones.find((entry) => entry.id === selectedId.value) || null : null)
 const selectedPart = computed(() => selectedKind.value === 'part' ? project.value.parts.find((entry) => entry.id === selectedId.value) || null : null)
+const selectedPartHidden = computed(() => Boolean(selectedPart.value && hiddenParts.value[activeCharacterId.value]?.[selectedPart.value.id]))
 const orderedParts = computed(() => [...project.value.parts].sort((left, right) => right.layer - left.layer || left.name.localeCompare(right.name)))
 
 function poseField(axis) {
@@ -271,15 +291,61 @@ const skeletonStatus = computed(() => {
   return ''
 })
 
-watch(project, () => {
+watch(roster, () => {
+  history.record(roster.value)
+  undoCount.value = history.stack.length || (history.groupDepth ? 1 : 0)
   clearTimeout(saveTimer)
   saveTimer = setTimeout(() => {
     try {
-      roster.value.activeCharacterId = activeCharacterId.value
       saveShadowRoster(roster.value)
     } catch { /* Keep editing in memory if localStorage is unavailable or full. */ }
   }, 140)
 }, { deep: true })
+
+function beginInputHistory(event) {
+  if (event.target.matches('input, select')) history.begin(roster.value)
+}
+
+function endInputHistory(event) {
+  if (!event.target.matches('input, select')) return
+  history.end(roster.value)
+  undoCount.value = history.stack.length
+}
+
+function endStageDrag() {
+  if (!stageDragGrouped) return
+  stageDragGrouped = false
+  history.end(roster.value)
+  undoCount.value = history.stack.length
+}
+
+function endActiveHistoryGroups() {
+  endStageDrag()
+  while (history.groupDepth) history.end(roster.value)
+  undoCount.value = history.stack.length
+}
+
+function undoEdit() {
+  endStageDrag()
+  const previous = history.undo(roster.value)
+  if (!previous) return
+  roster.value = normalizeShadowRoster(previous)
+  activeCharacterId.value = roster.value.activeCharacterId
+  playing.value = false
+  resetSelection()
+  undoCount.value = history.stack.length
+  clearTimeout(saveTimer)
+  try { saveShadowRoster(roster.value) } catch { /* Undo still works in memory. */ }
+}
+
+function toggleSelectedPartHidden() {
+  if (!selectedPart.value) return
+  const characterId = activeCharacterId.value
+  hiddenParts.value = {
+    ...hiddenParts.value,
+    [characterId]: { ...hiddenParts.value[characterId], [selectedPart.value.id]: !selectedPartHidden.value },
+  }
+}
 
 watch(() => currentAnimation.value.duration, (duration) => {
   if (time.value > duration) time.value = duration
@@ -589,6 +655,10 @@ function jointName(jointId) {
 }
 
 function onStageDrag({ kind, id, previous, current }) {
+  if (!stageDragGrouped) {
+    history.begin(roster.value)
+    stageDragGrouped = true
+  }
   selectedKind.value = kind
   selectedId.value = id
   const dx = current.x - previous.x
@@ -708,11 +778,14 @@ function frame(timestamp) {
 onMounted(() => {
   document.documentElement.classList.add('anime-html')
   document.body.classList.add('anime-body')
+  window.addEventListener('blur', endActiveHistoryGroups)
   lastFrameTime = window.performance.now()
   animationFrame = window.requestAnimationFrame(frame)
 })
 
 onBeforeUnmount(() => {
+  endActiveHistoryGroups()
+  window.removeEventListener('blur', endActiveHistoryGroups)
   document.documentElement.classList.remove('anime-html')
   document.body.classList.remove('anime-body')
   window.cancelAnimationFrame(animationFrame)

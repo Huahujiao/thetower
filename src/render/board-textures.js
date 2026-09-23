@@ -12,7 +12,7 @@ import drownBackUrl from '../assets/board-card-back-drown-v1.jpg'
 const SIZE = 512
 // Display-only exposure: keep bare stone behind the illustrated card backs.
 // Source artwork stays intact; no painted symbols or opaque color washes.
-const FLOOR_URLS = [floorAUrl, floorBUrl, floorCUrl, floorDUrl]
+export const FLOOR_URLS = [floorAUrl, floorBUrl, floorCUrl, floorDUrl]
 const NEUTRAL_BACK_BRIGHTNESS = 1.3
 const BLOCKED_BACK_COLOR = '#363a40'
 const BACK_URLS = { neutral: cardBackUrl, scorch: scorchBackUrl, wither: witherBackUrl, drown: drownBackUrl }
@@ -86,12 +86,7 @@ export class BoardTextures {
 
   floor(position = null) {
     if (!position) return this.floors[0].texture
-    // Coordinate hash: stable through flips/moves and independent of gameplay RNG.
-    let hash = Math.imul(position.c + 1, 374761393) ^ Math.imul(position.r + 1, 668265263)
-    hash = Math.imul(hash ^ (hash >>> 13), 1274126177)
-    const bucket = ((hash ^ (hash >>> 16)) >>> 0) % 10
-    const index = bucket < 5 ? 0 : bucket < 7 ? 1 : bucket < 9 ? 2 : 3
-    return this.floors[index].texture
+    return this.floors[floorTextureIndex(position)].texture
   }
 
   back(attribute, blocked) {
@@ -103,4 +98,12 @@ export class BoardTextures {
     this.disposed = true
     for (const entry of [...this.floors, ...this.backs.values(), this.blockedBack]) entry.texture.dispose()
   }
+}
+
+export function floorTextureIndex(position) {
+  // Coordinate hash: stable through flips/moves and independent of gameplay RNG.
+  let hash = Math.imul(position.c + 1, 374761393) ^ Math.imul(position.r + 1, 668265263)
+  hash = Math.imul(hash ^ (hash >>> 13), 1274126177)
+  const bucket = ((hash ^ (hash >>> 16)) >>> 0) % 10
+  return bucket < 5 ? 0 : bucket < 7 ? 1 : bucket < 9 ? 2 : 3
 }

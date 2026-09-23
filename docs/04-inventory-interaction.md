@@ -1,6 +1,6 @@
 # Inventory staging interaction
 
-Inventory movement is touch-only. A 300 ms hold on an occupied item opens its detail panel; moving farther than 18 px after the hold begins drag mode. A tap still selects an item for use or combat, but never moves it.
+Inventory movement is touch-only. A 150 ms hold on an occupied item opens its detail panel; moving farther than 18 px after the hold begins drag mode. A tap still selects an item for use or combat, but never moves it.
 
 The first occupied cell of the rotated shape remains the model placement anchor, but touch placement snaps the center of the floating item footprint to the nearest backpack footprint center. This gives a half-cell alignment tolerance in each direction instead of treating the touch as the item's top-left cell. Green cells accept a drop, yellow cells replace the items there and move those conflicts to staging, and red cells reject the drop. Invalid release, touch cancellation, page blur, and visibility interruption leave the item at its original location.
 
