@@ -1,4 +1,4 @@
-import { createBoss, createEnemyById, createGoldEntity, createKeyEntity, createLootEntity, createMonster, makeItemById, nextEntityId, randomDefenseItem, randomItem, resetEntityIds, synchronizeEntityIds } from '../data/content.js'
+import { createBoss, createEnemyById, createGoldEntity, createKeyEntity, createLootEntity, createMonster, makeItemById, nextEntityId, randomItem, resetEntityIds, synchronizeEntityIds } from '../data/content.js'
 import { createMerchantEntity } from '../data/merchants.js'
 import { createTrapEntity, randomTrapId } from '../data/traps.js'
 import { neighbors8, pos, posKey } from '../core/geometry.js'
@@ -231,37 +231,41 @@ function validateDoor(room, door, edgeId, seenDoorIds, roomDoorLocations, roomDo
 
 function sameFloorCenters(dungeon, floor) {
   const rooms = dungeon.floorRooms(floor)
-  if (rooms.length <= 1) return new Map(rooms.map((room) => [room.id, { x: 0, z: 0 }]))
-  const centers = new Map([[rooms[0].id, { x: 0, z: 0 }]])
-  const queue = [rooms[0]]
-  while (queue.length) {
-    const room = queue.shift()
-    const center = centers.get(room.id)
-    for (const edge of dungeon.edges.values()) {
-      const fromCurrent = edge.fromRoomId === room.id
-      const toCurrent = edge.toRoomId === room.id
-      if (!fromCurrent && !toCurrent) continue
-      const otherRoom = dungeon.room(fromCurrent ? edge.toRoomId : edge.fromRoomId)
-      if (!otherRoom || otherRoom.floor !== floor) continue
-      const ownDoor = fromCurrent ? edge.fromDoor : edge.toDoor
-      const otherDoor = fromCurrent ? edge.toDoor : edge.fromDoor
-      const ownPoint = doorPoint(room, ownDoor)
-      const otherPoint = doorPoint(otherRoom, otherDoor)
-      const outward = outwardForDoor(ownDoor.side)
-      const expectedCenter = {
-        x: center.x + ownPoint.x + outward.x * ROOM_LAYOUT_GAP - otherPoint.x,
-        z: center.z + ownPoint.z + outward.z * ROOM_LAYOUT_GAP - otherPoint.z,
+  const spacing = Math.max(...rooms.map((room) => Math.max(room.width, room.height))) + ROOM_LAYOUT_GAP
+  const centers = new Map()
+  for (const root of rooms) {
+    if (centers.has(root.id)) continue
+    const layout = dungeon.roomLayout(root.id)
+    centers.set(root.id, { x: layout.c * spacing, z: layout.r * spacing })
+    const queue = [root]
+    while (queue.length) {
+      const room = queue.shift()
+      const center = centers.get(room.id)
+      for (const edge of dungeon.edges.values()) {
+        const fromCurrent = edge.fromRoomId === room.id
+        const toCurrent = edge.toRoomId === room.id
+        if (!fromCurrent && !toCurrent) continue
+        const otherRoom = dungeon.room(fromCurrent ? edge.toRoomId : edge.fromRoomId)
+        if (!otherRoom || otherRoom.floor !== floor) continue
+        const ownDoor = fromCurrent ? edge.fromDoor : edge.toDoor
+        const otherDoor = fromCurrent ? edge.toDoor : edge.fromDoor
+        const ownPoint = doorPoint(room, ownDoor)
+        const otherPoint = doorPoint(otherRoom, otherDoor)
+        const outward = outwardForDoor(ownDoor.side)
+        const expectedCenter = {
+          x: center.x + ownPoint.x + outward.x * ROOM_LAYOUT_GAP - otherPoint.x,
+          z: center.z + ownPoint.z + outward.z * ROOM_LAYOUT_GAP - otherPoint.z,
+        }
+        const knownCenter = centers.get(otherRoom.id)
+        if (knownCenter) {
+          layoutAssertion(Math.abs(knownCenter.x - expectedCenter.x) < LAYOUT_EPSILON && Math.abs(knownCenter.z - expectedCenter.z) < LAYOUT_EPSILON, `${room.id} and ${otherRoom.id} have inconsistent physical door placement`)
+          continue
+        }
+        centers.set(otherRoom.id, expectedCenter)
+        queue.push(otherRoom)
       }
-      const knownCenter = centers.get(otherRoom.id)
-      if (knownCenter) {
-        layoutAssertion(Math.abs(knownCenter.x - expectedCenter.x) < LAYOUT_EPSILON && Math.abs(knownCenter.z - expectedCenter.z) < LAYOUT_EPSILON, `${room.id} and ${otherRoom.id} have inconsistent physical door placement`)
-        continue
-      }
-      centers.set(otherRoom.id, expectedCenter)
-      queue.push(otherRoom)
     }
   }
-  layoutAssertion(centers.size === rooms.length, `floor ${floor} is not internally connected`)
   return centers
 }
 
@@ -381,7 +385,7 @@ function addTrap(room, reserved, random) {
 
 function populateRoom(room, reserved, random, config) {
   const role = room.role
-  const targetDensity = { entry: 0.58, elite: 0.64, supply: 0.48, prep: 0.55, boss: 0.42 }[role] || 0.5
+  const targetDensity = { entry: 0.58, elite: 0.64, supply: 0.48, boss: 0.42 }[role] || 0.5
   const targetCount = Math.ceil(room.width * room.height * targetDensity)
   const layoutKind = ['scattered', 'firing', 'wall'][(Number(room.id.split('-').at(-1)) - 1) % 3]
   let monsterIndex = role === 'boss' || role === 'supply' ? 0 : arrangeTacticalEnemies(room, reserved, layoutKind)
@@ -396,16 +400,12 @@ function populateRoom(room, reserved, random, config) {
     boss.finalBoss = room.chapter === config.chapters
     room.addEntity(boss)
   }
-  const targetMonsterCount = role === 'boss' ? 0 : role === 'supply' ? 1 : role === 'elite' ? 5 : role === 'prep' ? 2 : 3
+  const targetMonsterCount = role === 'boss' ? 0 : role === 'supply' ? 1 : role === 'elite' ? 5 : 3
   while (monsterIndex < targetMonsterCount && addMonster(room, reserved, random, monsterIndex)) {
     monsterIndex += 1
   }
-  for (const itemId of role === 'supply' ? ['health-potion', 'iron-powder'] : role === 'prep' ? ['health-potion'] : []) {
+  for (const itemId of role === 'supply' ? ['health-potion', 'iron-powder'] : []) {
     if (!addLoot(room, reserved, random, makeItemById(itemId))) break
-  }
-  if (role === 'prep' && room.chapter % 2 === 1) {
-    const defense = randomDefenseItem(room.floor, random)
-    if (defense) addLoot(room, reserved, random, defense)
   }
   addGold(room, reserved, random)
   while (room.entities.size < targetCount) {
@@ -483,9 +483,8 @@ function createChapterDungeonAttempt({ config, random }) {
     const size = config.roomSizes[chapter - 1]
     const roles = [
       ['entry', 0, { c: 0, r: 0 }],
-      ['elite', 0, { c: -1, r: 0 }],
-      ['supply', 0, { c: 1, r: 0 }],
-      ['prep', 1, { c: 0, r: 0 }],
+      ['elite', 1, { c: -1, r: 0 }],
+      ['supply', 1, { c: 1, r: 0 }],
       ['boss', 2, { c: 0, r: 0 }],
     ]
     const rooms = {}
@@ -538,9 +537,8 @@ function createChapterDungeonAttempt({ config, random }) {
     const chapter = index + 1
     connect(rooms.entry, rooms.elite, 'left', { chapter, option: 'elite' })
     connect(rooms.entry, rooms.supply, 'right', { chapter, option: 'supply' })
-    connect(rooms.elite, rooms.prep, 'top', { chapter, option: 'elite' })
-    connect(rooms.supply, rooms.prep, 'bottom', { chapter, option: 'supply' })
-    connect(rooms.prep, rooms.boss, 'right')
+    connect(rooms.elite, rooms.boss, 'bottom', { chapter, option: 'elite' })
+    connect(rooms.supply, rooms.boss, 'right', { chapter, option: 'supply' })
     if (chapters[index + 1]) connect(rooms.boss, chapters[index + 1].entry, 'bottom')
     const room = rooms.supply
     const approach = placeMerchant(room, reservations.get(room.id), config.merchantIds[index], random)

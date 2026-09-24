@@ -2186,7 +2186,7 @@ export class GameScene {
         detail: locked ? '机关锁住' : '连接下一个房间',
         footer: locked ? '找到开门机关' : '点击进入',
       }
-      const routeLabels = { elite: '\u7cbe\u82f1\u8def\u7ebf', supply: '\u8865\u7ed9\u8def\u7ebf', prep: '\u6574\u5907\u623f', boss: '\u7ae0\u8282\u9996\u9886', entry: '\u4e0b\u4e00\u7ae0' }
+      const routeLabels = { elite: '\u7cbe\u82f1\u8def\u7ebf', supply: '\u8865\u7ed9\u8def\u7ebf', boss: '\u7ae0\u8282\u9996\u9886', entry: '\u4e0b\u4e00\u7ae0' }
       if (destination && this.run.isExitDoor(entity)) {
         card.title = routeLabels[destination.role] || card.title
         if (destination.role === 'elite') card.detail = '\u66f4\u591a\u6218\u6597\uff0c\u66f4\u5c11\u8865\u7ed9'

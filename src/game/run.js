@@ -1331,7 +1331,7 @@ export class GameRun {
     this._endTurn({ skipEnemyPhase: true, turnKind: TURN_KINDS.ACTION })
     this._emitRelicEvent('room:entered', { room: targetRoom, firstVisit })
     this.itemRules.enter(firstVisit)
-    if (firstVisit && !this.gameOver && targetRoom.role !== 'boss' && targetRoom.role !== 'entry') {
+    if (firstVisit && !this.gameOver && targetRoom.role !== 'entry') {
       const reward = buildRoomRewardChoices(this.relics, {
         floor: targetRoom.floor,
         type: targetRoom.role === 'elite' ? 'relic' : targetRoom.role === 'supply' ? 'supply' : this._drawRoomRewardType(),

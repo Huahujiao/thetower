@@ -110,13 +110,8 @@ export function randomItem(floor, random = Math.random) {
   const defensePool = DEFENSES.filter((defense) => floor >= (defense.minFloor || 1))
   const roll = random()
   if (roll < 0.58 && weaponPool.length) return makeItem(weaponPool[Math.floor(random() * weaponPool.length)])
-  if (roll < 0.75 && defensePool.length) return makeItem(defensePool[Math.floor(random() * defensePool.length)])
+  if (roll < 0.83 && defensePool.length) return makeItem(defensePool[Math.floor(random() * defensePool.length)])
   return makeItem(randomConsumableDefinition(floor, random))
-}
-
-export function randomDefenseItem(floor, random = Math.random) {
-  const pool = DEFENSES.filter((defense) => floor >= (defense.minFloor || 1))
-  return pool.length ? makeItem(pool[Math.floor(random() * pool.length)]) : null
 }
 
 export function randomWeapon(floor, random = Math.random) {
