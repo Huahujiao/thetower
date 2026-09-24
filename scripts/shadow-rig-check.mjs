@@ -28,7 +28,7 @@ const legacy = normalizeShadowProject({
   parts: [{ id: 'plate', x: 4, y: 5, z: 9, rotation: 30 }],
   animations: { idle: { duration: 1000, tracks: { 'joint:root': [{ time: 0, dx: 2, dy: 3, rotation: 15 }] } } },
 })
-assert.equal(legacy.version, 3)
+assert.equal(legacy.version, 4)
 assert.equal(legacy.parts[0].layer, 9)
 assert.equal(legacy.parts[0].z, 0)
 assert.equal(legacy.parts[0].rotationZ, 30)
@@ -36,7 +36,7 @@ assert.equal(legacy.joints[0].rotationZ, 25)
 assert.equal(legacy.animations.idle.tracks['joint:root'][0].rotationZ, 15)
 
 const older = normalizeShadowProject({ version: 1, name: 'Older', parts: [{ id: 'old', x: 4, y: 8, z: 6, width: 30, height: 40 }] })
-assert.equal(older.version, 3)
+assert.equal(older.version, 4)
 assert.equal(older.parts[0].layer, 6)
 assert.equal(older.parts[0].z, 0)
 
@@ -62,10 +62,37 @@ near(halfway.dz, 20)
 near(halfway.rotationX, 40)
 near(shadowMatrixPosition(evaluateShadowProject(rig, 'idle', 350).jointsById.get('child').matrix).x, 30)
 
+const oldDepthProject = createDefaultShadowProject()
+oldDepthProject.version = 3
+oldDepthProject.joints.push(createShadowJoint({ id: 'root', z: -20, rotationX: 12, rotationY: -45 }))
+oldDepthProject.joints.push(createShadowJoint({ id: 'child', x: 30, z: -15 }))
+oldDepthProject.bones.push(createShadowBone({ id: 'link', fromJointId: 'root', toJointId: 'child' }))
+oldDepthProject.parts.push(createShadowPart({ id: 'face', z: -8, rotationX: -20, rotationY: 15, attachment: { type: 'joint', targetId: 'child', t: 0.5, followRotation: true } }))
+upsertShadowKeyframe(oldDepthProject, 'idle', shadowTargetKey('joint', 'root'), 500, { dz: -7, rotationX: 9, rotationY: -11 })
+const oldEvaluation = evaluateShadowProject(oldDepthProject, 'idle', 500)
+const migratedDepthProject = normalizeShadowProject(oldDepthProject)
+assert.equal(migratedDepthProject.version, 4)
+assert.equal(migratedDepthProject.joints[0].z, 20)
+assert.equal(migratedDepthProject.joints[0].rotationY, 45)
+assert.equal(migratedDepthProject.parts[0].z, 8)
+assert.equal(migratedDepthProject.parts[0].rotationX, 20)
+assert.equal(migratedDepthProject.animations.idle.tracks['joint:root'][0].dz, 7)
+assert.deepEqual(normalizeShadowProject(migratedDepthProject), migratedDepthProject)
+const migratedEvaluation = evaluateShadowProject(migratedDepthProject, 'idle', 500)
+for (const kind of ['joints', 'parts']) {
+  for (let index = 0; index < oldEvaluation[kind].length; index += 1) {
+    const before = shadowMatrixPosition(oldEvaluation[kind][index].matrix)
+    const after = shadowMatrixPosition(migratedEvaluation[kind][index].matrix)
+    near(after.x, before.x)
+    near(after.y, before.y)
+    near(after.z, -before.z)
+  }
+}
+
 const examples = createShadowExampleProjects()
 assert.deepEqual(examples.map((project) => project.name), ['\u788e\u94c3\u884c\u50e7', '\u6f6e\u773c\u86db\u6bcd', '\u7f1d\u8179\u706f\u86fe'])
 for (const example of examples) {
-  assert.equal(example.joints[0].rotationY, -45)
+  assert.equal(example.joints[0].rotationY, 45)
   assert.ok(example.joints.some((entry) => entry.z !== 0))
   assert.ok(example.parts.some((entry) => entry.z !== 0))
   const jointIds = new Set(example.joints.map((entry) => entry.id))
@@ -109,11 +136,11 @@ const damaged = normalizeShadowRoster({
 })
 damaged.characters[0].project.parts.find((entry) => entry.id === 'robe').fill = '#123456'
 damaged.characters[0].project.parts = damaged.characters[0].project.parts.filter((entry) => entry.id !== 'bell')
-damaged.characters[0].project.joints[0].rotationY = 45
+damaged.characters[0].project.joints[0].rotationY = -45
 assert.equal(repairInitialShadowExamples(damaged), true)
 assert.equal(damaged.characters[0].project.parts.find((entry) => entry.id === 'robe').fill, '#123456')
 assert.ok(damaged.characters[0].project.parts.some((entry) => entry.id === 'bell'))
-assert.equal(damaged.characters[0].project.joints[0].rotationY, -45)
+assert.equal(damaged.characters[0].project.joints[0].rotationY, 45)
 assert.equal(examples[2].stage.floorOffset, 44)
 damaged.characters[0].project.parts = damaged.characters[0].project.parts.filter((entry) => entry.id !== 'bell')
 assert.equal(repairInitialShadowExamples(damaged), false)

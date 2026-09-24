@@ -233,7 +233,7 @@ function normalizeAnimations(source, validTargetKeys) {
 
 function createBlankProject(name = '\u65b0\u89d2\u8272 1') {
   return {
-    version: 3,
+    version: 4,
     name,
     stage: { width: 600, height: 600, depth: 600, floorOffset: 8 },
     joints: [],
@@ -327,7 +327,7 @@ export function normalizeShadowProject(source) {
   if (!Array.isArray(source?.joints) || !Array.isArray(source?.bones)) {
     return normalizeShadowProject(migrateLegacyProject(source))
   }
-  const legacy2D = source.version !== 3
+  const legacy2D = Number(source.version || 0) < 3
   const joints = source.joints.map(normalizeJoint)
   const jointIds = new Set(joints.map((entry) => entry.id))
   const usedTargets = new Set()
@@ -343,8 +343,8 @@ export function normalizeShadowProject(source) {
     ...joints.map((entry) => shadowTargetKey('joint', entry.id)),
     ...parts.map((entry) => shadowTargetKey('part', entry.id)),
   ])
-  return {
-    version: 3,
+  const project = {
+    version: 4,
     name: normalizeProjectName(source.name, '\u65b0\u89d2\u8272 1'),
     stage: {
       width: Math.max(200, finite(source.stage?.width, 600)),
@@ -357,6 +357,28 @@ export function normalizeShadowProject(source) {
     parts,
     animations: normalizeAnimations(source.animations, validTargetKeys),
   }
+  if (Number(source.version || 0) < 4) reflectShadowProjectZ(project)
+  return project
+}
+
+// Reflect authored 3D data once when moving from the old -Z-front convention.
+// Local Euler X/Y angles and animated offsets must follow the same reflection.
+export function reflectShadowProjectZ(project) {
+  for (const entry of [...project.joints, ...project.parts]) {
+    entry.z = -entry.z || 0
+    entry.rotationX = -entry.rotationX || 0
+    entry.rotationY = -entry.rotationY || 0
+  }
+  for (const animation of Object.values(project.animations)) {
+    for (const keys of Object.values(animation.tracks)) {
+      for (const frame of keys) {
+        frame.dz = -frame.dz || 0
+        frame.rotationX = -frame.rotationX || 0
+        frame.rotationY = -frame.rotationY || 0
+      }
+    }
+  }
+  return project
 }
 
 export function createDefaultShadowProject() {
@@ -379,7 +401,7 @@ export function normalizeShadowRoster(source) {
   if (!characters.length) characters.push(createShadowCharacter())
   const requested = typeof source?.activeCharacterId === 'string' ? source.activeCharacterId : null
   const activeCharacterId = characters.some((entry) => entry.id === requested) ? requested : characters[0].id
-  return { version: 3, examplePackVersion: Math.max(0, finite(source?.examplePackVersion, 0)), activeCharacterId, characters }
+  return { version: 4, examplePackVersion: Math.max(0, finite(source?.examplePackVersion, 0)), activeCharacterId, characters }
 }
 
 export function loadShadowProject() {
@@ -401,7 +423,7 @@ export function loadShadowRoster() {
     // Fall through to the single-project migration.
   }
   const character = createShadowCharacter()
-  return { version: 3, activeCharacterId: character.id, characters: [character] }
+  return { version: 4, activeCharacterId: character.id, characters: [character] }
 }
 
 export function saveShadowProject(project) {

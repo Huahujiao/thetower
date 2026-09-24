@@ -4,6 +4,7 @@ import {
   createShadowCharacter,
   createShadowJoint,
   createShadowPart,
+  reflectShadowProjectZ,
   shadowTargetKey,
   upsertShadowKeyframe,
 } from './shadow-rig.js'
@@ -195,7 +196,7 @@ function lanternMoth() {
 }
 
 export function createShadowExampleProjects() {
-  return [bellPilgrim(), tideSpider(), lanternMoth()]
+  return [bellPilgrim(), tideSpider(), lanternMoth()].map(reflectShadowProjectZ)
 }
 
 export function installInitialShadowExamples(roster) {
@@ -231,7 +232,7 @@ export function repairInitialShadowExamples(roster) {
       if (targets.has(entry.attachment.targetId)) project.parts.push(JSON.parse(JSON.stringify(entry)))
     }
     const root = project.joints.find((entry) => entry.id === 'root')
-    if (root?.rotationY === 45) root.rotationY = -45
+    if (root?.rotationY === -45) root.rotationY = 45
     if (template.stage.floorOffset !== 8 && project.stage.floorOffset === 8) project.stage.floorOffset = template.stage.floorOffset
   }
   roster.examplePackVersion = SHADOW_EXAMPLE_REPAIR_VERSION

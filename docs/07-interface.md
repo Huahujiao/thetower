@@ -13,7 +13,7 @@
 
 ## 三维骨架动画工具
 
-`/animeedit` 是独立的三维敌人骨架动画编辑器。角色库通过下拉框切换角色，并可新增、重命名、复制和删除；每个角色的关节、骨骼线、几何部件及五套动作都自动保存到 `localStorage`。初次打开会加入碎铃行僧、潮眼蛛母、缝腹灯蛾三个示例，并保留空白角色。示例的根关节统一设为 Y 轴 -45°，修正原来反向的朝向。对于已经安装的示例，下一次打开会一次性补回缺失的原始部件，并修正仍为旧角度的根关节；其余已修改的部件保持原样，之后删除的部件不会反复自动恢复。旧版二维角色仍迁移到 Z=0 平面。
+`/animeedit` 是独立的三维敌人骨架动画编辑器。角色库通过下拉框切换角色，并可新增、重命名、复制和删除；每个角色的关节、骨骼线、几何部件及五套动作都自动保存到 `localStorage`。初次打开会加入碎铃行僧、潮眼蛛母、缝腹灯蛾三个示例，并保留空白角色。示例的根关节统一设为 Y 轴 +45°，修正原来反向的朝向。对于已经安装的示例，下一次打开会一次性补回缺失的原始部件，并修正仍为旧角度的根关节；其余已修改的部件保持原样，之后删除的部件不会反复自动恢复。旧版二维角色仍迁移到 Z=0 平面。
 
 标准制作顺序是：在“骨架”模式创建关节点并连接骨骼；在“部件”模式创建几何部件并绑定；最后在“动作”模式编辑待机、攻击、受攻击、死亡、移动的关键帧。画布默认正面，单指拖动空白处平移、双指缩放。点击 3D 进入当前单个敌人的预览：隐藏编辑辅助网格与骨骼，显示游戏本体使用的地板纹理和地板格子，单指旋转视角；点击“正面”返回编辑视图。独立的 `/animepreview` 路由保留，暂不在编辑器顶部提供入口，未来可扩展为多敌人组合预览。
 
@@ -55,7 +55,7 @@
 
 ## Enemy animation editor cameras
 
-The flat editing view looks along the character's rest-pose forward direction (local negative Z), so a rotated character is still seen from its front. The 3D toggle uses a perspective camera and Three.js OrbitControls for one-finger orbit and two-finger zoom. The preview sizes and centers each character so its resting X/Z footprint fits inside one 150-unit floor tile. These view settings do not alter saved joints, parts, or animation data.
+Flat editing and 3D preview read the same character, geometry, and animation data. Both cameras observe from positive Z; larger Z values are closer to the viewer and take visual precedence over smaller Z values. The 3D toggle uses a perspective camera and Three.js OrbitControls for one-finger orbit and two-finger zoom. The preview sizes and centers each character so its resting X/Z footprint fits inside one 150-unit floor tile. Version-3 local projects are migrated once to the positive-Z convention, including joint/part depth, X/Y rotations, and keyframe depth/rotations; view-only preview scaling is never saved.
 
 ## Mobile portrait input contract
 

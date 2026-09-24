@@ -160,7 +160,7 @@ function framePreview() {
   const { height } = fitFigureToTile()
   const targetY = floorGroup.position.y - height * .48
   orbitControls.target.set(0, targetY, 0)
-  previewCamera.position.set(0, targetY - 210, -400)
+  previewCamera.position.set(0, targetY - 210, 400)
   orbitControls.update()
   framedProject = props.project
 }
@@ -174,14 +174,7 @@ function updateCamera() {
   frontCamera.right = width * span / 2
   frontCamera.top = height * span / 2
   frontCamera.bottom = -height * span / 2
-  const rest = evaluateShadowProject(props.project)
-  const childIds = new Set(props.project.bones.map((bone) => bone.toJointId))
-  const root = rest.joints.find(({ joint }) => !childIds.has(joint.id))
-  const forward = root ? new Vector3(0, 0, -1).transformDirection(root.matrix) : new Vector3(0, 0, -1)
-  forward.y = 0
-  if (forward.lengthSq() < 1e-6) forward.set(0, 0, -1)
-  forward.normalize()
-  frontCamera.position.copy(center).addScaledVector(forward, 1000)
+  frontCamera.position.set(center.x, center.y, center.z + 1000)
   frontCamera.lookAt(center)
   frontCamera.updateProjectionMatrix()
   frontCamera.updateMatrixWorld()
@@ -250,7 +243,7 @@ function clearObjects() {
 
 function line(start, end, color, kind = null, id = null, order = 0) {
   const geometry = new BufferGeometry().setFromPoints([start, end])
-  const material = new LineBasicMaterial({ color, depthTest: false })
+  const material = new LineBasicMaterial({ color, depthTest: false, depthWrite: false })
   const object = new Line(geometry, material)
   object.renderOrder = order
   addObject(object, kind, id)
@@ -269,7 +262,7 @@ function drawScene() {
     const part = entry.part
     if (props.hiddenPartIds.includes(part.id)) continue
     const geometry = shapeGeometry(part)
-    const material = new MeshBasicMaterial({ color: part.fill, side: DoubleSide, transparent: true, opacity: entry.opacity, depthWrite: orbitMode.value })
+    const material = new MeshBasicMaterial({ color: part.fill, side: DoubleSide, transparent: true, opacity: entry.opacity, depthWrite: true })
     if (part.visual.type === 'texture' && part.visual.texture) {
       if (!textureCache.has(part.visual.texture)) textureCache.set(part.visual.texture, textureLoader.load(part.visual.texture, render))
       material.map = textureCache.get(part.visual.texture)
