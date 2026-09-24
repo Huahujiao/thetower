@@ -74,6 +74,22 @@ const ITEM_SPRITE_SOURCES = Object.freeze({
     small: new URL('../assets/inventory/weapon-eagle-bow-v1-small.png', import.meta.url).href,
     medium: new URL('../assets/inventory/weapon-eagle-bow-v1-medium.png', import.meta.url).href,
   },
+  'triad-ember': {
+    small: new URL('../assets/inventory/weapon-triad-ember-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/weapon-triad-ember-v1-medium.png', import.meta.url).href,
+  },
+  'triad-wither': {
+    small: new URL('../assets/inventory/weapon-triad-wither-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/weapon-triad-wither-v1-medium.png', import.meta.url).href,
+  },
+  'triad-tide': {
+    small: new URL('../assets/inventory/weapon-triad-tide-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/weapon-triad-tide-v1-medium.png', import.meta.url).href,
+  },
+  'coin-blade': {
+    small: new URL('../assets/inventory/weapon-coin-blade-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/weapon-coin-blade-v1-medium.png', import.meta.url).href,
+  },
   'r-three': {
     small: new URL('../assets/inventory/relic-three-v1-small.png', import.meta.url).href,
     medium: new URL('../assets/inventory/relic-three-v1-medium.png', import.meta.url).href,
@@ -109,6 +125,34 @@ const ITEM_SPRITE_SOURCES = Object.freeze({
   'r-turn-shield': {
     small: new URL('../assets/inventory/relic-turn-shield-v1-small.png', import.meta.url).href,
     medium: new URL('../assets/inventory/relic-turn-shield-v1-medium.png', import.meta.url).href,
+  },
+  'r-relay-badge': {
+    small: new URL('../assets/inventory/relic-relay-badge-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/relic-relay-badge-v1-medium.png', import.meta.url).href,
+  },
+  'r-guard-return': {
+    small: new URL('../assets/inventory/relic-guard-return-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/relic-guard-return-v1-medium.png', import.meta.url).href,
+  },
+  'r-phase-pointer': {
+    small: new URL('../assets/inventory/relic-phase-pointer-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/relic-phase-pointer-v1-medium.png', import.meta.url).href,
+  },
+  'r-money-scale': {
+    small: new URL('../assets/inventory/relic-money-scale-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/relic-money-scale-v1-medium.png', import.meta.url).href,
+  },
+  'r-trade-voucher': {
+    small: new URL('../assets/inventory/relic-trade-voucher-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/relic-trade-voucher-v1-medium.png', import.meta.url).href,
+  },
+  'r-gold-hook': {
+    small: new URL('../assets/inventory/relic-gold-hook-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/relic-gold-hook-v1-medium.png', import.meta.url).href,
+  },
+  'r-ledger': {
+    small: new URL('../assets/inventory/relic-ledger-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/relic-ledger-v1-medium.png', import.meta.url).href,
   },
   'r-poison-hourglass': {
     small: new URL('../assets/inventory/relic-poison-hourglass-v1-small.png', import.meta.url).href,
@@ -186,6 +230,14 @@ const ITEM_SPRITE_SOURCES = Object.freeze({
     small: new URL('../assets/inventory/material-toxin-vial-v1-small.png', import.meta.url).href,
     medium: new URL('../assets/inventory/material-toxin-vial-v1-medium.png', import.meta.url).href,
   },
+  conduit: {
+    small: new URL('../assets/inventory/material-conduit-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/material-conduit-v1-medium.png', import.meta.url).href,
+  },
+  'fork-connector': {
+    small: new URL('../assets/inventory/material-fork-connector-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/material-fork-connector-v1-medium.png', import.meta.url).href,
+  },
   'health-potion': {
     small: new URL('../assets/inventory/item-health-potion-v1-small.png', import.meta.url).href,
     medium: new URL('../assets/inventory/item-health-potion-v1-medium.png', import.meta.url).href,
@@ -211,30 +263,6 @@ const ITEM_SPRITE_SOURCES = Object.freeze({
     medium: new URL('../assets/inventory/item-teleport-talisman-v2-medium.png', import.meta.url).href,
   },
 })
-
-// Temporary symbols for the first build batch. They use one compact SVG each
-// until shape-matched inventory illustrations are commissioned.
-const BUILD_PLACEHOLDERS = Object.freeze({
-  'triad-ember': ['烬', '#d77b54'],
-  'triad-wither': ['腐', '#98ba70'],
-  'triad-tide': ['潮', '#69aacb'],
-  'coin-blade': ['币', '#d8b45b'],
-  conduit: ['导', '#8cb8cb'],
-  'fork-connector': ['叉', '#8cb8cb'],
-  'r-relay-badge': ['接', '#c69a67'],
-  'r-guard-return': ['甲', '#8eaec5'],
-  'r-phase-pointer': ['相', '#b09cd0'],
-  'r-money-scale': ['秤', '#d8b45b'],
-  'r-trade-voucher': ['券', '#d8b45b'],
-  'r-gold-hook': ['钩', '#d8b45b'],
-  'r-ledger': ['账', '#d8b45b'],
-})
-
-const BUILD_SPRITE_SOURCES = Object.freeze(Object.fromEntries(Object.entries(BUILD_PLACEHOLDERS).map(([id, [glyph, color]]) => {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><rect x="9" y="9" width="110" height="110" rx="22" fill="#101924" fill-opacity=".9" stroke="${color}" stroke-width="5"/><path d="M25 102H103" stroke="${color}" stroke-width="3" opacity=".6"/><text x="64" y="83" text-anchor="middle" font-family="sans-serif" font-size="61" font-weight="700" fill="${color}">${glyph}</text></svg>`
-  const url = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
-  return [id, { small: url, medium: url }]
-})))
 
 // Gold is a room-floor entity rather than an inventory item.  Keep its
 // quantity-specific artwork in its own map so it cannot be confused with an
@@ -263,7 +291,7 @@ const GOLD_SPRITE_SOURCES = Object.freeze({
 })
 
 export function itemSpriteSources(item) {
-  return item?.id ? ITEM_SPRITE_SOURCES[item.id] || BUILD_SPRITE_SOURCES[item.id] || null : null
+  return item?.id ? ITEM_SPRITE_SOURCES[item.id] || null : null
 }
 
 export function goldSpriteSources(amount) {

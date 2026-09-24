@@ -1,4 +1,4 @@
-import { createBoss, createEnemyById, createGoldEntity, createKeyEntity, createLootEntity, createMonster, makeItemById, nextEntityId, randomItem, resetEntityIds, synchronizeEntityIds } from '../data/content.js'
+import { createBoss, createEnemyById, createGoldEntity, createKeyEntity, createLootEntity, createMonster, makeItemById, nextEntityId, randomDefenseItem, randomItem, resetEntityIds, synchronizeEntityIds } from '../data/content.js'
 import { createMerchantEntity } from '../data/merchants.js'
 import { createTrapEntity, randomTrapId } from '../data/traps.js'
 import { neighbors8, pos, posKey } from '../core/geometry.js'
@@ -381,7 +381,8 @@ function addTrap(room, reserved, random) {
 
 function populateRoom(room, reserved, random, config) {
   const role = room.role
-  const targetCount = Math.ceil(room.width * room.height * (role === 'supply' ? 0.18 : role === 'boss' ? 0.12 : 0.27))
+  const targetDensity = { entry: 0.58, elite: 0.64, supply: 0.48, prep: 0.55, boss: 0.42 }[role] || 0.5
+  const targetCount = Math.ceil(room.width * room.height * targetDensity)
   const layoutKind = ['scattered', 'firing', 'wall'][(Number(room.id.split('-').at(-1)) - 1) % 3]
   let monsterIndex = role === 'boss' || role === 'supply' ? 0 : arrangeTacticalEnemies(room, reserved, layoutKind)
   if (role === 'boss') {
@@ -401,6 +402,10 @@ function populateRoom(room, reserved, random, config) {
   }
   for (const itemId of role === 'supply' ? ['health-potion', 'iron-powder'] : role === 'prep' ? ['health-potion'] : []) {
     if (!addLoot(room, reserved, random, makeItemById(itemId))) break
+  }
+  if (role === 'prep' && room.chapter % 2 === 1) {
+    const defense = randomDefenseItem(room.floor, random)
+    if (defense) addLoot(room, reserved, random, defense)
   }
   addGold(room, reserved, random)
   while (room.entities.size < targetCount) {
