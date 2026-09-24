@@ -1,4 +1,4 @@
-import { createBoss, createGoldEntity, createKeyEntity, createLootEntity, createMonster, makeItemById, nextEntityId, randomItem, resetEntityIds, synchronizeEntityIds } from '../data/content.js'
+import { createBoss, createEnemyById, createGoldEntity, createKeyEntity, createLootEntity, createMonster, makeItemById, nextEntityId, randomItem, resetEntityIds, synchronizeEntityIds } from '../data/content.js'
 import { createMerchantEntity } from '../data/merchants.js'
 import { createTrapEntity, randomTrapId } from '../data/traps.js'
 import { neighbors8, pos, posKey } from '../core/geometry.js'
@@ -11,29 +11,11 @@ const LAYOUT_EPSILON = 0.0001
 const MAX_LAYOUT_GENERATION_ATTEMPTS = 24
 
 export const DUNGEON_CONFIG = Object.freeze({
-  roomsPerFloor: [1, 2, 2, 2, 1],
-  roomSizes: [6, 7, 8, 8, 9],
-  lockedEdgeIndexes: [1, 4],
-  merchantRoomIndexes: [1, 3, 5],
-  merchantIds: ['merchant', 'merchant', 'collector'],
-  minimumOccupiedRatio: 0.8,
+  chapters: 4,
+  roomSizes: [6, 7, 8, 9],
+  chapterBossIds: ['shellguard', 'moss-colossus', 'molten-core-beast'],
+  merchantIds: ['merchant', 'merchant', 'collector', 'collector'],
 })
-
-// Rooms are still traversed in a deliberate sequence, but their floor-plan
-// positions describe the physical direction of each connection.  This keeps
-// a floor readable as a small route rather than a row of left-to-right rooms.
-const FLOOR_ROOM_LAYOUTS = Object.freeze([
-  Object.freeze([{ c: 0, r: 0 }]),
-  Object.freeze([{ c: 0, r: 0 }, { c: 0, r: 1 }]),
-  Object.freeze([{ c: 1, r: 0 }, { c: 0, r: 0 }]),
-  Object.freeze([{ c: 0, r: 1 }, { c: 0, r: 0 }]),
-  Object.freeze([{ c: 0, r: 0 }]),
-])
-
-function layoutForRoom(floorIndex, roomIndex) {
-  const layout = FLOOR_ROOM_LAYOUTS[floorIndex]?.[roomIndex]
-  return layout ? { ...layout } : { c: roomIndex, r: 0 }
-}
 
 export class Dungeon {
   constructor() {
@@ -314,7 +296,7 @@ export function validateDungeonLayout(dungeon) {
   layoutAssertion(dungeon instanceof Dungeon, 'dungeon is missing')
   layoutAssertion(dungeon.roomOrder.length === dungeon.rooms.size, 'room order does not include every room exactly once')
   layoutAssertion(new Set(dungeon.roomOrder).size === dungeon.roomOrder.length, 'room order contains duplicates')
-  layoutAssertion(dungeon.edges.size === Math.max(0, dungeon.roomOrder.length - 1), 'linear room sequence has an invalid edge count')
+  layoutAssertion(dungeon.edges.size >= dungeon.rooms.size - 1, 'room graph has too few edges')
 
   const layoutsByFloor = new Map()
   for (const roomId of dungeon.roomOrder) {
@@ -333,13 +315,10 @@ export function validateDungeonLayout(dungeon) {
   const seenDoorIds = new Set()
   const roomDoorLocations = new Map([...dungeon.rooms.keys()].map((roomId) => [roomId, new Set()]))
   const roomDoorSides = new Map([...dungeon.rooms.keys()].map((roomId) => [roomId, new Set()]))
-  for (let index = 0; index < dungeon.roomOrder.length - 1; index += 1) {
-    const edge = dungeon.edge(`edge-${index + 1}`)
-    const fromRoomId = dungeon.roomOrder[index]
-    const toRoomId = dungeon.roomOrder[index + 1]
-    layoutAssertion(edge?.fromRoomId === fromRoomId && edge?.toRoomId === toRoomId, `edge-${index + 1} does not follow the room sequence`)
-    const fromRoom = dungeon.room(fromRoomId)
-    const toRoom = dungeon.room(toRoomId)
+  for (const edge of dungeon.edges.values()) {
+    const fromRoom = dungeon.room(edge.fromRoomId)
+    const toRoom = dungeon.room(edge.toRoomId)
+    layoutAssertion(fromRoom && toRoom && fromRoom !== toRoom, `${edge.id} has invalid endpoints`)
     validateDoor(fromRoom, edge.fromDoor, edge.id, seenDoorIds, roomDoorLocations.get(fromRoom.id), roomDoorSides.get(fromRoom.id))
     validateDoor(toRoom, edge.toDoor, edge.id, seenDoorIds, roomDoorLocations.get(toRoom.id), roomDoorSides.get(toRoom.id))
     layoutAssertion(edge.fromDoor.side === oppositeDoorSide(edge.toDoor.side), `${edge.id} doors do not face each other`)
@@ -352,34 +331,28 @@ export function validateDungeonLayout(dungeon) {
     }
   }
 
+  const startId = dungeon.roomOrder[0]
+  const reachable = new Set([startId])
+  const queue = [startId]
+  while (queue.length) {
+    const roomId = queue.shift()
+    for (const edge of dungeon.edges.values()) {
+      if (edge.fromRoomId !== roomId || reachable.has(edge.toRoomId)) continue
+      reachable.add(edge.toRoomId)
+      queue.push(edge.toRoomId)
+    }
+  }
+  layoutAssertion(reachable.size === dungeon.rooms.size, 'some rooms cannot be reached from the start')
+  layoutAssertion(dungeon.room(dungeon.roomOrder.at(-1))?.role === 'boss', 'final room is not a boss room')
+
   for (const floor of layoutsByFloor.keys()) validateRoomFootprints(dungeon, floor)
   return true
-}
-
-function connectionSide(fromLayout, toLayout, edgeIndex) {
-  const deltaC = toLayout.c - fromLayout.c
-  const deltaR = toLayout.r - fromLayout.r
-  const horizontal = () => deltaC >= 0 ? 'right' : 'left'
-  const vertical = () => deltaR >= 0 ? 'bottom' : 'top'
-  if (deltaC === 0 && deltaR === 0) return ['right', 'bottom', 'left', 'top'][edgeIndex % 4]
-  if (Math.abs(deltaC) > Math.abs(deltaR)) return horizontal()
-  if (Math.abs(deltaR) > Math.abs(deltaC)) return vertical()
-  return edgeIndex % 2 === 0 ? vertical() : horizontal()
-}
-
-function connectionDoorSides(preferredSide, fromUsedSides = new Set(), toUsedSides = new Set()) {
-  const sides = ['right', 'bottom', 'top', 'left']
-  const preferredIndex = Math.max(0, sides.indexOf(preferredSide))
-  const candidates = [0, 1, -1, 2].map((offset) => sides[(preferredIndex + offset + sides.length) % sides.length])
-  const fromSide = candidates.find((side) => !fromUsedSides.has(side) && !toUsedSides.has(oppositeDoorSide(side)))
-  if (!fromSide) throw new Error('Could not assign distinct door sides for room connection')
-  return { fromSide, toSide: oppositeDoorSide(fromSide) }
 }
 
 function addMonster(room, reserved, random, index) {
   const position = randomOpenPosition(room, reserved, random)
   if (!position) return false
-  const monster = createMonster(room.floor, index)
+  const monster = createMonster(room.chapter, Math.floor(random() * 10000) + index)
   monster.pos = position
   room.addEntity(monster)
   return true
@@ -406,20 +379,27 @@ function addTrap(room, reserved, random) {
   return true
 }
 
-function populateRoom(room, reserved, random, { bossRoom = false, minimumOccupiedRatio = 0.8 } = {}) {
-  const targetCount = Math.ceil(room.width * room.height * minimumOccupiedRatio)
+function populateRoom(room, reserved, random, config) {
+  const role = room.role
+  const targetCount = Math.ceil(room.width * room.height * (role === 'supply' ? 0.18 : role === 'boss' ? 0.12 : 0.27))
   const layoutKind = ['scattered', 'firing', 'wall'][(Number(room.id.split('-').at(-1)) - 1) % 3]
-  let monsterIndex = bossRoom ? 0 : arrangeTacticalEnemies(room, reserved, layoutKind)
-  if (bossRoom) {
+  let monsterIndex = role === 'boss' || role === 'supply' ? 0 : arrangeTacticalEnemies(room, reserved, layoutKind)
+  if (role === 'boss') {
     const position = randomOpenPosition(room, reserved, random)
     if (!position) throw new Error(`Could not place boss in ${room.id}`)
-    room.addEntity(createBoss(position))
+    const boss = room.chapter === config.chapters
+      ? createBoss(position)
+      : createEnemyById(config.chapterBossIds[room.chapter - 1], position)
+    if (!boss) throw new Error(`Missing chapter boss for ${room.id}`)
+    boss.boss = true
+    boss.finalBoss = room.chapter === config.chapters
+    room.addEntity(boss)
   }
-  const targetMonsterCount = bossRoom ? 3 : Math.round(room.width * room.height * 0.25)
+  const targetMonsterCount = role === 'boss' ? 0 : role === 'supply' ? 1 : role === 'elite' ? 5 : role === 'prep' ? 2 : 3
   while (monsterIndex < targetMonsterCount && addMonster(room, reserved, random, monsterIndex)) {
     monsterIndex += 1
   }
-  for (const itemId of ['health-potion', 'iron-powder', 'health-potion', 'silver-guard']) {
+  for (const itemId of role === 'supply' ? ['health-potion', 'iron-powder'] : role === 'prep' ? ['health-potion'] : []) {
     if (!addLoot(room, reserved, random, makeItemById(itemId))) break
   }
   addGold(room, reserved, random)
@@ -473,11 +453,11 @@ function placeMerchant(room, reserved, merchantId, random) {
   return approach
 }
 
-export function createLinearDungeon({ config = DUNGEON_CONFIG, random = Math.random } = {}) {
+export function createChapterDungeon({ config = DUNGEON_CONFIG, random = Math.random } = {}) {
   let failure = null
   for (let attempt = 0; attempt < MAX_LAYOUT_GENERATION_ATTEMPTS; attempt += 1) {
     try {
-      const generated = createLinearDungeonAttempt({ config, random })
+      const generated = createChapterDungeonAttempt({ config, random })
       validateDungeonLayout(generated.dungeon)
       return generated
     } catch (error) {
@@ -487,26 +467,33 @@ export function createLinearDungeon({ config = DUNGEON_CONFIG, random = Math.ran
   throw new Error(`Could not generate a valid dungeon layout after ${MAX_LAYOUT_GENERATION_ATTEMPTS} attempts: ${failure?.message || 'unknown error'}`)
 }
 
-function createLinearDungeonAttempt({ config, random }) {
+function createChapterDungeonAttempt({ config, random }) {
   resetEntityIds()
   const dungeon = new Dungeon()
   const reservations = new Map()
   const openAnchors = new Map()
   const doorSidesByRoom = new Map()
-  let sequence = 0
-
-  config.roomsPerFloor.forEach((count, floorIndex) => {
-    const floor = floorIndex + 1
-    for (let roomIndex = 0; roomIndex < count; roomIndex++) {
-      const size = config.roomSizes[floorIndex]
-      const room = new Room({ id: `room-${sequence + 1}`, floor, width: size, height: size, random })
-      dungeon.addRoom(room, layoutForRoom(floorIndex, roomIndex))
+  const chapters = []
+  for (let chapter = 1; chapter <= config.chapters; chapter++) {
+    const size = config.roomSizes[chapter - 1]
+    const roles = [
+      ['entry', 0, { c: 0, r: 0 }],
+      ['elite', 0, { c: -1, r: 0 }],
+      ['supply', 0, { c: 1, r: 0 }],
+      ['prep', 1, { c: 0, r: 0 }],
+      ['boss', 2, { c: 0, r: 0 }],
+    ]
+    const rooms = {}
+    for (const [role, floorOffset, layout] of roles) {
+      const room = new Room({ id: `room-${dungeon.roomOrder.length + 1}`, floor: (chapter - 1) * 3 + floorOffset + 1, width: size, height: size, chapter, role })
+      dungeon.addRoom(room, layout)
+      rooms[role] = room
       reservations.set(room.id, new Set())
       openAnchors.set(room.id, [])
       doorSidesByRoom.set(room.id, new Set())
-      sequence += 1
     }
-  })
+    chapters.push(rooms)
+  }
 
   const firstRoom = dungeon.room(dungeon.roomOrder[0])
   const start = pos(0, firstRoom.height - 1)
@@ -516,32 +503,13 @@ function createLinearDungeonAttempt({ config, random }) {
   reservations.get(firstRoom.id).add(posKey(start))
   openAnchors.get(firstRoom.id).push(start)
 
-  for (let index = 0; index < dungeon.roomOrder.length - 1; index++) {
-    const fromRoom = dungeon.room(dungeon.roomOrder[index])
-    const toRoom = dungeon.room(dungeon.roomOrder[index + 1])
-    const edgeId = `edge-${index + 1}`
-    let fromSide
-    let toSide
-    if (fromRoom.floor === toRoom.floor) {
-      fromSide = sideForLayoutDelta(dungeon.roomLayout(fromRoom.id), dungeon.roomLayout(toRoom.id))
-      if (!fromSide) throw new Error(`Invalid same-floor layout for ${edgeId}`)
-      toSide = oppositeDoorSide(fromSide)
-      if (doorSidesByRoom.get(fromRoom.id).has(fromSide) || doorSidesByRoom.get(toRoom.id).has(toSide)) {
-        throw new Error(`Same-floor door direction conflicts with an existing door for ${edgeId}`)
-      }
-    } else {
-      const preferredSide = connectionSide(dungeon.roomLayout(fromRoom.id), dungeon.roomLayout(toRoom.id), index)
-      const reservedTargetSides = new Set(doorSidesByRoom.get(toRoom.id))
-      const nextRoom = dungeon.room(dungeon.roomOrder[index + 2])
-      if (nextRoom?.floor === toRoom.floor) {
-        const nextSide = sideForLayoutDelta(dungeon.roomLayout(toRoom.id), dungeon.roomLayout(nextRoom.id))
-        if (!nextSide) throw new Error(`Invalid target-floor layout for ${edgeId}`)
-        reservedTargetSides.add(nextSide)
-      }
-      ;({ fromSide, toSide } = connectionDoorSides(preferredSide, doorSidesByRoom.get(fromRoom.id), reservedTargetSides))
-    }
+  const connect = (fromRoom, toRoom, fromSide, branch = null) => {
+    const edgeId = `edge-${dungeon.edges.size + 1}`
+    const toSide = oppositeDoorSide(fromSide)
+    if (doorSidesByRoom.get(fromRoom.id).has(fromSide) || doorSidesByRoom.get(toRoom.id).has(toSide)) throw new Error(`Door side conflict for ${edgeId}`)
     const fromDoor = addDoor(fromRoom, edgeId, fromSide, reservations.get(fromRoom.id), random)
     const toDoor = addDoor(toRoom, edgeId, toSide, reservations.get(toRoom.id), random)
+    if (fromRoom.role === 'entry' && branch) fromDoor.discovered = true
     doorSidesByRoom.get(fromRoom.id).add(fromSide)
     doorSidesByRoom.get(toRoom.id).add(toSide)
     openAnchors.get(fromRoom.id).push(fromDoor.arrival)
@@ -554,15 +522,23 @@ function createLinearDungeonAttempt({ config, random }) {
       toDoor,
       fromDoorId: fromDoor.id,
       toDoorId: toDoor.id,
-      locked: config.lockedEdgeIndexes.includes(index),
-      unlocked: !config.lockedEdgeIndexes.includes(index),
+      locked: toRoom.role === 'boss',
+      unlocked: toRoom.role !== 'boss',
+      branch,
+      sealed: false,
     })
   }
 
-  config.merchantRoomIndexes.forEach((roomIndex, merchantIndex) => {
-    const room = dungeon.room(dungeon.roomOrder[roomIndex])
-    if (!room) throw new Error(`Could not locate merchant room ${merchantIndex + 1}`)
-    const approach = placeMerchant(room, reservations.get(room.id), config.merchantIds[merchantIndex], random)
+  chapters.forEach((rooms, index) => {
+    const chapter = index + 1
+    connect(rooms.entry, rooms.elite, 'left', { chapter, option: 'elite' })
+    connect(rooms.entry, rooms.supply, 'right', { chapter, option: 'supply' })
+    connect(rooms.elite, rooms.prep, 'top', { chapter, option: 'elite' })
+    connect(rooms.supply, rooms.prep, 'bottom', { chapter, option: 'supply' })
+    connect(rooms.prep, rooms.boss, 'right')
+    if (chapters[index + 1]) connect(rooms.boss, chapters[index + 1].entry, 'bottom')
+    const room = rooms.supply
+    const approach = placeMerchant(room, reservations.get(room.id), config.merchantIds[index], random)
     openAnchors.get(room.id).push(approach)
   })
 
@@ -574,16 +550,12 @@ function createLinearDungeonAttempt({ config, random }) {
     source.addEntity(createKeyEntity(edge.id, position))
   }
 
-  const lastRoomId = dungeon.roomOrder[dungeon.roomOrder.length - 1]
   for (const room of dungeon.rooms.values()) {
     const anchors = openAnchors.get(room.id)
     for (let index = 1; index < anchors.length; index++) {
       reserveRoute(room, reservations.get(room.id), anchors[index])
     }
-    populateRoom(room, reservations.get(room.id), random, {
-      bossRoom: room.id === lastRoomId,
-      minimumOccupiedRatio: config.minimumOccupiedRatio,
-    })
+    populateRoom(room, reservations.get(room.id), random, config)
   }
 
   return { dungeon, startRoomId: firstRoom.id, start }

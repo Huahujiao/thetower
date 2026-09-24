@@ -4,6 +4,21 @@
       <button type="button" :class="{ active: orbitMode }" @click="toggle3D">3D</button>
       <button type="button" @click="resetView">{{ '\u6b63\u9762' }}</button>
     </div>
+    <svg class="shadow-axis-indicator" viewBox="0 0 92 92" aria-hidden="true">
+      <circle cx="43" cy="45" r="2" fill="#dce8f1" />
+      <g v-for="axis in axisMarker" :key="axis.label" :stroke="axis.color" :fill="axis.color">
+        <template v-if="axis.endOn">
+          <circle cx="43" cy="45" r="5" fill="none" stroke-width="1.5" />
+          <circle v-if="axis.towardViewer" cx="43" cy="45" r="1.7" />
+          <path v-else d="M40 42 L46 48 M46 42 L40 48" fill="none" stroke-width="1.4" />
+        </template>
+        <template v-else>
+          <line x1="43" y1="45" :x2="axis.x" :y2="axis.y" stroke-width="2" stroke-linecap="round" />
+          <polygon :points="axis.arrow" />
+        </template>
+        <text :x="axis.labelX" :y="axis.labelY" text-anchor="middle" dominant-baseline="middle" stroke="none">{{ axis.label }}</text>
+      </g>
+    </svg>
   </div>
 </template>
 
@@ -13,6 +28,7 @@ import { BufferGeometry, Color, DoubleSide, EdgesGeometry, Group, Line, LineBasi
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { evaluateShadowProject, shadowMatrixPosition } from '../animation/shadow-rig.js'
 import { FLOOR_URLS, floorTextureIndex } from '../render/board-textures.js'
+import { DEFAULT_CAMERA_ELEVATION } from '../render/camera-view.js'
 
 const props = defineProps({
   project: { type: Object, required: true },
@@ -32,11 +48,12 @@ const props = defineProps({
 const emit = defineEmits(['select', 'drag', 'drag-end', 'canvas-tap', 'view-mode-change'])
 const host = ref(null)
 const orbitMode = ref(false)
+const axisMarker = ref([])
 const evaluation = computed(() => evaluateShadowProject(props.project, props.animationId, props.time))
 const scene = new Scene()
 scene.background = new Color('#182431')
 const frontCamera = new OrthographicCamera()
-const previewCamera = new PerspectiveCamera(48, 1, 1, 5000)
+const previewCamera = new PerspectiveCamera(45, 1, 1, 5000)
 frontCamera.up.set(0, -1, 0)
 previewCamera.up.set(0, -1, 0)
 const raycaster = new Raycaster()
@@ -50,6 +67,11 @@ const figureGroup = new Group()
 scene.add(figureGroup)
 const activePointers = new Map()
 const objects = []
+const AXES = [
+  { label: '+X', color: '#e98b85', vector: new Vector3(1, 0, 0) },
+  { label: '+Y', color: '#8cce9d', vector: new Vector3(0, 1, 0) },
+  { label: '+Z', color: '#86b8ed', vector: new Vector3(0, 0, 1) },
+]
 let renderer = null
 let orbitControls = null
 let observer = null
@@ -58,6 +80,7 @@ let zoom = 1
 let drag = null
 let pinch = null
 let framedProject = null
+let lastAxisSignature = ''
 
 function clearPointerGesture() {
   if (drag) emit('drag-end', { kind: drag.kind, id: drag.id, cancelled: true })
@@ -159,8 +182,9 @@ function fitFigureToTile() {
 function framePreview() {
   const { height } = fitFigureToTile()
   const targetY = floorGroup.position.y - height * .48
+  const distance = 450
   orbitControls.target.set(0, targetY, 0)
-  previewCamera.position.set(0, targetY - 210, 400)
+  previewCamera.position.set(0, targetY - distance * Math.sin(DEFAULT_CAMERA_ELEVATION), distance * Math.cos(DEFAULT_CAMERA_ELEVATION))
   orbitControls.update()
   framedProject = props.project
 }
@@ -181,9 +205,45 @@ function updateCamera() {
   previewCamera.aspect = width / height
   previewCamera.updateProjectionMatrix()
   renderer?.setSize(width, height, false)
+  updateAxisMarker()
 }
 
 function render() { renderer?.render(scene, orbitMode.value ? previewCamera : frontCamera) }
+
+function updateAxisMarker() {
+  const camera = orbitMode.value ? previewCamera : frontCamera
+  camera.updateMatrixWorld()
+  const { x, y, z, w } = camera.quaternion
+  const signature = `${orbitMode.value}:${x}:${y}:${z}:${w}`
+  if (signature === lastAxisSignature) return
+  lastAxisSignature = signature
+  const inverse = camera.quaternion.clone().invert()
+  axisMarker.value = AXES.slice(0, orbitMode.value ? 3 : 2).map(({ label, color, vector }) => {
+    const direction = vector.clone().applyQuaternion(inverse)
+    const screenLength = Math.hypot(direction.x, direction.y)
+    if (screenLength < .18) {
+      return { label, color, endOn: true, towardViewer: direction.z > 0, labelX: 61, labelY: 34 }
+    }
+    const distance = Math.max(18, screenLength * 30)
+    const dx = direction.x / screenLength
+    const dy = -direction.y / screenLength
+    const x = 43 + dx * distance
+    const y = 45 + dy * distance
+    const baseX = x - dx * 6
+    const baseY = y - dy * 6
+    const arrow = `${x},${y} ${baseX - dy * 3},${baseY + dx * 3} ${baseX + dy * 3},${baseY - dx * 3}`
+    return {
+      label, color, endOn: false, x, y, arrow,
+      labelX: Math.max(12, Math.min(80, x + dx * 10)),
+      labelY: Math.max(10, Math.min(82, y + dy * 10)),
+    }
+  })
+}
+
+function onOrbitChange() {
+  updateAxisMarker()
+  render()
+}
 
 function shapeGeometry(part) {
   const width = part.width
@@ -225,6 +285,36 @@ function shapeGeometry(part) {
   return geometry
 }
 
+function textureGeometry(part, texture) {
+  const image = texture?.image
+  const imageWidth = image?.naturalWidth || image?.width || part.width
+  const imageHeight = image?.naturalHeight || image?.height || part.height
+  const imageRatio = imageWidth / imageHeight
+  const boxRatio = part.width / part.height
+  const contain = part.visual.textureFit !== 'cover'
+  const width = contain && imageRatio < boxRatio ? part.height * imageRatio : part.width
+  const height = contain && imageRatio > boxRatio ? part.width / imageRatio : part.height
+  const left = -part.width * part.pivotX + (part.width - width) / 2
+  const top = -part.height * part.pivotY + (part.height - height) / 2
+  const shape = new Shape()
+  shape.moveTo(left, top)
+  shape.lineTo(left + width, top)
+  shape.lineTo(left + width, top + height)
+  shape.lineTo(left, top + height)
+  shape.closePath()
+  const geometry = new ShapeGeometry(shape)
+  const uv = geometry.attributes.uv
+  const positions = geometry.attributes.position
+  const cropX = !contain && imageRatio > boxRatio ? (1 - boxRatio / imageRatio) / 2 : 0
+  const cropY = !contain && imageRatio < boxRatio ? (1 - imageRatio / boxRatio) / 2 : 0
+  for (let index = 0; index < uv.count; index += 1) {
+    const u = (positions.getX(index) - left) / width
+    const v = 1 - (positions.getY(index) - top) / height
+    uv.setXY(index, cropX + u * (1 - 2 * cropX), cropY + v * (1 - 2 * cropY))
+  }
+  return geometry
+}
+
 function addObject(object, kind = null, id = null) {
   object.userData = { kind, id }
   figureGroup.add(object)
@@ -258,15 +348,21 @@ function drawScene() {
     for (let x = -halfWidth; x <= halfWidth; x += 25) line(new Vector3(x, -halfHeight, 200), new Vector3(x, halfHeight, 200), '#324454')
     for (let y = -halfHeight; y <= halfHeight; y += 25) line(new Vector3(-halfWidth, y, 200), new Vector3(halfWidth, y, 200), '#324454')
   }
-  if (props.showParts || orbitMode.value) for (const entry of evaluation.value.parts) {
+  if (props.showParts) for (const entry of evaluation.value.parts) {
     const part = entry.part
     if (props.hiddenPartIds.includes(part.id)) continue
-    const geometry = shapeGeometry(part)
+    const textured = part.visual.type === 'texture' && Boolean(part.visual.texture)
+    if (textured && !textureCache.has(part.visual.texture)) {
+      const texture = textureLoader.load(part.visual.texture, drawScene)
+      texture.colorSpace = SRGBColorSpace
+      textureCache.set(part.visual.texture, texture)
+    }
+    const geometry = textured ? textureGeometry(part, textureCache.get(part.visual.texture)) : shapeGeometry(part)
     const material = new MeshBasicMaterial({ color: part.fill, side: DoubleSide, transparent: true, opacity: entry.opacity, depthWrite: true })
-    if (part.visual.type === 'texture' && part.visual.texture) {
-      if (!textureCache.has(part.visual.texture)) textureCache.set(part.visual.texture, textureLoader.load(part.visual.texture, render))
+    if (textured) {
       material.map = textureCache.get(part.visual.texture)
       material.color.set('#ffffff')
+      material.alphaTest = 0.02
     }
     const mesh = new Mesh(geometry, material)
     mesh.matrixAutoUpdate = false
@@ -280,18 +376,20 @@ function drawScene() {
     outline.visible = !orbitMode.value
     addObject(outline)
   }
-  if (props.showBones && !orbitMode.value) {
+  if (props.showBones) {
     for (const entry of evaluation.value.bones) {
       line(new Vector3(entry.x1, entry.y1, entry.z1), new Vector3(entry.x2, entry.y2, entry.z2), props.selectedKind === 'bone' && props.selectedId === entry.bone.id ? '#8fd1ff' : '#bd5b50', 'bone', entry.bone.id, 80)
     }
     for (const entry of evaluation.value.joints) {
-      const sphere = new Mesh(new SphereGeometry(props.selectedKind === 'joint' && props.selectedId === entry.joint.id ? 10 : 7, 12, 8), new MeshBasicMaterial({ color: props.selectedKind === 'joint' && props.selectedId === entry.joint.id ? '#8fd1ff' : '#e2b967', depthTest: false }))
+      const sphere = new Mesh(new SphereGeometry(props.selectedKind === 'joint' && props.selectedId === entry.joint.id ? 10 : 7, 12, 8), new MeshBasicMaterial({ color: props.selectedKind === 'joint' && props.selectedId === entry.joint.id ? '#8fd1ff' : '#e2b967', depthTest: false, depthWrite: false }))
       sphere.position.copy(new Vector3().setFromMatrixPosition(entry.matrix))
       sphere.renderOrder = 100
       addObject(sphere)
-      const hit = new Mesh(new SphereGeometry(17, 8, 6), new MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }))
-      hit.position.copy(sphere.position)
-      addObject(hit, 'joint', entry.joint.id)
+      if (!orbitMode.value) {
+        const hit = new Mesh(new SphereGeometry(17, 8, 6), new MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }))
+        hit.position.copy(sphere.position)
+        addObject(hit, 'joint', entry.joint.id)
+      }
     }
   }
   render()
@@ -397,7 +495,7 @@ onMounted(() => {
   orbitControls.maxPolarAngle = Math.PI / 2 - .05
   orbitControls.touches.ONE = TOUCH.ROTATE
   orbitControls.touches.TWO = TOUCH.DOLLY_ROTATE
-  orbitControls.addEventListener('change', render)
+  orbitControls.addEventListener('change', onOrbitChange)
   host.value.addEventListener('pointerdown', pointerDown)
   host.value.addEventListener('pointermove', pointerMove)
   host.value.addEventListener('pointerup', pointerEnd)
@@ -411,7 +509,7 @@ onMounted(() => {
 function onPointerCancel(event) { pointerEnd(event, true) }
 
 onBeforeUnmount(() => {
-  orbitControls?.removeEventListener('change', render)
+  orbitControls?.removeEventListener('change', onOrbitChange)
   orbitControls?.dispose()
   observer?.disconnect()
   host.value?.removeEventListener('pointerdown', pointerDown)

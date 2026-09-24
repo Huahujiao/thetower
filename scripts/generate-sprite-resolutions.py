@@ -31,8 +31,8 @@ def trim_transparent_edges(image: Image.Image, alpha_threshold: int) -> Image.Im
     return image.crop(bounds) if bounds else image.copy()
 
 
-def generate(root: Path, names: set[str], trim_transparent: bool, backup_original: bool, alpha_threshold: int, from_uncropped: bool) -> int:
-    source_roots = [root / "backup" / "source", root]
+def generate(root: Path, names: set[str], trim_transparent: bool, backup_original: bool, alpha_threshold: int, from_uncropped: bool, source_root: Path | None = None, variants: tuple[tuple[str, int], ...] = VARIANTS) -> int:
+    source_roots = [source_root] if source_root else [root / "backup" / "source", root]
     sources = sorted(
         path
         for source_root in source_roots
@@ -56,7 +56,7 @@ def generate(root: Path, names: set[str], trim_transparent: bool, backup_origina
                     if not original.exists(): shutil.copy2(source, original)
                 image = trim_transparent_edges(image, alpha_threshold)
                 image.save(source, format="PNG", optimize=True)
-            for suffix, max_edge in VARIANTS:
+            for suffix, max_edge in variants:
                 target = root / f"{source.stem}-{suffix}.png"
                 resized = resize_to_max(image, max_edge)
                 resized.save(target, format="PNG", optimize=True)
@@ -68,13 +68,17 @@ def generate(root: Path, names: set[str], trim_transparent: bool, backup_origina
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=DEFAULT_ROOT, help="inventory sprite directory")
+    parser.add_argument("--source-root", type=Path, help="optional source directory outside the runtime output tree")
+    parser.add_argument("--small-edge", type=int, default=256, help="maximum edge of the small variant")
+    parser.add_argument("--small-only", action="store_true", help="generate only the small variant")
     parser.add_argument("--only", action="append", default=[], help="source sprite stem to process; repeatable")
     parser.add_argument("--trim-transparent", action="store_true", help="crop fully transparent outer edges before making variants")
     parser.add_argument("--backup-original", action="store_true", help="copy an uncropped source into backup/source/uncropped first")
     parser.add_argument("--alpha-threshold", type=int, default=1, help="alpha value treated as visible while trimming (1-255)")
     parser.add_argument("--from-uncropped", action="store_true", help="rebuild a cropped source from backup/source/uncropped when available")
     args = parser.parse_args()
-    count = generate(args.root, set(args.only), args.trim_transparent, args.backup_original, max(1, min(255, args.alpha_threshold)), args.from_uncropped)
+    variants = (("small", max(16, args.small_edge)),) if args.small_only else (("small", max(16, args.small_edge)), VARIANTS[1])
+    count = generate(args.root, set(args.only), args.trim_transparent, args.backup_original, max(1, min(255, args.alpha_threshold)), args.from_uncropped, args.source_root, variants)
     print(f"Generated {count} sprite variants in {args.root}")
 
 

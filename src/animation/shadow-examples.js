@@ -10,7 +10,77 @@ import {
 } from './shadow-rig.js'
 
 export const SHADOW_EXAMPLE_PACK_VERSION = 1
-export const SHADOW_EXAMPLE_REPAIR_VERSION = 2
+export const SHADOW_EXAMPLE_REPAIR_VERSION = 8
+
+export const SHADOW_TEXTURE_PRESETS = Object.freeze([
+  { id: 'robe', label: '\u50e7\u888d', url: '/assets/enemies/bell-pilgrim-robe-v1-medium.png' },
+  { id: 'skull', label: '\u94c3\u5934', url: '/assets/enemies/bell-pilgrim-skull-v1-medium.png' },
+  { id: 'abdomen', label: '\u86db\u8179', url: '/assets/enemies/tide-spider-abdomen-v1-medium.png' },
+  { id: 'spider-head', label: '\u86db\u5934', url: '/assets/enemies/tide-spider-head-v1-medium.png' },
+  { id: 'left-wing', label: '\u5de6\u7fc5', url: '/assets/enemies/lantern-moth-left-wing-v2-medium.png' },
+  { id: 'right-wing', label: '\u53f3\u7fc5', url: '/assets/enemies/lantern-moth-right-wing-v2-medium.png' },
+  { id: 'moth-head', label: '\u706f\u5934', url: '/assets/enemies/lantern-moth-head-v1-medium.png' },
+  { id: 'ribcage', label: '\u80f8\u9aa8', url: '/assets/enemies/bell-pilgrim-ribcage-v1-small.png' },
+  { id: 'handbell', label: '\u624b\u94c3', url: '/assets/enemies/bell-pilgrim-handbell-v1-small.png' },
+  { id: 'upper-leg', label: '\u4e0a\u817f', url: '/assets/enemies/tide-spider-upper-leg-v1-small.png' },
+  { id: 'lower-leg', label: '\u9488\u80eb', url: '/assets/enemies/tide-spider-lower-leg-v1-small.png' },
+  { id: 'thorax', label: '\u80f8\u8282', url: '/assets/enemies/lantern-moth-thorax-v1-small.png' },
+  { id: 'moth-abdomen', label: '\u86fe\u8179', url: '/assets/enemies/lantern-moth-abdomen-v1-small.png' },
+  { id: 'pilgrim-mouth', label: '\u884c\u50e7\u88c2\u53e3', url: '/assets/enemies/bell-pilgrim-mouth-v2-small.png' },
+  { id: 'pilgrim-eye', label: '\u884c\u50e7\u72ec\u773c', url: '/assets/enemies/bell-pilgrim-eye-v1-small.png' },
+  { id: 'pilgrim-arm', label: '\u884c\u50e7\u624b\u81c2', url: '/assets/enemies/bell-pilgrim-arm-v1-small.png' },
+  { id: 'pilgrim-claw', label: '\u884c\u50e7\u722a', url: '/assets/enemies/bell-pilgrim-claw-v1-small.png' },
+  { id: 'bell-mouth', label: '\u94c3\u9ed1\u8154', url: '/assets/enemies/bell-pilgrim-bell-mouth-v1-small.png' },
+  { id: 'pilgrim-leg', label: '\u884c\u50e7\u817f', url: '/assets/enemies/bell-pilgrim-leg-v1-small.png' },
+  { id: 'spider-body', label: '\u86db\u8eab\u7532', url: '/assets/enemies/tide-spider-body-v1-small.png' },
+  { id: 'spider-mark', label: '\u86db\u8179\u773c\u7eb9', url: '/assets/enemies/tide-spider-abdomen-mark-v1-small.png' },
+  { id: 'spider-eye', label: '\u86db\u773c', url: '/assets/enemies/tide-spider-eye-v1-small.png' },
+  { id: 'moth-eye', label: '\u706f\u86fe\u706f\u82af', url: '/assets/enemies/lantern-moth-eye-v1-small.png' },
+  { id: 'moth-wing-eye', label: '\u706f\u86fe\u7fc5\u773c', url: '/assets/enemies/lantern-moth-wing-eye-v1-small.png' },
+  { id: 'moth-tail-glow', label: '\u706f\u86fe\u5c3e\u706b', url: '/assets/enemies/lantern-moth-tail-glow-v1-small.png' },
+  { id: 'moth-antenna', label: '\u706f\u86fe\u89e6\u987b', url: '/assets/enemies/lantern-moth-antenna-v1-small.png' },
+])
+
+const PRESET_URLS = Object.fromEntries(SHADOW_TEXTURE_PRESETS.map(({ id, url }) => [id, url]))
+const LEGACY_WING_URL = '/assets/enemies/lantern-moth-wing-v1-medium.png'
+const LEGACY_PILGRIM_MOUTH_URL = '/assets/enemies/bell-pilgrim-mouth-v1-small.png'
+const SPIDER_LEG_PART = /^(left|right)-[0-2]-(upper|lower)$/
+const EXAMPLE_TEXTURES = Object.freeze({
+  robe: PRESET_URLS.robe,
+  skull: PRESET_URLS.skull,
+  'abdomen-shell': PRESET_URLS.abdomen,
+  'head-shell': PRESET_URLS['spider-head'],
+  'left-wing-membrane': PRESET_URLS['left-wing'],
+  'right-wing-membrane': PRESET_URLS['right-wing'],
+  'head-lamp': PRESET_URLS['moth-head'],
+  ribcage: PRESET_URLS.ribcage,
+  bell: PRESET_URLS.handbell,
+  thorax: PRESET_URLS.thorax,
+  abdomen: PRESET_URLS['moth-abdomen'],
+  mouth: PRESET_URLS['pilgrim-mouth'],
+  eye: PRESET_URLS['pilgrim-eye'],
+  'left-arm': PRESET_URLS['pilgrim-arm'],
+  'right-arm': PRESET_URLS['pilgrim-arm'],
+  'left-claw': PRESET_URLS['pilgrim-claw'],
+  'bell-mouth': PRESET_URLS['bell-mouth'],
+  'left-leg': PRESET_URLS['pilgrim-leg'],
+  'right-leg': PRESET_URLS['pilgrim-leg'],
+  body: PRESET_URLS['spider-body'],
+  'abdomen-mark': PRESET_URLS['spider-mark'],
+  'moth-eye': PRESET_URLS['moth-eye'],
+  'left-wing-eye': PRESET_URLS['moth-wing-eye'],
+  'right-wing-eye': PRESET_URLS['moth-wing-eye'],
+  'tail-glow': PRESET_URLS['moth-tail-glow'],
+  'left-antenna': PRESET_URLS['moth-antenna'],
+  'right-antenna': PRESET_URLS['moth-antenna'],
+})
+
+function exampleTextureForPart(id) {
+  const spiderLeg = SPIDER_LEG_PART.exec(id)
+  if (spiderLeg) return PRESET_URLS[`${spiderLeg[2]}-leg`]
+  if (/^eye-[0-2]$/.test(id)) return PRESET_URLS['spider-eye']
+  return EXAMPLE_TEXTURES[id] || null
+}
 
 function newProject(name) {
   const project = createDefaultShadowProject()
@@ -24,12 +94,15 @@ function joint(project, id, name, x, y, z, parentId = null, rotationY = 0) {
 }
 
 function part(project, id, name, shape, targetId, width, height, fill, options = {}) {
-  const { x = 0, y = 0, z = 0, rotationX = 0, rotationY = 0, rotationZ = 0, layer = 0, bone = false } = options
-  project.parts.push(createShadowPart({
+  const { x = 0, y = 0, z = 0, rotationX = 0, rotationY = 0, rotationZ = 0, layer = 0, bone = false, textureId = id } = options
+  const entry = createShadowPart({
     id, name, shape, x, y, z, width, height, fill, stroke: '#a7a9a0',
     rotationX, rotationY, rotationZ, layer,
     attachment: { type: bone ? 'bone' : 'joint', targetId, t: 0.5, followRotation: true },
-  }))
+  })
+  const texture = exampleTextureForPart(textureId)
+  if (texture) entry.visual = { type: 'texture', texture, textureFit: SPIDER_LEG_PART.test(id) ? 'cover' : 'contain' }
+  project.parts.push(entry)
 }
 
 function keys(project, action, targetId, frames, kind = 'joint') {
@@ -42,7 +115,7 @@ function keys(project, action, targetId, frames, kind = 'joint') {
 
 function bellPilgrim() {
   const project = newProject('\u788e\u94c3\u884c\u50e7')
-  joint(project, 'root', '\u810a\u67f1', 0, 0, 0, null, -45)
+  joint(project, 'root', '\u810a\u67f1', 0, 0, 0, null, -30)
   joint(project, 'head', '\u949f\u5934', -8, -91, -28, 'root')
   joint(project, 'jaw', '\u88c2\u989a', -10, 39, -23, 'head')
   joint(project, 'left-shoulder', '\u5de6\u80a9', -47, -43, -14, 'root')
@@ -96,7 +169,7 @@ function bellPilgrim() {
 
 function tideSpider() {
   const project = newProject('\u6f6e\u773c\u86db\u6bcd')
-  joint(project, 'root', '\u8179\u90e8', 0, 7, 0, null, -45)
+  joint(project, 'root', '\u8179\u90e8', 0, 7, 0, null, -30)
   joint(project, 'head', '\u591a\u773c\u989d', -13, -31, -72, 'root')
   joint(project, 'abdomen', '\u540e\u8179', 18, 9, 85, 'root')
   part(project, 'body', '\u7532\u58f3', 'ellipse', 'root', 118, 88, '#334e58', { z: -5, layer: 2 })
@@ -149,7 +222,7 @@ function tideSpider() {
 function lanternMoth() {
   const project = newProject('\u7f1d\u8179\u706f\u86fe')
   project.stage.floorOffset = 44
-  joint(project, 'root', '\u80f8\u8282', 0, 0, 0, null, -45)
+  joint(project, 'root', '\u80f8\u8282', 0, 0, 0, null, -30)
   joint(project, 'head', '\u706f\u5934', -8, -69, -42, 'root')
   joint(project, 'left-wing', '\u5de6\u7fc5\u67a2', -41, -38, -13, 'root')
   joint(project, 'right-wing', '\u53f3\u7fc5\u67a2', 42, -36, 17, 'root')
@@ -159,7 +232,7 @@ function lanternMoth() {
   joint(project, 'right-feeler', '\u53f3\u89e6\u987b', 19, -24, -13, 'head')
   part(project, 'thorax', '\u7f1d\u5408\u80f8', 'capsule', 'root', 71, 116, '#5f565e', { layer: 4 })
   part(project, 'head-lamp', '\u706f\u7b3c\u5934', 'ellipse', 'head', 72, 64, '#bd9c67', { z: -12, layer: 7 })
-  part(project, 'eye', '\u706f\u82af', 'diamond', 'head', 31, 39, '#f1c883', { x: -13, z: -19, layer: 8 })
+  part(project, 'eye', '\u706f\u82af', 'diamond', 'head', 31, 39, '#f1c883', { x: -13, z: -19, layer: 8, textureId: 'moth-eye' })
   part(project, 'left-wing-membrane', '\u5de6\u88c2\u7fc5', 'triangle', 'left-wing', 135, 126, '#647e78', { x: -61, y: -24, z: 5, rotationZ: -28, rotationY: -12, layer: 2 })
   part(project, 'right-wing-membrane', '\u53f3\u88c2\u7fc5', 'triangle', 'right-wing', 138, 128, '#7b817b', { x: 62, y: -22, z: 14, rotationZ: 29, rotationY: 18, layer: 3 })
   part(project, 'left-wing-eye', '\u5de6\u7fc5\u773c', 'circle', 'left-wing', 39, 39, '#a88a6e', { x: -75, y: -28, z: -5, layer: 5 })
@@ -209,31 +282,54 @@ export function installInitialShadowExamples(roster) {
   return true
 }
 
+function exampleIndex(project) {
+  if (!project.joints.some((entry) => entry.id === 'root')) return -1
+  if (project.joints.some((entry) => entry.id === 'jaw' && entry.name === '\u88c2\u989a')) return 0
+  if (project.joints.some((entry) => entry.id === 'left-2-knee')) return 1
+  if (project.joints.some((entry) => entry.id === 'tail-tip' && entry.name === '\u5c3e\u706f')) return 2
+  return -1
+}
+
+export function texturePresetsForShadowProject(project) {
+  const prefix = ['bell-pilgrim-', 'tide-spider-', 'lantern-moth-'][exampleIndex(project)]
+  if (!prefix) return SHADOW_TEXTURE_PRESETS
+  return SHADOW_TEXTURE_PRESETS.filter((preset) => preset.url.startsWith(`/assets/enemies/${prefix}`))
+}
+
 function matchingExample(project, templates) {
-  if (!project.joints.some((entry) => entry.id === 'root')) return null
-  if (project.joints.some((entry) => entry.id === 'jaw' && entry.name === '\u88c2\u989a')) return templates[0]
-  if (project.joints.some((entry) => entry.id === 'left-2-knee')) return templates[1]
-  if (project.joints.some((entry) => entry.id === 'tail-tip' && entry.name === '\u5c3e\u706f')) return templates[2]
-  return null
+  return templates[exampleIndex(project)] || null
 }
 
 export function repairInitialShadowExamples(roster) {
   if (roster.examplePackVersion < SHADOW_EXAMPLE_PACK_VERSION || roster.examplePackVersion >= SHADOW_EXAMPLE_REPAIR_VERSION) return false
   const templates = createShadowExampleProjects()
+  const restoreMissingParts = roster.examplePackVersion < 2
   for (const { project } of roster.characters) {
     const template = matchingExample(project, templates)
     if (!template) continue
-    const existing = new Set(project.parts.map((entry) => entry.id))
-    const jointIds = new Set(project.joints.map((entry) => entry.id))
-    const boneIds = new Set(project.bones.map((entry) => entry.id))
-    for (const entry of template.parts) {
-      if (existing.has(entry.id)) continue
-      const targets = entry.attachment.type === 'bone' ? boneIds : jointIds
-      if (targets.has(entry.attachment.targetId)) project.parts.push(JSON.parse(JSON.stringify(entry)))
+    if (restoreMissingParts) {
+      const existing = new Set(project.parts.map((entry) => entry.id))
+      const jointIds = new Set(project.joints.map((entry) => entry.id))
+      const boneIds = new Set(project.bones.map((entry) => entry.id))
+      for (const entry of template.parts) {
+        if (existing.has(entry.id)) continue
+        const targets = entry.attachment.type === 'bone' ? boneIds : jointIds
+        if (targets.has(entry.attachment.targetId)) project.parts.push(JSON.parse(JSON.stringify(entry)))
+      }
+      if (template.stage.floorOffset !== 8 && project.stage.floorOffset === 8) project.stage.floorOffset = template.stage.floorOffset
     }
     const root = project.joints.find((entry) => entry.id === 'root')
-    if (root?.rotationY === -45) root.rotationY = 45
-    if (template.stage.floorOffset !== 8 && project.stage.floorOffset === 8) project.stage.floorOffset = template.stage.floorOffset
+    if (root && (root.rotationY === 45 || (restoreMissingParts && root.rotationY === -45))) root.rotationY = 30
+    for (const entry of project.parts) {
+      const source = template.parts.find((part) => part.id === entry.id)
+      if (source?.visual.type === 'texture' && entry.visual.type === 'shape' && !entry.visual.texture && entry.shape === source.shape && entry.fill === source.fill && entry.stroke === source.stroke) {
+        entry.visual = { ...source.visual }
+      } else if (source?.visual.type === 'texture' && entry.visual.texture === LEGACY_WING_URL && (entry.id === 'left-wing-membrane' || entry.id === 'right-wing-membrane')) {
+        entry.visual = { ...entry.visual, texture: source.visual.texture }
+      } else if (source?.visual.type === 'texture' && entry.id === 'mouth' && entry.visual.texture === LEGACY_PILGRIM_MOUTH_URL) {
+        entry.visual = { ...entry.visual, texture: source.visual.texture }
+      }
+    }
   }
   roster.examplePackVersion = SHADOW_EXAMPLE_REPAIR_VERSION
   return true

@@ -106,13 +106,13 @@ export function randomConsumableDefinition(floor, random = Math.random) {
 }
 
 export function randomItem(floor, random = Math.random) {
-  const weaponPool = WEAPONS.filter((weapon) => !weapon.crafted)
+  const weaponPool = WEAPONS.filter((weapon) => !weapon.crafted && floor >= (weapon.minFloor || 1))
   if (random() < 0.42) return makeItem(weaponPool[Math.floor(random() * weaponPool.length)])
   return makeItem(randomConsumableDefinition(floor, random))
 }
 
 export function randomWeapon(floor, random = Math.random) {
-  const weaponPool = WEAPONS.filter((weapon) => !weapon.crafted)
+  const weaponPool = WEAPONS.filter((weapon) => !weapon.crafted && floor >= (weapon.minFloor || 1))
   return makeItem(weaponPool[Math.floor(random() * weaponPool.length)], random)
 }
 
@@ -146,6 +146,7 @@ function createEnemy(definition, { position = null, boss = false } = {}) {
     deathSpawnCount: definition.deathSpawnCount || 0,
     explosionRadius: definition.explosionRadius || 0,
     deathExplosionDamage: definition.deathExplosionDamage || 0,
+    selfDestructOnAttack: definition.selfDestructOnAttack === true,
     noLoot: definition.noLoot === true,
     noExperience: definition.spawnOnly === true,
     boss,

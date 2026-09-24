@@ -12,7 +12,7 @@ export function arrangeTacticalEnemies(room, reserved, kind) {
   const empty = p => room.contains(p) && room.isEmpty(p)
   const place = (targets, approaches) => {
     for (const [index, p] of targets.entries()) {
-      const enemy = createMonster(room.floor, index)
+      const enemy = createMonster(room.chapter, index + (room.chapter - 1) * 3)
       enemy.pos = { ...p }
       room.addEntity(enemy)
     }

@@ -6,7 +6,8 @@ export const ENEMY_DEFS = Object.freeze(catalog.enemies)
 const BY_ID = new Map(ENEMY_DEFS.map((definition) => [definition.id, definition]))
 
 export function enemyDefinitionFor(floor, index) {
-  const available = ENEMY_DEFS.filter((definition) => definition.minFloor <= floor && !definition.spawnOnly)
+  const chapter = Math.max(1, Math.min(4, floor))
+  const available = ENEMY_DEFS.filter((definition) => definition.minFloor <= chapter && definition.minFloor >= Math.max(1, chapter - 1) && !definition.spawnOnly)
   return available[index % available.length]
 }
 

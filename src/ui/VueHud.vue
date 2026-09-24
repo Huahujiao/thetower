@@ -113,6 +113,7 @@
             /><span
               v-for="cell in entry.cells" :key="cell.index" class="occupied" :style="cell.style"
             ></span>
+            <b v-if="!entry.spriteSources" class="bag-name staging-name">{{ entry.item.name }}</b>
           </span>
         </div>
       </div>
@@ -127,6 +128,7 @@
           /><span
             v-for="cell in draggedItemView.cells" :key="cell.index" class="occupied" :style="cell.style"
           ></span>
+          <b v-if="!draggedItemView.spriteSources" class="bag-name staging-name">{{ draggedItemView.item.name }}</b>
         </span>
       </div>
     </section>
@@ -379,7 +381,7 @@
               @contextmenu.prevent
             >
               <b>{{
-                getItemDefinition(entry.itemId)?.name }}</b><small>{{ LABELS.buy }} {{ entry.price }}</small>
+                getItemDefinition(entry.itemId)?.name }}</b><small>{{ LABELS.buy }} {{ run.merchantPrice(entry) }}</small>
             </button>
           </div>
           <div class="merchant-trade">
@@ -493,7 +495,7 @@
         </div>
       </div>
     </section>
-    <div class="hud-over" :class="{ show: state.gameOver, win: state.win, lose: !state.win }">
+    <div class="hud-over" :class="{ show: state.gameOver && !state.combatResolving && !state.deathAnimationPending && !state.enemyDeathAnimationsPending, win: state.win, lose: !state.win }">
       <h1>{{ state.win ? LABELS.win : LABELS.lose }}</h1>
       <p>{{ state.win ? LABELS.winMessage : LABELS.loseMessage }}</p><button
         data-action="restart"
@@ -824,7 +826,7 @@ const roomRewardOpen = computed(() => {
 })
 const levelUpOpen = computed(() => {
   const current = state.value
-  return current.phase === 'level-up' && !!current.levelUp
+  return current.phase === 'level-up' && !!current.levelUp && !current.combatResolving && !current.enemyDeathAnimationsPending
 })
 const levelUpChoices = computed(() => {
   state.value

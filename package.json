@@ -10,6 +10,7 @@
     "build": "vite build",
     "lint": "eslint . --max-warnings=0",
     "check:turns": "node scripts/turns-check.mjs",
+    "check:combat-motion": "node scripts/combat-motion-check.mjs",
     "check:traps": "node scripts/traps-check.mjs",
     "check:items": "node scripts/items-check.mjs",
     "check:enemies": "node scripts/enemies-check.mjs",
@@ -17,6 +18,8 @@
     "preview": "vite preview",
     "sprites:variants": "python scripts/generate-sprite-resolutions.py",
     "check:rules": "node scripts/v2-check.mjs",
+    "check:dungeon": "node scripts/dungeon-check.mjs",
+    "check:synergies": "node scripts/synergies-check.mjs",
     "check:talents": "node scripts/talents-check.mjs"
   },
   "dependencies": {

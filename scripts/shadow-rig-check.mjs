@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
-import { createShadowExampleProjects, installInitialShadowExamples, repairInitialShadowExamples } from '../src/animation/shadow-examples.js'
+import { existsSync } from 'node:fs'
+import { createShadowExampleProjects, installInitialShadowExamples, repairInitialShadowExamples, texturePresetsForShadowProject } from '../src/animation/shadow-examples.js'
 import { ShadowHistory } from '../src/animation/shadow-history.js'
 import {
   createDefaultShadowProject,
@@ -91,8 +92,16 @@ for (const kind of ['joints', 'parts']) {
 
 const examples = createShadowExampleProjects()
 assert.deepEqual(examples.map((project) => project.name), ['\u788e\u94c3\u884c\u50e7', '\u6f6e\u773c\u86db\u6bcd', '\u7f1d\u8179\u706f\u86fe'])
+assert.deepEqual(examples.map((project) => project.parts.length), [12, 19, 11])
+assert.deepEqual(examples.map((project) => texturePresetsForShadowProject(project).length), [10, 7, 9])
+for (const [index, prefix] of ['bell-pilgrim-', 'tide-spider-', 'lantern-moth-'].entries()) {
+  assert.ok(texturePresetsForShadowProject(examples[index]).every((preset) => preset.url.startsWith(`/assets/enemies/${prefix}`)))
+}
+assert.equal(texturePresetsForShadowProject(createDefaultShadowProject()).length, 26)
 for (const example of examples) {
-  assert.equal(example.joints[0].rotationY, 45)
+  assert.equal(example.joints[0].rotationY, 30)
+  const rootForward = evaluateShadowProject(example).joints[0].matrix.elements
+  assert.ok(rootForward[8] > 0 && rootForward[10] > 0, `${example.name}: forward must face character-right and camera`)
   assert.ok(example.joints.some((entry) => entry.z !== 0))
   assert.ok(example.parts.some((entry) => entry.z !== 0))
   const jointIds = new Set(example.joints.map((entry) => entry.id))
@@ -102,6 +111,9 @@ for (const example of examples) {
   }
   for (const entry of example.parts) {
     assert.ok((entry.attachment.type === 'joint' ? jointIds : boneIds).has(entry.attachment.targetId))
+    assert.equal(entry.visual.type, 'texture', `${example.name}/${entry.id} is missing a texture`)
+    assert.ok(entry.visual.texture.startsWith('/assets/enemies/'), `${example.name}/${entry.id} has an invalid texture URL`)
+    assert.ok(existsSync(new URL(`../public${entry.visual.texture}`, import.meta.url)), `${example.name}/${entry.id} texture file is missing`)
   }
   for (const action of ['idle', 'attack', 'hit', 'death', 'move']) {
     const animation = example.animations[action]
@@ -140,11 +152,76 @@ damaged.characters[0].project.joints[0].rotationY = -45
 assert.equal(repairInitialShadowExamples(damaged), true)
 assert.equal(damaged.characters[0].project.parts.find((entry) => entry.id === 'robe').fill, '#123456')
 assert.ok(damaged.characters[0].project.parts.some((entry) => entry.id === 'bell'))
-assert.equal(damaged.characters[0].project.joints[0].rotationY, 45)
+assert.equal(damaged.characters[0].project.joints[0].rotationY, 30)
 assert.equal(examples[2].stage.floorOffset, 44)
 damaged.characters[0].project.parts = damaged.characters[0].project.parts.filter((entry) => entry.id !== 'bell')
 assert.equal(repairInitialShadowExamples(damaged), false)
 assert.ok(!damaged.characters[0].project.parts.some((entry) => entry.id === 'bell'))
+
+const alreadyRepaired = normalizeShadowRoster({
+  characters: [
+    { id: 'default-angle', project: examples[0] },
+    { id: 'custom-angle', project: examples[1] },
+  ],
+  activeCharacterId: 'default-angle',
+  examplePackVersion: 2,
+})
+alreadyRepaired.characters[0].project.joints[0].rotationY = 45
+alreadyRepaired.characters[0].project.parts = alreadyRepaired.characters[0].project.parts.filter((entry) => entry.id !== 'bell')
+alreadyRepaired.characters[0].project.parts.find((entry) => entry.id === 'robe').visual = { type: 'shape', texture: null, textureFit: 'contain' }
+alreadyRepaired.characters[1].project.parts.find((entry) => entry.id === 'abdomen-shell').visual = { type: 'texture', texture: '/assets/enemies/custom.png', textureFit: 'cover' }
+alreadyRepaired.characters[1].project.joints[0].rotationY = 18
+assert.equal(repairInitialShadowExamples(alreadyRepaired), true)
+assert.equal(alreadyRepaired.examplePackVersion, 8)
+assert.equal(alreadyRepaired.characters[0].project.joints[0].rotationY, 30)
+assert.ok(!alreadyRepaired.characters[0].project.parts.some((entry) => entry.id === 'bell'))
+assert.equal(alreadyRepaired.characters[0].project.parts.find((entry) => entry.id === 'robe').visual.type, 'texture')
+assert.equal(alreadyRepaired.characters[1].project.parts.find((entry) => entry.id === 'abdomen-shell').visual.texture, '/assets/enemies/custom.png')
+assert.equal(alreadyRepaired.characters[1].project.joints[0].rotationY, 18)
+assert.equal(repairInitialShadowExamples(alreadyRepaired), false)
+
+const wingMigration = normalizeShadowRoster({
+  characters: [{ id: 'moth', project: examples[2] }], activeCharacterId: 'moth', examplePackVersion: 4,
+})
+const mothParts = wingMigration.characters[0].project.parts
+mothParts.find((entry) => entry.id === 'left-wing-membrane').visual.texture = '/assets/enemies/lantern-moth-wing-v1-medium.png'
+mothParts.find((entry) => entry.id === 'right-wing-membrane').visual.texture = '/assets/enemies/custom-right-wing.png'
+mothParts.find((entry) => entry.id === 'head-lamp').visual = { type: 'shape', texture: null, textureFit: 'contain' }
+assert.equal(repairInitialShadowExamples(wingMigration), true)
+assert.equal(mothParts.find((entry) => entry.id === 'left-wing-membrane').visual.texture, '/assets/enemies/lantern-moth-left-wing-v2-medium.png')
+assert.equal(mothParts.find((entry) => entry.id === 'right-wing-membrane').visual.texture, '/assets/enemies/custom-right-wing.png')
+assert.equal(mothParts.find((entry) => entry.id === 'head-lamp').visual.texture, '/assets/enemies/lantern-moth-head-v1-medium.png')
+
+const smallPartMigration = normalizeShadowRoster({
+  characters: [{ id: 'spider', project: examples[1] }], activeCharacterId: 'spider', examplePackVersion: 5,
+})
+const spiderParts = smallPartMigration.characters[0].project.parts
+spiderParts.find((entry) => entry.id === 'left-0-upper').visual = { type: 'shape', texture: null, textureFit: 'contain' }
+spiderParts.find((entry) => entry.id === 'left-0-lower').visual = { type: 'texture', texture: '/assets/enemies/my-leg.png', textureFit: 'contain' }
+assert.equal(repairInitialShadowExamples(smallPartMigration), true)
+assert.equal(spiderParts.find((entry) => entry.id === 'left-0-upper').visual.texture, '/assets/enemies/tide-spider-upper-leg-v1-small.png')
+assert.equal(spiderParts.find((entry) => entry.id === 'left-0-lower').visual.texture, '/assets/enemies/my-leg.png')
+assert.equal(examples[0].parts.find((entry) => entry.id === 'ribcage').visual.texture, '/assets/enemies/bell-pilgrim-ribcage-v1-small.png')
+assert.equal(examples[2].parts.find((entry) => entry.id === 'thorax').visual.texture, '/assets/enemies/lantern-moth-thorax-v1-small.png')
+
+const finalTextureMigration = normalizeShadowRoster({
+  characters: [{ id: 'pilgrim', project: examples[0] }], activeCharacterId: 'pilgrim', examplePackVersion: 6,
+})
+const pilgrimParts = finalTextureMigration.characters[0].project.parts
+pilgrimParts.find((entry) => entry.id === 'mouth').visual = { type: 'shape', texture: null, textureFit: 'contain' }
+pilgrimParts.find((entry) => entry.id === 'eye').visual = { type: 'texture', texture: '/assets/enemies/custom-eye.png', textureFit: 'cover' }
+assert.equal(repairInitialShadowExamples(finalTextureMigration), true)
+assert.equal(pilgrimParts.find((entry) => entry.id === 'mouth').visual.texture, '/assets/enemies/bell-pilgrim-mouth-v2-small.png')
+assert.equal(pilgrimParts.find((entry) => entry.id === 'eye').visual.texture, '/assets/enemies/custom-eye.png')
+
+const mouthMigration = normalizeShadowRoster({
+  characters: [{ id: 'pilgrim', project: examples[0] }], activeCharacterId: 'pilgrim', examplePackVersion: 7,
+})
+const mouthPart = mouthMigration.characters[0].project.parts.find((entry) => entry.id === 'mouth')
+mouthPart.visual.texture = '/assets/enemies/bell-pilgrim-mouth-v1-small.png'
+assert.equal(repairInitialShadowExamples(mouthMigration), true)
+assert.equal(mouthPart.visual.texture, '/assets/enemies/bell-pilgrim-mouth-v2-small.png')
+assert.equal(repairInitialShadowExamples(mouthMigration), false)
 
 const editState = { parts: [{ id: 'p', x: 0 }], name: 'first' }
 const history = new ShadowHistory(editState)

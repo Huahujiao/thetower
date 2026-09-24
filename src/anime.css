@@ -22,7 +22,7 @@ body.anime-body #hud { position: static; display: block; pointer-events: auto; }
 .anime-icon-button { display: grid; width: 28px; height: 31px; flex: 0 0 28px; place-items: center; padding: 5px; }
 .anime-icon-button svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
 
-.anime-editor-menu { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; min-height: 0; padding: .55dvh 8px; border-bottom: 1px solid var(--anime-line); background: #0e161f; }
+.anime-editor-menu { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; min-height: 0; padding: .55dvh 8px; border-bottom: 1px solid var(--anime-line); background: #0e161f; }
 .anime-editor-menu button { min-height: 0; border-color: transparent; background: transparent; font-size: 11px; }
 
 .rig-editor-workspace { display: flex; min-height: 0; flex-direction: column; overflow: hidden; padding: 6px 7px 7px; }
@@ -34,6 +34,8 @@ body.anime-body #hud { position: static; display: block; pointer-events: auto; }
 .shadow-stage canvas { display: block; width: 100%; height: 100%; }
 .shadow-view-controls { position: absolute; z-index: 5; top: 6px; left: 6px; display: flex; gap: 4px; }
 .shadow-view-controls button { min-width: 31px; height: 25px; padding: 2px 5px; background: rgba(12, 22, 31, .83); color: #b7cfdd; font-size: 9px; }
+.shadow-axis-indicator { position: absolute; z-index: 4; bottom: 7px; left: 7px; width: 92px; height: 92px; padding: 2px; border: 1px solid rgba(143,174,198,.24); border-radius: 7px; background: rgba(8,16,24,.78); pointer-events: none; }
+.shadow-axis-indicator text { font-size: 10px; font-weight: 700; paint-order: stroke; }
 .shadow-stage-paper { fill: #182431; }
 .shadow-grid-layer { pointer-events: none; }
 .shadow-part { filter: url(#shadow-part-shadow); }
@@ -49,7 +51,7 @@ body.anime-body #hud { position: static; display: block; pointer-events: auto; }
 .shadow-joint { fill: #e2b967; stroke: #6b302a; stroke-width: 3; vector-effect: non-scaling-stroke; pointer-events: none; }
 .shadow-joint-selection { fill: none; stroke: #8fd1ff; stroke-width: 3; vector-effect: non-scaling-stroke; pointer-events: none; }
 
-/* Three-axis controls use the same fixed-height panel in all three tabs. */
+/* All editor modes share one fixed-height panel. */
 .rig-context-panel { min-height: 0; height: 204px; overflow: hidden; flex: 0 0 204px; padding: 7px 8px; border: 1px solid var(--anime-line); border-top: 0; border-radius: 0 0 9px 9px; background: #101923; overscroll-behavior: contain; }
 .rig-tool-row,.rig-shape-row,.rig-part-select-row,.anime-playback-row,.rig-animation-fields { display: flex; min-width: 0; align-items: center; gap: 5px; }
 .rig-tool-row button { flex: 1; min-height: 29px; padding: 4px; font-size: 9px; }
@@ -77,6 +79,18 @@ body.anime-body #hud { position: static; display: block; pointer-events: auto; }
 .rig-part-fields label > input,.rig-part-fields label > select { width: 0; min-width: 0; flex: 1 1 0; }
 .rig-part-fields input[type='color'] { padding: 2px; }
 .rig-part-fields input[type='range'] { padding: 0; }
+.texture-context-panel .rig-part-select-row { margin-top: 0; }
+.texture-context-panel .rig-part-select-row > button { flex: 0 0 auto; }
+.rig-texture-presets { display: flex; gap: 5px; min-width: 0; height: 59px; overflow-x: auto; overflow-y: hidden; margin-top: 6px; scrollbar-width: thin; touch-action: pan-x; }
+.rig-texture-presets button { display: flex; min-width: 72px; height: 47px; flex: 0 0 72px; flex-direction: column; align-items: center; justify-content: center; gap: 1px; padding: 2px; font-size: 9px; }
+.rig-texture-presets img { display: block; max-width: 56px; max-height: 30px; object-fit: contain; pointer-events: none; }
+.rig-texture-presets span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rig-texture-fields { display: flex; gap: 5px; margin-top: 6px; }
+.rig-texture-fields label { display: flex; min-width: 0; height: 27px; align-items: center; gap: 6px; color: #8199aa; font-size: 9px; }
+.rig-texture-fields label:first-child { flex: 3 1 0; }
+.rig-texture-fields label:last-child { flex: 1 1 0; }
+.rig-texture-fields label span { flex: 0 0 28px; }
+.rig-texture-fields input,.rig-texture-fields select { width: 0; min-width: 0; height: 27px; flex: 1; padding: 3px 5px; font-size: 10px; }
 
 .anime-animation-tabs { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)) 42px; gap: 5px; }
 .anime-animation-tabs button { min-height: 29px; padding: 3px; color: #8ca2b2; font-size: 9px; }

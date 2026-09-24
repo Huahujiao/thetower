@@ -27,12 +27,13 @@
     <nav class="anime-editor-menu" :aria-label="COPY.editorMode">
       <button type="button" :class="{ active: editorMode === 'skeleton' }" @click="setEditorMode('skeleton')">{{ COPY.skeleton }}</button>
       <button type="button" :class="{ active: editorMode === 'parts' }" @click="setEditorMode('parts')">{{ COPY.parts }}</button>
+      <button type="button" :class="{ active: editorMode === 'texture' }" @click="setEditorMode('texture')">{{ COPY.texture }}</button>
       <button type="button" :class="{ active: editorMode === 'animation' }" @click="setEditorMode('animation')">{{ COPY.animation }}</button>
     </nav>
 
     <section class="rig-editor-workspace">
       <div class="anime-stage-wrap">
-        <div v-if="!stage3D" class="rig-stage-options">
+        <div v-if="editorMode !== 'texture'" class="rig-stage-options">
           <label><input v-model="showBones" type="checkbox">{{ COPY.bones }}</label>
           <label><input v-model="showMesh" type="checkbox">{{ COPY.grid }}</label>
         </div>
@@ -42,11 +43,11 @@
           :time="time"
           :selected-kind="selectedKind"
           :selected-id="selectedId"
-          :show-bones="showBones"
-          :show-grid="showMesh"
-          :show-parts="showMesh"
+          :show-bones="editorMode !== 'texture' && showBones"
+          :show-grid="editorMode !== 'texture' && showMesh"
+          :show-parts="editorMode === 'texture' || showMesh"
           :hidden-part-ids="hiddenPartIds"
-          :joint-interactive="editorMode !== 'parts'"
+          :joint-interactive="editorMode === 'skeleton' || editorMode === 'animation'"
           :bone-interactive="editorMode === 'skeleton'"
           :part-interactive="editorMode !== 'skeleton'"
           interactive
@@ -54,7 +55,6 @@
           @canvas-tap="onCanvasTap"
           @drag="onStageDrag"
           @drag-end="endStageDrag"
-          @view-mode-change="stage3D = $event"
         />
       </div>
 
@@ -129,6 +129,25 @@
         </div>
       </section>
 
+      <section v-else-if="editorMode === 'texture'" class="rig-context-panel texture-context-panel">
+        <div class="rig-part-select-row">
+          <select :value="selectedKind === 'part' ? selectedId : ''" :aria-label="COPY.selectPart" @change="selectPart($event.target.value)">
+            <option value="">{{ COPY.selectPart }}</option>
+            <option v-for="part in orderedParts" :key="part.id" :value="part.id">{{ part.name }}</option>
+          </select>
+          <button type="button" :disabled="!selectedPart" @click="clearSelectedTexture">{{ COPY.shapeOnly }}</button>
+        </div>
+        <div class="rig-texture-presets">
+          <button v-for="preset in texturePresets" :key="preset.id" type="button" :disabled="!selectedPart" :class="{ active: selectedPart?.visual.texture === preset.url && selectedPart?.visual.type === 'texture' }" @click="setSelectedTexture(preset.url)">
+            <img :src="preset.url" :alt="preset.label"><span>{{ preset.label }}</span>
+          </button>
+        </div>
+        <div v-if="selectedPart" class="rig-texture-fields">
+          <label><span>{{ COPY.texturePath }}</span><input :value="selectedPart.visual.texture || ''" :placeholder="COPY.texturePlaceholder" @change="setSelectedTexture($event.target.value)"></label>
+          <label><span>{{ COPY.fit }}</span><select :value="selectedPart.visual.textureFit" @change="selectedPart.visual.textureFit = $event.target.value"><option value="contain">contain</option><option value="cover">cover</option></select></label>
+        </div>
+      </section>
+
       <section v-else class="rig-context-panel animation-context-panel">
         <div class="anime-animation-tabs">
           <button
@@ -176,7 +195,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { Matrix4 } from 'three'
-import { installInitialShadowExamples, repairInitialShadowExamples } from '../animation/shadow-examples.js'
+import { installInitialShadowExamples, repairInitialShadowExamples, texturePresetsForShadowProject } from '../animation/shadow-examples.js'
 import { ShadowHistory } from '../animation/shadow-history.js'
 import {
   SHADOW_ANIMATION_TYPES,
@@ -206,6 +225,7 @@ import '../anime.css'
 const COPY = Object.freeze({
   undo: '\u64a4\u56de', hidePart: '\u6682\u65f6\u9690\u85cf\u90e8\u4ef6', showPart: '\u663e\u793a\u90e8\u4ef6',
   partName: '\u90e8\u4ef6\u540d\u79f0',
+  texture: '\u8d34\u56fe', texturePath: '\u8def\u5f84', texturePlaceholder: '/assets/enemies/...png', fit: '\u9002\u914d', shapeOnly: '\u51e0\u4f55\u5916\u89c2',
   size: '\u5c3a\u5bf8', scale: '\u7f29\u653e',
   resetAnimation: '\u91cd\u7f6e',
   resetAnimationConfirm: '\u6e05\u7a7a\u5f53\u524d\u52a8\u4f5c\u7684\u6240\u6709\u5173\u952e\u5e27\uff0c\u6062\u590d\u9aa8\u67b6\u548c\u90e8\u4ef6\u7684\u521d\u59cb\u59ff\u6001\uff1f',
@@ -229,6 +249,7 @@ const project = computed({
     if (character) character.project = value
   },
 })
+const texturePresets = computed(() => texturePresetsForShadowProject(project.value))
 const editorMode = ref('skeleton')
 const skeletonTool = ref('select')
 const selectedKind = ref(null)
@@ -240,7 +261,6 @@ const partFieldMode = ref('size')
 const poseFieldMode = ref('position')
 const showBones = ref(true)
 const showMesh = ref(true)
-const stage3D = ref(false)
 const hiddenParts = ref({})
 const hiddenPartIds = computed(() => Object.entries(hiddenParts.value[activeCharacterId.value] || {}).filter(([, hidden]) => hidden).map(([id]) => id))
 const animationId = ref('idle')
@@ -367,6 +387,17 @@ function setEditorMode(mode) {
   notice.value = ''
   pendingShape.value = null
   if (mode === 'skeleton') showBones.value = true
+}
+
+function setSelectedTexture(value) {
+  if (!selectedPart.value) return
+  const path = value.trim()
+  selectedPart.value.visual = { ...selectedPart.value.visual, type: path ? 'texture' : 'shape', texture: path || null }
+}
+
+function clearSelectedTexture() {
+  if (!selectedPart.value) return
+  selectedPart.value.visual = { ...selectedPart.value.visual, type: 'shape', texture: null }
 }
 
 function resetSelection() {

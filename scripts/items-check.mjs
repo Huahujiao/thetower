@@ -7,7 +7,7 @@ import { adjacentItems } from '../src/game/rules/items.js'
 import { attackRangeCells, enemyThreatCells, weaponTargetCells } from '../src/game/rules/attack-range.js'
 import { rangePulse } from '../src/render/attack-range-overlay.js'
 
-assert.equal(ALL_ITEM_DEFS.length, 44)
+assert.equal(ALL_ITEM_DEFS.length, 65)
 assert.equal(makeItemById('short-sword'), null)
 for (let i = 0; i < 100; i++) assert.notEqual(randomItem(1, () => i / 100).type, 'material')
 
@@ -372,9 +372,9 @@ for(const recipe of RECIPES) {
     assert(run.detailPanel.description)
   }
 }
-// Every catalog item is eligible in the ordinary shop, including crafted gear and relics.
+// Every catalog item is eligible by the final floor, including crafted gear and relics.
 for (let i = 0; i < ALL_ITEM_DEFS.length; i++) {
-  assert.equal(buildMerchantStock('merchant', 1, () => (i + 0.1) / ALL_ITEM_DEFS.length)[0].itemId, ALL_ITEM_DEFS[i].id)
+  assert.equal(buildMerchantStock('merchant', 12, () => (i + 0.1) / ALL_ITEM_DEFS.length)[0].itemId, ALL_ITEM_DEFS[i].id)
 }
 {
   const run = fixture(), merchant = createMerchantEntity('merchant', { c: 2, r: 3 }, { floor: 1, random: () => 0.5 })

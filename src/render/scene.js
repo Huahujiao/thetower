@@ -5,6 +5,7 @@ import { enemyCardSubtitle, enemyOverheadHints } from '../game/data/enemy-featur
 import { isAdjacent8 } from '../game/core/geometry.js'
 import { AttackRangeOverlay } from './attack-range-overlay.js'
 import { BoardTextures } from './board-textures.js'
+import { combatMotionAt, deathMotion, explosionMotion, EXPLOSION_DURATION, hitMotion, idleMotion } from './character-motion.js'
 import { DEFAULT_CAMERA_ELEVATION, panAzimuth } from './camera-view.js'
 import { cardBodyGeometry, styleCardBody, cardFaceY, CARD_FACE_CLEARANCE, HIDDEN_CARD_THICKNESS, HIDDEN_CARD_SCALE } from './card-body.js'
 import { boundaryPillarPoint, createDoorFrame, createLowPolyPillar, createLowPolyWall, evenPillarOffsets } from './wall-kit.js'
@@ -48,6 +49,7 @@ const ITEM_SPRITE_FLOAT_SPEED = 1.35
 const GROUND_WEAPON_GLOW_SIZE = CARD_SIZE * 0.9
 const GROUND_WEAPON_GLOW_OPACITY = 0.28
 const ATTACK_ANIMATION_DURATION = 0.5
+const EXPLOSION_FLASH_COLOR = new THREE.Color(0xff9b43)
 const PLAYER_ATTACK_LIFT = 0.045
 const ENEMY_ATTACK_LIFT = 0.075
 const TILE_RENDER_ORDER_BASE = 100
@@ -315,6 +317,7 @@ export class GameScene {
     this.flipAnimations = []
     this.animationQueue = []
     this.attackAnimation = null
+    this.characterIdleTime = 0
     this.movementAnimation = null
     this.moveCompletionPending = false
     this.playerMarker = null
@@ -366,6 +369,8 @@ export class GameScene {
     this._onMove = (payload) => this._queueAnimation('move', payload)
     this._onEnemyMove = (payload) => this._queueAnimation('enemy-move', payload)
     this._onAttack = (payload) => this._queueAnimation('attack', payload)
+    this._onImpact = (payload) => this._queueAnimation('impact', payload)
+    this._onExplosion = (payload) => this._queueAnimation('explode', payload)
     window.addEventListener('resize', this._onResize)
     this.renderer.domElement.addEventListener('pointerdown', this._onPointerDown)
     this.renderer.domElement.addEventListener('pointermove', this._onPointerMove)
@@ -385,6 +390,8 @@ export class GameScene {
     this.moveUnsubscribe = this.run.on('animate:move', this._onMove)
     this.enemyMoveUnsubscribe = this.run.on('animate:enemy-move', this._onEnemyMove)
     this.attackUnsubscribe = this.run.on('animate:attack', this._onAttack)
+    this.impactUnsubscribe = this.run.on('animate:impact', this._onImpact)
+    this.explosionUnsubscribe = this.run.on('animate:explode', this._onExplosion)
     this.rebuild()
     this.attackRangeOverlay.refresh()
     this._resize(true)
@@ -1007,8 +1014,10 @@ export class GameScene {
   _setDoorAppearance(mesh) {
     const door = this.run.dungeon.door(mesh.userData.doorId)
     const locked = this.run.isDoorLocked(door)
-    mesh.material.color.setHex(locked ? 0x5a341d : 0x9a6533)
-    mesh.material.emissive?.setHex(locked ? 0x1c0e05 : 0x2b1608)
+    const route = this.run.isExitDoor(door) ? this.run.doorDestination(door)?.role : null
+    const routeColor = route === 'elite' ? 0x935056 : route === 'supply' ? 0x497e72 : 0x9a6533
+    mesh.material.color.setHex(locked ? 0x5a341d : routeColor)
+    mesh.material.emissive?.setHex(locked ? 0x1c0e05 : route === 'elite' ? 0x321216 : route === 'supply' ? 0x0d2923 : 0x2b1608)
     mesh.userData.lockIndicator.visible = locked
   }
 
@@ -1325,8 +1334,19 @@ export class GameScene {
           ? this._startFlipBatch(animation.payload, animation.sourceBackTextures)
           : animation.type === 'attack'
             ? this._startAttack(animation.payload)
+            : animation.type === 'explode'
+              ? this._startExplosion(animation.payload)
+            : animation.type === 'impact'
+              ? this._startImpact(animation.payload)
             : this._startFlip(animation.payload, animation.sourceBackTexture)
       if (started) return
+      if (animation.type === 'attack') {
+        this.run.bus?.emit('animate:attack-complete', { actor: animation.payload?.actor, roomId: animation.payload?.roomId })
+      } else if (animation.type === 'impact') {
+        this.run.bus?.emit('animate:impact-complete', { target: animation.payload?.target, defeated: animation.payload?.defeated, roomId: animation.payload?.roomId })
+      } else if (animation.type === 'explode') {
+        this.run.bus?.emit('animate:explode-complete', { targetDefeated: animation.payload?.targetDefeated, roomId: animation.payload?.roomId })
+      }
       animation.sourceBackTexture?.dispose()
       for (const texture of animation.sourceBackTextures || []) texture?.dispose()
     }
@@ -1489,9 +1509,10 @@ export class GameScene {
     return true
   }
 
-  _startAttack({ roomId, actor = 'enemy', position, targetStatus = null } = {}) {
+  _startAttack({ roomId, actor = 'enemy', enemyId = null, position, targetPosition, targetDefeated = false, targetStatus = null } = {}) {
     const room = this.run.currentRoom
     if (!room || room.id !== roomId || room.id !== this.framedRoomId || !position) return false
+    if (actor === 'enemy' && enemyId && !room.entity(enemyId)) return false
     const face = this.tileMeshByKey.get(tileKey(position))
     if (!face) return false
     const marker = actor === 'player' && this.playerMarker?.visible ? this.playerMarker : null
@@ -1500,6 +1521,20 @@ export class GameScene {
     if (!object.visible || !mesh?.material) return false
 
     const sourceTexture = mesh.material.map
+    const targetFace = targetPosition && this.tileMeshByKey.get(tileKey(targetPosition))
+    const targetMarker = actor === 'enemy' && targetPosition && this.playerMarker?.visible
+      && this.playerMarker.userData.footprintKey === tileKey(targetPosition) ? this.playerMarker : null
+    const target = targetMarker || targetFace
+    const targetMesh = targetMarker?.children.find((child) => child?.isMesh && child.material?.map) || targetFace
+    const victim = target?.visible && target !== object && targetMesh?.material ? {
+      object: target,
+      mesh: targetMesh,
+      face: targetFace,
+      tileFace: target === targetFace,
+      baseScale: target.scale.clone(),
+      baseRotationZ: target.rotation.z,
+      baseOpacity: targetMesh.material.opacity,
+    } : null
     const attackTexture = makeCanvasTexture((context) => actor === 'player'
       ? drawStickFigure(context, { armLift: 0, legSpread: 1 })
       : drawStandingToken(context, this._cardFaceData(room, position), { headLift: 0, bodySway: 0 }))
@@ -1516,6 +1551,8 @@ export class GameScene {
       sourceTexture,
       attackTexture,
       targetStatus: actor === 'player' ? targetStatus : null,
+      victim,
+      targetDefeated,
       baseScale: object.scale.clone(),
       baseRotationZ: object.rotation.z,
       elapsed: 0,
@@ -1523,6 +1560,77 @@ export class GameScene {
     }
     this._setAttackPose(this.attackAnimation, 0)
     return true
+  }
+
+  _startImpact({ roomId, target, position, defeated = false } = {}) {
+    const room = this.run.currentRoom
+    if (!room || room.id !== roomId || room.id !== this.framedRoomId || !position) return false
+    const face = this.tileMeshByKey.get(tileKey(position))
+    const marker = target === 'player' && this.playerMarker?.visible
+      && this.playerMarker.userData.footprintKey === tileKey(position) ? this.playerMarker : null
+    const object = marker || face
+    const mesh = marker?.children.find((child) => child?.isMesh && child.material?.map) || face
+    if (!object?.visible || !mesh?.material) return false
+    this.attackAnimation = {
+      actor: 'impact',
+      victim: {
+        object, mesh, face, tileFace: object === face,
+        baseScale: object.scale.clone(),
+        baseRotationZ: object.rotation.z,
+        baseOpacity: mesh.material.opacity,
+      },
+      impactTarget: target,
+      targetDefeated: defeated,
+      elapsed: 0,
+      duration: 0.001,
+    }
+    return true
+  }
+
+  _startExplosion({ roomId, position, targetPosition, targetDefeated = false } = {}) {
+    const room = this.run.currentRoom
+    if (!room || room.id !== roomId || room.id !== this.framedRoomId || !position) return false
+    const face = this.tileMeshByKey.get(tileKey(position))
+    if (!face?.visible || !face.userData.standing) return false
+    const targetFace = targetPosition && this.tileMeshByKey.get(tileKey(targetPosition))
+    const targetMarker = targetPosition && this.playerMarker?.visible
+      && this.playerMarker.userData.footprintKey === tileKey(targetPosition) ? this.playerMarker : null
+    const target = targetMarker || targetFace
+    const targetMesh = targetMarker?.children.find((child) => child?.isMesh && child.material?.map) || targetFace
+    const victim = target?.visible && targetMesh?.material ? {
+      object: target, mesh: targetMesh, face: targetFace, tileFace: target === targetFace,
+      baseScale: target.scale.clone(), baseRotationZ: target.rotation.z, baseOpacity: targetMesh.material.opacity,
+    } : null
+    const point = this._gridPosition(room, position)
+    const ring = new THREE.Mesh(
+      new THREE.RingGeometry(CARD_SIZE * 0.18, CARD_SIZE * 0.3, 32),
+      new THREE.MeshBasicMaterial({ color: 0xff6944, transparent: true, opacity: 0.5, depthWrite: false, side: THREE.DoubleSide }),
+    )
+    ring.rotation.x = -Math.PI / 2
+    ring.position.set(point.x, CARD_THICKNESS / 2 + 0.025, point.z)
+    ring.renderOrder = tileRenderOrder(position, 6)
+    ring.raycast = NO_RAYCAST
+    this.roomGroup.add(ring)
+    this.attackAnimation = {
+      actor: 'explosion', object: face, mesh: face, face, tileFace: true,
+      position, room, ring, victim, targetDefeated,
+      baseScale: face.scale.clone(), baseRotationZ: face.rotation.z,
+      baseOpacity: face.material.opacity, baseColor: face.material.color.clone(),
+      elapsed: 0, duration: EXPLOSION_DURATION,
+    }
+    this._setExplosionPose(this.attackAnimation, 0)
+    return true
+  }
+
+  _setExplosionPose(animation, progress) {
+    const pose = explosionMotion(progress)
+    animation.object.position.y = this._characterBaseY(animation) + pose.lift
+    animation.object.rotation.z = animation.baseRotationZ + pose.tilt
+    animation.object.scale.copy(animation.baseScale).multiplyScalar(pose.scale)
+    animation.mesh.material.opacity = animation.baseOpacity * pose.opacity
+    animation.mesh.material.color.lerpColors(animation.baseColor, EXPLOSION_FLASH_COLOR, pose.flash * 0.8)
+    animation.ring.scale.setScalar(0.4 + progress * 4)
+    animation.ring.material.opacity = 0.5 * (1 - progress)
   }
 
   _setAttackPose(animation, progress) {
@@ -1553,6 +1661,51 @@ export class GameScene {
     animation.object.rotation.z = animation.baseRotationZ + (animation.actor === 'enemy' ? sway * 0.045 : Math.sin(progress * Math.PI * 2) * 0.035)
   }
 
+  _characterBaseY(character) {
+    if (character.tileFace) return character.face.userData.baseY
+      + (character.face.userData.lift || 0) + (character.face.userData.press || 0)
+    return (character.object.userData.baseY || 0) + (character.face?.userData.press || 0)
+  }
+
+  _setVictimPose(victim, motion, defeated) {
+    if (!victim) return
+    const pose = defeated && motion.death > 0 ? deathMotion(motion.death) : hitMotion(motion.hit)
+    victim.object.position.y = this._characterBaseY(victim) + pose.lift
+    victim.object.rotation.z = victim.baseRotationZ + pose.tilt
+    victim.object.scale.copy(victim.baseScale).multiplyScalar(pose.scale)
+    victim.mesh.material.opacity = victim.baseOpacity * (pose.opacity ?? 1)
+  }
+
+  _applyIdlePose(object, face, offset) {
+    if (!object?.visible || object === this.attackAnimation?.object
+      || object === this.attackAnimation?.victim?.object || object === this.movementAnimation?.face) return
+    const pose = idleMotion(this.characterIdleTime, offset)
+    object.position.y = (object === face
+      ? face.userData.baseY + (face.userData.lift || 0) + (face.userData.press || 0)
+      : (object.userData.baseY || 0) + (face.userData.press || 0)) + pose.lift
+    object.scale.setScalar(pose.scale)
+    object.rotation.z = pose.tilt
+  }
+
+  _updateCharacterIdle(delta) {
+    this.characterIdleTime += delta
+    const room = this.run.currentRoom
+    if (!room) return
+    for (const face of this.tileMeshes) {
+      if (!face?.visible || !face.userData.standing) continue
+      const position = face.userData.position
+      const isPlayer = samePosition(this.run.player.pos, position)
+      if (isPlayer && this.playerMarker?.visible) continue
+      if (isPlayer && this.run.gameOver) continue
+      if (!isPlayer && room.entityAt(position)?.kind !== 'enemy') continue
+      this._applyIdlePose(face, face, position.c * 0.7 + position.r * 1.3)
+    }
+    if (this.playerMarker?.visible && !this.run.gameOver) {
+      const face = this.tileMeshByKey.get(this.playerMarker.userData.footprintKey)
+      if (face) this._applyIdlePose(this.playerMarker, face, 0)
+    }
+  }
+
   _clearAttackAnimation({ continueQueue = false, completed = false } = {}) {
     const animation = this.attackAnimation
     if (!animation) return
@@ -1560,16 +1713,25 @@ export class GameScene {
       animation.mesh.material.map = animation.sourceTexture || null
       animation.mesh.material.needsUpdate = true
     }
-    animation.object.scale.copy(animation.baseScale)
-    animation.object.rotation.z = animation.baseRotationZ
-    const baseY = animation.tileFace
-      ? animation.face.userData.baseY
-      : animation.object.userData.baseY || animation.object.position.y
-    const heldOffset = animation.tileFace
-      ? (animation.face.userData.lift || 0) + (animation.face.userData.press || 0)
-      : (animation.face.userData.press || 0)
-    animation.object.position.y = baseY + heldOffset
+    if (animation.object) {
+      animation.object.scale.copy(animation.baseScale)
+      animation.object.rotation.z = animation.baseRotationZ
+      animation.object.position.y = this._characterBaseY(animation)
+    }
+    if (animation.actor === 'explosion') {
+      animation.mesh.material.opacity = animation.baseOpacity
+      animation.mesh.material.color.copy(animation.baseColor)
+      this.roomGroup.remove(animation.ring)
+      disposeObject(animation.ring)
+    }
     animation.attackTexture?.dispose()
+    if (animation.victim) {
+      const { object, mesh, baseScale, baseRotationZ, baseOpacity } = animation.victim
+      object.scale.copy(baseScale)
+      object.rotation.z = baseRotationZ
+      mesh.material.opacity = baseOpacity
+      object.position.y = this._characterBaseY(animation.victim)
+    }
     this._applyAttackTargetStatus(animation.targetStatus)
     this.attackAnimation = null
     if (completed && animation.actor === 'player') {
@@ -1577,8 +1739,18 @@ export class GameScene {
       // this settled player-hit state (including killed or displaced targets)
       // before GameRun is allowed to enqueue the next enemy action.
       const room = this.run.currentRoom
-      if (room?.id === this.framedRoomId) this._refreshRoom(room)
+      if (room?.id === this.framedRoomId) {
+        if (this.animationQueue.some((queued) => queued.type === 'impact' || queued.type === 'explode')) this.pendingRebuild = true
+        else this._refreshRoom(room)
+      }
       this.run.bus?.emit('animate:attack-complete', { actor: 'player', roomId: room?.id })
+    } else if (completed && animation.actor === 'enemy') {
+      this.run.bus?.emit('animate:attack-complete', { actor: 'enemy', roomId: this.run.currentRoom?.id })
+    } else if (completed && animation.actor === 'impact') {
+      this.run.bus?.emit('animate:impact-complete', { target: animation.impactTarget, defeated: animation.targetDefeated, roomId: this.run.currentRoom?.id })
+    } else if (completed && animation.actor === 'explosion') {
+      if (animation.room?.id === this.framedRoomId) this._refreshTile(animation.room, animation.position, { force: true })
+      this.run.bus?.emit('animate:explode-complete', { targetDefeated: animation.targetDefeated, roomId: animation.room?.id })
     }
     if (continueQueue) {
       this._drainAnimationQueue()
@@ -1644,9 +1816,11 @@ export class GameScene {
       const end = this._gridPosition(animation.room, animation.to)
       animation.face.position.set(
         THREE.MathUtils.lerp(start.x, end.x, eased),
-        animation.baseY,
+        animation.baseY + Math.sin(progress * Math.PI * 2) * 0.045,
         THREE.MathUtils.lerp(start.z, end.z, eased),
       )
+      animation.face.rotation.z = Math.sin(progress * Math.PI) * 0.09 * Math.sign(end.x - start.x || 1)
+      animation.face.scale.setScalar(1 + Math.sin(progress * Math.PI * 2) * 0.035)
       animation.face.renderOrder = tileRenderOrder({ r: animation.from.r + (animation.to.r - animation.from.r) * eased }, 4)
       if (progress < 1) return
       this.movementAnimation = null
@@ -1679,6 +1853,8 @@ export class GameScene {
         CARD_THICKNESS / 2 + 0.006 + Math.sin(progress * Math.PI) * 0.13,
         THREE.MathUtils.lerp(start.z, end.z, ratio),
       )
+      animation.group.rotation.z = Math.sin(progress * Math.PI * 2) * 0.055
+      animation.group.scale.setScalar(1 + Math.sin(progress * Math.PI * 2) * 0.025)
       const marker = animation.group.children[0]
       if (marker) marker.renderOrder = tileRenderOrder({ r: from.r + (to.r - from.r) * ratio }, 8)
     }
@@ -1826,7 +2002,7 @@ export class GameScene {
       const pressTarget = this.depressedTileKeys.has(key) ? -FOOTPRINT_PRESS_DEPTH : 0
       face.userData.press = (face.userData.press || 0) + (pressTarget - (face.userData.press || 0)) * 0.2
       const offset = face.userData.lift + face.userData.press
-      face.position.y = face.userData.baseY + offset
+      if (face !== this.movementAnimation?.face) face.position.y = face.userData.baseY + offset
       face.userData.body.position.y = (face.userData.body.userData.baseY || 0) + offset
       if (key === this.playerMarker?.userData?.footprintKey) this.playerMarker.position.y = (this.playerMarker.userData.baseY || 0) + face.userData.press
     }
@@ -1887,9 +2063,11 @@ export class GameScene {
     const animation = this.attackAnimation
     if (!animation) return
     animation.elapsed += delta
-    const progress = Math.min(1, animation.elapsed / animation.duration)
-    this._setAttackPose(animation, progress)
-    if (progress < 1) return
+    const motion = combatMotionAt(animation.elapsed, animation.duration, animation.targetDefeated)
+    if (animation.actor === 'explosion') this._setExplosionPose(animation, motion.attack)
+    else if (animation.actor !== 'impact') this._setAttackPose(animation, motion.attack)
+    this._setVictimPose(animation.victim, motion, animation.targetDefeated)
+    if (!motion.done) return
     this._clearAttackAnimation({ continueQueue: true, completed: true })
   }
 
@@ -1999,7 +2177,8 @@ export class GameScene {
     }
     if (entity.kind === 'door') {
       const locked = this.run.isDoorLocked(entity)
-      return {
+      const destination = this.run.doorDestination(entity)
+      const card = {
         type: 'door',
         title: '门',
         value: locked ? '锁' : '→',
@@ -2007,6 +2186,14 @@ export class GameScene {
         detail: locked ? '机关锁住' : '连接下一个房间',
         footer: locked ? '找到开门机关' : '点击进入',
       }
+      const routeLabels = { elite: '\u7cbe\u82f1\u8def\u7ebf', supply: '\u8865\u7ed9\u8def\u7ebf', prep: '\u6574\u5907\u623f', boss: '\u7ae0\u8282\u9996\u9886', entry: '\u4e0b\u4e00\u7ae0' }
+      if (destination && this.run.isExitDoor(entity)) {
+        card.title = routeLabels[destination.role] || card.title
+        if (destination.role === 'elite') card.detail = '\u66f4\u591a\u6218\u6597\uff0c\u66f4\u5c11\u8865\u7ed9'
+        if (destination.role === 'supply') card.detail = '\u5546\u4eba\u4e0e\u8865\u7ed9\uff0c\u8f83\u5c11\u6218\u6597'
+        if (destination.role === 'entry' && locked) card.detail = '\u51fb\u8d25\u672c\u7ae0\u9996\u9886\u540e\u5f00\u542f'
+      }
+      return card
     }
     if (entity.kind === 'merchant') {
       return { type: 'merchant', title: entity.name, value: '商人', valueColor: '#ffd56b', detail: '点击交谈' }
@@ -2334,6 +2521,7 @@ export class GameScene {
     this._updateFlipAnimations(delta)
     this._updateItemSprites(delta)
     this._updateHoverLift()
+    this._updateCharacterIdle(delta)
     this._updateAttackAnimation(delta)
     this.attackRangeOverlay.syncPosition()
     this.attackRangeOverlay.update(delta)
@@ -2359,6 +2547,8 @@ export class GameScene {
     this.flipUnsubscribe?.()
     this.flipBatchUnsubscribe?.()
     this.attackUnsubscribe?.()
+    this.impactUnsubscribe?.()
+    this.explosionUnsubscribe?.()
     this._clearPathPreview()
     this.attackRangeOverlay.dispose()
     this._clearAttackAnimation()

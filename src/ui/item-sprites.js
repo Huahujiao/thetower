@@ -180,6 +180,30 @@ const ITEM_SPRITE_SOURCES = Object.freeze({
   },
 })
 
+// Temporary symbols for the first build batch. They use one compact SVG each
+// until shape-matched inventory illustrations are commissioned.
+const BUILD_PLACEHOLDERS = Object.freeze({
+  'triad-ember': ['烬', '#d77b54'],
+  'triad-wither': ['腐', '#98ba70'],
+  'triad-tide': ['潮', '#69aacb'],
+  'coin-blade': ['币', '#d8b45b'],
+  conduit: ['导', '#8cb8cb'],
+  'fork-connector': ['叉', '#8cb8cb'],
+  'r-relay-badge': ['接', '#c69a67'],
+  'r-guard-return': ['甲', '#8eaec5'],
+  'r-phase-pointer': ['相', '#b09cd0'],
+  'r-money-scale': ['秤', '#d8b45b'],
+  'r-trade-voucher': ['券', '#d8b45b'],
+  'r-gold-hook': ['钩', '#d8b45b'],
+  'r-ledger': ['账', '#d8b45b'],
+})
+
+const BUILD_SPRITE_SOURCES = Object.freeze(Object.fromEntries(Object.entries(BUILD_PLACEHOLDERS).map(([id, [glyph, color]]) => {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><rect x="9" y="9" width="110" height="110" rx="22" fill="#101924" fill-opacity=".9" stroke="${color}" stroke-width="5"/><path d="M25 102H103" stroke="${color}" stroke-width="3" opacity=".6"/><text x="64" y="83" text-anchor="middle" font-family="sans-serif" font-size="61" font-weight="700" fill="${color}">${glyph}</text></svg>`
+  const url = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
+  return [id, { small: url, medium: url }]
+})))
+
 // Gold is a room-floor entity rather than an inventory item.  Keep its
 // quantity-specific artwork in its own map so it cannot be confused with an
 // item id or accidentally enter the backpack sprite contract.
@@ -207,7 +231,7 @@ const GOLD_SPRITE_SOURCES = Object.freeze({
 })
 
 export function itemSpriteSources(item) {
-  return item?.id ? ITEM_SPRITE_SOURCES[item.id] || null : null
+  return item?.id ? ITEM_SPRITE_SOURCES[item.id] || BUILD_SPRITE_SOURCES[item.id] || null : null
 }
 
 export function goldSpriteSources(amount) {

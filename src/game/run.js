@@ -10,7 +10,7 @@ import { buildRelicChoices, getRelicDefinition } from './data/relics.js'
 import { buildRoomRewardChoices } from './data/rewards.js'
 import { FIXED_GROWTH, PROGRESSION, buildLevelUpChoices, experienceToNextLevel, getLevelUpOption, hasTalent, talentGraphState, unlockableTalents } from './data/progression.js'
 import { getTrapDefinition } from './data/traps.js'
-import { createLinearDungeon, Dungeon } from './model/dungeon.js'
+import { createChapterDungeon, Dungeon } from './model/dungeon.js'
 import { BackpackGrid } from './model/backpack.js'
 import { RelicCollection } from './model/relics.js'
 import { resolveDamage } from './rules/modifiers.js'
@@ -21,6 +21,7 @@ import { RelicEngine } from './rules/relics.js'
 import { stepEnemy } from './rules/enemies.js'
 import { findAttackPath, findDoorPath, findInteractionPath, findPath, findRevealPath } from './rules/pathfinding.js'
 import { terrainDamageModifiers } from './rules/terrain.js'
+import { suggestedSynergyId } from './rules/synergies.js'
 
 // The design notation is rows × columns: four rows, eight columns.
 export const INVENTORY_COLUMNS = 8
@@ -31,7 +32,7 @@ export const ENERGY_MAX = 10
 export const TELEPORT_RANGE = 6
 export const SAVE_KEY = 'grid_flip_adventure_v2'
 // Pending attack turns must be recoverable in every accepted save.
-export const SAVE_VERSION = 26
+export const SAVE_VERSION = 27
 
 function clone(value) { return JSON.parse(JSON.stringify(value)) }
 
@@ -203,6 +204,10 @@ export class GameRun {
     this.merchantEntering = false
     this.roomEntering = false
     this.combatResolving = false
+    this.deathAnimationPending = false
+    this.enemyDeathAnimationsPending = 0
+    this.pendingAttackImpacts = null
+    this.pendingAttackExplosions = null
     this.enemyAttackInterruptedRoute = false
     this.moveCompleteUnsubscribe = this.on('animate:move-complete', () => {
       if (!this.merchantEntering && !this.roomEntering) return
@@ -211,9 +216,23 @@ export class GameRun {
       this._changed()
     })
     this.attackCompleteUnsubscribe = this.on('animate:attack-complete', ({ actor } = {}) => {
+      if (actor === 'enemy' && this.deathAnimationPending) {
+        this.deathAnimationPending = false
+        this._changed()
+      }
       if (actor !== 'player' || !this.combatResolving) return
       this.combatResolving = false
       this._endTurn({ turnKind: TURN_KINDS.ATTACK })
+      this._changed()
+    })
+    this.impactCompleteUnsubscribe = this.on('animate:impact-complete', ({ target, defeated } = {}) => {
+      if (defeated && target === 'player' && this.deathAnimationPending) this.deathAnimationPending = false
+      if (defeated && target === 'enemy' && this.enemyDeathAnimationsPending > 0) this.enemyDeathAnimationsPending--
+      this._changed()
+    })
+    this.explosionCompleteUnsubscribe = this.on('animate:explode-complete', ({ targetDefeated } = {}) => {
+      if (this.enemyDeathAnimationsPending > 0) this.enemyDeathAnimationsPending--
+      if (targetDefeated) this.deathAnimationPending = false
       this._changed()
     })
     this.random = random
@@ -234,7 +253,7 @@ export class GameRun {
   }
 
   reset({ emit = true } = {}) {
-    const generated = createLinearDungeon({ random: this.random })
+    const generated = createChapterDungeon({ random: this.random })
     this.dungeon = generated.dungeon
     this.player = {
       hp: 20,
@@ -273,6 +292,10 @@ export class GameRun {
     this.merchantEntering = false
     this.roomEntering = false
     this.combatResolving = false
+    this.deathAnimationPending = false
+    this.enemyDeathAnimationsPending = 0
+    this.pendingAttackImpacts = null
+    this.pendingAttackExplosions = null
     this.enemyAttackInterruptedRoute = false
     this.roomReward = null
     this.roomRewardBag = shuffled(['supply', 'supply', 'supply', 'relic'], this.random)
@@ -299,8 +322,16 @@ export class GameRun {
   entityAt(position) { return this.currentRoom?.entityAt(position) || null }
   doorEdge(door) { return door ? this.dungeon.edgeForDoor(door.id) : null }
   isExitDoor(door) { return !!door && this.doorEdge(door)?.fromDoor.id === door.id }
-  isDoorRevealed(door) { return !!door && (!this.isExitDoor(door) || door.discovered === true) }
-  isDoorLocked(door) { return !!this.doorEdge(door)?.locked && !this.doorEdge(door)?.unlocked }
+  isDoorRevealed(door) { return !!door && !this.doorEdge(door)?.sealed && (!this.isExitDoor(door) || door.discovered === true) }
+  isDoorLocked(door) {
+    const edge = this.doorEdge(door)
+    if (!edge) return false
+    if (edge.locked && !edge.unlocked) return true
+    const source = this.dungeon.room(edge.fromRoomId)
+    return source?.role === 'boss' && this.dungeon.room(edge.toRoomId)?.chapter > source.chapter
+      && [...source.entities.values()].some((entity) => entity.kind === 'enemy' && entity.boss)
+  }
+  doorDestination(door) { return this.dungeon.room(this.dungeon.otherDoor(door)?.roomId) }
   activeRelics() { return this.relicEngine.activeDefinitions({ run: this }) }
 
   hasActiveRelic(id) { return this.activeRelics().some((relic) => relic.id === id) }
@@ -422,7 +453,7 @@ export class GameRun {
 
   _gainExperience(enemy) {
     const amount = Math.max(0, Number(enemy?.experience) || 0)
-    if (!amount || enemy?.noExperience || enemy?.boss) return false
+    if (!amount || enemy?.noExperience || enemy?.finalBoss) return false
     this.player.experience += amount
     this._log(`\u83b7\u5f97 ${amount} \u7ecf\u9a8c\u3002`)
     return this._queueLevelUp()
@@ -987,7 +1018,10 @@ export class GameRun {
     if (!movement.stopped && !this.gameOver && this.phase === 'explore') {
       this.merchant = { entityId: merchant.id }
       if (this.merchantDefinition?.services.includes('relic-choice') && !merchant.relicOfferResolved) {
-        merchant.relicChoices = buildRelicChoices(this.relics, { random: this.random }).map((relic) => relic.id)
+        merchant.relicChoices = buildRelicChoices(this.relics, {
+          random: this.random,
+          preferredId: suggestedSynergyId(this.backpack.items, 'relic', this.random),
+        }).map((relic) => relic.id)
       }
       this.phase = 'merchant'
       this.selectedInventoryIndex = null
@@ -1006,20 +1040,27 @@ export class GameRun {
     return true
   }
 
+  merchantPrice(stock) {
+    const discount = Number(this.backpack.items.some((item) => item.id === 'r-trade-voucher')) +
+      Number(this.backpack.items.some((item) => item.id === 'r-ledger'))
+    return Math.max(1, (Number(stock?.price) || 0) - discount)
+  }
+
   buyMerchantItem(index) {
     const merchant = this.merchantEntity
     const stock = merchant?.stock?.[index]
     const definition = getItemDefinition(stock?.itemId)
     if (this.phase !== 'merchant' || !merchant || !stock || !definition) return false
-    if (this.player.gold < stock.price) return this._reject('\u91d1\u5e01\u4e0d\u8db3\u3002')
+    const price = this.merchantPrice(stock)
+    if (this.player.gold < price) return this._reject('\u91d1\u5e01\u4e0d\u8db3\u3002')
     const item = makeItemById(stock.itemId)
     if (!item) return false
     if (!this.backpack.canFit(item)) return this._reject('\u80cc\u5305\u6ca1\u6709\u8db3\u591f\u7a7a\u95f4\u3002')
     if (item.type === 'relic' && this.relics.has(item.relicId)) return this._reject('已经持有此圣遗物。')
-    this.player.gold -= stock.price
+    this.player.gold -= price
     if (item.type === 'relic') this.acquireRelic(item.relicId, { notify: false })
     else this._putInInventory(item)
-    this._log(`\u8d2d\u4e70 ${item.name}\uff0c\u82b1\u8d39 ${stock.price} \u91d1\u5e01\u3002`)
+    this._log(`\u8d2d\u4e70 ${item.name}\uff0c\u82b1\u8d39 ${price} \u91d1\u5e01\u3002`)
     refreshMerchantSlot(merchant, this.currentRoom.floor, index, this.random)
     this._changed()
     return true
@@ -1045,6 +1086,7 @@ export class GameRun {
     this.itemRules.discarded(item)
     this.backpack.removeByUid(item.uid)
     if (item.type === 'relic') this.relics.remove(item.uid) || this.relics.remove(item.relicId)
+    this.itemRules.action('organize')
     this.selectedInventoryIndex = null
     this.itemTargeting = false
     this.player.gold += price
@@ -1234,8 +1276,9 @@ export class GameRun {
         }
       } else if (entity.kind === 'gold') {
         room.removeEntity(entity.id)
-        this.player.gold += entity.amount
-        this._log(`\u83b7\u5f97 ${entity.amount} \u91d1\u5e01\u3002`)
+        const amount = entity.amount + (this.backpack.items.some((item) => item.id === 'r-money-scale') ? 1 : 0)
+        this.player.gold += amount
+        this._log(`\u83b7\u5f97 ${amount} \u91d1\u5e01\u3002`)
         this._emitRelicEvent('gold:collected', { amount: entity.amount })
       } else if (entity.kind === 'key') {
         room.removeEntity(entity.id)
@@ -1252,7 +1295,8 @@ export class GameRun {
 
   _useDoor(door) {
     const edge = this.doorEdge(door)
-    if (!edge?.unlocked) return this._reject('\u95e8\u88ab\u673a\u5173\u9501\u4f4f\u4e86\u3002')
+    if (!edge || edge.sealed) return false
+    if (this.isDoorLocked(door)) return this._reject('\u95e8\u88ab\u673a\u5173\u9501\u4f4f\u4e86\u3002')
     const route = findDoorPath(this.currentRoom, this.player.pos, door)
     if (!route) return this._reject('\u65e0\u6cd5\u9760\u8fd1\u8fd9\u6247\u95e8\u3002')
     this.roomEntering = route.length > 0
@@ -1266,6 +1310,11 @@ export class GameRun {
     const targetRoom = this.dungeon.room(targetDoor?.roomId)
     if (!targetDoor || !targetRoom) this.roomEntering = false
     if (!targetDoor || !targetRoom) return this._reject('\u95e8\u7684\u8fde\u63a5\u635f\u574f\u3002')
+    if (edge.branch && this.isExitDoor(door)) {
+      for (const otherEdge of this.dungeon.edges.values()) {
+        if (otherEdge.branch?.chapter === edge.branch.chapter && otherEdge.branch.option !== edge.branch.option) otherEdge.sealed = true
+      }
+    }
     this._emitRelicEvent('room:left', { room: this.currentRoom })
     const firstVisit = !targetRoom.visited
     targetRoom.reveal(targetDoor.arrival)
@@ -1277,11 +1326,12 @@ export class GameRun {
     this._endTurn({ skipEnemyPhase: true, turnKind: TURN_KINDS.ACTION })
     this._emitRelicEvent('room:entered', { room: targetRoom, firstVisit })
     this.itemRules.enter(firstVisit)
-    if (firstVisit && !this.gameOver) {
+    if (firstVisit && !this.gameOver && targetRoom.role !== 'boss' && targetRoom.role !== 'entry') {
       const reward = buildRoomRewardChoices(this.relics, {
         floor: targetRoom.floor,
-        type: this._drawRoomRewardType(),
+        type: targetRoom.role === 'elite' ? 'relic' : targetRoom.role === 'supply' ? 'supply' : this._drawRoomRewardType(),
         random: this.random,
+        items: this.backpack.items,
       })
       this.roomReward = {
         roomId: targetRoom.id,
@@ -1298,6 +1348,7 @@ export class GameRun {
   _knockbackEnemy(enemy, distance = 1, { collisionDamage = 0, collisionDelay = 0 } = {}) {
     const room = this.currentRoom
     if (!room || !enemy?.pos) return false
+    const visualPosition = { ...enemy.pos }
     const dc = Math.sign(enemy.pos.c - this.player.pos.c)
     const dr = Math.sign(enemy.pos.r - this.player.pos.r)
     if (dc === 0 && dr === 0) return false
@@ -1321,7 +1372,7 @@ export class GameRun {
       break
     }
     if (collision) {
-      if (collisionDamage > 0 && room.entity(enemy.id)) this._damageEnemy(enemy, collisionDamage, { source: 'weapon:polearm-collision' })
+      if (collisionDamage > 0 && room.entity(enemy.id)) this._damageEnemy(enemy, collisionDamage, { source: 'weapon:polearm-collision', impactPosition: visualPosition })
       if (collisionDelay > 0 && room.entity(enemy.id)) enemy.actionDelay = normalizedCounter(enemy.actionDelay) + collisionDelay
     }
     return { moved, collision }
@@ -1356,25 +1407,36 @@ export class GameRun {
       { stage: 'multiply', value: context.multiplier },
       ...terrainDamageModifiers(this.currentRoom, this.player.pos),
     ]).total
+    const targetPosition = { ...enemy.pos }
+    this.pendingAttackImpacts = []
+    this.pendingAttackExplosions = []
     this.itemRules.consume(context)
     const logSequence = this._logSequence
     const hit = this._damageEnemy(enemy, damage, { ignoreDefense: context.ignoreDefense })
     this.itemRules.afterAttack(weapon, enemy, hit, context)
     this._log(`${weapon.name} 对 ${enemy.name} 造成 ${hit.damage} 伤害。`, { insertAt: this._logSequence - logSequence })
     this._roomRuntime().firstAttackUsed = true
+    this.combatResolving = true
     this.bus.emit('animate:attack', {
       roomId: this.currentRoom?.id,
       actor: 'player',
       position: { ...this.player.pos },
+      targetPosition,
+      targetDefeated: hit.defeated && !hit.exploded,
       targetStatus: hit.defeated ? null : {
         position: { ...enemy.pos },
         enemy: enemyStatusSnapshot(enemy),
       },
     })
+    const pendingImpacts = this.pendingAttackImpacts
+    const pendingExplosions = this.pendingAttackExplosions
+    this.pendingAttackImpacts = null
+    this.pendingAttackExplosions = null
+    for (const explosion of pendingExplosions) this.bus.emit('animate:explode', explosion)
+    for (const impact of pendingImpacts) this.bus.emit('animate:impact', impact)
     // The renderer confirms the player pose before this turn advances. This
     // keeps enemy actions out of both the model and the animation queue until
     // the player hit (including a kill) is visibly settled.
-    this.combatResolving = true
     this._changed()
     return true
   }
@@ -1438,7 +1500,8 @@ export class GameRun {
       if (this.gameOver || skipEnemyIds.has(enemy.id) || !this.currentRoom.entity(enemy.id)) continue
       if (enemy.itemPoisonTurns > 0) {
         enemy.itemPoisonTurns--
-        this._damageEnemy(enemy, 1, { source: 'item:poison', ignoreDefense: true })
+        const poisonHit = this._damageEnemy(enemy, 1, { source: 'item:poison', ignoreDefense: true })
+        this.itemRules.onPoisonTick(enemy, poisonHit)
       }
       if (!this.currentRoom.entity(enemy.id) || this.gameOver) continue
       this._applyEnemyTraits(enemy)
@@ -1462,17 +1525,34 @@ export class GameRun {
     if (!enemy || enemy.attack <= 0) return { healthDamage: 0 }
     this.enemyAttackInterruptedRoute = true
     enemy.hasActed = true
+    const targetPosition = { ...this.player.pos }
+    const rawDamage = Math.max(0, Math.max(1, Math.floor(enemy.attack * multiplier)) - (enemy.nextAttackReduction || 0))
+    enemy.nextAttackReduction = 0
+    if (enemy.selfDestructOnAttack) {
+      const blast = this._explodeEnemy(enemy, rawDamage, 'large')
+      this._defeatEnemy(enemy, { source: 'enemy:self-explosion', suppressDeathExplosion: true })
+      const explosion = {
+        roomId: this.currentRoom?.id,
+        enemyId: enemy.id,
+        position: { ...enemy.pos },
+        targetPosition: blast?.targetPosition || null,
+        targetDefeated: !!blast && this.gameOver,
+      }
+      if (animate) this._queueExplosion(explosion)
+      return { ...(blast?.result || { healthDamage: 0 }), explosion }
+    }
+    const result = this._damagePlayer(rawDamage, { source: 'enemy:attack', enemy })
+    if (animate && this.gameOver) this.deathAnimationPending = true
     if (animate) {
       this.bus.emit('animate:attack', {
         roomId: this.currentRoom?.id,
         actor: 'enemy',
         enemyId: enemy.id,
         position: { ...enemy.pos },
+        targetPosition,
+        targetDefeated: this.gameOver,
       })
     }
-    const rawDamage = Math.max(0, Math.max(1, Math.floor(enemy.attack * multiplier)) - (enemy.nextAttackReduction || 0))
-    enemy.nextAttackReduction = 0
-    const result = this._damagePlayer(rawDamage, { source: 'enemy:attack', enemy })
     if (!this.currentRoom.entity(enemy.id)) return result
     enemy.attackCooldown = cooldownWaitTurns(enemy.attackCooldownMax)
     this._log(`${enemy.name} \u653b\u51fb\u4f60\uff0c${damageReductionLog(result)}\u3002`)
@@ -1516,7 +1596,25 @@ export class GameRun {
       this.phase = 'over'
       this._log(`\u4f60\u5012\u4e0b\u4e86\uff08\u539f\u56e0\uff1a${playerDeathCause(context)}\uff09\u3002`, { death: true })
     }
+    const enemyExplosion = context.source === 'enemy:small-explosion' || context.source === 'enemy:large-explosion'
+    if (damage > 0 && context.source !== 'enemy:attack' && !enemyExplosion) {
+      this._queueImpact({ roomId: this.currentRoom?.id, target: 'player', position: { ...this.player.pos }, defeated: this.gameOver })
+    }
     return { rawDamage: damage, absorbed, healthDamage }
+  }
+
+  _queueImpact(impact) {
+    if (impact.defeated && impact.target === 'player') this.deathAnimationPending = true
+    if (impact.defeated && impact.target === 'enemy') this.enemyDeathAnimationsPending++
+    if (this.pendingAttackImpacts) this.pendingAttackImpacts.push(impact)
+    else this.bus.emit('animate:impact', impact)
+  }
+
+  _queueExplosion(explosion) {
+    this.enemyDeathAnimationsPending++
+    if (explosion.targetDefeated) this.deathAnimationPending = true
+    if (this.pendingAttackExplosions) this.pendingAttackExplosions.push(explosion)
+    else this.bus.emit('animate:explode', explosion)
   }
 
   _healPlayer(amount, context = {}) {
@@ -1529,11 +1627,13 @@ export class GameRun {
     return healed
   }
 
-  _damageEnemy(enemy, damage, { source = 'attack', ignoreDefense = false } = {}) {
+  _damageEnemy(enemy, damage, { source = 'attack', ignoreDefense = false, impactPosition = enemy?.pos } = {}) {
     if (!enemy || !this.currentRoom?.entity(enemy.id)) return { damage: 0, healthDamage: 0, defeated: false, finishedDowned: false }
     if (enemy.downed) {
+      const exploded = enemy.deathExplosionDamage > 0
       this._defeatEnemy(enemy, { source })
-      return { damage: 0, healthDamage: 0, defeated: true, finishedDowned: true }
+      if (source !== 'attack' && !exploded) this._queueImpact({ roomId: this.currentRoom?.id, target: 'enemy', position: { ...impactPosition }, defeated: true })
+      return { damage: 0, healthDamage: 0, defeated: true, finishedDowned: true, exploded }
     }
     const hpBefore = Math.max(0, Number(enemy.hp) || 0)
     let applied = Math.max(0, Math.floor(damage || 0))
@@ -1544,23 +1644,36 @@ export class GameRun {
     if (enemy.traits?.includes('heavy-armor')) applied = Math.max(0, applied - 1)
     const healthDamage = Math.min(hpBefore, applied)
     enemy.hp -= applied
-    if (enemy.hp > 0) return { damage: healthDamage, rawDamage: applied, healthDamage, defeated: false, finishedDowned: false }
+    if (enemy.hp > 0) {
+      if (source !== 'attack' && applied > 0) this._queueImpact({ roomId: this.currentRoom?.id, target: 'enemy', position: { ...impactPosition }, defeated: false })
+      return { damage: healthDamage, rawDamage: applied, healthDamage, defeated: false, finishedDowned: false }
+    }
     enemy.hp = 0
     if (enemy.deathRule === 'revive' && !enemy.reviveUsed) {
       enemy.reviveUsed = true
       enemy.downed = true
       enemy.reviveTurns = 2
       this._log(`${enemy.name}\u5047\u6b7b\u4e86\uff0c\u4e24\u56de\u5408\u540e\u5c06\u6ee1\u8840\u590d\u6d3b\u3002`)
+      if (source !== 'attack') this._queueImpact({ roomId: this.currentRoom?.id, target: 'enemy', position: { ...impactPosition }, defeated: false })
       return { damage: healthDamage, rawDamage: applied, healthDamage, defeated: false, finishedDowned: false }
     }
+    const exploded = enemy.deathExplosionDamage > 0
     this._defeatEnemy(enemy, { source })
-    return { damage: healthDamage, rawDamage: applied, healthDamage, defeated: true, finishedDowned: false }
+    if (source !== 'attack' && !exploded) this._queueImpact({ roomId: this.currentRoom?.id, target: 'enemy', position: { ...impactPosition }, defeated: true })
+    return { damage: healthDamage, rawDamage: applied, healthDamage, defeated: true, finishedDowned: false, exploded }
   }
 
   _defeatEnemy(enemy, { source = 'attack', suppressDeathExplosion = false, suppressLoot = false } = {}) {
     if (!enemy || !this.currentRoom?.entity(enemy.id)) return false
     if (enemy.deathExplosionDamage > 0 && !suppressDeathExplosion) {
-      this._explodeEnemy(enemy, enemy.deathExplosionDamage, 'small')
+      const blast = this._explodeEnemy(enemy, enemy.deathExplosionDamage, 'small')
+      this._queueExplosion({
+        roomId: this.currentRoom?.id,
+        enemyId: enemy.id,
+        position: { ...enemy.pos },
+        targetPosition: blast?.targetPosition || null,
+        targetDefeated: !!blast && this.gameOver,
+      })
     }
     this.currentRoom.removeEntity(enemy.id)
     this._log(`${enemy.name} \u88ab\u51fb\u8d25\u3002`)
@@ -1582,7 +1695,7 @@ export class GameRun {
         this._log(`${enemy.name} \u6389\u843d\u4e86 ${drop.name}\u3002`)
       }
     }
-    if (enemy.boss) {
+    if (enemy.finalBoss) {
       this.win = true
       this.gameOver = true
       this.phase = 'over'
@@ -1794,9 +1907,10 @@ export class GameRun {
   _explodeEnemy(enemy, damage, size) {
     const radius = enemy.explosionRadius || enemy.range || 1
     if (combatDistance(enemy.pos, this.player.pos, radius) > radius) return false
+    const targetPosition = { ...this.player.pos }
     const result = this._damagePlayer(damage, { source: `enemy:${size}-explosion`, enemy })
     this._log(`${enemy.name}\u53d1\u751f\u4e86${size === 'large' ? '\u5927' : '\u5c0f'}\u81ea\u7206\uff0c${damageReductionLog(result)}\u3002`)
-    return true
+    return { targetPosition, result }
   }
 
   _triggerAmbushes(position) {
@@ -1814,8 +1928,13 @@ export class GameRun {
       flips.push({ position: enemy.pos, backUnflippable: !wasFlippable })
       this._log(`${enemy.name}\u4ece\u4f0f\u51fb\u4e2d\u73b0\u8eab\u3002`)
       if (normalizedCounter(enemy.actionDelay) === 0 && normalizedCounter(enemy.attackCooldown) === 0) {
-        this._enemyAttack(enemy, 1, { animate: false })
-        delayedAttacks.push({ enemyId: enemy.id, position: { ...enemy.pos } })
+        const targetPosition = { ...this.player.pos }
+        const outcome = this._enemyAttack(enemy, 1, { animate: false })
+        if (outcome.explosion) delayedAttacks.push({ type: 'explode', payload: outcome.explosion })
+        else {
+          delayedAttacks.push({ type: 'attack', payload: { enemyId: enemy.id, position: { ...enemy.pos }, targetPosition, targetDefeated: this.gameOver } })
+          if (this.gameOver) this.deathAnimationPending = true
+        }
         this._onEnemyAction(enemy)
         enemy.attackCooldown = cooldownWaitTurns(enemy.attackCooldownMax)
       }
@@ -1823,11 +1942,8 @@ export class GameRun {
     }
     this._animateEnemyRevealBatch(room, flips)
     for (const attack of delayedAttacks) {
-      this.bus.emit('animate:attack', {
-        roomId: room.id,
-        actor: 'enemy',
-        ...attack,
-      })
+      if (attack.type === 'explode') this._queueExplosion(attack.payload)
+      else this.bus.emit('animate:attack', { roomId: room.id, actor: 'enemy', ...attack.payload })
     }
     return ambushers.length > 0
   }
@@ -1939,7 +2055,9 @@ export class GameRun {
       if (this.player.itemState?.buffs) {
         delete this.player.itemState.buffs['r-three']
         delete this.player.itemState.buffs['r-scales']
+        delete this.player.itemState.buffs['triad-complete']
       }
+      if (this.player.itemState) delete this.player.itemState.relayCharge
       this.backpack = BackpackGrid.hydrate(data.backpack)
       this.inventoryStash = Array.isArray(data.inventoryStash) ? data.inventoryStash.filter((item) => item?.uid) : []
       // Refresh authored descriptions without resetting the run or its used charges.
@@ -2000,6 +2118,10 @@ export class GameRun {
       this.merchantEntering = false
       this.roomEntering = false
       this.combatResolving = false
+      this.deathAnimationPending = false
+      this.enemyDeathAnimationsPending = 0
+      this.pendingAttackImpacts = null
+      this.pendingAttackExplosions = null
       this.enemyAttackInterruptedRoute = false
       this.roomReward = data.roomReward?.roomId && Array.isArray(data.roomReward.choices) ? clone(data.roomReward) : null
       this.roomRewardBag = Array.isArray(data.roomRewardBag) && data.roomRewardBag.every((type) => type === 'supply' || type === 'relic')

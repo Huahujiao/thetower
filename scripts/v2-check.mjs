@@ -10,7 +10,7 @@ import { computeAttackDamage } from '../src/game/rules/modifiers.js'
 
 const removedRelics = ['r-harmonic-echo', 'r-apprentice-mark', 'r-last-stand', 'r-threshold-seal', 'r-no-mercy', 'r-blood-prism', 'r-armor-echo', 'r-inheritance-edge', 'r-breaker-spark']
 const relicIds = new Set(RELIC_DEFS.map((definition) => definition.id))
-assert.equal(RELIC_DEFS.length, 6, 'relic pool must contain 6 definitions')
+assert.equal(RELIC_DEFS.length, 17, 'relic pool must contain 17 definitions')
 const relicDrop = createRelicEntity(RELIC_DEFS[0], { c: 0, r: 0 })
 assert.equal(relicDrop.kind, 'item')
 assert.equal(relicDrop.item.type, 'relic')
@@ -22,7 +22,7 @@ assert.equal(ATTRIBUTE_ORDER.join(','), 'scorch,wither,drown')
 assert.equal(attributeModifier('scorch', 'wither').multiplier, 1.6)
 assert.equal(attributeModifier('wither', 'scorch').multiplier, 0.65)
 assert.equal(catalog.consumables.length, 6)
-assert.equal(catalog.weapons.length, 18)
+assert.equal(catalog.weapons.length, 22)
 assert.equal(catalog.defenses.length, 8)
 assert(catalog.enemyLoot.every(item => item.type === 'material'))
 assert.equal(TALENT_DEFS.length, 20, 'talent graph must contain 20 nodes')

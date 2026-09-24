@@ -2,15 +2,10 @@ import { attributeModifier } from '../data/attributes.js'
 import { getItemDefinition } from '../data/content.js'
 import { getTalentDefinition } from '../data/talents.js'
 import { combatDistance, neighbors8, chebyshev } from '../core/geometry.js'
+import { adjacentItems } from './backpack-geometry.js'
+import { activeConduits, conduitCapacity } from './synergies.js'
 
-// All spatial conditions are evaluated from occupied cells, never bounding boxes.
-export function adjacentItems(backpack, item) {
-  const placement = backpack.placementOf(item.uid)
-  if (!placement) return []
-  const own = backpack.cellsForPlacement(placement)
-  return backpack.items.filter(other => other.uid !== item.uid && backpack.cellsForPlacement(backpack.placementOf(other.uid))
-    .some(b => own.some(a => Math.abs(a.x - b.x) + Math.abs(a.y - b.y) === 1)))
-}
+export { adjacentItems }
 
 const ADJACENCY_EFFECT_TARGETS = Object.freeze({
   scope: (item) => item.type === 'weapon' && item.weaponClass === 'bow',
@@ -19,6 +14,12 @@ const ADJACENCY_EFFECT_TARGETS = Object.freeze({
   'venom-sac': (item) => item.type === 'weapon',
   spring: (item) => item.type === 'weapon',
   'shield-core': (item) => item.type === 'defense',
+  conduit: (item) => item.type === 'weapon' || item.type === 'defense' || item.id === 'fork-connector',
+  'fork-connector': (item) => item.type === 'weapon',
+  'range-disc': (item) => item.type === 'weapon' && item.weaponClass === 'bow',
+  'steady-clip': (item) => item.type === 'weapon' && item.weaponClass === 'bow',
+  'bone-nail': (item) => item.type === 'weapon' && item.weaponClass === 'polearm',
+  'toxin-vial': (item) => item.type === 'weapon',
 })
 
 export function adjacencyEffectApplies(source, target) {
@@ -65,6 +66,7 @@ export class ItemRules {
     if (defense && this.talent('guard-gain') && this.run.player.armor === 0) amount += 1
     if (defense && this.talent('guard-reply')) this.buff('guard-reply', { flat: 1 })
     this.run.player.armor += amount
+    if (activeConduits(this.run.backpack).length) this.state.conduitCharge = Math.min(3, (this.state.conduitCharge || 0) + Math.min(2, amount))
   }
   armorFloor(target, defense = false, sourceId = null) {
     if (sourceId) {
@@ -88,6 +90,16 @@ export class ItemRules {
     this.state.lastAction = kind
     if (kind !== 'movement') this.state.steps = 0
     if (kind === 'attack') this.state.travel = 0
+    if (kind === 'organize' || kind === 'craft') {
+      if (!activeConduits(this.run.backpack).length) this.state.conduitCharge = 0
+      if (!this.has('r-phase-pointer')) {
+        this.state.triadStage = 0
+        delete this.state.buffs['r-phase-pointer']
+      }
+      if (!this.has('r-relay-badge')) delete this.state.buffs['r-relay-badge']
+      if (!this.run.backpack.items.some((item) => item.id === 'range-disc')) this.state.sniperCharge = 0
+      if (!this.has('r-poison-hourglass')) this.state.poisonCharge = 0
+    }
   }
   move() {
     this.state.steps = (this.state.steps || 0) + 1
@@ -105,6 +117,7 @@ export class ItemRules {
   matchingBuffs(weapon) {
     return Object.entries(this.state.buffs).filter(([key, b]) =>
       (!key.startsWith('r-') || this.has(key)) && (key !== 'spring' || this.has(key)) &&
+      (key !== 'r-phase-pointer' || this.has('r-phase-pointer')) &&
       (!b.other || b.other !== weapon.uid) && (!b.attribute || b.attribute === weapon.attribute) &&
       (!b.otherAttribute || b.otherAttribute !== weapon.attribute))
   }
@@ -117,6 +130,7 @@ export class ItemRules {
       if (this.state.lastAction === 'movement' || extraSteps > 0) cost -= 2
       else if (this.state.lastAction === 'attack') cost++
     }
+    if (weapon.weaponClass === 'heavy' && this.has('r-heavy-wrist') && adjacentItems(this.run.backpack, weapon).length === 0) cost--
     return Math.max(1, cost)
   }
   attackContext(weapon, enemy) {
@@ -138,6 +152,15 @@ export class ItemRules {
     if (weapon.id === 'wall-sword' && run.player.armor > 0) flat += 2
     if (weapon.id === 'mountain-maul' && adjacentItems(run.backpack, weapon).length === 0) flat += 4
     if (weapon.weaponClass === 'heavy' && this.adjacent(weapon, 'weight')) flat += 2
+    const conduitSpend = Math.min(conduitCapacity(run.backpack, weapon), this.state.conduitCharge || 0)
+    flat += conduitSpend
+    if (weapon.id === 'coin-blade' && run.player.gold >= 12) flat += 2
+    if (this.has('r-step-boots') && moved) flat++
+    const sniperSpend = weapon.weaponClass === 'bow' && this.adjacent(weapon, 'range-disc') ? this.state.sniperCharge || 0 : 0
+    flat += sniperSpend
+    if (weapon.weaponClass === 'bow' && distance <= 2 && this.adjacent(weapon, 'steady-clip')) flat++
+    const poisonSpend = this.has('r-poison-hourglass') ? this.state.poisonCharge || 0 : 0
+    flat += poisonSpend
     const weapons = run.backpack.items.filter(i => i.type === 'weapon')
     if (this.has('r-scales') && weapons.length === 1) flat += 4
     if (this.has('r-blood') && run.player.hp <= run.player.maxHp / 2) flat += 3
@@ -150,11 +173,15 @@ export class ItemRules {
     flat += buffs.reduce((n,[,b]) => n + (b.flat || 0), 0)
     const triad = this.has('r-three') && new Set(weapons.map(i => i.attribute).filter(Boolean)).size === 3
     const multiplier = triad && relation.countered ? 2.2 : triad && relation.resisted ? 0.5 : relation.multiplier
-    return { ...relation, flat, multiplier, buffs, distance, ignoreDefense: weapon.id === 'rock-maul' }
+    return { ...relation, flat, multiplier, buffs, distance, conduitSpend, sniperSpend, poisonSpend, moved,
+      armorBefore: run.player.armor, ignoreDefense: weapon.id === 'rock-maul' }
   }
   consume(context) {
     // Consume before hit callbacks so freshly generated bonuses survive for the next attack.
     for (const [key] of context.buffs) delete this.state.buffs[key]
+    if (context.conduitSpend) this.state.conduitCharge = Math.max(0, (this.state.conduitCharge || 0) - context.conduitSpend)
+    if (context.sniperSpend) this.state.sniperCharge = 0
+    if (context.poisonSpend) this.state.poisonCharge = 0
     this.room.attacked = true
   }
   afterAttack(weapon, enemy, hit, context) {
@@ -162,23 +189,40 @@ export class ItemRules {
     if (run.gameOver) return
     if (weapon.id === 'rust-sword') run.player.parry = { multiplier: 0.7 }
     if (weapon.id === 'wall-sword') run.player.armor = Math.max(0, run.player.armor - 2)
+    if (this.has('r-guard-return') && context.armorBefore > run.player.armor) run.player.armor++
     if (hit.damage > 0 && this.state.lastAction === 'movement' && this.talent('flow-walk')) this.armorFloor(1)
     if (hit.damage > 0 && !enemy.downed && run.currentRoom.entity(enemy.id) && this.talent('harmony-switch') &&
         this.state.lastAttribute && this.state.lastAttribute !== weapon.attribute) {
       enemy.nextAttackReduction = 1
     }
     if (hit.damage > 0 && !enemy.downed && run.currentRoom.entity(enemy.id) && this.adjacent(weapon, 'venom-sac')) {
-      enemy.itemPoisonTurns = 2
+      enemy.itemPoisonTurns = this.adjacent(weapon, 'toxin-vial') ? 3 : 2
+      enemy.itemPoisonSource = true
+    }
+    if (hit.damage > 0 && context.moved) {
+      if (this.has('r-step-boots')) this.armorFloor(1)
+      if (this.has('r-turn-shield')) this.armorFloor(2)
+    }
+    if (hit.damage > 0 && weapon.weaponClass === 'bow' && this.adjacent(weapon, 'range-disc') && context.distance === this.range(weapon)) {
+      this.state.sniperCharge = 2
     }
     const chainedPolearm = weapon.weaponClass === 'polearm' && this.adjacent(weapon, 'chain')
-    const polearmKnockback = ['ember-spear', 'soul-spear'].includes(weapon.id) || chainedPolearm
+    const nailedPolearm = weapon.weaponClass === 'polearm' && this.adjacent(weapon, 'bone-nail')
+    const polearmKnockback = ['ember-spear', 'soul-spear'].includes(weapon.id) || chainedPolearm || nailedPolearm
     if (context.distance === 2 && polearmKnockback && run.currentRoom.entity(enemy.id) && !enemy.downed) {
-      run._knockbackEnemy(enemy, 1, { collisionDamage: (weapon.id === 'soul-spear' ? 3 : 0) + (chainedPolearm ? 2 : 0) })
+      run._knockbackEnemy(enemy, 1, {
+        collisionDamage: (weapon.id === 'soul-spear' ? 3 : 0) + (chainedPolearm ? 2 : 0) + (nailedPolearm ? 2 : 0),
+        collisionDelay: nailedPolearm ? 1 : 0,
+      })
     }
     if (hit.defeated) {
       if (weapon.id === 'bone-knife') run._recoverEnergy(1)
       if (weapon.id === 'erosion-knife') run._recoverEnergy(context.countered ? 2 : 1)
       if (weapon.id === 'return-axe') this.buff('return-axe', { other: weapon.uid, flat: 2, discount: 1 })
+      if (this.has('r-gold-hook') && (this.room.goldHookKills || 0) < 3) {
+        run.player.gold++
+        this.room.goldHookKills = (this.room.goldHookKills || 0) + 1
+      }
       if (this.adjacent(weapon, 'spring')) this.buff('spring', { other: weapon.uid, discount: 1 })
       if (this.talent('flow-relay')) this.buff('flow-relay', { other: weapon.uid, discount: 1 })
       if (this.talent('harmony-kill') && context.countered) run._recoverEnergy(1)
@@ -191,6 +235,20 @@ export class ItemRules {
       }
     }
     if (run.gameOver) return
+    if (hit.damage > 0 && this.has('r-relay-badge')) this.buff('r-relay-badge', { other: weapon.uid, flat: 1 })
+    if (this.has('r-phase-pointer') && hit.damage > 0 && weapon.attribute) {
+      const order = ['scorch', 'wither', 'drown']
+      const expected = order[this.state.triadStage || 0]
+      if (weapon.attribute === expected) {
+        this.state.triadStage = (this.state.triadStage || 0) + 1
+        if (this.state.triadStage === 3) {
+          this.state.triadStage = 0
+          this.buff('r-phase-pointer', { flat: 3, discount: 1 })
+        }
+      } else if ((this.state.triadStage || 0) > 0 && !this.room.phasePointerUsed) {
+        this.room.phasePointerUsed = true
+      } else this.state.triadStage = weapon.attribute === order[0] ? 1 : 0
+    } else if (!this.has('r-phase-pointer')) this.state.triadStage = 0
     if (hit.damage > 0 && this.has('tide-shield') && weapon.attribute === 'drown') this.armorFloor(2, true, 'tide-shield')
     if (hit.damage > 0 && this.has('red-armor') && weapon.attribute === 'scorch' && run.player.hp <= run.player.maxHp / 2) this.armorFloor(3, true, 'red-armor')
     if (this.talent('harmony-resist') && context.resisted) this.buff('harmony-resist', { flat: 2, otherAttribute: weapon.attribute })
@@ -225,11 +283,18 @@ export class ItemRules {
   }
   discarded() {}
 
+  onPoisonTick(enemy, hit) {
+    if ((enemy.itemPoisonSource || enemy.itemPoisonBuild) && hit.damage > 0 && this.has('r-poison-hourglass')) {
+      this.state.poisonCharge = Math.min(3, (this.state.poisonCharge || 0) + 1)
+    }
+  }
+
   sourceName(id) { return getItemDefinition(id)?.name || getTalentDefinition(id)?.name || id }
 
   pendingLines(weapon = null) {
     const buffs = weapon ? this.matchingBuffs(weapon) : Object.entries(this.state.buffs).filter(([key]) =>
-      (!key.startsWith('r-') || this.has(key)) && (key !== 'spring' || this.has(key)))
+      (!key.startsWith('r-') || this.has(key)) && (key !== 'spring' || this.has(key)) &&
+      (key !== 'r-phase-pointer' || this.has('r-phase-pointer')))
     return buffs.map(([key, buff]) => {
       const effects = []
       if (buff.flat) effects.push(`伤害+${buff.flat}`)
@@ -243,12 +308,21 @@ export class ItemRules {
     const lines = []
     if (weapon.id === 'silver-guard' && adjacent.some(i => i.type === 'defense')) lines.push('防具邻接：攻击+1')
     if (weapon.id === 'mountain-maul' && adjacent.length === 0) lines.push('四向留白：攻击+4')
+    if (conduitCapacity(this.run.backpack, weapon)) lines.push(`导流线：可用蓄势 ${this.state.conduitCharge || 0}/3`)
+    if (weapon.id === 'coin-blade') lines.push(`金币 ${this.run.player.gold}/12${this.run.player.gold >= 12 ? '，攻击+2' : ''}`)
+    if (this.has('r-phase-pointer') && weapon.attribute) lines.push(`换相指针：印记 ${this.state.triadStage || 0}/3`)
+    if (this.has('r-step-boots')) lines.push('步痕靴：移动后攻击+1，命中补足护甲')
+    if (weapon.weaponClass === 'bow' && this.adjacent(weapon, 'range-disc')) lines.push(`测距盘：下一箭蓄势 ${this.state.sniperCharge || 0}/2`)
+    if (weapon.weaponClass === 'polearm' && this.adjacent(weapon, 'bone-nail')) lines.push('裂骨钉：碰撞伤害+2，延迟行动1次')
+    if (this.has('r-poison-hourglass')) lines.push(`蚀时漏斗：蓄毒 ${this.state.poisonCharge || 0}/3`)
     for (const [id, valid, effect] of [
       ['scope', weapon.weaponClass === 'bow', '射程+1'],
       ['weight', weapon.weaponClass === 'heavy', '攻击+2，体力消耗+1'],
       ['chain', weapon.weaponClass === 'polearm', '距离2命中击退1格，碰撞伤害+2'],
       ['venom-sac', true, '命中附毒并刷新至2回合'],
       ['spring', true, '击杀后，下一击更换武器体力消耗-1'],
+      ['steady-clip', weapon.weaponClass === 'bow', '距离不超过2时攻击+1'],
+      ['toxin-vial', this.adjacent(weapon, 'venom-sac'), '附毒持续3次敌人阶段'],
     ]) {
       if (valid && this.has(id) && adjacent.some(i => i.id === id)) lines.push(`${this.sourceName(id)}：${effect}`)
     }
@@ -257,6 +331,10 @@ export class ItemRules {
 
   statusLines() {
     const lines = this.pendingLines()
+    if (activeConduits(this.run.backpack).length) lines.push(`导流线：蓄势 ${this.state.conduitCharge || 0}/3`)
+    if (this.has('r-phase-pointer')) lines.push(`换相指针：印记 ${this.state.triadStage || 0}/3`)
+    if (this.run.backpack.items.some((item) => item.id === 'range-disc')) lines.push(`测距盘：蓄势 ${this.state.sniperCharge || 0}/2`)
+    if (this.has('r-poison-hourglass')) lines.push(`蚀时漏斗：蓄毒 ${this.state.poisonCharge || 0}/3`)
     if (this.run.player.parry) lines.push('锈蚀短剑：下一次近战普通攻击减伤30%')
     if (this.has('wood-shield')) lines.push(`木盾：下次是第${(this.state.enemyAttacks || 0) % 2 === 0 ? 1 : 2}次受击（第2次触发）`)
     if (this.talent('survival-energy')) lines.push(`续命：受生命伤害计数${(this.state.healthHits || 0) % 2}/2`)

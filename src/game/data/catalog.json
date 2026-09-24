@@ -608,6 +608,7 @@
       "behavior": "stationary",
       "explosionRadius": 2,
       "deathExplosionDamage": 6,
+      "selfDestructOnAttack": true,
       "range": 2,
       "hp": 6,
       "attack": 12,
@@ -1091,6 +1092,54 @@
       "energyCost": 5,
       "description": "物品外缘四向无其他物品时，攻击+4；边界不算占用。",
       "crafted": true
+    },
+    {
+      "id": "triad-ember",
+      "name": "烬钥剑",
+      "type": "weapon",
+      "weaponClass": "sword",
+      "attribute": "scorch",
+      "attack": 4,
+      "range": 1,
+      "shape": [[1], [1]],
+      "minFloor": 1,
+      "description": "灼热剑；有效命中可推进换相指针的灼热印记。"
+    },
+    {
+      "id": "triad-wither",
+      "name": "腐环匕",
+      "type": "weapon",
+      "weaponClass": "dagger",
+      "attribute": "wither",
+      "attack": 3,
+      "range": 1,
+      "shape": [[1]],
+      "minFloor": 2,
+      "description": "枯萎匕首；有效命中可推进换相指针的枯萎印记。"
+    },
+    {
+      "id": "triad-tide",
+      "name": "潮尺弓",
+      "type": "weapon",
+      "weaponClass": "bow",
+      "attribute": "drown",
+      "attack": 3,
+      "range": 3,
+      "shape": [[1, 1], [0, 1]],
+      "minFloor": 3,
+      "description": "沉溺弓；有效命中可推进换相指针的沉溺印记。"
+    },
+    {
+      "id": "coin-blade",
+      "name": "铸币剑",
+      "type": "weapon",
+      "weaponClass": "sword",
+      "attribute": "drown",
+      "attack": 4,
+      "range": 1,
+      "shape": [[1], [1]],
+      "minFloor": 1,
+      "description": "持有至少12金币时攻击+2。"
     }
   ],
   "consumables": [
@@ -1260,6 +1309,55 @@
       ],
       "description": "相邻重武器攻击+2，体力消耗+1。",
       "dropOnly": true
+    },
+    {
+      "id": "conduit",
+      "name": "导流线",
+      "type": "material",
+      "attribute": null,
+      "shape": [[1], [1]],
+      "description": "四向相邻任意防具时，获得护甲会积蓄导流点，上限3；四向相邻的任意武器可在攻击时消耗至多3点并等量增伤。"
+    },
+    {
+      "id": "fork-connector",
+      "name": "分叉接头",
+      "type": "material",
+      "attribute": null,
+      "shape": [[1]],
+      "description": "四向同时连接已接入防具的导流线与任意武器时，该武器可消耗至多1点导流蓄势。"
+    },
+    {
+      "id": "range-disc",
+      "name": "测距盘",
+      "type": "material",
+      "attribute": "drown",
+      "shape": [[1]],
+      "minFloor": 2,
+      "description": "四向相邻任意弓时，该弓在最大射程有效命中可为下一箭蓄2点伤害；不叠加。"
+    },
+    {
+      "id": "steady-clip",
+      "name": "稳弦扣",
+      "type": "material",
+      "attribute": null,
+      "shape": [[1]],
+      "description": "四向相邻任意弓时，该弓攻击距离不超过2格的敌人伤害+1。"
+    },
+    {
+      "id": "bone-nail",
+      "name": "裂骨钉",
+      "type": "material",
+      "attribute": "wither",
+      "shape": [[1]],
+      "description": "四向相邻任意长柄武器时，该武器距离2命中可击退目标；撞墙或撞到敌人时额外造成2点碰撞伤害，并延迟目标行动1次。"
+    },
+    {
+      "id": "toxin-vial",
+      "name": "续毒瓶",
+      "type": "material",
+      "attribute": "wither",
+      "shape": [[1]],
+      "description": "四向相邻的任意武器附毒时，中毒持续3次敌人阶段。"
     }
   ],
   "merchantWeapons": [],
