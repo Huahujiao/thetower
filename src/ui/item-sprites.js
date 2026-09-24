@@ -98,6 +98,22 @@ const ITEM_SPRITE_SOURCES = Object.freeze({
     small: new URL('../assets/inventory/relic-scales-v1-small.png', import.meta.url).href,
     medium: new URL('../assets/inventory/relic-scales-v1-medium.png', import.meta.url).href,
   },
+  'r-heavy-wrist': {
+    small: new URL('../assets/inventory/relic-heavy-wrist-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/relic-heavy-wrist-v1-medium.png', import.meta.url).href,
+  },
+  'r-step-boots': {
+    small: new URL('../assets/inventory/relic-step-boots-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/relic-step-boots-v1-medium.png', import.meta.url).href,
+  },
+  'r-turn-shield': {
+    small: new URL('../assets/inventory/relic-turn-shield-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/relic-turn-shield-v1-medium.png', import.meta.url).href,
+  },
+  'r-poison-hourglass': {
+    small: new URL('../assets/inventory/relic-poison-hourglass-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/relic-poison-hourglass-v1-medium.png', import.meta.url).href,
+  },
   'wood-shield': {
     small: new URL('../assets/inventory/defense-wood-shield-v1-small.png', import.meta.url).href,
     medium: new URL('../assets/inventory/defense-wood-shield-v1-medium.png', import.meta.url).href,
@@ -153,6 +169,22 @@ const ITEM_SPRITE_SOURCES = Object.freeze({
   weight: {
     small: new URL('../assets/inventory/material-weight-v1-small.png', import.meta.url).href,
     medium: new URL('../assets/inventory/material-weight-v1-medium.png', import.meta.url).href,
+  },
+  'range-disc': {
+    small: new URL('../assets/inventory/material-range-disc-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/material-range-disc-v1-medium.png', import.meta.url).href,
+  },
+  'steady-clip': {
+    small: new URL('../assets/inventory/material-steady-clip-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/material-steady-clip-v1-medium.png', import.meta.url).href,
+  },
+  'bone-nail': {
+    small: new URL('../assets/inventory/material-bone-nail-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/material-bone-nail-v1-medium.png', import.meta.url).href,
+  },
+  'toxin-vial': {
+    small: new URL('../assets/inventory/material-toxin-vial-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/material-toxin-vial-v1-medium.png', import.meta.url).href,
   },
   'health-potion': {
     small: new URL('../assets/inventory/item-health-potion-v1-small.png', import.meta.url).href,

@@ -158,11 +158,11 @@ import { getItemDefinition } from '../src/game/data/content.js'
   assert.equal(suggestedSynergyId([], 'item', () => 0), null)
 }
 
-// A saved run keeps individual item state and the second batch's text cards.
+// A saved run keeps individual item state and all second-batch artwork resolves.
 {
   const ids = ['range-disc', 'steady-clip', 'bone-nail', 'toxin-vial',
     'r-heavy-wrist', 'r-step-boots', 'r-turn-shield', 'r-poison-hourglass']
-  for (const id of ids) assert.equal(itemSpriteSources({ id }), null)
+  for (const id of ids) assert(itemSpriteSources({ id })?.medium)
   const run = fixture()
   add(run, 'r-poison-hourglass')
   run.itemRules.state.poisonCharge = 2

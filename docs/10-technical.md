@@ -16,7 +16,7 @@
 
 规则数值以运行时为准。`catalog.json`、`progression.js`、`relics.js`、`merchants.js` 和 `traps.js` 是当前内容定义；`src/game/data/enemies.js` 的 `ENEMY_HP_MULTIPLIER`（当前 2）参与生成生命与图鉴展示。
 
-物品效果在 `items.js` 按各自条件结算，没有固定套装激活名单；`backpack-geometry.js` 计算四向相邻，`synergies.js` 提供导流连接与奖励标签推荐。标签只影响候选排序。毒蚀蓄势在敌人中毒伤害结算后累计，商店付款与界面展示共用 `GameRun.merchantPrice()`。待用效果进度写入 `player.itemState`，房间内次数限制写入该房间的物品运行状态。第二批新物品暂用文字显示。
+物品效果在 `items.js` 按各自条件结算，没有固定套装激活名单；`backpack-geometry.js` 计算四向相邻，`synergies.js` 提供导流连接与奖励标签推荐。标签只影响候选排序。毒蚀蓄势在敌人中毒伤害结算后累计，商店付款与界面展示共用 `GameRun.merchantPrice()`。待用效果进度写入 `player.itemState`，房间内次数限制写入该房间的物品运行状态。第二批新增物品的 PNG 源图保存在 `src/assets/inventory/backup/source/`，small 与 medium 版本由资源生成脚本导出。
 
 ## 模型、视图和动画
 
