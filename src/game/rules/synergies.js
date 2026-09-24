@@ -3,11 +3,11 @@ import { adjacentItems } from './backpack-geometry.js'
 
 // These tags affect only reward suggestions. They never activate an item effect.
 const HINTS = Object.freeze({
-  'silver-guard': ['armor'], 'wood-shield': ['armor'], conduit: ['armor'], 'shield-core': ['armor'],
+  'silver-guard': ['armor'], 'wood-shield': ['armor'], conduit: ['armor'], 'fork-connector': ['armor'], 'shield-core': ['armor'],
   'wall-sword': ['armor'], 'r-guard-return': ['armor'], 'iron-powder': ['armor'],
   'return-axe': ['switch'], spring: ['switch'], 'r-relay-badge': ['switch'],
   'tide-blade': ['switch', 'movement'], 'r-traveler': ['switch', 'movement'],
-  'triad-ember': ['attributes'], 'triad-wither': ['attributes'], 'triad-tide': ['attributes'],
+  'triad-ember': ['attributes'], 'triad-wither': ['poison'],
   'r-phase-pointer': ['attributes'], 'r-three': ['attributes'],
   'coin-blade': ['gold'], 'r-money-scale': ['gold'], 'r-trade-voucher': ['gold'],
   'r-gold-hook': ['gold'], 'r-ledger': ['gold'],
@@ -29,11 +29,15 @@ function tagsOf(item) {
 
 export function suggestedSynergyId(items, kind, random = Math.random, eligible = () => true) {
   const owned = new Set(items.map((item) => item.id))
+  const ownedAttributes = new Set(items.filter((item) => item.type === 'weapon').map((item) => item.attribute).filter(Boolean))
+  const wantsAttributeCoverage = items.some((item) => tagsOf(item).has('attributes'))
   const tags = new Map()
   for (const item of items) for (const tag of tagsOf(item)) tags.set(tag, (tags.get(tag) || 0) + 1)
+  tags.set('attributes', (tags.get('attributes') || 0) + ownedAttributes.size)
   const candidates = ALL_ITEM_DEFS.filter((item) => !owned.has(item.id) && eligible(item.id) &&
     (item.type === 'relic' ? 'relic' : 'item') === kind)
-    .map((item) => ({ id: item.id, score: [...tagsOf(item)].reduce((sum, tag) => sum + (tags.get(tag) || 0), 0) }))
+    .map((item) => ({ id: item.id, score: [...tagsOf(item)].reduce((sum, tag) => sum + (tags.get(tag) || 0), 0) +
+      Number(item.type === 'weapon' && item.attribute && wantsAttributeCoverage && !ownedAttributes.has(item.attribute)) * 2 }))
   const bestScore = Math.max(0, ...candidates.map((item) => item.score))
   if (bestScore === 0) return null
   const best = candidates.filter((item) => item.score === bestScore)
@@ -48,8 +52,11 @@ export function activeConduits(backpack) {
 export function conduitCapacity(backpack, weapon) {
   const conduits = activeConduits(backpack)
   if (conduits.some((wire) => adjacentItems(backpack, wire).some((item) => item.uid === weapon.uid))) return 3
-  const fork = backpack.items.some((item) => item.id === 'fork-connector' &&
-    adjacentItems(backpack, item).some((neighbor) => conduits.some((wire) => wire.uid === neighbor.uid)) &&
+  return 0
+}
+
+export function forkBridgeActive(backpack, weapon) {
+  return backpack.items.some((item) => item.id === 'fork-connector' &&
+    adjacentItems(backpack, item).some((neighbor) => neighbor.type === 'defense') &&
     adjacentItems(backpack, item).some((neighbor) => neighbor.uid === weapon.uid))
-  return fork ? 1 : 0
 }

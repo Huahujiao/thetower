@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { fixture, add, enemy, attack } from './item-test-helpers.mjs'
-import { activeConduits, conduitCapacity, suggestedSynergyId } from '../src/game/rules/synergies.js'
+import { activeConduits, conduitCapacity, forkBridgeActive, suggestedSynergyId } from '../src/game/rules/synergies.js'
 import { buildRoomRewardChoices } from '../src/game/data/rewards.js'
 import { GameRun, SAVE_KEY } from '../src/game/run.js'
 import { itemSpriteSources } from '../src/ui/item-sprites.js'
@@ -28,9 +28,10 @@ import { getItemDefinition } from '../src/game/data/content.js'
 {
   const run = fixture()
   add(run, 'r-ledger')
-  assert.equal(run.merchantPrice({ price: 9 }), 8)
+  assert.equal(run.merchantPrice({ price: 9 }), 9)
+  assert.equal(run.merchantRestockPrice({ restockPrice: 6 }), 4)
   add(run, 'r-trade-voucher')
-  assert.equal(run.merchantPrice({ price: 9 }), 7)
+  assert.equal(run.merchantPrice({ price: 9 }), 8)
   assert.equal(run.merchantPrice({ price: 1 }), 1)
   assert(getItemDefinition('coin-blade').description.includes('至少12金币'))
   assert(getItemDefinition('r-money-scale').description.includes('额外获得1金币'))
@@ -48,7 +49,46 @@ import { getItemDefinition } from '../src/game/data/content.js'
   run.itemRules.move()
   assert.equal(run.itemRules.attackContext(maul, target).flat, 4)
   attack(run, maul, target)
+  assert.equal(run.player.armor, 1)
+  run._damagePlayer(1, { source: 'enemy:attack', enemy: { range: 1 } })
   assert.equal(run.player.armor, 2)
+}
+
+{
+  const run = fixture()
+  const shield = add(run, 'r-turn-shield')
+  run.itemRules.move()
+  assert.equal(run.itemRules.state.turnShieldReady, true)
+  run.backpack.removeByUid(shield.uid)
+  run.itemRules.action('organize')
+  assert.equal(run.itemRules.state.turnShieldReady, false)
+  add(run, 'r-turn-shield')
+  run._damagePlayer(1, { source: 'enemy:attack', enemy: { range: 1 } })
+  assert.equal(run.player.armor, 0)
+}
+
+{
+  const run = fixture()
+  const sword = add(run, 'rust-sword', 0, 0)
+  const fork = add(run, 'fork-connector', 1, 0)
+  const shield = add(run, 'wood-shield', 2, 0)
+  assert(forkBridgeActive(run.backpack, sword))
+  assert.equal(run.itemRules.attackContext(sword, enemy(run)).flat, 1)
+  run.backpack.move(shield.uid, 5, 0)
+  assert.equal(forkBridgeActive(run.backpack, sword), false)
+  assert.equal(run.itemRules.attackContext(sword, run.currentRoom.entityAt({ c: 4, r: 3 })).flat, 0)
+  assert(run.backpack.placementOf(fork.uid))
+}
+
+{
+  const run = fixture()
+  add(run, 'conduit', 0, 0)
+  add(run, 'wood-shield', 1, 0)
+  add(run, 'r-guard-return')
+  run.player.armor = 2
+  run._damagePlayer(2, { source: 'enemy:attack', enemy: { range: 1 } })
+  assert.equal(run.player.armor, 1)
+  assert.equal(run.itemRules.state.conduitCharge, 1)
 }
 
 // Defense, wire, and recipient can be of any applicable item type.
@@ -120,21 +160,42 @@ import { getItemDefinition } from '../src/game/data/content.js'
   assert.equal(run.itemRules.state.poisonCharge, 1) // The remaining poison tick charges the next attack.
 }
 
-// The pointer reads attributes across arbitrary weapon types.
+// Two arbitrary attributes enable switching; the named elemental weapons each work alone.
 {
   const run = fixture()
   const scorch = add(run, 'rust-sword')
   const wither = add(run, 'bone-knife')
-  const drown = add(run, 'wood-bow')
   add(run, 'r-phase-pointer')
   const target = enemy(run, { hp: 200 })
   attack(run, scorch, target)
+  assert.equal(run.itemRules.state.buffs['r-phase-pointer'], undefined)
   attack(run, wither, target)
-  attack(run, drown, target)
-  assert.equal(run.itemRules.state.buffs['r-phase-pointer'].flat, 3)
+  assert.equal(run.itemRules.state.buffs['r-phase-pointer'].flat, 1)
   assert.equal(run.itemRules.cost(scorch), scorch.energyCost - 1)
   attack(run, scorch, target)
+  assert.equal(run.itemRules.state.buffs['r-phase-pointer'].flat, 1)
+  attack(run, scorch, target)
   assert.equal(run.itemRules.state.buffs['r-phase-pointer'], undefined)
+}
+
+{
+  const run = fixture()
+  const wither = add(run, 'bone-knife')
+  const ember = add(run, 'triad-ember')
+  const target = enemy(run, { hp: 200 })
+  attack(run, wither, target)
+  assert.equal(run.itemRules.attackContext(ember, target).flat, 1)
+  const dagger = add(run, 'triad-wither')
+  target.itemPoisonTurns = 2
+  assert.equal(run.itemRules.attackContext(dagger, target).flat, 2)
+}
+
+{
+  const run = fixture()
+  const bow = add(run, 'triad-tide')
+  const target = enemy(run, { hp: 200, pos: { c: 0, r: 3 } })
+  attack(run, bow, target)
+  assert.equal(run.player.energy, 7)
 }
 
 {
@@ -158,6 +219,18 @@ import { getItemDefinition } from '../src/game/data/content.js'
   assert.equal(suggestedSynergyId([], 'item', () => 0), null)
 }
 
+{
+  const run = fixture()
+  add(run, 'rust-sword')
+  add(run, 'r-phase-pointer')
+  const only = (...ids) => (id) => ids.includes(id)
+  assert.equal(suggestedSynergyId(run.backpack.items, 'item', () => 0,
+    only('ember-spear', 'bone-knife')), 'bone-knife')
+  add(run, 'bone-knife')
+  assert.equal(suggestedSynergyId(run.backpack.items, 'item', () => 0,
+    only('ember-spear', 'wood-bow')), 'wood-bow')
+}
+
 // A saved run keeps individual item state and all second-batch artwork resolves.
 {
   const ids = ['range-disc', 'steady-clip', 'bone-nail', 'toxin-vial',
@@ -172,6 +245,21 @@ import { getItemDefinition } from '../src/game/data/content.js'
   try {
     const loaded = new GameRun()
     assert.equal(loaded.itemRules.state.poisonCharge, 2)
+  } finally { globalThis.localStorage = previous }
+}
+
+{
+  const run = fixture()
+  const data = run.serialize()
+  data.player.itemState = { buffs: {} }
+  data.player.itemState.triadStage = 2
+  data.player.itemState.buffs['r-phase-pointer'] = { flat: 3, discount: 1 }
+  const previous = globalThis.localStorage
+  globalThis.localStorage = { getItem: (key) => key === SAVE_KEY ? JSON.stringify(data) : null, setItem() {}, removeItem() {} }
+  try {
+    const loaded = new GameRun()
+    assert.equal(loaded.itemRules.state.triadStage, undefined)
+    assert.equal(loaded.itemRules.state.buffs['r-phase-pointer'], undefined)
   } finally { globalThis.localStorage = previous }
 }
 

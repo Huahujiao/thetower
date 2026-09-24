@@ -44,13 +44,13 @@ export const RELIC_DEFS = Object.freeze([
   {
     "id": "r-guard-return",
     "name": "回甲刻印",
-    "description": "用武器攻击使自身护甲减少后，返还1点护甲。",
+    "description": "自身护甲因武器效果或敌人普通攻击降低后，返还1点护甲。",
     "attribute": null
   },
   {
     "id": "r-phase-pointer",
     "name": "换相指针",
-    "description": "任意武器按灼热→枯萎→沉溺的顺序有效命中后，下一次武器攻击伤害+3、体力消耗-1；每房首次错序命中保留已有印记。",
+    "description": "用与上次攻击不同属性的武器有效命中后，下一次武器攻击伤害+1、体力消耗-1；不叠加。",
     "attribute": null
   },
   {
@@ -74,7 +74,7 @@ export const RELIC_DEFS = Object.freeze([
   {
     "id": "r-ledger",
     "name": "折价账本",
-    "description": "普通商人货品价格减少1金币，最低为1金币；可与其他折扣叠加。",
+    "description": "普通商人刷新货架费用减少2金币，最低为1金币。",
     "attribute": null
   },
   {
@@ -92,7 +92,7 @@ export const RELIC_DEFS = Object.freeze([
   {
     "id": "r-turn-shield",
     "name": "回身盾",
-    "description": "主动移动后立即用任意武器有效命中，将护甲补足至2。",
+    "description": "主动移动后，下一次受到敌人普通攻击前获得2护甲；重复移动刷新，不叠加。",
     "attribute": null
   },
   {

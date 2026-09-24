@@ -1103,7 +1103,7 @@
       "range": 1,
       "shape": [[1], [1]],
       "minFloor": 1,
-      "description": "灼热剑；有效命中可推进换相指针的灼热印记。"
+      "description": "若上一把用于攻击的武器属性不同，本次攻击伤害+1。"
     },
     {
       "id": "triad-wither",
@@ -1115,7 +1115,7 @@
       "range": 1,
       "shape": [[1]],
       "minFloor": 2,
-      "description": "枯萎匕首；有效命中可推进换相指针的枯萎印记。"
+      "description": "攻击中毒敌人时，伤害+2。"
     },
     {
       "id": "triad-tide",
@@ -1127,7 +1127,7 @@
       "range": 3,
       "shape": [[1, 1], [0, 1]],
       "minFloor": 3,
-      "description": "沉溺弓；有效命中可推进换相指针的沉溺印记。"
+      "description": "在当前最大射程有效命中后，返还1体力。"
     },
     {
       "id": "coin-blade",
@@ -1324,7 +1324,7 @@
       "type": "material",
       "attribute": null,
       "shape": [[1]],
-      "description": "四向同时连接已接入防具的导流线与任意武器时，该武器可消耗至多1点导流蓄势。"
+      "description": "本物品同时四向相邻防具与武器时，该武器攻击+1；多个分叉接头不叠加。"
     },
     {
       "id": "range-disc",

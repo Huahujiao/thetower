@@ -390,9 +390,9 @@
                 LABELS.sellSelected }}{{ selectedItem ? ` ${merchantSellPrice(selectedItem)}` : '' }}
             </button><button
               v-if="merchant?.restockPrice > 0" data-action="merchant-refresh"
-              :disabled="state.player.gold < merchant.restockPrice" @click="handleAction('merchant-refresh')"
+              :disabled="state.player.gold < run.merchantRestockPrice(merchant)" @click="handleAction('merchant-refresh')"
             >
-              {{ LABELS.refreshStock }} {{ merchant.restockPrice
+              {{ LABELS.refreshStock }} {{ run.merchantRestockPrice(merchant)
               }}
             </button>
           </div>

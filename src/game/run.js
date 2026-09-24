@@ -1041,9 +1041,14 @@ export class GameRun {
   }
 
   merchantPrice(stock) {
-    const discount = Number(this.backpack.items.some((item) => item.id === 'r-trade-voucher')) +
-      Number(this.backpack.items.some((item) => item.id === 'r-ledger'))
+    const discount = Number(this.backpack.items.some((item) => item.id === 'r-trade-voucher'))
     return Math.max(1, (Number(stock?.price) || 0) - discount)
+  }
+
+  merchantRestockPrice(merchant = this.merchantEntity) {
+    const base = Number(merchant?.restockPrice) || 0
+    if (base <= 0) return 0
+    return Math.max(1, base - (this.backpack.items.some((item) => item.id === 'r-ledger') ? 2 : 0))
   }
 
   buyMerchantItem(index) {
@@ -1068,7 +1073,7 @@ export class GameRun {
 
   refreshMerchantInventory() {
     const merchant = this.merchantEntity
-    const price = merchant?.restockPrice || 0
+    const price = this.merchantRestockPrice(merchant)
     if (this.phase !== 'merchant' || !merchant || price <= 0) return false
     if (this.player.gold < price) return this._reject('\u91d1\u5e01\u4e0d\u8db3\u3002')
     if (!refreshMerchantStock(merchant, this.currentRoom.floor, this.random)) return false
@@ -2056,8 +2061,12 @@ export class GameRun {
         delete this.player.itemState.buffs['r-three']
         delete this.player.itemState.buffs['r-scales']
         delete this.player.itemState.buffs['triad-complete']
+        if (Object.hasOwn(this.player.itemState, 'triadStage')) delete this.player.itemState.buffs['r-phase-pointer']
       }
-      if (this.player.itemState) delete this.player.itemState.relayCharge
+      if (this.player.itemState) {
+        delete this.player.itemState.relayCharge
+        delete this.player.itemState.triadStage
+      }
       this.backpack = BackpackGrid.hydrate(data.backpack)
       this.inventoryStash = Array.isArray(data.inventoryStash) ? data.inventoryStash.filter((item) => item?.uid) : []
       // Refresh authored descriptions without resetting the run or its used charges.
