@@ -106,13 +106,7 @@ export function randomConsumableDefinition(floor, random = Math.random) {
 }
 
 export function randomNeutralItem(floor, random = Math.random) {
-  const defensePool = DEFENSES.filter((defense) => floor >= (defense.minFloor || 1))
-  const consumablePool = CONSUMABLES.filter((item) => floor >= (item.minFloor || 1))
-  if (!defensePool.length) return makeItem(randomConsumableDefinition(floor, random))
-  if (!consumablePool.length) return makeItem(defensePool[Math.floor(random() * defensePool.length)])
-  return random() < 25 / 42
-    ? makeItem(defensePool[Math.floor(random() * defensePool.length)])
-    : makeItem(randomConsumableDefinition(floor, random))
+  return makeItem(randomConsumableDefinition(floor, random))
 }
 
 export function randomWeapon(floor, random = Math.random) {

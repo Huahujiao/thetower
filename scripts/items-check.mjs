@@ -9,7 +9,10 @@ import { rangePulse } from '../src/render/attack-range-overlay.js'
 
 assert.equal(ALL_ITEM_DEFS.length, 65)
 assert.equal(makeItemById('short-sword'), null)
-for (let i = 0; i < 100; i++) assert.notEqual(randomNeutralItem(1, () => i / 100).type, 'material')
+for (let i = 0; i < 100; i++) {
+  const groundItem = randomNeutralItem(1, () => i / 100)
+  assert.notEqual(groundItem.type, 'defense')
+}
 
 // Backpack changes spend one turn; repositioning on the free-form staging canvas is free.
 {

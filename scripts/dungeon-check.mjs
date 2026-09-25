@@ -37,6 +37,7 @@ for (let seed = 1; seed <= 100; seed++) {
     assert.equal(entities.filter((entity) => entity.kind === 'enemy').length, Math.round(cards * 0.25))
     assert.equal(entities.filter((entity) => entity.kind === 'item' && entity.item?.type === 'weapon').length, Math.round(cards * 0.25))
     assert(entities.length / cards >= 0.9, `${room.id} has too many empty cards`)
+    assert(!entities.some((entity) => entity.kind === 'item' && entity.item?.type === 'defense'), `${room.id} generated a defense on the ground`)
   }
   const restored = Dungeon.hydrate(dungeon.serialize())
   assert.equal(validateDungeonLayout(restored), true)
