@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { fixture, add, select, enemy, attack } from './item-test-helpers.mjs'
 import { GameRun, SAVE_KEY } from '../src/game/run.js'
-import { ALL_ITEM_DEFS, RECIPES, randomItem, makeItemById } from '../src/game/data/content.js'
+import { ALL_ITEM_DEFS, RECIPES, randomNeutralItem, makeItemById } from '../src/game/data/content.js'
 import { createMerchantEntity, buildMerchantStock, refreshMerchantSlot } from '../src/game/data/merchants.js'
 import { adjacentItems } from '../src/game/rules/items.js'
 import { attackRangeCells, enemyThreatCells, weaponTargetCells } from '../src/game/rules/attack-range.js'
@@ -9,7 +9,7 @@ import { rangePulse } from '../src/render/attack-range-overlay.js'
 
 assert.equal(ALL_ITEM_DEFS.length, 65)
 assert.equal(makeItemById('short-sword'), null)
-for (let i = 0; i < 100; i++) assert.notEqual(randomItem(1, () => i / 100).type, 'material')
+for (let i = 0; i < 100; i++) assert.notEqual(randomNeutralItem(1, () => i / 100).type, 'material')
 
 // Backpack changes spend one turn; repositioning on the free-form staging canvas is free.
 {
@@ -413,12 +413,12 @@ for(let i=0;i<100;i++) {
   assert.equal(result.stopped,true);assert.equal(run.phase,'level-up')
   assert.equal(run.globalTurn,1);assert.deepEqual(run.player.pos,{c:2,r:3})
 }
-// Generated tactical approach cells stay clear and survive serialization.
+// Generated tactical approach markers stay in bounds and survive serialization.
 {
   const run=new GameRun({autoLoad:false,random:()=>0.99}),kinds=new Set()
   for(const room of run.dungeon.rooms.values()) {
     kinds.add(room.tacticalLayout)
-    for(const cell of room.tacticalCells||[]) assert(room.isEmpty(cell))
+    for(const cell of room.tacticalCells||[]) assert(room.contains(cell))
     assert.deepEqual(room.serialize().tacticalCells,room.tacticalCells||[])
   }
   assert(kinds.has('firing'));assert(kinds.has('wall'))

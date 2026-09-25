@@ -31,6 +31,13 @@ for (let seed = 1; seed <= 100; seed++) {
     assert.equal(bossEdge.locked, true)
     assert([...branch.entities.values()].some((entity) => entity.kind === 'key' && entity.edgeId === bossEdge.id))
   }
+  for (const room of dungeon.rooms.values()) {
+    const cards = room.width * room.height
+    const entities = [...room.entities.values()]
+    assert.equal(entities.filter((entity) => entity.kind === 'enemy').length, Math.round(cards * 0.25))
+    assert.equal(entities.filter((entity) => entity.kind === 'item' && entity.item?.type === 'weapon').length, Math.round(cards * 0.25))
+    assert(entities.length / cards >= 0.9, `${room.id} has too many empty cards`)
+  }
   const restored = Dungeon.hydrate(dungeon.serialize())
   assert.equal(validateDungeonLayout(restored), true)
   assert.equal(restored.rooms.size, dungeon.rooms.size)
@@ -66,11 +73,6 @@ for (const option of ['elite', 'supply']) {
   assert.equal(run._useDoor(next.fromDoor), true)
   assert.equal(run.currentRoom.role, 'boss')
   assert.equal(run.skipRoomReward(), true)
-  const bossEdge = next
-  assert.equal(run.isDoorLocked(bossEdge.fromDoor), false)
-  run.player.pos = { ...bossEdge.fromDoor.arrival }
-  run.currentRoom.reveal(run.player.pos)
-  assert.equal(run._useDoor(bossEdge.fromDoor), true)
   const chapterBoss = [...run.currentRoom.entities.values()].find((entity) => entity.boss)
   const exit = [...run.dungeon.edges.values()].find((edge) => edge.fromRoomId === run.currentRoom.id)
   assert.equal(run.isDoorLocked(exit.fromDoor), true)

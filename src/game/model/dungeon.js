@@ -1,4 +1,4 @@
-import { createBoss, createEnemyById, createGoldEntity, createKeyEntity, createLootEntity, createMonster, makeItemById, nextEntityId, randomItem, resetEntityIds, synchronizeEntityIds } from '../data/content.js'
+import { createBoss, createEnemyById, createGoldEntity, createKeyEntity, createLootEntity, createMonster, makeItemById, nextEntityId, randomNeutralItem, randomWeapon, resetEntityIds, synchronizeEntityIds } from '../data/content.js'
 import { createMerchantEntity } from '../data/merchants.js'
 import { createTrapEntity, randomTrapId } from '../data/traps.js'
 import { neighbors8, pos, posKey } from '../core/geometry.js'
@@ -385,8 +385,10 @@ function addTrap(room, reserved, random) {
 
 function populateRoom(room, reserved, random, config) {
   const role = room.role
-  const targetDensity = { entry: 0.58, elite: 0.64, supply: 0.48, boss: 0.42 }[role] || 0.5
-  const targetCount = Math.ceil(room.width * room.height * targetDensity)
+  const cardCount = room.width * room.height
+  const targetEnemyCount = Math.round(cardCount * 0.25)
+  const targetWeaponCount = Math.round(cardCount * 0.25)
+  const targetCount = Math.ceil(cardCount * 0.95)
   const layoutKind = ['scattered', 'firing', 'wall'][(Number(room.id.split('-').at(-1)) - 1) % 3]
   let monsterIndex = role === 'boss' || role === 'supply' ? 0 : arrangeTacticalEnemies(room, reserved, layoutKind)
   if (role === 'boss') {
@@ -400,51 +402,24 @@ function populateRoom(room, reserved, random, config) {
     boss.finalBoss = room.chapter === config.chapters
     room.addEntity(boss)
   }
-  const targetMonsterCount = role === 'boss' ? 0 : role === 'supply' ? 1 : role === 'elite' ? 5 : 3
-  while (monsterIndex < targetMonsterCount && addMonster(room, reserved, random, monsterIndex)) {
+  let enemyCount = [...room.entities.values()].filter((entity) => entity.kind === 'enemy').length
+  while (enemyCount < targetEnemyCount && addMonster(room, reserved, random, monsterIndex)) {
     monsterIndex += 1
+    enemyCount += 1
   }
   for (const itemId of role === 'supply' ? ['health-potion', 'iron-powder'] : []) {
     if (!addLoot(room, reserved, random, makeItemById(itemId))) break
   }
   addGold(room, reserved, random)
+  let weaponCount = [...room.entities.values()].filter((entity) => entity.kind === 'item' && entity.item?.type === 'weapon').length
+  while (weaponCount < targetWeaponCount && addLoot(room, reserved, random, randomWeapon(room.floor, random))) weaponCount += 1
   while (room.entities.size < targetCount) {
     const roll = random()
     if (roll < 0.03 && addTrap(room, reserved, random)) continue
-    if (roll < 0.86 && addLoot(room, reserved, random, randomItem(room.floor, random))) continue
+    if (roll < 0.86 && addLoot(room, reserved, random, randomNeutralItem(room.floor, random))) continue
     if (addGold(room, reserved, random)) continue
     break
   }
-}
-
-function reserveRoute(room, reserved, start) {
-  const startKey = posKey(start)
-  const queue = [{ ...start }]
-  const seen = new Set([startKey])
-  const cameFrom = new Map()
-  let connected = null
-  while (queue.length) {
-    const current = queue.shift()
-    const currentKey = posKey(current)
-    if (currentKey !== startKey && reserved.has(currentKey)) {
-      connected = current
-      break
-    }
-    for (const candidate of neighbors8(current, room.width, room.height)) {
-      const key = posKey(candidate)
-      if (seen.has(key) || room.entityAt(candidate)) continue
-      seen.add(key)
-      cameFrom.set(key, current)
-      queue.push(candidate)
-    }
-  }
-  if (!connected) throw new Error(`Could not reserve route in ${room.id}`)
-  let current = connected
-  while (posKey(current) !== startKey) {
-    reserved.add(posKey(current))
-    current = cameFrom.get(posKey(current))
-  }
-  reserved.add(startKey)
 }
 
 function placeMerchant(room, reserved, merchantId, random) {
@@ -476,7 +451,6 @@ function createChapterDungeonAttempt({ config, random }) {
   resetEntityIds()
   const dungeon = new Dungeon()
   const reservations = new Map()
-  const openAnchors = new Map()
   const doorSidesByRoom = new Map()
   const chapters = []
   for (let chapter = 1; chapter <= config.chapters; chapter++) {
@@ -493,7 +467,6 @@ function createChapterDungeonAttempt({ config, random }) {
       dungeon.addRoom(room, layout)
       rooms[role] = room
       reservations.set(room.id, new Set())
-      openAnchors.set(room.id, [])
       doorSidesByRoom.set(room.id, new Set())
     }
     chapters.push(rooms)
@@ -505,7 +478,6 @@ function createChapterDungeonAttempt({ config, random }) {
   firstRoom.visited = true
   firstRoom.entry = { ...start }
   reservations.get(firstRoom.id).add(posKey(start))
-  openAnchors.get(firstRoom.id).push(start)
 
   const connect = (fromRoom, toRoom, fromSide, branch = null) => {
     const edgeId = `edge-${dungeon.edges.size + 1}`
@@ -516,8 +488,6 @@ function createChapterDungeonAttempt({ config, random }) {
     if (fromRoom.role === 'entry' && branch) fromDoor.discovered = true
     doorSidesByRoom.get(fromRoom.id).add(fromSide)
     doorSidesByRoom.get(toRoom.id).add(toSide)
-    openAnchors.get(fromRoom.id).push(fromDoor.arrival)
-    openAnchors.get(toRoom.id).push(toDoor.arrival)
     dungeon.addEdge({
       id: edgeId,
       fromRoomId: fromRoom.id,
@@ -541,8 +511,7 @@ function createChapterDungeonAttempt({ config, random }) {
     connect(rooms.supply, rooms.boss, 'right', { chapter, option: 'supply' })
     if (chapters[index + 1]) connect(rooms.boss, chapters[index + 1].entry, 'bottom')
     const room = rooms.supply
-    const approach = placeMerchant(room, reservations.get(room.id), config.merchantIds[index], random)
-    openAnchors.get(room.id).push(approach)
+    placeMerchant(room, reservations.get(room.id), config.merchantIds[index], random)
   })
 
   for (const edge of dungeon.edges.values()) {
@@ -554,10 +523,6 @@ function createChapterDungeonAttempt({ config, random }) {
   }
 
   for (const room of dungeon.rooms.values()) {
-    const anchors = openAnchors.get(room.id)
-    for (let index = 1; index < anchors.length; index++) {
-      reserveRoute(room, reservations.get(room.id), anchors[index])
-    }
     populateRoom(room, reservations.get(room.id), random, config)
   }
 

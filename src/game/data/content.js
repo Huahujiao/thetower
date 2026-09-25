@@ -105,13 +105,14 @@ export function randomConsumableDefinition(floor, random = Math.random) {
   return weightedPick(pool, random)
 }
 
-export function randomItem(floor, random = Math.random) {
-  const weaponPool = WEAPONS.filter((weapon) => !weapon.crafted && floor >= (weapon.minFloor || 1))
+export function randomNeutralItem(floor, random = Math.random) {
   const defensePool = DEFENSES.filter((defense) => floor >= (defense.minFloor || 1))
-  const roll = random()
-  if (roll < 0.58 && weaponPool.length) return makeItem(weaponPool[Math.floor(random() * weaponPool.length)])
-  if (roll < 0.83 && defensePool.length) return makeItem(defensePool[Math.floor(random() * defensePool.length)])
-  return makeItem(randomConsumableDefinition(floor, random))
+  const consumablePool = CONSUMABLES.filter((item) => floor >= (item.minFloor || 1))
+  if (!defensePool.length) return makeItem(randomConsumableDefinition(floor, random))
+  if (!consumablePool.length) return makeItem(defensePool[Math.floor(random() * defensePool.length)])
+  return random() < 25 / 42
+    ? makeItem(defensePool[Math.floor(random() * defensePool.length)])
+    : makeItem(randomConsumableDefinition(floor, random))
 }
 
 export function randomWeapon(floor, random = Math.random) {

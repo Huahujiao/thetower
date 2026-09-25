@@ -3,8 +3,8 @@ import { posKey, manhattan } from '../core/geometry.js'
 
 export const TACTICAL_LAYOUT_LABELS = Object.freeze({ scattered: '散布', firing: '开阔射线', wall: '靠墙敌阵' })
 
-// Reserve empty approach cells before random population. Doors, keys, merchants,
-// and their existing routes always take precedence over a tactical template.
+// Place the initial enemies in a readable formation. Doors, keys and merchants
+// take precedence; the remaining cards are populated after this layout is set.
 export function arrangeTacticalEnemies(room, reserved, kind) {
   room.tacticalLayout = 'scattered'
   room.tacticalCells = []
@@ -16,7 +16,6 @@ export function arrangeTacticalEnemies(room, reserved, kind) {
       enemy.pos = { ...p }
       room.addEntity(enemy)
     }
-    for (const p of approaches) reserved.add(posKey(p))
     room.tacticalLayout = kind
     room.tacticalCells = approaches.map(p => ({ ...p }))
     return targets.length
