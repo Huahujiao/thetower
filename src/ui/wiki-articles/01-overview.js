@@ -1,4 +1,4 @@
-# 一局游戏
+export default `# 一局游戏
 
 ## 目标
 
@@ -41,14 +41,15 @@
 
 | 文档 | 内容 |
 | --- | --- |
-| [02-dungeon.md](./02-dungeon.md) | 房间、卡牌、门与翻牌 |
-| [03-turn-and-combat.md](./03-turn-and-combat.md) | 回合、移动、战斗与属性 |
-| [04-inventory.md](./04-inventory.md) | 背包手势、整理与合成 |
-| [05-items.md](./05-items.md) | 物品数据与效果 |
-| [06-progression.md](./06-progression.md) | 天赋、房间奖励和商人 |
-| [07-enemies.md](./07-enemies.md) | 敌人数据、行为与陷阱 |
-| [08-interface.md](./08-interface.md) | 根路由界面与视觉反馈 |
-| [09-tools.md](./09-tools.md) | 图鉴和动画编辑工具 |
-| [10-technical.md](./10-technical.md) | 代码结构、存档和验证 |
+| [地牢、卡牌与门](/wiki/02-dungeon) | 房间、卡牌、门与翻牌 |
+| [回合、移动与战斗](/wiki/03-turn-and-combat) | 回合、移动、战斗与属性 |
+| [背包、物品与合成](/wiki/04-inventory) | 背包手势、整理与合成 |
+| [当前物品清单](/wiki/05-items) | 物品数据与效果 |
+| [升级、奖励与商店](/wiki/06-progression) | 天赋、房间奖励和商人 |
+| [敌人、行为与陷阱](/wiki/07-enemies) | 敌人数据、行为与陷阱 |
+| [游戏界面与交互](/wiki/08-interface) | 根路由界面与视觉反馈 |
+| [图鉴与动画编辑工具](/wiki/09-tools) | 图鉴和动画编辑工具 |
+| [技术结构、存档与验证](/wiki/10-technical) | 代码结构、存档和验证 |
 
-文档解释当前玩法；具体数值和结算以 `src/game` 的运行时代码与数据为准。
+文档解释当前玩法；具体数值和结算以 \`src/game\` 的运行时代码与数据为准。
+`

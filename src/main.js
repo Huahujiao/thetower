@@ -3,7 +3,7 @@ import { createApp } from 'vue'
 
 const pathname = window.location.pathname.replace(/\/$/, '') || '/'
 
-if (pathname === '/wiki') {
+if (pathname === '/wiki' || pathname.startsWith('/wiki/')) {
   import('./ui/wiki.js').then(({ WikiPage }) => new WikiPage())
 } else if (pathname === '/animeedit' || pathname === '/animepreview') {
   const page = pathname === '/animeedit' ? import('./ui/AnimeEditor.vue') : import('./ui/AnimePreview.vue')

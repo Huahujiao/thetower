@@ -20,10 +20,12 @@
     "check:rules": "node scripts/v2-check.mjs",
     "check:dungeon": "node scripts/dungeon-check.mjs",
     "check:synergies": "node scripts/synergies-check.mjs",
-    "check:talents": "node scripts/talents-check.mjs"
+    "check:talents": "node scripts/talents-check.mjs",
+    "check:wiki": "node scripts/wiki-check.mjs"
   },
   "dependencies": {
     "@vitejs/plugin-vue": "^6.0.9",
+    "marked": "^18.0.14",
     "three": "^0.185.1",
     "vue": "^3.5.43"
   },

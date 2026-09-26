@@ -1,8 +1,8 @@
-# Generated art prompts
+export default `# Generated art prompts
 
 ## Stoneshard-reference dungeon floor — current integration, 2026-09-16
 
-Generated with the built-in image model using `screenshots/stoneshard_floor.jpg` as the reference (2 rows by 7 cells). Four independent single-cell masters: `art/generated/floor-dungeon-{a,b,c,d}-v1.png`. Runtime files: `src/assets/board-floor-dungeon-{a,b,c,d}-v1.jpg`, exported with `scripts/export-board-art.ps1`. Cool dark teal-gray palette is kept without runtime brightness adjustment. Coordinate-hashed distribution: intact 50%, fractured 20%, chipped 20%, four-block 10%; these are selection weights, not guaranteed per-room counts. No gameplay RNG or redraw reshuffling. Card backs unchanged. Previous floors below are historical, not currently imported. No browser preview.
+Generated with the built-in image model using \`screenshots/stoneshard_floor.jpg\` as the reference (2 rows by 7 cells). Four independent single-cell masters: \`art/generated/floor-dungeon-{a,b,c,d}-v1.png\`. Runtime files: \`src/assets/board-floor-dungeon-{a,b,c,d}-v1.jpg\`, exported with \`scripts/export-board-art.ps1\`. Cool dark teal-gray palette is kept without runtime brightness adjustment. Coordinate-hashed distribution: intact 50%, fractured 20%, chipped 20%, four-block 10%; these are selection weights, not guaranteed per-room counts. No gameplay RNG or redraw reshuffling. Card backs unchanged. Previous floors below are historical, not currently imported. No browser preview.
 
 ### Variant A
 
@@ -23,27 +23,27 @@ Prompt: Use case: stylized-concept. Production game dungeon floor texture. Attac
 
 ## Dark brick floor — historical, 2026-09-16
 
-Built-in image generation. Master: `art/generated/floor-brick-v1.png`. Runtime JPEG: `src/assets/board-floor-brick-v1.jpg`. Replaces the plain stone floor; previous masters are retained. The renderer uses brightness 0.85 because this image is already dark. Neutral card backs retain brightness 1.3. No browser preview performed.
+Built-in image generation. Master: \`art/generated/floor-brick-v1.png\`. Runtime JPEG: \`src/assets/board-floor-brick-v1.jpg\`. Replaces the plain stone floor; previous masters are retained. The renderer uses brightness 0.85 because this image is already dark. Neutral card backs retain brightness 1.3. No browser preview performed.
 
 Prompt: Use case: stylized-concept. Asset type: finished square diffuse floor texture for a Chinese ancient tower board game. Generate ONE flat orthographic directly top-down square texture, edge to edge, of DARK WARM GRAY aged rectangular stone bricks laid in a simple staggered running-bond pattern. About four rows across the square, each row two or three broad rectangular bricks, seams clearly visible but narrow, uneven slightly chipped brick edges, moderate hand-painted tonal variation between bricks, subtle worn matte mineral grain. Dark gray NOT pale beige and NOT pitch black: average midtone approximately #454740 with recessed mortar around #292c29. Hand-painted ink and mineral-pigment game art with a restrained ancient Chinese masonry feel. Seamless repeating edges if possible; no outer frame or special perimeter, no central focal point. Texture must visibly read as BRICK PAVING at small game size, not smooth concrete or plain noise. No ornamental pattern, no symbols, no gold, no flowers, no cloud scrolls, no card border, no words, no grass, no objects, no perspective, no extrusion, no cast shadows, no surrounding scene, no atlas. Fully opaque image.
 
 
 ## Plain stone floor — historical, 2026-09-16
 
-Generated with built-in image generation, without image references. Master: `art/generated/floor-plain-stone-v1.png`. Runtime: `src/assets/board-floor-plain-v1.jpg`, exported by `scripts/export-board-art.ps1`. Replaces the decorative floor atlas on all empty ground, including ground under standing tokens. Original atlas retained but no longer imported. Card backs unchanged.
+Generated with built-in image generation, without image references. Master: \`art/generated/floor-plain-stone-v1.png\`. Runtime: \`src/assets/board-floor-plain-v1.jpg\`, exported by \`scripts/export-board-art.ps1\`. Replaces the decorative floor atlas on all empty ground, including ground under standing tokens. Original atlas retained but no longer imported. Card backs unchanged.
 
 Prompt: Use case: stylized-concept. Asset type: finished square base-color texture for ONE plain Chinese ancient tower stone floor slab in a hand-painted folk-horror board game. Direct orthographic top down, completely flat, edge-to-edge stone surface. Medium-light warm gray weathered stone, subtle irregular mineral grain, tiny pores, broad very quiet tonal variation, delicate rubbed wear, muted antique hand-painted mineral-pigment aesthetic, matte diffuse surface. This is mundane walkable empty floor, visually clearly different from dark ornate ritual card backs. NO ornament whatsoever: no borders, no frame, no carved lines, no flower, no cloud, no emblem, no seal, no gold, no circle, no intentional decorative pattern. No dramatic cracks, no grass, no objects, no writing, no letters, no grid, no tile joints, no bevel, no shadows, no perspective, no surrounding scene, no atlas. Single quiet uniform square stone texture, all edges similar brightness for repetition, low contrast, no central focal point. Opaque.
 
 
 ## Independent colored card backs — current integration
 
-Built-in image generation produced three separate finished textures using `card-back-neutral-v1.png` as the style/layout reference:
+Built-in image generation produced three separate finished textures using \`card-back-neutral-v1.png\` as the style/layout reference:
 
-- `art/generated/card-back-scorch-v1.png`: cinnabar flame ornament.
-- `art/generated/card-back-wither-v1.png`: ochre root ornament.
-- `art/generated/card-back-drown-v1.png`: indigo water ornament.
+- \`art/generated/card-back-scorch-v1.png\`: cinnabar flame ornament.
+- \`art/generated/card-back-wither-v1.png\`: ochre root ornament.
+- \`art/generated/card-back-drown-v1.png\`: indigo water ornament.
 
-The corresponding runtime JPEGs are `src/assets/board-card-back-{scorch,wither,drown}-v1.jpg`. Neutral uses `src/assets/board-card-back-v1.jpg`. All are exported at 1024 square, JPEG quality 88, using `scripts/export-board-art.ps1`.
+The corresponding runtime JPEGs are \`src/assets/board-card-back-{scorch,wither,drown}-v1.jpg\`. Neutral uses \`src/assets/board-card-back-v1.jpg\`. All are exported at 1024 square, JPEG quality 88, using \`scripts/export-board-art.ps1\`.
 
 The renderer now copies these complete images into cached textures without tinting, central icons, or extra borders. Only blocked cards receive a 28% dark overlay. The older single-master tint-and-icon experiment described below is superseded. Floor textures also retain their source colors without the former desaturation/darkening filter.
 
@@ -63,11 +63,11 @@ Use case: stylized-concept. Generate ONE square game card-back texture, flat ort
 ## Card back master v1 — integrated batch
 
 - Tool: built-in image generation.
-- New master: `art/generated/card-back-neutral-v1.png`.
-- Style references: `floor-tiles-v1.png` and `card-plates-v1.png`; not edit targets.
-- Runtime export: `src/assets/board-card-back-v1.jpg`, 1024 square, JPEG quality 88.
-- Existing floor master exported to `src/assets/board-floor-atlas-v1.jpg` with the same settings.
-- Re-export command: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/export-board-art.ps1`.
+- New master: \`art/generated/card-back-neutral-v1.png\`.
+- Style references: \`floor-tiles-v1.png\` and \`card-plates-v1.png\`; not edit targets.
+- Runtime export: \`src/assets/board-card-back-v1.jpg\`, 1024 square, JPEG quality 88.
+- Existing floor master exported to \`src/assets/board-floor-atlas-v1.jpg\` with the same settings.
+- Re-export command: \`powershell -NoProfile -ExecutionPolicy Bypass -File scripts/export-board-art.ps1\`.
 - Renderer samples the top-left and bottom-right dark floor tiles. Colored wave tiles remain unused.
 - Card color, central attribute symbols, and blocked-state dimming are drawn at runtime. Originals stay unchanged.
 - Original prompt:
@@ -77,8 +77,8 @@ Use case: stylized-concept. Asset type: ONE square production texture for the BA
 
 Reference images for both generations:
 
-- `art/fullscene1.png`
-- `art/fullscene2.png`
+- \`art/fullscene1.png\`
+- \`art/fullscene2.png\`
 
 ## Floor tile atlas
 
@@ -107,3 +107,4 @@ Materials/textures: bake old paper fibers, faint tide marks, restrained grime, r
 Design: thin double-line ink border, subtle corner ornaments, tiny restrained cloud/wave/floral motifs around the perimeter, broad low-contrast center with no focal illustration
 Lighting/mood: flat diffuse painted lighting, archival and mysterious, no cast shadows and no glossy modern rendering
 Constraints: no text, letters, numbers, pseudo-writing, characters, weapons, creatures, objects, UI labels, logos, watermark, perspective, extrusion, dramatic lighting, or central emblems. All six cards must remain readable as a coherent family and leave at least 65 percent of each center visually quiet.
+`
