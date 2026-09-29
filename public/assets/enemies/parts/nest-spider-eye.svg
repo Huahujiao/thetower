@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+<defs><linearGradient id="shell" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#a6a7a1"/><stop offset="36%" stop-color="#59616c"/><stop offset="100%" stop-color="#2b3039"/></linearGradient></defs>
+<g stroke="#2b3039" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"><ellipse cx="50" cy="50" rx="31" ry="26" fill="#2b3039"/><ellipse cx="50" cy="50" rx="23" ry="20" fill="#c46c67"/><ellipse cx="50" cy="50" rx="10" ry="16" fill="#2b3039"/><circle cx="43" cy="41" r="6" fill="#a6a7a1"/></g>
+<g></g></svg>

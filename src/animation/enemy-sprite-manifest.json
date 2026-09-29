@@ -1,0 +1,200 @@
+{
+  "gnawer": {
+    "url": "/assets/enemies/characters/gnawer.png",
+    "width": 335,
+    "height": 377,
+    "batch": 1
+  },
+  "emberwing-moth": {
+    "url": "/assets/enemies/characters/emberwing-moth.png",
+    "width": 436,
+    "height": 381,
+    "batch": 1
+  },
+  "rootrot-bud": {
+    "url": "/assets/enemies/characters/rootrot-bud.png",
+    "width": 343,
+    "height": 399,
+    "batch": 1
+  },
+  "tide-shadow-cub": {
+    "url": "/assets/enemies/characters/tide-shadow-cub.png",
+    "width": 349,
+    "height": 306,
+    "batch": 1
+  },
+  "nest-spider": {
+    "url": "/assets/enemies/characters/nest-spider.png",
+    "width": 413,
+    "height": 359,
+    "batch": 1
+  },
+  "beetle-guard": {
+    "url": "/assets/enemies/characters/beetle-guard.png",
+    "width": 359,
+    "height": 368,
+    "batch": 1
+  },
+  "rot-walker": {
+    "url": "/assets/enemies/characters/rot-walker.png",
+    "width": 335,
+    "height": 487,
+    "batch": 1
+  },
+  "shellguard": {
+    "url": "/assets/enemies/characters/shellguard.png",
+    "width": 358,
+    "height": 494,
+    "batch": 1
+  },
+  "wisp": {
+    "url": "/assets/enemies/characters/wisp.png",
+    "width": 363,
+    "height": 472,
+    "batch": 1
+  },
+  "patrol-hound": {
+    "url": "/assets/enemies/characters/patrol-hound.png",
+    "width": 384,
+    "height": 381,
+    "batch": 2
+  },
+  "redneedle-salamander": {
+    "url": "/assets/enemies/characters/redneedle-salamander.png",
+    "width": 382,
+    "height": 262,
+    "batch": 2
+  },
+  "rot-sac-toad": {
+    "url": "/assets/enemies/characters/rot-sac-toad.png",
+    "width": 379,
+    "height": 337,
+    "batch": 2
+  },
+  "claw-beast": {
+    "url": "/assets/enemies/characters/claw-beast.png",
+    "width": 376,
+    "height": 362,
+    "batch": 2
+  },
+  "broodmother": {
+    "url": "/assets/enemies/characters/broodmother.png",
+    "width": 435,
+    "height": 462,
+    "batch": 2
+  },
+  "moss-colossus": {
+    "url": "/assets/enemies/characters/moss-colossus.png",
+    "width": 368,
+    "height": 482,
+    "batch": 2
+  },
+  "sentry-crossbow": {
+    "url": "/assets/enemies/characters/sentry-crossbow.png",
+    "width": 343,
+    "height": 441,
+    "batch": 2
+  },
+  "ash-cannon-bug": {
+    "url": "/assets/enemies/characters/ash-cannon-bug.png",
+    "width": 431,
+    "height": 382,
+    "batch": 2
+  },
+  "furnace-beetle": {
+    "url": "/assets/enemies/characters/furnace-beetle.png",
+    "width": 381,
+    "height": 368,
+    "batch": 2
+  },
+  "thorn-shell-flower": {
+    "url": "/assets/enemies/characters/thorn-shell-flower.png",
+    "width": 427,
+    "height": 404,
+    "batch": 3
+  },
+  "water-leech-swarm": {
+    "url": "/assets/enemies/characters/water-leech-swarm.png",
+    "width": 384,
+    "height": 404,
+    "batch": 3
+  },
+  "whirlpool-eye-sac": {
+    "url": "/assets/enemies/characters/whirlpool-eye-sac.png",
+    "width": 330,
+    "height": 422,
+    "batch": 3
+  },
+  "molten-core-beast": {
+    "url": "/assets/enemies/characters/molten-core-beast.png",
+    "width": 458,
+    "height": 383,
+    "batch": 3
+  },
+  "redwheel-fire-crow": {
+    "url": "/assets/enemies/characters/redwheel-fire-crow.png",
+    "width": 464,
+    "height": 445,
+    "batch": 3
+  },
+  "cinder-curse-lamp-swarm": {
+    "url": "/assets/enemies/characters/cinder-curse-lamp-swarm.png",
+    "width": 363,
+    "height": 432,
+    "batch": 3
+  },
+  "tide-rite-matriarch": {
+    "url": "/assets/enemies/characters/tide-rite-matriarch.png",
+    "width": 439,
+    "height": 465,
+    "batch": 3
+  },
+  "drown-shadow-hunter": {
+    "url": "/assets/enemies/characters/drown-shadow-hunter.png",
+    "width": 377,
+    "height": 425,
+    "batch": 3
+  },
+  "tidal-spore-sac": {
+    "url": "/assets/enemies/characters/tidal-spore-sac.png",
+    "width": 406,
+    "height": 409,
+    "batch": 3
+  },
+  "revenant-guard": {
+    "url": "/assets/enemies/characters/revenant-guard.png",
+    "width": 432,
+    "height": 481,
+    "batch": 4
+  },
+  "bomb-wisp": {
+    "url": "/assets/enemies/characters/bomb-wisp.png",
+    "width": 258,
+    "height": 442,
+    "batch": 4
+  },
+  "cracked-hunter": {
+    "url": "/assets/enemies/characters/cracked-hunter.png",
+    "width": 359,
+    "height": 460,
+    "batch": 4
+  },
+  "broodling": {
+    "url": "/assets/enemies/characters/broodling.png",
+    "width": 323,
+    "height": 248,
+    "batch": 4
+  },
+  "leech-larva": {
+    "url": "/assets/enemies/characters/leech-larva.png",
+    "width": 313,
+    "height": 208,
+    "batch": 4
+  },
+  "tide-shadow": {
+    "url": "/assets/enemies/characters/tide-shadow.png",
+    "width": 413,
+    "height": 360,
+    "batch": 4
+  }
+}

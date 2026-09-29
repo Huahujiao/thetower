@@ -27,8 +27,14 @@ assert((await WIKI_PAGE_BY_ID.get('build-archetypes').load()).default.includes('
 assert((await WIKI_PAGE_BY_ID.get('02-dungeon').load()).default.includes('普通地面随机格不会生成防具'))
 
 for (const page of CATALOG_PAGES) {
-  assert(catalogContent(page.id).includes('wiki-card'), `Empty Wiki catalog: ${page.id}`)
+  const content = catalogContent(page.id)
+  assert(content.includes('wiki-card'), `Empty Wiki catalog: ${page.id}`)
+  assert.equal((content.match(/class="wiki-card /g) || []).length, (content.match(/class="wiki-card-media"/g) || []).length, `Missing image slot: ${page.id}`)
 }
+assert(catalogContent('weapons').includes('weapon-rust-sword-v2-small.png'))
+assert(catalogContent('relics').includes('relic-three-v1-small.png'))
+assert(catalogContent('items').includes('item-health-potion-v1-small.png'))
+assert(catalogContent('enemies').includes('wiki-media-placeholder'))
 
 for (const directory of ['.', 'docs', 'art', 'art/generated']) {
   assert(!readdirSync(directory).some((name) => name.endsWith('.md')), `Markdown documents remain in ${directory}`)

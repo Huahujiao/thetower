@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+<defs><linearGradient id="shell" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#a4ae85"/><stop offset="36%" stop-color="#536a68"/><stop offset="100%" stop-color="#29343b"/></linearGradient></defs>
+<g stroke="#29343b" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"><path d="M10 16 Q46 22 57 49 L91 83 L67 75 Q39 70 21 49Z" fill="url(#shell)"/><path d="M30 38 L67 67" stroke="#e7b76e" stroke-width="5"/></g>
+<g></g></svg>

@@ -111,6 +111,7 @@ export function createShadowPart({
   z = 0,
   width = 80,
   height = 80,
+  depth = 0,
   rotationX = 0,
   rotationY = 0,
   rotationZ = 0,
@@ -130,6 +131,7 @@ export function createShadowPart({
     z,
     width,
     height,
+    depth,
     rotationX,
     rotationY,
     rotationZ,
@@ -192,6 +194,7 @@ function normalizePart(source, index, jointIds, boneIds, legacy2D = false) {
     z: legacy2D ? 0 : finite(source?.z, 0),
     width: Math.max(4, finite(source?.width, 80)),
     height: Math.max(4, finite(source?.height, 80)),
+    depth: Math.max(0, finite(source?.depth, 0)),
     rotationX: finite(source?.rotationX, 0),
     rotationY: finite(source?.rotationY, 0),
     rotationZ: finite(source?.rotationZ ?? source?.rotation, 0),
@@ -206,6 +209,16 @@ function normalizePart(source, index, jointIds, boneIds, legacy2D = false) {
       type: visual.type === 'texture' ? 'texture' : 'shape',
       texture: typeof visual.texture === 'string' ? visual.texture : null,
       textureFit: visual.textureFit === 'cover' ? 'cover' : 'contain',
+      textureFrame: visual.textureFrame && Number.isInteger(visual.textureFrame.column) && Number.isInteger(visual.textureFrame.row)
+        && Number.isInteger(visual.textureFrame.columns) && Number.isInteger(visual.textureFrame.rows)
+        && visual.textureFrame.columns > 0 && visual.textureFrame.rows > 0
+        ? { column: visual.textureFrame.column, row: visual.textureFrame.row, columns: visual.textureFrame.columns, rows: visual.textureFrame.rows,
+          crop: visual.textureFrame.crop && Number.isFinite(visual.textureFrame.crop.left) && Number.isFinite(visual.textureFrame.crop.top)
+            && Number.isFinite(visual.textureFrame.crop.width) && Number.isFinite(visual.textureFrame.crop.height)
+            ? { left: visual.textureFrame.crop.left, top: visual.textureFrame.crop.top,
+              width: visual.textureFrame.crop.width, height: visual.textureFrame.crop.height }
+            : null }
+        : null,
     },
   }
 }
@@ -233,7 +246,7 @@ function normalizeAnimations(source, validTargetKeys) {
 
 function createBlankProject(name = '\u65b0\u89d2\u8272 1') {
   return {
-    version: 4,
+    version: 5,
     name,
     stage: { width: 600, height: 600, depth: 600, floorOffset: 8 },
     joints: [],
@@ -344,8 +357,9 @@ export function normalizeShadowProject(source) {
     ...parts.map((entry) => shadowTargetKey('part', entry.id)),
   ])
   const project = {
-    version: 4,
+    version: 5,
     name: normalizeProjectName(source.name, '\u65b0\u89d2\u8272 1'),
+    enemyId: typeof source.enemyId === 'string' ? source.enemyId : null,
     stage: {
       width: Math.max(200, finite(source.stage?.width, 600)),
       height: Math.max(200, finite(source.stage?.height, 600)),
@@ -358,6 +372,26 @@ export function normalizeShadowProject(source) {
     animations: normalizeAnimations(source.animations, validTargetKeys),
   }
   if (Number(source.version || 0) < 4) reflectShadowProjectZ(project)
+  if (Number(source.version || 0) < 5) reflectShadowProjectY(project)
+  return project
+}
+
+// V5 uses right-handed world coordinates: +X right, +Y up, +Z toward
+// the front viewer. Reflect the complete local transform and every keyframe.
+// The renderers use the same reflected local shape/texture coordinates.
+export function reflectShadowProjectY(project) {
+  for (const entry of [...project.joints, ...project.parts]) {
+    entry.y = -entry.y || 0
+    entry.rotationX = -entry.rotationX || 0
+    entry.rotationZ = -entry.rotationZ || 0
+  }
+  for (const animation of Object.values(project.animations)) {
+    for (const keys of Object.values(animation.tracks)) for (const frame of keys) {
+      frame.dy = -frame.dy || 0
+      frame.rotationX = -frame.rotationX || 0
+      frame.rotationZ = -frame.rotationZ || 0
+    }
+  }
   return project
 }
 
@@ -401,14 +435,20 @@ export function normalizeShadowRoster(source) {
   if (!characters.length) characters.push(createShadowCharacter())
   const requested = typeof source?.activeCharacterId === 'string' ? source.activeCharacterId : null
   const activeCharacterId = characters.some((entry) => entry.id === requested) ? requested : characters[0].id
-  return { version: 4, examplePackVersion: Math.max(0, finite(source?.examplePackVersion, 0)), activeCharacterId, characters }
+  return { version: 5, examplePackVersion: Math.max(0, finite(source?.examplePackVersion, 0)), enemyArtPackVersion: Math.max(0, finite(source?.enemyArtPackVersion, 0)), activeCharacterId, characters }
 }
 
 export function loadShadowProject() {
   try {
     const stored = window.localStorage.getItem(SHADOW_PUPPET_STORAGE_KEY)
       || window.localStorage.getItem(LEGACY_PROJECT_STORAGE_KEY)
-    return stored ? normalizeShadowProject(JSON.parse(stored)) : createDefaultShadowProject()
+    if (!stored) return createDefaultShadowProject()
+    const source = JSON.parse(stored)
+    const project = normalizeShadowProject(source)
+    if (Number(source.version || 0) < 5) {
+      try { saveShadowProject(project) } catch { /* Keep the migrated in-memory data usable. */ }
+    }
+    return project
   } catch {
     return createDefaultShadowProject()
   }
@@ -418,12 +458,19 @@ export function loadShadowRoster() {
   try {
     const stored = window.localStorage.getItem(SHADOW_PUPPET_ROSTER_STORAGE_KEY)
       || window.localStorage.getItem(LEGACY_ROSTER_STORAGE_KEY)
-    if (stored) return normalizeShadowRoster(JSON.parse(stored))
+    if (stored) {
+      const source = JSON.parse(stored)
+      const roster = normalizeShadowRoster(source)
+      if (Number(source.version || 0) < 5 || source.characters?.some((entry) => Number((entry.project || entry).version || 0) < 5)) {
+        try { saveShadowRoster(roster) } catch { /* Keep the migrated in-memory data usable. */ }
+      }
+      return roster
+    }
   } catch {
     // Fall through to the single-project migration.
   }
   const character = createShadowCharacter()
-  return { version: 4, activeCharacterId: character.id, characters: [character] }
+  return { version: 5, activeCharacterId: character.id, characters: [character] }
 }
 
 export function saveShadowProject(project) {
@@ -627,5 +674,5 @@ export function shadowMatrixRotation(matrix) {
 
 export function matrixToSvg(matrix) {
   const e = matrix.elements
-  return `matrix(${e[0]} ${e[1]} ${e[4]} ${e[5]} ${e[12]} ${e[13]})`
+  return `matrix(${e[0]} ${-e[1]} ${-e[4]} ${e[5]} ${e[12]} ${-e[13]})`
 }

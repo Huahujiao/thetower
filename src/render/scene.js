@@ -10,6 +10,7 @@ import { DEFAULT_CAMERA_ELEVATION, panAzimuth } from './camera-view.js'
 import { cardBodyGeometry, styleCardBody, cardFaceY, CARD_FACE_CLEARANCE, HIDDEN_CARD_THICKNESS, HIDDEN_CARD_SCALE } from './card-body.js'
 import { boundaryPillarPoint, createDoorFrame, createLowPolyPillar, createLowPolyWall, evenPillarOffsets } from './wall-kit.js'
 import { goldSpriteSources, itemSpriteSources } from '../ui/item-sprites.js'
+import { drawEnemyPuppet, enemyPuppetProject, prepareEnemyPuppets } from './enemy-puppet.js'
 
 const TILE_SIZE = 1.14
 const CARD_SIZE = TILE_SIZE
@@ -392,6 +393,13 @@ export class GameScene {
     this.attackUnsubscribe = this.run.on('animate:attack', this._onAttack)
     this.impactUnsubscribe = this.run.on('animate:impact', this._onImpact)
     this.explosionUnsubscribe = this.run.on('animate:explode', this._onExplosion)
+    prepareEnemyPuppets(() => {
+      const room = this.run.currentRoom
+      if (room?.id !== this.framedRoomId) return
+      for (const face of this.tileMeshes) {
+        if (face.userData.enemyId) this._refreshTile(room, face.userData.position, { force: true })
+      }
+    })
     this.rebuild()
     this.attackRangeOverlay.refresh()
     this._resize(true)
@@ -529,6 +537,7 @@ export class GameScene {
     // pointer instead so a character/enemy cannot block the tile behind it.
     face.raycast = standing ? NO_RAYCAST : THREE.Mesh.prototype.raycast
     face.userData.position = { ...position }
+    face.userData.enemyId = card?.type === 'monster' ? card.enemyId : null
     face.userData.lift = 0
     face.userData.press = 0
     face.userData.body = mesh
@@ -1287,6 +1296,7 @@ export class GameScene {
     this._attachGroundSprite(face, card, this._gridPosition(room, position), position, revealed)
     this._setEnemyStatusOverlay(face, face.userData.groundFace, revealed && card?.type === 'monster' ? room.entityAt(position) : null)
     face.userData.visualKey = visual.key
+    face.userData.enemyId = card?.type === 'monster' ? card.enemyId : null
     return true
   }
 
@@ -1535,9 +1545,11 @@ export class GameScene {
       baseRotationZ: target.rotation.z,
       baseOpacity: targetMesh.material.opacity,
     } : null
+    const attackCard = actor === 'player' ? null : this._cardFaceData(room, position)
     const attackTexture = makeCanvasTexture((context) => actor === 'player'
       ? drawStickFigure(context, { armLift: 0, legSpread: 1 })
-      : drawStandingToken(context, this._cardFaceData(room, position), { headLift: 0, bodySway: 0 }))
+      : drawEnemyPuppet(context, attackCard?.enemyId, 'attack', 0)
+        || drawStandingToken(context, attackCard, { headLift: 0, bodySway: 0 }))
     if (attackTexture) {
       mesh.material.map = attackTexture
       mesh.material.needsUpdate = true
@@ -1643,11 +1655,11 @@ export class GameScene {
           legSpread: 1 - wave * 0.35,
         }))
       } else {
-        redrawCanvasTexture(animation.attackTexture, (context) => drawStandingToken(
-          context,
-          this._cardFaceData(this.run.currentRoom, animation.face.userData.position),
-          { headLift: wave, bodySway: sway },
-        ))
+        const card = this._cardFaceData(this.run.currentRoom, animation.face.userData.position)
+        const project = enemyPuppetProject(card?.enemyId)
+        redrawCanvasTexture(animation.attackTexture, (context) =>
+          drawEnemyPuppet(context, card?.enemyId, 'attack', (project?.animations.attack.duration || 500) * progress)
+          || drawStandingToken(context, card, { headLift: wave, bodySway: sway }))
       }
     }
     const lift = animation.actor === 'player' ? wave * PLAYER_ATTACK_LIFT : wave * ENEMY_ATTACK_LIFT
@@ -1674,6 +1686,14 @@ export class GameScene {
     victim.object.rotation.z = victim.baseRotationZ + pose.tilt
     victim.object.scale.copy(victim.baseScale).multiplyScalar(pose.scale)
     victim.mesh.material.opacity = victim.baseOpacity * (pose.opacity ?? 1)
+    const enemyId = victim.face?.userData.enemyId
+    const project = enemyPuppetProject(enemyId)
+    if (project && victim.mesh.material.map?.isCanvasTexture) {
+      const action = defeated && motion.death > 0 ? 'death' : 'hit'
+      const progress = action === 'death' ? motion.death : motion.hit
+      redrawCanvasTexture(victim.mesh.material.map, (context) =>
+        drawEnemyPuppet(context, enemyId, action, project.animations[action].duration * progress))
+    }
   }
 
   _applyIdlePose(object, face, offset) {
@@ -1689,6 +1709,9 @@ export class GameScene {
 
   _updateCharacterIdle(delta) {
     this.characterIdleTime += delta
+    this.enemyArtTick = (this.enemyArtTick || 0) + delta
+    const refreshArt = this.enemyArtTick >= 1 / 12
+    if (refreshArt) this.enemyArtTick = 0
     const room = this.run.currentRoom
     if (!room) return
     for (const face of this.tileMeshes) {
@@ -1699,6 +1722,14 @@ export class GameScene {
       if (isPlayer && this.run.gameOver) continue
       if (!isPlayer && room.entityAt(position)?.kind !== 'enemy') continue
       this._applyIdlePose(face, face, position.c * 0.7 + position.r * 1.3)
+      const enemyId = !isPlayer ? face.userData.enemyId : null
+      const project = enemyPuppetProject(enemyId)
+      if (refreshArt && project && face !== this.attackAnimation?.object
+        && face !== this.attackAnimation?.victim?.object && face !== this.movementAnimation?.face) {
+        const offset = (position.c * 0.7 + position.r * 1.3) * 190
+        redrawCanvasTexture(face.material.map, (context) =>
+          drawEnemyPuppet(context, enemyId, 'idle', (this.characterIdleTime * 1000 + offset) % project.animations.idle.duration))
+      }
     }
     if (this.playerMarker?.visible && !this.run.gameOver) {
       const face = this.tileMeshByKey.get(this.playerMarker.userData.footprintKey)
@@ -1821,6 +1852,10 @@ export class GameScene {
       )
       animation.face.rotation.z = Math.sin(progress * Math.PI) * 0.09 * Math.sign(end.x - start.x || 1)
       animation.face.scale.setScalar(1 + Math.sin(progress * Math.PI * 2) * 0.035)
+      const enemyId = animation.face.userData.enemyId
+      const project = enemyPuppetProject(enemyId)
+      if (project) redrawCanvasTexture(animation.face.material.map, (context) =>
+        drawEnemyPuppet(context, enemyId, 'move', progress * project.animations.move.duration))
       animation.face.renderOrder = tileRenderOrder({ r: animation.from.r + (animation.to.r - animation.from.r) * eased }, 4)
       if (progress < 1) return
       this.movementAnimation = null
@@ -2087,7 +2122,7 @@ export class GameScene {
     if (card.type === 'empty') return this.boardTextures.floor(position)
     return makeCanvasTexture((context) => {
       if (card.type === 'monster') {
-        drawStandingToken(context, card)
+        if (!drawEnemyPuppet(context, card.enemyId)) drawStandingToken(context, card)
         return
       }
       if (card.type === 'merchant') {
@@ -2145,6 +2180,7 @@ export class GameScene {
     if (entity.kind === 'enemy') {
       return {
         type: 'monster',
+        enemyId: entity.enemyId,
         title: entity.name,
         subtitle: enemyCardSubtitle(entity),
         value: String(Math.max(0, entity.hp)),

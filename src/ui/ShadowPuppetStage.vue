@@ -24,9 +24,10 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { BufferGeometry, Color, DoubleSide, EdgesGeometry, Group, Line, LineBasicMaterial, LineSegments, Mesh, MeshBasicMaterial, OrthographicCamera, PerspectiveCamera, PlaneGeometry, Raycaster, Scene, Shape, ShapeGeometry, SphereGeometry, SRGBColorSpace, TextureLoader, TOUCH, Vector2, Vector3, WebGLRenderer } from 'three'
+import { BufferGeometry, Color, DirectionalLight, DoubleSide, EdgesGeometry, Group, HemisphereLight, Line, LineBasicMaterial, LineSegments, Mesh, MeshBasicMaterial, MeshLambertMaterial, OrthographicCamera, PerspectiveCamera, PlaneGeometry, Raycaster, Scene, Shape, ShapeGeometry, SphereGeometry, SRGBColorSpace, TextureLoader, TOUCH, Vector2, Vector3, WebGLRenderer } from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { evaluateShadowProject, shadowMatrixPosition } from '../animation/shadow-rig.js'
+import { shadowPartGeometry } from '../animation/shadow-geometry.js'
 import { FLOOR_URLS, floorTextureIndex } from '../render/board-textures.js'
 import { DEFAULT_CAMERA_ELEVATION } from '../render/camera-view.js'
 
@@ -54,12 +55,23 @@ const scene = new Scene()
 scene.background = new Color('#182431')
 const frontCamera = new OrthographicCamera()
 const previewCamera = new PerspectiveCamera(45, 1, 1, 5000)
-frontCamera.up.set(0, -1, 0)
-previewCamera.up.set(0, -1, 0)
+frontCamera.up.set(0, 1, 0)
+previewCamera.up.set(0, 1, 0)
+scene.add(new HemisphereLight('#e8f2ff', '#46515d', 1.2))
+const keyLight = new DirectionalLight('#ffe5c4', 1.2)
+keyLight.position.set(-200, 350, 500)
+scene.add(keyLight)
 const raycaster = new Raycaster()
 raycaster.params.Line.threshold = 10
 const textureLoader = new TextureLoader()
 const textureCache = new Map()
+const geometryCache = new Map()
+
+function cachedPartGeometry(part) {
+  const key = JSON.stringify([part.shape, part.width, part.height, part.depth, part.pivotX, part.pivotY])
+  if (!geometryCache.has(key)) geometryCache.set(key, shadowPartGeometry(part))
+  return geometryCache.get(key)
+}
 const floorGroup = new Group()
 floorGroup.visible = false
 scene.add(floorGroup)
@@ -164,9 +176,11 @@ function fitFigureToTile() {
   for (const entry of rest.parts) {
     const part = entry.part
     const left = -part.width * part.pivotX
-    const top = -part.height * part.pivotY
+    const top = part.height * part.pivotY
     for (const x of [left, left + part.width]) {
-      for (const y of [top, top + part.height]) include(new Vector3(x, y, 0).applyMatrix4(entry.matrix))
+      for (const y of [top, top - part.height]) {
+        for (const z of [-(part.depth || 0) / 2, (part.depth || 0) / 2]) include(new Vector3(x, y, z).applyMatrix4(entry.matrix))
+      }
     }
   }
   if (!Number.isFinite(minX)) {
@@ -175,16 +189,16 @@ function fitFigureToTile() {
   const scale = Math.min(1, 120 / Math.max(1, maxX - minX, maxZ - minZ))
   figureGroup.scale.setScalar(scale)
   figureGroup.position.set(-(minX + maxX) * scale / 2, 0, -(minZ + maxZ) * scale / 2)
-  floorGroup.position.y = maxY * scale + (props.project.stage.floorOffset ?? 8) * scale
+  floorGroup.position.y = minY * scale - (props.project.stage.floorOffset ?? 8) * scale
   return { height: (maxY - minY) * scale }
 }
 
 function framePreview() {
   const { height } = fitFigureToTile()
-  const targetY = floorGroup.position.y - height * .48
+  const targetY = floorGroup.position.y + height * .48
   const distance = 450
   orbitControls.target.set(0, targetY, 0)
-  previewCamera.position.set(0, targetY - distance * Math.sin(DEFAULT_CAMERA_ELEVATION), distance * Math.cos(DEFAULT_CAMERA_ELEVATION))
+  previewCamera.position.set(0, targetY + distance * Math.sin(DEFAULT_CAMERA_ELEVATION), distance * Math.cos(DEFAULT_CAMERA_ELEVATION))
   orbitControls.update()
   framedProject = props.project
 }
@@ -245,62 +259,24 @@ function onOrbitChange() {
   render()
 }
 
-function shapeGeometry(part) {
-  const width = part.width
-  const height = part.height
-  const left = -width * part.pivotX
-  const top = -height * part.pivotY
-  const shape = new Shape()
-  if (part.shape === 'circle' || part.shape === 'ellipse' || part.shape === 'capsule') {
-    const rx = width / 2
-    const ry = height / 2
-    const cx = left + rx
-    const cy = top + ry
-    shape.absellipse(cx, cy, rx, ry, 0, Math.PI * 2, false, 0)
-  } else if (part.shape === 'triangle') {
-    shape.moveTo(left + width / 2, top)
-    shape.lineTo(left + width, top + height)
-    shape.lineTo(left, top + height)
-    shape.closePath()
-  } else if (part.shape === 'diamond') {
-    shape.moveTo(left + width / 2, top)
-    shape.lineTo(left + width, top + height / 2)
-    shape.lineTo(left + width / 2, top + height)
-    shape.lineTo(left, top + height / 2)
-    shape.closePath()
-  } else {
-    shape.moveTo(left, top)
-    shape.lineTo(left + width, top)
-    shape.lineTo(left + width, top + height)
-    shape.lineTo(left, top + height)
-    shape.closePath()
-  }
-  const geometry = new ShapeGeometry(shape)
-  const positions = geometry.attributes.position
-  const uv = geometry.attributes.uv
-  for (let index = 0; index < uv.count; index += 1) {
-    uv.setXY(index, (positions.getX(index) - left) / width, 1 - (positions.getY(index) - top) / height)
-  }
-  uv.needsUpdate = true
-  return geometry
-}
-
 function textureGeometry(part, texture) {
   const image = texture?.image
-  const imageWidth = image?.naturalWidth || image?.width || part.width
-  const imageHeight = image?.naturalHeight || image?.height || part.height
+  const frame = part.visual.textureFrame
+  const crop = frame?.crop || { left: 0, top: 0, width: 1, height: 1 }
+  const imageWidth = (image?.naturalWidth || image?.width || part.width) / (frame?.columns || 1) * crop.width
+  const imageHeight = (image?.naturalHeight || image?.height || part.height) / (frame?.rows || 1) * crop.height
   const imageRatio = imageWidth / imageHeight
   const boxRatio = part.width / part.height
   const contain = part.visual.textureFit !== 'cover'
   const width = contain && imageRatio < boxRatio ? part.height * imageRatio : part.width
   const height = contain && imageRatio > boxRatio ? part.width / imageRatio : part.height
   const left = -part.width * part.pivotX + (part.width - width) / 2
-  const top = -part.height * part.pivotY + (part.height - height) / 2
+  const top = part.height * part.pivotY - (part.height - height) / 2
   const shape = new Shape()
   shape.moveTo(left, top)
   shape.lineTo(left + width, top)
-  shape.lineTo(left + width, top + height)
-  shape.lineTo(left, top + height)
+  shape.lineTo(left + width, top - height)
+  shape.lineTo(left, top - height)
   shape.closePath()
   const geometry = new ShapeGeometry(shape)
   const uv = geometry.attributes.uv
@@ -309,8 +285,11 @@ function textureGeometry(part, texture) {
   const cropY = !contain && imageRatio < boxRatio ? (1 - imageRatio / boxRatio) / 2 : 0
   for (let index = 0; index < uv.count; index += 1) {
     const u = (positions.getX(index) - left) / width
-    const v = 1 - (positions.getY(index) - top) / height
-    uv.setXY(index, cropX + u * (1 - 2 * cropX), cropY + v * (1 - 2 * cropY))
+    const v = 1 + (positions.getY(index) - top) / height
+    const frameU = cropX + u * (1 - 2 * cropX)
+    const frameV = cropY + v * (1 - 2 * cropY)
+    uv.setXY(index, frame ? (frame.column + crop.left + frameU * crop.width) / frame.columns : frameU,
+      frame ? 1 - (frame.row + crop.top + (1 - frameV) * crop.height) / frame.rows : frameV)
   }
   return geometry
 }
@@ -324,7 +303,7 @@ function addObject(object, kind = null, id = null) {
 function clearObjects() {
   for (const object of objects) {
     figureGroup.remove(object)
-    object.geometry?.dispose()
+    if (!object.userData.sharedGeometry) object.geometry?.dispose()
     if (Array.isArray(object.material)) object.material.forEach((material) => material.dispose())
     else object.material?.dispose()
   }
@@ -357,8 +336,9 @@ function drawScene() {
       texture.colorSpace = SRGBColorSpace
       textureCache.set(part.visual.texture, texture)
     }
-    const geometry = textured ? textureGeometry(part, textureCache.get(part.visual.texture)) : shapeGeometry(part)
-    const material = new MeshBasicMaterial({ color: part.fill, side: DoubleSide, transparent: true, opacity: entry.opacity, depthWrite: true })
+    const geometry = textured ? textureGeometry(part, textureCache.get(part.visual.texture)) : cachedPartGeometry(part)
+    const Material = textured ? MeshBasicMaterial : MeshLambertMaterial
+    const material = new Material({ color: part.fill, side: DoubleSide, transparent: true, opacity: entry.opacity, depthWrite: true })
     if (textured) {
       material.map = textureCache.get(part.visual.texture)
       material.color.set('#ffffff')
@@ -369,12 +349,15 @@ function drawScene() {
     mesh.matrix.copy(entry.matrix)
     mesh.renderOrder = orbitMode.value ? 1 : 10 + entry.order
     addObject(mesh, 'part', part.id)
+    mesh.userData.sharedGeometry = !textured
+    if (!orbitMode.value) {
     const outline = new LineSegments(new EdgesGeometry(geometry), new LineBasicMaterial({ color: props.selectedKind === 'part' && props.selectedId === part.id ? '#8fd1ff' : part.stroke, depthTest: false }))
     outline.matrixAutoUpdate = false
     outline.matrix.copy(entry.matrix)
     outline.renderOrder = 30 + entry.order
     outline.visible = !orbitMode.value
     addObject(outline)
+    }
   }
   if (props.showBones) {
     for (const entry of evaluation.value.bones) {
@@ -517,6 +500,8 @@ onBeforeUnmount(() => {
   host.value?.removeEventListener('pointerup', pointerEnd)
   host.value?.removeEventListener('pointercancel', onPointerCancel)
   clearObjects()
+  for (const geometry of geometryCache.values()) geometry.dispose()
+  geometryCache.clear()
   for (const tile of floorGroup.children) {
     tile.geometry.dispose()
     tile.material.dispose()

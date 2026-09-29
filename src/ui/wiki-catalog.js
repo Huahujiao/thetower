@@ -5,9 +5,11 @@ import { enemyBehaviorLabel, enemyFeatureLabel } from '../game/data/enemy-featur
 import { RELIC_DEFS } from '../game/data/relics.js'
 import { TALENT_DEFS } from '../game/data/progression.js'
 import { TRAP_DEFS } from '../game/data/traps.js'
+import { itemSpriteSources } from './item-sprites.js'
 
 const COPY = Object.freeze({
   implemented: '\u5df2\u5b9e\u88c5',
+  imagePending: '\u5f85\u8865\u56fe',
   traps: '\u9677\u9631',
   enemy: '\u654c\u4eba',
   boss: '\u9996\u9886',
@@ -88,16 +90,27 @@ function shapeText(shape) {
 }
 
 function stat(labelText, value) {
-  return `<div class="wiki-stat"><dt>${escapeHtml(labelText)}</dt><dd>${escapeHtml(value)}</dd></div>`
+  const wide = String(value).length > 24 ? ' wiki-stat-wide' : ''
+  return `<div class="wiki-stat${wide}"><dt>${escapeHtml(labelText)}</dt><dd>${escapeHtml(value)}</dd></div>`
 }
 
-function card({ tone, tag, title, description = '', stats = [], accent = '' }) {
+function card({ tone, tag, title, description = '', stats = [], accent = '', image = '' }) {
+  const visibleStats = stats.filter(Boolean)
+  const leadStats = visibleStats.slice(0, 4)
+  const remainingStats = visibleStats.slice(4)
   return `<article class="wiki-card ${tone}">
-    <div class="wiki-card-accent">${escapeHtml(accent)}</div>
-    <div class="wiki-card-head"><span class="wiki-tag">${escapeHtml(tag)}</span><span class="wiki-status">${COPY.implemented}</span></div>
-    <h2>${escapeHtml(title)}</h2>
-    ${description ? `<p>${escapeHtml(description)}</p>` : ''}
-    <dl class="wiki-stats">${stats.join('')}</dl>
+    <div class="wiki-card-top">
+      <div class="wiki-card-media">${image
+        ? `<img src="${escapeHtml(image)}" alt="" loading="lazy" decoding="async">`
+        : `<span class="wiki-media-placeholder" role="img" aria-label="${COPY.imagePending}"><span aria-hidden="true">${escapeHtml(accent || '\u25c7')}</span><small>${COPY.imagePending}</small></span>`}</div>
+      <div class="wiki-card-intro">
+        <div class="wiki-card-head"><span class="wiki-tag">${escapeHtml(tag)}</span><span class="wiki-status">${COPY.implemented}</span></div>
+        <h2>${escapeHtml(title)}</h2>
+        ${description ? `<p>${escapeHtml(description)}</p>` : ''}
+        ${leadStats.length ? `<dl class="wiki-stats wiki-stats-lead">${leadStats.join('')}</dl>` : ''}
+      </div>
+    </div>
+    ${remainingStats.length ? `<dl class="wiki-stats wiki-stats-rest">${remainingStats.join('')}</dl>` : ''}
   </article>`
 }
 
@@ -141,6 +154,7 @@ function weaponCards() {
     tone: 'tone-weapon',
     tag: COPY.weapon,
     title: weapon.name,
+    image: itemSpriteSources(weapon)?.small,
     accent: '\u2694',
     stats: [
       stat(COPY.weaponClass, label(weapon.weaponClass)),
@@ -155,17 +169,12 @@ function weaponCards() {
 }
 
 function relicCards() {
-  const system = card({
-    tone: 'tone-relic',
-    tag: COPY.relic,
-    title: '\u5723\u9057\u7269\u4e0e\u80cc\u5305',
-    description: '\u80cc\u5305\u5185\u6301\u6709\u65f6\u751f\u6548\uff0c\u540c\u540d\u4e0d\u53e0\u52a0\uff1b\u65e0\u6570\u91cf\u8d85\u8f7d\u9650\u5236\u3002\u901a\u8fc7\u5f00\u5c40\u9009\u62e9\u3001\u623f\u95f4\u5956\u52b1\u548c\u5546\u5e97\u83b7\u5f97\u3002\u6563\u4ef6\u7684\u76f8\u90bb\u6548\u679c\u751f\u6548\u65f6\uff0c\u4f1a\u5728\u53cc\u65b9\u683c\u7ebf\u5904\u663e\u793a\u7eff\u8272\u6d41\u52a8\u77ed\u5149\u5e26\u3002',
-    stats: [],
-  })
+  const system = `<aside class="wiki-catalog-note"><strong>\u5723\u9057\u7269\u4e0e\u80cc\u5305</strong><p>\u80cc\u5305\u5185\u6301\u6709\u65f6\u751f\u6548\uff0c\u540c\u540d\u4e0d\u53e0\u52a0\uff1b\u65e0\u6570\u91cf\u8d85\u8f7d\u9650\u5236\u3002\u901a\u8fc7\u5f00\u5c40\u9009\u62e9\u3001\u623f\u95f4\u5956\u52b1\u548c\u5546\u5e97\u83b7\u5f97\u3002\u6563\u4ef6\u7684\u76f8\u90bb\u6548\u679c\u751f\u6548\u65f6\uff0c\u4f1a\u5728\u53cc\u65b9\u683c\u7ebf\u5904\u663e\u793a\u7eff\u8272\u6d41\u52a8\u77ed\u5149\u5e26\u3002</p></aside>`
   return system + RELIC_DEFS.map((relic) => card({
     tone: 'tone-relic',
     tag: COPY.relic,
     title: relic.name,
+    image: itemSpriteSources(relic)?.small,
     description: relic.description,
     accent: '\u2726',
     stats: [],
@@ -200,6 +209,7 @@ function itemCards() {
     tone: `tone-${item.type}`,
     tag: label(item.type),
     title: item.name,
+    image: itemSpriteSources(item)?.small,
     description: item.description,
     accent: item.type === 'buff' ? '\u2727' : '\u25cf',
     stats: [
