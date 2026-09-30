@@ -1,24 +1,32 @@
 import { ENEMY_HP_MULTIPLIER, enemyDefinitionFor, getEnemyDefinition } from './enemies.js'
 import catalog from './catalog.json' with { type: 'json' }
 import { getRelicDefinition, RELIC_DEFS } from './relics.js'
+import { bindStatusAccessors } from '../rules/statuses.js'
+import { EXPANSION_WEAPONS, EXPANSION_DEFENSES, GENERATED_CONSUMABLES } from './expansion-items.js'
+import { PETS, PET_WEAPONS, PET_DEFENSES, BUTCHER_FOOD } from './pets.js'
 
-const WEAPON_ENERGY_COSTS = Object.freeze({ dagger: 2, sword: 3, axe: 4, polearm: 4, bow: 4, heavy: 5 })
 function weaponDefinition(source) {
-  return Object.freeze({ ...source, energyCost: WEAPON_ENERGY_COSTS[source.weaponClass] || 3 })
+  return Object.freeze({ ...source, energyCost: Math.max(1, Math.floor(Number(source.energyCost) || 3)) })
 }
-const WEAPONS = Object.freeze(catalog.weapons.map(weaponDefinition))
-const CONSUMABLES = Object.freeze(catalog.consumables)
+const WEAPONS = Object.freeze([...catalog.weapons, ...(catalog.merchantWeapons || []), ...EXPANSION_WEAPONS, ...PET_WEAPONS].map(weaponDefinition))
+const CONSUMABLES = Object.freeze([...catalog.consumables, ...GENERATED_CONSUMABLES, BUTCHER_FOOD].map(item => Object.freeze({ tier: 1, supplyWeight: 4, ...item,
+  ...(item.type === 'energy' ? { description: '\u5ba0\u7269\u53ef\u6309\u70b9\u6570\u90e8\u5206\u6d88\u8017\uff1b\u76f4\u63a5\u4f7f\u7528\u6d88\u8017\u6574\u4efd\uff0c\u6062\u590d\u5269\u4f59\u70b9\u6570\u7684\u4f53\u529b\u3002' } : {}),
+})))
 const ENEMY_LOOT = Object.freeze(catalog.enemyLoot || [])
-const MERCHANT_WEAPONS = Object.freeze(catalog.merchantWeapons || [])
 const BOSS = Object.freeze(catalog.boss)
-export const DEFENSES = Object.freeze(catalog.defenses)
+export const DEFENSES = Object.freeze([...catalog.defenses, ...EXPANSION_DEFENSES, ...PET_DEFENSES].map(item => Object.freeze({ ...item, armorValue: item.armorValue || 1 })))
+export const MONEY_POUCH = Object.freeze({
+  id: 'money-pouch', type: 'money-pouch', name: '\u94b1\u888b', shape: [[1]], rotatable: false,
+  discardable: false, sellable: false, starterOnly: true,
+  description: '\u663e\u793a\u5f53\u524d\u91d1\u5e01\u6570\u91cf\u3002\u53ef\u79fb\u52a8\u3001\u6682\u5b58\uff0c\u4e0d\u53ef\u4e22\u5f03\u6216\u51fa\u552e\u3002',
+})
 export const RECIPES = Object.freeze(catalog.recipes)
 
 export function upgradeRecipesForItem(itemOrId) {
   const id = typeof itemOrId === 'object' ? itemOrId?.id : itemOrId
   return id ? RECIPES.filter((recipe) => recipe.a === id) : []
 }
-export const ALL_ITEM_DEFS = Object.freeze([...WEAPONS, ...CONSUMABLES, ...DEFENSES, ...ENEMY_LOOT, ...MERCHANT_WEAPONS, ...RELIC_DEFS.map(r => ({ ...r, type: 'relic', relicId: r.id, shape: [[1]], rotatable: false }))])
+export const ALL_ITEM_DEFS = Object.freeze([...WEAPONS, ...CONSUMABLES, ...DEFENSES, ...PETS, ...ENEMY_LOOT, MONEY_POUCH, ...RELIC_DEFS.map(r => ({ ...r, type: 'relic', relicId: r.id, shape: [[1]], rotatable: false }))])
 const ITEM_BY_ID = new Map(ALL_ITEM_DEFS.map((definition) => [definition.id, definition]))
 
 let serial = 0
@@ -46,7 +54,6 @@ export function starterWeapon() { return makeItem(WEAPONS[0]) }
 export function makeItem(definition, _random = Math.random) {
   const item = { ...definition, shape: cloneShape(definition.shape), uid: nextEntityId('item') }
   if (item.type === 'weapon') {
-    item.energyCost = WEAPON_ENERGY_COSTS[item.weaponClass] || 3
     item.tier = weaponTier(item)
   }
   return item
@@ -79,6 +86,8 @@ export function makeRelicItem(relicOrId) {
   return {
     type: 'relic',
     relicId: definition.id,
+    totemId: definition.totemId,
+    summonRange: definition.summonRange,
     id: definition.id,
     attribute: definition.attribute,
     name: definition.name,
@@ -101,12 +110,17 @@ function weightedPick(values, random) {
 }
 
 export function randomConsumableDefinition(floor, random = Math.random) {
-  const pool = CONSUMABLES.filter((item) => floor >= (item.minFloor || 1))
+  const pool = CONSUMABLES.filter((item) => !item.generatedOnly && !item.disabled && floor >= (item.minFloor || 1))
   return weightedPick(pool, random)
 }
 
 export function randomNeutralItem(floor, random = Math.random) {
   return makeItem(randomConsumableDefinition(floor, random))
+}
+
+export function randomConsumableOfTier(tier, random = Math.random) {
+  const pool = CONSUMABLES.filter(item => !item.generatedOnly && !item.disabled && item.tier === tier)
+  return pool.length ? makeItem(pool[Math.min(pool.length - 1, Math.floor(random() * pool.length))]) : null
 }
 
 export function randomWeapon(floor, random = Math.random) {
@@ -116,7 +130,7 @@ export function randomWeapon(floor, random = Math.random) {
 
 function createEnemy(definition, { position = null, boss = false } = {}) {
   if (!definition) return null
-  return {
+  return bindStatusAccessors({
     id: nextEntityId(boss ? 'boss' : 'enemy'),
     kind: 'enemy',
     enemyId: definition.id,
@@ -151,6 +165,7 @@ function createEnemy(definition, { position = null, boss = false } = {}) {
     pos: position ? { ...position } : null,
     hp: definition.hp * ENEMY_HP_MULTIPLIER,
     maxHp: definition.hp * ENEMY_HP_MULTIPLIER,
+    hpMultiplier: ENEMY_HP_MULTIPLIER,
     attack: definition.attack,
     range: definition.range,
     attackCooldownMax: Math.max(1, Number(definition.attackCooldownMax ?? definition.cooldownMax) || 0),
@@ -161,7 +176,8 @@ function createEnemy(definition, { position = null, boss = false } = {}) {
     hasActed: false,
     alertTriggered: false,
     revealOrder: null,
-  }
+    statuses: {},
+  })
 }
 
 export function createMonster(floor, index = 0) {

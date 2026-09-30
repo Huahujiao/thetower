@@ -17,6 +17,7 @@
       @contextmenu.prevent
     >
       <span class="bag-shape" :style="entry.shapeStyle">
+        <ItemValueBadge :item="entry.item" :gold="gold" />
         <InventorySprite
           v-if="entry.spriteSources" :sources="entry.spriteSources"
           :item-index="entry.originIndex" :style="entry.spriteStyle"
@@ -26,7 +27,7 @@
           :data-bag-item="cell.index" :style="cell.style"
           @click.stop="emit('cell-click', cell.index)"
         ><i v-for="edge in cell.edgeNames" :key="edge" class="shape-edge" :class="`edge-${edge}`" aria-hidden="true"></i></span>
-        <b v-if="entry.nameStyle" class="bag-name" :style="entry.nameStyle">{{ entry.item.name }}</b>
+        <b v-if="entry.nameStyle && entry.item.id !== 'money-pouch'" class="bag-name" :style="entry.nameStyle">{{ entry.item.name }}</b>
         <small v-if="entry.detailStyle" class="bag-detail" :style="entry.detailStyle">{{ entry.detail }}</small>
       </span>
     </div>
@@ -43,6 +44,7 @@
 <script setup>
 import { ref } from 'vue'
 import InventorySprite from './InventorySprite.vue'
+import ItemValueBadge from './ItemValueBadge.vue'
 
 defineProps({
   columns: { type: Number, required: true },
@@ -50,6 +52,7 @@ defineProps({
   cells: { type: Array, required: true },
   items: { type: Array, required: true },
   links: { type: Array, required: true },
+  gold: { type: Number, default: 0 },
 })
 const emit = defineEmits(['cell-click', 'item-touchstart', 'item-touchmove', 'item-touchend', 'item-touchcancel'])
 const grid = ref(null)

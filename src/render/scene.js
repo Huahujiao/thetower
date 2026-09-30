@@ -11,6 +11,7 @@ import { cardBodyGeometry, styleCardBody, cardFaceY, CARD_FACE_CLEARANCE, HIDDEN
 import { boundaryPillarPoint, createDoorFrame, createLowPolyPillar, createLowPolyWall, evenPillarOffsets } from './wall-kit.js'
 import { goldSpriteSources, itemSpriteSources } from '../ui/item-sprites.js'
 import { drawEnemyPuppet, enemyPuppetProject, prepareEnemyPuppets } from './enemy-puppet.js'
+import { drawTotemToken, totemFaceData } from './totem-token.js'
 
 const TILE_SIZE = 1.14
 const CARD_SIZE = TILE_SIZE
@@ -77,7 +78,6 @@ const CARD_COLORS = Object.freeze({
   empty: '#20242d',
 })
 
-const WEAPON_CLASS_LABELS = Object.freeze({ sword: '\u5251', axe: '\u65a7', dagger: '\u5315\u9996', polearm: '\u957f\u67c4', heavy: '\u91cd\u6b66\u5668', bow: '\u5f13' })
 
 const NO_RAYCAST = () => {}
 
@@ -507,8 +507,8 @@ export class GameScene {
     mesh.receiveShadow = true
     this.roomGroup.add(mesh)
     const card = revealed || peeked ? this._cardFaceData(room, position) : null
-    const standing = revealed && (card?.type === 'monster' || card?.type === 'merchant' || card?.type === 'entry')
-    const emptyGround = standing && (card?.type === 'monster' || card?.type === 'merchant' || card?.type === 'entry')
+    const standing = revealed && (card?.type === 'monster' || card?.type === 'merchant' || card?.type === 'entry' || card?.type === 'totem')
+    const emptyGround = standing && (card?.type === 'monster' || card?.type === 'merchant' || card?.type === 'entry' || card?.type === 'totem')
     const texture = card
       ? this._makeFrontTexture(card, position, revealed)
       : this._makeBackTexture(this._backAttributeFor(room, position), { unflippable: !flippable })
@@ -844,6 +844,8 @@ export class GameScene {
   _addEnemyHintLabel(overlay, enemy) {
     const range = Math.max(1, turnCounter(enemy?.range))
     const tokens = [
+      ...(enemy.statuses?.rooted ? ['缠'] : []),
+      ...(enemy.statuses?.prey ? ['\u730e'] : []),
       ...enemyOverheadHints(enemy).map((hint) => hint.icon),
       `\u{1F3F9} ${range}`,
     ]
@@ -931,6 +933,7 @@ export class GameScene {
         peeked,
         flippable,
         entity,
+        totemTurn: entity?.kind === 'totem' ? this.run.globalTurn : null,
         player: isPlayer ? {
           hp: this.run.player.hp,
           maxHp: this.run.player.maxHp,
@@ -1266,8 +1269,8 @@ export class GameScene {
     this._clearGroundSprite(face)
     const oldTexture = face.material.map
     const card = revealed || peeked ? this._cardFaceData(room, position) : null
-    const standing = revealed && (card?.type === 'monster' || card?.type === 'merchant' || card?.type === 'entry')
-    const emptyGround = standing && (card?.type === 'monster' || card?.type === 'merchant' || card?.type === 'entry')
+    const standing = revealed && (card?.type === 'monster' || card?.type === 'merchant' || card?.type === 'entry' || card?.type === 'totem')
+    const emptyGround = standing && (card?.type === 'monster' || card?.type === 'merchant' || card?.type === 'entry' || card?.type === 'totem')
     face.material.map = card
       ? this._makeFrontTexture(card, position, revealed)
       : this._makeBackTexture(this._backAttributeFor(room, position), { unflippable: !flippable })
@@ -1519,10 +1522,10 @@ export class GameScene {
     return true
   }
 
-  _startAttack({ roomId, actor = 'enemy', enemyId = null, position, targetPosition, targetDefeated = false, targetStatus = null } = {}) {
+  _startAttack({ roomId, actor = 'enemy', enemyId = null, actorStatus = null, position, targetPosition, targetDefeated = false, targetStatus = null, evaded = false } = {}) {
     const room = this.run.currentRoom
     if (!room || room.id !== roomId || room.id !== this.framedRoomId || !position) return false
-    if (actor === 'enemy' && enemyId && !room.entity(enemyId)) return false
+    if (actor === 'enemy' && enemyId && !room.entity(enemyId) && !actorStatus) return false
     const face = this.tileMeshByKey.get(tileKey(position))
     if (!face) return false
     const marker = actor === 'player' && this.playerMarker?.visible ? this.playerMarker : null
@@ -1536,7 +1539,7 @@ export class GameScene {
       && this.playerMarker.userData.footprintKey === tileKey(targetPosition) ? this.playerMarker : null
     const target = targetMarker || targetFace
     const targetMesh = targetMarker?.children.find((child) => child?.isMesh && child.material?.map) || targetFace
-    const victim = target?.visible && target !== object && targetMesh?.material ? {
+    const victim = !evaded && target?.visible && target !== object && targetMesh?.material ? {
       object: target,
       mesh: targetMesh,
       face: targetFace,
@@ -1545,7 +1548,9 @@ export class GameScene {
       baseRotationZ: target.rotation.z,
       baseOpacity: targetMesh.material.opacity,
     } : null
-    const attackCard = actor === 'player' ? null : this._cardFaceData(room, position)
+    const attackCard = actor === 'player' ? null : actorStatus
+      ? { type: 'monster', enemyId: actorStatus.enemyId, title: actorStatus.name, attribute: actorStatus.attribute, boss: actorStatus.boss }
+      : this._cardFaceData(room, position)
     const attackTexture = makeCanvasTexture((context) => actor === 'player'
       ? drawStickFigure(context, { armLift: 0, legSpread: 1 })
       : drawEnemyPuppet(context, attackCard?.enemyId, 'attack', 0)
@@ -2129,6 +2134,7 @@ export class GameScene {
         drawStandingToken(context, card)
         return
       }
+      if (card.type === 'totem') { drawTotemToken(context, card); return }
       if (card.type === 'entry') {
         context.clearRect(0, 0, 160, 160)
         drawStickFigure(context)
@@ -2194,6 +2200,7 @@ export class GameScene {
       }
     }
     if (entity.kind === 'item') return { ...this._itemCardFaceData(entity.item), item: entity.item, attribute: entity.item.type === 'weapon' ? entity.item.attribute : null }
+    if (entity.kind === 'totem') return totemFaceData(entity, this.run.globalTurn)
     if (entity.kind === 'trap') {
       const triggered = entity.triggered === true
       return {
@@ -2238,6 +2245,8 @@ export class GameScene {
   }
 
   _itemCardFaceData(item) {
+    if (item.type === 'pet') return { type: 'pet', title: item.name, value: '\u5ba0\u7269', valueColor: '#b9efad',
+      detail: `ATK ${item.attack} \u00b7 R ${item.range} \u00b7 \u98df ${item.foodCost}`, footer: '\u53602\u683c\uff0c\u81ea\u52a8\u653b\u51fb', clickHint: '\u70b9\u51fb\u62fe\u53d6' }
     if (item.type === 'defense' || item.type === 'material') {
       return { type: 'item', title: item.name, value: item.type === 'defense' ? '防具' : '材料', valueColor: '#d8ccac', detail: '背包内被动生效', clickHint: '点击拾取' }
     }
@@ -2245,7 +2254,7 @@ export class GameScene {
       return {
         type: 'weapon',
          title: item.name,
-         subtitle: WEAPON_CLASS_LABELS[item.weaponClass] || '\u6b66\u5668',
+         subtitle: '\u6b66\u5668',
         value: String(item.attack),
         valueColor: '#a9d8ff',
         energyCost: this.run.weaponEnergyCost(item),
@@ -2263,6 +2272,10 @@ export class GameScene {
     }
     if (item.type === 'energy') {
       return { type: 'energy', title: item.name, value: `+${item.energy} \u4f53\u529b`, valueColor: '#ffd56b', detail: '\u4f7f\u7528\u540e\u6062\u590d\u4f53\u529b', footer: '\u6d88\u8017\u884c\u52a8', clickHint: '\u70b9\u51fb\u62fe\u53d6' }
+    }
+    if (item.type === 'throwable') {
+      return { type: 'item', title: item.name, value: 'II', valueColor: '#ffd56b',
+        detail: `\u6295\u63b7 ${item.range}\u683c`, clickHint: '\u70b9\u51fb\u62fe\u53d6' }
     }
     if (item.type === 'buff') {
       return { type: 'buff', title: item.name, value: `攻击 +${item.attackBonus}`, valueColor: '#8effc8', detail: '下次攻击生效', footer: '消耗行动', clickHint: '点击拾取' }
@@ -2400,7 +2413,7 @@ export class GameScene {
   _startBoardHold(event) {
     const position = this._pickTile(event)?.userData?.position
     if (!position) return
-    if (this.run.itemTargeting && this.run.selectedItem?.type === 'teleport') {
+    if (this.run.itemTargeting) {
       this._clearPathPreview()
       this.run.clickTile(position.c, position.r)
       return

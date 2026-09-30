@@ -17,12 +17,12 @@ import { getItemDefinition } from '../src/game/data/content.js'
   assert.equal(run.itemRules.attackContext(blade, target).flat, 0)
   add(run, 'r-money-scale')
   assert.equal(run.itemRules.attackContext(blade, target).flat, 0)
-  add(run, 'r-gold-hook')
+  const hook = add(run, 'gold-hook')
   const before = run.player.gold
   target.hp = 1
-  attack(run, blade, target)
+  attack(run, hook, target)
   assert.equal(run.player.gold, before + 1)
-  assert.equal(run.itemRules.room.goldHookKills, 1)
+  assert.equal(getItemDefinition('r-gold-hook'), null)
 }
 
 {
@@ -47,23 +47,26 @@ import { getItemDefinition } from '../src/game/data/content.js'
   add(run, 'r-turn-shield', 7, 1)
   const target = enemy(run, { hp: 100 })
   run.itemRules.move()
-  assert.equal(run.itemRules.attackContext(maul, target).flat, 4)
+  assert.equal(run.itemRules.attackContext(maul, target).flat, 3)
   attack(run, maul, target)
-  assert.equal(run.player.armor, 1)
-  run._damagePlayer(1, { source: 'enemy:attack', enemy: { range: 1 } })
-  assert.equal(run.player.armor, 2)
+  assert.equal(run.player.armor, 0)
+  run.itemRules.move()
+  assert.equal(run.getStatus(run.player, 'dodge').layers, 1)
+  assert.equal(run.getStatus(run.player, 'counter').damage, 5)
+  run._enemyAttack(enemy(run, { attack: 1, pos: { c: 2, r: 3 } }))
+  assert.equal(run.player.hp, 20)
+  assert.equal(run.getStatus(run.player, 'counter').layers, 1)
 }
 
 {
   const run = fixture()
-  const shield = add(run, 'r-turn-shield')
-  run.itemRules.move()
-  assert.equal(run.itemRules.state.turnShieldReady, true)
-  run.backpack.removeByUid(shield.uid)
-  run.itemRules.action('organize')
-  assert.equal(run.itemRules.state.turnShieldReady, false)
   add(run, 'r-turn-shield')
-  run._damagePlayer(1, { source: 'enemy:attack', enemy: { range: 1 } })
+  run.itemRules.move()
+  assert.equal(run.getStatus(run.player, 'counter'), null)
+  run.itemRules.action('attack')
+  run.itemRules.move()
+  run._endTurn({ skipEnemyPhase: true, action: 'movement' })
+  assert.equal(run.getStatus(run.player, 'counter'), null)
   assert.equal(run.player.armor, 0)
 }
 
@@ -137,27 +140,27 @@ import { getItemDefinition } from '../src/game/data/content.js'
 {
   const run = fixture()
   const dagger = add(run, 'bone-knife', 0, 0)
-  add(run, 'toxin-vial', 1, 0)
-  assert(!run.itemRules.weaponLines(dagger).some((line) => line.includes('附毒持续3')))
   add(run, 'venom-sac', 0, 1)
   attack(run, dagger, enemy(run, { hp: 100 }))
-  assert.equal(run.currentRoom.entityAt({ c: 4, r: 3 }).itemPoisonTurns, 2)
+  assert.equal(run.currentRoom.entityAt({ c: 4, r: 3 }).itemPoisonTurns, 5)
 }
 
-// Poison from one weapon can charge a relic spent by a different weapon.
+// Poison from one weapon can be detonated and removed by another weapon.
 {
   const run = fixture()
   const dagger = add(run, 'bone-knife', 0, 0)
   add(run, 'venom-sac', 1, 0)
-  const sword = add(run, 'rust-sword', 3, 0)
-  add(run, 'r-poison-hourglass', 5, 0)
+  const sword = add(run, 'erosion-knife', 3, 0)
   const target = enemy(run)
   attack(run, dagger, target)
-  assert.equal(target.itemPoisonTurns, 1)
-  assert.equal(run.itemRules.state.poisonCharge, 1)
-  assert.equal(run.itemRules.attackContext(sword, target).poisonSpend, 1)
+  assert.equal(target.itemPoisonTurns, 5)
+  target.attack = 1
+  run._enemyAttack(target)
+  assert.equal(target.itemPoisonTurns, 4)
+  const hp = target.hp
   attack(run, sword, target)
-  assert.equal(run.itemRules.state.poisonCharge, 1) // The remaining poison tick charges the next attack.
+  assert.equal(target.hp, hp - 7)
+  assert.equal(run.getStatus(target, 'enemy-poison'), null)
 }
 
 // Two arbitrary attributes enable switching; the named elemental weapons each work alone.
@@ -200,12 +203,12 @@ import { getItemDefinition } from '../src/game/data/content.js'
 
 {
   const run = fixture()
-  const sword = add(run, 'rust-sword')
-  const dagger = add(run, 'bone-knife')
-  add(run, 'r-relay-badge')
+  const sword = add(run, 'rust-sword', 0, 0)
+  const dagger = add(run, 'bone-knife', 2, 0)
+  add(run, 'r-relay-badge', 1, 0)
   const target = enemy(run, { hp: 200 })
   attack(run, sword, target)
-  assert.equal(run.itemRules.attackContext(dagger, target).flat, 1)
+  assert.equal(run.itemRules.attackContext(dagger, target).multiplier, 1.7)
 }
 
 // Suggestions use loose effect tags only and respect floor requirements.
@@ -213,7 +216,7 @@ import { getItemDefinition } from '../src/game/data/content.js'
   const run = fixture()
   add(run, 'wood-bow')
   const suggestion = suggestedSynergyId(run.backpack.items, 'item', () => 0)
-  assert(['ash-bow', 'eagle-bow', 'scope', 'range-disc', 'steady-clip'].includes(suggestion))
+  assert(getItemDefinition(suggestion)?.range >= 2 || ['scope', 'range-disc', 'steady-clip'].includes(suggestion))
   const reward = buildRoomRewardChoices(run.relics, { floor: 1, type: 'supply', random: () => 0, items: run.backpack.items })
   assert.notEqual(reward.choices[0].itemId, 'range-disc')
   assert.equal(suggestedSynergyId([], 'item', () => 0), null)
@@ -237,14 +240,14 @@ import { getItemDefinition } from '../src/game/data/content.js'
     'r-heavy-wrist', 'r-step-boots', 'r-turn-shield', 'r-poison-hourglass']
   for (const id of ids) assert(itemSpriteSources({ id })?.medium)
   const run = fixture()
-  add(run, 'r-poison-hourglass')
-  run.itemRules.state.poisonCharge = 2
+  add(run, 'r-step-boots')
+  run.itemRules.state.lastAction = 'attack'
   const saved = JSON.stringify(run.serialize())
   const previous = globalThis.localStorage
   globalThis.localStorage = { getItem: (key) => key === SAVE_KEY ? saved : null, setItem() {}, removeItem() {} }
   try {
     const loaded = new GameRun()
-    assert.equal(loaded.itemRules.state.poisonCharge, 2)
+    assert.equal(loaded.itemRules.state.lastAction, 'attack')
   } finally { globalThis.localStorage = previous }
 }
 
@@ -252,14 +255,14 @@ import { getItemDefinition } from '../src/game/data/content.js'
   const run = fixture()
   const data = run.serialize()
   data.player.itemState = { buffs: {} }
-  data.player.itemState.triadStage = 2
-  data.player.itemState.buffs['r-phase-pointer'] = { flat: 3, discount: 1 }
+  data.version--
+  let removed = false
   const previous = globalThis.localStorage
-  globalThis.localStorage = { getItem: (key) => key === SAVE_KEY ? JSON.stringify(data) : null, setItem() {}, removeItem() {} }
+  globalThis.localStorage = { getItem: (key) => key === SAVE_KEY ? JSON.stringify(data) : null, setItem() {}, removeItem() { removed = true } }
   try {
     const loaded = new GameRun()
-    assert.equal(loaded.itemRules.state.triadStage, undefined)
-    assert.equal(loaded.itemRules.state.buffs['r-phase-pointer'], undefined)
+    assert.equal(loaded._loaded, false)
+    assert.equal(removed, true)
   } finally { globalThis.localStorage = previous }
 }
 

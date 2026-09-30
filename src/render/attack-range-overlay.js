@@ -1,5 +1,6 @@
 import * as THREE from 'three'
-import { enemyThreatCells, weaponTargetCells } from '../game/rules/attack-range.js'
+import { consumableTargetCells, enemyThreatCells, weaponTargetCells } from '../game/rules/attack-range.js'
+import { isTotemBadge } from '../game/data/totems.js'
 
 const TEXTURE_SIZE = 256
 const SHRINK_SECONDS = 1.2
@@ -65,7 +66,9 @@ export class AttackRangeOverlay {
     this.geometry = new THREE.PlaneGeometry(cardSize * 0.96, cardSize * 0.96)
     this.textures = {
       weapon: canvasTexture((context) => drawAim(context, '100, 216, 255')),
+      throwable: canvasTexture((context) => drawAim(context, '255, 211, 91')),
       enemy: canvasTexture((context) => drawAim(context, '255, 91, 104')),
+      totem: canvasTexture((context) => drawAim(context, '190, 142, 255')),
     }
     this.materials = Object.fromEntries(Object.entries(this.textures).map(([mode, map]) => [mode, new THREE.MeshBasicMaterial({
       map, transparent: true, opacity: 0, depthTest: false, depthWrite: false,
@@ -109,13 +112,17 @@ export class AttackRangeOverlay {
     const heldEnemy = this.heldEnemy
     const enemy = heldEnemy && room?.id === heldEnemy.roomId ? room.entity(heldEnemy.id) : null
     const heldWeapon = this.heldWeapon
-    const weapon = !enemy && heldWeapon ? this.run.backpack.placementOf(heldWeapon)?.item : null
-    const mode = enemy ? 'enemy' : weapon?.type === 'weapon' ? 'weapon' : null
-    const origin = enemy?.pos || (mode === 'weapon' ? this.run.player.pos : null)
-    const range = enemy ? Number(enemy.range) || 0 : weapon ? this.run.weaponRange(weapon) : 0
-    const cells = mode === 'enemy'
+    const badge = !enemy && this.run.itemTargeting && isTotemBadge(this.run.selectedItem) ? this.run.selectedItem : null
+    const weapon = badge || (!enemy && this.run.itemTargeting && this.run.selectedItem?.type === 'throwable'
+      ? this.run.selectedItem : !enemy && heldWeapon ? this.run.backpack.placementOf(heldWeapon)?.item : null
+    )
+    const mode = enemy ? 'enemy' : badge ? 'totem' : ['weapon', 'throwable'].includes(weapon?.type) ? weapon.type : null
+    const origin = enemy?.pos || (mode ? this.run.player.pos : null)
+    const range = enemy ? Number(enemy.range) || 0 : badge ? badge.summonRange : weapon?.type === 'throwable' ? weapon.range : weapon ? this.run.weaponRange(weapon) : 0
+    const cells = mode === 'totem' ? this.run.totems.targets(badge) : mode === 'enemy'
       ? enemyThreatCells(room, enemy, this.run.player.pos)
-      : mode === 'weapon' ? weaponTargetCells(room, origin, range) : []
+      : mode === 'throwable' ? consumableTargetCells(room, origin, weapon)
+        : mode === 'weapon' ? weaponTargetCells(room, origin, range) : []
     const key = mode ? [mode, room.id, enemy?.id || weapon.uid, origin.c, origin.r, range,
       ...cells.map(({ c, r }) => `${c},${r}`)].join(':') : ''
     if (key === this.key) return

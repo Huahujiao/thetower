@@ -146,7 +146,7 @@ const ITEM_SPRITE_SOURCES = Object.freeze({
     small: new URL('../assets/inventory/relic-trade-voucher-v1-small.png', import.meta.url).href,
     medium: new URL('../assets/inventory/relic-trade-voucher-v1-medium.png', import.meta.url).href,
   },
-  'r-gold-hook': {
+  'gold-hook': {
     small: new URL('../assets/inventory/relic-gold-hook-v1-small.png', import.meta.url).href,
     medium: new URL('../assets/inventory/relic-gold-hook-v1-medium.png', import.meta.url).href,
   },
@@ -245,10 +245,6 @@ const ITEM_SPRITE_SOURCES = Object.freeze({
   'iron-powder': {
     small: new URL('../assets/inventory/item-iron-powder-v1-small.png', import.meta.url).href,
     medium: new URL('../assets/inventory/item-iron-powder-v1-medium.png', import.meta.url).href,
-  },
-  'energy-potion': {
-    small: new URL('../assets/inventory/item-energy-potion-v1-small.png', import.meta.url).href,
-    medium: new URL('../assets/inventory/item-energy-potion-v1-medium.png', import.meta.url).href,
   },
   cleanse: {
     small: new URL('../assets/inventory/item-cleanse-v1-small.png', import.meta.url).href,

@@ -12,10 +12,6 @@
           <span class="label">{{ LABELS.level }}</span><span class="value">{{ state.player.level
           }}</span>
         </div>
-        <div class="stat gold">
-          <span class="label">{{ LABELS.gold }}</span><span class="value">{{ state.player.gold
-          }}</span>
-        </div>
       </div>
       <div class="hud-btns">
         <button
@@ -107,13 +103,14 @@
           @touchcancel.stop.prevent="onStashTouchCancel($event)" @contextmenu.prevent
         >
           <span class="bag-shape" :style="entry.shapeStyle">
+            <ItemValueBadge :item="entry.item" :gold="state.player.gold" />
             <InventorySprite
               v-if="entry.spriteSources" :sources="entry.spriteSources" :item-index="-1"
               :style="entry.spriteStyle" @contextmenu.prevent
             /><span
               v-for="cell in entry.cells" :key="cell.index" class="occupied" :style="cell.style"
             ></span>
-            <b v-if="!entry.spriteSources" class="bag-name staging-name">{{ entry.item.name }}</b>
+            <b v-if="!entry.spriteSources && entry.item.id !== 'money-pouch'" class="bag-name staging-name">{{ entry.item.name }}</b>
           </span>
         </div>
       </div>
@@ -122,13 +119,14 @@
         :style="draggedItemView.previewStyle"
       >
         <span class="bag-shape" :style="draggedItemView.shapeStyle">
+          <ItemValueBadge :item="draggedItemView.item" :gold="state.player.gold" />
           <InventorySprite
             v-if="draggedItemView.spriteSources" :sources="draggedItemView.spriteSources" :item-index="-1"
             :style="draggedItemView.spriteStyle" @contextmenu.prevent
           /><span
             v-for="cell in draggedItemView.cells" :key="cell.index" class="occupied" :style="cell.style"
           ></span>
-          <b v-if="!draggedItemView.spriteSources" class="bag-name staging-name">{{ draggedItemView.item.name }}</b>
+          <b v-if="!draggedItemView.spriteSources && draggedItemView.item.id !== 'money-pouch'" class="bag-name staging-name">{{ draggedItemView.item.name }}</b>
         </span>
       </div>
     </section>
@@ -385,7 +383,7 @@
             </button>
           </div>
           <div class="merchant-trade">
-            <button data-action="merchant-sell" :disabled="!selectedItem" @click="handleAction('merchant-sell')">
+            <button data-action="merchant-sell" :disabled="!selectedItem || selectedItem.sellable === false" @click="handleAction('merchant-sell')">
               {{
                 LABELS.sellSelected }}{{ selectedItem ? ` ${merchantSellPrice(selectedItem)}` : '' }}
             </button><button
@@ -443,7 +441,7 @@
         <div class="backpack-action-slot act-use-slot">
           <button
             class="backpack-action act-use" data-action="use"
-            :hidden="!selectedUsable" :disabled="!selectedUsable"
+            :hidden="!selectedUsable" :disabled="!selectedUseAvailable"
             @click="handleAction('use')"
           >
             {{ LABELS.use }}
@@ -454,6 +452,7 @@
         <div class="backpack-grid-wrap">
           <BackpackGrid
             ref="backpackGrid" :columns="INVENTORY_COLUMNS" :rows="INVENTORY_ROWS"
+            :gold="state.player.gold"
             :cells="backpackCells" :items="backpackItems" :links="backpackAdjacencyLinks"
             @cell-click="onBagCellClick" @item-touchstart="onBagTouchStart"
             @item-touchmove="onBagTouchMove" @item-touchend="onBagTouchEnd"
@@ -512,14 +511,16 @@ import { computed, onBeforeUnmount, onMounted, reactive, ref, shallowRef, watch 
 import { merchantSellPrice } from '../game/data/merchants.js'
 import { getItemDefinition, upgradeRecipesForItem } from '../game/data/content.js'
 import { getRelicDefinition } from '../game/data/relics.js'
+import { isTotemBadge } from '../game/data/totems.js'
 import { INVENTORY_COLUMNS, INVENTORY_ROWS } from '../game/run.js'
 import { GameScene } from '../render/scene.js'
 import { DETAIL_HOLD_MS } from '../interaction-timing.js'
 import { bagShapeLayout } from './bag-shape.js'
 import { automaticStashPosition, inventoryDropAnchorAtCenter, inventoryItemLayout, stashPositionAtPoint as stashPositionForPoint } from './inventory-layout.js'
 import { itemSpriteSources } from './item-sprites.js'
-import { statusIconSource } from './status-icons.js'
+import { playerStatusEntries } from './status-presentation.js'
 import InventorySprite from './InventorySprite.vue'
+import ItemValueBadge from './ItemValueBadge.vue'
 import BackpackGrid from './BackpackGrid.vue'
 
 const props = defineProps({ run: { type: Object, required: true } })
@@ -538,12 +539,11 @@ const LABELS = Object.freeze({
   leaveMerchant: '\u79bb\u5f00', sold: '\u5df2\u552e\u7f44', buy: '\u8d2d\u4e70', merchantRelicsTab: '\u5723\u9057\u7269',
   noRelicsAvailable: '\u6682\u65e0\u53ef\u83b7\u5f97\u7684\u5723\u9057\u7269', relicChoice: '\u9009\u62e9\u4e00\u4ef6\u5723\u9057\u7269',
   roomReward: '\u65b0\u623f\u95f4\u5956\u52b1', growthChoice: '\u9009\u62e9\u5929\u8d4b\u6216\u5f3a\u5065\u4f53\u9b44', skipReward: '\u8df3\u8fc7',
-  sellSelected: '\u51fa\u552e\u6240\u9009', refreshStock: '\u5237\u65b0\u8d27\u67b6', weaponClass: '\u7c7b\u522b', restart: '\u91cd\u65b0\u5f00\u59cb',
+  sellSelected: '\u51fa\u552e\u6240\u9009', refreshStock: '\u5237\u65b0\u8d27\u67b6', restart: '\u91cd\u65b0\u5f00\u59cb',
   restartConfirm: '\u786e\u5b9a\u8981\u91cd\u65b0\u5f00\u59cb\u5417\uff1f\u5f53\u524d\u8fdb\u5ea6\u5c06\u88ab\u6e05\u9664\u3002',
   win: '\u9003\u51fa\u5730\u7262', lose: '\u4f60\u5df2\u9668\u843d', winMessage: '\u4f60\u51fb\u8d25\u4e86\u76d1\u89c6\u8005\u3002', loseMessage: '\u751f\u547d\u5f52\u96f6\u3002\u53ef\u4ee5\u91cd\u65b0\u5f00\u59cb\u6311\u6218\u3002',
 })
 const DETAIL_ICONS = Object.freeze({ enemy: '\u2694', weapon: '\u2694', potion: '\u271a', armor: '\u26e8', energy: '\u26a1', buff: '\u2726', relic: '\u25c6', trap: '!', gold: '\u25cf', key: '\ud83d\udd11', merchant: '\u25c9', item: '\u25a0' })
-const WEAPON_CLASS_LABELS = Object.freeze({ sword: '\u5251', axe: '\u65a7', dagger: '\u5315\u9996', polearm: '\u957f\u67c4', heavy: '\u91cd\u6b66\u5668', bow: '\u5f13' })
 const TALENT_LINE_LABELS = Object.freeze({ flow: '\u6362\u52bf', guard: '\u5b88\u5fa1', harmony: '\u8c03\u548c', sword: '\u5251', axe: '\u65a7', dagger: '\u5315\u9996', polearm: '\u957f\u67c4', heavy: '\u91cd\u6b66\u5668', bow: '\u5f13', scorch: '\u707c\u70ed', wither: '\u67af\u840e', drown: '\u6c89\u6eba', survival: '\u751f\u5b58' })
 const EDGE_NAMES = ['top', 'right', 'bottom', 'left']
 const HELP_SECTIONS = Object.freeze([
@@ -615,37 +615,15 @@ const craftAvailable = computed(() => {
 })
 const selectedUsable = computed(() => {
   const item = selectedItem.value
-  return actionsAvailable.value && !!item && ['potion', 'armor', 'energy', 'buff', 'cleanse', 'teleport'].includes(item.type)
+  return actionsAvailable.value && !!item && (isTotemBadge(item) || ['potion', 'armor', 'energy', 'buff', 'cleanse', 'teleport', 'throwable'].includes(item.type))
+})
+const selectedUseAvailable = computed(() => {
+  state.value
+  return selectedUsable.value && (!isTotemBadge(selectedItem.value) || run.totems.available(selectedItem.value))
 })
 const statusEntries = computed(() => {
-  const current = state.value
-  const entries = []
-  if (current.player.poisonedTurns > 0) {
-    entries.push({
-      id: 'poison', name: LABELS.poison, glyph: Array.from(LABELS.poison)[0], icon: statusIconSource('poison'),
-      badge: String(current.player.poisonedTurns), tone: 'poison',
-      description: `${LABELS.poison} ${current.player.poisonedTurns}${LABELS.turn}`,
-    })
-  }
-  if (current.player.burningTurns > 0) {
-    entries.push({
-      id: 'burning', name: LABELS.burning, glyph: Array.from(LABELS.burning)[0], icon: statusIconSource('burning'),
-      badge: String(current.player.burningTurns), tone: 'burning',
-      description: `${LABELS.burning} ${current.player.burningTurns}${LABELS.turn}`,
-    })
-  }
-
-  const pendingLines = run.itemRules.pendingLines()
-  for (const [id, buff] of Object.entries(current.player.itemState?.buffs || {})) {
-    if (id.startsWith('r-') || (id === 'spring' && !run.itemRules.has(id))) continue
-    const name = run.itemRules.sourceName(id)
-    entries.push({
-      id: `buff-${id}`, name, glyph: Array.from(name)[0] || '?', icon: statusIconSource(id, buff),
-      badge: buff.flat ? `+${buff.flat}` : buff.discount ? `-${buff.discount}` : '', tone: 'neutral',
-      description: pendingLines.find((line) => line.startsWith(name)) || name,
-    })
-  }
-  return entries
+  state.value
+  return playerStatusEntries(run)
 })
 const experienceProgress = computed(() => {
   const player = state.value.player
@@ -866,17 +844,19 @@ watch(craftAvailable, (available) => {
 }, { immediate: true })
 
 function itemDetail(item) {
-  if (item.type === 'weapon') return `${WEAPON_CLASS_LABELS[item.weaponClass] || LABELS.weaponClass} · ATK ${item.attack} · R ${run.weaponRange(item)} · ${LABELS.energy} ${run.weaponEnergyCost(item)}`
+  if (item.type === 'pet') return `ATK ${item.attack} \u00b7 R ${run.pets.range(item)} \u00b7 \u98df ${run.pets.cost(item)}`
+  if (item.type === 'weapon') return `ATK ${item.attack} · R ${run.weaponRange(item)} · ${LABELS.energy} ${run.weaponEnergyCost(item)}`
   if (item.type === 'potion') return `HP +${item.heal}`
   if (item.type === 'armor') return `${LABELS.armor} +${item.armor}`
   if (item.type === 'energy') return `${LABELS.energy} +${item.energy}`
   if (item.type === 'buff') return `ATK +${item.attackBonus}`
-  if (item.type === 'defense') return LABELS.armor
+  if (item.type === 'defense') return `${LABELS.armor} ${item.armorValue || 1}`
+  if (item.type === 'money-pouch') return ''
   return item.description || ''
 }
 
 function rewardDetail(definition) {
-  return definition.type === 'weapon' ? `${WEAPON_CLASS_LABELS[definition.weaponClass] || LABELS.weaponClass} · ATK ${definition.attack} · R ${run.weaponRange(definition)} · ${LABELS.energy} ${run.weaponEnergyCost(definition)}` : itemDetail(definition)
+  return itemDetail(definition)
 }
 
 function toggleTopPanel(panel) { topPanel.value = topPanel.value === panel ? null : panel }

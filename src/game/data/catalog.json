@@ -235,7 +235,7 @@
       "attribute": "wither",
       "behavior": "stationary",
       "deathStatus": "poison",
-      "deathStatusTurns": 2,
+      "deathStatusTurns": 10,
       "deathStatusDamage": 2,
       "range": 2,
       "hp": 8,
@@ -708,7 +708,7 @@
       "id": "rust-sword",
       "name": "锈蚀短剑",
       "type": "weapon",
-      "weaponClass": "sword",
+      "appearance": "sword",
       "attribute": "scorch",
       "attack": 3,
       "range": 1,
@@ -727,7 +727,7 @@
       "id": "silver-guard",
       "name": "沉银守剑",
       "type": "weapon",
-      "weaponClass": "sword",
+      "appearance": "sword",
       "attribute": "drown",
       "attack": 4,
       "range": 1,
@@ -749,7 +749,7 @@
       "id": "ember-axe",
       "name": "焦痕手斧",
       "type": "weapon",
-      "weaponClass": "axe",
+      "appearance": "axe",
       "attribute": "scorch",
       "attack": 4,
       "range": 1,
@@ -768,7 +768,7 @@
       "id": "root-axe",
       "name": "腐根战斧",
       "type": "weapon",
-      "weaponClass": "axe",
+      "appearance": "axe",
       "attribute": "wither",
       "attack": 5,
       "range": 1,
@@ -789,7 +789,7 @@
       "id": "bone-knife",
       "name": "枯骨匕",
       "type": "weapon",
-      "weaponClass": "dagger",
+      "appearance": "dagger",
       "attribute": "wither",
       "attack": 2,
       "range": 1,
@@ -805,7 +805,7 @@
       "id": "tide-blade",
       "name": "潮步刃",
       "type": "weapon",
-      "weaponClass": "dagger",
+      "appearance": "dagger",
       "attribute": "drown",
       "attack": 3,
       "range": 1,
@@ -824,7 +824,7 @@
       "id": "ember-spear",
       "name": "炭纹长枪",
       "type": "weapon",
-      "weaponClass": "polearm",
+      "appearance": "sword",
       "attribute": "scorch",
       "attack": 3,
       "range": 2,
@@ -846,7 +846,7 @@
       "id": "thorn-spear",
       "name": "荆钩枪",
       "type": "weapon",
-      "weaponClass": "polearm",
+      "appearance": "sword",
       "attribute": "wither",
       "attack": 4,
       "range": 2,
@@ -871,7 +871,7 @@
       "id": "wood-bow",
       "name": "沉木短弓",
       "type": "weapon",
-      "weaponClass": "bow",
+      "appearance": "bow",
       "attribute": "drown",
       "attack": 3,
       "range": 3,
@@ -890,7 +890,7 @@
       "id": "ash-bow",
       "name": "灰烬猎弓",
       "type": "weapon",
-      "weaponClass": "bow",
+      "appearance": "bow",
       "attribute": "scorch",
       "attack": 4,
       "range": 3,
@@ -911,7 +911,7 @@
       "id": "rock-maul",
       "name": "枯岩重锤",
       "type": "weapon",
-      "weaponClass": "heavy",
+      "appearance": "axe",
       "attribute": "wither",
       "attack": 6,
       "range": 1,
@@ -932,7 +932,7 @@
       "id": "bell-maul",
       "name": "沉铁钟锤",
       "type": "weapon",
-      "weaponClass": "heavy",
+      "appearance": "axe",
       "attribute": "drown",
       "attack": 7,
       "range": 1,
@@ -953,7 +953,7 @@
       "id": "wall-sword",
       "name": "城壁剑",
       "type": "weapon",
-      "weaponClass": "sword",
+      "appearance": "sword",
       "attribute": "drown",
       "attack": 5,
       "range": 1,
@@ -976,7 +976,7 @@
       "id": "return-axe",
       "name": "回旋斧",
       "type": "weapon",
-      "weaponClass": "axe",
+      "appearance": "axe",
       "attribute": "scorch",
       "attack": 6,
       "range": 1,
@@ -998,7 +998,7 @@
       "id": "erosion-knife",
       "name": "蚀骨刃",
       "type": "weapon",
-      "weaponClass": "dagger",
+      "appearance": "dagger",
       "attribute": "wither",
       "attack": 4,
       "range": 1,
@@ -1011,14 +1011,14 @@
         ]
       ],
       "energyCost": 2,
-      "description": "主攻击克制击杀返还2体力，其他击杀返还1体力。",
+      "description": "\u653b\u51fb\u4e2d\u6bd2\u654c\u4eba\u65f6\uff0c\u7acb\u5373\u89e6\u53d13\u6b21\u6bd2\u4f24\uff0c\u5e76\u79fb\u9664\u5176\u4e2d\u6bd2\u6548\u679c\u3002",
       "crafted": true
     },
     {
       "id": "soul-spear",
       "name": "锁魂枪",
       "type": "weapon",
-      "weaponClass": "polearm",
+      "appearance": "sword",
       "attribute": "scorch",
       "attack": 5,
       "range": 2,
@@ -1044,7 +1044,7 @@
       "id": "eagle-bow",
       "name": "鹰眼弓",
       "type": "weapon",
-      "weaponClass": "bow",
+      "appearance": "bow",
       "attribute": "drown",
       "attack": 5,
       "range": 4,
@@ -1068,7 +1068,7 @@
       "id": "mountain-maul",
       "name": "断岳槌",
       "type": "weapon",
-      "weaponClass": "heavy",
+      "appearance": "axe",
       "attribute": "wither",
       "attack": 9,
       "range": 1,
@@ -1095,9 +1095,10 @@
     },
     {
       "id": "triad-ember",
+      "energyCost": 3,
       "name": "烬钥剑",
       "type": "weapon",
-      "weaponClass": "sword",
+      "appearance": "sword",
       "attribute": "scorch",
       "attack": 4,
       "range": 1,
@@ -1107,9 +1108,10 @@
     },
     {
       "id": "triad-wither",
+      "energyCost": 2,
       "name": "腐环匕",
       "type": "weapon",
-      "weaponClass": "dagger",
+      "appearance": "dagger",
       "attribute": "wither",
       "attack": 3,
       "range": 1,
@@ -1119,9 +1121,10 @@
     },
     {
       "id": "triad-tide",
+      "energyCost": 4,
       "name": "潮尺弓",
       "type": "weapon",
-      "weaponClass": "bow",
+      "appearance": "bow",
       "attribute": "drown",
       "attack": 3,
       "range": 3,
@@ -1131,15 +1134,28 @@
     },
     {
       "id": "coin-blade",
+      "energyCost": 3,
       "name": "铸币剑",
       "type": "weapon",
-      "weaponClass": "sword",
+      "appearance": "sword",
       "attribute": "drown",
       "attack": 4,
       "range": 1,
       "shape": [[1], [1]],
       "minFloor": 1,
       "description": "持有至少12金币时攻击+2。"
+    },
+    {
+      "id": "gold-hook",
+      "name": "\u62fe\u91d1\u94a9",
+      "type": "weapon",
+      "appearance": "sword",
+      "attribute": null,
+      "attack": 3,
+      "range": 1,
+      "energyCost": 3,
+      "shape": [[1], [1]],
+      "description": "\u4f7f\u7528\u8be5\u6b66\u5668\u51fb\u6740\u654c\u4eba\u65f6\uff0c\u83b7\u5f971\u91d1\u5e01\u3002"
     }
   ],
   "consumables": [
@@ -1170,16 +1186,83 @@
       "energyCost": 0
     },
     {
-      "id": "energy-potion",
-      "name": "体力药",
+      "id": "food-3",
+      "name": "\u98df\u7269\uff083\uff09",
       "type": "energy",
       "energy": 3,
-      "description": "恢复3体力。",
+      "description": "\u4e00\u6b21\u6027\u6062\u590d3\u4f53\u529b\u3002",
       "shape": [
         [
           1
         ]
       ],
+      "energyCost": 0
+    },
+    {
+      "id": "food-5",
+      "name": "\u98df\u7269\uff085\uff09",
+      "type": "energy",
+      "energy": 5,
+      "description": "\u4e00\u6b21\u6027\u6062\u590d5\u4f53\u529b\u3002",
+      "shape": [[1]],
+      "energyCost": 0
+    },
+    {
+      "id": "food-7",
+      "name": "\u98df\u7269\uff087\uff09",
+      "type": "energy",
+      "energy": 7,
+      "description": "\u4e00\u6b21\u6027\u6062\u590d7\u4f53\u529b\u3002",
+      "shape": [[1]],
+      "energyCost": 0
+    },
+    {
+      "id": "food-9",
+      "name": "\u98df\u7269\uff089\uff09",
+      "type": "energy",
+      "energy": 9,
+      "description": "\u4e00\u6b21\u6027\u6062\u590d9\u4f53\u529b\u3002",
+      "shape": [[1]],
+      "energyCost": 0
+    },
+    {
+      "id": "poison",
+      "name": "\u6bd2\u836f",
+      "type": "throwable",
+      "tier": 2,
+      "supplyWeight": 1,
+      "range": 4,
+      "effect": "poison",
+      "poisonDamage": 5,
+      "description": "\u6295\u63b7\u8303\u56f44\u683c\uff0c\u4f7f\u654c\u4eba\u4e2d\u6bd2\u3002\u654c\u4eba\u6bcf\u6b21\u653b\u51fb\u65f6\u5931\u53bb5\u751f\u547d\u3002",
+      "shape": [[1]],
+      "energyCost": 0
+    },
+    {
+      "id": "explosive",
+      "name": "\u70b8\u836f",
+      "type": "throwable",
+      "tier": 2,
+      "supplyWeight": 1,
+      "range": 4,
+      "effect": "explosion",
+      "damage": 10,
+      "description": "\u6295\u63b7\u8303\u56f44\u683c\uff0c\u53ef\u9009\u62e9\u5df2\u7ffb\u5f00\u7684\u683c\u5b50\u3002\u5bf9\u76ee\u6807\u683c\u53ca8\u90bb\u57df\u7684\u6240\u6709\u654c\u4eba\u9020\u621010\u4f24\u5bb3\u3002",
+      "shape": [[1]],
+      "energyCost": 0
+    },
+    {
+      "id": "thunder-charm",
+      "name": "\u96f7\u7b26",
+      "type": "throwable",
+      "tier": 2,
+      "supplyWeight": 1,
+      "range": 4,
+      "effect": "lightning",
+      "damage": 16,
+      "bounceDamage": 5,
+      "description": "\u6295\u63b7\u8303\u56f44\u683c\uff0c\u5bf9\u76ee\u6807\u654c\u4eba\u9020\u621016\u4f24\u5bb3\uff0c\u5e76\u5f39\u5c04\u5230\u8ddd\u76ee\u6807\u6700\u8fd1\u7684\u53e6\u4e00\u4e2a\u654c\u4eba\u9020\u62105\u4f24\u5bb3\u3002",
+      "shape": [[1]],
       "energyCost": 0
     },
     {
@@ -1259,7 +1342,7 @@
           1
         ]
       ],
-      "description": "相邻武器命中使目标中毒：每回合1伤害，持续2回合；再次命中刷新持续时间。",
+      "description": "\u76f8\u90bb\u6b66\u5668\u653b\u51fb\u4f7f\u654c\u4eba\u4e2d\u6bd2\uff0c5\u5c42\u3002\u654c\u4eba\u6bcf\u6b21\u653b\u51fb\u65f6\u5931\u53bb1\u751f\u547d\u3002",
       "dropOnly": true
     },
     {
@@ -1275,7 +1358,7 @@
           1
         ]
       ],
-      "description": "相邻长柄武器距离2命中时，击退1格并造成碰撞伤害+2。",
+      "description": "\u76f8\u90bb\u6b66\u5668\u5728\u8ddd\u79bb2\u547d\u4e2d\u65f6\uff0c\u51fb\u90001\u683c\u5e76\u9020\u6210\u78b0\u649e\u4f24\u5bb3+2\u3002",
       "dropOnly": true
     },
     {
@@ -1291,7 +1374,7 @@
           1
         ]
       ],
-      "description": "相邻弓射程+1。",
+      "description": "\u76f8\u90bb\u6b66\u5668\u5c04\u7a0b+1\u3002",
       "dropOnly": true
     },
     {
@@ -1307,7 +1390,7 @@
           1
         ]
       ],
-      "description": "相邻重武器攻击+2，体力消耗+1。",
+      "description": "\u76f8\u90bb\u6b66\u5668\u653b\u51fb+2\u3001\u4f53\u529b\u6d88\u8017+1\u3002",
       "dropOnly": true
     },
     {
@@ -1333,7 +1416,7 @@
       "attribute": "drown",
       "shape": [[1]],
       "minFloor": 2,
-      "description": "四向相邻任意弓时，该弓在最大射程有效命中可为下一箭蓄2点伤害；不叠加。"
+      "description": "\u76f8\u90bb\u6700\u5927\u5c04\u7a0b\u22652\u7684\u6b66\u5668\uff0c\u5728\u6700\u5927\u5c04\u7a0b\u6709\u6548\u547d\u4e2d\u540e\uff0c\u4e3a\u4e0b\u4e00\u6b21\u653b\u51fb\u84c42\u70b9\u4f24\u5bb3\u3002"
     },
     {
       "id": "steady-clip",
@@ -1341,7 +1424,7 @@
       "type": "material",
       "attribute": null,
       "shape": [[1]],
-      "description": "四向相邻任意弓时，该弓攻击距离不超过2格的敌人伤害+1。"
+      "description": "\u76f8\u90bb\u6700\u5927\u5c04\u7a0b\u22652\u7684\u6b66\u5668\uff0c\u653b\u51fb\u8ddd\u79bb\u22642\u65f6\u4f24\u5bb3+1\u3002"
     },
     {
       "id": "bone-nail",
@@ -1349,15 +1432,16 @@
       "type": "material",
       "attribute": "wither",
       "shape": [[1]],
-      "description": "四向相邻任意长柄武器时，该武器距离2命中可击退目标；撞墙或撞到敌人时额外造成2点碰撞伤害，并延迟目标行动1次。"
+      "description": "\u76f8\u90bb\u6b66\u5668\u5728\u8ddd\u79bb2\u547d\u4e2d\u65f6\u51fb\u9000\u76ee\u6807\uff1b\u649e\u5899\u6216\u649e\u5230\u654c\u4eba\u65f6\u989d\u5916\u9020\u62102\u70b9\u78b0\u649e\u4f24\u5bb3\uff0c\u5e76\u5ef6\u8fdf\u76ee\u6807\u884c\u52a81\u6b21\u3002"
     },
     {
       "id": "toxin-vial",
+      "disabled": true,
       "name": "续毒瓶",
       "type": "material",
       "attribute": "wither",
       "shape": [[1]],
-      "description": "四向相邻的任意武器附毒时，中毒持续3次敌人阶段。"
+      "description": "\u56db\u5411\u76f8\u90bb\u7684\u4efb\u610f\u6b66\u5668\u9644\u6bd2\u65f6\uff0c\u4e2d\u6bd2\u6301\u7eed3\u6b21\u654c\u4eba\u653b\u51fb\u3002"
     }
   ],
   "merchantWeapons": [],
@@ -1367,6 +1451,7 @@
       "name": "木盾",
       "type": "defense",
       "defenseClass": "shield",
+      "armorValue": 1,
       "attribute": null,
       "shape": [
         [
@@ -1383,6 +1468,7 @@
       "name": "棘盾",
       "type": "defense",
       "defenseClass": "shield",
+      "armorValue": 1,
       "attribute": "wither",
       "shape": [
         [
@@ -1401,6 +1487,7 @@
       "name": "潮镜盾",
       "type": "defense",
       "defenseClass": "shield",
+      "armorValue": 1,
       "attribute": "drown",
       "shape": [
         [
@@ -1420,6 +1507,7 @@
       "name": "赤鳞盾",
       "type": "defense",
       "defenseClass": "shield",
+      "armorValue": 1,
       "attribute": "scorch",
       "shape": [
         [
@@ -1438,6 +1526,7 @@
       "name": "轻甲",
       "type": "defense",
       "defenseClass": "armor",
+      "armorValue": 1,
       "attribute": null,
       "shape": [
         [
@@ -1449,13 +1538,14 @@
           1
         ]
       ],
-      "description": "首次进入新房间时获得3护甲。"
+      "description": "\u9996\u6b21\u8fdb\u5165\u65b0\u623f\u95f4\u65f6\u83b7\u5f971\u62a4\u7532\u3002"
     },
     {
       "id": "red-armor",
       "name": "赤鳞甲",
       "type": "defense",
       "defenseClass": "armor",
+      "armorValue": 1,
       "attribute": "scorch",
       "shape": [
         [
@@ -1475,6 +1565,7 @@
       "name": "腐藤甲",
       "type": "defense",
       "defenseClass": "armor",
+      "armorValue": 1,
       "attribute": "wither",
       "shape": [
         [
@@ -1493,6 +1584,7 @@
       "name": "潮行披风",
       "type": "defense",
       "defenseClass": "armor",
+      "armorValue": 1,
       "attribute": "drown",
       "shape": [
         [

@@ -26,6 +26,7 @@ const BY_ID = new Map(MERCHANT_DEFS.map((definition) => [definition.id, definiti
 
 function availableItems(floor) {
   return ITEM_DEFS.filter((definition) => {
+    if (definition.starterOnly || definition.generatedOnly || definition.disabled) return false
     if (floor < (definition.minFloor || 1)) return false
     // First release: every item category, including materials and crafted weapons.
     return true
@@ -55,7 +56,9 @@ export function merchantItemPrice(itemOrId) {
   return 4
 }
 
-export function merchantSellPrice(item) { return Math.max(1, Math.floor(merchantItemPrice(item) / 2)) }
+export function merchantSellPrice(item) {
+  return item?.sellable === false || item?.id === 'money-pouch' ? 0 : Math.max(1, Math.floor(merchantItemPrice(item) / 2))
+}
 
 function makeStockEntry(definition) { return { itemId: definition.id, price: merchantItemPrice(definition) } }
 

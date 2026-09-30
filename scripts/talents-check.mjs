@@ -26,12 +26,12 @@ assert.equal(buildLevelUpChoices({talents:[]}).length,5)
 }
 {
   const run=fixture();run.player.talents=['guard-shell','guard-gain','guard-reply']
-  add(run,'light-armor');run.itemRules.enter(true);assert.equal(run.player.armor,6)
+  add(run,'light-armor');run.itemRules.enter(true);assert.equal(run.player.armor,4)
   const w=add(run,'rust-sword'),e=enemy(run)
   assert.equal(run.itemRules.attackContext(w,e).flat,1)
   attack(run,w,e);assert.equal(run.itemRules.attackContext(w,e).flat,0)
   run.itemRules.armor(1,true);run.itemRules.armor(1,true);run.itemRules.armor(1,true)
-  assert.equal(run.player.armor,9)
+  assert.equal(run.player.armor,7)
 }
 {
   const run=fixture();run.player.talents=['guard-hard','guard-last'];run.player.armor=2

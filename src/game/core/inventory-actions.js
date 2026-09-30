@@ -30,7 +30,7 @@ export function discardInventoryItem(run, itemOrUid, { notify = true } = {}) {
   const uid = typeof itemOrUid === 'object' ? itemOrUid?.uid : itemOrUid
   const item = run.inventoryStash.find((stashed) => stashed?.uid === uid)
     || run.backpack.placementOf(uid)?.item
-  if (!item) return false
+  if (!item || item.discardable === false || item.id === 'money-pouch') return false
   run.inventoryStash = run.inventoryStash.filter((stashed) => stashed.uid !== uid)
   run.backpack.removeByUid(uid)
   run.itemRules.discarded(item)

@@ -1,3 +1,7 @@
+import { EXPANSION_RELICS } from './expansion-items.js'
+import { TOTEM_BADGES } from './totems.js'
+import { PET_RELICS } from './pets.js'
+
 export const RELIC_DEFS = Object.freeze([
   {
     "id": "r-three",
@@ -20,7 +24,7 @@ export const RELIC_DEFS = Object.freeze([
   {
     "id": "r-traveler",
     "name": "旅者骨牌",
-    "description": "移动后立即进行的武器攻击体力消耗-2；连续攻击时体力消耗+1。",
+    "description": "\u653b\u51fb\u540e\u7acb\u5373\u8fdb\u884c\u7684\u79fb\u52a8\u56de\u5408\uff0c\u989d\u5916\u6062\u590d1\u70b9\u4f53\u529b\u3002",
     "attribute": null
   },
   {
@@ -32,13 +36,13 @@ export const RELIC_DEFS = Object.freeze([
   {
     "id": "r-scales",
     "name": "断刃秤",
-    "description": "背包恰好只有一把武器时，该武器攻击+4、射程+1。",
+    "description": "\u80cc\u5305\u4e2d\u53ea\u67091\u628a\u6b66\u5668\u65f6\uff0c\u8be5\u6b66\u5668\u653b\u51fb\u529b\u00d72\u3001\u5c04\u7a0b+1\u3002",
     "attribute": null
   },
   {
     "id": "r-relay-badge",
     "name": "接力徽记",
-    "description": "任意武器有效命中后，下一次换用其他武器攻击伤害+1；不叠加。",
+    "description": "\u4e0e\u672c\u5723\u9057\u7269\u76f8\u90bb\u7684\u6b66\u5668\u653b\u51fb\u540e\uff0c\u4e0b\u4e00\u6b21\u4f7f\u7528\u4e0e\u672c\u5723\u9057\u7269\u76f8\u90bb\u7684\u53e6\u4e00\u628a\u6b66\u5668\u653b\u51fb\u65f6\uff0c\u4f24\u5bb3\u00d71.7\u3002",
     "attribute": null
   },
   {
@@ -66,12 +70,6 @@ export const RELIC_DEFS = Object.freeze([
     "attribute": null
   },
   {
-    "id": "r-gold-hook",
-    "name": "拾金钩",
-    "description": "任意武器主攻击击杀获得1金币，每房间最多3次。",
-    "attribute": null
-  },
-  {
     "id": "r-ledger",
     "name": "折价账本",
     "description": "普通商人刷新货架费用减少2金币，最低为1金币。",
@@ -80,27 +78,31 @@ export const RELIC_DEFS = Object.freeze([
   {
     "id": "r-heavy-wrist",
     "name": "重腕护符",
-    "description": "四向没有相邻物品的重武器体力消耗-1，最低仍为1。",
+    "description": "\u56db\u5411\u6ca1\u6709\u76f8\u90bb\u7269\u54c1\u4e14\u57fa\u7840\u4f53\u529b\u6d88\u8017\u22655\u7684\u6b66\u5668\uff0c\u4f53\u529b\u6d88\u8017-1\uff0c\u6700\u4f4e\u51cf\u4e3a1\u3002",
     "attribute": null
   },
   {
     "id": "r-step-boots",
     "name": "步痕靴",
-    "description": "主动移动后立即进行的任意武器攻击伤害+1；有效命中后将护甲补足至1。",
+    "description": "\u653b\u51fb\u540e\u7acb\u5373\u8fdb\u884c\u7684\u79fb\u52a8\u56de\u5408\uff0c\u83b7\u5f971\u5c42\u95ea\u907f\uff0c\u6301\u7eed\u672c\u56de\u5408\u3002",
     "attribute": null
   },
   {
     "id": "r-turn-shield",
     "name": "回身盾",
-    "description": "主动移动后，下一次受到敌人普通攻击前获得2护甲；重复移动刷新，不叠加。",
+    "description": "\u653b\u51fb\u540e\u7acb\u5373\u8fdb\u884c\u7684\u79fb\u52a8\u56de\u5408\uff0c\u83b7\u5f971\u5c42\u53cd\u51fb\uff0c\u4f24\u5bb3\u4e3a\u4e0a\u6b21\u6b66\u5668\u653b\u51fb\u529b\u7684\u4e00\u534a\uff0c\u5411\u4e0a\u53d6\u6574\uff0c\u6301\u7eed\u672c\u56de\u5408\u3002",
     "attribute": null
   },
   {
     "id": "r-poison-hourglass",
+    "disabled": true,
     "name": "蚀时漏斗",
     "description": "武器附毒每次造成伤害时积1点蓄毒，至多3点；下一次任意武器攻击消耗并等量增伤。",
     "attribute": "wither"
-  }
+  },
+  ...EXPANSION_RELICS,
+  ...TOTEM_BADGES,
+  ...PET_RELICS
 ])
 
 const BY_ID = new Map(RELIC_DEFS.map((definition) => [definition.id, definition]))
@@ -108,7 +110,7 @@ const BY_ID = new Map(RELIC_DEFS.map((definition) => [definition.id, definition]
 export function getRelicDefinition(id) { return BY_ID.get(id) || null }
 
 export function buildRelicChoices(collection, { count = 3, random = Math.random, preferredId = null } = {}) {
-  const candidates = RELIC_DEFS.filter((definition) => !collection?.has(definition.id))
+  const candidates = RELIC_DEFS.filter((definition) => !definition.disabled && !collection?.has(definition.id))
   const shuffled = [...candidates]
   for (let index = shuffled.length - 1; index > 0; index--) {
     const swapIndex = Math.floor(random() * (index + 1))

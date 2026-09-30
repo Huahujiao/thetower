@@ -26,9 +26,33 @@ export default `# 技术结构、存档与验证
 
 ## 存档
 
-游戏状态变化后自动写入 \`localStorage\`。存档包含地牢与翻牌、章节房间角色、分支封闭状态、玩家资源和成长、背包位置与旋转、暂存物品、圣遗物、商人货架、奖励、回合计数、状态效果、敌人状态、陷阱延迟移除、日志和结算状态。攻击动画期间还保存待结算回合标记；读档会完成该回合。当前版本为 **27**，版本不匹配或结构无效时创建新局；\`turn\` 仅作为 \`globalTurn\` 的兼容字段。读取旧存档时会清除旧版换相指针的三段印记和待用增益，并更新物品描述。工具路由的角色库使用独立的浏览器存储，不属于游戏局存档。
+游戏状态变化后自动写入 \`localStorage\`。存档包含地牢与翻牌、章节房间角色、分支封闭状态、玩家资源和成长、背包位置与旋转、暂存物品、圣遗物、商人货架、奖励、回合计数、状态效果、敌人状态、陷阱延迟移除、日志和结算状态。攻击动画期间还保存待结算回合标记与宠物目标标记；读档会完成该回合。食物和血瓶保存剩余点数。当前版本为 **32**，版本不匹配、结构无效或包含停用物品时，直接删除该存档并重新开始游戏，不迁移物品、血量、状态或旧计数。\`turnCounters\` 保存正式回合计数。工具路由的角色库使用独立的浏览器存储，不属于游戏局存档。
+
+## 状态接口
+
+统一逻辑在 \`src/game/rules/statuses.js\`。角色状态保存在 \`actor.statuses\`，下一击增益保存在 \`player.itemState.buffs\`，两者使用相同计数结构和全局时钟。中毒、格挡等便捷访问器不参与序列化，不单独计时，也不读取或迁移旧存档字段。
+
+- \`run.applyStatus(actor, id, options)\` 获取状态，\`options.layers\` 和 \`options.turns\` 可独立指定；省略时各为100，明确标注的状态默认值除外。
+- \`run.updateStatus(actor, id, changes)\` 原位修改伤害或其他参数，保留未指定的层数和持续时间。\`run.removeStatus(actor, id)\` 移除状态。
+- 固定反击：\`run.applyStatus(run.player, 'counter', { layers: 1, damage: 5 })\`。
+- 获取时记录上一击攻击力：\`damage: { mode: 'last-player-attack', stage: 'gain', ratio: 1 }\`。上一击攻击力为基础攻击加固定加成后乘攻击力倍率，未乘属性或地形倍率；获取后保存为数值。
+- 每次受击时按比例：\`damage: { mode: 'incoming-attack', stage: 'trigger', ratio: 0.5 }\`。默认按攻击本身的伤害计算；\`basis: 'rawDamage'\` 使用减伤后、护甲前的伤害，\`basis: 'healthDamage'\` 使用实际损失生命。
+- 自定义算法使用 \`registerStatusDamageResolver(name, callback)\` 注册，通过 \`damage.mode\` 引用；存档只保存算法名称和参数。触发阶段的上下文含玩家、持有者、攻击者和已结算的伤害结果。
+- 闪避：\`run.applyStatus(run.player, 'dodge')\` 默认1层；可显式指定更多层。玩家毒使用 \`player-poison\`，敌人毒使用 \`enemy-poison\`，不能跨持有者类型混用。
+
+## 物品事件与消耗品连锁
+
+新增物品的独立逻辑集中在 \`src/game/rules/expansion.js\`，由攻击前后、受伤前后、敌人移动和公共事件入口触发。累计翻牌、1级消耗品使用、受击次数和续甲胄上次触发点保存在 \`player.itemState.expansion\`；武器实例和属性历史仍共用物品规则中的攻击记录。
+
+宠物定义位于 \`src/game/data/pets.js\`，目标、射程、供食事务、返还和击杀效果集中在 \`src/game/rules/pets.js\`。玩家武器先写入本回合猎物、号角和割肉刀目标，攻击动画完成后按背包物理顺序运行宠物阶段，之后才进入图腾回合效果和敌人阶段。供食先生成完整方案，点数不足时不修改物品；食尸鼠击杀按同一事务恢复原物品与位置。宠物不改写玩家的上次武器和属性历史。
+
+\`src/game/rules/consumables.js\` 统一处理主动与免费使用。先验证目标和体力，再从背包移除消耗品，执行效果及奖励回调，最后由主流程推进一次回合。连饮环在开始时保存原有邻域物品，避免消耗品奖励重入连锁。盾击符不进入随机池，只由镇岳盾生成；盾击伤害和耗甲按使用时的护甲读取。疫行铃复制毒伤参数与剩余计数，目标状态独立计时。
 
 ## 美术资源
+
+图腾定义在 \`src/game/data/totems.js\`，召唤、生命周期和效果集中在 \`src/game/rules/totems.js\`。实体记录召唤回合、到期回合和下次招魂触发回合；共享冷却与护身图腾的受击回合记录位于 \`player.itemState.totems\`。敌人行为通过障碍检查和攻击图腾回调调用规则，招魂换位通过 \`Room.swapCards\` 同步实体位置和牌面状态。读档校验体力上限与存活实体数量一致；不兼容存档直接删除重开。
+
+图腾当前使用程序绘制的立牌占位图，显示各自符号、名称与剩余回合。召唤瞄准显示紫色有效空格，背包徽章根据场上实体和共享冷却显示灰色状态。
 
 背包和地面物品共用与实际占格形状对应的透明精灵；运行时只加载小／中尺寸版本，原始高分辨率资源保留在 \`src/assets/inventory/backup/source/\`，由 \`scripts/generate-sprite-resolutions.py\` 导出。背包的相邻生效提示由真实占用格计算，Vue 只渲染其公共边短光带。地面武器的属性光芒、物品旋转、移动格下沉及固定房间边墙属于渲染反馈，不改变规则或寻路。
 
@@ -43,6 +67,9 @@ npm.cmd run check:dungeon
 npm.cmd run check:turns
 npm.cmd run check:traps
 npm.cmd run check:items
+npm.cmd run check:statuses
+npm.cmd run check:expansion
+npm.cmd run check:totems
 npm.cmd run check:synergies
 npm.cmd run check:enemies
 npm.cmd run check:talents

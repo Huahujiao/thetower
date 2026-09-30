@@ -15,7 +15,7 @@ const expected = {
   'water-leech-swarm': { minFloor: 3, behavior: 'chaser', attribute: 'drown', splitMinionId: 'leech-larva' },
   'molten-core-beast': { minFloor: 4, behavior: 'stationary', attribute: 'scorch', deathExplosionDamage: 5 },
   'redneedle-salamander': { minFloor: 2, behavior: 'stationary', attribute: 'scorch', traits: ['burning'], burningTurns: 2, burningDamage: 1 },
-  'rot-sac-toad': { minFloor: 2, behavior: 'stationary', attribute: 'wither', deathStatus: 'poison', deathStatusTurns: 2, deathStatusDamage: 2 },
+  'rot-sac-toad': { minFloor: 2, behavior: 'stationary', attribute: 'wither', deathStatus: 'poison', deathStatusTurns: 10, deathStatusDamage: 2 },
   'claw-beast': { minFloor: 2, behavior: 'chaser', attribute: 'drown', traits: ['swift'] },
   'whirlpool-eye-sac': { minFloor: 3, behavior: 'chaser', attribute: 'drown', traits: ['pull'], pullDistance: 1 },
   'redwheel-fire-crow': { minFloor: 4, behavior: 'chaser', attribute: 'scorch', traits: ['burning'], burningTurns: 2 },
@@ -80,8 +80,8 @@ armorRoom.addEntity(shellguard)
 const hpBeforeArmorHit = shellguard.hp
 assert.equal(armorRun._damageEnemy(shellguard, 5).damage, 4)
 assert.equal(shellguard.hp, hpBeforeArmorHit - 4)
-assert.equal(armorRun._damageEnemy(shellguard, 1, { ignoreDefense: true }).damage, 0)
-assert.equal(shellguard.hp, hpBeforeArmorHit - 4)
+assert.equal(armorRun._damageEnemy(shellguard, 1, { ignoreDefense: true }).damage, 1)
+assert.equal(shellguard.hp, hpBeforeArmorHit - 5)
 
 const burningRun = new GameRun({ autoLoad: false, random: () => 0.25 })
 const burningRoom = blankRoom(burningRun)
@@ -106,7 +106,7 @@ poisonRun.player.armor = 5
 const toad = createEnemyById('rot-sac-toad', { c: 2, r: 2 })
 poisonRoom.addEntity(toad)
 poisonRun._defeatEnemy(toad, { suppressLoot: true })
-assert.equal(poisonRun.player.poisonedTurns, 2)
+assert.equal(poisonRun.player.poisonedTurns, 10)
 poisonRun._tickPlayerStatuses()
 assert.equal(poisonRun.player.hp, 8)
 assert.equal(poisonRun.player.armor, 5)

@@ -76,6 +76,18 @@ export class Room {
 
   isEmpty(position) { return this.contains(position) && !this.entityAt(position) }
 
+  swapCards(first, second) {
+    if (!this.contains(first) || !this.contains(second) || (first.c === second.c && first.r === second.r)) return false
+    const firstTile = this.tile(first), secondTile = this.tile(second)
+    this.tiles[first.r][first.c] = secondTile
+    this.tiles[second.r][second.c] = firstTile
+    const firstEntity = firstTile.entityId ? this.entity(firstTile.entityId) : null
+    const secondEntity = secondTile.entityId ? this.entity(secondTile.entityId) : null
+    if (firstEntity) firstEntity.pos = { ...second }
+    if (secondEntity) secondEntity.pos = { ...first }
+    return true
+  }
+
   serialize() {
     return {
       id: this.id,

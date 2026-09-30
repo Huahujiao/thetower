@@ -1,0 +1,218 @@
+import assert from 'node:assert/strict'
+import { readFile } from 'node:fs/promises'
+import { parse, compileScript } from '@vue/compiler-sfc'
+import { createSSRApp } from 'vue'
+import { renderToString } from '@vue/server-renderer'
+import { fixture, add, select, enemy } from './item-test-helpers.mjs'
+import { GameRun } from '../src/game/run.js'
+import { ALL_ITEM_DEFS, createEnemyById, makeItemById, randomNeutralItem } from '../src/game/data/content.js'
+import { consumableTargetCells } from '../src/game/rules/attack-range.js'
+import { createMerchantEntity } from '../src/game/data/merchants.js'
+import { enemyOverheadHints } from '../src/game/data/enemy-features.js'
+
+// Most ordinary, unmodified weapons need at least five neutral hits on ordinary enemies.
+const ordinary = ALL_ITEM_DEFS.filter(item => item.type === 'weapon' && !item.crafted)
+const firstEnemies = ['gnawer', 'emberwing-moth', 'rootrot-bud', 'tide-shadow-cub', 'beetle-guard']
+let slowKills = 0
+for (const id of firstEnemies) for (const weapon of ordinary) {
+  if (Math.ceil(createEnemyById(id).hp / weapon.attack) >= 5) slowKills++
+}
+assert(slowKills / (ordinary.length * firstEnemies.length) >= 0.9)
+
+{
+  const run = new GameRun({ autoLoad: false })
+  run.initialRelicChoices = []
+  for (const entity of [...run.currentRoom.entities.values()]) run.currentRoom.removeEntity(entity.id)
+  for (const row of run.currentRoom.tiles) for (const tile of row) { tile.revealed = true; tile.terrain = 'plain' }
+  const pouch = run.backpack.items.find(item => item.id === 'money-pouch')
+  assert(pouch)
+  assert.deepEqual(pouch.shape, [[1]])
+  run.player.gold = 37
+  assert(run.commitInventoryDrop(pouch, 31))
+  assert(run.moveInventoryToStash(pouch.uid))
+  const turn = run.globalTurn
+  assert.equal(run.discardInventoryItem(pouch.uid), false)
+  assert.equal(run.globalTurn, turn)
+  assert.equal(run.player.gold, 37)
+  assert(run.commitInventoryDrop(pouch, 31))
+  assert.equal(run.discardInventoryItem(pouch.uid), false)
+  const merchant = createMerchantEntity('merchant', { c: 0, r: 0 })
+  run.currentRoom.addEntity(merchant)
+  run.phase = 'merchant'; run.merchant = { entityId: merchant.id }
+  select(run, pouch)
+  assert.equal(run.sellSelectedMerchantItem(), false)
+  assert(run.backpack.placementOf(pouch.uid))
+}
+
+// Every equipped defense contributes once; stashed gear and revisits contribute nothing.
+for (const definition of ALL_ITEM_DEFS.filter(item => item.type === 'defense')) {
+  const run = fixture(), armor = add(run, definition.id)
+  assert.equal(armor.armorValue, 1)
+  run.itemRules.enter(true)
+  assert.equal(run.player.armor, 1)
+  run.itemRules.enter(false)
+  assert.equal(run.player.armor, 1)
+  assert(run.moveInventoryToStash(armor.uid))
+  run.itemRules.enter(true)
+  assert.equal(run.player.armor, 1)
+}
+{
+  const run = fixture()
+  add(run, 'light-armor'); add(run, 'wood-shield')
+  run.itemRules.enter(true)
+  assert.equal(run.player.armor, 2)
+}
+
+for (const points of [3, 5, 7, 9]) {
+  const run = fixture(), food = add(run, `food-${points}`)
+  assert.equal(food.name, `\u98df\u7269\uff08${points}\uff09`)
+  assert.equal(food.tier, 1)
+  run.player.energy = 1
+  select(run, food); assert(run.useSelected())
+  assert.equal(run.player.energy, Math.min(10, 1 + points))
+  assert.equal(run.globalTurn, 1)
+  assert.equal(run.backpack.placementOf(food.uid), null)
+  assert.equal(run.useSelected(), false)
+}
+assert.equal(makeItemById('energy-potion'), null)
+let tier1 = 0, tier2 = 0
+for (let i = 0; i < 390; i++) {
+  const item = randomNeutralItem(1, () => (i + 0.5) / 390)
+  if (item.tier === 1) tier1++
+  else if (item.tier === 2) tier2++
+  else assert.fail('Every consumable has a tier')
+}
+assert.equal(tier1, 360); assert.equal(tier2, 30)
+
+function aim(run, item) {
+  select(run, item)
+  const turn = run.globalTurn
+  assert(run.useSelected())
+  assert.equal(run.itemTargeting, true)
+  assert.equal(run.globalTurn, turn)
+}
+{
+  const run = fixture(), poison = add(run, 'poison')
+  const target = enemy(run, { pos: { c: 3, r: 5 }, attack: 2, actionDelay: 0, attackCooldown: 2, range: 1 })
+  aim(run, poison)
+  assert.equal(run.clickTile(0, 0), false)
+  assert.equal(run.clickTile(3, 4), false) // Poison requires an enemy.
+  assert(run.backpack.placementOf(poison.uid))
+  assert.equal(run.globalTurn, 0)
+  assert(run.clickTile(3, 5))
+  assert.equal(run.globalTurn, 1)
+  assert.equal(run.attackCount, 0)
+  assert.equal(target.hp, 100) // Out of range: no poison tick on idle.
+  assert.equal(target.itemPoisonTurns, 100)
+  assert(enemyOverheadHints(target).some(hint => hint.label === '\u4e2d\u6bd2'))
+  run._endTurn(); assert.equal(target.hp, 100)
+  run.player.pos = { c: 3, r: 4 }
+  run._endTurn(); assert.equal(target.hp, 95)
+  assert.equal(target.itemPoisonTurns, 99)
+  run._endTurn(); run._endTurn(); run._endTurn()
+  assert.equal(target.hp, 80)
+  assert.equal(target.itemPoisonTurns, 96)
+  assert(enemyOverheadHints(target).some(hint => hint.label === '\u4e2d\u6bd2'))
+}
+{
+  const run = fixture(), poison = add(run, 'poison')
+  const target = enemy(run, { hp: 5, attack: 3, actionDelay: 0, traits: ['heavy-armor'] })
+  aim(run, poison)
+  assert(run.clickTile(4, 3))
+  assert.equal(run.currentRoom.entity(target.id), null)
+  assert.equal(run.player.hp, 20) // Lethal poison prevents the pending attack.
+}
+{
+  const run = fixture(), bomb = add(run, 'explosive')
+  const adjacent = enemy(run, { pos: { c: 4, r: 4 } })
+  const hidden = enemy(run, { pos: { c: 5, r: 5 } })
+  const outside = enemy(run, { pos: { c: 2, r: 5 } })
+  const corpse = enemy(run, { hp: 0, downed: true, reviveTurns: 2, pos: { c: 5, r: 4 } })
+  run.currentRoom.tile(hidden.pos).revealed = false
+  aim(run, bomb)
+  assert(consumableTargetCells(run.currentRoom, run.player.pos, bomb).some(p => p.c === 3 && p.r === 3))
+  assert(consumableTargetCells(run.currentRoom, run.player.pos, bomb).some(p => p.c === 1 && p.r === 5))
+  assert(run.clickTile(4, 5)) // Empty cell with enemies in its eight-cell neighborhood.
+  assert.equal(adjacent.hp, 90); assert.equal(hidden.hp, 90); assert.equal(outside.hp, 100)
+  assert.equal(run.currentRoom.entity(corpse.id), null)
+  assert(run.currentRoom.isRevealed(hidden.pos))
+  assert.equal(run.player.energy, 10)
+  assert.equal(run.globalTurn, 1)
+}
+{
+  const run = fixture(), thunder = add(run, 'thunder-charm')
+  const primary = enemy(run, { hp: 16, pos: { c: 3, r: 5 } })
+  const nearest = enemy(run, { pos: { c: 4, r: 5 } })
+  const farther = enemy(run, { pos: { c: 2, r: 3 } })
+  aim(run, thunder); assert(run.clickTile(3, 5))
+  assert.equal(run.currentRoom.entity(primary.id), null)
+  assert.equal(nearest.hp, 95); assert.equal(farther.hp, 100)
+  assert.equal(run.globalTurn, 1)
+}
+
+// Compatible saves preserve placement and values without migrating anything.
+{
+  const run = fixture(), food = add(run, 'food-3'), armor = add(run, 'light-armor')
+  add(run, 'money-pouch')
+  run.player.gold = 21
+  const target = enemy(run, { hp: 8 })
+  target.hp = 4
+  const oldStorage = globalThis.localStorage
+  let payload = JSON.stringify(run.serialize())
+  globalThis.localStorage = { getItem: () => payload, setItem: (_key, value) => { payload = value }, removeItem: () => {} }
+  try {
+    const loaded = new GameRun({ autoLoad: true })
+    assert.equal(loaded.player.gold, 21)
+    assert.equal(loaded.backpack.items.filter(item => item.id === 'money-pouch').length, 1)
+    assert.equal(loaded.backpack.placementOf(food.uid).item.id, 'food-3')
+    assert.equal(loaded.backpack.placementOf(armor.uid).item.armorValue, 1)
+    assert.equal(loaded.currentRoom.entity(target.id).hp, 4)
+    assert.equal(loaded.currentRoom.entity(target.id).maxHp, 8)
+    const pouch = loaded.backpack.items.find(item => item.id === 'money-pouch')
+    assert(loaded.moveInventoryToStash(pouch.uid))
+    loaded._changed()
+    const reloaded = new GameRun({ autoLoad: true })
+    assert.equal(reloaded.inventoryStash.filter(item => item.id === 'money-pouch').length, 1)
+    assert.equal(reloaded.backpack.items.filter(item => item.id === 'money-pouch').length, 0)
+    assert.equal(reloaded.currentRoom.entity(target.id).hp, 4)
+    assert.equal(reloaded.discardInventoryItem(pouch.uid), false)
+    assert.equal(new Set([...reloaded.backpack.items, ...reloaded.inventoryStash].map(item => item.uid)).size,
+      reloaded.backpack.length + reloaded.inventoryStash.length)
+  } finally { globalThis.localStorage = oldStorage }
+}
+
+// A full backpack preserves its stashed pouch without injecting any items.
+{
+  const run = fixture()
+  for (let i = 0; i < run.backpack.capacity; i++) add(run, 'food-3')
+  run.inventoryStash.push(makeItemById('money-pouch'))
+  const payload = JSON.stringify(run.serialize())
+  const previous = globalThis.localStorage
+  globalThis.localStorage = { getItem: () => payload, setItem: () => {}, removeItem: () => {} }
+  try {
+    const loaded = new GameRun({ autoLoad: true })
+    assert.equal(loaded.backpack.length, 32)
+    assert.equal(loaded.inventoryStash.length, 1)
+    assert.equal(loaded.inventoryStash[0].id, 'money-pouch')
+  } finally { globalThis.localStorage = previous }
+}
+// Render the actual Vue badges to verify decoded Chinese and live numeric values.
+{
+  const source = await readFile(new URL('../src/ui/ItemValueBadge.vue', import.meta.url), 'utf8')
+  const { descriptor } = parse(source)
+  const compiled = compileScript(descriptor, { id: 'basic-rules-qa', inlineTemplate: true }).content
+    .replaceAll('from "vue"', `from ${JSON.stringify(import.meta.resolve('vue'))}`)
+    .replaceAll("from 'vue'", `from ${JSON.stringify(import.meta.resolve('vue'))}`)
+  const { default: Badge } = await import(`data:text/javascript;base64,${Buffer.from(compiled).toString('base64')}`)
+  const render = (id, gold = 0) => renderToString(createSSRApp(Badge, { item: makeItemById(id), gold }))
+  const pouchHtml = await render('money-pouch', 123)
+  assert(pouchHtml.includes('\u94b1\u888b: 123'))
+  assert(pouchHtml.includes('>123</span>'))
+  const armorHtml = await render('wood-shield')
+  assert(armorHtml.includes('\u62a4\u7532\u503c'))
+  assert(armorHtml.includes('>1</span>'))
+  assert((await render('food-9')).includes('>9</span>'))
+  assert((await render('poison')).includes('>II</span>'))
+  assert((await render('health-potion')).includes('>I</span>'))
+}
+console.log('basic-rules-check passed: health, pouch, room armor, food, rarity, targeting, poison, area damage, bounce, saves and Vue badges')

@@ -1,3 +1,5 @@
+import { getStatus } from '../rules/statuses.js'
+
 export const ENEMY_BEHAVIOR_LABELS = Object.freeze({
   stationary: '\u9a7b\u5b88',
   ambush: '\u4f0f\u51fb',
@@ -20,6 +22,9 @@ export const ENEMY_TRAIT_LABELS = Object.freeze({
 
 export const ENEMY_STATUS_LABELS = Object.freeze({
   marked: '\u6807\u8bb0',
+  poisoned: '\u4e2d\u6bd2',
+  counter: '\u53cd\u51fb',
+  dodge: '\u95ea\u907f',
 })
 
 export const ENEMY_OVERHEAD_HINTS = Object.freeze({
@@ -38,6 +43,9 @@ export const ENEMY_OVERHEAD_HINTS = Object.freeze({
   'death-spawn': Object.freeze({ icon: '\u273a', label: ENEMY_TRAIT_LABELS['death-spawn'] }),
   'death-explosion': Object.freeze({ icon: '\u2739', label: '\u6b7b\u4ea1\u7206\u70b8' }),
   'death-poison': Object.freeze({ icon: '\u2620', label: '\u6b7b\u4ea1\u4e2d\u6bd2' }),
+  poisoned: Object.freeze({ icon: '\u2620', label: ENEMY_STATUS_LABELS.poisoned }),
+  counter: Object.freeze({ icon: '\u21a9', label: ENEMY_STATUS_LABELS.counter }),
+  dodge: Object.freeze({ icon: '\u2933', label: ENEMY_STATUS_LABELS.dodge }),
 })
 
 const DEATH_EXPLOSION_LABEL = '\u6b7b\u4ea1\u7206\u70b8'
@@ -58,6 +66,8 @@ function enemyFeatureEntries(entity) {
     entity?.deathExplosionDamage > 0 ? { key: 'death-explosion', label: DEATH_EXPLOSION_LABEL } : null,
     entity?.deathStatus ? { key: `death-${entity.deathStatus}`, label: DEATH_STATUS_LABELS[entity.deathStatus] || entity.deathStatus } : null,
     entity?.marked ? { key: 'marked', label: ENEMY_STATUS_LABELS.marked } : null,
+    getStatus(entity, 'enemy-poison') ? { key: 'poisoned', label: ENEMY_STATUS_LABELS.poisoned } : null,
+    ...['counter', 'dodge'].filter(id => getStatus(entity, id)).map(id => ({ key: id, label: ENEMY_STATUS_LABELS[id] })),
   ].filter(Boolean)
 }
 
@@ -80,6 +90,8 @@ export function enemyOverheadHints(entity) {
     entity?.deathRule || '',
     entity?.deathExplosionDamage > 0 ? 'death-explosion' : '',
     entity?.deathStatus ? `death-${entity.deathStatus}` : '',
+    getStatus(entity, 'enemy-poison') ? 'poisoned' : '',
+    ...['counter', 'dodge'].filter(id => getStatus(entity, id)),
   ].filter(Boolean)
   return [...new Set(keys)].map((key) => ENEMY_OVERHEAD_HINTS[key]).filter(Boolean)
 }

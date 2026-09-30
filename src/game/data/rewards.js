@@ -1,13 +1,12 @@
-import catalog from './catalog.json' with { type: 'json' }
-import { getItemDefinition, randomConsumableDefinition } from './content.js'
+import { ALL_ITEM_DEFS, getItemDefinition, randomConsumableDefinition } from './content.js'
 import { buildRelicChoices } from './relics.js'
 import { suggestedSynergyId } from '../rules/synergies.js'
 
-const WEAPONS = Object.freeze([...catalog.weapons.filter(w => !w.crafted), ...catalog.defenses])
+const WEAPONS = Object.freeze(ALL_ITEM_DEFS.filter(item => (item.type === 'weapon' && !item.crafted) || ['defense', 'pet'].includes(item.type)))
 
 function pick(values, random) { return values[Math.floor(random() * values.length)] || null }
 
-function eligible(values, floor) { return values.filter((value) => floor >= (value.minFloor || 1)) }
+function eligible(values, floor) { return values.filter((value) => !value.disabled && floor >= (value.minFloor || 1)) }
 
 function itemChoice(definition) { return definition ? { kind: 'item', itemId: definition.id } : null }
 

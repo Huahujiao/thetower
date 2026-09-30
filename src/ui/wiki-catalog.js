@@ -1,4 +1,5 @@
 import catalog from '../game/data/catalog.json' with { type: 'json' }
+import { ALL_ITEM_DEFS } from '../game/data/content.js'
 import { attributeLabel } from '../game/data/attributes.js'
 import { ENEMY_HP_MULTIPLIER } from '../game/data/enemies.js'
 import { enemyBehaviorLabel, enemyFeatureLabel } from '../game/data/enemy-features.js'
@@ -14,17 +15,19 @@ const COPY = Object.freeze({
   enemy: '\u654c\u4eba',
   boss: '\u9996\u9886',
   weapon: '\u6b66\u5668',
+  pet: '\u5ba0\u7269',
   relic: '\u5723\u9057\u7269',
   potion: '\u751f\u547d\u836f\u6c34',
   armor: '\u62a4\u7532\u836f\u5242',
-  energyPotion: '\u4f53\u529b\u836f\u5242',
+  energyPotion: '\u98df\u7269',
+  throwable: '\u6295\u63b7\u6d88\u8017\u54c1',
+  'money-pouch': '\u94b1\u888b',
   buff: '\u589e\u76ca\u7269\u54c1',
   attack: '\u653b\u51fb',
   health: '\u751f\u547d',
   range: '\u5c04\u7a0b',
   energy: '\u4f53\u529b\u6d88\u8017',
   footprint: '\u5360\u683c',
-  weaponClass: '\u7c7b\u522b',
   weaponEffect: '\u7279\u6548',
   energyLoss: '\u4f53\u529b\u635f\u5931',
   attribute: '\u5c5e\u6027',
@@ -42,12 +45,6 @@ const COPY = Object.freeze({
   relicChance: '\u5723\u9057\u7269\u6389\u843d',
   relicSources: '\u83b7\u53d6\u6765\u6e90',
   enemyDrop: '\u654c\u4eba\u6389\u843d',
-  sword: '\u5251',
-  axe: '\u65a7',
-  dagger: '\u5315\u9996',
-  polearm: '\u957f\u67c4',
-  heavy: '\u91cd\u6b66\u5668',
-  bow: '\u5f13',
   generated: '\u751f\u6210\u7269',
   cell: '\u683c',
   turn: '\u56de\u5408',
@@ -67,8 +64,6 @@ const COPY = Object.freeze({
   revealTrigger: '\u7ffb\u5f00\u540e\u7acb\u5373\u89e6\u53d1',
   globalTurns: '\u5168\u5c40\u56de\u5408',
 })
-
-const WEAPON_ENERGY_COSTS = Object.freeze({ dagger: 2, sword: 3, axe: 4, polearm: 4, bow: 4, heavy: 5 })
 
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[character]))
@@ -149,7 +144,7 @@ function enemyCards() {
 
 function weaponCards() {
 
-  const weapons = [...catalog.weapons, ...(catalog.enemyLoot || []).filter((item) => item.type === 'weapon'), ...(catalog.merchantWeapons || [])]
+  const weapons = ALL_ITEM_DEFS.filter(item => item.type === 'weapon' && !item.disabled)
   return weapons.map((weapon) => card({
     tone: 'tone-weapon',
     tag: COPY.weapon,
@@ -157,10 +152,9 @@ function weaponCards() {
     image: itemSpriteSources(weapon)?.small,
     accent: '\u2694',
     stats: [
-      stat(COPY.weaponClass, label(weapon.weaponClass)),
       stat(COPY.attack, weapon.attack),
       stat(COPY.range, `${weapon.range} ${COPY.cell}`),
-      stat(COPY.energy, WEAPON_ENERGY_COSTS[weapon.weaponClass] || 3),
+      stat(COPY.energy, weapon.energyCost),
       stat(COPY.attribute, attributeLabel(weapon.attribute)),
       stat(COPY.footprint, shapeText(weapon.shape)),
       stat(COPY.weaponEffect, weapon.description || ''),
@@ -170,14 +164,14 @@ function weaponCards() {
 
 function relicCards() {
   const system = `<aside class="wiki-catalog-note"><strong>\u5723\u9057\u7269\u4e0e\u80cc\u5305</strong><p>\u80cc\u5305\u5185\u6301\u6709\u65f6\u751f\u6548\uff0c\u540c\u540d\u4e0d\u53e0\u52a0\uff1b\u65e0\u6570\u91cf\u8d85\u8f7d\u9650\u5236\u3002\u901a\u8fc7\u5f00\u5c40\u9009\u62e9\u3001\u623f\u95f4\u5956\u52b1\u548c\u5546\u5e97\u83b7\u5f97\u3002\u6563\u4ef6\u7684\u76f8\u90bb\u6548\u679c\u751f\u6548\u65f6\uff0c\u4f1a\u5728\u53cc\u65b9\u683c\u7ebf\u5904\u663e\u793a\u7eff\u8272\u6d41\u52a8\u77ed\u5149\u5e26\u3002</p></aside>`
-  return system + RELIC_DEFS.map((relic) => card({
+  return system + RELIC_DEFS.filter(relic => !relic.disabled).map((relic) => card({
     tone: 'tone-relic',
     tag: COPY.relic,
     title: relic.name,
     image: itemSpriteSources(relic)?.small,
     description: relic.description,
     accent: '\u2726',
-    stats: [],
+    stats: relic.totemId ? [stat('图腾召唤', '选择徽章→使用→4格内已翻开的空格'), stat('有效期', '10回合；占用1体力上限'), stat('共享冷却', '2个全局回合')] : [],
   })).join('')
 }
 
@@ -196,6 +190,9 @@ function talentCards() {
 }
 
 function itemEffect(item) {
+  if (item.type === 'pet') return stat(COPY.attack, item.attack) + stat(COPY.range, item.range) + stat('\u98df\u7269\u6d88\u8017', item.foodCost)
+  if (item.type === 'defense') return stat('\u62a4\u7532\u503c', `${item.armorValue} \u00b7 \u9996\u6b21\u8fdb\u5165\u65b0\u623f\u95f4\u65f6\u83b7\u5f97`)
+  if (item.type === 'throwable') return stat('\u6295\u63b7\u8303\u56f4', `${item.range} ${COPY.cell}`)
   if (item.type === 'potion') return stat(COPY.healing, `+${item.heal}`)
   if (item.type === 'armor') return stat(COPY.armorValue, `+${item.armor}`)
   if (item.type === 'energy') return stat('\u6062\u590d\u4f53\u529b', `+${item.energy}`)
@@ -204,7 +201,7 @@ function itemEffect(item) {
 }
 
 function itemCards() {
-  const items = [...catalog.defenses, ...catalog.consumables, ...(catalog.enemyLoot || []).filter((item) => item.type !== 'weapon')]
+  const items = ALL_ITEM_DEFS.filter(item => !item.disabled && !['weapon', 'relic'].includes(item.type))
   return items.map((item) => card({
     tone: `tone-${item.type}`,
     tag: label(item.type),
@@ -214,8 +211,10 @@ function itemCards() {
     accent: item.type === 'buff' ? '\u2727' : '\u25cf',
     stats: [
       itemEffect(item),
+      item.tier ? stat('\u6d88\u8017\u54c1\u7b49\u7ea7', item.tier) : '',
       stat(COPY.footprint, shapeText(item.shape)),
-      stat(COPY.floor, item.dropOnly ? COPY.enemyDrop : item.minFloor || 1),
+      stat(COPY.floor, item.generatedOnly ? (item.id === 'meat-scrap' ? '\u5272\u8089\u5200\u751f\u6210' : '镇岳盾生成') : item.starterOnly ? '\u5f00\u5c40\u81ea\u5e26' : item.dropOnly ? COPY.enemyDrop : item.minFloor || 1),
+      item.type === 'pet' ? stat(COPY.relicSources, '\u666e\u901a\u5546\u5e97\u3001\u8865\u7ed9\u5956\u52b1\uff1b\u6682\u5b58\u533a\u4e0d\u751f\u6548\u3002') : '',
       item.type === 'defense' ? stat(COPY.relicSources, '\u654c\u4eba\u6389\u843d\u3001\u5546\u5e97\u8d2d\u4e70\u3001\u623f\u95f4\u5956\u52b1\uff1b\u4e0d\u4f5c\u4e3a\u5730\u9762\u7269\u54c1\u751f\u6210\u3002') : '',
     ],
   })).join('')

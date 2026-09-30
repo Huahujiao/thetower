@@ -18,6 +18,16 @@ export function weaponTargetCells(room, origin, range) {
     .filter((position) => room.entityAt(position)?.kind === 'enemy')
 }
 
+export function consumableTargetCells(room, origin, item) {
+  if (item?.type !== 'throwable') return []
+  const cells = attackRangeCells(room, origin, item.range || 4)
+  if (item.effect === 'explosion') return room.isRevealed(origin) ? [origin, ...cells] : cells
+  return cells.filter(position => {
+    const enemy = room.entityAt(position)
+    return enemy?.kind === 'enemy' && (item.effect !== 'poison' || !enemy.downed)
+  })
+}
+
 export function enemyThreatCells(room, enemy, playerPosition) {
   if (!enemy || enemy.kind !== 'enemy' || enemy.downed || !(enemy.attack > 0) || !(enemy.range > 0)) return []
   return attackRangeCells(room, enemy.pos, Number(enemy.range))

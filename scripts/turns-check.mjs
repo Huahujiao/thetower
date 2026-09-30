@@ -127,11 +127,18 @@ assert.deepEqual(logRun.log.slice(0, 5).map((entry) => entry.split('] ')[1]), [
 const overloadRun = new GameRun({ autoLoad: false, random: () => 0.25 })
 const initialRelic = overloadRun.initialRelicChoices[0]
 assert(overloadRun.chooseInitialRelic(initialRelic))
-for (const relic of RELIC_DEFS.filter(({ id }) => id !== initialRelic)) {
+// The expanded catalog is larger than a backpack. Fill every remaining cell
+// with active relics to verify the absence of the former five-relic limit.
+const testedRelics = RELIC_DEFS.filter(({ id, disabled }) => !disabled && id !== initialRelic)
+  .slice(0, overloadRun.backpack.capacity - overloadRun.backpack.usedCells)
+for (const relic of testedRelics) {
   assert(overloadRun.acquireRelic(relic.id))
 }
-assert.equal(overloadRun.relicCount(), RELIC_DEFS.length)
-assert.equal(overloadRun.activeRelics().length, RELIC_DEFS.length)
+const testedRelicCount = testedRelics.length + 1
+assert(testedRelicCount > 5)
+assert.equal(overloadRun.backpack.usedCells, overloadRun.backpack.capacity)
+assert.equal(overloadRun.relicCount(), testedRelicCount)
+assert.equal(overloadRun.activeRelics().length, testedRelicCount)
 assert.equal(overloadRun.hasActiveRelic(initialRelic), true)
 overloadRun.player.hp = 20
 overloadRun.player.armor = 1
@@ -146,7 +153,7 @@ assert(buildRelicChoices(overloadRun.relics, { count: RELIC_DEFS.length }).some(
 const secondDiscard = overloadRun.backpack.items.find((item) => item.type === 'relic')
 overloadRun.selectedInventoryIndex = overloadRun.backpack.originIndex(overloadRun.backpack.placementOf(secondDiscard.uid))
 assert(overloadRun.discardSelected())
-assert.equal(overloadRun.relicCount(), RELIC_DEFS.length - 2)
-assert.equal(overloadRun.activeRelics().length, RELIC_DEFS.length - 2)
+assert.equal(overloadRun.relicCount(), testedRelicCount - 2)
+assert.equal(overloadRun.activeRelics().length, testedRelicCount - 2)
 
 console.log('turns-check passed')

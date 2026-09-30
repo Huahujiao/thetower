@@ -11,3 +11,16 @@ export function adjacentItemIds(backpack, firstId, secondId) {
   return backpack.items.filter((item) => item.id === firstId)
     .some((item) => adjacentItems(backpack, item).some((other) => other.id === secondId))
 }
+
+export function emptyPerimeterCells(backpack, item) {
+  const placement = backpack.placementOf(item.uid)
+  if (!placement) return []
+  const cells = new Map()
+  for (const own of backpack.cellsForPlacement(placement)) {
+    for (const [dx, dy] of [[0, -1], [1, 0], [0, 1], [-1, 0]]) {
+      const x = own.x + dx, y = own.y + dy
+      if (x >= 0 && y >= 0 && x < backpack.columns && y < backpack.rows && !backpack.placementAt(x, y)) cells.set(`${x},${y}`, { x, y })
+    }
+  }
+  return [...cells.values()]
+}
