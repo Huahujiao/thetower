@@ -4,6 +4,8 @@ import { adjacentItems } from './backpack-geometry.js'
 // These tags affect only reward suggestions. They never activate an item effect.
 const HINTS = Object.freeze({
   'r-far-whistle': ['pet', 'range'], 'r-hunting-horn': ['pet'], 'hunter-shortbow': ['pet'],
+  'wall-core': ['armor'], 'return-axle': ['switch'], 'corrosive-heart-core': ['poison'],
+  'soul-chain': ['collision'], 'beast-hunting-horn': ['pet', 'range'], 'mountain-break-stone': ['empty'],
   'r-pack-hunt': ['pet'], 'beast-armor': ['pet', 'armor'], 'r-feeding-charm': ['pet', 'food'],
   'butcher-knife': ['pet', 'food'], 'r-vampire-fang': ['pet', 'food'],
   'venom-toad': ['poison'], 'spirit-raven': ['reveal'],

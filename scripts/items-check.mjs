@@ -7,7 +7,7 @@ import { adjacentItems } from '../src/game/rules/items.js'
 import { attackRangeCells, enemyThreatCells, weaponTargetCells } from '../src/game/rules/attack-range.js'
 import { rangePulse } from '../src/render/attack-range-overlay.js'
 
-assert.equal(ALL_ITEM_DEFS.length, 127)
+assert.equal(ALL_ITEM_DEFS.length, 133)
 assert.equal(makeItemById('short-sword'), null)
 for (let i = 0; i < 100; i++) {
   const groundItem = randomNeutralItem(1, () => i / 100)
@@ -289,7 +289,7 @@ for(const recipe of RECIPES) {
   assert.equal(run.availableRecipes().length,0)
 }
 {
-  const run=fixture();add(run,'rock-maul');add(run,'weight')
+  const run=fixture();add(run,'bell-maul');add(run,'mountain-break-stone')
   for(let i=0;i<27;i++) add(run,'health-potion')
   const before=run.backpack.serialize()
   assert.equal(run.availableRecipes()[0].canFit,false)
@@ -368,9 +368,9 @@ for(const recipe of RECIPES) {
 }
 // Craft choices and their details use the same data as the Vue panel.
 {
-  const run=fixture();add(run,'silver-guard');add(run,'shield-core')
-  assert(run.availableRecipes().some((recipe) => recipe.result === 'wall-sword' && recipe.canFit))
-  for(const id of ['silver-guard','shield-core','wall-sword']) {
+  const run=fixture();add(run,'rust-sword');add(run,'shield-core')
+  assert(run.availableRecipes().some((recipe) => recipe.result === 'silver-guard' && recipe.canFit))
+  for(const id of ['rust-sword','shield-core','silver-guard']) {
     assert(run.showItemDetail(makeItemById(id)))
     assert.equal(run.detailPanel.title,makeItemById(id).name)
     assert(run.detailPanel.description)
@@ -398,7 +398,7 @@ for (let i = 0; i < purchasableItems.length; i++) {
   assert.equal(run.currentRoom.entityAt(e.pos).item.type,'material')
 }
 {
-  const run=fixture();add(run,'silver-guard');add(run,'shield-core');const item=add(run,'teleport')
+  const run=fixture();add(run,'silver-guard');add(run,'wall-core');const item=add(run,'teleport')
   select(run,item);assert(run.useSelected());assert.equal(run.craft('wall-sword'),false)
   run.clearSelection();assert(run.craft('wall-sword'))
 }

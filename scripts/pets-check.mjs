@@ -17,8 +17,8 @@ function feed(run, id = 'food-3', points = null, x = 0, y = 1) {
 function phase(run, options = {}) { run._endTurn({ skipEnemyPhase: true, recoverEnergy: false, ...options }) }
 
 assert.equal(PETS.length, 8)
-assert.equal(ALL_ITEM_DEFS.length, 127)
-assert.equal(ALL_ITEM_DEFS.filter(item => !item.starterOnly && !item.generatedOnly && !item.disabled).length, 122)
+assert.equal(ALL_ITEM_DEFS.length, 133)
+assert.equal(ALL_ITEM_DEFS.filter(item => !item.starterOnly && !item.generatedOnly && !item.disabled).length, 128)
 assert.equal(makeItemById('r-feeding-charm').name, '\u9972\u517d\u7b26')
 for (const pet of PETS) {
   const item = makeItemById(pet.id)

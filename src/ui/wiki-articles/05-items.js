@@ -1,10 +1,26 @@
 import { EXPANSION_RELICS, EXPANSION_WEAPONS, EXPANSION_DEFENSES } from '../../game/data/expansion-items.js'
 import { TOTEM_BADGES } from '../../game/data/totems.js'
 import { PETS, PET_RELICS, PET_WEAPONS, PET_DEFENSES } from '../../game/data/pets.js'
+import { getItemDefinition } from '../../game/data/content.js'
+import { ADVANCED_CRAFT_MATERIALS, WEAPON_RECIPES, WEAPON_TIERS } from '../../game/data/weapon-progression.js'
 
 export default `# 当前物品清单
 
-当前常规物品共 123 种：28 把武器、16 件被动防具、8 种宠物、12 种消耗品、11 种材料、47 件圣遗物（其中7件为图腾徽章）、1 个钱袋。盾击符和2点肉块分别由镇岳盾、割肉刀生成，不进入随机掉落、奖励或商店。续毒瓶、蚀时漏斗暂时移出物品池，保留定义以待重新设计。形状中 ■ 为占用、· 为空洞，/ 分隔行。背包摆放、合成和伤害顺序见 [背包、物品与合成](/wiki/04-inventory)；获取渠道见 [升级、奖励与商店](/wiki/06-progression)。新增物品见下方清单，数值与效果直接读取程序定义。
+当前常规物品共 129 种：28 把武器、16 件被动防具、8 种宠物、12 种消耗品、17 种材料、47 件圣遗物（其中7件为图腾徽章）、1 个钱袋。盾击符和2点肉块分别由镇岳盾、割肉刀生成，不进入随机掉落、奖励或商店。续毒瓶、蚀时漏斗暂时移出物品池，保留定义以待重新设计。形状中 ■ 为占用、· 为空洞，/ 分隔行。背包摆放、合成和伤害顺序见 [背包、物品与合成](/wiki/04-inventory)；获取渠道见 [升级、奖励与商店](/wiki/06-progression)。新增物品见下方清单，数值与效果直接读取程序定义。
+
+## 武器等级与合成路线
+
+所有武器明确分为1～3级，背包角标、详情面板、场地牌面与图鉴使用同一等级数据。普通地面武器与补给武器只从1级武器中产生；2级、3级武器可通过下列路线逐级合成，也可在普通商店出现。
+
+| 等级 | 数量 | 武器 |
+| --- | ---: | --- |
+${Object.entries(WEAPON_TIERS).map(([tier, ids]) => `| ${tier}级 | ${ids.length} | ${ids.map(id => getItemDefinition(id)?.name || id).join('、')} |`).join('\n')}
+
+| 阶段 | 输入武器 | 材料 | 成品 |
+| --- | --- | --- | --- |
+${WEAPON_RECIPES.map(recipe => `| ${getItemDefinition(recipe.a).tier}级 → ${getItemDefinition(recipe.result).tier}级 | ${getItemDefinition(recipe.a).name} | ${getItemDefinition(recipe.b).name} | ${getItemDefinition(recipe.result).name} |`).join('\n')}
+
+同一成品的不同入口彼此独立：寻妖刃和潮尺弓都可进入窥阵弓路线，拾金钩和灰烬猎弓都可进入悬赏弓路线；鹰眼弓、悬赏弓、窥阵弓均可与猎兽号角合成猎手短弓。合成器按实际拥有的输入武器选择入口，不会误用同成品的另一条配方。
 
 ## 原有武器（23）
 
@@ -67,7 +83,7 @@ export default `# 当前物品清单
 
 钱袋开局自带，占1格，金币显示在黄色圆形上，可以移动和暂存，不可丢弃或出售。
 
-## 材料（11）
+## 材料（17）
 
 | 名称 | 属性 | 形状 | 被动效果 |
 | --- | --- | --- | --- |
@@ -82,6 +98,7 @@ export default `# 当前物品清单
 | 测距盘 | 沉溺 | ■（1格） | 相邻最大射程≥2的武器，在最大射程有效命中后，为下一次攻击蓄2点伤害；第2层起出现。 |
 | 稳弦扣 | 中性 | ■（1格） | 相邻最大射程≥2的武器，攻击距离≤2时伤害+1。 |
 | 裂骨钉 | 枯萎 | ■（1格） | 相邻武器在距离2命中时击退目标；撞墙或撞到敌人时额外造成2点碰撞伤害，并延迟目标行动1次。 |
+${ADVANCED_CRAFT_MATERIALS.map(item => `| ${item.name} | ${item.attribute === 'wither' ? '枯萎' : '中性'} | ■（1格） | ${item.description} |`).join('\n')}
 
 ## 原有圣遗物（15）
 
@@ -107,7 +124,7 @@ export default `# 当前物品清单
 
 | 类型 | 名称 | 基础数值 | 效果 |
 | --- | --- | --- | --- |
-${EXPANSION_WEAPONS.map(item => `| 武器 | ${item.name} | 攻击${item.attack}，射程${item.range}，体力${item.energyCost}，2格 | ${item.description} |`).join('\n')}
+${EXPANSION_WEAPONS.map(item => `| 武器 | ${item.name} | ${getItemDefinition(item.id).tier}级，攻击${item.attack}，射程${item.range}，体力${item.energyCost}，2格 | ${item.description} |`).join('\n')}
 ${EXPANSION_DEFENSES.map(item => `| 防具 | ${item.name} | 入房护甲${item.armorValue}，2格 | ${item.description} |`).join('\n')}
 ${EXPANSION_RELICS.map(item => `| 圣遗物 | ${item.name} | 1格 | ${item.description} |`).join('\n')}
 
@@ -149,7 +166,7 @@ ${PETS.map(item => `| ${item.name} | ${item.attack} | ${item.range} | ${item.foo
 
 | 名称 | 类型 | 数值 | 效果 |
 | --- | --- | --- | --- |
-${PET_WEAPONS.map(item => `| ${item.name} | 武器 | 攻击${item.attack}；射程${item.range}；体力${item.energyCost} | ${item.description} |`).join('\n')}
+${PET_WEAPONS.map(item => `| ${item.name} | 武器 | ${getItemDefinition(item.id).tier}级；攻击${item.attack}；射程${item.range}；体力${item.energyCost} | ${item.description} |`).join('\n')}
 ${PET_DEFENSES.map(item => `| ${item.name} | 防具 | 护甲值${item.armorValue} | ${item.description} |`).join('\n')}
 ${PET_RELICS.map(item => `| ${item.name} | 圣遗物 | 占1格 | ${item.description} |`).join('\n')}
 

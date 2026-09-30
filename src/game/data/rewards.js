@@ -13,7 +13,10 @@ function itemChoice(definition) { return definition ? { kind: 'item', itemId: de
 function goldChoice(floor) { return { kind: 'gold', amount: 3 + Math.max(1, floor || 1) } }
 
 export function buildSupplyRewardChoices({ floor, count = 3, random = Math.random, items = [] } = {}) {
-  const suggestedId = suggestedSynergyId(items, 'item', random, (id) => floor >= (getItemDefinition(id)?.minFloor || 1))
+  const suggestedId = suggestedSynergyId(items, 'item', random, (id) => {
+    const definition = getItemDefinition(id)
+    return !!definition && floor >= (definition.minFloor || 1) && !(definition.type === 'weapon' && definition.tier > 1)
+  })
   const suggested = getItemDefinition(suggestedId)
   const choices = [
     itemChoice(suggested && floor >= (suggested.minFloor || 1) ? suggested : pick(eligible(WEAPONS, floor), random)),

@@ -1599,36 +1599,5 @@
       "description": "受到远程普通攻击时，伤害-1。"
     }
   ],
-  "recipes": [
-    {
-      "a": "silver-guard",
-      "b": "shield-core",
-      "result": "wall-sword"
-    },
-    {
-      "a": "ember-axe",
-      "b": "spring",
-      "result": "return-axe"
-    },
-    {
-      "a": "bone-knife",
-      "b": "venom-sac",
-      "result": "erosion-knife"
-    },
-    {
-      "a": "ember-spear",
-      "b": "chain",
-      "result": "soul-spear"
-    },
-    {
-      "a": "wood-bow",
-      "b": "scope",
-      "result": "eagle-bow"
-    },
-    {
-      "a": "rock-maul",
-      "b": "weight",
-      "result": "mountain-maul"
-    }
-  ]
+  "recipes": []
 }

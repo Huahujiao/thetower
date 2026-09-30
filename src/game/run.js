@@ -37,7 +37,7 @@ export const ENERGY_MAX = 10
 export const TELEPORT_RANGE = 6
 export const SAVE_KEY = 'grid_flip_adventure_v2'
 // Pending attack turns must be recoverable in every accepted save.
-export const SAVE_VERSION = 32
+export const SAVE_VERSION = 33
 
 function clone(value) { return JSON.parse(JSON.stringify(value)) }
 
@@ -47,6 +47,7 @@ function compatibleSave(data) {
       Number.isInteger(status.turns) && status.turns > 0 && typeof status.showLayers === 'boolean' && typeof status.showTurns === 'boolean')
   const itemValid = item => typeof item?.uid === 'string' && !!getItemDefinition(item.id) &&
     !getItemDefinition(item.id).disabled && item.type === getItemDefinition(item.id).type &&
+    (item.type !== 'weapon' || item.tier === getItemDefinition(item.id).tier) &&
     (!['energy', 'potion'].includes(item.type) || (Number.isInteger(item[item.type === 'energy' ? 'energy' : 'heal']) &&
       item[item.type === 'energy' ? 'energy' : 'heal'] > 0 && item[item.type === 'energy' ? 'energy' : 'heal'] <= getItemDefinition(item.id)[item.type === 'energy' ? 'energy' : 'heal']))
   if (!data || data.version !== SAVE_VERSION || !data.dungeon || !data.player || !data.backpack ||
@@ -1037,10 +1038,15 @@ export class GameRun {
     return preview.canFit(result) ? { a, b, result } : null
   }
 
-  craft(resultId) {
+  craft(recipeIdOrResult) {
     if (!this._canOrganizeBackpack() || this.itemTargeting) return false
-    const recipe = RECIPES.find(r => r.result === resultId)
-    const preview = recipe && this._craftPreview(recipe)
+    const candidates = RECIPES.filter(recipe => recipe.id === recipeIdOrResult || recipe.result === recipeIdOrResult)
+    let recipe = null, preview = null
+    for (const candidate of candidates) {
+      const candidatePreview = this._craftPreview(candidate)
+      if (!candidatePreview) continue
+      recipe = candidate; preview = candidatePreview; break
+    }
     if (!preview) return this._reject('材料不足或成品没有放置空间。')
     this.backpack.removeByUid(preview.a.uid)
     this.backpack.removeByUid(preview.b.uid)

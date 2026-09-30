@@ -12,6 +12,7 @@ import { boundaryPillarPoint, createDoorFrame, createLowPolyPillar, createLowPol
 import { goldSpriteSources, itemSpriteSources } from '../ui/item-sprites.js'
 import { drawEnemyPuppet, enemyPuppetProject, prepareEnemyPuppets } from './enemy-puppet.js'
 import { drawTotemToken, totemFaceData } from './totem-token.js'
+import { weaponTierRoman } from '../game/data/content.js'
 
 const TILE_SIZE = 1.14
 const CARD_SIZE = TILE_SIZE
@@ -2254,7 +2255,7 @@ export class GameScene {
       return {
         type: 'weapon',
          title: item.name,
-         subtitle: '\u6b66\u5668',
+         subtitle: `\u6b66\u5668 \u00b7 ${weaponTierRoman(item)}`,
         value: String(item.attack),
         valueColor: '#a9d8ff',
         energyCost: this.run.weaponEnergyCost(item),

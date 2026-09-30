@@ -468,7 +468,7 @@
         </header>
         <p>消耗背包中的原料，合成会推进 1 回合。长按配方中的物品查看详情。</p>
         <div>
-          <div v-for="recipe in craftRows" :key="recipe.result" class="craft-row">
+          <div v-for="recipe in craftRows" :key="recipe.id" class="craft-row">
             <button
               class="craft-item"
               :data-craft-item="recipe.a"
@@ -485,7 +485,7 @@
             >
               {{ getItemDefinition(recipe.b)?.name
               }}
-            </button><span>=</span><button :data-craft-result="recipe.result" :disabled="!recipe.canFit" @click="handleAction('craft-result', recipe.result)">
+            </button><span>=</span><button :data-craft-result="recipe.id" :disabled="!recipe.canFit" @click="handleAction('craft-result', recipe.id)">
               {{
                 recipe.canFit ? '合成' : '空间不足' }}
             </button>

@@ -4,15 +4,17 @@ import { getRelicDefinition, RELIC_DEFS } from './relics.js'
 import { bindStatusAccessors } from '../rules/statuses.js'
 import { EXPANSION_WEAPONS, EXPANSION_DEFENSES, GENERATED_CONSUMABLES } from './expansion-items.js'
 import { PETS, PET_WEAPONS, PET_DEFENSES, BUTCHER_FOOD } from './pets.js'
+import { ADVANCED_CRAFT_MATERIALS, WEAPON_RECIPES, weaponTierForId } from './weapon-progression.js'
 
 function weaponDefinition(source) {
-  return Object.freeze({ ...source, energyCost: Math.max(1, Math.floor(Number(source.energyCost) || 3)) })
+  const tier = weaponTierForId(source.id) || Math.max(1, Math.min(3, Number(source.tier) || (source.crafted ? 2 : 1)))
+  return Object.freeze({ ...source, tier, crafted: tier > 1, energyCost: Math.max(1, Math.floor(Number(source.energyCost) || 3)) })
 }
 const WEAPONS = Object.freeze([...catalog.weapons, ...(catalog.merchantWeapons || []), ...EXPANSION_WEAPONS, ...PET_WEAPONS].map(weaponDefinition))
 const CONSUMABLES = Object.freeze([...catalog.consumables, ...GENERATED_CONSUMABLES, BUTCHER_FOOD].map(item => Object.freeze({ tier: 1, supplyWeight: 4, ...item,
   ...(item.type === 'energy' ? { description: '\u5ba0\u7269\u53ef\u6309\u70b9\u6570\u90e8\u5206\u6d88\u8017\uff1b\u76f4\u63a5\u4f7f\u7528\u6d88\u8017\u6574\u4efd\uff0c\u6062\u590d\u5269\u4f59\u70b9\u6570\u7684\u4f53\u529b\u3002' } : {}),
 })))
-const ENEMY_LOOT = Object.freeze(catalog.enemyLoot || [])
+const ENEMY_LOOT = Object.freeze([...(catalog.enemyLoot || []), ...ADVANCED_CRAFT_MATERIALS])
 const BOSS = Object.freeze(catalog.boss)
 export const DEFENSES = Object.freeze([...catalog.defenses, ...EXPANSION_DEFENSES, ...PET_DEFENSES].map(item => Object.freeze({ ...item, armorValue: item.armorValue || 1 })))
 export const MONEY_POUCH = Object.freeze({
@@ -20,7 +22,7 @@ export const MONEY_POUCH = Object.freeze({
   discardable: false, sellable: false, starterOnly: true,
   description: '\u663e\u793a\u5f53\u524d\u91d1\u5e01\u6570\u91cf\u3002\u53ef\u79fb\u52a8\u3001\u6682\u5b58\uff0c\u4e0d\u53ef\u4e22\u5f03\u6216\u51fa\u552e\u3002',
 })
-export const RECIPES = Object.freeze(catalog.recipes)
+export const RECIPES = WEAPON_RECIPES
 
 export function upgradeRecipesForItem(itemOrId) {
   const id = typeof itemOrId === 'object' ? itemOrId?.id : itemOrId
@@ -59,11 +61,11 @@ export function makeItem(definition, _random = Math.random) {
   return item
 }
 
-// Base weapons are tier I; crafted definitions are tier II. Keep the value on
-// the runtime item so saved runs and UI projections can render the same tier.
+// Every weapon has an explicit tier. Keep it on runtime items so saves, combat
+// details, the backpack, shops and the Wiki all project the same value.
 export function weaponTier(item) {
   if (item?.type !== 'weapon') return 0
-  const fallback = item.crafted ? 2 : 1
+  const fallback = weaponTierForId(item.id) || (item.crafted ? 2 : 1)
   return Math.max(1, Math.min(3, Number(item.tier) || fallback))
 }
 
@@ -124,7 +126,7 @@ export function randomConsumableOfTier(tier, random = Math.random) {
 }
 
 export function randomWeapon(floor, random = Math.random) {
-  const weaponPool = WEAPONS.filter((weapon) => !weapon.crafted && floor >= (weapon.minFloor || 1))
+  const weaponPool = WEAPONS.filter((weapon) => weapon.tier === 1 && floor >= (weapon.minFloor || 1))
   return makeItem(weaponPool[Math.floor(random() * weaponPool.length)], random)
 }
 

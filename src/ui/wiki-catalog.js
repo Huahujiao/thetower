@@ -155,6 +155,7 @@ function weaponCards() {
       stat(COPY.attack, weapon.attack),
       stat(COPY.range, `${weapon.range} ${COPY.cell}`),
       stat(COPY.energy, weapon.energyCost),
+      stat('\u6b66\u5668\u7b49\u7ea7', `${weapon.tier}\u7ea7`),
       stat(COPY.attribute, attributeLabel(weapon.attribute)),
       stat(COPY.footprint, shapeText(weapon.shape)),
       stat(COPY.weaponEffect, weapon.description || ''),
