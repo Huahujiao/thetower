@@ -37,7 +37,7 @@ export const ENERGY_MAX = 10
 export const TELEPORT_RANGE = 6
 export const SAVE_KEY = 'grid_flip_adventure_v2'
 // Pending attack turns must be recoverable in every accepted save.
-export const SAVE_VERSION = 33
+export const SAVE_VERSION = 35
 
 function clone(value) { return JSON.parse(JSON.stringify(value)) }
 

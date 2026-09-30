@@ -1150,7 +1150,7 @@
       "name": "\u62fe\u91d1\u94a9",
       "type": "weapon",
       "appearance": "sword",
-      "attribute": null,
+      "attribute": "scorch",
       "attack": 3,
       "range": 1,
       "energyCost": 3,

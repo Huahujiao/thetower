@@ -158,6 +158,50 @@ const ITEM_SPRITE_SOURCES = Object.freeze({
     small: new URL('../assets/inventory/relic-poison-hourglass-v1-small.png', import.meta.url).href,
     medium: new URL('../assets/inventory/relic-poison-hourglass-v1-medium.png', import.meta.url).href,
   },
+  'r-step-edge': {
+    small: new URL('../assets/inventory/relic-step-edge-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/relic-step-edge-v1-medium.png', import.meta.url).href,
+  },
+  'r-single-seal': {
+    small: new URL('../assets/inventory/relic-single-seal-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/relic-single-seal-v1-medium.png', import.meta.url).href,
+  },
+  'r-neutral-stone': {
+    small: new URL('../assets/inventory/relic-neutral-stone-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/relic-neutral-stone-v1-medium.png', import.meta.url).href,
+  },
+  'r-lone-edge': {
+    small: new URL('../assets/inventory/relic-lone-edge-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/relic-lone-edge-v1-medium.png', import.meta.url).href,
+  },
+  'r-armor-command': {
+    small: new URL('../assets/inventory/relic-armor-command-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/relic-armor-command-v1-medium.png', import.meta.url).href,
+  },
+  'r-miasma-sac': {
+    small: new URL('../assets/inventory/relic-miasma-sac-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/relic-miasma-sac-v1-medium.png', import.meta.url).href,
+  },
+  'r-bone-incense': {
+    small: new URL('../assets/inventory/relic-bone-incense-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/relic-bone-incense-v1-medium.png', import.meta.url).href,
+  },
+  'r-plague-bell': {
+    small: new URL('../assets/inventory/relic-plague-bell-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/relic-plague-bell-v1-medium.png', import.meta.url).href,
+  },
+  'r-switch-ring': {
+    small: new URL('../assets/inventory/relic-switch-ring-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/relic-switch-ring-v1-medium.png', import.meta.url).href,
+  },
+  'r-iron-will': {
+    small: new URL('../assets/inventory/relic-iron-will-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/relic-iron-will-v1-medium.png', import.meta.url).href,
+  },
+  'r-armor-ring': {
+    small: new URL('../assets/inventory/relic-armor-ring-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/relic-armor-ring-v1-medium.png', import.meta.url).href,
+  },
   'wood-shield': {
     small: new URL('../assets/inventory/defense-wood-shield-v1-small.png', import.meta.url).href,
     medium: new URL('../assets/inventory/defense-wood-shield-v1-medium.png', import.meta.url).href,
@@ -189,6 +233,38 @@ const ITEM_SPRITE_SOURCES = Object.freeze({
   'tide-cloak': {
     small: new URL('../assets/inventory/defense-tide-cloak-v1-small.png', import.meta.url).href,
     medium: new URL('../assets/inventory/defense-tide-cloak-v1-medium.png', import.meta.url).href,
+  },
+  'phase-armor': {
+    small: new URL('../assets/inventory/defense-phase-armor-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/defense-phase-armor-v1-medium.png', import.meta.url).href,
+  },
+  'renewal-armor': {
+    small: new URL('../assets/inventory/defense-renewal-armor-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/defense-renewal-armor-v1-medium.png', import.meta.url).href,
+  },
+  'mountain-shield': {
+    small: new URL('../assets/inventory/defense-mountain-shield-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/defense-mountain-shield-v1-medium.png', import.meta.url).href,
+  },
+  'farwatch-armor': {
+    small: new URL('../assets/inventory/defense-farwatch-armor-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/defense-farwatch-armor-v1-medium.png', import.meta.url).href,
+  },
+  'gold-pick-armor': {
+    small: new URL('../assets/inventory/defense-gold-pick-armor-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/defense-gold-pick-armor-v1-medium.png', import.meta.url).href,
+  },
+  'coin-armor': {
+    small: new URL('../assets/inventory/defense-coin-armor-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/defense-coin-armor-v1-medium.png', import.meta.url).href,
+  },
+  'bath-robe': {
+    small: new URL('../assets/inventory/defense-bath-robe-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/defense-bath-robe-v1-medium.png', import.meta.url).href,
+  },
+  'beast-armor': {
+    small: new URL('../assets/inventory/defense-beast-armor-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/defense-beast-armor-v1-medium.png', import.meta.url).href,
   },
   'shield-core': {
     small: new URL('../assets/inventory/material-shield-core-v1-small.png', import.meta.url).href,
@@ -238,6 +314,30 @@ const ITEM_SPRITE_SOURCES = Object.freeze({
     small: new URL('../assets/inventory/material-fork-connector-v1-small.png', import.meta.url).href,
     medium: new URL('../assets/inventory/material-fork-connector-v1-medium.png', import.meta.url).href,
   },
+  'wall-core': {
+    small: new URL('../assets/inventory/material-wall-core-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/material-wall-core-v1-medium.png', import.meta.url).href,
+  },
+  'return-axle': {
+    small: new URL('../assets/inventory/material-return-axle-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/material-return-axle-v1-medium.png', import.meta.url).href,
+  },
+  'corrosive-heart-core': {
+    small: new URL('../assets/inventory/material-corrosive-heart-core-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/material-corrosive-heart-core-v1-medium.png', import.meta.url).href,
+  },
+  'soul-chain': {
+    small: new URL('../assets/inventory/material-soul-chain-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/material-soul-chain-v1-medium.png', import.meta.url).href,
+  },
+  'beast-hunting-horn': {
+    small: new URL('../assets/inventory/material-beast-hunting-horn-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/material-beast-hunting-horn-v1-medium.png', import.meta.url).href,
+  },
+  'mountain-break-stone': {
+    small: new URL('../assets/inventory/material-mountain-break-stone-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/material-mountain-break-stone-v1-medium.png', import.meta.url).href,
+  },
   'health-potion': {
     small: new URL('../assets/inventory/item-health-potion-v1-small.png', import.meta.url).href,
     medium: new URL('../assets/inventory/item-health-potion-v1-medium.png', import.meta.url).href,
@@ -257,6 +357,46 @@ const ITEM_SPRITE_SOURCES = Object.freeze({
   teleport: {
     small: new URL('../assets/inventory/item-teleport-talisman-v2-small.png', import.meta.url).href,
     medium: new URL('../assets/inventory/item-teleport-talisman-v2-medium.png', import.meta.url).href,
+  },
+  'food-3': {
+    small: new URL('../assets/inventory/item-food-3-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/item-food-3-v1-medium.png', import.meta.url).href,
+  },
+  'food-5': {
+    small: new URL('../assets/inventory/item-food-5-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/item-food-5-v1-medium.png', import.meta.url).href,
+  },
+  'food-7': {
+    small: new URL('../assets/inventory/item-food-7-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/item-food-7-v1-medium.png', import.meta.url).href,
+  },
+  'food-9': {
+    small: new URL('../assets/inventory/item-food-9-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/item-food-9-v1-medium.png', import.meta.url).href,
+  },
+  poison: {
+    small: new URL('../assets/inventory/item-poison-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/item-poison-v1-medium.png', import.meta.url).href,
+  },
+  explosive: {
+    small: new URL('../assets/inventory/item-explosive-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/item-explosive-v1-medium.png', import.meta.url).href,
+  },
+  'thunder-charm': {
+    small: new URL('../assets/inventory/item-thunder-charm-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/item-thunder-charm-v1-medium.png', import.meta.url).href,
+  },
+  'shield-bash': {
+    small: new URL('../assets/inventory/item-shield-bash-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/item-shield-bash-v1-medium.png', import.meta.url).href,
+  },
+  'meat-scrap': {
+    small: new URL('../assets/inventory/item-meat-scrap-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/item-meat-scrap-v1-medium.png', import.meta.url).href,
+  },
+  'money-pouch': {
+    small: new URL('../assets/inventory/item-money-pouch-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/item-money-pouch-v1-medium.png', import.meta.url).href,
   },
 })
 

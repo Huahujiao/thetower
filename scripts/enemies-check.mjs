@@ -5,6 +5,8 @@ import { ENEMY_DEFS, ENEMY_HP_MULTIPLIER, getEnemyDefinition } from '../src/game
 import { GameRun } from '../src/game/run.js'
 import { stepEnemy } from '../src/game/rules/enemies.js'
 
+assert.equal(ENEMY_HP_MULTIPLIER, 4)
+
 const expected = {
   'emberwing-moth': { minFloor: 1, behavior: 'ambush', attribute: 'scorch', deathExplosionDamage: 2 },
   'rootrot-bud': { minFloor: 1, behavior: 'stationary', attribute: 'wither', regen: 1 },

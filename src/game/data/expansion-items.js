@@ -131,7 +131,7 @@ export const EXPANSION_WEAPONS = Object.freeze([
     "energyCost": 3,
     "description": "\u653b\u51fb\u654c\u4eba\u65f6\uff0c\u7ffb\u5f00\u8ddd\u79bb\u5176\u6700\u8fd1\u7684\u4e00\u4e2a\u672a\u7ffb\u5f00\u654c\u4eba\u3002",
     "type": "weapon",
-    "attribute": null,
+    "attribute": "wither",
     "shape": [
       [
         1
@@ -150,7 +150,7 @@ export const EXPANSION_WEAPONS = Object.freeze([
     "energyCost": 4,
     "description": "\u653b\u51fb\u8ddd\u79bb\u22652\u5e76\u51fb\u6740\u654c\u4eba\u65f6\uff0c\u83b7\u5f971\u91d1\u5e01\u3002",
     "type": "weapon",
-    "attribute": null,
+    "attribute": "scorch",
     "shape": [
       [
         1
@@ -169,7 +169,7 @@ export const EXPANSION_WEAPONS = Object.freeze([
     "energyCost": 4,
     "description": "\u51fb\u6740\u8ddd\u79bb\u22653\u7684\u654c\u4eba\u65f6\uff0c\u968f\u673a\u7ffb\u5f00\u51768\u90bb\u57df\u51852\u5f20\u672a\u7ffb\u724c\u3002",
     "type": "weapon",
-    "attribute": null,
+    "attribute": "wither",
     "shape": [
       [
         1
@@ -320,4 +320,3 @@ export const GENERATED_CONSUMABLES = Object.freeze([
     "description": "\u5bf9\u654c\u4eba\u9020\u6210\u5f53\u524d\u62a4\u7532\u7b49\u91cf\u4f24\u5bb3\uff0c\u5e76\u6d88\u8017\u4e00\u534a\u62a4\u7532\uff0c\u5411\u4e0a\u53d6\u6574\u3002\u5c04\u7a0b1\u3002"
   }
 ])
-

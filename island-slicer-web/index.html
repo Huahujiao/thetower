@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sprite Island Slicer</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">Sprite Island Slicer</div>
+        <div class="brand-sub">透明散件自动抠图工具</div>
+      </div>
+
+      <div class="toolbar">
+        <label class="btn primary">
+          导入图片
+          <input id="fileInput" type="file" accept="image/png,image/webp,image/*" multiple hidden />
+        </label>
+        <button id="pickOutputBtn" class="btn">选择导出目录</button>
+      </div>
+
+      <div id="outputDirLabel" class="path-label">尚未选择导出目录</div>
+
+      <div class="sidebar-tabs">
+        <button id="assetsTabBtn" class="sidebar-tab active">
+          <span>素材</span>
+          <span id="assetCount" class="tab-count">0</span>
+        </button>
+        <button id="partsTabBtn" class="sidebar-tab">
+          <span>部件</span>
+          <span id="partCount" class="tab-count">0</span>
+        </button>
+      </div>
+
+      <div id="assetsPane" class="sidebar-pane active">
+        <div id="assetList" class="asset-list"></div>
+      </div>
+
+      <div id="partsPane" class="sidebar-pane">
+        <div id="partsAssetName" class="parts-asset-name">未选择素材</div>
+        <div id="partList" class="part-list sidebar-part-list" tabindex="0">
+          <div class="part-list-empty">进入抠图预览后显示</div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <section class="topbar">
+        <div>
+          <div id="currentName" class="current-name">未选择素材</div>
+          <div id="currentMeta" class="current-meta">导入 PNG 后开始</div>
+        </div>
+        <div class="top-actions">
+          <button id="analyzeBtn" class="btn primary" disabled>抠图预览</button>
+          <button id="cancelPreviewBtn" class="btn hidden" disabled>取消预览</button>
+          <button id="exportBtn" class="btn success" disabled>确认并导出当前</button>
+          <button id="exportAllBtn" class="btn" disabled>导出全部已分析</button>
+        </div>
+      </section>
+
+      <section class="workspace">
+        <div id="canvasViewport" class="canvas-wrap">
+          <div id="canvasStage" class="canvas-stage">
+            <div class="checker"></div>
+            <canvas id="previewCanvas"></canvas>
+          </div>
+
+          <div id="emptyHint" class="empty-hint">一次可导入多张透明图片</div>
+          <div id="busy" class="busy hidden">正在分析孤岛…</div>
+
+          <div class="zoom-toolbar">
+            <button id="zoomOutBtn" class="zoom-btn" title="缩小">−</button>
+            <button id="zoomInBtn" class="zoom-btn" title="放大">＋</button>
+            <button id="fitBtn" class="zoom-btn wide" title="适应容器">适应</button>
+            <button id="actualBtn" class="zoom-btn wide" title="100%">100%</button>
+            <span id="zoomLabel" class="zoom-label">—</span>
+          </div>
+        </div>
+
+        <aside class="panel">
+          <div class="panel-title">抠图参数</div>
+
+          <div class="control">
+            <div class="control-head">
+              <label for="alphaThreshold">Alpha 阈值</label>
+              <span id="alphaValue">8</span>
+            </div>
+            <input id="alphaThreshold" type="range" min="1" max="254" value="8" />
+            <div class="hint">透明边缘低于阈值的像素忽略。</div>
+          </div>
+
+          <div class="control">
+            <div class="control-head">
+              <label for="minArea" class="label-with-info">
+                <span>最小面积</span>
+                <span id="minDetectedInfo" class="detected-info">当前最小：—</span>
+              </label>
+              <span id="minAreaValue">200 px</span>
+            </div>
+            <input id="minArea" type="range" min="1" max="10000" value="200" step="10" />
+            <div class="hint">过滤碎屑、发光噪点和小孤岛。</div>
+          </div>
+
+          <div class="control">
+            <div class="control-head">
+              <label for="padding">导出 Padding</label>
+              <span id="paddingValue">12 px</span>
+            </div>
+            <input id="padding" type="range" min="0" max="64" value="12" />
+            <div class="hint">每个导出部件四周保留透明边。</div>
+          </div>
+
+          <div class="control">
+            <div class="control-head">
+              <label for="mergeRadius">合并间隙</label>
+              <span id="mergeRadiusValue">0 px</span>
+            </div>
+            <input id="mergeRadius" type="range" min="0" max="8" value="0" />
+            <div class="hint">把距离很近但未接触的像素岛临时连起来，仅用于分组。</div>
+          </div>
+
+          <div class="control row-control">
+            <label>连通方式</label>
+            <select id="connectivity">
+              <option value="8" selected>8 邻域</option>
+              <option value="4">4 邻域</option>
+            </select>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="panel-title">预览</div>
+          <label class="check-row">
+            <input id="showOriginal" type="checkbox" checked disabled />
+            <span>显示原贴图</span>
+          </label>
+          <label class="check-row">
+            <input id="dimOutside" type="checkbox" checked disabled />
+            <span>压暗非孤岛区域</span>
+          </label>
+          <label class="check-row">
+            <input id="showBounds" type="checkbox" checked disabled />
+            <span>显示编号和外接框</span>
+          </label>
+
+          <div id="stats" class="stats">
+            <div><span>有效孤岛</span><strong>—</strong></div>
+            <div><span>原图尺寸</span><strong>—</strong></div>
+            <div><span>分析耗时</span><strong>—</strong></div>
+          </div>
+
+          <div class="note">
+            进入抠图预览后可显示/隐藏原贴图；鼠标滚轮缩放，按住左键拖动平移。
+          </div>
+        </aside>
+      </section>
+    </main>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>

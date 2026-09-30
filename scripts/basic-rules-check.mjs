@@ -10,12 +10,13 @@ import { consumableTargetCells } from '../src/game/rules/attack-range.js'
 import { createMerchantEntity } from '../src/game/data/merchants.js'
 import { enemyOverheadHints } from '../src/game/data/enemy-features.js'
 
-// Most ordinary, unmodified weapons need at least five neutral hits on ordinary enemies.
+// At the reduced health baseline, most ordinary, unmodified weapons still need
+// at least four neutral hits on ordinary enemies.
 const ordinary = ALL_ITEM_DEFS.filter(item => item.type === 'weapon' && !item.crafted)
 const firstEnemies = ['gnawer', 'emberwing-moth', 'rootrot-bud', 'tide-shadow-cub', 'beetle-guard']
 let slowKills = 0
 for (const id of firstEnemies) for (const weapon of ordinary) {
-  if (Math.ceil(createEnemyById(id).hp / weapon.attack) >= 5) slowKills++
+  if (Math.ceil(createEnemyById(id).hp / weapon.attack) >= 4) slowKills++
 }
 assert(slowKills / (ordinary.length * firstEnemies.length) >= 0.9)
 

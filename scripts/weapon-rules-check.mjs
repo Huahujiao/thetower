@@ -4,8 +4,10 @@ import { ALL_ITEM_DEFS, getItemDefinition, makeItem } from '../src/game/data/con
 import { catalogContent } from '../src/ui/wiki-catalog.js'
 
 const appearances = ['sword', 'dagger', 'axe', 'bow']
+const attributes = ['scorch', 'wither', 'drown']
 for (const weapon of ALL_ITEM_DEFS.filter(item => item.type === 'weapon')) {
   assert(appearances.includes(weapon.appearance))
+  assert(attributes.includes(weapon.attribute))
   assert(Number.isInteger(weapon.energyCost) && weapon.energyCost >= 1)
 }
 
@@ -21,7 +23,7 @@ for (const appearance of appearances) {
   assert.equal(run.itemRules.attackContext(weapon, enemy(run)).flat, 2)
   assert(run.itemRules.activeAdjacencyLinks().some(link => link.source.id === 'scope' && link.target === weapon))
   assert(run.showItemDetail(weapon))
-  assert.deepEqual(run.detailPanel.badges, ['\u2605'])
+  assert.deepEqual(run.detailPanel.badges, ['\u707c\u70ed', '\u2605'])
 }
 
 // Wrist checks the independent base cost and live four-way geometry, with a
