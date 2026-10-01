@@ -36,6 +36,69 @@ for (let index = 0; index <= 100; index++) {
 }
 assert.equal(seen.size, 6, 'all six rewards participate in the pool')
 
+// Loot-pouch overflow and a kill-triggered upgrade must not lock inventory management.
+{
+  const run = fixture(), weapon = add(run, 'rust-sword')
+  add(run, 'r-loot-pouch')
+  const pouch = add(run, 'money-pouch')
+  while (run.backpack.add(makeItemById('health-potion'))) { /* Fill every cell. */ }
+  run.player.experience = run.player.experienceToNext - 1
+  const target = enemy(run, { hp: 1, noExperience: false, experience: 1 })
+  attack(run, weapon, target)
+  assert.equal(run.phase, 'level-up')
+  assert.equal(run.inventoryStash.length, 1, 'loot-pouch reward overflows into staging')
+  const reward = run.inventoryStash[0], choices = JSON.stringify(run.levelUp)
+  const before = { turn: run.globalTurn, hp: run.player.hp, energy: run.player.energy, experience: run.player.experience }
+  const assertPaused = () => {
+    assert.deepEqual({ turn: run.globalTurn, hp: run.player.hp, energy: run.player.energy, experience: run.player.experience }, before)
+    assert.equal(run.phase, 'level-up')
+    assert.equal(JSON.stringify(run.levelUp), choices, 'organizing preserves the offered rewards')
+  }
+  const potion = run.backpack.items.find(item => item.id === 'health-potion')
+  const freedCell = run.backpack.originIndex(run.backpack.placementOf(potion.uid))
+  assert.equal(run.discardInventoryItem(pouch.uid), false, 'money pouch stays protected')
+  assert(run.discardInventoryItem(potion.uid), 'backpack discard works while an upgrade is pending')
+  assert(run.commitInventoryDrop(reward, freedCell), 'overflow reward can enter the freed slot')
+  assert.equal(run.inventoryStash.length, 0)
+  assertPaused()
+  assert(run.moveInventoryToStash(reward.uid))
+  assert(run.setStashedInventoryRotation(reward.uid, 1))
+  assert(run.discardInventoryItem(reward.uid), 'staged discard works while an upgrade is pending')
+  assertPaused()
+  const loaded = restore(run)
+  assert.deepEqual(loaded.levelUp, run.levelUp)
+  assert.equal(loaded.inventoryStash.length, 0)
+  assert(loaded.chooseLevelUpOption(loaded.levelUp.choices.find(id => ['heal', 'max-health', 'max-energy'].includes(id))))
+  assert.equal(loaded.player.level, 2)
+  assert.equal(loaded.globalTurn, before.turn)
+}
+
+// A pending upgrade permits only inventory management after combat has settled.
+{
+  const run = fixture(), weapon = add(run, 'rust-sword')
+  add(run, 'shield-core')
+  offer(run, 'weapon-upgrade')
+  run.combatResolving = true
+  assert.equal(run.discardInventoryItem(weapon.uid), false)
+  run.combatResolving = false; run.enemyDeathAnimationsPending = 1
+  assert.equal(run.moveInventoryToStash(weapon.uid), false)
+  run.enemyDeathAnimationsPending = 0
+  select(run, weapon)
+  assert.equal(run.useSelected(), false)
+  assert.equal(run.clickTile(3, 2), false)
+  assert.equal(run.craft('silver-guard'), false)
+  assert(run.chooseLevelUpOption('weapon-upgrade'))
+  assert(run.moveInventoryToStash(weapon.uid))
+  assert.equal(run.levelUp.selectedOption, undefined, 'empty weapon selection returns to the main choices')
+  assert(run.backpack.add(weapon))
+  run.unstageInventoryItem(weapon.uid, { notify: false })
+  for (const relic of RELIC_DEFS.filter(relic => !relic.disabled)) run.relics.acquire(relic.id)
+  run.levelUp.choices = ['weapon-upgrade', 'relic', 'item-compression']
+  assert(run.discardInventoryItem(weapon.uid))
+  assert(run.levelUp.choices.some(id => run.canChooseLevelUpOption(id)), 'removing the sole upgrade target cannot deadlock')
+  assert.equal(run.globalTurn, 0)
+}
+
 // Immediate rewards do not refill the stats whose caps they increase or spend turns.
 {
   const run = fixture(), turn = run.globalTurn

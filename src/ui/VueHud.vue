@@ -757,7 +757,7 @@ const roomRewardOpen = computed(() => {
 })
 const levelUpOpen = computed(() => {
   const current = state.value
-  return current.phase === 'level-up' && !!current.levelUp && !current.combatResolving && !current.enemyDeathAnimationsPending
+  return current.phase === 'level-up' && !!current.levelUp && !current.combatResolving && !current.enemyDeathAnimationsPending && !inventoryStagingVisible.value
 })
 const levelUpChoices = computed(() => {
   state.value

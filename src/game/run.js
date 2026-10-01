@@ -907,7 +907,7 @@ export class GameRun {
     if (!preview || preview.status !== 'move' || (preview.x === placement.x && preview.y === placement.y)) return false
     const moved = this.backpack.move(item.uid, preview.x, preview.y, preview.rotation)
     if (!moved) return false
-    this._endTurn({ recoverEnergy: false, action: 'organize' })
+    this._endInventoryTurn()
     this.selectedInventoryIndex = this.backpack.originIndex(this.backpack.placementOf(item.uid))
     this.itemTargeting = false
     this._changed()
@@ -1002,11 +1002,20 @@ export class GameRun {
 
   _finishInventoryAction() {
     if (!this._canOrganizeBackpack()) return false
-    this._endTurn({ recoverEnergy: false, action: 'organize' })
+    this._endInventoryTurn()
     this.selectedInventoryIndex = null
     this.itemTargeting = false
     this._changed()
     return true
+  }
+
+  _endInventoryTurn() {
+    if (this.phase !== 'level-up') return this._endTurn({ recoverEnergy: false, action: 'organize' })
+    // Inventory management during a reward choice keeps the world paused.
+    // Removing the last weapon must not strand its nested selection or leave
+    // a choice set with only unavailable targets and the compression placeholder.
+    if (this.levelUp.selectedOption === 'weapon-upgrade' && !this.levelUpWeapons().length) delete this.levelUp.selectedOption
+    if (!this.levelUp.choices.some(id => this.canChooseLevelUpOption(id))) this.levelUp.choices[0] = 'heal'
   }
 
   stageInventoryItem(item, { notify = true } = {}) {
@@ -1066,7 +1075,7 @@ export class GameRun {
   }
 
   craft(recipeIdOrResult) {
-    if (!this._canOrganizeBackpack() || this.itemTargeting) return false
+    if (this.phase === 'level-up' || !this._canOrganizeBackpack() || this.itemTargeting) return false
     const candidates = RECIPES.filter(recipe => recipe.id === recipeIdOrResult || recipe.result === recipeIdOrResult)
     let recipe = null, preview = null
     for (const candidate of candidates) {
@@ -2192,7 +2201,9 @@ export class GameRun {
   }
 
   _canOrganizeBackpack() {
-    return !this.gameOver && this.initialRelicChoices.length === 0 && ['explore', 'merchant'].includes(this.phase) && !this.merchantEntering && !this.roomEntering && !this.combatResolving
+    const phaseAllows = ['explore', 'merchant'].includes(this.phase)
+      || (this.phase === 'level-up' && !!this.levelUp && !this.enemyDeathAnimationsPending)
+    return !this.gameOver && this.initialRelicChoices.length === 0 && phaseAllows && !this.merchantEntering && !this.roomEntering && !this.combatResolving
   }
 
   _reject(message) {

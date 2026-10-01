@@ -36,7 +36,7 @@ export function discardInventoryItem(run, itemOrUid, { notify = true } = {}) {
   run.itemRules.discarded(item)
   if (item.type === 'relic') run.relics.remove(item.uid) || run.relics.remove(item.relicId)
   run._log(`\u4e22\u5f03 ${item.name}\u3002`)
-  run._endTurn({ recoverEnergy: false, action: 'organize' })
+  run._endInventoryTurn()
   if (notify) run._changed()
   return true
 }
