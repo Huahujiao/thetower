@@ -1,6 +1,15 @@
 import assert from 'node:assert/strict'
 import { createChapterDungeon, Dungeon, validateDungeonLayout } from '../src/game/model/dungeon.js'
 import { GameRun } from '../src/game/run.js'
+import { chapterEncounter, getEnemyDefinition } from '../src/game/data/enemies.js'
+import { chebyshev } from '../src/game/core/geometry.js'
+
+const expectedCounts = [
+  { entry: 8, elite: 9, supply: 8, boss: 7 },
+  { entry: 11, elite: 12, supply: 10, boss: 9 },
+  { entry: 14, elite: 16, supply: 13, boss: 12 },
+  { entry: 18, elite: 20, supply: 16, boss: 15 },
+]
 
 function seeded(seed) {
   let state = seed >>> 0
@@ -34,7 +43,28 @@ for (let seed = 1; seed <= 100; seed++) {
   for (const room of dungeon.rooms.values()) {
     const cards = room.width * room.height
     const entities = [...room.entities.values()]
-    assert.equal(entities.filter((entity) => entity.kind === 'enemy').length, Math.round(cards * 0.25))
+    const enemies = entities.filter((entity) => entity.kind === 'enemy')
+    assert.equal(enemies.length, expectedCounts[room.chapter - 1][room.role])
+    const pool = chapterEncounter(room.chapter)
+    const mobs = enemies.filter((enemy) => !enemy.boss)
+    const challengeCount = room.role === 'boss' || (room.chapter === 1 && room.role === 'entry')
+      ? 0 : room.role === 'elite' ? (room.chapter === 1 ? 2 : 3) : 1
+    assert.equal(mobs.filter((enemy) => pool.challenge.includes(enemy.enemyId)).length, challengeCount)
+    assert(mobs.every((enemy) => pool.standard.includes(enemy.enemyId) || pool.challenge.includes(enemy.enemyId)))
+    assert(mobs.filter((enemy) => enemy.behavior === 'ambush').length <= (room.chapter <= 2 ? 1 : 2))
+    assert(mobs.filter((enemy) => enemy.traits.includes('alert')).length <= (room.chapter === 1 ? 2 : room.chapter === 2 ? 3 : 4))
+    for (const enemy of enemies) {
+      const definition = getEnemyDefinition(enemy.enemyId)
+      if (!definition) continue // The final boss has its own definition.
+      assert.equal(enemy.maxHp, definition.hp, `${enemy.name} must have fixed health in every room`)
+      assert.equal(enemy.attack, definition.attack, `${enemy.name} must have fixed attack in every room`)
+      assert.equal(enemy.range, definition.range)
+      assert.equal(enemy.initialActionDelay, definition.initialActionDelay)
+      assert.equal(enemy.attackCooldownMax, definition.attackCooldownMax)
+    }
+    if (room.chapter === 1 && room.role === 'entry') {
+      assert(mobs.filter((enemy) => chebyshev(enemy.pos, room.entry) <= 1).every((enemy) => enemy.enemyId === 'gnawer'))
+    }
     assert.equal(entities.filter((entity) => entity.kind === 'item' && entity.item?.type === 'weapon').length, Math.round(cards * 0.25))
     assert(entities.length / cards >= 0.9, `${room.id} has too many empty cards`)
     assert(!entities.some((entity) => entity.kind === 'item' && entity.item?.type === 'defense'), `${room.id} generated a defense on the ground`)

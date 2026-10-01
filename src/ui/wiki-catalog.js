@@ -4,7 +4,7 @@ import { attributeLabel } from '../game/data/attributes.js'
 import { ENEMY_HP_MULTIPLIER } from '../game/data/enemies.js'
 import { enemyBehaviorLabel, enemyFeatureLabel } from '../game/data/enemy-features.js'
 import { RELIC_DEFS } from '../game/data/relics.js'
-import { TALENT_DEFS } from '../game/data/progression.js'
+import { LEVEL_UP_OPTIONS } from '../game/data/progression.js'
 import { TRAP_DEFS } from '../game/data/traps.js'
 import { itemSpriteSources } from './item-sprites.js'
 
@@ -176,17 +176,14 @@ function relicCards() {
   })).join('')
 }
 
-function talentCards() {
-  return TALENT_DEFS.map((talent) => card({
+function growthCards() {
+  return LEVEL_UP_OPTIONS.map((option) => card({
     tone: 'tone-relic',
-    tag: `${label(talent.line)} · ${talent.slot}`,
-    title: talent.name,
-    description: talent.description,
+    tag: '\u5347\u7ea7\u5956\u52b1',
+    title: option.name,
+    description: option.description,
     accent: '\u2736',
-    stats: [
-      stat('\u5c42\u7ea7', talent.tier),
-      stat('\u524d\u7f6e', talent.prerequisites.length ? talent.prerequisites.join('、') : '\u65e0'),
-    ],
+    stats: [],
   })).join('')
 }
 
@@ -242,7 +239,7 @@ function trapCards() {
   }).join('')
 }
 
-const BUILDERS = Object.freeze({ enemies: enemyCards, traps: trapCards, weapons: weaponCards, relics: relicCards, talents: talentCards, items: itemCards })
+const BUILDERS = Object.freeze({ enemies: enemyCards, traps: trapCards, weapons: weaponCards, relics: relicCards, growth: growthCards, items: itemCards })
 
 
 export function catalogContent(id) { return BUILDERS[id]?.() || null }

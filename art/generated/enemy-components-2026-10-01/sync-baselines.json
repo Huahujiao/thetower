@@ -1,0 +1,7 @@
+{
+  "src/animation/shadow-enemies.js": "c16f4943e4639dd922d2620981c909dd4505b86b80501f4bf2d26e6920b760b8",
+  "src/ui/AnimeEditor.vue": "882f869e2fcd40c819ede18bfc7c63024a321134755a6b36d90d0b4c763a83cb",
+  "src/ui/ShadowPuppetStage.vue": "56caf72d4440393b4f78bd5d501779d8389f626fe2c7202899fc1c116f36cc59",
+  "scripts/shadow-rig-check.mjs": "947f69285ea69ae391cf4d402cd137f8d2d74d5f82602d5671a26dd3e6cb9f55",
+  "scripts/preview-enemy-puppet.mjs": "383c03ea594b836050c1ddda9242c19a8b376e9cd9b8a4ebc250a86441d18d4b"
+}

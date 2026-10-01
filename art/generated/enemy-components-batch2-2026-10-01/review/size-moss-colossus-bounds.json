@@ -1,0 +1,227 @@
+[
+  {
+    "enemy": "moss-colossus",
+    "action": "idle",
+    "fraction": 0,
+    "left": 48,
+    "right": 104,
+    "top": 28,
+    "bottom": 148
+  },
+  {
+    "enemy": "moss-colossus",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 49,
+    "right": 106,
+    "top": 26,
+    "bottom": 148
+  },
+  {
+    "enemy": "moss-colossus",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 50,
+    "right": 107,
+    "top": 26,
+    "bottom": 147
+  },
+  {
+    "enemy": "moss-colossus",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 49,
+    "right": 105,
+    "top": 27,
+    "bottom": 148
+  },
+  {
+    "enemy": "moss-colossus",
+    "action": "idle",
+    "fraction": 1,
+    "left": 48,
+    "right": 104,
+    "top": 28,
+    "bottom": 148
+  },
+  {
+    "enemy": "moss-colossus",
+    "action": "move",
+    "fraction": 0,
+    "left": 48,
+    "right": 104,
+    "top": 28,
+    "bottom": 148
+  },
+  {
+    "enemy": "moss-colossus",
+    "action": "move",
+    "fraction": 0.27,
+    "left": 51,
+    "right": 118,
+    "top": 24,
+    "bottom": 145
+  },
+  {
+    "enemy": "moss-colossus",
+    "action": "move",
+    "fraction": 0.64,
+    "left": 48,
+    "right": 103,
+    "top": 28,
+    "bottom": 147
+  },
+  {
+    "enemy": "moss-colossus",
+    "action": "move",
+    "fraction": 0.85,
+    "left": 46,
+    "right": 102,
+    "top": 30,
+    "bottom": 147
+  },
+  {
+    "enemy": "moss-colossus",
+    "action": "move",
+    "fraction": 1,
+    "left": 48,
+    "right": 104,
+    "top": 28,
+    "bottom": 148
+  },
+  {
+    "enemy": "moss-colossus",
+    "action": "attack",
+    "fraction": 0,
+    "left": 48,
+    "right": 104,
+    "top": 28,
+    "bottom": 148
+  },
+  {
+    "enemy": "moss-colossus",
+    "action": "attack",
+    "fraction": 0.27,
+    "left": 38,
+    "right": 101,
+    "top": 30,
+    "bottom": 149
+  },
+  {
+    "enemy": "moss-colossus",
+    "action": "attack",
+    "fraction": 0.64,
+    "left": 48,
+    "right": 122,
+    "top": 25,
+    "bottom": 147
+  },
+  {
+    "enemy": "moss-colossus",
+    "action": "attack",
+    "fraction": 0.85,
+    "left": 51,
+    "right": 111,
+    "top": 25,
+    "bottom": 148
+  },
+  {
+    "enemy": "moss-colossus",
+    "action": "attack",
+    "fraction": 1,
+    "left": 48,
+    "right": 104,
+    "top": 28,
+    "bottom": 148
+  },
+  {
+    "enemy": "moss-colossus",
+    "action": "hit",
+    "fraction": 0,
+    "left": 48,
+    "right": 104,
+    "top": 28,
+    "bottom": 148
+  },
+  {
+    "enemy": "moss-colossus",
+    "action": "hit",
+    "fraction": 0.27,
+    "left": 35,
+    "right": 110,
+    "top": 32,
+    "bottom": 147
+  },
+  {
+    "enemy": "moss-colossus",
+    "action": "hit",
+    "fraction": 0.64,
+    "left": 40,
+    "right": 106,
+    "top": 31,
+    "bottom": 148
+  },
+  {
+    "enemy": "moss-colossus",
+    "action": "hit",
+    "fraction": 0.85,
+    "left": 46,
+    "right": 105,
+    "top": 30,
+    "bottom": 148
+  },
+  {
+    "enemy": "moss-colossus",
+    "action": "hit",
+    "fraction": 1,
+    "left": 48,
+    "right": 104,
+    "top": 28,
+    "bottom": 148
+  },
+  {
+    "enemy": "moss-colossus",
+    "action": "death",
+    "fraction": 0,
+    "left": 48,
+    "right": 104,
+    "top": 28,
+    "bottom": 148
+  },
+  {
+    "enemy": "moss-colossus",
+    "action": "death",
+    "fraction": 0.27,
+    "left": 47,
+    "right": 114,
+    "top": 32,
+    "bottom": 152
+  },
+  {
+    "enemy": "moss-colossus",
+    "action": "death",
+    "fraction": 0.64,
+    "left": 44,
+    "right": 119,
+    "top": 39,
+    "bottom": 155
+  },
+  {
+    "enemy": "moss-colossus",
+    "action": "death",
+    "fraction": 0.85,
+    "left": 46,
+    "right": 122,
+    "top": 46,
+    "bottom": 151
+  },
+  {
+    "enemy": "moss-colossus",
+    "action": "death",
+    "fraction": 1,
+    "left": 48,
+    "right": 121,
+    "top": 51,
+    "bottom": 147
+  }
+]

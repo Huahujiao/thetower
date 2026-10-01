@@ -1,0 +1,38 @@
+<!doctype html><html lang="en"><meta charset="UTF-8"><title>Enemy size review</title>
+<style>body{margin:0;background:#1b242d;color:#ddd;font:14px sans-serif}main{display:grid;grid-template-columns:repeat(5,320px);width:1600px}figure{margin:0;text-align:center}canvas{display:block;width:320px;height:320px;image-rendering:pixelated}h1{font-size:20px;margin:12px}</style>
+<h1></h1><main></main>
+<script type="module">
+import { createEnemyShadowProjects, ENEMY_ART_PACK_VERSION } from '/src/animation/shadow-enemies.js'
+import { prepareEnemyPuppets, drawEnemyPuppet } from '/src/render/enemy-puppet.js'
+document.title = `Enemy size review V${ENEMY_ART_PACK_VERSION}`
+document.querySelector('h1').textContent = `V${ENEMY_ART_PACK_VERSION} / actual 160px game tiles, shown at 2x`
+const params = new URLSearchParams(location.search), enemy = params.get('enemy')
+const projects = createEnemyShadowProjects().filter(p => !enemy || p.enemyId === enemy)
+prepareEnemyPuppets(() => {})
+await Promise.all(projects.flatMap(p => [...new Set(p.parts.map(s => s.visual.texture).filter(Boolean))].map(src => new Promise((resolve,reject) => {
+  const img = new Image(); img.onload = resolve; img.onerror = () => reject(new Error(src)); img.src = src
+}))))
+for (const p of projects) drawEnemyPuppet(document.createElement('canvas').getContext('2d'),p.enemyId)
+await new Promise(resolve => setTimeout(resolve,300))
+window.sizeReport = []
+for (const p of projects) for (const action of enemy ? ['idle','move','attack','hit','death'] : ['idle']) for (const fraction of [0,.27,.64,.85,1]) {
+  const probe = document.createElement('canvas');probe.width = probe.height = 480
+  const ctx = probe.getContext('2d');ctx.translate(160,160)
+  drawEnemyPuppet(ctx,p.enemyId,action,p.animations[action].duration * fraction)
+  const pixels = ctx.getImageData(0,0,480,480).data
+  let left = 480, right = 0, top = 480, bottom = 0
+  for (let y = 0; y < 480; y++) for (let x = 0; x < 480; x++) if (pixels[(y * 480 + x) * 4 + 3] > 8) {
+    left = Math.min(left,x);right = Math.max(right,x);top = Math.min(top,y);bottom = Math.max(bottom,y)
+  }
+  window.sizeReport.push({enemy:p.enemyId,action,fraction,left:left-160,right:right-160,top:top-160,bottom:bottom-160})
+  if (!enemy && fraction !== 0) continue
+  const figure = document.createElement('figure'), tile = document.createElement('canvas'), label = document.createElement('figcaption')
+  tile.width = tile.height = 160
+  const tc = tile.getContext('2d');tc.fillStyle = '#263746';tc.fillRect(0,0,160,160)
+  tc.strokeStyle = '#788b9d';tc.strokeRect(.5,.5,159,159)
+  tc.drawImage(probe,160,160,160,160,0,0,160,160)
+  label.textContent = `${p.enemyId} / ${action} / ${fraction}`
+  figure.append(tile,label);document.querySelector('main').append(figure)
+}
+window.reviewReady = true
+</script></html>

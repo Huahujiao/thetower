@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict'
+/* global structuredClone */
 import { existsSync } from 'node:fs'
 import { createShadowExampleProjects, installInitialShadowExamples, repairInitialShadowExamples, texturePresetsForShadowProject } from '../src/animation/shadow-examples.js'
-import { createEnemyShadowProjects, ENEMY_ART, ENEMY_ART_PACK_VERSION, installEnemyShadowProjects } from '../src/animation/shadow-enemies.js'
+import { createEnemyShadowProject, createEnemyShadowProjects, ENEMY_ART, ENEMY_ART_PACK_VERSION, installEnemyShadowProjects } from '../src/animation/shadow-enemies.js'
+import { COMPONENT_ENEMY_IDS, BATCH2_COMPONENT_ENEMY_IDS, BATCH3_COMPONENT_ENEMY_IDS, BATCH4_COMPONENT_ENEMY_IDS } from '../src/animation/shadow-enemy-components.js'
 import { createRosterEnemyProject } from '../src/animation/shadow-enemy-roster.js'
 import { VARIANT_ENEMY_IDS } from '../src/animation/shadow-enemy-variants.js'
 import { ENEMY_DEFS } from '../src/game/data/enemies.js'
@@ -287,10 +289,11 @@ for (const project of enemyProjects) {
     assert.ok(Math.min(...heights) < -50, `${project.enemyId}: crawler lacks ground-reaching feet`)
   } else {
     const upperLimit = ['quadruped', 'toad'].includes(art.family) ? 10 : 30
-    assert.ok(Math.max(...heights) > upperLimit && Math.max(...heights) - Math.min(...heights) > 75,
+    assert.ok(Math.max(...heights) >= upperLimit && Math.max(...heights) - Math.min(...heights) > 75,
       `${project.enemyId}: skeleton lacks vertical articulation`)
   }
-  assert.ok(Math.max(...depths) - Math.min(...depths) > 75, `${project.enemyId}: flat skeleton`)
+  // Compact component rigs no longer include the draft's unused finger/antenna branches.
+  assert.ok(Math.max(...depths) - Math.min(...depths) > (COMPONENT_ENEMY_IDS.includes(project.enemyId) ? 45 : 75), `${project.enemyId}: flat skeleton`)
   if (['quadruped', 'toad', 'arthropod'].includes(art.family)) {
     const head = shadowMatrixPosition(rest.jointsById.get('head').matrix)
     const rear = shadowMatrixPosition(rest.jointsById.get(art.family === 'arthropod' ? 'abdomen' : 'haunch').matrix)
@@ -298,15 +301,24 @@ for (const project of enemyProjects) {
       `${project.enemyId}: head must point toward viewer-left after the -30 degree yaw`)
     if (art.family === 'arthropod') {
       assert.ok(Math.abs(head.y - rear.y) < 20, `${project.enemyId}: head and abdomen must lie horizontally`)
-      assert.ok(project.parts.find((part) => part.id === 'carapace').rotationX < -40,
+      const carapace = rest.parts.find(({ part }) => part.id === 'carapace').matrix.elements
+      // Tilting the parent hinge also tilts its attached shell and ornaments.
+      assert.ok(carapace[9] / Math.hypot(carapace[8], carapace[9], carapace[10]) > Math.sin(40 * Math.PI / 180),
         `${project.enemyId}: carapace should lie over the legs`)
     }
   }
   const jointIds = new Set(project.joints.map((joint) => joint.id))
   const boneIds = new Set(project.bones.map((bone) => bone.id))
   for (const part of normalized.parts) {
-    assert.equal(part.visual.type, 'shape', `${project.enemyId}: ${part.id} still has texture`)
-    assert.equal(part.visual.texture, null)
+    if (COMPONENT_ENEMY_IDS.includes(project.enemyId)) {
+      assert.equal(part.visual.type, 'texture', `${project.enemyId}: ${part.id} missing component art`)
+      assert.ok(existsSync(new URL(`../public${part.visual.texture}`, import.meta.url)))
+      const crop = part.visual.textureFrame.crop
+      assert.ok(crop.left >= 0 && crop.top >= 0 && crop.left + crop.width <= 1.000001 && crop.top + crop.height <= 1.000001)
+    } else {
+      assert.equal(part.visual.type, 'shape')
+      assert.equal(part.visual.texture, null)
+    }
     assert.equal(part.depth, 0, `${project.enemyId}: ${part.id} must remain a paper plane`)
     assert.ok((part.attachment.type === 'bone' ? boneIds : jointIds).has(part.attachment.targetId), `${project.enemyId}: missing target for ${part.id}`)
   }
@@ -315,14 +327,31 @@ for (const project of enemyProjects) {
   assert.equal(volume.boundingBox.max.z - volume.boundingBox.min.z, 0)
   volume.dispose()
   const faces = projectShadowFaces(rest)
-  assert.equal(faces.length, project.parts.length)
+  assert.equal(faces.length, project.parts.filter(part => part.visual.type === 'shape').length)
   assert.ok(faces.every((face) => face.points.every((point) => Number.isFinite(point.x) && Number.isFinite(point.y))))
   for (const action of ['idle', 'move', 'attack', 'hit', 'death']) {
     const animation = project.animations[action]
     assert.ok(animation.tracks['joint:root']?.length >= 3, `${project.enemyId}: ${action} root animation`)
     assert.ok(Object.keys(animation.tracks).filter((key) => key.startsWith('joint:') && key !== 'joint:root').length >= 2, `${project.enemyId}: ${action} has no joint articulation`)
     if (VARIANT_ENEMY_IDS.includes(project.enemyId)) {
-      assert.ok(Object.keys(animation.tracks).some((key) => key.endsWith('-hinge')),
+      const componentOrgans = {
+        'furnace-beetle': ['left-shutter', 'right-shutter'],
+        'thorn-shell-flower': ['left-shell', 'right-shell'],
+        'water-leech-swarm': ['leech-0-jaw', 'leech-1-jaw', 'leech-2-jaw'],
+        'whirlpool-eye-sac': ['eye', 'tether'],
+        'cinder-curse-lamp-swarm': ['lamp-0-core', 'lamp-1-core', 'lamp-2-core'],
+        'drown-shadow-hunter': ['scythe', 'right-arm'],
+        'tidal-spore-sac': ['pod-0', 'pod-1', 'pod-2'],
+        'revenant-guard': ['soul-focus', 'left-wrist'],
+        'bomb-wisp': ['core', 'left-fuse', 'right-fuse'],
+        'cracked-hunter': ['hook', 'missing-arm'],
+        broodling: ['left-jaw', 'right-jaw'],
+        'leech-larva': ['mouth', 'left-sucker', 'right-sucker'],
+        'tide-shadow': ['eye', 'left-wrist', 'right-wrist'],
+      }[project.enemyId]
+      assert.ok(componentOrgans
+        ? componentOrgans.every(id => animation.tracks[`joint:${id}`]?.some(frame => frame.rotationX || frame.rotationY || frame.rotationZ))
+        : Object.keys(animation.tracks).some((key) => key.endsWith('-hinge')),
         `${project.enemyId}: ${action} lacks motion on its distinctive organ`)
     }
     for (const time of [0, animation.duration / 2, animation.duration]) {
@@ -344,11 +373,13 @@ savedEnemyRoster.characters.splice(1, 1)
 assert.equal(installEnemyShadowProjects(savedEnemyRoster), false)
 assert.equal(savedEnemyRoster.characters.length, ENEMY_DEFS.length)
 
-const paperRoster = normalizeShadowRoster({ characters: [{ id: 'edited-gnawer', project: enemyProjects[0] }],
+const paperGnawer = createEnemyShadowProject(ENEMY_DEFS[0], { withComponentArt: false })
+const paperRoster = normalizeShadowRoster({ characters: [{ id: 'edited-gnawer', project: paperGnawer }],
   activeCharacterId: 'edited-gnawer', enemyArtPackVersion: 6 })
 paperRoster.characters[0].project.parts[0].x += 27
 assert.equal(installEnemyShadowProjects(paperRoster), true)
-assert.equal(paperRoster.characters[0].project.parts[0].x, enemyProjects[0].parts[0].x + 27)
+assert.equal(paperRoster.characters[0].project.parts[0].x, enemyProjects[0].parts[0].x)
+assert.ok(paperRoster.characters.some(({ project }) => !project.enemyId && project.parts[0].x === paperGnawer.parts[0].x + 27))
 assert.equal(paperRoster.activeCharacterId, 'edited-gnawer')
 assert.equal(paperRoster.characters.filter(({ project }) => project.enemyId).length, ENEMY_DEFS.length)
 
@@ -390,11 +421,200 @@ oldEnemy.parts = [
 const oldEnemyRoster = normalizeShadowRoster({ characters: [{ id: 'gnawer-old', project: oldEnemy }], enemyArtPackVersion: 2 })
 assert.equal(installEnemyShadowProjects(oldEnemyRoster), true)
 const restored = oldEnemyRoster.characters.find(({ project }) => project.enemyId === 'gnawer').project
-assert.ok(restored.parts.some((part) => part.id === 'skull' && part.visual.type === 'shape'))
-assert.ok(restored.parts.every((part) => part.visual.type === 'shape'))
+assert.ok(restored.parts.some((part) => part.id === 'skull' && part.visual.type === 'texture'))
+assert.ok(restored.parts.every((part) => part.visual.type === 'texture'))
 assert.ok(!restored.parts.some((part) => part.id === 'head-art' || part.id === 'body-art'))
 assert.equal(oldEnemyRoster.characters.filter(({ project }) => project.enemyId === 'gnawer').length, 1)
 assert.equal(oldEnemyRoster.characters.filter(({ project }) => project.enemyId).length, ENEMY_DEFS.length)
+
+// V9 edits are archived, association/selection survive, and a second load is a no-op.
+const componentMigration = normalizeShadowRoster({ enemyArtPackVersion: 9, activeCharacterId: 'custom-six', characters: [{ id: 'custom-six',
+  project: createEnemyShadowProject(ENEMY_DEFS[0], { withComponentArt: false }) }] })
+componentMigration.characters[0].project.parts[0].visual = { type: 'texture', texture: '/personal.png', textureFit: 'cover' }
+const originalCustom = JSON.stringify(componentMigration.characters[0].project)
+assert.equal(installEnemyShadowProjects(componentMigration), true)
+assert.equal(componentMigration.activeCharacterId, 'custom-six')
+const archive = componentMigration.characters.find(({ project }) => !project.enemyId && project.parts[0].visual.texture === '/personal.png')
+assert.ok(archive)
+const beforeArchive = JSON.parse(originalCustom)
+assert.equal(JSON.stringify({ ...archive.project, name: beforeArchive.name, enemyId: beforeArchive.enemyId }), JSON.stringify(normalizeShadowProject(beforeArchive)))
+const afterFirstLoad = JSON.stringify(componentMigration)
+assert.equal(installEnemyShadowProjects(componentMigration), false)
+assert.equal(JSON.stringify(componentMigration), afterFirstLoad)
+
+// A saved V10 rig gets the elbow-chain offset and width update with custom edits.
+// Persistence must not apply it twice or replace other species / backups.
+const oldGnawer = JSON.parse(JSON.stringify(enemyProjects.find(p => p.enemyId === 'gnawer')))
+oldGnawer.joints.find(j => j.id === 'root').scaleX = 1
+for (const side of ['left', 'right']) {
+  const elbow = oldGnawer.joints.find(j => j.id === `${side}-elbow`)
+  elbow.y += 3
+  elbow.z -= 3
+}
+oldGnawer.joints.find(j => j.id === 'left-elbow').y -= 1.5
+oldGnawer.parts.find(p => p.id === 'right-palm').x += 2
+oldGnawer.name = 'custom gnawer'
+oldGnawer.animations.attack.tracks['joint:right-elbow'][1].rotationZ += 7
+const elbowRoster = normalizeShadowRoster({ enemyArtPackVersion: 10, activeCharacterId: 'elbow-edit', characters: [
+  { id: 'elbow-edit', project: oldGnawer },
+  { id: 'other-edit', project: enemyProjects.find(p => p.enemyId === 'nest-spider') },
+  { id: 'old-backup', project: { ...oldGnawer, enemyId: null } },
+] })
+const expectedElbowRoster = JSON.parse(JSON.stringify(elbowRoster))
+expectedElbowRoster.enemyArtPackVersion = ENEMY_ART_PACK_VERSION
+expectedElbowRoster.characters[0].project.joints.find(j => j.id === 'root').scaleX = 1.15
+for (const side of ['left', 'right']) {
+  const elbow = expectedElbowRoster.characters[0].project.joints.find(j => j.id === `${side}-elbow`)
+  elbow.y -= 3
+  elbow.z += 3
+}
+assert.equal(installEnemyShadowProjects(elbowRoster), true)
+expectedElbowRoster.characters.push(...elbowRoster.characters.slice(3))
+assert.deepEqual(elbowRoster, expectedElbowRoster)
+const reloadedElbowRoster = normalizeShadowRoster(elbowRoster)
+const savedElbowSnapshot = JSON.stringify(reloadedElbowRoster)
+assert.equal(installEnemyShadowProjects(reloadedElbowRoster), false)
+assert.equal(JSON.stringify(reloadedElbowRoster), savedElbowSnapshot)
+// Geometry-only personal replacements are not mistaken for component art.
+const personalElbowRoster = normalizeShadowRoster({ enemyArtPackVersion: 10, characters: [
+  { id: 'geometric', project: createEnemyShadowProject(ENEMY_DEFS[0], { withComponentArt: false }) },
+] })
+const personalElbowSnapshot = JSON.stringify(personalElbowRoster.characters)
+assert.equal(installEnemyShadowProjects(personalElbowRoster), true)
+assert.equal(JSON.stringify(personalElbowRoster.characters.slice(0, 1)), personalElbowSnapshot)
+
+// V11 -> V12 widens just the two narrow rigs. Custom proportions, poses,
+// associations and detached backups survive, and persisted loads are a no-op.
+const widthRoster = normalizeShadowRoster({ enemyArtPackVersion: 11, activeCharacterId: 'wide-cub', characters: [
+  { id: 'wide-gnawer', project: enemyProjects.find(p => p.enemyId === 'gnawer') },
+  { id: 'wide-cub', project: enemyProjects.find(p => p.enemyId === 'tide-shadow-cub') },
+  { id: 'unchanged', project: enemyProjects.find(p => p.enemyId === 'emberwing-moth') },
+  { id: 'detached', project: { ...enemyProjects[0], enemyId: null } },
+] })
+for (const { project } of widthRoster.characters.slice(0, 2)) project.joints.find(j => j.id === 'root').scaleX = 1.07
+widthRoster.characters[1].project.parts[0].y += 5
+const expectedWidthRoster = structuredClone(widthRoster)
+expectedWidthRoster.enemyArtPackVersion = ENEMY_ART_PACK_VERSION
+for (const { project } of expectedWidthRoster.characters.slice(0, 2)) project.joints.find(j => j.id === 'root').scaleX *= 1.15
+assert.equal(installEnemyShadowProjects(widthRoster), true)
+expectedWidthRoster.characters.push(...widthRoster.characters.slice(4))
+assert.deepEqual(widthRoster, expectedWidthRoster)
+const persistedWidthRoster = normalizeShadowRoster(JSON.parse(JSON.stringify(widthRoster)))
+assert.equal(JSON.stringify(persistedWidthRoster), JSON.stringify(widthRoster))
+assert.equal(installEnemyShadowProjects(persistedWidthRoster), false)
+assert.equal(JSON.stringify(persistedWidthRoster), JSON.stringify(expectedWidthRoster))
+
+// V12 installs the following two non-contiguous batches. The original six
+// component rigs and all other species stay byte-for-byte intact. Edited geometry is
+// retained as a detached backup, with selection and enemy association stable.
+const postV12Ids = [...BATCH2_COMPONENT_ENEMY_IDS, ...BATCH3_COMPONENT_ENEMY_IDS, ...BATCH4_COMPONENT_ENEMY_IDS]
+const batchRoster = normalizeShadowRoster({ enemyArtPackVersion: 12, activeCharacterId: 'batch-rot-walker',
+  characters: enemyProjects.map(project => ({ id: `batch-${project.enemyId}`, project: postV12Ids.includes(project.enemyId)
+    ? createEnemyShadowProject(ENEMY_DEFS.find(d => d.id === project.enemyId), { withComponentArt: false }) : project })) })
+const oldBatchProjects = new Map(batchRoster.characters.map(c => [c.project.enemyId, JSON.stringify(c.project)]))
+const customWalker = batchRoster.characters.find(c => c.project.enemyId === 'rot-walker')
+customWalker.project.parts[0].width += 13
+const customWalkerSnapshot = normalizeShadowProject({ ...customWalker.project, name: `${customWalker.project.name} · 旧版备份`, enemyId: null })
+assert.equal(installEnemyShadowProjects(batchRoster), true)
+assert.equal(batchRoster.activeCharacterId, 'batch-rot-walker')
+assert.equal(batchRoster.characters.length, ENEMY_DEFS.length + 1)
+assert.deepEqual(batchRoster.characters.find(c => !c.project.enemyId).project, customWalkerSnapshot)
+for (const { project } of batchRoster.characters) {
+  if (!project.enemyId) continue
+  if (!postV12Ids.includes(project.enemyId)) assert.equal(JSON.stringify(project), oldBatchProjects.get(project.enemyId))
+  else assert.ok(project.parts.every(p => p.visual.texture?.startsWith(`/assets/enemies/components-v1/${project.enemyId}/`)))
+}
+const reloadedBatch = normalizeShadowRoster(JSON.parse(JSON.stringify(batchRoster)))
+const installedBatchSnapshot = JSON.stringify(reloadedBatch)
+assert.equal(installEnemyShadowProjects(reloadedBatch), false)
+assert.equal(JSON.stringify(reloadedBatch), installedBatchSnapshot)
+
+// V13 -> V14 replaces only this batch, preserving the other 27 projects,
+// including edits to the twelve existing component rigs and their poses.
+const postV13Ids = [...BATCH3_COMPONENT_ENEMY_IDS, ...BATCH4_COMPONENT_ENEMY_IDS]
+const thirdBatchRoster = normalizeShadowRoster({ enemyArtPackVersion: 13, activeCharacterId: 'third-drown-shadow-hunter',
+  characters: enemyProjects.map(project => ({ id: `third-${project.enemyId}`, project: postV13Ids.includes(project.enemyId)
+    ? createEnemyShadowProject(ENEMY_DEFS.find(d => d.id === project.enemyId), { withComponentArt: false }) : project })) })
+thirdBatchRoster.characters.find(c => c.project.enemyId === 'wisp').project.parts[0].x += 9
+const oldThirdProjects = new Map(thirdBatchRoster.characters.map(c => [c.project.enemyId, JSON.stringify(c.project)]))
+const customHunter = thirdBatchRoster.characters.find(c => c.project.enemyId === 'drown-shadow-hunter')
+customHunter.project.parts[0].width += 11
+const customHunterSnapshot = normalizeShadowProject({ ...customHunter.project, name: `${customHunter.project.name} · 旧版备份`, enemyId: null })
+assert.equal(installEnemyShadowProjects(thirdBatchRoster), true)
+assert.equal(thirdBatchRoster.activeCharacterId, 'third-drown-shadow-hunter')
+assert.equal(thirdBatchRoster.enemyArtPackVersion, ENEMY_ART_PACK_VERSION)
+assert.equal(thirdBatchRoster.characters.length, ENEMY_DEFS.length + 1)
+assert.deepEqual(thirdBatchRoster.characters.find(c => !c.project.enemyId).project, customHunterSnapshot)
+for (const { project } of thirdBatchRoster.characters) {
+  if (!project.enemyId) continue
+  if (!postV13Ids.includes(project.enemyId)) assert.equal(JSON.stringify(project), oldThirdProjects.get(project.enemyId))
+  else assert.ok(project.parts.every(p => p.visual.texture?.startsWith(`/assets/enemies/components-v1/${project.enemyId}/`)))
+}
+const persistedThird = normalizeShadowRoster(JSON.parse(JSON.stringify(thirdBatchRoster)))
+const thirdSnapshot = JSON.stringify(persistedThird)
+assert.equal(installEnemyShadowProjects(persistedThird), false)
+assert.equal(JSON.stringify(persistedThird), thirdSnapshot)
+
+// V14 replaces only the seven new component rigs. Earlier component art,
+// personal edits and the selected ID survive; persisted loads are a no-op.
+const fourthRoster = normalizeShadowRoster({ enemyArtPackVersion: 14, activeCharacterId: 'fourth-bomb-wisp',
+  characters: enemyProjects.map(project => ({ id: `fourth-${project.enemyId}`, project: BATCH4_COMPONENT_ENEMY_IDS.includes(project.enemyId)
+    ? createEnemyShadowProject(ENEMY_DEFS.find(d => d.id === project.enemyId), { withComponentArt: false }) : project })) })
+fourthRoster.characters.find(c => c.project.enemyId === 'cinder-curse-lamp-swarm').project.parts[0].x += 7
+const originalFourth = new Map(fourthRoster.characters.map(c => [c.project.enemyId, JSON.stringify(c.project)]))
+const customBomb = fourthRoster.characters.find(c => c.project.enemyId === 'bomb-wisp')
+customBomb.project.parts[0].width += 9
+const customBombBackup = normalizeShadowProject({ ...customBomb.project, name: `${customBomb.project.name} · 旧版备份`, enemyId: null })
+assert.equal(installEnemyShadowProjects(fourthRoster), true)
+assert.equal(fourthRoster.activeCharacterId, 'fourth-bomb-wisp')
+assert.equal(fourthRoster.enemyArtPackVersion, ENEMY_ART_PACK_VERSION)
+assert.equal(fourthRoster.characters.length, ENEMY_DEFS.length + 1)
+assert.deepEqual(fourthRoster.characters.find(c => !c.project.enemyId).project, customBombBackup)
+for (const { project } of fourthRoster.characters) {
+  if (!project.enemyId) continue
+  if (!BATCH4_COMPONENT_ENEMY_IDS.includes(project.enemyId)) assert.equal(JSON.stringify(project), originalFourth.get(project.enemyId))
+  else assert.ok(project.parts.every(part => part.visual.texture?.startsWith(`/assets/enemies/components-v1/${project.enemyId}/`)))
+}
+const persistedFourth = normalizeShadowRoster(JSON.parse(JSON.stringify(fourthRoster)))
+const fourthSnapshot = JSON.stringify(persistedFourth)
+assert.equal(installEnemyShadowProjects(persistedFourth), false)
+assert.equal(JSON.stringify(persistedFourth), fourthSnapshot)
+
+// Every part and hinge keeps its exact transform relative to the root in
+// rest and all five actions, so stretching cannot separate textured seams.
+for (const id of ['gnawer', 'tide-shadow-cub']) {
+  const wide = normalizeShadowProject(enemyProjects.find(p => p.enemyId === id))
+  const narrow = JSON.parse(JSON.stringify(wide))
+  narrow.joints.find(j => j.id === 'root').scaleX /= 1.15
+  for (const action of [null, 'idle', 'move', 'attack', 'hit', 'death']) {
+    for (const fraction of [0, .27, .64, .85, 1]) {
+      const time = (wide.animations[action]?.duration || 0) * fraction
+      const a = evaluateShadowProject(wide, action, time), b = evaluateShadowProject(narrow, action, time)
+      const aRoot = a.jointsById.get('root').matrix, bRoot = b.jointsById.get('root').matrix
+      const stretch = aRoot.clone().multiply(bRoot.clone().invert())
+      for (const type of ['joints', 'parts']) for (let i = 0; i < a[type].length; i++) {
+        const expected = stretch.clone().multiply(b[type][i].matrix)
+        a[type][i].matrix.elements.forEach((value, axis) => near(value, expected.elements[axis]))
+      }
+    }
+  }
+}
+for (const id of COMPONENT_ENEMY_IDS) {
+  const project = enemyProjects.find(p => p.enemyId === id)
+  for (const action of ['idle', 'move', 'attack', 'hit', 'death']) {
+    const animation = project.animations[action]
+    for (const [target, frames] of Object.entries(animation.tracks)) if (target.startsWith('joint:') && target !== 'joint:root') {
+      assert.ok(frames.every(f => f.dx === 0 && f.dy === 0 && f.dz === 0), `${id}/${action}/${target}: textured hinge drift`)
+    }
+    const first = evaluateShadowProject(project, action, 0)
+    const last = evaluateShadowProject(project, action, animation.duration)
+    const beyond = evaluateShadowProject(project, action, animation.duration + 1000)
+    for (let i = 0; i < first.parts.length; i++) {
+      if (animation.loop) first.parts[i].matrix.elements.forEach((value, axis) => near(value, last.parts[i].matrix.elements[axis]))
+      if (action === 'death') last.parts[i].matrix.elements.forEach((value, axis) => near(value, beyond.parts[i].matrix.elements[axis]))
+    }
+  }
+}
 
 const editState = { parts: [{ id: 'p', x: 0 }], name: 'first' }
 const history = new ShadowHistory(editState)

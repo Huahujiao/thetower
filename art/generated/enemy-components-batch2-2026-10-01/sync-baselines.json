@@ -1,0 +1,12 @@
+{
+  "src/animation/enemy-component-assets.json": "137377e247bda55c4ff4ceb8c2b6b99b695897921c2dc8d8f9586aab08a66e1e",
+  "src/animation/shadow-enemy-components.js": "92bb54f050ba50270e6904cb92e9a4eb96bb4f1778d6ed5fa2f377a314442b7b",
+  "src/animation/shadow-enemies.js": "1b1fd5cae68523fb9e0a13ca8f925544a9209e053ee05ca8a41f7bb7d2c258d8",
+  "scripts/shadow-rig-check.mjs": "89f3911c61e981c214dd7f540b935d5f11ed0dbad8789e21529bf9daa9c5fc47",
+  "tools/enemy-component-browser.mjs": "42d6f21d62d15458f689fec8bd962d8fbe28270de737d7551d98c489a7953dcd",
+  "scripts/build-enemy-component-review.py": "b3f7de55271ae4fcb899d0540fe475a12f120f50424884b78fb7e2fbc815f501",
+  "tools/sync-enemy-components.mjs": "bd01e60af1905eaa7cae4e43716b14c9414bf930d3fecee47f65a40ada558988",
+  "tools/enemy-component-review.html": "99d13659b49dd638ef2f66a71b150b99affc22219e1b3f534e32ebfa82a916f5",
+  "tools/enemy-size-review.html": "ec0eb01626cfec1e744ab031a342809c660201e94fecd4af9a2485af44f3d3a7",
+  "src/render/enemy-puppet.js": "60ecc0bfb4b366a4692df01b85b6db0d8d71215d55fd82a5560a213130945c37"
+}

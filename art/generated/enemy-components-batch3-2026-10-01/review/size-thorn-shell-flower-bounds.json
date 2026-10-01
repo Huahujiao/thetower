@@ -1,0 +1,227 @@
+[
+  {
+    "enemy": "thorn-shell-flower",
+    "action": "idle",
+    "fraction": 0,
+    "left": 49,
+    "right": 109,
+    "top": 13,
+    "bottom": 127
+  },
+  {
+    "enemy": "thorn-shell-flower",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 48,
+    "right": 109,
+    "top": 13,
+    "bottom": 127
+  },
+  {
+    "enemy": "thorn-shell-flower",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 48,
+    "right": 109,
+    "top": 13,
+    "bottom": 127
+  },
+  {
+    "enemy": "thorn-shell-flower",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 48,
+    "right": 109,
+    "top": 13,
+    "bottom": 127
+  },
+  {
+    "enemy": "thorn-shell-flower",
+    "action": "idle",
+    "fraction": 1,
+    "left": 49,
+    "right": 109,
+    "top": 13,
+    "bottom": 127
+  },
+  {
+    "enemy": "thorn-shell-flower",
+    "action": "move",
+    "fraction": 0,
+    "left": 49,
+    "right": 109,
+    "top": 13,
+    "bottom": 127
+  },
+  {
+    "enemy": "thorn-shell-flower",
+    "action": "move",
+    "fraction": 0.27,
+    "left": 43,
+    "right": 109,
+    "top": 16,
+    "bottom": 126
+  },
+  {
+    "enemy": "thorn-shell-flower",
+    "action": "move",
+    "fraction": 0.64,
+    "left": 49,
+    "right": 109,
+    "top": 13,
+    "bottom": 126
+  },
+  {
+    "enemy": "thorn-shell-flower",
+    "action": "move",
+    "fraction": 0.85,
+    "left": 51,
+    "right": 111,
+    "top": 14,
+    "bottom": 127
+  },
+  {
+    "enemy": "thorn-shell-flower",
+    "action": "move",
+    "fraction": 1,
+    "left": 49,
+    "right": 109,
+    "top": 13,
+    "bottom": 127
+  },
+  {
+    "enemy": "thorn-shell-flower",
+    "action": "attack",
+    "fraction": 0,
+    "left": 49,
+    "right": 109,
+    "top": 13,
+    "bottom": 127
+  },
+  {
+    "enemy": "thorn-shell-flower",
+    "action": "attack",
+    "fraction": 0.27,
+    "left": 55,
+    "right": 111,
+    "top": 15,
+    "bottom": 127
+  },
+  {
+    "enemy": "thorn-shell-flower",
+    "action": "attack",
+    "fraction": 0.64,
+    "left": 39,
+    "right": 108,
+    "top": 16,
+    "bottom": 128
+  },
+  {
+    "enemy": "thorn-shell-flower",
+    "action": "attack",
+    "fraction": 0.85,
+    "left": 41,
+    "right": 109,
+    "top": 14,
+    "bottom": 128
+  },
+  {
+    "enemy": "thorn-shell-flower",
+    "action": "attack",
+    "fraction": 1,
+    "left": 49,
+    "right": 109,
+    "top": 13,
+    "bottom": 127
+  },
+  {
+    "enemy": "thorn-shell-flower",
+    "action": "hit",
+    "fraction": 0,
+    "left": 49,
+    "right": 109,
+    "top": 13,
+    "bottom": 127
+  },
+  {
+    "enemy": "thorn-shell-flower",
+    "action": "hit",
+    "fraction": 0.27,
+    "left": 38,
+    "right": 114,
+    "top": 19,
+    "bottom": 126
+  },
+  {
+    "enemy": "thorn-shell-flower",
+    "action": "hit",
+    "fraction": 0.64,
+    "left": 43,
+    "right": 112,
+    "top": 15,
+    "bottom": 127
+  },
+  {
+    "enemy": "thorn-shell-flower",
+    "action": "hit",
+    "fraction": 0.85,
+    "left": 47,
+    "right": 110,
+    "top": 14,
+    "bottom": 127
+  },
+  {
+    "enemy": "thorn-shell-flower",
+    "action": "hit",
+    "fraction": 1,
+    "left": 49,
+    "right": 109,
+    "top": 13,
+    "bottom": 127
+  },
+  {
+    "enemy": "thorn-shell-flower",
+    "action": "death",
+    "fraction": 0,
+    "left": 49,
+    "right": 109,
+    "top": 13,
+    "bottom": 127
+  },
+  {
+    "enemy": "thorn-shell-flower",
+    "action": "death",
+    "fraction": 0.27,
+    "left": 43,
+    "right": 108,
+    "top": 15,
+    "bottom": 130
+  },
+  {
+    "enemy": "thorn-shell-flower",
+    "action": "death",
+    "fraction": 0.64,
+    "left": 40,
+    "right": 107,
+    "top": 20,
+    "bottom": 134
+  },
+  {
+    "enemy": "thorn-shell-flower",
+    "action": "death",
+    "fraction": 0.85,
+    "left": 42,
+    "right": 107,
+    "top": 28,
+    "bottom": 135
+  },
+  {
+    "enemy": "thorn-shell-flower",
+    "action": "death",
+    "fraction": 1,
+    "left": 48,
+    "right": 107,
+    "top": 35,
+    "bottom": 137
+  }
+]

@@ -1,21 +1,16 @@
-import { createMonster } from '../data/content.js'
 import { posKey, manhattan } from '../core/geometry.js'
 
 export const TACTICAL_LAYOUT_LABELS = Object.freeze({ scattered: '散布', firing: '开阔射线', wall: '靠墙敌阵' })
 
 // Place the initial enemies in a readable formation. Doors, keys and merchants
 // take precedence; the remaining cards are populated after this layout is set.
-export function arrangeTacticalEnemies(room, reserved, kind) {
+export function arrangeTacticalEnemies(room, reserved, kind, placeEnemy) {
   room.tacticalLayout = 'scattered'
   room.tacticalCells = []
   const targetFree = p => room.isEmpty(p) && !reserved.has(posKey(p))
   const empty = p => room.contains(p) && room.isEmpty(p)
   const place = (targets, approaches) => {
-    for (const [index, p] of targets.entries()) {
-      const enemy = createMonster(room.chapter, index + (room.chapter - 1) * 3)
-      enemy.pos = { ...p }
-      room.addEntity(enemy)
-    }
+    for (const p of targets) placeEnemy(p)
     room.tacticalLayout = kind
     room.tacticalCells = approaches.map(p => ({ ...p }))
     return targets.length

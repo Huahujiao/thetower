@@ -1,0 +1,227 @@
+[
+  {
+    "enemy": "sentry-crossbow",
+    "action": "idle",
+    "fraction": 0,
+    "left": 43,
+    "right": 115,
+    "top": 39,
+    "bottom": 132
+  },
+  {
+    "enemy": "sentry-crossbow",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 44,
+    "right": 116,
+    "top": 39,
+    "bottom": 131
+  },
+  {
+    "enemy": "sentry-crossbow",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 44,
+    "right": 116,
+    "top": 39,
+    "bottom": 131
+  },
+  {
+    "enemy": "sentry-crossbow",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 43,
+    "right": 116,
+    "top": 39,
+    "bottom": 131
+  },
+  {
+    "enemy": "sentry-crossbow",
+    "action": "idle",
+    "fraction": 1,
+    "left": 43,
+    "right": 115,
+    "top": 39,
+    "bottom": 132
+  },
+  {
+    "enemy": "sentry-crossbow",
+    "action": "move",
+    "fraction": 0,
+    "left": 43,
+    "right": 115,
+    "top": 39,
+    "bottom": 132
+  },
+  {
+    "enemy": "sentry-crossbow",
+    "action": "move",
+    "fraction": 0.27,
+    "left": 43,
+    "right": 118,
+    "top": 39,
+    "bottom": 130
+  },
+  {
+    "enemy": "sentry-crossbow",
+    "action": "move",
+    "fraction": 0.64,
+    "left": 45,
+    "right": 114,
+    "top": 38,
+    "bottom": 131
+  },
+  {
+    "enemy": "sentry-crossbow",
+    "action": "move",
+    "fraction": 0.85,
+    "left": 44,
+    "right": 114,
+    "top": 38,
+    "bottom": 131
+  },
+  {
+    "enemy": "sentry-crossbow",
+    "action": "move",
+    "fraction": 1,
+    "left": 43,
+    "right": 115,
+    "top": 39,
+    "bottom": 132
+  },
+  {
+    "enemy": "sentry-crossbow",
+    "action": "attack",
+    "fraction": 0,
+    "left": 43,
+    "right": 115,
+    "top": 39,
+    "bottom": 132
+  },
+  {
+    "enemy": "sentry-crossbow",
+    "action": "attack",
+    "fraction": 0.27,
+    "left": 44,
+    "right": 113,
+    "top": 39,
+    "bottom": 133
+  },
+  {
+    "enemy": "sentry-crossbow",
+    "action": "attack",
+    "fraction": 0.64,
+    "left": 44,
+    "right": 119,
+    "top": 41,
+    "bottom": 129
+  },
+  {
+    "enemy": "sentry-crossbow",
+    "action": "attack",
+    "fraction": 0.85,
+    "left": 43,
+    "right": 117,
+    "top": 40,
+    "bottom": 131
+  },
+  {
+    "enemy": "sentry-crossbow",
+    "action": "attack",
+    "fraction": 1,
+    "left": 43,
+    "right": 115,
+    "top": 39,
+    "bottom": 132
+  },
+  {
+    "enemy": "sentry-crossbow",
+    "action": "hit",
+    "fraction": 0,
+    "left": 43,
+    "right": 115,
+    "top": 39,
+    "bottom": 132
+  },
+  {
+    "enemy": "sentry-crossbow",
+    "action": "hit",
+    "fraction": 0.27,
+    "left": 56,
+    "right": 125,
+    "top": 41,
+    "bottom": 136
+  },
+  {
+    "enemy": "sentry-crossbow",
+    "action": "hit",
+    "fraction": 0.64,
+    "left": 51,
+    "right": 121,
+    "top": 40,
+    "bottom": 134
+  },
+  {
+    "enemy": "sentry-crossbow",
+    "action": "hit",
+    "fraction": 0.85,
+    "left": 46,
+    "right": 118,
+    "top": 40,
+    "bottom": 132
+  },
+  {
+    "enemy": "sentry-crossbow",
+    "action": "hit",
+    "fraction": 1,
+    "left": 43,
+    "right": 115,
+    "top": 39,
+    "bottom": 132
+  },
+  {
+    "enemy": "sentry-crossbow",
+    "action": "death",
+    "fraction": 0,
+    "left": 43,
+    "right": 115,
+    "top": 39,
+    "bottom": 132
+  },
+  {
+    "enemy": "sentry-crossbow",
+    "action": "death",
+    "fraction": 0.27,
+    "left": 49,
+    "right": 122,
+    "top": 42,
+    "bottom": 136
+  },
+  {
+    "enemy": "sentry-crossbow",
+    "action": "death",
+    "fraction": 0.64,
+    "left": 56,
+    "right": 130,
+    "top": 49,
+    "bottom": 145
+  },
+  {
+    "enemy": "sentry-crossbow",
+    "action": "death",
+    "fraction": 0.85,
+    "left": 54,
+    "right": 128,
+    "top": 54,
+    "bottom": 148
+  },
+  {
+    "enemy": "sentry-crossbow",
+    "action": "death",
+    "fraction": 1,
+    "left": 55,
+    "right": 124,
+    "top": 58,
+    "bottom": 148
+  }
+]

@@ -1,7 +1,8 @@
-import { createBoss, createEnemyById, createGoldEntity, createKeyEntity, createLootEntity, createMonster, makeItemById, nextEntityId, randomNeutralItem, randomWeapon, resetEntityIds, synchronizeEntityIds } from '../data/content.js'
+import { createBoss, createEnemyById, createGoldEntity, createKeyEntity, createLootEntity, makeItemById, nextEntityId, randomNeutralItem, randomWeapon, resetEntityIds, synchronizeEntityIds } from '../data/content.js'
+import { buildEnemyEncounter, enemyCountForRoom } from '../data/enemies.js'
 import { createMerchantEntity } from '../data/merchants.js'
 import { createTrapEntity, randomTrapId } from '../data/traps.js'
-import { neighbors8, pos, posKey } from '../core/geometry.js'
+import { chebyshev, neighbors8, pos, posKey } from '../core/geometry.js'
 import { Room } from './room.js'
 import { arrangeTacticalEnemies } from './tactical-layouts.js'
 
@@ -126,14 +127,14 @@ function shuffled(values, random) {
   return copy
 }
 
-function randomOpenPosition(room, reserved, random, { requiresEmptyNeighbor = false } = {}) {
+function randomOpenPosition(room, reserved, random, { requiresEmptyNeighbor = false, accept = () => true } = {}) {
   const positions = []
   for (let r = 0; r < room.height; r++) {
     for (let c = 0; c < room.width; c++) {
       const candidate = pos(c, r)
       const hasEmptyNeighbor = neighbors8(candidate, room.width, room.height)
         .some((neighbor) => !reserved.has(posKey(neighbor)) && room.isEmpty(neighbor))
-      if (!reserved.has(posKey(candidate)) && room.isEmpty(candidate) && (!requiresEmptyNeighbor || hasEmptyNeighbor)) positions.push(candidate)
+      if (!reserved.has(posKey(candidate)) && room.isEmpty(candidate) && accept(candidate) && (!requiresEmptyNeighbor || hasEmptyNeighbor)) positions.push(candidate)
     }
   }
   return shuffled(positions, random)[0] || null
@@ -353,12 +354,13 @@ export function validateDungeonLayout(dungeon) {
   return true
 }
 
-function addMonster(room, reserved, random, index) {
-  const position = randomOpenPosition(room, reserved, random)
+function addMonster(room, reserved, random, placeEnemy, enemyId) {
+  const position = randomOpenPosition(room, reserved, random, {
+    accept: (candidate) => !(room.chapter === 1 && room.role === 'entry' && enemyId !== 'gnawer')
+      || chebyshev(candidate, room.entry) > 1,
+  })
   if (!position) return false
-  const monster = createMonster(room.chapter, Math.floor(random() * 10000) + index)
-  monster.pos = position
-  room.addEntity(monster)
+  placeEnemy(position)
   return true
 }
 
@@ -386,11 +388,13 @@ function addTrap(room, reserved, random) {
 function populateRoom(room, reserved, random, config) {
   const role = room.role
   const cardCount = room.width * room.height
-  const targetEnemyCount = Math.round(cardCount * 0.25)
+  const targetEnemyCount = enemyCountForRoom(room)
   const targetWeaponCount = Math.round(cardCount * 0.25)
   const targetCount = Math.ceil(cardCount * 0.95)
   const layoutKind = ['scattered', 'firing', 'wall'][(Number(room.id.split('-').at(-1)) - 1) % 3]
-  let monsterIndex = role === 'boss' || role === 'supply' ? 0 : arrangeTacticalEnemies(room, reserved, layoutKind)
+  const encounter = buildEnemyEncounter(room.chapter, role, targetEnemyCount - (role === 'boss' ? 1 : 0), random)
+  const placeEnemy = (position) => room.addEntity(createEnemyById(encounter.shift(), position))
+  if (role !== 'boss' && role !== 'supply') arrangeTacticalEnemies(room, reserved, layoutKind, placeEnemy)
   if (role === 'boss') {
     const position = randomOpenPosition(room, reserved, random)
     if (!position) throw new Error(`Could not place boss in ${room.id}`)
@@ -403,8 +407,7 @@ function populateRoom(room, reserved, random, config) {
     room.addEntity(boss)
   }
   let enemyCount = [...room.entities.values()].filter((entity) => entity.kind === 'enemy').length
-  while (enemyCount < targetEnemyCount && addMonster(room, reserved, random, monsterIndex)) {
-    monsterIndex += 1
+  while (enemyCount < targetEnemyCount && addMonster(room, reserved, random, placeEnemy, encounter[0])) {
     enemyCount += 1
   }
   for (const itemId of role === 'supply' ? ['health-potion', 'iron-powder'] : []) {

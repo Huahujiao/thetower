@@ -2,6 +2,110 @@
 // Keep every URL literal so Vite fingerprints and copies both runtime sizes.
 // The HUD starts with the small image, then upgrades to medium after decoding.
 const ITEM_SPRITE_SOURCES = Object.freeze({
+  'butcher-knife': {
+    small: new URL('../assets/inventory/weapon-butcher-knife-v2-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/weapon-butcher-knife-v2-medium.png', import.meta.url).href,
+  },
+  'hunter-shortbow': {
+    small: new URL('../assets/inventory/weapon-hunter-shortbow-v2-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/weapon-hunter-shortbow-v2-medium.png', import.meta.url).href,
+  },
+  'scouting-bow': {
+    small: new URL('../assets/inventory/weapon-scouting-bow-v2-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/weapon-scouting-bow-v2-medium.png', import.meta.url).href,
+  },
+  'bounty-bow': {
+    small: new URL('../assets/inventory/weapon-bounty-bow-v2-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/weapon-bounty-bow-v2-medium.png', import.meta.url).href,
+  },
+  'demon-seeker': {
+    small: new URL('../assets/inventory/weapon-demon-seeker-v2-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/weapon-demon-seeker-v2-medium.png', import.meta.url).href,
+  },
+  'r-vampire-fang': {
+    small: new URL('../assets/inventory/relic-vampire-fang-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/relic-vampire-fang-v1-medium.png', import.meta.url).href,
+  },
+  'r-feeding-charm': {
+    small: new URL('../assets/inventory/relic-feeding-charm-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/relic-feeding-charm-v1-medium.png', import.meta.url).href,
+  },
+  'r-pack-hunt': {
+    small: new URL('../assets/inventory/relic-pack-hunt-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/relic-pack-hunt-v1-medium.png', import.meta.url).href,
+  },
+  'r-hunting-horn': {
+    small: new URL('../assets/inventory/relic-hunting-horn-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/relic-hunting-horn-v1-medium.png', import.meta.url).href,
+  },
+  'r-far-whistle': {
+    small: new URL('../assets/inventory/relic-far-whistle-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/relic-far-whistle-v1-medium.png', import.meta.url).href,
+  },
+  'r-totem-soul': {
+    small: new URL('../assets/inventory/relic-totem-soul-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/relic-totem-soul-v1-medium.png', import.meta.url).href,
+  },
+  'r-totem-gas': {
+    small: new URL('../assets/inventory/relic-totem-gas-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/relic-totem-gas-v1-medium.png', import.meta.url).href,
+  },
+  'r-totem-bind': {
+    small: new URL('../assets/inventory/relic-totem-bind-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/relic-totem-bind-v1-medium.png', import.meta.url).href,
+  },
+  'r-totem-spirit': {
+    small: new URL('../assets/inventory/relic-totem-spirit-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/relic-totem-spirit-v1-medium.png', import.meta.url).href,
+  },
+  'r-totem-breath': {
+    small: new URL('../assets/inventory/relic-totem-breath-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/relic-totem-breath-v1-medium.png', import.meta.url).href,
+  },
+  'r-totem-ward': {
+    small: new URL('../assets/inventory/relic-totem-ward-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/relic-totem-ward-v1-medium.png', import.meta.url).href,
+  },
+  'r-totem-drum': {
+    small: new URL('../assets/inventory/relic-totem-drum-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/relic-totem-drum-v1-medium.png', import.meta.url).href,
+  },
+  'r-launcher': {
+    small: new URL('../assets/inventory/relic-launcher-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/relic-launcher-v1-medium.png', import.meta.url).href,
+  },
+  'r-chain-drink': {
+    small: new URL('../assets/inventory/relic-chain-drink-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/relic-chain-drink-v1-medium.png', import.meta.url).href,
+  },
+  'r-loot-pouch': {
+    small: new URL('../assets/inventory/relic-loot-pouch-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/relic-loot-pouch-v1-medium.png', import.meta.url).href,
+  },
+  'r-pill-ticket': {
+    small: new URL('../assets/inventory/relic-pill-ticket-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/relic-pill-ticket-v1-medium.png', import.meta.url).href,
+  },
+  'r-furnace': {
+    small: new URL('../assets/inventory/relic-furnace-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/relic-furnace-v1-medium.png', import.meta.url).href,
+  },
+  'r-gold-fuel': {
+    small: new URL('../assets/inventory/relic-gold-fuel-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/relic-gold-fuel-v1-medium.png', import.meta.url).href,
+  },
+  'r-wealth-scale': {
+    small: new URL('../assets/inventory/relic-wealth-scale-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/relic-wealth-scale-v1-medium.png', import.meta.url).href,
+  },
+  'r-range-mirror': {
+    small: new URL('../assets/inventory/relic-range-mirror-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/relic-range-mirror-v1-medium.png', import.meta.url).href,
+  },
+  'r-extreme-range': {
+    small: new URL('../assets/inventory/relic-extreme-range-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/relic-extreme-range-v1-medium.png', import.meta.url).href,
+  },
   'rust-sword': {
     small: new URL('../assets/inventory/weapon-rust-sword-v2-small.png', import.meta.url).href,
     medium: new URL('../assets/inventory/weapon-rust-sword-v2-medium.png', import.meta.url).href,

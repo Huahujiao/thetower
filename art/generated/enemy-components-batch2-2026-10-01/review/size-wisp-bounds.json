@@ -1,0 +1,227 @@
+[
+  {
+    "enemy": "wisp",
+    "action": "idle",
+    "fraction": 0,
+    "left": 53,
+    "right": 101,
+    "top": 24,
+    "bottom": 145
+  },
+  {
+    "enemy": "wisp",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 53,
+    "right": 103,
+    "top": 24,
+    "bottom": 144
+  },
+  {
+    "enemy": "wisp",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 53,
+    "right": 105,
+    "top": 24,
+    "bottom": 144
+  },
+  {
+    "enemy": "wisp",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 53,
+    "right": 102,
+    "top": 24,
+    "bottom": 144
+  },
+  {
+    "enemy": "wisp",
+    "action": "idle",
+    "fraction": 1,
+    "left": 53,
+    "right": 101,
+    "top": 24,
+    "bottom": 145
+  },
+  {
+    "enemy": "wisp",
+    "action": "move",
+    "fraction": 0,
+    "left": 53,
+    "right": 101,
+    "top": 24,
+    "bottom": 145
+  },
+  {
+    "enemy": "wisp",
+    "action": "move",
+    "fraction": 0.27,
+    "left": 52,
+    "right": 123,
+    "top": 24,
+    "bottom": 140
+  },
+  {
+    "enemy": "wisp",
+    "action": "move",
+    "fraction": 0.64,
+    "left": 53,
+    "right": 99,
+    "top": 23,
+    "bottom": 144
+  },
+  {
+    "enemy": "wisp",
+    "action": "move",
+    "fraction": 0.85,
+    "left": 54,
+    "right": 99,
+    "top": 23,
+    "bottom": 143
+  },
+  {
+    "enemy": "wisp",
+    "action": "move",
+    "fraction": 1,
+    "left": 53,
+    "right": 101,
+    "top": 24,
+    "bottom": 145
+  },
+  {
+    "enemy": "wisp",
+    "action": "attack",
+    "fraction": 0,
+    "left": 53,
+    "right": 101,
+    "top": 24,
+    "bottom": 145
+  },
+  {
+    "enemy": "wisp",
+    "action": "attack",
+    "fraction": 0.27,
+    "left": 53,
+    "right": 102,
+    "top": 23,
+    "bottom": 145
+  },
+  {
+    "enemy": "wisp",
+    "action": "attack",
+    "fraction": 0.64,
+    "left": 53,
+    "right": 146,
+    "top": 25,
+    "bottom": 142
+  },
+  {
+    "enemy": "wisp",
+    "action": "attack",
+    "fraction": 0.85,
+    "left": 53,
+    "right": 124,
+    "top": 25,
+    "bottom": 144
+  },
+  {
+    "enemy": "wisp",
+    "action": "attack",
+    "fraction": 1,
+    "left": 53,
+    "right": 101,
+    "top": 24,
+    "bottom": 145
+  },
+  {
+    "enemy": "wisp",
+    "action": "hit",
+    "fraction": 0,
+    "left": 53,
+    "right": 101,
+    "top": 24,
+    "bottom": 145
+  },
+  {
+    "enemy": "wisp",
+    "action": "hit",
+    "fraction": 0.27,
+    "left": 50,
+    "right": 102,
+    "top": 24,
+    "bottom": 142
+  },
+  {
+    "enemy": "wisp",
+    "action": "hit",
+    "fraction": 0.64,
+    "left": 51,
+    "right": 100,
+    "top": 24,
+    "bottom": 144
+  },
+  {
+    "enemy": "wisp",
+    "action": "hit",
+    "fraction": 0.85,
+    "left": 52,
+    "right": 101,
+    "top": 24,
+    "bottom": 145
+  },
+  {
+    "enemy": "wisp",
+    "action": "hit",
+    "fraction": 1,
+    "left": 53,
+    "right": 101,
+    "top": 24,
+    "bottom": 145
+  },
+  {
+    "enemy": "wisp",
+    "action": "death",
+    "fraction": 0,
+    "left": 53,
+    "right": 101,
+    "top": 24,
+    "bottom": 145
+  },
+  {
+    "enemy": "wisp",
+    "action": "death",
+    "fraction": 0.27,
+    "left": 49,
+    "right": 118,
+    "top": 26,
+    "bottom": 144
+  },
+  {
+    "enemy": "wisp",
+    "action": "death",
+    "fraction": 0.64,
+    "left": 44,
+    "right": 124,
+    "top": 30,
+    "bottom": 133
+  },
+  {
+    "enemy": "wisp",
+    "action": "death",
+    "fraction": 0.85,
+    "left": 45,
+    "right": 123,
+    "top": 36,
+    "bottom": 121
+  },
+  {
+    "enemy": "wisp",
+    "action": "death",
+    "fraction": 1,
+    "left": 48,
+    "right": 124,
+    "top": 40,
+    "bottom": 115
+  }
+]

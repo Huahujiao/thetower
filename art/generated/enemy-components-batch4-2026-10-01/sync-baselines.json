@@ -1,0 +1,11 @@
+{
+  "src/animation/enemy-component-assets.json": "55811c6f3080b5d247e75035a0607738b1e0c3ab0dd41ec0f302ebf766267623",
+  "src/animation/shadow-enemy-components.js": "0bb30f9ee538d7238490280c060e73cc5d4a7d272583c2fea97289b7e92b5caa",
+  "src/animation/shadow-enemies.js": "a9b504cb48bca35ec2ef23c699d7030cc6940041e7723920c5cf767f1ebc3e5f",
+  "scripts/shadow-rig-check.mjs": "add15a9d75b02e38313f90dee14f4521ea4856a9c5520e084d0c4e41dc64a2bc",
+  "tools/enemy-component-browser.mjs": "ebc370b2788dc2ba4a2fe9e2ddcc30640fe043b79d253ff8e839044e93e47ec1",
+  "scripts/build-enemy-component-review.py": "56a863400ea9a2b1adb4e44203ea854892eda93880b9a1a7b8515757a07f2aff",
+  "tools/sync-enemy-components.mjs": "bc8090f154d0d12f6f7d199d7a5e1bb3b925b031f3ce2af312836919518b5fa1",
+  "scripts/record-enemy-component-batch2.mjs": "07b22000ea2a44538bacb477031d647600c16e3da8d5a9b65421fbef7bc9986f",
+  "src/render/enemy-puppet.js": "caceb9f8cd00436dd749723ec3d0cddfadeb67ffa21d886ce406e366824721da"
+}

@@ -11,7 +11,7 @@ export const CATALOG_PAGES = Object.freeze([
   { id: 'traps', title: '陷阱清单', summary: '触发与持续效果', section: 'catalog' },
   { id: 'weapons', title: '武器清单', summary: '属性、攻击、射程与占格', section: 'catalog' },
   { id: 'relics', title: '圣遗物清单', summary: '被动效果与获取来源', section: 'catalog' },
-  { id: 'talents', title: '天赋清单', summary: '三条路线与前置条件', section: 'catalog' },
+  { id: 'growth', title: '\u5347\u7ea7\u5956\u52b1\u6e05\u5355', summary: '\u516d\u79cd\u5956\u52b1\uff0c\u968f\u673a\u4e09\u9009\u4e00', section: 'catalog' },
   { id: 'items', title: '防具、消耗品与材料', summary: '效果、占格与来源', section: 'catalog' },
 ])
 
@@ -20,7 +20,7 @@ export const ARTICLE_PAGES = Object.freeze([
   { id: '02-dungeon', title: '地牢、卡牌与门', summary: '房间拓扑、翻牌与钥匙机关', section: 'rules', load: () => import('./wiki-articles/02-dungeon.js') },
   { id: '03-turn-and-combat', title: '回合、移动与战斗', summary: '行动顺序、体力与属性克制', section: 'rules', load: () => import('./wiki-articles/03-turn-and-combat.js') },
   { id: '04-inventory', title: '背包、物品与合成', summary: '占格、整理费用与合成规则', section: 'rules', load: () => import('./wiki-articles/04-inventory.js') },
-  { id: '06-progression', title: '升级、奖励与商店', summary: '天赋、房间奖励与获取渠道', section: 'rules', load: () => import('./wiki-articles/06-progression.js') },
+  { id: '06-progression', title: '升级、奖励与商店', summary: '升级奖励、房间奖励与获取渠道', section: 'rules', load: () => import('./wiki-articles/06-progression.js') },
   { id: '08-interface', title: '游戏界面与交互', summary: '触屏操作与视觉反馈', section: 'rules', load: () => import('./wiki-articles/08-interface.js') },
   { id: '05-items', title: '当前物品清单', summary: '物品效果与协同示例', section: 'reference', load: () => import('./wiki-articles/05-items.js') },
   { id: '07-enemies', title: '敌人、行为与陷阱', summary: '敌人数据、行动规则与陷阱', section: 'reference', load: () => import('./wiki-articles/07-enemies.js') },

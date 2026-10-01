@@ -1,0 +1,177 @@
+[
+  {
+    "id": "gnawer",
+    "action": "idle",
+    "fraction": 0,
+    "played": "113 / 1400 ms",
+    "path": "art/generated/enemy-components-2026-10-01/gnawer-elbow-v11/editor-gnawer-idle-0.png"
+  },
+  {
+    "id": "gnawer",
+    "action": "idle",
+    "fraction": 0.27,
+    "played": "113 / 1400 ms",
+    "path": "art/generated/enemy-components-2026-10-01/gnawer-elbow-v11/editor-gnawer-idle-0.27.png"
+  },
+  {
+    "id": "gnawer",
+    "action": "idle",
+    "fraction": 0.64,
+    "played": "113 / 1400 ms",
+    "path": "art/generated/enemy-components-2026-10-01/gnawer-elbow-v11/editor-gnawer-idle-0.64.png"
+  },
+  {
+    "id": "gnawer",
+    "action": "idle",
+    "fraction": 0.85,
+    "played": "113 / 1400 ms",
+    "path": "art/generated/enemy-components-2026-10-01/gnawer-elbow-v11/editor-gnawer-idle-0.85.png"
+  },
+  {
+    "id": "gnawer",
+    "action": "idle",
+    "fraction": 1,
+    "played": "113 / 1400 ms",
+    "path": "art/generated/enemy-components-2026-10-01/gnawer-elbow-v11/editor-gnawer-idle-1.png"
+  },
+  {
+    "id": "gnawer",
+    "action": "move",
+    "fraction": 0,
+    "played": "121 / 700 ms",
+    "path": "art/generated/enemy-components-2026-10-01/gnawer-elbow-v11/editor-gnawer-move-0.png"
+  },
+  {
+    "id": "gnawer",
+    "action": "move",
+    "fraction": 0.27,
+    "played": "121 / 700 ms",
+    "path": "art/generated/enemy-components-2026-10-01/gnawer-elbow-v11/editor-gnawer-move-0.27.png"
+  },
+  {
+    "id": "gnawer",
+    "action": "move",
+    "fraction": 0.64,
+    "played": "121 / 700 ms",
+    "path": "art/generated/enemy-components-2026-10-01/gnawer-elbow-v11/editor-gnawer-move-0.64.png"
+  },
+  {
+    "id": "gnawer",
+    "action": "move",
+    "fraction": 0.85,
+    "played": "121 / 700 ms",
+    "path": "art/generated/enemy-components-2026-10-01/gnawer-elbow-v11/editor-gnawer-move-0.85.png"
+  },
+  {
+    "id": "gnawer",
+    "action": "move",
+    "fraction": 1,
+    "played": "121 / 700 ms",
+    "path": "art/generated/enemy-components-2026-10-01/gnawer-elbow-v11/editor-gnawer-move-1.png"
+  },
+  {
+    "id": "gnawer",
+    "action": "attack",
+    "fraction": 0,
+    "played": "115 / 500 ms",
+    "path": "art/generated/enemy-components-2026-10-01/gnawer-elbow-v11/editor-gnawer-attack-0.png"
+  },
+  {
+    "id": "gnawer",
+    "action": "attack",
+    "fraction": 0.27,
+    "played": "115 / 500 ms",
+    "path": "art/generated/enemy-components-2026-10-01/gnawer-elbow-v11/editor-gnawer-attack-0.27.png"
+  },
+  {
+    "id": "gnawer",
+    "action": "attack",
+    "fraction": 0.64,
+    "played": "115 / 500 ms",
+    "path": "art/generated/enemy-components-2026-10-01/gnawer-elbow-v11/editor-gnawer-attack-0.64.png"
+  },
+  {
+    "id": "gnawer",
+    "action": "attack",
+    "fraction": 0.85,
+    "played": "115 / 500 ms",
+    "path": "art/generated/enemy-components-2026-10-01/gnawer-elbow-v11/editor-gnawer-attack-0.85.png"
+  },
+  {
+    "id": "gnawer",
+    "action": "attack",
+    "fraction": 1,
+    "played": "115 / 500 ms",
+    "path": "art/generated/enemy-components-2026-10-01/gnawer-elbow-v11/editor-gnawer-attack-1.png"
+  },
+  {
+    "id": "gnawer",
+    "action": "hit",
+    "fraction": 0,
+    "played": "114 / 380 ms",
+    "path": "art/generated/enemy-components-2026-10-01/gnawer-elbow-v11/editor-gnawer-hit-0.png"
+  },
+  {
+    "id": "gnawer",
+    "action": "hit",
+    "fraction": 0.27,
+    "played": "114 / 380 ms",
+    "path": "art/generated/enemy-components-2026-10-01/gnawer-elbow-v11/editor-gnawer-hit-0.27.png"
+  },
+  {
+    "id": "gnawer",
+    "action": "hit",
+    "fraction": 0.64,
+    "played": "114 / 380 ms",
+    "path": "art/generated/enemy-components-2026-10-01/gnawer-elbow-v11/editor-gnawer-hit-0.64.png"
+  },
+  {
+    "id": "gnawer",
+    "action": "hit",
+    "fraction": 0.85,
+    "played": "114 / 380 ms",
+    "path": "art/generated/enemy-components-2026-10-01/gnawer-elbow-v11/editor-gnawer-hit-0.85.png"
+  },
+  {
+    "id": "gnawer",
+    "action": "hit",
+    "fraction": 1,
+    "played": "114 / 380 ms",
+    "path": "art/generated/enemy-components-2026-10-01/gnawer-elbow-v11/editor-gnawer-hit-1.png"
+  },
+  {
+    "id": "gnawer",
+    "action": "death",
+    "fraction": 0,
+    "played": "121 / 800 ms",
+    "path": "art/generated/enemy-components-2026-10-01/gnawer-elbow-v11/editor-gnawer-death-0.png"
+  },
+  {
+    "id": "gnawer",
+    "action": "death",
+    "fraction": 0.27,
+    "played": "121 / 800 ms",
+    "path": "art/generated/enemy-components-2026-10-01/gnawer-elbow-v11/editor-gnawer-death-0.27.png"
+  },
+  {
+    "id": "gnawer",
+    "action": "death",
+    "fraction": 0.64,
+    "played": "121 / 800 ms",
+    "path": "art/generated/enemy-components-2026-10-01/gnawer-elbow-v11/editor-gnawer-death-0.64.png"
+  },
+  {
+    "id": "gnawer",
+    "action": "death",
+    "fraction": 0.85,
+    "played": "121 / 800 ms",
+    "path": "art/generated/enemy-components-2026-10-01/gnawer-elbow-v11/editor-gnawer-death-0.85.png"
+  },
+  {
+    "id": "gnawer",
+    "action": "death",
+    "fraction": 1,
+    "played": "121 / 800 ms",
+    "path": "art/generated/enemy-components-2026-10-01/gnawer-elbow-v11/editor-gnawer-death-1.png"
+  }
+]

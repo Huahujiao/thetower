@@ -1,0 +1,227 @@
+[
+  {
+    "enemy": "shellguard",
+    "action": "idle",
+    "fraction": 0,
+    "left": 45,
+    "right": 110,
+    "top": 41,
+    "bottom": 139
+  },
+  {
+    "enemy": "shellguard",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 45,
+    "right": 111,
+    "top": 41,
+    "bottom": 138
+  },
+  {
+    "enemy": "shellguard",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 45,
+    "right": 112,
+    "top": 41,
+    "bottom": 138
+  },
+  {
+    "enemy": "shellguard",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 45,
+    "right": 111,
+    "top": 41,
+    "bottom": 138
+  },
+  {
+    "enemy": "shellguard",
+    "action": "idle",
+    "fraction": 1,
+    "left": 45,
+    "right": 110,
+    "top": 41,
+    "bottom": 139
+  },
+  {
+    "enemy": "shellguard",
+    "action": "move",
+    "fraction": 0,
+    "left": 45,
+    "right": 110,
+    "top": 41,
+    "bottom": 139
+  },
+  {
+    "enemy": "shellguard",
+    "action": "move",
+    "fraction": 0.27,
+    "left": 43,
+    "right": 117,
+    "top": 40,
+    "bottom": 137
+  },
+  {
+    "enemy": "shellguard",
+    "action": "move",
+    "fraction": 0.64,
+    "left": 45,
+    "right": 110,
+    "top": 40,
+    "bottom": 138
+  },
+  {
+    "enemy": "shellguard",
+    "action": "move",
+    "fraction": 0.85,
+    "left": 46,
+    "right": 107,
+    "top": 40,
+    "bottom": 138
+  },
+  {
+    "enemy": "shellguard",
+    "action": "move",
+    "fraction": 1,
+    "left": 45,
+    "right": 110,
+    "top": 41,
+    "bottom": 139
+  },
+  {
+    "enemy": "shellguard",
+    "action": "attack",
+    "fraction": 0,
+    "left": 45,
+    "right": 110,
+    "top": 41,
+    "bottom": 139
+  },
+  {
+    "enemy": "shellguard",
+    "action": "attack",
+    "fraction": 0.27,
+    "left": 41,
+    "right": 105,
+    "top": 43,
+    "bottom": 138
+  },
+  {
+    "enemy": "shellguard",
+    "action": "attack",
+    "fraction": 0.64,
+    "left": 51,
+    "right": 113,
+    "top": 43,
+    "bottom": 138
+  },
+  {
+    "enemy": "shellguard",
+    "action": "attack",
+    "fraction": 0.85,
+    "left": 49,
+    "right": 113,
+    "top": 42,
+    "bottom": 138
+  },
+  {
+    "enemy": "shellguard",
+    "action": "attack",
+    "fraction": 1,
+    "left": 45,
+    "right": 110,
+    "top": 41,
+    "bottom": 139
+  },
+  {
+    "enemy": "shellguard",
+    "action": "hit",
+    "fraction": 0,
+    "left": 45,
+    "right": 110,
+    "top": 41,
+    "bottom": 139
+  },
+  {
+    "enemy": "shellguard",
+    "action": "hit",
+    "fraction": 0.27,
+    "left": 52,
+    "right": 114,
+    "top": 40,
+    "bottom": 138
+  },
+  {
+    "enemy": "shellguard",
+    "action": "hit",
+    "fraction": 0.64,
+    "left": 50,
+    "right": 111,
+    "top": 40,
+    "bottom": 138
+  },
+  {
+    "enemy": "shellguard",
+    "action": "hit",
+    "fraction": 0.85,
+    "left": 47,
+    "right": 111,
+    "top": 41,
+    "bottom": 138
+  },
+  {
+    "enemy": "shellguard",
+    "action": "hit",
+    "fraction": 1,
+    "left": 45,
+    "right": 110,
+    "top": 41,
+    "bottom": 139
+  },
+  {
+    "enemy": "shellguard",
+    "action": "death",
+    "fraction": 0,
+    "left": 45,
+    "right": 110,
+    "top": 41,
+    "bottom": 139
+  },
+  {
+    "enemy": "shellguard",
+    "action": "death",
+    "fraction": 0.27,
+    "left": 44,
+    "right": 116,
+    "top": 41,
+    "bottom": 142
+  },
+  {
+    "enemy": "shellguard",
+    "action": "death",
+    "fraction": 0.64,
+    "left": 45,
+    "right": 123,
+    "top": 45,
+    "bottom": 146
+  },
+  {
+    "enemy": "shellguard",
+    "action": "death",
+    "fraction": 0.85,
+    "left": 47,
+    "right": 126,
+    "top": 50,
+    "bottom": 146
+  },
+  {
+    "enemy": "shellguard",
+    "action": "death",
+    "fraction": 1,
+    "left": 49,
+    "right": 126,
+    "top": 51,
+    "bottom": 144
+  }
+]

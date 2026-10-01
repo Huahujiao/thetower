@@ -1,0 +1,227 @@
+[
+  {
+    "enemy": "ash-cannon-bug",
+    "action": "idle",
+    "fraction": 0,
+    "left": 48,
+    "right": 110,
+    "top": 55,
+    "bottom": 109
+  },
+  {
+    "enemy": "ash-cannon-bug",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 48,
+    "right": 110,
+    "top": 54,
+    "bottom": 109
+  },
+  {
+    "enemy": "ash-cannon-bug",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 48,
+    "right": 110,
+    "top": 54,
+    "bottom": 109
+  },
+  {
+    "enemy": "ash-cannon-bug",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 48,
+    "right": 110,
+    "top": 55,
+    "bottom": 109
+  },
+  {
+    "enemy": "ash-cannon-bug",
+    "action": "idle",
+    "fraction": 1,
+    "left": 48,
+    "right": 110,
+    "top": 55,
+    "bottom": 109
+  },
+  {
+    "enemy": "ash-cannon-bug",
+    "action": "move",
+    "fraction": 0,
+    "left": 48,
+    "right": 110,
+    "top": 55,
+    "bottom": 109
+  },
+  {
+    "enemy": "ash-cannon-bug",
+    "action": "move",
+    "fraction": 0.27,
+    "left": 48,
+    "right": 110,
+    "top": 53,
+    "bottom": 107
+  },
+  {
+    "enemy": "ash-cannon-bug",
+    "action": "move",
+    "fraction": 0.64,
+    "left": 49,
+    "right": 110,
+    "top": 54,
+    "bottom": 109
+  },
+  {
+    "enemy": "ash-cannon-bug",
+    "action": "move",
+    "fraction": 0.85,
+    "left": 48,
+    "right": 110,
+    "top": 54,
+    "bottom": 109
+  },
+  {
+    "enemy": "ash-cannon-bug",
+    "action": "move",
+    "fraction": 1,
+    "left": 48,
+    "right": 110,
+    "top": 55,
+    "bottom": 109
+  },
+  {
+    "enemy": "ash-cannon-bug",
+    "action": "attack",
+    "fraction": 0,
+    "left": 48,
+    "right": 110,
+    "top": 55,
+    "bottom": 109
+  },
+  {
+    "enemy": "ash-cannon-bug",
+    "action": "attack",
+    "fraction": 0.27,
+    "left": 50,
+    "right": 109,
+    "top": 50,
+    "bottom": 111
+  },
+  {
+    "enemy": "ash-cannon-bug",
+    "action": "attack",
+    "fraction": 0.64,
+    "left": 47,
+    "right": 112,
+    "top": 55,
+    "bottom": 112
+  },
+  {
+    "enemy": "ash-cannon-bug",
+    "action": "attack",
+    "fraction": 0.85,
+    "left": 47,
+    "right": 111,
+    "top": 55,
+    "bottom": 110
+  },
+  {
+    "enemy": "ash-cannon-bug",
+    "action": "attack",
+    "fraction": 1,
+    "left": 48,
+    "right": 110,
+    "top": 55,
+    "bottom": 109
+  },
+  {
+    "enemy": "ash-cannon-bug",
+    "action": "hit",
+    "fraction": 0,
+    "left": 48,
+    "right": 110,
+    "top": 55,
+    "bottom": 109
+  },
+  {
+    "enemy": "ash-cannon-bug",
+    "action": "hit",
+    "fraction": 0.27,
+    "left": 55,
+    "right": 115,
+    "top": 57,
+    "bottom": 112
+  },
+  {
+    "enemy": "ash-cannon-bug",
+    "action": "hit",
+    "fraction": 0.64,
+    "left": 53,
+    "right": 112,
+    "top": 56,
+    "bottom": 111
+  },
+  {
+    "enemy": "ash-cannon-bug",
+    "action": "hit",
+    "fraction": 0.85,
+    "left": 50,
+    "right": 111,
+    "top": 55,
+    "bottom": 110
+  },
+  {
+    "enemy": "ash-cannon-bug",
+    "action": "hit",
+    "fraction": 1,
+    "left": 48,
+    "right": 110,
+    "top": 55,
+    "bottom": 109
+  },
+  {
+    "enemy": "ash-cannon-bug",
+    "action": "death",
+    "fraction": 0,
+    "left": 48,
+    "right": 110,
+    "top": 55,
+    "bottom": 109
+  },
+  {
+    "enemy": "ash-cannon-bug",
+    "action": "death",
+    "fraction": 0.27,
+    "left": 51,
+    "right": 111,
+    "top": 54,
+    "bottom": 115
+  },
+  {
+    "enemy": "ash-cannon-bug",
+    "action": "death",
+    "fraction": 0.64,
+    "left": 56,
+    "right": 114,
+    "top": 54,
+    "bottom": 125
+  },
+  {
+    "enemy": "ash-cannon-bug",
+    "action": "death",
+    "fraction": 0.85,
+    "left": 57,
+    "right": 113,
+    "top": 56,
+    "bottom": 129
+  },
+  {
+    "enemy": "ash-cannon-bug",
+    "action": "death",
+    "fraction": 1,
+    "left": 56,
+    "right": 110,
+    "top": 58,
+    "bottom": 131
+  }
+]

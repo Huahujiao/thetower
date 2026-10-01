@@ -430,7 +430,7 @@ for(let i=0;i<100;i++) {
 }
 // Safe movement neither advances combat counters nor accumulates protection.
 {
-  const run=fixture();add(run,'wood-shield');add(run,'tide-cloak');run.player.talents=['flow-walk','survival-energy']
+  const run=fixture();add(run,'wood-shield');add(run,'tide-cloak')
   const e=enemy(run,{attack:1,range:1});run._enemyAttack(e)
   run.currentRoom.removeEntity(e.id)
   const hp=run.player.hp, armor=run.player.armor, count=run.itemRules.state.enemyAttacks
@@ -450,12 +450,12 @@ for(let i=0;i<100;i++) {
   w.attack=0;attack(run,w,e);assert.equal(run.player.armor,0)
   w.attack=3;attack(run,w,e);attack(run,w,e);assert.equal(run.player.armor,2)
 }
-// Relic inversion is applied before triad amplification and talent checks.
+// Relic inversion is applied before triad amplification.
 {
   const run=fixture();add(run,'r-three');add(run,'r-reverse')
   const w=add(run,'rust-sword');add(run,'bone-knife');add(run,'tide-blade')
-  const e=enemy(run,{attribute:'drown'});run.player.talents=['harmony-counter']
+  const e=enemy(run,{attribute:'drown'})
   const context=run.itemRules.attackContext(w,e)
-  assert.equal(context.multiplier,2.2);assert.equal(context.flat,1)
+  assert.equal(context.multiplier,2.2);assert.equal(context.flat,0)
 }
 console.log('items-check passed: new inventory, combat, crafting, defenses, relics, save and UI contracts')

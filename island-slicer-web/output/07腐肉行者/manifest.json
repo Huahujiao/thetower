@@ -1,0 +1,223 @@
+{
+  "source": {
+    "name": "07腐肉行者.png",
+    "width": 1254,
+    "height": 1254,
+    "type": "image/png",
+    "size": 2096436
+  },
+  "settings": {
+    "alphaThreshold": 28,
+    "minArea": 201,
+    "padding": 0,
+    "mergeRadius": 0,
+    "connectivity": 8
+  },
+  "generatedAt": "2026-10-01T11:17:48.493Z",
+  "parts": [
+    {
+      "id": 1,
+      "file": "parts/part_001.png",
+      "sourceBounds": {
+        "x": 439,
+        "y": 10,
+        "width": 256,
+        "height": 314
+      },
+      "exportBounds": {
+        "x": 439,
+        "y": 10,
+        "width": 256,
+        "height": 314
+      },
+      "area": 48581
+    },
+    {
+      "id": 2,
+      "file": "parts/part_002.png",
+      "sourceBounds": {
+        "x": 36,
+        "y": 63,
+        "width": 364,
+        "height": 390
+      },
+      "exportBounds": {
+        "x": 36,
+        "y": 63,
+        "width": 364,
+        "height": 390
+      },
+      "area": 66453
+    },
+    {
+      "id": 3,
+      "file": "parts/part_003.png",
+      "sourceBounds": {
+        "x": 930,
+        "y": 79,
+        "width": 309,
+        "height": 371
+      },
+      "exportBounds": {
+        "x": 930,
+        "y": 79,
+        "width": 309,
+        "height": 371
+      },
+      "area": 43648
+    },
+    {
+      "id": 4,
+      "file": "parts/part_004.png",
+      "sourceBounds": {
+        "x": 699,
+        "y": 112,
+        "width": 227,
+        "height": 360
+      },
+      "exportBounds": {
+        "x": 699,
+        "y": 112,
+        "width": 227,
+        "height": 360
+      },
+      "area": 44096
+    },
+    {
+      "id": 5,
+      "file": "parts/part_005.png",
+      "sourceBounds": {
+        "x": 450,
+        "y": 232,
+        "width": 145,
+        "height": 130
+      },
+      "exportBounds": {
+        "x": 450,
+        "y": 232,
+        "width": 145,
+        "height": 130
+      },
+      "area": 9318
+    },
+    {
+      "id": 6,
+      "file": "parts/part_006.png",
+      "sourceBounds": {
+        "x": 912,
+        "y": 311,
+        "width": 188,
+        "height": 231
+      },
+      "exportBounds": {
+        "x": 912,
+        "y": 311,
+        "width": 188,
+        "height": 231
+      },
+      "area": 26847
+    },
+    {
+      "id": 7,
+      "file": "parts/part_007.png",
+      "sourceBounds": {
+        "x": 412,
+        "y": 349,
+        "width": 405,
+        "height": 827
+      },
+      "exportBounds": {
+        "x": 412,
+        "y": 349,
+        "width": 405,
+        "height": 827
+      },
+      "area": 173931
+    },
+    {
+      "id": 8,
+      "file": "parts/part_008.png",
+      "sourceBounds": {
+        "x": 218,
+        "y": 371,
+        "width": 196,
+        "height": 435
+      },
+      "exportBounds": {
+        "x": 218,
+        "y": 371,
+        "width": 196,
+        "height": 435
+      },
+      "area": 56516
+    },
+    {
+      "id": 9,
+      "file": "parts/part_009.png",
+      "sourceBounds": {
+        "x": 10,
+        "y": 460,
+        "width": 181,
+        "height": 446
+      },
+      "exportBounds": {
+        "x": 10,
+        "y": 460,
+        "width": 181,
+        "height": 446
+      },
+      "area": 38564
+    },
+    {
+      "id": 10,
+      "file": "parts/part_010.png",
+      "sourceBounds": {
+        "x": 828,
+        "y": 477,
+        "width": 371,
+        "height": 761
+      },
+      "exportBounds": {
+        "x": 828,
+        "y": 477,
+        "width": 371,
+        "height": 761
+      },
+      "area": 73356
+    },
+    {
+      "id": 11,
+      "file": "parts/part_011.png",
+      "sourceBounds": {
+        "x": 1054,
+        "y": 496,
+        "width": 193,
+        "height": 397
+      },
+      "exportBounds": {
+        "x": 1054,
+        "y": 496,
+        "width": 193,
+        "height": 397
+      },
+      "area": 36672
+    },
+    {
+      "id": 12,
+      "file": "parts/part_012.png",
+      "sourceBounds": {
+        "x": 132,
+        "y": 797,
+        "width": 270,
+        "height": 446
+      },
+      "exportBounds": {
+        "x": 132,
+        "y": 797,
+        "width": 270,
+        "height": 446
+      },
+      "area": 48362
+    }
+  ]
+}

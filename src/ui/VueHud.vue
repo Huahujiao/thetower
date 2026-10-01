@@ -25,11 +25,6 @@
             <path d="m14 3 7 7-4 4-7-7zM12 12 3 21M4 3v6M1 6h6" />
           </svg>
         </button><button
-          class="hud-icon talent-book-top" data-action="talents" :title="LABELS.talentGraph"
-          :aria-label="LABELS.talentGraph" @click="handleAction('talents')"
-        >
-          ✶
-        </button><button
           class="hud-icon" data-action="character"
           :title="LABELS.character" :aria-label="LABELS.character" @click="handleAction('character')"
         >
@@ -216,43 +211,11 @@
           <span>{{ LABELS.maxHealth }}</span><strong>{{ state.player.hp }} / {{
             state.player.maxHp }}</strong>
         </div>
-      </div>
-      <div class="character-expbar"><span :style="{ width: `${characterExperienceProgress}%` }"></span></div>
-      <div class="character-talents">
-        <section class="character-talent-summary">
-          <div class="character-talent-title">{{ LABELS.talents }}</div>
-          <div class="character-row">
-            <span>{{ LABELS.talents }}</span><strong>{{ state.player.talents?.length || 0
-            }}</strong>
-          </div>
-          <div class="character-row sub">
-            <span>{{ LABELS.fixedGrowth }}</span><strong>{{
-              state.player.talentRuntime?.bodyStrength || 0 }}</strong>
-          </div>
-        </section>
-      </div>
-    </section>
-    <section
-      class="talent-panel" :class="{ show: topPanel === 'talentpanel' }"
-      :aria-hidden="topPanel === 'talentpanel' ? 'false' : 'true'"
-    >
-      <div class="talent-panel-head">
-        <span>{{ LABELS.talentGraph }}</span><strong>{{ talentGraph.filter((node) =>
-          node.state === 'owned').length }}/{{ talentGraph.length }}</strong>
-      </div>
-      <div class="talent-graph">
-        <div v-for="group in talentLines" :key="group.line" class="talent-line">
-          <div class="talent-line-title">{{ group.title }}</div>
-          <div
-            v-for="node in group.nodes" :key="node.id" class="talent-node" :class="node.state"
-            :title="`${node.description} · ${node.prerequisites}`"
-          >
-            <span class="talent-node-slot">{{ node.slot
-            }}</span><b>{{ node.name }}</b><small>{{ node.description }}</small><small class="talent-node-prereq">{{
-              node.prerequisites }}</small>
-          </div>
+        <div class="character-stat">
+          <span>{{ LABELS.maxEnergy }}</span><strong>{{ state.player.energy }} / {{ state.player.maxEnergy }}</strong>
         </div>
       </div>
+      <div class="character-expbar"><span :style="{ width: `${characterExperienceProgress}%` }"></span></div>
     </section>
 
     <div class="hud-log" :class="{ show: topPanel === 'log' }">
@@ -324,30 +287,35 @@
       </button>
     </div>
     <div class="relic-choice level-up" :class="{ show: levelUpOpen }">
-      <div class="relic-choice-title">{{ LABELS.growthChoice }}</div>
-      <div class="relic-choice-row level-up-talent-row">
+      <div class="relic-choice-title">{{ levelUpTitle }}</div>
+      <div v-if="!state.levelUp?.selectedOption" class="relic-choice-row">
         <button
-          v-for="choice in levelUpTalents" :key="choice.id"
-          class="relic-choice-card talent-choice-card" :data-level-up-choice="choice.id" @click="handleAction('level-up-choice', choice.id)"
+          v-for="choice in levelUpChoices" :key="choice.id"
+          class="relic-choice-card" :data-level-up-choice="choice.id" :disabled="!levelUpOptionAvailable(choice.id)" @click="handleAction('level-up-choice', choice.id)"
         >
-          <span class="talent-choice-head"><span
-            class="relic-name"
-          >{{ choice.name }}</span><span
-            class="talent-choice-branch"
-          >{{ TALENT_LINE_LABELS[choice.line] || choice.line }}</span></span><span class="relic-desc">{{ choice.description }}</span>
+          <span class="relic-name">{{ choice.name }}</span><span class="relic-desc">{{ choice.description }}</span>
+          <small v-if="!choice.disabled && !levelUpOptionAvailable(choice.id)">{{ LABELS.noUpgradeTarget }}</small>
         </button>
       </div>
-      <div class="level-up-fixed-row">
+      <div v-else-if="state.levelUp.selectedOption === 'relic'" class="relic-choice-row">
         <button
-          v-if="levelUpFixed"
-          class="relic-choice-card level-up-fixed-choice" :data-level-up-choice="levelUpFixed.id" @click="handleAction('level-up-choice', levelUpFixed.id)"
+          v-for="relic in levelUpRelics" :key="relic.id" class="relic-choice-card"
+          :data-level-up-relic="relic.id" @click="run.chooseLevelUpRelic(relic.id)"
         >
-          <span
-            class="relic-name"
-          >{{ levelUpFixed.name }}</span><span class="relic-desc">{{ levelUpFixed.description
-          }}</span>
+          <span class="relic-name">{{ relic.name }}</span>
+          <img v-if="itemSpriteSources(relic)" class="relic-choice-sprite" :src="itemSpriteSources(relic).medium" :alt="relic.name" draggable="false">
+          <span class="relic-desc">{{ relic.description }}</span>
         </button>
       </div>
+      <div v-else-if="state.levelUp.selectedOption === 'weapon-upgrade'" class="relic-choice-row level-up-weapons">
+        <button v-for="weapon in levelUpWeapons" :key="weapon.uid" class="relic-choice-card" :data-level-up-weapon="weapon.uid" @click="run.chooseLevelUpWeapon(weapon.uid)">
+          <span class="relic-name">{{ weapon.name }}</span>
+          <img v-if="itemSpriteSources(weapon)" class="relic-choice-sprite" :src="itemSpriteSources(weapon).medium" :alt="weapon.name" draggable="false">
+          <span class="relic-desc">{{ LABELS.baseAttack }} {{ weapon.attack }} → {{ weapon.attack + 1 }}</span>
+          <small>{{ LABELS.bagPosition }} {{ weapon.slot }}</small>
+        </button>
+      </div>
+      <button v-if="state.levelUp?.selectedOption" class="level-up-back" @click="run.backToLevelUpChoices()">{{ LABELS.backToGrowth }}</button>
     </div>
 
     <div class="hud-rest" :class="{ show: merchantOpen }">
@@ -529,8 +497,10 @@ const run = props.run
 const LABELS = Object.freeze({
   floor: '\u697c\u5c42', health: '\u751f\u547d', armor: '\u62a4\u7532', energy: '\u4f53\u529b', gold: '\u91d1\u5e01',
   turn: '\u5168\u5c40\u56de\u5408', poison: '\u4e2d\u6bd2', burning: '\u71c3\u70e7', level: '\u7b49\u7ea7', experience: '\u7ecf\u9a8c',
-  character: '\u89d2\u8272', characterGrowth: '\u89d2\u8272\u6210\u957f', maxHealth: '\u751f\u547d\u4e0a\u9650', talents: '\u5929\u8d4b',
-  talentGraph: '\u5929\u8d4b\u7f51', fixedGrowth: '\u5f3a\u5065\u4f53\u9b44', help: '\u5e2e\u52a9', basicGameplay: '\u57fa\u672c\u73a9\u6cd5',
+  character: '\u89d2\u8272', characterGrowth: '\u89d2\u8272\u6210\u957f', maxHealth: '\u751f\u547d\u4e0a\u9650', maxEnergy: '\u4f53\u529b\u4e0a\u9650',
+  help: '\u5e2e\u52a9', basicGameplay: '\u57fa\u672c\u73a9\u6cd5',
+  chooseWeaponUpgrade: '\u9009\u62e9\u8981\u5f3a\u5316\u7684\u6b66\u5668', baseAttack: '\u57fa\u7840\u653b\u51fb\u529b', bagPosition: '\u80cc\u5305\u683c\u4f4d',
+  backToGrowth: '\u8fd4\u56de\u5347\u7ea7\u9009\u9879', noUpgradeTarget: '\u6682\u65e0\u53ef\u9009\u76ee\u6807',
   close: '\u5173\u95ed', craft: '\u5408\u6210', status: '\u72b6\u6001', settings: '\u8bbe\u7f6e', camera: '\u89c6\u89d2', cameraAzimuth: '\u65cb\u8f6c\u89d2\u5ea6',
   cameraPitch: '\u4fef\u4ef0\u89d2\u5ea6', cameraPitchDecrease: '\u51cf\u5c0f\u4fef\u4ef0\u89d2\u5ea6', cameraPitchIncrease: '\u589e\u52a0\u4fef\u4ef0\u89d2\u5ea6',
   log: '\u65e5\u5fd7', copyLog: '\u590d\u5236\u65e5\u5fd7', copied: '\u5df2\u590d\u5236', copyFailed: '\u590d\u5236\u5931\u8d25',
@@ -538,18 +508,17 @@ const LABELS = Object.freeze({
   empty: '\u7a7a', relics: '\u5723\u9057\u7269', relicOverload: '\u5723\u9057\u7269\u8d85\u8f7d', initialRelic: '\u9009\u62e9\u521d\u59cb\u5723\u9057\u7269',
   leaveMerchant: '\u79bb\u5f00', sold: '\u5df2\u552e\u7f44', buy: '\u8d2d\u4e70', merchantRelicsTab: '\u5723\u9057\u7269',
   noRelicsAvailable: '\u6682\u65e0\u53ef\u83b7\u5f97\u7684\u5723\u9057\u7269', relicChoice: '\u9009\u62e9\u4e00\u4ef6\u5723\u9057\u7269',
-  roomReward: '\u65b0\u623f\u95f4\u5956\u52b1', growthChoice: '\u9009\u62e9\u5929\u8d4b\u6216\u5f3a\u5065\u4f53\u9b44', skipReward: '\u8df3\u8fc7',
+  roomReward: '\u65b0\u623f\u95f4\u5956\u52b1', growthChoice: '\u9009\u62e9\u5347\u7ea7\u5956\u52b1', skipReward: '\u8df3\u8fc7',
   sellSelected: '\u51fa\u552e\u6240\u9009', refreshStock: '\u5237\u65b0\u8d27\u67b6', restart: '\u91cd\u65b0\u5f00\u59cb',
   restartConfirm: '\u786e\u5b9a\u8981\u91cd\u65b0\u5f00\u59cb\u5417\uff1f\u5f53\u524d\u8fdb\u5ea6\u5c06\u88ab\u6e05\u9664\u3002',
   win: '\u9003\u51fa\u5730\u7262', lose: '\u4f60\u5df2\u9668\u843d', winMessage: '\u4f60\u51fb\u8d25\u4e86\u76d1\u89c6\u8005\u3002', loseMessage: '\u751f\u547d\u5f52\u96f6\u3002\u53ef\u4ee5\u91cd\u65b0\u5f00\u59cb\u6311\u6218\u3002',
 })
 const DETAIL_ICONS = Object.freeze({ enemy: '\u2694', weapon: '\u2694', potion: '\u271a', armor: '\u26e8', energy: '\u26a1', buff: '\u2726', relic: '\u25c6', trap: '!', gold: '\u25cf', key: '\ud83d\udd11', merchant: '\u25c9', item: '\u25a0' })
-const TALENT_LINE_LABELS = Object.freeze({ flow: '\u6362\u52bf', guard: '\u5b88\u5fa1', harmony: '\u8c03\u548c', sword: '\u5251', axe: '\u65a7', dagger: '\u5315\u9996', polearm: '\u957f\u67c4', heavy: '\u91cd\u6b66\u5668', bow: '\u5f13', scorch: '\u707c\u70ed', wither: '\u67af\u840e', drown: '\u6c89\u6eba', survival: '\u751f\u5b58' })
 const EDGE_NAMES = ['top', 'right', 'bottom', 'left']
 const HELP_SECTIONS = Object.freeze([
   { title: '\u884c\u52a8\u4e0e\u4f53\u529b', items: ['\u6bcf\u6b21\u79fb\u52a8\u3001\u7ffb\u724c\u3001\u62fe\u53d6\u548c\u666e\u901a\u4ea4\u4e92\u90fd\u4f1a\u63a8\u8fdb\u56de\u5408\u3002', '\u6b66\u5668\u653b\u51fb\u4f1a\u6d88\u8017\u4f53\u529b\uff0c\u4f7f\u7528\u7269\u54c1\u3001\u5408\u6210\u3001\u79fb\u52a8\u548c\u65cb\u8f6c\u4e5f\u53ef\u80fd\u63a8\u8fdb\u56de\u5408\u3002'] },
   { title: '\u80cc\u5305\u4e0e\u5408\u6210', items: ['\u80cc\u5305\u662f 8 \u5217 4 \u884c\uff0c\u7269\u54c1\u6309\u5f62\u72b6\u5360\u683c\u3002', '\u70b9\u6309\u7269\u54c1\u53ef\u9009\u4e2d\uff1b\u957f\u6309 150ms \u540e\u62d6\u52a8\u79fb\u52a8\uff0c\u4e0d\u518d\u7528\u70b9\u51fb\u7a7a\u683c\u79fb\u7269\u54c1\u3002', '\u62d6\u52a8\u65f6\u4f7f\u7528\u7ea2\u8272\u4e22\u5f03\u533a\u4e0e\u84dd\u8272\u6682\u5b58\u533a\uff0c\u7a7a\u6682\u5b58\u533a\u540e\u63a8\u8fdb\u4e00\u4e2a\u6574\u7406\u56de\u5408\u3002', '\u5408\u6210\u9762\u677f\u53ea\u663e\u793a\u5f53\u524d\u80cc\u5305\u53ef\u5408\u6210\u7684\u914d\u65b9\u3002'] },
-  { title: '\u5929\u8d4b\u4e0e\u5723\u9057\u7269', items: ['\u5347\u7ea7\u65f6\u9009\u62e9\u5929\u8d4b\u8def\u7ebf\u6216\u5f3a\u5316\u4f53\u683c\u3002', '\u5723\u9057\u7269\u653e\u5728\u80cc\u5305\u4e2d\u5373\u53ef\u751f\u6548\uff0c\u79bb\u5f00\u623f\u95f4\u4e0d\u4f1a\u91cd\u7f6e\u3002'] },
+  { title: '\u5347\u7ea7\u4e0e\u5723\u9057\u7269', items: ['\u5347\u7ea7\u65f6\u4ece6\u79cd\u5956\u52b1\u4e2d\u968f\u673a\u63d0\u4f9b3\u9879\uff0c\u9009\u62e91\u9879\u3002\u7269\u54c1\u538b\u7f29\u6682\u672a\u5f00\u653e\u3002', '\u6b66\u5668\u5f3a\u5316\u4ec5\u5f71\u54cd\u6240\u9009\u6b66\u5668\uff0c\u5408\u6210\u540e\u4e0d\u7ee7\u627f\u3002', '\u5723\u9057\u7269\u653e\u5728\u80cc\u5305\u4e2d\u5373\u53ef\u751f\u6548\uff0c\u79bb\u5f00\u623f\u95f4\u4e0d\u4f1a\u91cd\u7f6e\u3002'] },
   { title: '\u6218\u6597\u4e0e\u63a2\u7d22', items: ['\u9009\u62e9\u6b66\u5668\u540e\u70b9\u51fb\u654c\u4eba\u53d1\u8d77\u653b\u51fb\uff0c\u8fdc\u5904\u76ee\u6807\u4f1a\u5148\u9884\u89c8\u8def\u5f84\u3002', '\u957f\u6309\u68cb\u76d8\u6216\u80cc\u5305\u7269\u54c1\u67e5\u770b\u8be6\u60c5\uff0c\u8fde\u7eed\u79fb\u52a8\u89c6\u89d2\u53ef\u4f7f\u7528\u62d6\u62fd\u548c\u6eda\u8f6e\u7f29\u653e\u3002'] },
 ])
 
@@ -630,22 +599,6 @@ const experienceProgress = computed(() => {
   return player.experienceToNext > 0 ? Math.min(100, Math.max(0, player.experience / player.experienceToNext * 100)) : 0
 })
 const characterExperienceProgress = experienceProgress
-const talentGraph = computed(() => {
-  state.value
-  return run.talentGraph()
-})
-const talentLines = computed(() => {
-  const graph = talentGraph.value
-  const names = new Map(graph.map((node) => [node.id, node.name]))
-  return [...new Set(graph.map((node) => node.line))].map((line) => ({
-    line,
-    title: TALENT_LINE_LABELS[line] || line,
-    nodes: graph.filter((node) => node.line === line).map((node) => ({
-      ...node,
-      prerequisites: node.prerequisites.length ? `\u524d\u7f6e\uff1a${node.prerequisites.map((id) => names.get(id) || id).join('\u3001')}` : '\u524d\u7f6e：\u65e0',
-    })),
-  }))
-})
 const inventoryStagingVisible = computed(() => state.value.inventoryStash.length > 0 || !!bagGesture.value?.dragging)
 const dragPreview = computed(() => {
   const gesture = bagGesture.value
@@ -810,8 +763,14 @@ const levelUpChoices = computed(() => {
   state.value
   return run.levelUpChoices()
 })
-const levelUpTalents = computed(() => levelUpChoices.value.filter((choice) => !choice.fixed))
-const levelUpFixed = computed(() => levelUpChoices.value.find((choice) => choice.fixed))
+const levelUpRelics = computed(() => (state.value.levelUp?.relicChoices || []).map(getRelicDefinition).filter(Boolean))
+const levelUpWeapons = computed(() => {
+  state.value
+  return run.levelUpWeapons().map(weapon => ({ ...weapon, slot: run.backpack.originIndex(run.backpack.placementOf(weapon.uid)) + 1 }))
+})
+const levelUpTitle = computed(() => state.value.levelUp?.selectedOption === 'relic' ? LABELS.relicChoice
+  : state.value.levelUp?.selectedOption === 'weapon-upgrade' ? LABELS.chooseWeaponUpgrade : LABELS.growthChoice)
+function levelUpOptionAvailable(id) { state.value; return run.canChooseLevelUpOption(id) }
 const merchant = computed(() => state.value.merchantEntity)
 const merchantOpen = computed(() => {
   const current = state.value
@@ -1341,7 +1300,6 @@ function handleAction(action, value = null) {
   if (action === 'log') toggleTopPanel('log')
   if (action === 'settings') toggleTopPanel('settings')
   if (action === 'character') toggleTopPanel('characterpanel')
-  if (action === 'talents') toggleTopPanel('talentpanel')
   if (action === 'help') { topPanel.value = null; helpOpen.value = true }
   if (action === 'close-help') helpOpen.value = false
 }

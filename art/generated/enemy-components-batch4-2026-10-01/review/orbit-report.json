@@ -1,0 +1,107 @@
+[
+  {
+    "id": "tidal-spore-sac",
+    "view": 0,
+    "path": "art/generated/enemy-components-batch4-2026-10-01/review/orbit-tidal-spore-sac-0.png"
+  },
+  {
+    "id": "tidal-spore-sac",
+    "view": 1,
+    "path": "art/generated/enemy-components-batch4-2026-10-01/review/orbit-tidal-spore-sac-1.png"
+  },
+  {
+    "id": "tidal-spore-sac",
+    "view": 2,
+    "path": "art/generated/enemy-components-batch4-2026-10-01/review/orbit-tidal-spore-sac-2.png"
+  },
+  {
+    "id": "revenant-guard",
+    "view": 0,
+    "path": "art/generated/enemy-components-batch4-2026-10-01/review/orbit-revenant-guard-0.png"
+  },
+  {
+    "id": "revenant-guard",
+    "view": 1,
+    "path": "art/generated/enemy-components-batch4-2026-10-01/review/orbit-revenant-guard-1.png"
+  },
+  {
+    "id": "revenant-guard",
+    "view": 2,
+    "path": "art/generated/enemy-components-batch4-2026-10-01/review/orbit-revenant-guard-2.png"
+  },
+  {
+    "id": "bomb-wisp",
+    "view": 0,
+    "path": "art/generated/enemy-components-batch4-2026-10-01/review/orbit-bomb-wisp-0.png"
+  },
+  {
+    "id": "bomb-wisp",
+    "view": 1,
+    "path": "art/generated/enemy-components-batch4-2026-10-01/review/orbit-bomb-wisp-1.png"
+  },
+  {
+    "id": "bomb-wisp",
+    "view": 2,
+    "path": "art/generated/enemy-components-batch4-2026-10-01/review/orbit-bomb-wisp-2.png"
+  },
+  {
+    "id": "cracked-hunter",
+    "view": 0,
+    "path": "art/generated/enemy-components-batch4-2026-10-01/review/orbit-cracked-hunter-0.png"
+  },
+  {
+    "id": "cracked-hunter",
+    "view": 1,
+    "path": "art/generated/enemy-components-batch4-2026-10-01/review/orbit-cracked-hunter-1.png"
+  },
+  {
+    "id": "cracked-hunter",
+    "view": 2,
+    "path": "art/generated/enemy-components-batch4-2026-10-01/review/orbit-cracked-hunter-2.png"
+  },
+  {
+    "id": "broodling",
+    "view": 0,
+    "path": "art/generated/enemy-components-batch4-2026-10-01/review/orbit-broodling-0.png"
+  },
+  {
+    "id": "broodling",
+    "view": 1,
+    "path": "art/generated/enemy-components-batch4-2026-10-01/review/orbit-broodling-1.png"
+  },
+  {
+    "id": "broodling",
+    "view": 2,
+    "path": "art/generated/enemy-components-batch4-2026-10-01/review/orbit-broodling-2.png"
+  },
+  {
+    "id": "leech-larva",
+    "view": 0,
+    "path": "art/generated/enemy-components-batch4-2026-10-01/review/orbit-leech-larva-0.png"
+  },
+  {
+    "id": "leech-larva",
+    "view": 1,
+    "path": "art/generated/enemy-components-batch4-2026-10-01/review/orbit-leech-larva-1.png"
+  },
+  {
+    "id": "leech-larva",
+    "view": 2,
+    "path": "art/generated/enemy-components-batch4-2026-10-01/review/orbit-leech-larva-2.png"
+  },
+  {
+    "id": "tide-shadow",
+    "view": 0,
+    "path": "art/generated/enemy-components-batch4-2026-10-01/review/orbit-tide-shadow-0.png"
+  },
+  {
+    "id": "tide-shadow",
+    "view": 1,
+    "path": "art/generated/enemy-components-batch4-2026-10-01/review/orbit-tide-shadow-1.png"
+  },
+  {
+    "id": "tide-shadow",
+    "view": 2,
+    "path": "art/generated/enemy-components-batch4-2026-10-01/review/orbit-tide-shadow-2.png"
+  }
+]

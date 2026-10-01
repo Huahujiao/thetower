@@ -1,0 +1,227 @@
+[
+  {
+    "enemy": "leech-larva",
+    "action": "idle",
+    "fraction": 0,
+    "left": 46,
+    "right": 146,
+    "top": 21,
+    "bottom": 85
+  },
+  {
+    "enemy": "leech-larva",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 46,
+    "right": 145,
+    "top": 21,
+    "bottom": 85
+  },
+  {
+    "enemy": "leech-larva",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 45,
+    "right": 144,
+    "top": 21,
+    "bottom": 85
+  },
+  {
+    "enemy": "leech-larva",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 46,
+    "right": 145,
+    "top": 21,
+    "bottom": 85
+  },
+  {
+    "enemy": "leech-larva",
+    "action": "idle",
+    "fraction": 1,
+    "left": 46,
+    "right": 146,
+    "top": 21,
+    "bottom": 85
+  },
+  {
+    "enemy": "leech-larva",
+    "action": "move",
+    "fraction": 0,
+    "left": 46,
+    "right": 146,
+    "top": 21,
+    "bottom": 85
+  },
+  {
+    "enemy": "leech-larva",
+    "action": "move",
+    "fraction": 0.27,
+    "left": 45,
+    "right": 149,
+    "top": 20,
+    "bottom": 84
+  },
+  {
+    "enemy": "leech-larva",
+    "action": "move",
+    "fraction": 0.64,
+    "left": 46,
+    "right": 145,
+    "top": 21,
+    "bottom": 85
+  },
+  {
+    "enemy": "leech-larva",
+    "action": "move",
+    "fraction": 0.85,
+    "left": 46,
+    "right": 144,
+    "top": 21,
+    "bottom": 85
+  },
+  {
+    "enemy": "leech-larva",
+    "action": "move",
+    "fraction": 1,
+    "left": 46,
+    "right": 146,
+    "top": 21,
+    "bottom": 85
+  },
+  {
+    "enemy": "leech-larva",
+    "action": "attack",
+    "fraction": 0,
+    "left": 46,
+    "right": 146,
+    "top": 21,
+    "bottom": 85
+  },
+  {
+    "enemy": "leech-larva",
+    "action": "attack",
+    "fraction": 0.27,
+    "left": 44,
+    "right": 150,
+    "top": 22,
+    "bottom": 85
+  },
+  {
+    "enemy": "leech-larva",
+    "action": "attack",
+    "fraction": 0.64,
+    "left": 48,
+    "right": 141,
+    "top": 22,
+    "bottom": 87
+  },
+  {
+    "enemy": "leech-larva",
+    "action": "attack",
+    "fraction": 0.85,
+    "left": 47,
+    "right": 144,
+    "top": 21,
+    "bottom": 87
+  },
+  {
+    "enemy": "leech-larva",
+    "action": "attack",
+    "fraction": 1,
+    "left": 46,
+    "right": 146,
+    "top": 21,
+    "bottom": 85
+  },
+  {
+    "enemy": "leech-larva",
+    "action": "hit",
+    "fraction": 0,
+    "left": 46,
+    "right": 146,
+    "top": 21,
+    "bottom": 85
+  },
+  {
+    "enemy": "leech-larva",
+    "action": "hit",
+    "fraction": 0.27,
+    "left": 50,
+    "right": 149,
+    "top": 21,
+    "bottom": 87
+  },
+  {
+    "enemy": "leech-larva",
+    "action": "hit",
+    "fraction": 0.64,
+    "left": 49,
+    "right": 148,
+    "top": 21,
+    "bottom": 86
+  },
+  {
+    "enemy": "leech-larva",
+    "action": "hit",
+    "fraction": 0.85,
+    "left": 47,
+    "right": 147,
+    "top": 21,
+    "bottom": 86
+  },
+  {
+    "enemy": "leech-larva",
+    "action": "hit",
+    "fraction": 1,
+    "left": 46,
+    "right": 146,
+    "top": 21,
+    "bottom": 85
+  },
+  {
+    "enemy": "leech-larva",
+    "action": "death",
+    "fraction": 0,
+    "left": 46,
+    "right": 146,
+    "top": 21,
+    "bottom": 85
+  },
+  {
+    "enemy": "leech-larva",
+    "action": "death",
+    "fraction": 0.27,
+    "left": 46,
+    "right": 145,
+    "top": 23,
+    "bottom": 89
+  },
+  {
+    "enemy": "leech-larva",
+    "action": "death",
+    "fraction": 0.64,
+    "left": 45,
+    "right": 143,
+    "top": 29,
+    "bottom": 97
+  },
+  {
+    "enemy": "leech-larva",
+    "action": "death",
+    "fraction": 0.85,
+    "left": 46,
+    "right": 144,
+    "top": 33,
+    "bottom": 101
+  },
+  {
+    "enemy": "leech-larva",
+    "action": "death",
+    "fraction": 1,
+    "left": 47,
+    "right": 145,
+    "top": 36,
+    "bottom": 104
+  }
+]

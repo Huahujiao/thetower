@@ -1,0 +1,92 @@
+[
+  {
+    "id": "rot-walker",
+    "view": 0,
+    "path": "art/generated/enemy-components-batch2-2026-10-01/review/orbit-rot-walker-0.png"
+  },
+  {
+    "id": "rot-walker",
+    "view": 1,
+    "path": "art/generated/enemy-components-batch2-2026-10-01/review/orbit-rot-walker-1.png"
+  },
+  {
+    "id": "rot-walker",
+    "view": 2,
+    "path": "art/generated/enemy-components-batch2-2026-10-01/review/orbit-rot-walker-2.png"
+  },
+  {
+    "id": "shellguard",
+    "view": 0,
+    "path": "art/generated/enemy-components-batch2-2026-10-01/review/orbit-shellguard-0.png"
+  },
+  {
+    "id": "shellguard",
+    "view": 1,
+    "path": "art/generated/enemy-components-batch2-2026-10-01/review/orbit-shellguard-1.png"
+  },
+  {
+    "id": "shellguard",
+    "view": 2,
+    "path": "art/generated/enemy-components-batch2-2026-10-01/review/orbit-shellguard-2.png"
+  },
+  {
+    "id": "wisp",
+    "view": 0,
+    "path": "art/generated/enemy-components-batch2-2026-10-01/review/orbit-wisp-0.png"
+  },
+  {
+    "id": "wisp",
+    "view": 1,
+    "path": "art/generated/enemy-components-batch2-2026-10-01/review/orbit-wisp-1.png"
+  },
+  {
+    "id": "wisp",
+    "view": 2,
+    "path": "art/generated/enemy-components-batch2-2026-10-01/review/orbit-wisp-2.png"
+  },
+  {
+    "id": "moss-colossus",
+    "view": 0,
+    "path": "art/generated/enemy-components-batch2-2026-10-01/review/orbit-moss-colossus-0.png"
+  },
+  {
+    "id": "moss-colossus",
+    "view": 1,
+    "path": "art/generated/enemy-components-batch2-2026-10-01/review/orbit-moss-colossus-1.png"
+  },
+  {
+    "id": "moss-colossus",
+    "view": 2,
+    "path": "art/generated/enemy-components-batch2-2026-10-01/review/orbit-moss-colossus-2.png"
+  },
+  {
+    "id": "sentry-crossbow",
+    "view": 0,
+    "path": "art/generated/enemy-components-batch2-2026-10-01/review/orbit-sentry-crossbow-0.png"
+  },
+  {
+    "id": "sentry-crossbow",
+    "view": 1,
+    "path": "art/generated/enemy-components-batch2-2026-10-01/review/orbit-sentry-crossbow-1.png"
+  },
+  {
+    "id": "sentry-crossbow",
+    "view": 2,
+    "path": "art/generated/enemy-components-batch2-2026-10-01/review/orbit-sentry-crossbow-2.png"
+  },
+  {
+    "id": "ash-cannon-bug",
+    "view": 0,
+    "path": "art/generated/enemy-components-batch2-2026-10-01/review/orbit-ash-cannon-bug-0.png"
+  },
+  {
+    "id": "ash-cannon-bug",
+    "view": 1,
+    "path": "art/generated/enemy-components-batch2-2026-10-01/review/orbit-ash-cannon-bug-1.png"
+  },
+  {
+    "id": "ash-cannon-bug",
+    "view": 2,
+    "path": "art/generated/enemy-components-batch2-2026-10-01/review/orbit-ash-cannon-bug-2.png"
+  }
+]

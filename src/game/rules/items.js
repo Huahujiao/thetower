@@ -1,6 +1,5 @@
 import { attributeModifier } from '../data/attributes.js'
 import { getItemDefinition } from '../data/content.js'
-import { getTalentDefinition } from '../data/talents.js'
 import { combatDistance, neighbors8, chebyshev } from '../core/geometry.js'
 import { adjacentItems } from './backpack-geometry.js'
 import { activeConduits, conduitCapacity, forkBridgeActive } from './synergies.js'
@@ -63,7 +62,6 @@ export class ItemRules {
   }
   get room() { return this.run._roomRuntime().items ||= {} }
   has(id) { return this.run.backpack.items.some(i => (i.id || i.relicId) === id) }
-  talent(id) { return this.run.hasTalent(id) }
   adjacent(item, id) {
     const range = ['range-disc', 'steady-clip'].includes(id) ? this.range(item) : item.range || 1
     return adjacentItems(this.run.backpack, item)
@@ -83,26 +81,22 @@ export class ItemRules {
     return true
   }
   buff(key, value) { return applyStatus({ statuses: this.state.buffs }, key, { layers: 1, trigger: 'attack', ...value }) }
-  armor(amount, defense = false, sourceId = null) {
+  armor(amount, _defense = false, sourceId = null) {
     if (amount <= 0 || this.run.gameOver) return
     if (sourceId) {
       const defenseItem = this.run.backpack.items.find(i => i.uid === sourceId || i.id === sourceId)
       if (defenseItem && this.adjacent(defenseItem, 'shield-core')) amount += 1
     }
-    if (defense && this.talent('guard-gain') && this.run.player.armor === 0) amount += 1
-    if (defense && this.talent('guard-reply')) this.buff('guard-reply', { flat: 1 })
     this.run.player.armor += amount
     if (activeConduits(this.run.backpack).length) this.state.conduitCharge = Math.min(3, (this.state.conduitCharge || 0) + Math.min(2, amount))
   }
-  armorFloor(target, defense = false, sourceId = null) {
+  armorFloor(target, _defense = false, sourceId = null) {
     if (sourceId) {
       const defenseItem = this.run.backpack.items.find(i => i.id === sourceId)
       if (defenseItem && this.adjacent(defenseItem, 'shield-core')) target += 1
     }
-    if (defense && this.talent('guard-gain')) target += 1
     const gain = Math.max(0, target - this.run.player.armor)
     if (gain > 0) this.armor(gain, false)
-    if (gain > 0 && defense && this.talent('guard-reply')) this.buff('guard-reply', { flat: 1 })
   }
   enter(firstVisit) {
     this.state.lastAction = 'enter'
@@ -112,7 +106,6 @@ export class ItemRules {
     for (const item of this.run.backpack.items.filter(item => item.type === 'defense')) {
       this.armor(item.armorValue || 1, true, item.uid)
     }
-    if (this.talent('guard-shell')) this.armor(2)
   }
   action(kind) {
     this.state.lastAction = kind
@@ -175,7 +168,6 @@ export class ItemRules {
     const range = this.range(weapon)
     const distance = combatDistance(run.player.pos, enemy.pos, range)
     const moved = this.state.lastAction === 'movement'
-    const switched = !!this.state.lastWeapon && this.state.lastWeapon !== weapon.uid
     let flat = run.totems.attackBonus()
     if (weapon.id === 'silver-guard' && adjacentItems(run.backpack, weapon).some(i => i.type === 'defense')) flat++
     if (weapon.id === 'root-axe' && enemy.hp === enemy.maxHp) flat += 2
@@ -201,11 +193,6 @@ export class ItemRules {
     flat += extra.flat
     const attackMultiplier = (this.has('r-scales') && weapons.length === 1 ? 2 : 1) * extra.attackMultiplier
     if (this.has('r-blood') && run.player.hp <= run.player.maxHp / 2) flat += 3
-    if (this.talent('flow-step') && moved) flat++
-    if (this.talent('flow-switch') && switched && distance >= 2) flat += 2
-    if (this.talent('flow-master') && moved && switched) flat += 2
-    if (this.talent('harmony-counter') && relation.countered) flat++
-    if (this.talent('survival-low') && run.player.hp <= run.player.maxHp / 2) flat++
     const buffs = this.matchingBuffs(weapon)
     flat += buffs.reduce((n,[,b]) => n + (b.flat || 0), 0)
     const triad = this.has('r-three') && new Set(weapons.map(i => i.attribute).filter(Boolean)).size === 3
@@ -237,11 +224,6 @@ export class ItemRules {
     if (weapon.id === 'rust-sword') run.applyStatus(run.player, 'parry', { multiplier: 0.7 })
     if (weapon.id === 'wall-sword') run.player.armor = Math.max(0, run.player.armor - 2)
     if (this.has('r-guard-return') && context.armorBefore > run.player.armor) this.armor(1)
-    if (hit.damage > 0 && this.state.lastAction === 'movement' && this.talent('flow-walk')) this.armorFloor(1)
-    if (hit.damage > 0 && !enemy.downed && run.currentRoom.entity(enemy.id) && this.talent('harmony-switch') &&
-        this.state.lastAttribute && this.state.lastAttribute !== weapon.attribute) {
-      run.applyStatus(enemy, 'attack-reduction', { amount: 1 })
-    }
     if (!purgePoison && !hit.evaded && !enemy.downed && run.currentRoom.entity(enemy.id) && this.adjacent(weapon, 'venom-sac')) {
       run.applyStatus(enemy, 'enemy-poison', { layers: 5, damage: 1 }, { refresh: true })
     }
@@ -263,8 +245,6 @@ export class ItemRules {
       if (weapon.id === 'return-axe') this.buff('return-axe', { other: weapon.uid, flat: 2, discount: 1 })
       if (weapon.id === 'gold-hook') run.player.gold++
       if (this.adjacent(weapon, 'spring')) this.buff('spring', { other: weapon.uid, discount: 1 })
-      if (this.talent('flow-relay')) this.buff('flow-relay', { other: weapon.uid, discount: 1 })
-      if (this.talent('harmony-kill') && context.countered) run._recoverEnergy(1)
       if (weapon.id === 'ember-axe') {
         const targets = run._activeEnemies().filter(e => chebyshev(e.pos, enemy.pos) === 1)
         for (const target of targets) {
@@ -279,7 +259,6 @@ export class ItemRules {
         this.state.lastAttribute !== weapon.attribute) this.buff('r-phase-pointer', { flat: 1, discount: 1 })
     if (hit.damage > 0 && this.has('tide-shield') && weapon.attribute === 'drown') this.armorFloor(2, true, 'tide-shield')
     if (hit.damage > 0 && this.has('red-armor') && weapon.attribute === 'scorch' && run.player.hp <= run.player.maxHp / 2) this.armorFloor(3, true, 'red-armor')
-    if (this.talent('harmony-resist') && context.resisted) this.buff('harmony-resist', { flat: 2, otherAttribute: weapon.attribute })
     this.expansion.afterAttack(weapon, enemy, hit, context)
     this.state.lastWeapon = weapon.uid
     this.state.lastAttribute = weapon.attribute
@@ -293,9 +272,6 @@ export class ItemRules {
       if (this.state.enemyAttacks % 2 === 0) this.armorFloor(3, true, 'wood-shield')
     }
     if (context.enemy?.range > 1 && this.has('tide-cloak')) damage--
-    if (this.talent('guard-hard') && this.run.player.armor > 0) damage--
-    const attributes = new Set(this.run.backpack.items.filter(i => i.type === 'weapon').map(i => i.attribute).filter(Boolean))
-    if (this.talent('harmony-three') && attributes.size === 3 && context.enemy?.attribute) damage--
     if (this.has('vine-armor') && neighbors8(this.run.player.pos, this.run.currentRoom.width, this.run.currentRoom.height).some(p => !this.run.currentRoom.isRevealed(p))) damage--
     return Math.max(0, damage)
   }
@@ -308,19 +284,14 @@ export class ItemRules {
     }
     if (armorBefore > 0 && armorAfter === 0) {
       if (this.has('red-shield')) this.buff('red-shield', { attribute: 'scorch', flat: 2 })
-      if (this.talent('guard-last')) this.buff('guard-last', { flat: 2 })
     }
     if (this.has('r-guard-return') && armorBefore > armorAfter) this.armor(1)
-    if (healthDamage > 0 && run.player.hp <= run.player.maxHp / 2 && this.talent('survival-energy')) {
-      this.state.healthHits = (this.state.healthHits || 0) + 1
-      if (this.state.healthHits % 2 === 0) run._recoverEnergy(1)
-    }
     if (healthDamage > 0 && context.enemy?.range === 1 && this.has('thorn-shield')) run._damageEnemy(context.enemy, 2, { source: 'item:thorns' })
     this.expansion.afterDamage(armorBefore, armorAfter)
   }
   discarded() {}
 
-  sourceName(id) { return getItemDefinition(id)?.name || getTalentDefinition(id)?.name || id }
+  sourceName(id) { return getItemDefinition(id)?.name || id }
 
   pendingLines(weapon = null) {
     const buffs = weapon ? this.matchingBuffs(weapon) : Object.entries(this.state.buffs).filter(([key]) =>
@@ -379,7 +350,6 @@ export class ItemRules {
     if (this.run.backpack.items.some((item) => item.id === 'range-disc')) lines.push(`测距盘：蓄势 ${this.state.sniperCharge || 0}/2`)
     if (getStatus(this.run.player, 'parry')) lines.push('锈蚀短剑：下一次近战普通攻击减伤30%')
     if (this.has('wood-shield')) lines.push(`木盾：下次是第${(this.state.enemyAttacks || 0) % 2 === 0 ? 1 : 2}次受击（第2次触发）`)
-    if (this.talent('survival-energy')) lines.push(`续命：受生命伤害计数${(this.state.healthHits || 0) % 2}/2`)
     if (this.has('r-empty')) lines.push(`空匣印：空格${this.run.backpack.capacity - this.run.backpack.usedCells}/8${this.run.backpack.capacity - this.run.backpack.usedCells >= 8 ? '，武器体力消耗-1' : ''}`)
     if (this.has('r-three')) lines.push(`三相轮：武器属性${new Set(this.run.backpack.items.filter(i => i.type === 'weapon').map(i => i.attribute).filter(Boolean)).size}/3`)
     for (const id of ['r-traveler', 'r-step-boots', 'r-turn-shield']) {

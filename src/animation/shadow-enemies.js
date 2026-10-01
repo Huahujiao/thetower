@@ -1,5 +1,6 @@
 import { ENEMY_DEFS } from '../game/data/enemies.js'
 import { createRosterEnemyProject, ROSTER_ENEMY_ART } from './shadow-enemy-roster.js'
+import { applyEnemyComponentArt, COMPONENT_ENEMY_IDS, BATCH2_COMPONENT_ENEMY_IDS, BATCH3_COMPONENT_ENEMY_IDS, BATCH4_COMPONENT_ENEMY_IDS, componentTexturePresets, offsetGnawerForearms, widenEnemyComponentRig } from './shadow-enemy-components.js'
 import {
   createDefaultShadowProject,
   createShadowBone,
@@ -12,12 +13,13 @@ import {
   upsertShadowKeyframe,
 } from './shadow-rig.js'
 
-export const ENEMY_ART_PACK_VERSION = 9
+export const ENEMY_ART_PACK_VERSION = 15
 export const ENEMY_ART = Object.freeze({
   gnawer: { family: 'humanoid' },
   'emberwing-moth': { family: 'winged' },
   'rootrot-bud': { family: 'rooted' },
   ...ROSTER_ENEMY_ART,
+  'tide-shadow-cub': { family: 'floater' },
 })
 
 const PALETTE = {
@@ -431,9 +433,12 @@ function sculptDepth(project) {
   }
 }
 
-export function createEnemyShadowProject(definition) {
+export function createEnemyShadowProject(definition, { withComponentArt = true } = {}) {
   const build = BUILD[definition?.id]
-  if (!build) return createRosterEnemyProject(definition)
+  if (!build) {
+    const project = createRosterEnemyProject(definition)
+    return project && withComponentArt ? applyEnemyComponentArt(project) : project
+  }
   const project = createDefaultShadowProject()
   project.name = `${definition.name} · 骨架预览`
   project.enemyId = definition.id
@@ -441,21 +446,55 @@ export function createEnemyShadowProject(definition) {
   // Import the original screen-space draft once into the V5 world convention.
   reflectShadowProjectY(project)
   sculptDepth(project)
-  return project
+  return withComponentArt ? applyEnemyComponentArt(project) : project
 }
 
 export function createEnemyShadowProjects() {
   return ENEMY_DEFS.map(createEnemyShadowProject).filter(Boolean)
 }
 
+function replaceComponentTemplate(roster, character, template) {
+  const definition = ENEMY_DEFS.find(({ id }) => id === template.enemyId)
+  const previous = normalizeShadowProject(createEnemyShadowProject(definition, { withComponentArt: false }))
+  const generic = ROSTER_ENEMY_ART[template.enemyId]
+    ? normalizeShadowProject(createRosterEnemyProject(definition, { withVariants: false })) : previous
+  const fingerprint = rigFingerprint(character.project)
+  const pristine = character.project.name === previous.name
+    && JSON.stringify(character.project.stage) === JSON.stringify(previous.stage)
+    && [rigFingerprint(previous), rigFingerprint(generic), rigFingerprint(normalizeShadowProject(template))].includes(fingerprint)
+  if (!pristine) roster.characters.push(createShadowCharacter({
+    ...character.project, name: `${character.project.name} · 旧版备份`, enemyId: null,
+  }))
+  character.project = template
+}
+
 export function installEnemyShadowProjects(roster) {
   if (roster.enemyArtPackVersion >= ENEMY_ART_PACK_VERSION) return false
+  // V10/V11 already have component art. Apply small rig adjustments in place
+  // so saved custom poses, textures, selection and other enemies remain intact.
+  if (roster.enemyArtPackVersion >= 10) {
+    for (const { project } of roster.characters) {
+      if (roster.enemyArtPackVersion === 10) offsetGnawerForearms(project)
+      if (roster.enemyArtPackVersion < 12) widenEnemyComponentRig(project)
+    }
+    const newIds = [...(roster.enemyArtPackVersion < 13 ? BATCH2_COMPONENT_ENEMY_IDS : []), ...(roster.enemyArtPackVersion < 14 ? BATCH3_COMPONENT_ENEMY_IDS : []), ...BATCH4_COMPONENT_ENEMY_IDS]
+    for (const enemyId of newIds) {
+      const template = createEnemyShadowProject(ENEMY_DEFS.find(d => d.id === enemyId))
+      const character = roster.characters.find(({ project }) => project.enemyId === enemyId)
+      if (character) replaceComponentTemplate(roster, character, template)
+      else roster.characters.push(createShadowCharacter(template))
+    }
+    roster.enemyArtPackVersion = ENEMY_ART_PACK_VERSION
+    return true
+  }
   let reviewCharacterId = null
   for (const template of createEnemyShadowProjects()) {
     const character = roster.characters.find(({ project }) => project.enemyId === template.enemyId)
     // Pre-paper projects contain rejected atlas cutouts. V7/V8 roster rigs
     // share generic anatomy; archive edited versions before replacing them.
-    if (character && roster.enemyArtPackVersion < 6 && BUILD[template.enemyId]) character.project = template
+    if (character && COMPONENT_ENEMY_IDS.includes(template.enemyId)) {
+      replaceComponentTemplate(roster, character, template)
+    }
     else if (character && roster.enemyArtPackVersion >= 7 && roster.enemyArtPackVersion < 9
       && ROSTER_ENEMY_ART[template.enemyId]) {
       const fingerprint = rigFingerprint(character.project)
@@ -481,4 +520,4 @@ export function installEnemyShadowProjects(roster) {
   return true
 }
 
-export function enemyTexturePresets() { return null }
+export function enemyTexturePresets(enemyId) { return componentTexturePresets(enemyId) }

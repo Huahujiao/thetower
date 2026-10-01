@@ -1,0 +1,227 @@
+[
+  {
+    "enemy": "bomb-wisp",
+    "action": "idle",
+    "fraction": 0,
+    "left": 60,
+    "right": 101,
+    "top": 36,
+    "bottom": 115
+  },
+  {
+    "enemy": "bomb-wisp",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 60,
+    "right": 102,
+    "top": 35,
+    "bottom": 115
+  },
+  {
+    "enemy": "bomb-wisp",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 59,
+    "right": 102,
+    "top": 35,
+    "bottom": 114
+  },
+  {
+    "enemy": "bomb-wisp",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 60,
+    "right": 101,
+    "top": 36,
+    "bottom": 115
+  },
+  {
+    "enemy": "bomb-wisp",
+    "action": "idle",
+    "fraction": 1,
+    "left": 60,
+    "right": 101,
+    "top": 36,
+    "bottom": 115
+  },
+  {
+    "enemy": "bomb-wisp",
+    "action": "move",
+    "fraction": 0,
+    "left": 60,
+    "right": 101,
+    "top": 36,
+    "bottom": 115
+  },
+  {
+    "enemy": "bomb-wisp",
+    "action": "move",
+    "fraction": 0.27,
+    "left": 61,
+    "right": 106,
+    "top": 35,
+    "bottom": 112
+  },
+  {
+    "enemy": "bomb-wisp",
+    "action": "move",
+    "fraction": 0.64,
+    "left": 60,
+    "right": 101,
+    "top": 37,
+    "bottom": 116
+  },
+  {
+    "enemy": "bomb-wisp",
+    "action": "move",
+    "fraction": 0.85,
+    "left": 59,
+    "right": 101,
+    "top": 37,
+    "bottom": 116
+  },
+  {
+    "enemy": "bomb-wisp",
+    "action": "move",
+    "fraction": 1,
+    "left": 60,
+    "right": 101,
+    "top": 36,
+    "bottom": 115
+  },
+  {
+    "enemy": "bomb-wisp",
+    "action": "attack",
+    "fraction": 0,
+    "left": 60,
+    "right": 101,
+    "top": 36,
+    "bottom": 115
+  },
+  {
+    "enemy": "bomb-wisp",
+    "action": "attack",
+    "fraction": 0.27,
+    "left": 64,
+    "right": 98,
+    "top": 36,
+    "bottom": 115
+  },
+  {
+    "enemy": "bomb-wisp",
+    "action": "attack",
+    "fraction": 0.64,
+    "left": 53,
+    "right": 114,
+    "top": 36,
+    "bottom": 114
+  },
+  {
+    "enemy": "bomb-wisp",
+    "action": "attack",
+    "fraction": 0.85,
+    "left": 57,
+    "right": 106,
+    "top": 36,
+    "bottom": 115
+  },
+  {
+    "enemy": "bomb-wisp",
+    "action": "attack",
+    "fraction": 1,
+    "left": 60,
+    "right": 101,
+    "top": 36,
+    "bottom": 115
+  },
+  {
+    "enemy": "bomb-wisp",
+    "action": "hit",
+    "fraction": 0,
+    "left": 60,
+    "right": 101,
+    "top": 36,
+    "bottom": 115
+  },
+  {
+    "enemy": "bomb-wisp",
+    "action": "hit",
+    "fraction": 0.27,
+    "left": 60,
+    "right": 107,
+    "top": 37,
+    "bottom": 114
+  },
+  {
+    "enemy": "bomb-wisp",
+    "action": "hit",
+    "fraction": 0.64,
+    "left": 61,
+    "right": 104,
+    "top": 36,
+    "bottom": 115
+  },
+  {
+    "enemy": "bomb-wisp",
+    "action": "hit",
+    "fraction": 0.85,
+    "left": 62,
+    "right": 101,
+    "top": 36,
+    "bottom": 115
+  },
+  {
+    "enemy": "bomb-wisp",
+    "action": "hit",
+    "fraction": 1,
+    "left": 60,
+    "right": 101,
+    "top": 36,
+    "bottom": 115
+  },
+  {
+    "enemy": "bomb-wisp",
+    "action": "death",
+    "fraction": 0,
+    "left": 60,
+    "right": 101,
+    "top": 36,
+    "bottom": 115
+  },
+  {
+    "enemy": "bomb-wisp",
+    "action": "death",
+    "fraction": 0.27,
+    "left": 60,
+    "right": 104,
+    "top": 38,
+    "bottom": 116
+  },
+  {
+    "enemy": "bomb-wisp",
+    "action": "death",
+    "fraction": 0.64,
+    "left": 56,
+    "right": 102,
+    "top": 41,
+    "bottom": 116
+  },
+  {
+    "enemy": "bomb-wisp",
+    "action": "death",
+    "fraction": 0.85,
+    "left": 57,
+    "right": 98,
+    "top": 44,
+    "bottom": 115
+  },
+  {
+    "enemy": "bomb-wisp",
+    "action": "death",
+    "fraction": 1,
+    "left": 59,
+    "right": 98,
+    "top": 47,
+    "bottom": 114
+  }
+]

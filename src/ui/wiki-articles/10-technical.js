@@ -7,14 +7,14 @@ export default `# 技术结构、存档与验证
 | 路径 | 职责 |
 | --- | --- |
 | \`src/game/core/\` | 事件、坐标、回合计数及背包操作提交 |
-| \`src/game/data/\` | 敌人、物品、陷阱、圣遗物、天赋、奖励与商人静态定义 |
+| \`src/game/data/\` | 敌人、物品、陷阱、圣遗物、升级奖励与商人静态定义 |
 | \`src/game/model/\` | 地牢、房间、背包和圣遗物持有状态 |
 | \`src/game/rules/\` | 寻路、射程、伤害、敌人、物品及圣遗物规则 |
 | \`src/game/run.js\` | 一局游戏的状态、操作、动画结算屏障与持久化 |
 | \`src/render/\` | Three.js 棋盘、相机、瞄准星和临时角色动作 |
 | \`src/ui/\` | Vue HUD、背包组件、详情与图鉴 |
 
-规则数值以运行时为准。\`catalog.json\`、\`progression.js\`、\`relics.js\`、\`merchants.js\` 和 \`traps.js\` 是当前内容定义；\`src/game/data/enemies.js\` 的 \`ENEMY_HP_MULTIPLIER\`（当前 4）参与生成生命与图鉴展示。
+规则数值以运行时为准。\`catalog.json\`、\`progression.js\`、\`relics.js\`、\`merchants.js\` 和 \`traps.js\` 是当前内容定义；敌人生命直接存储为实际数值，\`src/game/data/enemies.js\` 的 \`ENEMY_HP_MULTIPLIER\` 为 1，章节和房间只决定生成种类、数量与组合，不改变同种敌人的数值。
 
 物品效果在 \`items.js\` 按各自条件结算，没有固定套装激活名单；\`backpack-geometry.js\` 计算四向相邻，\`synergies.js\` 提供导流线和分叉接头的独立邻接判断，以及奖励标签推荐。标签只影响候选排序。毒蚀蓄势在敌人中毒伤害结算后累计。普通商人货品价格与刷新费用分别由 \`GameRun.merchantPrice()\` 和 \`GameRun.merchantRestockPrice()\` 计算，付款与界面展示共用这两个方法。待用效果进度写入 \`player.itemState\`，房间内次数限制写入该房间的物品运行状态。第二批新增物品的 PNG 源图保存在 \`src/assets/inventory/backup/source/\`，small 与 medium 版本由资源生成脚本导出。
 
@@ -74,7 +74,7 @@ npm.cmd run check:expansion
 npm.cmd run check:totems
 npm.cmd run check:synergies
 npm.cmd run check:enemies
-npm.cmd run check:talents
+npm.cmd run check:progression
 npm.cmd run check:combat-motion
 npm.cmd run check:animation
 npm.cmd run build

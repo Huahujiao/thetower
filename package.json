@@ -28,7 +28,7 @@
     "check:rules": "node scripts/v2-check.mjs",
     "check:dungeon": "node scripts/dungeon-check.mjs",
     "check:synergies": "node scripts/synergies-check.mjs",
-    "check:talents": "node scripts/talents-check.mjs",
+    "check:progression": "node scripts/progression-check.mjs && node scripts/progression-ui-check.mjs",
     "check:wiki": "node scripts/wiki-check.mjs"
   },
   "dependencies": {

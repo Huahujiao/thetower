@@ -10,8 +10,8 @@
         "alert"
       ],
       "range": 1,
-      "hp": 4,
-      "attack": 4,
+      "hp": 12,
+      "attack": 3,
       "experience": 2,
       "relicDropChance": 0,
       "drop": {
@@ -30,7 +30,7 @@
       "explosionRadius": 1,
       "deathExplosionDamage": 2,
       "range": 1,
-      "hp": 3,
+      "hp": 9,
       "attack": 2,
       "experience": 2,
       "relicDropChance": 0,
@@ -47,12 +47,9 @@
       "minFloor": 1,
       "attribute": "wither",
       "behavior": "stationary",
-      "traits": [
-        "regen"
-      ],
-      "regen": 1,
-      "range": 2,
-      "hp": 7,
+      "traits": [],
+      "range": 1,
+      "hp": 20,
       "attack": 2,
       "experience": 2,
       "relicDropChance": 0,
@@ -70,7 +67,7 @@
       "attribute": "drown",
       "behavior": "chaser",
       "range": 1,
-      "hp": 4,
+      "hp": 12,
       "attack": 2,
       "experience": 2,
       "relicDropChance": 0,
@@ -84,12 +81,12 @@
     {
       "id": "nest-spider",
       "name": "伏巢蜘蛛",
-      "minFloor": 3,
+      "minFloor": 2,
       "attribute": "wither",
       "behavior": "ambush",
       "range": 1,
-      "hp": 3,
-      "attack": 5,
+      "hp": 9,
+      "attack": 4,
       "experience": 3,
       "relicDropChance": 0,
       "drop": {
@@ -109,13 +106,16 @@
         "shield"
       ],
       "range": 1,
-      "hp": 6,
+      "hp": 17,
       "attack": 3,
       "experience": 2,
       "relicDropChance": 0,
       "drop": {
         "chance": 0.35,
-        "itemIds": ["shield-core", "wood-shield"]
+        "itemIds": [
+          "shield-core",
+          "wood-shield"
+        ]
       },
       "attackCooldownMax": 2,
       "initialActionDelay": 1
@@ -130,7 +130,7 @@
         "alert"
       ],
       "range": 1,
-      "hp": 7,
+      "hp": 20,
       "attack": 4,
       "experience": 2,
       "relicDropChance": 0,
@@ -151,14 +151,17 @@
       "traits": [
         "heavy-armor"
       ],
-      "hp": 10,
-      "attack": 7,
+      "hp": 28,
+      "attack": 5,
       "elite": true,
       "experience": 4,
       "relicDropChance": 0,
       "drop": {
         "chance": 0.6,
-        "itemIds": ["weight", "light-armor"]
+        "itemIds": [
+          "weight",
+          "light-armor"
+        ]
       },
       "attackCooldownMax": 3,
       "initialActionDelay": 1
@@ -173,13 +176,16 @@
         "alert"
       ],
       "range": 3,
-      "hp": 5,
+      "hp": 14,
       "attack": 3,
       "experience": 3,
       "relicDropChance": 0,
       "drop": {
         "chance": 0.6,
-        "itemIds": ["chain", "tide-shield"]
+        "itemIds": [
+          "chain",
+          "tide-shield"
+        ]
       },
       "attackCooldownMax": 1,
       "initialActionDelay": 1
@@ -194,7 +200,7 @@
         "alert"
       ],
       "range": 1,
-      "hp": 6,
+      "hp": 17,
       "attack": 4,
       "experience": 3,
       "relicDropChance": 0,
@@ -217,8 +223,8 @@
       "burningTurns": 2,
       "burningDamage": 1,
       "range": 3,
-      "hp": 5,
-      "attack": 6,
+      "hp": 14,
+      "attack": 5,
       "experience": 3,
       "relicDropChance": 0,
       "attackCooldownMax": 2,
@@ -235,10 +241,10 @@
       "attribute": "wither",
       "behavior": "stationary",
       "deathStatus": "poison",
-      "deathStatusTurns": 10,
+      "deathStatusTurns": 7,
       "deathStatusDamage": 2,
       "range": 2,
-      "hp": 8,
+      "hp": 23,
       "attack": 3,
       "experience": 3,
       "relicDropChance": 0,
@@ -259,7 +265,7 @@
         "swift"
       ],
       "range": 1,
-      "hp": 6,
+      "hp": 17,
       "attack": 3,
       "experience": 3,
       "relicDropChance": 0,
@@ -282,7 +288,7 @@
       ],
       "splitMinionId": "broodling",
       "range": 2,
-      "hp": 11,
+      "hp": 31,
       "attack": 5,
       "elite": true,
       "experience": 4,
@@ -305,14 +311,17 @@
       ],
       "regen": 1,
       "range": 1,
-      "hp": 14,
+      "hp": 40,
       "attack": 6,
       "elite": true,
       "experience": 4,
       "relicDropChance": 0,
       "drop": {
         "chance": 0.45,
-        "itemIds": ["weight", "vine-armor"]
+        "itemIds": [
+          "weight",
+          "vine-armor"
+        ]
       },
       "attackCooldownMax": 2,
       "initialActionDelay": 1
@@ -327,7 +336,7 @@
         "alert"
       ],
       "range": 3,
-      "hp": 8,
+      "hp": 23,
       "attack": 6,
       "elite": true,
       "experience": 4,
@@ -346,8 +355,8 @@
       "attribute": "scorch",
       "behavior": "stationary",
       "range": 4,
-      "hp": 7,
-      "attack": 8,
+      "hp": 20,
+      "attack": 7,
       "experience": 4,
       "relicDropChance": 0,
       "attackCooldownMax": 3,
@@ -366,7 +375,7 @@
       "explosionRadius": 1,
       "deathExplosionDamage": 3,
       "range": 1,
-      "hp": 8,
+      "hp": 23,
       "attack": 6,
       "experience": 3,
       "relicDropChance": 0,
@@ -374,7 +383,10 @@
       "initialActionDelay": 1,
       "drop": {
         "chance": 0.25,
-        "itemIds": ["shield-core", "red-shield"]
+        "itemIds": [
+          "shield-core",
+          "red-shield"
+        ]
       }
     },
     {
@@ -389,7 +401,7 @@
       ],
       "regen": 1,
       "range": 2,
-      "hp": 10,
+      "hp": 28,
       "attack": 4,
       "experience": 4,
       "relicDropChance": 0,
@@ -397,7 +409,10 @@
       "initialActionDelay": 1,
       "drop": {
         "chance": 0.25,
-        "itemIds": ["shield-core", "thorn-shield"]
+        "itemIds": [
+          "shield-core",
+          "thorn-shield"
+        ]
       }
     },
     {
@@ -411,7 +426,7 @@
       ],
       "splitMinionId": "leech-larva",
       "range": 1,
-      "hp": 6,
+      "hp": 17,
       "attack": 4,
       "experience": 3,
       "relicDropChance": 0,
@@ -433,7 +448,7 @@
       ],
       "pullDistance": 1,
       "range": 2,
-      "hp": 7,
+      "hp": 20,
       "attack": 4,
       "experience": 4,
       "relicDropChance": 0,
@@ -453,8 +468,8 @@
       "explosionRadius": 2,
       "deathExplosionDamage": 5,
       "range": 2,
-      "hp": 12,
-      "attack": 10,
+      "hp": 34,
+      "attack": 8,
       "experience": 5,
       "relicDropChance": 0,
       "attackCooldownMax": 3,
@@ -476,8 +491,8 @@
       "burningTurns": 2,
       "burningDamage": 1,
       "range": 3,
-      "hp": 8,
-      "attack": 9,
+      "hp": 23,
+      "attack": 7,
       "experience": 5,
       "relicDropChance": 0,
       "attackCooldownMax": 2,
@@ -499,8 +514,8 @@
       "burningTurns": 2,
       "burningDamage": 1,
       "range": 3,
-      "hp": 5,
-      "attack": 8,
+      "hp": 14,
+      "attack": 6,
       "experience": 4,
       "relicDropChance": 0,
       "attackCooldownMax": 2,
@@ -523,7 +538,7 @@
       "summonMinionId": "tide-shadow",
       "summonLimit": 2,
       "range": 2,
-      "hp": 14,
+      "hp": 40,
       "attack": 4,
       "experience": 6,
       "relicDropChance": 0,
@@ -546,7 +561,7 @@
       ],
       "pullDistance": 1,
       "range": 2,
-      "hp": 10,
+      "hp": 28,
       "attack": 6,
       "experience": 5,
       "relicDropChance": 0,
@@ -569,7 +584,7 @@
       "deathSpawnMinionId": "tide-shadow",
       "deathSpawnCount": 2,
       "range": 1,
-      "hp": 9,
+      "hp": 26,
       "attack": 5,
       "experience": 5,
       "relicDropChance": 0,
@@ -588,14 +603,17 @@
       "behavior": "stationary",
       "deathRule": "revive",
       "range": 1,
-      "hp": 12,
+      "hp": 34,
       "attack": 7,
       "elite": true,
       "experience": 4,
       "relicDropChance": 0,
       "drop": {
         "chance": 0.5,
-        "itemIds": ["chain", "tide-cloak"]
+        "itemIds": [
+          "chain",
+          "tide-cloak"
+        ]
       },
       "attackCooldownMax": 2,
       "initialActionDelay": 1
@@ -610,8 +628,8 @@
       "deathExplosionDamage": 6,
       "selfDestructOnAttack": true,
       "range": 2,
-      "hp": 6,
-      "attack": 12,
+      "hp": 17,
+      "attack": 10,
       "elite": true,
       "experience": 4,
       "relicDropChance": 0,
@@ -619,7 +637,10 @@
       "initialActionDelay": 3,
       "drop": {
         "chance": 0.5,
-        "itemIds": ["weight", "red-armor"]
+        "itemIds": [
+          "weight",
+          "red-armor"
+        ]
       }
     },
     {
@@ -633,7 +654,7 @@
         "alert"
       ],
       "range": 2,
-      "hp": 14,
+      "hp": 40,
       "attack": 7,
       "elite": true,
       "experience": 4,
@@ -654,7 +675,7 @@
       "spawnOnly": true,
       "noLoot": true,
       "range": 1,
-      "hp": 3,
+      "hp": 9,
       "attack": 2,
       "attackCooldownMax": 1,
       "initialActionDelay": 1,
@@ -669,7 +690,7 @@
       "spawnOnly": true,
       "noLoot": true,
       "range": 1,
-      "hp": 2,
+      "hp": 6,
       "attack": 2,
       "attackCooldownMax": 1,
       "initialActionDelay": 1,
@@ -684,7 +705,7 @@
       "spawnOnly": true,
       "noLoot": true,
       "range": 1,
-      "hp": 3,
+      "hp": 9,
       "attack": 2,
       "attackCooldownMax": 1,
       "initialActionDelay": 1,
@@ -697,8 +718,8 @@
     "minFloor": 5,
     "attribute": "wither",
     "behavior": "stationary",
-    "hp": 36,
-    "attack": 10,
+    "hp": 101,
+    "attack": 9,
     "range": 2,
     "attackCooldownMax": 2,
     "initialActionDelay": 1
@@ -1011,7 +1032,7 @@
         ]
       ],
       "energyCost": 2,
-      "description": "\u653b\u51fb\u4e2d\u6bd2\u654c\u4eba\u65f6\uff0c\u7acb\u5373\u89e6\u53d13\u6b21\u6bd2\u4f24\uff0c\u5e76\u79fb\u9664\u5176\u4e2d\u6bd2\u6548\u679c\u3002",
+      "description": "攻击中毒敌人时，立即触发3次毒伤，并移除其中毒效果。",
       "crafted": true
     },
     {
@@ -1102,7 +1123,14 @@
       "attribute": "scorch",
       "attack": 4,
       "range": 1,
-      "shape": [[1], [1]],
+      "shape": [
+        [
+          1
+        ],
+        [
+          1
+        ]
+      ],
       "minFloor": 1,
       "description": "若上一把用于攻击的武器属性不同，本次攻击伤害+1。"
     },
@@ -1115,7 +1143,11 @@
       "attribute": "wither",
       "attack": 3,
       "range": 1,
-      "shape": [[1]],
+      "shape": [
+        [
+          1
+        ]
+      ],
       "minFloor": 2,
       "description": "攻击中毒敌人时，伤害+2。"
     },
@@ -1128,7 +1160,16 @@
       "attribute": "drown",
       "attack": 3,
       "range": 3,
-      "shape": [[1, 1], [0, 1]],
+      "shape": [
+        [
+          1,
+          1
+        ],
+        [
+          0,
+          1
+        ]
+      ],
       "minFloor": 3,
       "description": "在当前最大射程有效命中后，返还1体力。"
     },
@@ -1141,21 +1182,35 @@
       "attribute": "drown",
       "attack": 4,
       "range": 1,
-      "shape": [[1], [1]],
+      "shape": [
+        [
+          1
+        ],
+        [
+          1
+        ]
+      ],
       "minFloor": 1,
       "description": "持有至少12金币时攻击+2。"
     },
     {
       "id": "gold-hook",
-      "name": "\u62fe\u91d1\u94a9",
+      "name": "拾金钩",
       "type": "weapon",
       "appearance": "sword",
       "attribute": "scorch",
       "attack": 3,
       "range": 1,
       "energyCost": 3,
-      "shape": [[1], [1]],
-      "description": "\u4f7f\u7528\u8be5\u6b66\u5668\u51fb\u6740\u654c\u4eba\u65f6\uff0c\u83b7\u5f971\u91d1\u5e01\u3002"
+      "shape": [
+        [
+          1
+        ],
+        [
+          1
+        ]
+      ],
+      "description": "使用该武器击杀敌人时，获得1金币。"
     }
   ],
   "consumables": [
@@ -1187,10 +1242,10 @@
     },
     {
       "id": "food-3",
-      "name": "\u98df\u7269\uff083\uff09",
+      "name": "食物（3）",
       "type": "energy",
       "energy": 3,
-      "description": "\u4e00\u6b21\u6027\u6062\u590d3\u4f53\u529b\u3002",
+      "description": "一次性恢复3体力。",
       "shape": [
         [
           1
@@ -1200,60 +1255,80 @@
     },
     {
       "id": "food-5",
-      "name": "\u98df\u7269\uff085\uff09",
+      "name": "食物（5）",
       "type": "energy",
       "energy": 5,
-      "description": "\u4e00\u6b21\u6027\u6062\u590d5\u4f53\u529b\u3002",
-      "shape": [[1]],
+      "description": "一次性恢复5体力。",
+      "shape": [
+        [
+          1
+        ]
+      ],
       "energyCost": 0
     },
     {
       "id": "food-7",
-      "name": "\u98df\u7269\uff087\uff09",
+      "name": "食物（7）",
       "type": "energy",
       "energy": 7,
-      "description": "\u4e00\u6b21\u6027\u6062\u590d7\u4f53\u529b\u3002",
-      "shape": [[1]],
+      "description": "一次性恢复7体力。",
+      "shape": [
+        [
+          1
+        ]
+      ],
       "energyCost": 0
     },
     {
       "id": "food-9",
-      "name": "\u98df\u7269\uff089\uff09",
+      "name": "食物（9）",
       "type": "energy",
       "energy": 9,
-      "description": "\u4e00\u6b21\u6027\u6062\u590d9\u4f53\u529b\u3002",
-      "shape": [[1]],
+      "description": "一次性恢复9体力。",
+      "shape": [
+        [
+          1
+        ]
+      ],
       "energyCost": 0
     },
     {
       "id": "poison",
-      "name": "\u6bd2\u836f",
+      "name": "毒药",
       "type": "throwable",
       "tier": 2,
       "supplyWeight": 1,
       "range": 4,
       "effect": "poison",
       "poisonDamage": 5,
-      "description": "\u6295\u63b7\u8303\u56f44\u683c\uff0c\u4f7f\u654c\u4eba\u4e2d\u6bd2\u3002\u654c\u4eba\u6bcf\u6b21\u653b\u51fb\u65f6\u5931\u53bb5\u751f\u547d\u3002",
-      "shape": [[1]],
+      "description": "投掷范围4格，使敌人中毒。敌人每次攻击时失去5生命。",
+      "shape": [
+        [
+          1
+        ]
+      ],
       "energyCost": 0
     },
     {
       "id": "explosive",
-      "name": "\u70b8\u836f",
+      "name": "炸药",
       "type": "throwable",
       "tier": 2,
       "supplyWeight": 1,
       "range": 4,
       "effect": "explosion",
       "damage": 10,
-      "description": "\u6295\u63b7\u8303\u56f44\u683c\uff0c\u53ef\u9009\u62e9\u5df2\u7ffb\u5f00\u7684\u683c\u5b50\u3002\u5bf9\u76ee\u6807\u683c\u53ca8\u90bb\u57df\u7684\u6240\u6709\u654c\u4eba\u9020\u621010\u4f24\u5bb3\u3002",
-      "shape": [[1]],
+      "description": "投掷范围4格，可选择已翻开的格子。对目标格及8邻域的所有敌人造成10伤害。",
+      "shape": [
+        [
+          1
+        ]
+      ],
       "energyCost": 0
     },
     {
       "id": "thunder-charm",
-      "name": "\u96f7\u7b26",
+      "name": "雷符",
       "type": "throwable",
       "tier": 2,
       "supplyWeight": 1,
@@ -1261,8 +1336,12 @@
       "effect": "lightning",
       "damage": 16,
       "bounceDamage": 5,
-      "description": "\u6295\u63b7\u8303\u56f44\u683c\uff0c\u5bf9\u76ee\u6807\u654c\u4eba\u9020\u621016\u4f24\u5bb3\uff0c\u5e76\u5f39\u5c04\u5230\u8ddd\u76ee\u6807\u6700\u8fd1\u7684\u53e6\u4e00\u4e2a\u654c\u4eba\u9020\u62105\u4f24\u5bb3\u3002",
-      "shape": [[1]],
+      "description": "投掷范围4格，对目标敌人造成16伤害，并弹射到距目标最近的另一个敌人造成5伤害。",
+      "shape": [
+        [
+          1
+        ]
+      ],
       "energyCost": 0
     },
     {
@@ -1296,7 +1375,7 @@
       "name": "换位符",
       "type": "teleport",
       "attribute": "drown",
-      "description": "\u79fb\u52a8\u5230\u66fc\u54c8\u987f\u8ddd\u79bb6\u5185\u5df2\u7ffb\u5f00\u7684\u7a7a\u683c\uff1b\u53ea\u63a8\u8fdb1\u56de\u5408\uff0c\u4e0d\u7d2f\u8ba1\u79fb\u52a8\u6b65\u6570\u3002",
+      "description": "移动到曼哈顿距离6内已翻开的空格；只推进1回合，不累计移动步数。",
       "shape": [
         [
           1
@@ -1342,7 +1421,7 @@
           1
         ]
       ],
-      "description": "\u76f8\u90bb\u6b66\u5668\u653b\u51fb\u4f7f\u654c\u4eba\u4e2d\u6bd2\uff0c5\u5c42\u3002\u654c\u4eba\u6bcf\u6b21\u653b\u51fb\u65f6\u5931\u53bb1\u751f\u547d\u3002",
+      "description": "相邻武器攻击使敌人中毒，5层。敌人每次攻击时失去1生命。",
       "dropOnly": true
     },
     {
@@ -1358,7 +1437,7 @@
           1
         ]
       ],
-      "description": "\u76f8\u90bb\u6b66\u5668\u5728\u8ddd\u79bb2\u547d\u4e2d\u65f6\uff0c\u51fb\u90001\u683c\u5e76\u9020\u6210\u78b0\u649e\u4f24\u5bb3+2\u3002",
+      "description": "相邻武器在距离2命中时，击退1格并造成碰撞伤害+2。",
       "dropOnly": true
     },
     {
@@ -1374,7 +1453,7 @@
           1
         ]
       ],
-      "description": "\u76f8\u90bb\u6b66\u5668\u5c04\u7a0b+1\u3002",
+      "description": "相邻武器射程+1。",
       "dropOnly": true
     },
     {
@@ -1390,7 +1469,7 @@
           1
         ]
       ],
-      "description": "\u76f8\u90bb\u6b66\u5668\u653b\u51fb+2\u3001\u4f53\u529b\u6d88\u8017+1\u3002",
+      "description": "相邻武器攻击+2、体力消耗+1。",
       "dropOnly": true
     },
     {
@@ -1398,7 +1477,14 @@
       "name": "导流线",
       "type": "material",
       "attribute": null,
-      "shape": [[1], [1]],
+      "shape": [
+        [
+          1
+        ],
+        [
+          1
+        ]
+      ],
       "description": "四向相邻任意防具时，获得护甲会积蓄导流点，上限3；四向相邻的任意武器可在攻击时消耗至多3点并等量增伤。"
     },
     {
@@ -1406,7 +1492,11 @@
       "name": "分叉接头",
       "type": "material",
       "attribute": null,
-      "shape": [[1]],
+      "shape": [
+        [
+          1
+        ]
+      ],
       "description": "本物品同时四向相邻防具与武器时，该武器攻击+1；多个分叉接头不叠加。"
     },
     {
@@ -1414,25 +1504,37 @@
       "name": "测距盘",
       "type": "material",
       "attribute": "drown",
-      "shape": [[1]],
+      "shape": [
+        [
+          1
+        ]
+      ],
       "minFloor": 2,
-      "description": "\u76f8\u90bb\u6700\u5927\u5c04\u7a0b\u22652\u7684\u6b66\u5668\uff0c\u5728\u6700\u5927\u5c04\u7a0b\u6709\u6548\u547d\u4e2d\u540e\uff0c\u4e3a\u4e0b\u4e00\u6b21\u653b\u51fb\u84c42\u70b9\u4f24\u5bb3\u3002"
+      "description": "相邻最大射程≥2的武器，在最大射程有效命中后，为下一次攻击蓄2点伤害。"
     },
     {
       "id": "steady-clip",
       "name": "稳弦扣",
       "type": "material",
       "attribute": null,
-      "shape": [[1]],
-      "description": "\u76f8\u90bb\u6700\u5927\u5c04\u7a0b\u22652\u7684\u6b66\u5668\uff0c\u653b\u51fb\u8ddd\u79bb\u22642\u65f6\u4f24\u5bb3+1\u3002"
+      "shape": [
+        [
+          1
+        ]
+      ],
+      "description": "相邻最大射程≥2的武器，攻击距离≤2时伤害+1。"
     },
     {
       "id": "bone-nail",
       "name": "裂骨钉",
       "type": "material",
       "attribute": "wither",
-      "shape": [[1]],
-      "description": "\u76f8\u90bb\u6b66\u5668\u5728\u8ddd\u79bb2\u547d\u4e2d\u65f6\u51fb\u9000\u76ee\u6807\uff1b\u649e\u5899\u6216\u649e\u5230\u654c\u4eba\u65f6\u989d\u5916\u9020\u62102\u70b9\u78b0\u649e\u4f24\u5bb3\uff0c\u5e76\u5ef6\u8fdf\u76ee\u6807\u884c\u52a81\u6b21\u3002"
+      "shape": [
+        [
+          1
+        ]
+      ],
+      "description": "相邻武器在距离2命中时击退目标；撞墙或撞到敌人时额外造成2点碰撞伤害，并延迟目标行动1次。"
     },
     {
       "id": "toxin-vial",
@@ -1440,8 +1542,12 @@
       "name": "续毒瓶",
       "type": "material",
       "attribute": "wither",
-      "shape": [[1]],
-      "description": "\u56db\u5411\u76f8\u90bb\u7684\u4efb\u610f\u6b66\u5668\u9644\u6bd2\u65f6\uff0c\u4e2d\u6bd2\u6301\u7eed3\u6b21\u654c\u4eba\u653b\u51fb\u3002"
+      "shape": [
+        [
+          1
+        ]
+      ],
+      "description": "四向相邻的任意武器附毒时，中毒持续3次敌人攻击。"
     }
   ],
   "merchantWeapons": [],
@@ -1538,7 +1644,7 @@
           1
         ]
       ],
-      "description": "\u9996\u6b21\u8fdb\u5165\u65b0\u623f\u95f4\u65f6\u83b7\u5f971\u62a4\u7532\u3002"
+      "description": "首次进入新房间时获得1护甲。"
     },
     {
       "id": "red-armor",

@@ -206,7 +206,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { Matrix4 } from 'three'
 import { installInitialShadowExamples, repairInitialShadowExamples, texturePresetsForShadowProject } from '../animation/shadow-examples.js'
-import { installEnemyShadowProjects } from '../animation/shadow-enemies.js'
+import { enemyTexturePresets, installEnemyShadowProjects } from '../animation/shadow-enemies.js'
 import { ShadowHistory } from '../animation/shadow-history.js'
 import {
   SHADOW_ANIMATION_TYPES,
@@ -261,7 +261,7 @@ const project = computed({
     if (character) character.project = value
   },
 })
-const texturePresets = computed(() => project.value.enemyId ? [] : texturePresetsForShadowProject(project.value))
+const texturePresets = computed(() => project.value.enemyId ? enemyTexturePresets(project.value.enemyId) : texturePresetsForShadowProject(project.value))
 const editorMode = ref('skeleton')
 const skeletonTool = ref('select')
 const selectedKind = ref(null)

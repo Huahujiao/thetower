@@ -1,0 +1,92 @@
+[
+  {
+    "id": "furnace-beetle",
+    "view": 0,
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/orbit-furnace-beetle-0.png"
+  },
+  {
+    "id": "furnace-beetle",
+    "view": 1,
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/orbit-furnace-beetle-1.png"
+  },
+  {
+    "id": "furnace-beetle",
+    "view": 2,
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/orbit-furnace-beetle-2.png"
+  },
+  {
+    "id": "thorn-shell-flower",
+    "view": 0,
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/orbit-thorn-shell-flower-0.png"
+  },
+  {
+    "id": "thorn-shell-flower",
+    "view": 1,
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/orbit-thorn-shell-flower-1.png"
+  },
+  {
+    "id": "thorn-shell-flower",
+    "view": 2,
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/orbit-thorn-shell-flower-2.png"
+  },
+  {
+    "id": "water-leech-swarm",
+    "view": 0,
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/orbit-water-leech-swarm-0.png"
+  },
+  {
+    "id": "water-leech-swarm",
+    "view": 1,
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/orbit-water-leech-swarm-1.png"
+  },
+  {
+    "id": "water-leech-swarm",
+    "view": 2,
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/orbit-water-leech-swarm-2.png"
+  },
+  {
+    "id": "whirlpool-eye-sac",
+    "view": 0,
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/orbit-whirlpool-eye-sac-0.png"
+  },
+  {
+    "id": "whirlpool-eye-sac",
+    "view": 1,
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/orbit-whirlpool-eye-sac-1.png"
+  },
+  {
+    "id": "whirlpool-eye-sac",
+    "view": 2,
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/orbit-whirlpool-eye-sac-2.png"
+  },
+  {
+    "id": "cinder-curse-lamp-swarm",
+    "view": 0,
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/orbit-cinder-curse-lamp-swarm-0.png"
+  },
+  {
+    "id": "cinder-curse-lamp-swarm",
+    "view": 1,
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/orbit-cinder-curse-lamp-swarm-1.png"
+  },
+  {
+    "id": "cinder-curse-lamp-swarm",
+    "view": 2,
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/orbit-cinder-curse-lamp-swarm-2.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "view": 0,
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/orbit-drown-shadow-hunter-0.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "view": 1,
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/orbit-drown-shadow-hunter-1.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "view": 2,
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/orbit-drown-shadow-hunter-2.png"
+  }
+]

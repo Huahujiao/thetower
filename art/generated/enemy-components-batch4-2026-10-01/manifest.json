@@ -1,0 +1,7478 @@
+{
+  "packVersion": 15,
+  "date": "2026-10-01",
+  "method": "existing split PNGs, anatomical pivots/crops, indexed preview references, no new image generation",
+  "enemies": [
+    {
+      "id": "tidal-spore-sac",
+      "name": "群潮孢囊 · 骨架预览",
+      "sourceFolder": "27群潮孢囊",
+      "reference": "preview_indexed.png",
+      "referenceSha256": "d9a5788b2c15d8698a2be33ab9b0ff57a6907b5998e612486bbcd5e40d6a6285",
+      "used": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        14,
+        15,
+        16,
+        18,
+        19
+      ],
+      "unused": [
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        17
+      ],
+      "joints": [
+        {
+          "id": "root",
+          "name": "主体",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "rotationX": 0,
+          "rotationY": -30,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "stem-0",
+          "name": "孢茎1根",
+          "x": -26,
+          "y": 17,
+          "z": 6,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "stem-0-hinge-1",
+          "name": "孢茎1中节",
+          "x": -4.7760000000000025,
+          "y": 42.32,
+          "z": 0.3,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "pod-0",
+          "name": "吊囊1柄",
+          "x": -9.154,
+          "y": 36.8,
+          "z": 1,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "stem-1",
+          "name": "孢茎2根",
+          "x": 0,
+          "y": 18,
+          "z": -12,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "stem-1-hinge-1",
+          "name": "孢茎2中节",
+          "x": -3.4428000000000014,
+          "y": 31.7262,
+          "z": 0.3,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "pod-1",
+          "name": "吊囊2柄",
+          "x": -6.598699999999999,
+          "y": 27.587999999999997,
+          "z": 1,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "stem-2",
+          "name": "孢茎3根",
+          "x": 27,
+          "y": 16,
+          "z": 8,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "stem-2-hinge-1",
+          "name": "孢茎3中节",
+          "x": -2.280000000000001,
+          "y": 19.4902,
+          "z": 0.3,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "pod-2",
+          "name": "吊囊3柄",
+          "x": -4.37,
+          "y": 16.947999999999997,
+          "z": 1,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "left-leaf",
+          "name": "左孢叶",
+          "x": -26,
+          "y": 5,
+          "z": -5,
+          "rotationX": 0,
+          "rotationY": -23,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "left-root",
+          "name": "左行根",
+          "x": -30,
+          "y": -25,
+          "z": -10,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "right-leaf",
+          "name": "右孢叶",
+          "x": 26,
+          "y": 5,
+          "z": -5,
+          "rotationX": 0,
+          "rotationY": 23,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "right-root",
+          "name": "右行根",
+          "x": 30,
+          "y": -25,
+          "z": 10,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        }
+      ],
+      "bones": [
+        {
+          "id": "component-root-stem-0",
+          "name": "孢茎1根",
+          "fromJointId": "root",
+          "toJointId": "stem-0"
+        },
+        {
+          "id": "component-stem-0-stem-0-hinge-1",
+          "name": "孢茎1中节",
+          "fromJointId": "stem-0",
+          "toJointId": "stem-0-hinge-1"
+        },
+        {
+          "id": "component-stem-0-hinge-1-pod-0",
+          "name": "吊囊1柄",
+          "fromJointId": "stem-0-hinge-1",
+          "toJointId": "pod-0"
+        },
+        {
+          "id": "component-root-stem-1",
+          "name": "孢茎2根",
+          "fromJointId": "root",
+          "toJointId": "stem-1"
+        },
+        {
+          "id": "component-stem-1-stem-1-hinge-1",
+          "name": "孢茎2中节",
+          "fromJointId": "stem-1",
+          "toJointId": "stem-1-hinge-1"
+        },
+        {
+          "id": "component-stem-1-hinge-1-pod-1",
+          "name": "吊囊2柄",
+          "fromJointId": "stem-1-hinge-1",
+          "toJointId": "pod-1"
+        },
+        {
+          "id": "component-root-stem-2",
+          "name": "孢茎3根",
+          "fromJointId": "root",
+          "toJointId": "stem-2"
+        },
+        {
+          "id": "component-stem-2-stem-2-hinge-1",
+          "name": "孢茎3中节",
+          "fromJointId": "stem-2",
+          "toJointId": "stem-2-hinge-1"
+        },
+        {
+          "id": "component-stem-2-hinge-1-pod-2",
+          "name": "吊囊3柄",
+          "fromJointId": "stem-2-hinge-1",
+          "toJointId": "pod-2"
+        },
+        {
+          "id": "component-root-left-leaf",
+          "name": "左孢叶",
+          "fromJointId": "root",
+          "toJointId": "left-leaf"
+        },
+        {
+          "id": "component-root-left-root",
+          "name": "左行根",
+          "fromJointId": "root",
+          "toJointId": "left-root"
+        },
+        {
+          "id": "component-root-right-leaf",
+          "name": "右孢叶",
+          "fromJointId": "root",
+          "toJointId": "right-leaf"
+        },
+        {
+          "id": "component-root-right-root",
+          "name": "右行根",
+          "fromJointId": "root",
+          "toJointId": "right-root"
+        }
+      ],
+      "parts": [
+        {
+          "id": "root-body",
+          "name": "三孔孢囊根体",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 127.67999999999999,
+          "height": 83.52,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.5,
+          "pivotY": 0.22,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 6,
+          "attachment": {
+            "type": "joint",
+            "targetId": "root",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/tidal-spore-sac/part_016.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 1
+              }
+            }
+          }
+        },
+        {
+          "id": "stem-0-part-0",
+          "name": "孢茎1上段",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 39.800000000000004,
+          "height": 54.28,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.55,
+          "pivotY": 0.8983050847457628,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 7,
+          "attachment": {
+            "type": "joint",
+            "targetId": "stem-0",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/tidal-spore-sac/part_001.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0.41,
+                "width": 1,
+                "height": 0.59
+              }
+            }
+          }
+        },
+        {
+          "id": "stem-0-part-1",
+          "name": "孢茎1下段",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 39.800000000000004,
+          "height": 51.52000000000001,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.43,
+          "pivotY": 0.857142857142857,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 8,
+          "attachment": {
+            "type": "joint",
+            "targetId": "stem-0-hinge-1",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/tidal-spore-sac/part_001.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 0.56
+              }
+            }
+          }
+        },
+        {
+          "id": "pod-0-art",
+          "name": "吊囊1",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 60.28,
+          "height": 98.78,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.53,
+          "pivotY": 0.08,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 8,
+          "attachment": {
+            "type": "joint",
+            "targetId": "pod-0",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/tidal-spore-sac/part_002.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 1
+              }
+            }
+          }
+        },
+        {
+          "id": "stem-1-part-0",
+          "name": "孢茎2上段",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 28.69,
+          "height": 40.692299999999996,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.55,
+          "pivotY": 0.8983050847457628,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 4,
+          "attachment": {
+            "type": "joint",
+            "targetId": "stem-1",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/tidal-spore-sac/part_004.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0.41,
+                "width": 1,
+                "height": 0.59
+              }
+            }
+          }
+        },
+        {
+          "id": "stem-1-part-1",
+          "name": "孢茎2下段",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 28.69,
+          "height": 38.623200000000004,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.43,
+          "pivotY": 0.857142857142857,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 5,
+          "attachment": {
+            "type": "joint",
+            "targetId": "stem-1-hinge-1",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/tidal-spore-sac/part_004.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 0.56
+              }
+            }
+          }
+        },
+        {
+          "id": "pod-1-art",
+          "name": "吊囊2",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 45.76,
+          "height": 82.5,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.53,
+          "pivotY": 0.08,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 8,
+          "attachment": {
+            "type": "joint",
+            "targetId": "pod-1",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/tidal-spore-sac/part_003.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 1
+              }
+            }
+          }
+        },
+        {
+          "id": "stem-2-part-0",
+          "name": "孢茎3上段",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 19,
+          "height": 24.9983,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.55,
+          "pivotY": 0.8983050847457628,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 7,
+          "attachment": {
+            "type": "joint",
+            "targetId": "stem-2",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/tidal-spore-sac/part_006.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0.41,
+                "width": 1,
+                "height": 0.59
+              }
+            }
+          }
+        },
+        {
+          "id": "stem-2-part-1",
+          "name": "孢茎3下段",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 19,
+          "height": 23.727200000000003,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.43,
+          "pivotY": 0.857142857142857,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 8,
+          "attachment": {
+            "type": "joint",
+            "targetId": "stem-2-hinge-1",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/tidal-spore-sac/part_006.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 0.56
+              }
+            }
+          }
+        },
+        {
+          "id": "pod-2-art",
+          "name": "吊囊3",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 29.04,
+          "height": 67.76,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.53,
+          "pivotY": 0.08,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 8,
+          "attachment": {
+            "type": "joint",
+            "targetId": "pod-2",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/tidal-spore-sac/part_005.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 1
+              }
+            }
+          }
+        },
+        {
+          "id": "left-leaf-art",
+          "name": "左孢叶",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 43.04,
+          "height": 39.36,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.1,
+          "pivotY": 0.07,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 3,
+          "attachment": {
+            "type": "joint",
+            "targetId": "left-leaf",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/tidal-spore-sac/part_014.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 1
+              }
+            }
+          }
+        },
+        {
+          "id": "left-root-art",
+          "name": "左行根",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 50.4,
+          "height": 27.36,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.65,
+          "pivotY": 0.08,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 5,
+          "attachment": {
+            "type": "joint",
+            "targetId": "left-root",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/tidal-spore-sac/part_018.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 1
+              }
+            }
+          }
+        },
+        {
+          "id": "right-leaf-art",
+          "name": "右孢叶",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 41.28,
+          "height": 33.44,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.9,
+          "pivotY": 0.07,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 3,
+          "attachment": {
+            "type": "joint",
+            "targetId": "right-leaf",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/tidal-spore-sac/part_015.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 1
+              }
+            }
+          }
+        },
+        {
+          "id": "right-root-art",
+          "name": "右行根",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 41.28,
+          "height": 27.36,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.35,
+          "pivotY": 0.08,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 5,
+          "attachment": {
+            "type": "joint",
+            "targetId": "right-root",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/tidal-spore-sac/part_019.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 1
+              }
+            }
+          }
+        }
+      ],
+      "animations": {
+        "idle": {
+          "duration": 1400,
+          "loop": true,
+          "targets": [
+            "joint:stem-0",
+            "joint:stem-0-hinge-1",
+            "joint:pod-0",
+            "joint:stem-1",
+            "joint:stem-1-hinge-1",
+            "joint:pod-1",
+            "joint:stem-2",
+            "joint:stem-2-hinge-1",
+            "joint:pod-2",
+            "joint:left-leaf",
+            "joint:left-root",
+            "joint:right-leaf",
+            "joint:right-root",
+            "joint:root"
+          ]
+        },
+        "attack": {
+          "duration": 500,
+          "loop": false,
+          "targets": [
+            "joint:stem-0",
+            "joint:stem-0-hinge-1",
+            "joint:pod-0",
+            "joint:stem-1",
+            "joint:stem-1-hinge-1",
+            "joint:pod-1",
+            "joint:stem-2",
+            "joint:stem-2-hinge-1",
+            "joint:pod-2",
+            "joint:left-leaf",
+            "joint:left-root",
+            "joint:right-leaf",
+            "joint:right-root",
+            "joint:root"
+          ]
+        },
+        "hit": {
+          "duration": 380,
+          "loop": false,
+          "targets": [
+            "joint:stem-0",
+            "joint:stem-0-hinge-1",
+            "joint:pod-0",
+            "joint:stem-1",
+            "joint:stem-1-hinge-1",
+            "joint:pod-1",
+            "joint:stem-2",
+            "joint:stem-2-hinge-1",
+            "joint:pod-2",
+            "joint:left-leaf",
+            "joint:left-root",
+            "joint:right-leaf",
+            "joint:right-root",
+            "joint:root"
+          ]
+        },
+        "death": {
+          "duration": 800,
+          "loop": false,
+          "targets": [
+            "joint:stem-0",
+            "joint:stem-0-hinge-1",
+            "joint:pod-0",
+            "joint:stem-1",
+            "joint:stem-1-hinge-1",
+            "joint:pod-1",
+            "joint:stem-2",
+            "joint:stem-2-hinge-1",
+            "joint:pod-2",
+            "joint:left-leaf",
+            "joint:left-root",
+            "joint:right-leaf",
+            "joint:right-root",
+            "joint:root"
+          ]
+        },
+        "move": {
+          "duration": 700,
+          "loop": true,
+          "targets": [
+            "joint:stem-0",
+            "joint:stem-0-hinge-1",
+            "joint:pod-0",
+            "joint:stem-1",
+            "joint:stem-1-hinge-1",
+            "joint:pod-1",
+            "joint:stem-2",
+            "joint:stem-2-hinge-1",
+            "joint:pod-2",
+            "joint:left-leaf",
+            "joint:left-root",
+            "joint:right-leaf",
+            "joint:right-root",
+            "joint:root"
+          ]
+        }
+      }
+    },
+    {
+      "id": "revenant-guard",
+      "name": "还魂侍卫 · 骨架预览",
+      "sourceFolder": "28还魂侍卫",
+      "reference": "preview_indexed.png",
+      "referenceSha256": "dc5cf8c3c493dde27ef7b0d9f8acc2109bbf25ebb859385222846f1d8c573965",
+      "used": [
+        1,
+        11,
+        13,
+        14,
+        15,
+        21,
+        22,
+        24,
+        25,
+        26,
+        28
+      ],
+      "unused": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        12,
+        16,
+        17,
+        18,
+        19,
+        20,
+        23,
+        27,
+        29,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38
+      ],
+      "joints": [
+        {
+          "id": "root",
+          "name": "主体",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "rotationX": 0,
+          "rotationY": -30,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "neck",
+          "name": "还魂颈环",
+          "x": 0,
+          "y": 20,
+          "z": 6,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "head",
+          "name": "还魂头",
+          "x": 0,
+          "y": 10,
+          "z": 2,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "jaw",
+          "name": "还魂下颌",
+          "x": 0,
+          "y": -2.150400000000002,
+          "z": 0.3,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "pelvis",
+          "name": "束甲骨盆",
+          "x": 0,
+          "y": -66,
+          "z": -5,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "left-shoulder",
+          "name": "左肩",
+          "x": -36,
+          "y": 10,
+          "z": -12,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "left-elbow",
+          "name": "左肘",
+          "x": -6.4944,
+          "y": -37.136,
+          "z": 0.3,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "left-wrist",
+          "name": "左腕",
+          "x": -10.454400000000001,
+          "y": -38.9444,
+          "z": 0.3,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "left-leg",
+          "name": "左甲足根",
+          "x": -21,
+          "y": -10,
+          "z": -8,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "left-leg-hinge-1",
+          "name": "左甲足中节",
+          "x": -12.816000000000003,
+          "y": -35.958,
+          "z": 0.3,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "left-leg-hinge-2",
+          "name": "左甲足末节",
+          "x": 2.8480000000000025,
+          "y": -35.035999999999994,
+          "z": 0.3,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "right-shoulder",
+          "name": "右肩",
+          "x": 36,
+          "y": 10,
+          "z": 12,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "right-elbow",
+          "name": "右肘",
+          "x": 12.372799999999998,
+          "y": -38.561600000000006,
+          "z": 0.3,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "right-wrist",
+          "name": "右腕",
+          "x": 13.912799999999999,
+          "y": -41.626200000000004,
+          "z": 0.3,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "right-leg",
+          "name": "右甲足根",
+          "x": 21,
+          "y": -10,
+          "z": 8,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "right-leg-hinge-1",
+          "name": "右甲足中节",
+          "x": 14.036,
+          "y": -36.504000000000005,
+          "z": 0.3,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "right-leg-hinge-2",
+          "name": "右甲足末节",
+          "x": 4.84,
+          "y": -35.568,
+          "z": 0.3,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "soul-focus",
+          "name": "还魂铃印",
+          "x": 0,
+          "y": -12,
+          "z": 3,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        }
+      ],
+      "bones": [
+        {
+          "id": "component-root-neck",
+          "name": "还魂颈环",
+          "fromJointId": "root",
+          "toJointId": "neck"
+        },
+        {
+          "id": "component-neck-head",
+          "name": "还魂头",
+          "fromJointId": "neck",
+          "toJointId": "head"
+        },
+        {
+          "id": "component-head-jaw",
+          "name": "还魂下颌",
+          "fromJointId": "head",
+          "toJointId": "jaw"
+        },
+        {
+          "id": "component-root-pelvis",
+          "name": "束甲骨盆",
+          "fromJointId": "root",
+          "toJointId": "pelvis"
+        },
+        {
+          "id": "component-root-left-shoulder",
+          "name": "左肩",
+          "fromJointId": "root",
+          "toJointId": "left-shoulder"
+        },
+        {
+          "id": "component-left-shoulder-left-elbow",
+          "name": "左肘",
+          "fromJointId": "left-shoulder",
+          "toJointId": "left-elbow"
+        },
+        {
+          "id": "component-left-elbow-left-wrist",
+          "name": "左腕",
+          "fromJointId": "left-elbow",
+          "toJointId": "left-wrist"
+        },
+        {
+          "id": "component-pelvis-left-leg",
+          "name": "左甲足根",
+          "fromJointId": "pelvis",
+          "toJointId": "left-leg"
+        },
+        {
+          "id": "component-left-leg-left-leg-hinge-1",
+          "name": "左甲足中节",
+          "fromJointId": "left-leg",
+          "toJointId": "left-leg-hinge-1"
+        },
+        {
+          "id": "component-left-leg-hinge-1-left-leg-hinge-2",
+          "name": "左甲足末节",
+          "fromJointId": "left-leg-hinge-1",
+          "toJointId": "left-leg-hinge-2"
+        },
+        {
+          "id": "component-root-right-shoulder",
+          "name": "右肩",
+          "fromJointId": "root",
+          "toJointId": "right-shoulder"
+        },
+        {
+          "id": "component-right-shoulder-right-elbow",
+          "name": "右肘",
+          "fromJointId": "right-shoulder",
+          "toJointId": "right-elbow"
+        },
+        {
+          "id": "component-right-elbow-right-wrist",
+          "name": "右腕",
+          "fromJointId": "right-elbow",
+          "toJointId": "right-wrist"
+        },
+        {
+          "id": "component-pelvis-right-leg",
+          "name": "右甲足根",
+          "fromJointId": "pelvis",
+          "toJointId": "right-leg"
+        },
+        {
+          "id": "component-right-leg-right-leg-hinge-1",
+          "name": "右甲足中节",
+          "fromJointId": "right-leg",
+          "toJointId": "right-leg-hinge-1"
+        },
+        {
+          "id": "component-right-leg-hinge-1-right-leg-hinge-2",
+          "name": "右甲足末节",
+          "fromJointId": "right-leg-hinge-1",
+          "toJointId": "right-leg-hinge-2"
+        },
+        {
+          "id": "component-left-wrist-soul-focus",
+          "name": "还魂铃印",
+          "fromJointId": "left-wrist",
+          "toJointId": "soul-focus"
+        }
+      ],
+      "parts": [
+        {
+          "id": "chest",
+          "name": "还魂胸甲与魂火",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 55.160000000000004,
+          "height": 89.32000000000001,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.5,
+          "pivotY": 0.24,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 7,
+          "attachment": {
+            "type": "joint",
+            "targetId": "root",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/revenant-guard/part_011.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 1
+              }
+            }
+          }
+        },
+        {
+          "id": "neck-art",
+          "name": "还魂颈骨",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 13.600000000000001,
+          "height": 28.8,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.5,
+          "pivotY": 0.06,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 8,
+          "attachment": {
+            "type": "joint",
+            "targetId": "neck",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/revenant-guard/part_013.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 1
+              }
+            }
+          }
+        },
+        {
+          "id": "head-art",
+          "name": "还魂冠盔与颅骨",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 68.60000000000001,
+          "height": 63.79520000000001,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.5,
+          "pivotY": 0.9438202247191011,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 10,
+          "attachment": {
+            "type": "joint",
+            "targetId": "head",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/revenant-guard/part_001.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 0.89
+              }
+            }
+          }
+        },
+        {
+          "id": "jaw-art",
+          "name": "还魂下颌与魂焰",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 27.44,
+          "height": 13.619200000000001,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.5,
+          "pivotY": 0.31578947368421023,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 11,
+          "attachment": {
+            "type": "joint",
+            "targetId": "jaw",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/revenant-guard/part_001.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0.3,
+                "top": 0.81,
+                "width": 0.4,
+                "height": 0.19
+              }
+            }
+          }
+        },
+        {
+          "id": "skirt",
+          "name": "束甲魂裾",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 92.4,
+          "height": 89.1,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.5,
+          "pivotY": 0.08,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 6,
+          "attachment": {
+            "type": "joint",
+            "targetId": "pelvis",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/revenant-guard/part_024.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 1
+              }
+            }
+          }
+        },
+        {
+          "id": "left-upper-arm",
+          "name": "左上臂",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 27.06,
+          "height": 46.42,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.72,
+          "pivotY": 0.08,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 5,
+          "attachment": {
+            "type": "joint",
+            "targetId": "left-shoulder",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/revenant-guard/part_014.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 1
+              }
+            }
+          }
+        },
+        {
+          "id": "left-forearm",
+          "name": "左前臂",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 38.72,
+          "height": 50.70119999999999,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.63,
+          "pivotY": 0.13043478260869565,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 6,
+          "attachment": {
+            "type": "joint",
+            "targetId": "left-elbow",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/revenant-guard/part_021.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 0.69
+              }
+            }
+          }
+        },
+        {
+          "id": "left-hand",
+          "name": "左骨爪",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 38.72,
+          "height": 32.3312,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.36,
+          "pivotY": 0.13636363636363624,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 8,
+          "attachment": {
+            "type": "joint",
+            "targetId": "left-wrist",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/revenant-guard/part_021.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0.56,
+                "width": 1,
+                "height": 0.44
+              }
+            }
+          }
+        },
+        {
+          "id": "left-leg-part-0",
+          "name": "左甲足上段",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 40.584,
+          "height": 47.944,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.5789473684210527,
+          "pivotY": 0.09615384615384616,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 4,
+          "attachment": {
+            "type": "joint",
+            "targetId": "left-leg",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/revenant-guard/part_026.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0.43,
+                "top": 0,
+                "width": 0.57,
+                "height": 0.52
+              }
+            }
+          }
+        },
+        {
+          "id": "left-leg-part-1",
+          "name": "左甲足下段",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 40.584,
+          "height": 45.178,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.2631578947368421,
+          "pivotY": 0.10204081632653059,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 5,
+          "attachment": {
+            "type": "joint",
+            "targetId": "left-leg-hinge-1",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/revenant-guard/part_026.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0.43,
+                "top": 0.39,
+                "width": 0.57,
+                "height": 0.49
+              }
+            }
+          }
+        },
+        {
+          "id": "left-leg-part-2",
+          "name": "左甲足末端",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 40.584,
+          "height": 23.05,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.33333333333333337,
+          "pivotY": 0.2799999999999998,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 6,
+          "attachment": {
+            "type": "joint",
+            "targetId": "left-leg-hinge-2",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/revenant-guard/part_026.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0.43,
+                "top": 0.75,
+                "width": 0.57,
+                "height": 0.25
+              }
+            }
+          }
+        },
+        {
+          "id": "right-upper-arm",
+          "name": "右上臂",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 33.44,
+          "height": 68.86,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.2,
+          "pivotY": 0.08,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 5,
+          "attachment": {
+            "type": "joint",
+            "targetId": "right-shoulder",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/revenant-guard/part_015.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 1
+              }
+            }
+          }
+        },
+        {
+          "id": "right-forearm",
+          "name": "右前臂",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 40.92,
+          "height": 54.1926,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.27,
+          "pivotY": 0.13043478260869565,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 6,
+          "attachment": {
+            "type": "joint",
+            "targetId": "right-elbow",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/revenant-guard/part_022.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 0.69
+              }
+            }
+          }
+        },
+        {
+          "id": "right-hand",
+          "name": "右骨爪",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 40.92,
+          "height": 34.5576,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.61,
+          "pivotY": 0.13636363636363624,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 8,
+          "attachment": {
+            "type": "joint",
+            "targetId": "right-wrist",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/revenant-guard/part_022.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0.56,
+                "width": 1,
+                "height": 0.44
+              }
+            }
+          }
+        },
+        {
+          "id": "right-leg-part-0",
+          "name": "右甲足上段",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 48.400000000000006,
+          "height": 48.672000000000004,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.18,
+          "pivotY": 0.09615384615384616,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 7,
+          "attachment": {
+            "type": "joint",
+            "targetId": "right-leg",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/revenant-guard/part_025.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 0.52
+              }
+            }
+          }
+        },
+        {
+          "id": "right-leg-part-1",
+          "name": "右甲足下段",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 48.400000000000006,
+          "height": 45.864000000000004,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.47,
+          "pivotY": 0.10204081632653059,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 8,
+          "attachment": {
+            "type": "joint",
+            "targetId": "right-leg-hinge-1",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/revenant-guard/part_025.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0.39,
+                "width": 1,
+                "height": 0.49
+              }
+            }
+          }
+        },
+        {
+          "id": "right-leg-part-2",
+          "name": "右甲足末端",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 48.400000000000006,
+          "height": 23.400000000000002,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.57,
+          "pivotY": 0.2799999999999998,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 9,
+          "attachment": {
+            "type": "joint",
+            "targetId": "right-leg-hinge-2",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/revenant-guard/part_025.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0.75,
+                "width": 1,
+                "height": 0.25
+              }
+            }
+          }
+        },
+        {
+          "id": "soul-focus-art",
+          "name": "还魂铃印",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 24.6,
+          "height": 48.400000000000006,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.5,
+          "pivotY": 0.14,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 9,
+          "attachment": {
+            "type": "joint",
+            "targetId": "soul-focus",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/revenant-guard/part_028.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 1
+              }
+            }
+          }
+        }
+      ],
+      "animations": {
+        "idle": {
+          "duration": 1400,
+          "loop": true,
+          "targets": [
+            "joint:neck",
+            "joint:head",
+            "joint:jaw",
+            "joint:pelvis",
+            "joint:left-shoulder",
+            "joint:left-elbow",
+            "joint:left-wrist",
+            "joint:left-leg",
+            "joint:left-leg-hinge-1",
+            "joint:left-leg-hinge-2",
+            "joint:right-shoulder",
+            "joint:right-elbow",
+            "joint:right-wrist",
+            "joint:right-leg",
+            "joint:right-leg-hinge-1",
+            "joint:right-leg-hinge-2",
+            "joint:soul-focus",
+            "joint:root"
+          ]
+        },
+        "attack": {
+          "duration": 500,
+          "loop": false,
+          "targets": [
+            "joint:neck",
+            "joint:head",
+            "joint:jaw",
+            "joint:pelvis",
+            "joint:left-shoulder",
+            "joint:left-elbow",
+            "joint:left-wrist",
+            "joint:left-leg",
+            "joint:left-leg-hinge-1",
+            "joint:left-leg-hinge-2",
+            "joint:right-shoulder",
+            "joint:right-elbow",
+            "joint:right-wrist",
+            "joint:right-leg",
+            "joint:right-leg-hinge-1",
+            "joint:right-leg-hinge-2",
+            "joint:soul-focus",
+            "joint:root"
+          ]
+        },
+        "hit": {
+          "duration": 380,
+          "loop": false,
+          "targets": [
+            "joint:neck",
+            "joint:head",
+            "joint:jaw",
+            "joint:pelvis",
+            "joint:left-shoulder",
+            "joint:left-elbow",
+            "joint:left-wrist",
+            "joint:left-leg",
+            "joint:left-leg-hinge-1",
+            "joint:left-leg-hinge-2",
+            "joint:right-shoulder",
+            "joint:right-elbow",
+            "joint:right-wrist",
+            "joint:right-leg",
+            "joint:right-leg-hinge-1",
+            "joint:right-leg-hinge-2",
+            "joint:soul-focus",
+            "joint:root"
+          ]
+        },
+        "death": {
+          "duration": 800,
+          "loop": false,
+          "targets": [
+            "joint:neck",
+            "joint:head",
+            "joint:jaw",
+            "joint:pelvis",
+            "joint:left-shoulder",
+            "joint:left-elbow",
+            "joint:left-wrist",
+            "joint:left-leg",
+            "joint:left-leg-hinge-1",
+            "joint:left-leg-hinge-2",
+            "joint:right-shoulder",
+            "joint:right-elbow",
+            "joint:right-wrist",
+            "joint:right-leg",
+            "joint:right-leg-hinge-1",
+            "joint:right-leg-hinge-2",
+            "joint:soul-focus",
+            "joint:root"
+          ]
+        },
+        "move": {
+          "duration": 700,
+          "loop": true,
+          "targets": [
+            "joint:neck",
+            "joint:head",
+            "joint:jaw",
+            "joint:pelvis",
+            "joint:left-shoulder",
+            "joint:left-elbow",
+            "joint:left-wrist",
+            "joint:left-leg",
+            "joint:left-leg-hinge-1",
+            "joint:left-leg-hinge-2",
+            "joint:right-shoulder",
+            "joint:right-elbow",
+            "joint:right-wrist",
+            "joint:right-leg",
+            "joint:right-leg-hinge-1",
+            "joint:right-leg-hinge-2",
+            "joint:soul-focus",
+            "joint:root"
+          ]
+        }
+      }
+    },
+    {
+      "id": "bomb-wisp",
+      "name": "自爆灯灵 · 骨架预览",
+      "sourceFolder": "29自爆灯灵",
+      "reference": "preview_indexed.png",
+      "referenceSha256": "9be7d3cdcb26a9e76076698342a7811b22835a8a027825db7bdc5aadfd95d3ef",
+      "used": [
+        2,
+        5,
+        10,
+        15,
+        18,
+        20,
+        44
+      ],
+      "unused": [
+        1,
+        3,
+        4,
+        6,
+        7,
+        8,
+        11,
+        13,
+        14,
+        16,
+        17,
+        19,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        42,
+        43,
+        46,
+        47,
+        48,
+        50,
+        52
+      ],
+      "joints": [
+        {
+          "id": "root",
+          "name": "主体",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "rotationX": 0,
+          "rotationY": -30,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "shell",
+          "name": "自爆灯壳",
+          "x": 0,
+          "y": 0,
+          "z": -1,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "core",
+          "name": "自爆灯芯",
+          "x": 0,
+          "y": 0,
+          "z": 1,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "roof",
+          "name": "自爆灯檐",
+          "x": 0,
+          "y": 39,
+          "z": -2,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "tassel",
+          "name": "自爆咒穗",
+          "x": 0,
+          "y": -36,
+          "z": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "left-arm",
+          "name": "左灯爪臂根",
+          "x": -35,
+          "y": 17,
+          "z": -10,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "left-arm-hinge-1",
+          "name": "左灯爪臂中节",
+          "x": 0,
+          "y": -28.6902,
+          "z": 0.3,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "left-arm-hinge-2",
+          "name": "左灯爪臂末节",
+          "x": 0,
+          "y": -28.690199999999997,
+          "z": 0.3,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "left-fuse",
+          "name": "左倒数灯芯",
+          "x": -20,
+          "y": 19,
+          "z": -0.4,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 17,
+          "scaleX": 1
+        },
+        {
+          "id": "right-arm",
+          "name": "右灯爪臂根",
+          "x": 35,
+          "y": 17,
+          "z": 10,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "right-arm-hinge-1",
+          "name": "右灯爪臂中节",
+          "x": 6.228,
+          "y": -30.294,
+          "z": 0.3,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "right-arm-hinge-2",
+          "name": "右灯爪臂末节",
+          "x": 0,
+          "y": -30.293999999999997,
+          "z": 0.3,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "right-fuse",
+          "name": "右倒数灯芯",
+          "x": 20,
+          "y": 19,
+          "z": -0.4,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": -17,
+          "scaleX": 1
+        }
+      ],
+      "bones": [
+        {
+          "id": "component-root-shell",
+          "name": "自爆灯壳",
+          "fromJointId": "root",
+          "toJointId": "shell"
+        },
+        {
+          "id": "component-shell-core",
+          "name": "自爆灯芯",
+          "fromJointId": "shell",
+          "toJointId": "core"
+        },
+        {
+          "id": "component-shell-roof",
+          "name": "自爆灯檐",
+          "fromJointId": "shell",
+          "toJointId": "roof"
+        },
+        {
+          "id": "component-shell-tassel",
+          "name": "自爆咒穗",
+          "fromJointId": "shell",
+          "toJointId": "tassel"
+        },
+        {
+          "id": "component-shell-left-arm",
+          "name": "左灯爪臂根",
+          "fromJointId": "shell",
+          "toJointId": "left-arm"
+        },
+        {
+          "id": "component-left-arm-left-arm-hinge-1",
+          "name": "左灯爪臂中节",
+          "fromJointId": "left-arm",
+          "toJointId": "left-arm-hinge-1"
+        },
+        {
+          "id": "component-left-arm-hinge-1-left-arm-hinge-2",
+          "name": "左灯爪臂末节",
+          "fromJointId": "left-arm-hinge-1",
+          "toJointId": "left-arm-hinge-2"
+        },
+        {
+          "id": "component-core-left-fuse",
+          "name": "左倒数灯芯",
+          "fromJointId": "core",
+          "toJointId": "left-fuse"
+        },
+        {
+          "id": "component-shell-right-arm",
+          "name": "右灯爪臂根",
+          "fromJointId": "shell",
+          "toJointId": "right-arm"
+        },
+        {
+          "id": "component-right-arm-right-arm-hinge-1",
+          "name": "右灯爪臂中节",
+          "fromJointId": "right-arm",
+          "toJointId": "right-arm-hinge-1"
+        },
+        {
+          "id": "component-right-arm-hinge-1-right-arm-hinge-2",
+          "name": "右灯爪臂末节",
+          "fromJointId": "right-arm-hinge-1",
+          "toJointId": "right-arm-hinge-2"
+        },
+        {
+          "id": "component-core-right-fuse",
+          "name": "右倒数灯芯",
+          "fromJointId": "core",
+          "toJointId": "right-fuse"
+        }
+      ],
+      "parts": [
+        {
+          "id": "shell-art",
+          "name": "焦裂灯壳",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 62.900000000000006,
+          "height": 77.52,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.5,
+          "pivotY": 0.456140350877193,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 6,
+          "attachment": {
+            "type": "joint",
+            "targetId": "shell",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/bomb-wisp/part_005.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 0.57
+              }
+            }
+          }
+        },
+        {
+          "id": "core-art",
+          "name": "焰眼灯芯",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 51.6,
+          "height": 52.03,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.5,
+          "pivotY": 0.5,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 9,
+          "attachment": {
+            "type": "joint",
+            "targetId": "core",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/bomb-wisp/part_015.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 1
+              }
+            }
+          }
+        },
+        {
+          "id": "roof-art",
+          "name": "自爆灯檐",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 80.14999999999999,
+          "height": 53.23499999999999,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.5,
+          "pivotY": 0.8923076923076922,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 7,
+          "attachment": {
+            "type": "joint",
+            "targetId": "roof",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/bomb-wisp/part_002.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 0.65
+              }
+            }
+          }
+        },
+        {
+          "id": "tassel-art",
+          "name": "自爆咒穗",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 10.44,
+          "height": 43.92,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.5,
+          "pivotY": 0.02,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 7,
+          "attachment": {
+            "type": "joint",
+            "targetId": "tassel",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/bomb-wisp/part_044.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 1
+              }
+            }
+          }
+        },
+        {
+          "id": "left-arm-part-0",
+          "name": "左灯爪臂上段",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 34.199999999999996,
+          "height": 39.123,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.5,
+          "pivotY": 0.11111111111111112,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 4,
+          "attachment": {
+            "type": "joint",
+            "targetId": "left-arm",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/bomb-wisp/part_020.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 0.45
+              }
+            }
+          }
+        },
+        {
+          "id": "left-arm-part-1",
+          "name": "左灯爪臂下段",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 34.199999999999996,
+          "height": 38.2536,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.5,
+          "pivotY": 0.13636363636363635,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 5,
+          "attachment": {
+            "type": "joint",
+            "targetId": "left-arm-hinge-1",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/bomb-wisp/part_020.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0.32,
+                "width": 1,
+                "height": 0.44
+              }
+            }
+          }
+        },
+        {
+          "id": "left-arm-part-2",
+          "name": "左灯爪臂末端",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 34.199999999999996,
+          "height": 30.428999999999995,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.5,
+          "pivotY": 0.17142857142857126,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 6,
+          "attachment": {
+            "type": "joint",
+            "targetId": "left-arm-hinge-2",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/bomb-wisp/part_020.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0.65,
+                "width": 1,
+                "height": 0.35
+              }
+            }
+          }
+        },
+        {
+          "id": "left-fuse-art",
+          "name": "左倒数灯芯",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 17.48,
+          "height": 34.77,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.5,
+          "pivotY": 0.92,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 8,
+          "attachment": {
+            "type": "joint",
+            "targetId": "left-fuse",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/bomb-wisp/part_010.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 1
+              }
+            }
+          }
+        },
+        {
+          "id": "right-arm-part-0",
+          "name": "右灯爪臂上段",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 31.14,
+          "height": 41.309999999999995,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.3,
+          "pivotY": 0.11111111111111112,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 7,
+          "attachment": {
+            "type": "joint",
+            "targetId": "right-arm",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/bomb-wisp/part_018.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 0.45
+              }
+            }
+          }
+        },
+        {
+          "id": "right-arm-part-1",
+          "name": "右灯爪臂下段",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 31.14,
+          "height": 40.392,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.5,
+          "pivotY": 0.13636363636363635,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 8,
+          "attachment": {
+            "type": "joint",
+            "targetId": "right-arm-hinge-1",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/bomb-wisp/part_018.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0.32,
+                "width": 1,
+                "height": 0.44
+              }
+            }
+          }
+        },
+        {
+          "id": "right-arm-part-2",
+          "name": "右灯爪臂末端",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 31.14,
+          "height": 32.129999999999995,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.5,
+          "pivotY": 0.17142857142857126,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 9,
+          "attachment": {
+            "type": "joint",
+            "targetId": "right-arm-hinge-2",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/bomb-wisp/part_018.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0.65,
+                "width": 1,
+                "height": 0.35
+              }
+            }
+          }
+        },
+        {
+          "id": "right-fuse-art",
+          "name": "右倒数灯芯",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 17.48,
+          "height": 34.77,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.5,
+          "pivotY": 0.92,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 8,
+          "attachment": {
+            "type": "joint",
+            "targetId": "right-fuse",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/bomb-wisp/part_010.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 1
+              }
+            }
+          }
+        }
+      ],
+      "animations": {
+        "idle": {
+          "duration": 1400,
+          "loop": true,
+          "targets": [
+            "joint:shell",
+            "joint:core",
+            "joint:roof",
+            "joint:tassel",
+            "joint:left-arm",
+            "joint:left-arm-hinge-1",
+            "joint:left-arm-hinge-2",
+            "joint:left-fuse",
+            "joint:right-arm",
+            "joint:right-arm-hinge-1",
+            "joint:right-arm-hinge-2",
+            "joint:right-fuse",
+            "joint:root"
+          ]
+        },
+        "attack": {
+          "duration": 500,
+          "loop": false,
+          "targets": [
+            "joint:shell",
+            "joint:core",
+            "joint:roof",
+            "joint:tassel",
+            "joint:left-arm",
+            "joint:left-arm-hinge-1",
+            "joint:left-arm-hinge-2",
+            "joint:left-fuse",
+            "joint:right-arm",
+            "joint:right-arm-hinge-1",
+            "joint:right-arm-hinge-2",
+            "joint:right-fuse",
+            "joint:root"
+          ]
+        },
+        "hit": {
+          "duration": 380,
+          "loop": false,
+          "targets": [
+            "joint:shell",
+            "joint:core",
+            "joint:roof",
+            "joint:tassel",
+            "joint:left-arm",
+            "joint:left-arm-hinge-1",
+            "joint:left-arm-hinge-2",
+            "joint:left-fuse",
+            "joint:right-arm",
+            "joint:right-arm-hinge-1",
+            "joint:right-arm-hinge-2",
+            "joint:right-fuse",
+            "joint:root"
+          ]
+        },
+        "death": {
+          "duration": 800,
+          "loop": false,
+          "targets": [
+            "joint:shell",
+            "joint:core",
+            "joint:roof",
+            "joint:tassel",
+            "joint:left-arm",
+            "joint:left-arm-hinge-1",
+            "joint:left-arm-hinge-2",
+            "joint:left-fuse",
+            "joint:right-arm",
+            "joint:right-arm-hinge-1",
+            "joint:right-arm-hinge-2",
+            "joint:right-fuse",
+            "joint:root"
+          ]
+        },
+        "move": {
+          "duration": 700,
+          "loop": true,
+          "targets": [
+            "joint:shell",
+            "joint:core",
+            "joint:roof",
+            "joint:tassel",
+            "joint:left-arm",
+            "joint:left-arm-hinge-1",
+            "joint:left-arm-hinge-2",
+            "joint:left-fuse",
+            "joint:right-arm",
+            "joint:right-arm-hinge-1",
+            "joint:right-arm-hinge-2",
+            "joint:right-fuse",
+            "joint:root"
+          ]
+        }
+      }
+    },
+    {
+      "id": "cracked-hunter",
+      "name": "裂甲追猎者 · 骨架预览",
+      "sourceFolder": "30裂甲追猎者",
+      "reference": "preview_indexed.png",
+      "referenceSha256": "b9deeab8310f7b389d33a15d7634dc1497a9a8f2fb432df0df7fb7ce37da2ce6",
+      "used": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        7,
+        9,
+        11,
+        12,
+        13,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20
+      ],
+      "unused": [],
+      "joints": [
+        {
+          "id": "root",
+          "name": "主体",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "rotationX": 0,
+          "rotationY": -30,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "neck",
+          "name": "偏颈",
+          "x": -13,
+          "y": 21,
+          "z": 7,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "head",
+          "name": "裂甲头",
+          "x": -5,
+          "y": 16,
+          "z": 4,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "pelvis",
+          "name": "裂甲骨盆",
+          "x": 0,
+          "y": -54,
+          "z": -5,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "right-arm",
+          "name": "右追猎臂根",
+          "x": 35,
+          "y": 17,
+          "z": 12,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "right-arm-hinge-1",
+          "name": "右追猎臂中节",
+          "x": -3.3819999999999997,
+          "y": -31.441200000000006,
+          "z": 0.3,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "right-arm-hinge-2",
+          "name": "右追猎臂末节",
+          "x": 0,
+          "y": -39.3015,
+          "z": 0.3,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "missing-arm",
+          "name": "裂缝代臂根",
+          "x": -35,
+          "y": 14,
+          "z": -8,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "missing-arm-hinge-1",
+          "name": "裂缝代臂中节",
+          "x": 14.2912,
+          "y": -45.29600000000001,
+          "z": 0.3,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "hook",
+          "name": "追猎钩",
+          "x": 0,
+          "y": -8,
+          "z": 4,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "left-plate",
+          "name": "左裂甲活片",
+          "x": -19,
+          "y": 9,
+          "z": 1,
+          "rotationX": 0,
+          "rotationY": -12,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "left-hip",
+          "name": "左髋",
+          "x": -21,
+          "y": -9,
+          "z": -8,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "left-knee",
+          "name": "左膝",
+          "x": 0.8150000000000007,
+          "y": -33.7875,
+          "z": 0.3,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "left-ankle",
+          "name": "左踝",
+          "x": 0,
+          "y": -46.75000000000001,
+          "z": 0.3,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "right-plate",
+          "name": "右裂甲活片",
+          "x": 19,
+          "y": 9,
+          "z": 1,
+          "rotationX": 0,
+          "rotationY": 12,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "right-hip",
+          "name": "右髋",
+          "x": 21,
+          "y": -9,
+          "z": 8,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "right-knee",
+          "name": "右膝",
+          "x": 0.7150000000000006,
+          "y": -35.519999999999996,
+          "z": 0.3,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "right-ankle",
+          "name": "右踝",
+          "x": 0,
+          "y": -47.3875,
+          "z": 0.3,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        }
+      ],
+      "bones": [
+        {
+          "id": "component-root-neck",
+          "name": "偏颈",
+          "fromJointId": "root",
+          "toJointId": "neck"
+        },
+        {
+          "id": "component-neck-head",
+          "name": "裂甲头",
+          "fromJointId": "neck",
+          "toJointId": "head"
+        },
+        {
+          "id": "component-root-pelvis",
+          "name": "裂甲骨盆",
+          "fromJointId": "root",
+          "toJointId": "pelvis"
+        },
+        {
+          "id": "component-root-right-arm",
+          "name": "右追猎臂根",
+          "fromJointId": "root",
+          "toJointId": "right-arm"
+        },
+        {
+          "id": "component-right-arm-right-arm-hinge-1",
+          "name": "右追猎臂中节",
+          "fromJointId": "right-arm",
+          "toJointId": "right-arm-hinge-1"
+        },
+        {
+          "id": "component-right-arm-hinge-1-right-arm-hinge-2",
+          "name": "右追猎臂末节",
+          "fromJointId": "right-arm-hinge-1",
+          "toJointId": "right-arm-hinge-2"
+        },
+        {
+          "id": "component-root-missing-arm",
+          "name": "裂缝代臂根",
+          "fromJointId": "root",
+          "toJointId": "missing-arm"
+        },
+        {
+          "id": "component-missing-arm-missing-arm-hinge-1",
+          "name": "裂缝代臂中节",
+          "fromJointId": "missing-arm",
+          "toJointId": "missing-arm-hinge-1"
+        },
+        {
+          "id": "component-right-arm-hinge-2-hook",
+          "name": "追猎钩",
+          "fromJointId": "right-arm-hinge-2",
+          "toJointId": "hook"
+        },
+        {
+          "id": "component-root-left-plate",
+          "name": "左裂甲活片",
+          "fromJointId": "root",
+          "toJointId": "left-plate"
+        },
+        {
+          "id": "component-pelvis-left-hip",
+          "name": "左髋",
+          "fromJointId": "pelvis",
+          "toJointId": "left-hip"
+        },
+        {
+          "id": "component-left-hip-left-knee",
+          "name": "左膝",
+          "fromJointId": "left-hip",
+          "toJointId": "left-knee"
+        },
+        {
+          "id": "component-left-knee-left-ankle",
+          "name": "左踝",
+          "fromJointId": "left-knee",
+          "toJointId": "left-ankle"
+        },
+        {
+          "id": "component-root-right-plate",
+          "name": "右裂甲活片",
+          "fromJointId": "root",
+          "toJointId": "right-plate"
+        },
+        {
+          "id": "component-pelvis-right-hip",
+          "name": "右髋",
+          "fromJointId": "pelvis",
+          "toJointId": "right-hip"
+        },
+        {
+          "id": "component-right-hip-right-knee",
+          "name": "右膝",
+          "fromJointId": "right-hip",
+          "toJointId": "right-knee"
+        },
+        {
+          "id": "component-right-knee-right-ankle",
+          "name": "右踝",
+          "fromJointId": "right-knee",
+          "toJointId": "right-ankle"
+        }
+      ],
+      "parts": [
+        {
+          "id": "chest",
+          "name": "裂甲胸壳",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 74.75,
+          "height": 90.75,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.5,
+          "pivotY": 0.25,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 7,
+          "attachment": {
+            "type": "joint",
+            "targetId": "root",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/cracked-hunter/part_001.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 1
+              }
+            }
+          }
+        },
+        {
+          "id": "neck-art",
+          "name": "裂甲颈脊",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 25.919999999999998,
+          "height": 25.919999999999998,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.5,
+          "pivotY": 0.125,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 8,
+          "attachment": {
+            "type": "joint",
+            "targetId": "neck",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/cracked-hunter/part_003.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 0.4
+              }
+            }
+          }
+        },
+        {
+          "id": "head-art",
+          "name": "裂甲头与角冠",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 56.16,
+          "height": 57.023999999999994,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.45,
+          "pivotY": 0.6666666666666666,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 9,
+          "attachment": {
+            "type": "joint",
+            "targetId": "head",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/cracked-hunter/part_002.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 0.72
+              }
+            }
+          }
+        },
+        {
+          "id": "pelvis-art",
+          "name": "裂甲髋裙",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 66.88,
+          "height": 75.68,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.5,
+          "pivotY": 0.1,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 6,
+          "attachment": {
+            "type": "joint",
+            "targetId": "pelvis",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/cracked-hunter/part_013.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 1
+              }
+            }
+          }
+        },
+        {
+          "id": "right-arm-part-0",
+          "name": "右追猎臂上段",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 33.82,
+          "height": 50.530499999999996,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.6,
+          "pivotY": 0.22222222222222224,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 7,
+          "attachment": {
+            "type": "joint",
+            "targetId": "right-arm",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/cracked-hunter/part_012.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 0.45
+              }
+            }
+          }
+        },
+        {
+          "id": "right-arm-part-1",
+          "name": "右追猎臂下段",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 33.82,
+          "height": 52.7763,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.5,
+          "pivotY": 0.10638297872340424,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 8,
+          "attachment": {
+            "type": "joint",
+            "targetId": "right-arm-hinge-1",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/cracked-hunter/part_012.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0.33,
+                "width": 1,
+                "height": 0.47
+              }
+            }
+          }
+        },
+        {
+          "id": "right-arm-part-2",
+          "name": "右追猎臂末端",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 33.82,
+          "height": 34.8099,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.5,
+          "pivotY": 0.12903225806451624,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 9,
+          "attachment": {
+            "type": "joint",
+            "targetId": "right-arm-hinge-2",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/cracked-hunter/part_012.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0.69,
+                "width": 1,
+                "height": 0.31
+              }
+            }
+          }
+        },
+        {
+          "id": "right-pauldron",
+          "name": "右追猎肩甲",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0.5,
+          "width": 36.2,
+          "height": 33.376000000000005,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.5,
+          "pivotY": 0.26785714285714285,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 8,
+          "attachment": {
+            "type": "joint",
+            "targetId": "right-arm",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/cracked-hunter/part_007.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 0.56
+              }
+            }
+          }
+        },
+        {
+          "id": "missing-arm-part-0",
+          "name": "裂缝代臂上段",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 51.04,
+          "height": 65.56000000000002,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.32,
+          "pivotY": 0.14545454545454545,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 4,
+          "attachment": {
+            "type": "joint",
+            "targetId": "missing-arm",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/cracked-hunter/part_011.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 0.55
+              }
+            }
+          }
+        },
+        {
+          "id": "missing-arm-part-1",
+          "name": "裂缝代臂下段",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 51.04,
+          "height": 70.32799999999999,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.6,
+          "pivotY": 0.08474576271186449,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 5,
+          "attachment": {
+            "type": "joint",
+            "targetId": "missing-arm-hinge-1",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/cracked-hunter/part_011.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0.41,
+                "width": 1,
+                "height": 0.59
+              }
+            }
+          }
+        },
+        {
+          "id": "hook-art",
+          "name": "追猎钩",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 33.25,
+          "height": 150.86,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.45,
+          "pivotY": 0.55,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 10,
+          "attachment": {
+            "type": "joint",
+            "targetId": "hook",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/cracked-hunter/part_009.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 1
+              }
+            }
+          }
+        },
+        {
+          "id": "left-plate-art",
+          "name": "左裂甲活片",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 25.44,
+          "height": 47.04,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.5,
+          "pivotY": 0.2,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 8,
+          "attachment": {
+            "type": "joint",
+            "targetId": "left-plate",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/cracked-hunter/part_004.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 1
+              }
+            }
+          }
+        },
+        {
+          "id": "left-thigh-art",
+          "name": "左大腿甲",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 40.75,
+          "height": 63.75,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.48,
+          "pivotY": 0.1,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 5,
+          "attachment": {
+            "type": "joint",
+            "targetId": "left-hip",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/cracked-hunter/part_016.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 1
+              }
+            }
+          }
+        },
+        {
+          "id": "left-shin-art",
+          "name": "左胫甲",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 27.25,
+          "height": 55,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.5,
+          "pivotY": 0.06,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 6,
+          "attachment": {
+            "type": "joint",
+            "targetId": "left-knee",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/cracked-hunter/part_017.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 1
+              }
+            }
+          }
+        },
+        {
+          "id": "left-foot-art",
+          "name": "左足爪",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 39.33,
+          "height": 33.35,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.68,
+          "pivotY": 0.1,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 7,
+          "attachment": {
+            "type": "joint",
+            "targetId": "left-ankle",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/cracked-hunter/part_019.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 1
+              }
+            }
+          }
+        },
+        {
+          "id": "right-plate-art",
+          "name": "右裂甲活片",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 26.88,
+          "height": 47.36,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.5,
+          "pivotY": 0.2,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 8,
+          "attachment": {
+            "type": "joint",
+            "targetId": "right-plate",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/cracked-hunter/part_005.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 1
+              }
+            }
+          }
+        },
+        {
+          "id": "right-thigh-art",
+          "name": "右大腿甲",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 35.75,
+          "height": 48,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.48,
+          "pivotY": 0.1,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 5,
+          "attachment": {
+            "type": "joint",
+            "targetId": "right-hip",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/cracked-hunter/part_015.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 1
+              }
+            }
+          }
+        },
+        {
+          "id": "right-shin-art",
+          "name": "右胫甲",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 29.25,
+          "height": 55.75,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.5,
+          "pivotY": 0.06,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 6,
+          "attachment": {
+            "type": "joint",
+            "targetId": "right-knee",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/cracked-hunter/part_018.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 1
+              }
+            }
+          }
+        },
+        {
+          "id": "right-foot-art",
+          "name": "右足爪",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 47.84,
+          "height": 32.2,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.3,
+          "pivotY": 0.1,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 7,
+          "attachment": {
+            "type": "joint",
+            "targetId": "right-ankle",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/cracked-hunter/part_020.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 1
+              }
+            }
+          }
+        }
+      ],
+      "animations": {
+        "idle": {
+          "duration": 1400,
+          "loop": true,
+          "targets": [
+            "joint:neck",
+            "joint:head",
+            "joint:pelvis",
+            "joint:right-arm",
+            "joint:right-arm-hinge-1",
+            "joint:right-arm-hinge-2",
+            "joint:missing-arm",
+            "joint:missing-arm-hinge-1",
+            "joint:hook",
+            "joint:left-plate",
+            "joint:left-hip",
+            "joint:left-knee",
+            "joint:left-ankle",
+            "joint:right-plate",
+            "joint:right-hip",
+            "joint:right-knee",
+            "joint:right-ankle",
+            "joint:root"
+          ]
+        },
+        "attack": {
+          "duration": 500,
+          "loop": false,
+          "targets": [
+            "joint:neck",
+            "joint:head",
+            "joint:pelvis",
+            "joint:right-arm",
+            "joint:right-arm-hinge-1",
+            "joint:right-arm-hinge-2",
+            "joint:missing-arm",
+            "joint:missing-arm-hinge-1",
+            "joint:hook",
+            "joint:left-plate",
+            "joint:left-hip",
+            "joint:left-knee",
+            "joint:left-ankle",
+            "joint:right-plate",
+            "joint:right-hip",
+            "joint:right-knee",
+            "joint:right-ankle",
+            "joint:root"
+          ]
+        },
+        "hit": {
+          "duration": 380,
+          "loop": false,
+          "targets": [
+            "joint:neck",
+            "joint:head",
+            "joint:pelvis",
+            "joint:right-arm",
+            "joint:right-arm-hinge-1",
+            "joint:right-arm-hinge-2",
+            "joint:missing-arm",
+            "joint:missing-arm-hinge-1",
+            "joint:hook",
+            "joint:left-plate",
+            "joint:left-hip",
+            "joint:left-knee",
+            "joint:left-ankle",
+            "joint:right-plate",
+            "joint:right-hip",
+            "joint:right-knee",
+            "joint:right-ankle",
+            "joint:root"
+          ]
+        },
+        "death": {
+          "duration": 800,
+          "loop": false,
+          "targets": [
+            "joint:neck",
+            "joint:head",
+            "joint:pelvis",
+            "joint:right-arm",
+            "joint:right-arm-hinge-1",
+            "joint:right-arm-hinge-2",
+            "joint:missing-arm",
+            "joint:missing-arm-hinge-1",
+            "joint:hook",
+            "joint:left-plate",
+            "joint:left-hip",
+            "joint:left-knee",
+            "joint:left-ankle",
+            "joint:right-plate",
+            "joint:right-hip",
+            "joint:right-knee",
+            "joint:right-ankle",
+            "joint:root"
+          ]
+        },
+        "move": {
+          "duration": 700,
+          "loop": true,
+          "targets": [
+            "joint:neck",
+            "joint:head",
+            "joint:pelvis",
+            "joint:right-arm",
+            "joint:right-arm-hinge-1",
+            "joint:right-arm-hinge-2",
+            "joint:missing-arm",
+            "joint:missing-arm-hinge-1",
+            "joint:hook",
+            "joint:left-plate",
+            "joint:left-hip",
+            "joint:left-knee",
+            "joint:left-ankle",
+            "joint:right-plate",
+            "joint:right-hip",
+            "joint:right-knee",
+            "joint:right-ankle",
+            "joint:root"
+          ]
+        }
+      }
+    },
+    {
+      "id": "broodling",
+      "name": "裂腹幼体 · 骨架预览",
+      "sourceFolder": "31裂腹幼体",
+      "reference": "preview_indexed.png",
+      "referenceSha256": "db5d2677f3c770546f0f8bf8b999f2ee49a6f370045d40c5013adb1fa79c438d",
+      "used": [
+        1,
+        2,
+        4,
+        5,
+        6,
+        8,
+        13,
+        14,
+        15,
+        16
+      ],
+      "unused": [
+        3,
+        7,
+        9,
+        10,
+        11,
+        12
+      ],
+      "joints": [
+        {
+          "id": "root",
+          "name": "主体",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "rotationX": 0,
+          "rotationY": -30,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "abdomen",
+          "name": "幼体后腹",
+          "x": 0,
+          "y": -4,
+          "z": -35,
+          "rotationX": 0,
+          "rotationY": 90,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "head",
+          "name": "幼体头",
+          "x": 0,
+          "y": 3,
+          "z": 49,
+          "rotationX": -14,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "left-jaw",
+          "name": "左颚根",
+          "x": -15,
+          "y": -12,
+          "z": 2,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "left-front",
+          "name": "左前足根",
+          "x": -30,
+          "y": -23,
+          "z": 22,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "left-front-hinge-1",
+          "name": "左前足中节",
+          "x": -43.659,
+          "y": 14.07,
+          "z": 0.3,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "left-front-hinge-2",
+          "name": "左前足末节",
+          "x": -18.2574,
+          "y": -45.023999999999994,
+          "z": 0.3,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "left-rear",
+          "name": "左后足根",
+          "x": -33,
+          "y": -23,
+          "z": -28,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "left-rear-hinge-1",
+          "name": "左后足中节",
+          "x": -15.044199999999998,
+          "y": -12.539999999999997,
+          "z": 0.3,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "left-rear-hinge-2",
+          "name": "左后足末节",
+          "x": -15.450800000000001,
+          "y": -27.36,
+          "z": 0.3,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "right-jaw",
+          "name": "右颚根",
+          "x": 15,
+          "y": -12,
+          "z": 2,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "right-front",
+          "name": "右前足根",
+          "x": 30,
+          "y": -23,
+          "z": 22,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "right-front-hinge-1",
+          "name": "右前足中节",
+          "x": 43.89000000000001,
+          "y": 14.07,
+          "z": 0.3,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "right-front-hinge-2",
+          "name": "右前足末节",
+          "x": 18.354,
+          "y": -45.023999999999994,
+          "z": 0.3,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "right-rear",
+          "name": "右后足根",
+          "x": 33,
+          "y": -23,
+          "z": -28,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "right-rear-hinge-1",
+          "name": "右后足中节",
+          "x": 15.184800000000001,
+          "y": -12.539999999999997,
+          "z": 0.3,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "right-rear-hinge-2",
+          "name": "右后足末节",
+          "x": 15.5952,
+          "y": -27.36,
+          "z": 0.3,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        }
+      ],
+      "bones": [
+        {
+          "id": "component-root-abdomen",
+          "name": "幼体后腹",
+          "fromJointId": "root",
+          "toJointId": "abdomen"
+        },
+        {
+          "id": "component-root-head",
+          "name": "幼体头",
+          "fromJointId": "root",
+          "toJointId": "head"
+        },
+        {
+          "id": "component-head-left-jaw",
+          "name": "左颚根",
+          "fromJointId": "head",
+          "toJointId": "left-jaw"
+        },
+        {
+          "id": "component-root-left-front",
+          "name": "左前足根",
+          "fromJointId": "root",
+          "toJointId": "left-front"
+        },
+        {
+          "id": "component-left-front-left-front-hinge-1",
+          "name": "左前足中节",
+          "fromJointId": "left-front",
+          "toJointId": "left-front-hinge-1"
+        },
+        {
+          "id": "component-left-front-hinge-1-left-front-hinge-2",
+          "name": "左前足末节",
+          "fromJointId": "left-front-hinge-1",
+          "toJointId": "left-front-hinge-2"
+        },
+        {
+          "id": "component-root-left-rear",
+          "name": "左后足根",
+          "fromJointId": "root",
+          "toJointId": "left-rear"
+        },
+        {
+          "id": "component-left-rear-left-rear-hinge-1",
+          "name": "左后足中节",
+          "fromJointId": "left-rear",
+          "toJointId": "left-rear-hinge-1"
+        },
+        {
+          "id": "component-left-rear-hinge-1-left-rear-hinge-2",
+          "name": "左后足末节",
+          "fromJointId": "left-rear-hinge-1",
+          "toJointId": "left-rear-hinge-2"
+        },
+        {
+          "id": "component-head-right-jaw",
+          "name": "右颚根",
+          "fromJointId": "head",
+          "toJointId": "right-jaw"
+        },
+        {
+          "id": "component-root-right-front",
+          "name": "右前足根",
+          "fromJointId": "root",
+          "toJointId": "right-front"
+        },
+        {
+          "id": "component-right-front-right-front-hinge-1",
+          "name": "右前足中节",
+          "fromJointId": "right-front",
+          "toJointId": "right-front-hinge-1"
+        },
+        {
+          "id": "component-right-front-hinge-1-right-front-hinge-2",
+          "name": "右前足末节",
+          "fromJointId": "right-front-hinge-1",
+          "toJointId": "right-front-hinge-2"
+        },
+        {
+          "id": "component-root-right-rear",
+          "name": "右后足根",
+          "fromJointId": "root",
+          "toJointId": "right-rear"
+        },
+        {
+          "id": "component-right-rear-right-rear-hinge-1",
+          "name": "右后足中节",
+          "fromJointId": "right-rear",
+          "toJointId": "right-rear-hinge-1"
+        },
+        {
+          "id": "component-right-rear-hinge-1-right-rear-hinge-2",
+          "name": "右后足末节",
+          "fromJointId": "right-rear-hinge-1",
+          "toJointId": "right-rear-hinge-2"
+        }
+      ],
+      "parts": [
+        {
+          "id": "thorax",
+          "name": "幼体胸皮",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 66.93,
+          "height": 62.330000000000005,
+          "depth": 0,
+          "rotationX": -40,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.5,
+          "pivotY": 0.5,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 6,
+          "attachment": {
+            "type": "joint",
+            "targetId": "root",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/broodling/part_004.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 1
+              }
+            }
+          }
+        },
+        {
+          "id": "abdomen-art",
+          "name": "幼体软腹",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 101.32000000000001,
+          "height": 70.04,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.23,
+          "pivotY": 0.46,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 4,
+          "attachment": {
+            "type": "joint",
+            "targetId": "abdomen",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/broodling/part_001.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 1
+              }
+            }
+          }
+        },
+        {
+          "id": "carapace",
+          "name": "幼体背膜",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 62.7,
+          "height": 93.06,
+          "depth": 0,
+          "rotationX": -55,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.5,
+          "pivotY": 0.35,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 5,
+          "attachment": {
+            "type": "joint",
+            "targetId": "abdomen",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/broodling/part_002.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 1
+              }
+            }
+          }
+        },
+        {
+          "id": "head-art",
+          "name": "幼体头壳",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 54.81,
+          "height": 54.27,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.5,
+          "pivotY": 0.5,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 9,
+          "attachment": {
+            "type": "joint",
+            "targetId": "head",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/broodling/part_008.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 1
+              }
+            }
+          }
+        },
+        {
+          "id": "left-jaw-art",
+          "name": "左锯颚",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 29.830000000000002,
+          "height": 53.01,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.75,
+          "pivotY": 0.08,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 10,
+          "attachment": {
+            "type": "joint",
+            "targetId": "left-jaw",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/broodling/part_006.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 1
+              }
+            }
+          }
+        },
+        {
+          "id": "left-front-part-0",
+          "name": "左前足上段",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 59.535,
+          "height": 42.21,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.8666666666666667,
+          "pivotY": 0.6666666666666667,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 4,
+          "attachment": {
+            "type": "joint",
+            "targetId": "left-front",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/broodling/part_013.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0.25,
+                "top": 0,
+                "width": 0.75,
+                "height": 0.6
+              }
+            }
+          }
+        },
+        {
+          "id": "left-front-part-1",
+          "name": "左前足下段",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 34.133399999999995,
+          "height": 61.204499999999996,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.813953488372093,
+          "pivotY": 0.2298850574712644,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 5,
+          "attachment": {
+            "type": "joint",
+            "targetId": "left-front-hinge-1",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/broodling/part_013.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 0.43,
+                "height": 0.87
+              }
+            }
+          }
+        },
+        {
+          "id": "left-front-part-2",
+          "name": "左前足末端",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 19.845,
+          "height": 17.5875,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.48,
+          "pivotY": 0.3599999999999999,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 6,
+          "attachment": {
+            "type": "joint",
+            "targetId": "left-front-hinge-2",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/broodling/part_013.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0.75,
+                "width": 0.25,
+                "height": 0.25
+              }
+            }
+          }
+        },
+        {
+          "id": "left-rear-part-0",
+          "name": "左后足上段",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 40.660000000000004,
+          "height": 25.65,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.87,
+          "pivotY": 0.2888888888888889,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 7,
+          "attachment": {
+            "type": "joint",
+            "targetId": "left-rear",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/broodling/part_016.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 0.45
+              }
+            }
+          }
+        },
+        {
+          "id": "left-rear-part-1",
+          "name": "左后足下段",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 40.660000000000004,
+          "height": 33.06,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.5,
+          "pivotY": 0.08620689655172413,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 8,
+          "attachment": {
+            "type": "joint",
+            "targetId": "left-rear-hinge-1",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/broodling/part_016.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0.3,
+                "width": 1,
+                "height": 0.58
+              }
+            }
+          }
+        },
+        {
+          "id": "left-rear-part-2",
+          "name": "左后足末端",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 40.660000000000004,
+          "height": 13.11,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.12,
+          "pivotY": 0.260869565217391,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 9,
+          "attachment": {
+            "type": "joint",
+            "targetId": "left-rear-hinge-2",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/broodling/part_016.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0.77,
+                "width": 1,
+                "height": 0.23
+              }
+            }
+          }
+        },
+        {
+          "id": "right-jaw-art",
+          "name": "右锯颚",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 29.830000000000002,
+          "height": 53.2,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.25,
+          "pivotY": 0.08,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 10,
+          "attachment": {
+            "type": "joint",
+            "targetId": "right-jaw",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/broodling/part_005.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 1
+              }
+            }
+          }
+        },
+        {
+          "id": "right-front-part-0",
+          "name": "右前足上段",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 59.849999999999994,
+          "height": 42.21,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.13333333333333333,
+          "pivotY": 0.6666666666666667,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 7,
+          "attachment": {
+            "type": "joint",
+            "targetId": "right-front",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/broodling/part_014.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 0.75,
+                "height": 0.6
+              }
+            }
+          }
+        },
+        {
+          "id": "right-front-part-1",
+          "name": "右前足下段",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 34.314,
+          "height": 61.204499999999996,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.18604651162790714,
+          "pivotY": 0.2298850574712644,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 8,
+          "attachment": {
+            "type": "joint",
+            "targetId": "right-front-hinge-1",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/broodling/part_014.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0.57,
+                "top": 0,
+                "width": 0.43,
+                "height": 0.87
+              }
+            }
+          }
+        },
+        {
+          "id": "right-front-part-2",
+          "name": "右前足末端",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 19.95,
+          "height": 17.5875,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.52,
+          "pivotY": 0.3599999999999999,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 9,
+          "attachment": {
+            "type": "joint",
+            "targetId": "right-front-hinge-2",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/broodling/part_014.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0.75,
+                "top": 0.75,
+                "width": 0.25,
+                "height": 0.25
+              }
+            }
+          }
+        },
+        {
+          "id": "right-rear-part-0",
+          "name": "右后足上段",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 41.04,
+          "height": 25.65,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.13,
+          "pivotY": 0.2888888888888889,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 4,
+          "attachment": {
+            "type": "joint",
+            "targetId": "right-rear",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/broodling/part_015.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 0.45
+              }
+            }
+          }
+        },
+        {
+          "id": "right-rear-part-1",
+          "name": "右后足下段",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 41.04,
+          "height": 33.06,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.5,
+          "pivotY": 0.08620689655172413,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 5,
+          "attachment": {
+            "type": "joint",
+            "targetId": "right-rear-hinge-1",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/broodling/part_015.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0.3,
+                "width": 1,
+                "height": 0.58
+              }
+            }
+          }
+        },
+        {
+          "id": "right-rear-part-2",
+          "name": "右后足末端",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 41.04,
+          "height": 13.11,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.88,
+          "pivotY": 0.260869565217391,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 6,
+          "attachment": {
+            "type": "joint",
+            "targetId": "right-rear-hinge-2",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/broodling/part_015.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0.77,
+                "width": 1,
+                "height": 0.23
+              }
+            }
+          }
+        }
+      ],
+      "animations": {
+        "idle": {
+          "duration": 1400,
+          "loop": true,
+          "targets": [
+            "joint:head",
+            "joint:abdomen",
+            "joint:left-jaw",
+            "joint:left-front",
+            "joint:left-front-hinge-1",
+            "joint:left-front-hinge-2",
+            "joint:left-rear",
+            "joint:left-rear-hinge-1",
+            "joint:left-rear-hinge-2",
+            "joint:right-jaw",
+            "joint:right-front",
+            "joint:right-front-hinge-1",
+            "joint:right-front-hinge-2",
+            "joint:right-rear",
+            "joint:right-rear-hinge-1",
+            "joint:right-rear-hinge-2",
+            "joint:root"
+          ]
+        },
+        "attack": {
+          "duration": 500,
+          "loop": false,
+          "targets": [
+            "joint:head",
+            "joint:abdomen",
+            "joint:left-jaw",
+            "joint:left-front",
+            "joint:left-front-hinge-1",
+            "joint:left-front-hinge-2",
+            "joint:left-rear",
+            "joint:left-rear-hinge-1",
+            "joint:left-rear-hinge-2",
+            "joint:right-jaw",
+            "joint:right-front",
+            "joint:right-front-hinge-1",
+            "joint:right-front-hinge-2",
+            "joint:right-rear",
+            "joint:right-rear-hinge-1",
+            "joint:right-rear-hinge-2",
+            "joint:root"
+          ]
+        },
+        "hit": {
+          "duration": 380,
+          "loop": false,
+          "targets": [
+            "joint:head",
+            "joint:abdomen",
+            "joint:left-jaw",
+            "joint:left-front",
+            "joint:left-front-hinge-1",
+            "joint:left-front-hinge-2",
+            "joint:left-rear",
+            "joint:left-rear-hinge-1",
+            "joint:left-rear-hinge-2",
+            "joint:right-jaw",
+            "joint:right-front",
+            "joint:right-front-hinge-1",
+            "joint:right-front-hinge-2",
+            "joint:right-rear",
+            "joint:right-rear-hinge-1",
+            "joint:right-rear-hinge-2",
+            "joint:root"
+          ]
+        },
+        "death": {
+          "duration": 800,
+          "loop": false,
+          "targets": [
+            "joint:head",
+            "joint:abdomen",
+            "joint:left-jaw",
+            "joint:left-front",
+            "joint:left-front-hinge-1",
+            "joint:left-front-hinge-2",
+            "joint:left-rear",
+            "joint:left-rear-hinge-1",
+            "joint:left-rear-hinge-2",
+            "joint:right-jaw",
+            "joint:right-front",
+            "joint:right-front-hinge-1",
+            "joint:right-front-hinge-2",
+            "joint:right-rear",
+            "joint:right-rear-hinge-1",
+            "joint:right-rear-hinge-2",
+            "joint:root"
+          ]
+        },
+        "move": {
+          "duration": 700,
+          "loop": true,
+          "targets": [
+            "joint:head",
+            "joint:abdomen",
+            "joint:left-jaw",
+            "joint:left-front",
+            "joint:left-front-hinge-1",
+            "joint:left-front-hinge-2",
+            "joint:left-rear",
+            "joint:left-rear-hinge-1",
+            "joint:left-rear-hinge-2",
+            "joint:right-jaw",
+            "joint:right-front",
+            "joint:right-front-hinge-1",
+            "joint:right-front-hinge-2",
+            "joint:right-rear",
+            "joint:right-rear-hinge-1",
+            "joint:right-rear-hinge-2",
+            "joint:root"
+          ]
+        }
+      }
+    },
+    {
+      "id": "leech-larva",
+      "name": "尸蛭幼体 · 骨架预览",
+      "sourceFolder": "32尸蛭幼体",
+      "reference": "preview_indexed.png",
+      "referenceSha256": "474053ef513306a665433fda053eefb8e1157605684d52058c28d1fbbe6b4891",
+      "used": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9
+      ],
+      "unused": [
+        8,
+        10
+      ],
+      "joints": [
+        {
+          "id": "root",
+          "name": "主体",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "rotationX": 0,
+          "rotationY": -30,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "body",
+          "name": "幼蛭环节轴",
+          "x": 0,
+          "y": -2,
+          "z": 0,
+          "rotationX": 0,
+          "rotationY": 65,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "middle-body",
+          "name": "幼蛭中腹节",
+          "x": 61.26120000000001,
+          "y": 0,
+          "z": 0.3,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "rear-body",
+          "name": "幼蛭后腹节",
+          "x": 38.303999999999995,
+          "y": 0,
+          "z": 0.3,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "tail",
+          "name": "幼蛭尾根",
+          "x": 23.6664,
+          "y": 0,
+          "z": 0.3,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "tail-tip",
+          "name": "幼蛭尾钩尖",
+          "x": 24.38,
+          "y": 25.384,
+          "z": 0.3,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "head",
+          "name": "幼蛭头",
+          "x": 0,
+          "y": 27,
+          "z": 35,
+          "rotationX": -15,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "mouth",
+          "name": "幼蛭吸附口",
+          "x": 0,
+          "y": -13.896,
+          "z": 0.3,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "eye",
+          "name": "幼蛭额眼",
+          "x": 0,
+          "y": 30,
+          "z": 0.6,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "left-sucker",
+          "name": "左吸盘触管根",
+          "x": -34,
+          "y": 10,
+          "z": 29,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "left-sucker-hinge-1",
+          "name": "左吸盘触管中节",
+          "x": -4.349999999999999,
+          "y": -32.745000000000005,
+          "z": 0.3,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "right-sucker",
+          "name": "右吸盘触管根",
+          "x": 34,
+          "y": 10,
+          "z": 29,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "right-sucker-hinge-1",
+          "name": "右吸盘触管中节",
+          "x": 4.350000000000001,
+          "y": -32.745000000000005,
+          "z": 0.3,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        }
+      ],
+      "bones": [
+        {
+          "id": "component-root-body",
+          "name": "幼蛭环节轴",
+          "fromJointId": "root",
+          "toJointId": "body"
+        },
+        {
+          "id": "component-body-middle-body",
+          "name": "幼蛭中腹节",
+          "fromJointId": "body",
+          "toJointId": "middle-body"
+        },
+        {
+          "id": "component-middle-body-rear-body",
+          "name": "幼蛭后腹节",
+          "fromJointId": "middle-body",
+          "toJointId": "rear-body"
+        },
+        {
+          "id": "component-rear-body-tail",
+          "name": "幼蛭尾根",
+          "fromJointId": "rear-body",
+          "toJointId": "tail"
+        },
+        {
+          "id": "component-tail-tail-tip",
+          "name": "幼蛭尾钩尖",
+          "fromJointId": "tail",
+          "toJointId": "tail-tip"
+        },
+        {
+          "id": "component-root-head",
+          "name": "幼蛭头",
+          "fromJointId": "root",
+          "toJointId": "head"
+        },
+        {
+          "id": "component-head-mouth",
+          "name": "幼蛭吸附口",
+          "fromJointId": "head",
+          "toJointId": "mouth"
+        },
+        {
+          "id": "component-head-eye",
+          "name": "幼蛭额眼",
+          "fromJointId": "head",
+          "toJointId": "eye"
+        },
+        {
+          "id": "component-root-left-sucker",
+          "name": "左吸盘触管根",
+          "fromJointId": "root",
+          "toJointId": "left-sucker"
+        },
+        {
+          "id": "component-left-sucker-left-sucker-hinge-1",
+          "name": "左吸盘触管中节",
+          "fromJointId": "left-sucker",
+          "toJointId": "left-sucker-hinge-1"
+        },
+        {
+          "id": "component-root-right-sucker",
+          "name": "右吸盘触管根",
+          "fromJointId": "root",
+          "toJointId": "right-sucker"
+        },
+        {
+          "id": "component-right-sucker-right-sucker-hinge-1",
+          "name": "右吸盘触管中节",
+          "fromJointId": "right-sucker",
+          "toJointId": "right-sucker-hinge-1"
+        }
+      ],
+      "parts": [
+        {
+          "id": "front-body",
+          "name": "幼蛭前腹节",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 78.54,
+          "height": 77,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.1,
+          "pivotY": 0.55,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 5,
+          "attachment": {
+            "type": "joint",
+            "targetId": "body",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/leech-larva/part_002.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 1
+              }
+            }
+          }
+        },
+        {
+          "id": "middle-body-art",
+          "name": "幼蛭中腹节",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 53.2,
+          "height": 56.800000000000004,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.13,
+          "pivotY": 0.55,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 4,
+          "attachment": {
+            "type": "joint",
+            "targetId": "middle-body",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/leech-larva/part_003.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 1
+              }
+            }
+          }
+        },
+        {
+          "id": "rear-body-art",
+          "name": "幼蛭后腹节",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 32.87,
+          "height": 43.13,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.13,
+          "pivotY": 0.55,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 3,
+          "attachment": {
+            "type": "joint",
+            "targetId": "rear-body",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/leech-larva/part_004.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 1
+              }
+            }
+          }
+        },
+        {
+          "id": "tail-base",
+          "name": "幼蛭尾钩下段",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 53,
+          "height": 48.096000000000004,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.16,
+          "pivotY": 0.611111111111111,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 4,
+          "attachment": {
+            "type": "joint",
+            "targetId": "tail",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/leech-larva/part_005.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0.28,
+                "width": 1,
+                "height": 0.72
+              }
+            }
+          }
+        },
+        {
+          "id": "tail-tip-art",
+          "name": "幼蛭尾钩尖",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 29.150000000000002,
+          "height": 26.72,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.309090909090909,
+          "pivotY": 0.85,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 5,
+          "attachment": {
+            "type": "joint",
+            "targetId": "tail-tip",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/leech-larva/part_005.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0.45,
+                "top": 0,
+                "width": 0.55,
+                "height": 0.4
+              }
+            }
+          }
+        },
+        {
+          "id": "hood",
+          "name": "幼蛭头罩与上口",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 110,
+          "height": 84.534,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.5,
+          "pivotY": 0.7945205479452054,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 8,
+          "attachment": {
+            "type": "joint",
+            "targetId": "head",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/leech-larva/part_001.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 0.73
+              }
+            }
+          }
+        },
+        {
+          "id": "mouth-art",
+          "name": "幼蛭吸附口下缘",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 88,
+          "height": 42.846000000000004,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.5,
+          "pivotY": 0.18918918918918906,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 9,
+          "attachment": {
+            "type": "joint",
+            "targetId": "mouth",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/leech-larva/part_001.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0.1,
+                "top": 0.63,
+                "width": 0.8,
+                "height": 0.37
+              }
+            }
+          }
+        },
+        {
+          "id": "eye-art",
+          "name": "幼蛭额眼",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 32.129999999999995,
+          "height": 30.45,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.5,
+          "pivotY": 0.5,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 10,
+          "attachment": {
+            "type": "joint",
+            "targetId": "eye",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/leech-larva/part_009.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 1
+              }
+            }
+          }
+        },
+        {
+          "id": "left-sucker-part-0",
+          "name": "左吸盘触管上段",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 43.5,
+          "height": 39.959999999999994,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.7,
+          "pivotY": 0.11111111111111112,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 4,
+          "attachment": {
+            "type": "joint",
+            "targetId": "left-sucker",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/leech-larva/part_006.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 0.72
+              }
+            }
+          }
+        },
+        {
+          "id": "left-sucker-part-1",
+          "name": "左吸盘触管下段",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 43.5,
+          "height": 22.2,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.6,
+          "pivotY": 0.17500000000000016,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 5,
+          "attachment": {
+            "type": "joint",
+            "targetId": "left-sucker-hinge-1",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/leech-larva/part_006.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0.6,
+                "width": 1,
+                "height": 0.4
+              }
+            }
+          }
+        },
+        {
+          "id": "right-sucker-part-0",
+          "name": "右吸盘触管上段",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 43.5,
+          "height": 39.959999999999994,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.3,
+          "pivotY": 0.11111111111111112,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 7,
+          "attachment": {
+            "type": "joint",
+            "targetId": "right-sucker",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/leech-larva/part_007.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 0.72
+              }
+            }
+          }
+        },
+        {
+          "id": "right-sucker-part-1",
+          "name": "右吸盘触管下段",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 43.5,
+          "height": 22.2,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.4,
+          "pivotY": 0.17500000000000016,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 8,
+          "attachment": {
+            "type": "joint",
+            "targetId": "right-sucker-hinge-1",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/leech-larva/part_007.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0.6,
+                "width": 1,
+                "height": 0.4
+              }
+            }
+          }
+        }
+      ],
+      "animations": {
+        "idle": {
+          "duration": 1400,
+          "loop": true,
+          "targets": [
+            "joint:left-sucker",
+            "joint:left-sucker-hinge-1",
+            "joint:right-sucker",
+            "joint:right-sucker-hinge-1",
+            "joint:body",
+            "joint:middle-body",
+            "joint:rear-body",
+            "joint:tail",
+            "joint:tail-tip",
+            "joint:head",
+            "joint:mouth",
+            "joint:eye",
+            "joint:root"
+          ]
+        },
+        "attack": {
+          "duration": 500,
+          "loop": false,
+          "targets": [
+            "joint:left-sucker",
+            "joint:left-sucker-hinge-1",
+            "joint:right-sucker",
+            "joint:right-sucker-hinge-1",
+            "joint:body",
+            "joint:middle-body",
+            "joint:rear-body",
+            "joint:tail",
+            "joint:tail-tip",
+            "joint:head",
+            "joint:mouth",
+            "joint:eye",
+            "joint:root"
+          ]
+        },
+        "hit": {
+          "duration": 380,
+          "loop": false,
+          "targets": [
+            "joint:left-sucker",
+            "joint:left-sucker-hinge-1",
+            "joint:right-sucker",
+            "joint:right-sucker-hinge-1",
+            "joint:body",
+            "joint:middle-body",
+            "joint:rear-body",
+            "joint:tail",
+            "joint:tail-tip",
+            "joint:head",
+            "joint:mouth",
+            "joint:eye",
+            "joint:root"
+          ]
+        },
+        "death": {
+          "duration": 800,
+          "loop": false,
+          "targets": [
+            "joint:left-sucker",
+            "joint:left-sucker-hinge-1",
+            "joint:right-sucker",
+            "joint:right-sucker-hinge-1",
+            "joint:body",
+            "joint:middle-body",
+            "joint:rear-body",
+            "joint:tail",
+            "joint:tail-tip",
+            "joint:head",
+            "joint:mouth",
+            "joint:eye",
+            "joint:root"
+          ]
+        },
+        "move": {
+          "duration": 700,
+          "loop": true,
+          "targets": [
+            "joint:left-sucker",
+            "joint:left-sucker-hinge-1",
+            "joint:right-sucker",
+            "joint:right-sucker-hinge-1",
+            "joint:body",
+            "joint:middle-body",
+            "joint:rear-body",
+            "joint:tail",
+            "joint:tail-tip",
+            "joint:head",
+            "joint:mouth",
+            "joint:eye",
+            "joint:root"
+          ]
+        }
+      }
+    },
+    {
+      "id": "tide-shadow",
+      "name": "潮影 · 骨架预览",
+      "sourceFolder": "33潮影",
+      "reference": "preview_indexed.png",
+      "referenceSha256": "1a62f43c61df7db14b684dd2682a8bb6b36cad5fd70fb1c678c8646739f526b4",
+      "used": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        9,
+        16,
+        25
+      ],
+      "unused": [
+        23,
+        24
+      ],
+      "joints": [
+        {
+          "id": "root",
+          "name": "主体",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "rotationX": 0,
+          "rotationY": -30,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "crown",
+          "name": "潮影冠焰",
+          "x": 0,
+          "y": 31,
+          "z": -1,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "eye-ring",
+          "name": "潮影眼环",
+          "x": 0,
+          "y": -7,
+          "z": 0.6,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "eye",
+          "name": "潮影魂眼",
+          "x": 0,
+          "y": 0,
+          "z": 0.3,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "left-shoulder",
+          "name": "左肩",
+          "x": -35,
+          "y": 16,
+          "z": -11,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "left-elbow",
+          "name": "左肘",
+          "x": -4.751499999999999,
+          "y": -30.9264,
+          "z": 0.3,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "left-wrist",
+          "name": "左腕",
+          "x": 0.9502999999999983,
+          "y": -15.4632,
+          "z": 0.3,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "right-shoulder",
+          "name": "右肩",
+          "x": 35,
+          "y": 16,
+          "z": 11,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "right-elbow",
+          "name": "右肘",
+          "x": 4.164999999999995,
+          "y": -30.9264,
+          "z": 0.3,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "right-wrist",
+          "name": "右腕",
+          "x": -0.8330000000000007,
+          "y": -15.4632,
+          "z": 0.3,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "veil",
+          "name": "潮影悬裾",
+          "x": 0,
+          "y": -45,
+          "z": -5,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "left-veil",
+          "name": "左悬裾铰链",
+          "x": 0,
+          "y": 0,
+          "z": 0.3,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "right-veil",
+          "name": "右悬裾铰链",
+          "x": 0,
+          "y": 0,
+          "z": 0.3,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "tail",
+          "name": "潮影垂缕根",
+          "x": 0,
+          "y": -20,
+          "z": -3,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        },
+        {
+          "id": "tail-hinge-1",
+          "name": "潮影垂缕中节",
+          "x": 0,
+          "y": -35.059200000000004,
+          "z": 0.3,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "scaleX": 1
+        }
+      ],
+      "bones": [
+        {
+          "id": "component-root-crown",
+          "name": "潮影冠焰",
+          "fromJointId": "root",
+          "toJointId": "crown"
+        },
+        {
+          "id": "component-root-eye-ring",
+          "name": "潮影眼环",
+          "fromJointId": "root",
+          "toJointId": "eye-ring"
+        },
+        {
+          "id": "component-eye-ring-eye",
+          "name": "潮影魂眼",
+          "fromJointId": "eye-ring",
+          "toJointId": "eye"
+        },
+        {
+          "id": "component-root-left-shoulder",
+          "name": "左肩",
+          "fromJointId": "root",
+          "toJointId": "left-shoulder"
+        },
+        {
+          "id": "component-left-shoulder-left-elbow",
+          "name": "左肘",
+          "fromJointId": "left-shoulder",
+          "toJointId": "left-elbow"
+        },
+        {
+          "id": "component-left-elbow-left-wrist",
+          "name": "左腕",
+          "fromJointId": "left-elbow",
+          "toJointId": "left-wrist"
+        },
+        {
+          "id": "component-root-right-shoulder",
+          "name": "右肩",
+          "fromJointId": "root",
+          "toJointId": "right-shoulder"
+        },
+        {
+          "id": "component-right-shoulder-right-elbow",
+          "name": "右肘",
+          "fromJointId": "right-shoulder",
+          "toJointId": "right-elbow"
+        },
+        {
+          "id": "component-right-elbow-right-wrist",
+          "name": "右腕",
+          "fromJointId": "right-elbow",
+          "toJointId": "right-wrist"
+        },
+        {
+          "id": "component-root-veil",
+          "name": "潮影悬裾",
+          "fromJointId": "root",
+          "toJointId": "veil"
+        },
+        {
+          "id": "component-veil-left-veil",
+          "name": "左悬裾铰链",
+          "fromJointId": "veil",
+          "toJointId": "left-veil"
+        },
+        {
+          "id": "component-veil-right-veil",
+          "name": "右悬裾铰链",
+          "fromJointId": "veil",
+          "toJointId": "right-veil"
+        },
+        {
+          "id": "component-veil-tail",
+          "name": "潮影垂缕根",
+          "fromJointId": "veil",
+          "toJointId": "tail"
+        },
+        {
+          "id": "component-tail-tail-hinge-1",
+          "name": "潮影垂缕中节",
+          "fromJointId": "tail",
+          "toJointId": "tail-hinge-1"
+        }
+      ],
+      "parts": [
+        {
+          "id": "chest-frame",
+          "name": "潮影空胸骨框",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 56.84,
+          "height": 80.64000000000001,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.5,
+          "pivotY": 0.3,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 7,
+          "attachment": {
+            "type": "joint",
+            "targetId": "root",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/tide-shadow/part_004.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 1
+              }
+            }
+          }
+        },
+        {
+          "id": "crown-art",
+          "name": "潮影冠焰",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 62.64,
+          "height": 40.77,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.5,
+          "pivotY": 0.8,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 8,
+          "attachment": {
+            "type": "joint",
+            "targetId": "crown",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/tide-shadow/part_001.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 1
+              }
+            }
+          }
+        },
+        {
+          "id": "eye-ring-art",
+          "name": "潮影眼环",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 33.3,
+          "height": 37.199999999999996,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.5,
+          "pivotY": 0.5,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 8,
+          "attachment": {
+            "type": "joint",
+            "targetId": "eye-ring",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/tide-shadow/part_005.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 1
+              }
+            }
+          }
+        },
+        {
+          "id": "eye-art",
+          "name": "潮影魂眼",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 25.28,
+          "height": 24.64,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.5,
+          "pivotY": 0.5,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 9,
+          "attachment": {
+            "type": "joint",
+            "targetId": "eye",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/tide-shadow/part_009.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 1
+              }
+            }
+          }
+        },
+        {
+          "id": "left-upper-arm",
+          "name": "左上臂与肩缕",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 34.2108,
+          "height": 50.2554,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.6111111111111112,
+          "pivotY": 0.30769230769230765,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 5,
+          "attachment": {
+            "type": "joint",
+            "targetId": "left-shoulder",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/tide-shadow/part_002.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 0.36,
+                "height": 0.39
+              }
+            }
+          }
+        },
+        {
+          "id": "left-forearm",
+          "name": "左前臂",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 24.707800000000002,
+          "height": 27.060600000000004,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.42307692307692313,
+          "pivotY": 0.14285714285714274,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 6,
+          "attachment": {
+            "type": "joint",
+            "targetId": "left-elbow",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/tide-shadow/part_002.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0.06,
+                "top": 0.33,
+                "width": 0.26,
+                "height": 0.21
+              }
+            }
+          }
+        },
+        {
+          "id": "left-claw",
+          "name": "左潮影手爪",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 28.509,
+          "height": 28.3492,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.33333333333333337,
+          "pivotY": 0.11363636363636374,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 9,
+          "attachment": {
+            "type": "joint",
+            "targetId": "left-wrist",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/tide-shadow/part_002.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0.525,
+                "width": 0.3,
+                "height": 0.22
+              }
+            }
+          }
+        },
+        {
+          "id": "right-upper-arm",
+          "name": "右上臂与肩缕",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 29.988000000000003,
+          "height": 50.2554,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.38888888888888895,
+          "pivotY": 0.30769230769230765,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 5,
+          "attachment": {
+            "type": "joint",
+            "targetId": "right-shoulder",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/tide-shadow/part_003.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0.64,
+                "top": 0,
+                "width": 0.36,
+                "height": 0.39
+              }
+            }
+          }
+        },
+        {
+          "id": "right-forearm",
+          "name": "右前臂",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 21.658,
+          "height": 27.060600000000004,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.5769230769230765,
+          "pivotY": 0.14285714285714274,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 6,
+          "attachment": {
+            "type": "joint",
+            "targetId": "right-elbow",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/tide-shadow/part_003.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0.68,
+                "top": 0.33,
+                "width": 0.26,
+                "height": 0.21
+              }
+            }
+          }
+        },
+        {
+          "id": "right-claw",
+          "name": "右潮影手爪",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 24.990000000000002,
+          "height": 28.3492,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.666666666666667,
+          "pivotY": 0.11363636363636374,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 9,
+          "attachment": {
+            "type": "joint",
+            "targetId": "right-wrist",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/tide-shadow/part_003.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0.7,
+                "top": 0.525,
+                "width": 0.3,
+                "height": 0.22
+              }
+            }
+          }
+        },
+        {
+          "id": "veil-center",
+          "name": "潮影悬裾中缕",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 21.7184,
+          "height": 80.74,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.5000000000000001,
+          "pivotY": 0.05,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 6,
+          "attachment": {
+            "type": "joint",
+            "targetId": "veil",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/tide-shadow/part_016.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0.42,
+                "top": 0,
+                "width": 0.16,
+                "height": 1
+              }
+            }
+          }
+        },
+        {
+          "id": "left-veil-art",
+          "name": "左悬裾",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 59.72560000000001,
+          "height": 80.74,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 1.1363636363636365,
+          "pivotY": 0.05,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 7,
+          "attachment": {
+            "type": "joint",
+            "targetId": "left-veil",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/tide-shadow/part_016.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 0.44,
+                "height": 1
+              }
+            }
+          }
+        },
+        {
+          "id": "right-veil-art",
+          "name": "右悬裾",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 59.72560000000001,
+          "height": 80.74,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": -0.1363636363636365,
+          "pivotY": 0.05,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 7,
+          "attachment": {
+            "type": "joint",
+            "targetId": "right-veil",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/tide-shadow/part_016.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0.56,
+                "top": 0,
+                "width": 0.44,
+                "height": 1
+              }
+            }
+          }
+        },
+        {
+          "id": "tail-part-0",
+          "name": "潮影垂缕上段",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 27.94,
+          "height": 44.554399999999994,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.5,
+          "pivotY": 0.0819672131147541,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 7,
+          "attachment": {
+            "type": "joint",
+            "targetId": "tail",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/tide-shadow/part_025.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0,
+                "width": 1,
+                "height": 0.61
+              }
+            }
+          }
+        },
+        {
+          "id": "tail-part-1",
+          "name": "潮影垂缕下段",
+          "shape": "rect",
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "width": 27.94,
+          "height": 39.4416,
+          "depth": 0,
+          "rotationX": 0,
+          "rotationY": 0,
+          "rotationZ": 0,
+          "pivotX": 0.5,
+          "pivotY": 0.12962962962962962,
+          "fill": "#ffffff",
+          "stroke": "#22272b",
+          "opacity": 1,
+          "layer": 8,
+          "attachment": {
+            "type": "joint",
+            "targetId": "tail-hinge-1",
+            "followRotation": true,
+            "t": 0.5
+          },
+          "visual": {
+            "type": "texture",
+            "texture": "/assets/enemies/components-v1/tide-shadow/part_025.png",
+            "textureFit": "contain",
+            "textureFrame": {
+              "columns": 1,
+              "rows": 1,
+              "column": 0,
+              "row": 0,
+              "crop": {
+                "left": 0,
+                "top": 0.46,
+                "width": 1,
+                "height": 0.54
+              }
+            }
+          }
+        }
+      ],
+      "animations": {
+        "idle": {
+          "duration": 1400,
+          "loop": true,
+          "targets": [
+            "joint:crown",
+            "joint:eye-ring",
+            "joint:eye",
+            "joint:left-shoulder",
+            "joint:left-elbow",
+            "joint:left-wrist",
+            "joint:right-shoulder",
+            "joint:right-elbow",
+            "joint:right-wrist",
+            "joint:veil",
+            "joint:left-veil",
+            "joint:right-veil",
+            "joint:tail",
+            "joint:tail-hinge-1",
+            "joint:root"
+          ]
+        },
+        "attack": {
+          "duration": 500,
+          "loop": false,
+          "targets": [
+            "joint:crown",
+            "joint:eye-ring",
+            "joint:eye",
+            "joint:left-shoulder",
+            "joint:left-elbow",
+            "joint:left-wrist",
+            "joint:right-shoulder",
+            "joint:right-elbow",
+            "joint:right-wrist",
+            "joint:veil",
+            "joint:left-veil",
+            "joint:right-veil",
+            "joint:tail",
+            "joint:tail-hinge-1",
+            "joint:root"
+          ]
+        },
+        "hit": {
+          "duration": 380,
+          "loop": false,
+          "targets": [
+            "joint:crown",
+            "joint:eye-ring",
+            "joint:eye",
+            "joint:left-shoulder",
+            "joint:left-elbow",
+            "joint:left-wrist",
+            "joint:right-shoulder",
+            "joint:right-elbow",
+            "joint:right-wrist",
+            "joint:veil",
+            "joint:left-veil",
+            "joint:right-veil",
+            "joint:tail",
+            "joint:tail-hinge-1",
+            "joint:root"
+          ]
+        },
+        "death": {
+          "duration": 800,
+          "loop": false,
+          "targets": [
+            "joint:crown",
+            "joint:eye-ring",
+            "joint:eye",
+            "joint:left-shoulder",
+            "joint:left-elbow",
+            "joint:left-wrist",
+            "joint:right-shoulder",
+            "joint:right-elbow",
+            "joint:right-wrist",
+            "joint:veil",
+            "joint:left-veil",
+            "joint:right-veil",
+            "joint:tail",
+            "joint:tail-hinge-1",
+            "joint:root"
+          ]
+        },
+        "move": {
+          "duration": 700,
+          "loop": true,
+          "targets": [
+            "joint:crown",
+            "joint:eye-ring",
+            "joint:eye",
+            "joint:left-shoulder",
+            "joint:left-elbow",
+            "joint:left-wrist",
+            "joint:right-shoulder",
+            "joint:right-elbow",
+            "joint:right-wrist",
+            "joint:veil",
+            "joint:left-veil",
+            "joint:right-veil",
+            "joint:tail",
+            "joint:tail-hinge-1",
+            "joint:root"
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,227 @@
+[
+  {
+    "enemy": "drown-shadow-hunter",
+    "action": "idle",
+    "fraction": 0,
+    "left": 61,
+    "right": 97,
+    "top": 39,
+    "bottom": 151
+  },
+  {
+    "enemy": "drown-shadow-hunter",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 62,
+    "right": 97,
+    "top": 39,
+    "bottom": 150
+  },
+  {
+    "enemy": "drown-shadow-hunter",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 62,
+    "right": 97,
+    "top": 39,
+    "bottom": 150
+  },
+  {
+    "enemy": "drown-shadow-hunter",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 62,
+    "right": 97,
+    "top": 39,
+    "bottom": 151
+  },
+  {
+    "enemy": "drown-shadow-hunter",
+    "action": "idle",
+    "fraction": 1,
+    "left": 61,
+    "right": 97,
+    "top": 39,
+    "bottom": 151
+  },
+  {
+    "enemy": "drown-shadow-hunter",
+    "action": "move",
+    "fraction": 0,
+    "left": 61,
+    "right": 97,
+    "top": 39,
+    "bottom": 151
+  },
+  {
+    "enemy": "drown-shadow-hunter",
+    "action": "move",
+    "fraction": 0.27,
+    "left": 61,
+    "right": 102,
+    "top": 39,
+    "bottom": 147
+  },
+  {
+    "enemy": "drown-shadow-hunter",
+    "action": "move",
+    "fraction": 0.64,
+    "left": 63,
+    "right": 96,
+    "top": 39,
+    "bottom": 151
+  },
+  {
+    "enemy": "drown-shadow-hunter",
+    "action": "move",
+    "fraction": 0.85,
+    "left": 61,
+    "right": 95,
+    "top": 39,
+    "bottom": 151
+  },
+  {
+    "enemy": "drown-shadow-hunter",
+    "action": "move",
+    "fraction": 1,
+    "left": 61,
+    "right": 97,
+    "top": 39,
+    "bottom": 151
+  },
+  {
+    "enemy": "drown-shadow-hunter",
+    "action": "attack",
+    "fraction": 0,
+    "left": 61,
+    "right": 97,
+    "top": 39,
+    "bottom": 151
+  },
+  {
+    "enemy": "drown-shadow-hunter",
+    "action": "attack",
+    "fraction": 0.27,
+    "left": 49,
+    "right": 99,
+    "top": 39,
+    "bottom": 153
+  },
+  {
+    "enemy": "drown-shadow-hunter",
+    "action": "attack",
+    "fraction": 0.64,
+    "left": 60,
+    "right": 157,
+    "top": 39,
+    "bottom": 150
+  },
+  {
+    "enemy": "drown-shadow-hunter",
+    "action": "attack",
+    "fraction": 0.85,
+    "left": 61,
+    "right": 127,
+    "top": 39,
+    "bottom": 150
+  },
+  {
+    "enemy": "drown-shadow-hunter",
+    "action": "attack",
+    "fraction": 1,
+    "left": 61,
+    "right": 97,
+    "top": 39,
+    "bottom": 151
+  },
+  {
+    "enemy": "drown-shadow-hunter",
+    "action": "hit",
+    "fraction": 0,
+    "left": 61,
+    "right": 97,
+    "top": 39,
+    "bottom": 151
+  },
+  {
+    "enemy": "drown-shadow-hunter",
+    "action": "hit",
+    "fraction": 0.27,
+    "left": 65,
+    "right": 114,
+    "top": 40,
+    "bottom": 149
+  },
+  {
+    "enemy": "drown-shadow-hunter",
+    "action": "hit",
+    "fraction": 0.64,
+    "left": 64,
+    "right": 107,
+    "top": 39,
+    "bottom": 151
+  },
+  {
+    "enemy": "drown-shadow-hunter",
+    "action": "hit",
+    "fraction": 0.85,
+    "left": 64,
+    "right": 101,
+    "top": 39,
+    "bottom": 151
+  },
+  {
+    "enemy": "drown-shadow-hunter",
+    "action": "hit",
+    "fraction": 1,
+    "left": 61,
+    "right": 97,
+    "top": 39,
+    "bottom": 151
+  },
+  {
+    "enemy": "drown-shadow-hunter",
+    "action": "death",
+    "fraction": 0,
+    "left": 61,
+    "right": 97,
+    "top": 39,
+    "bottom": 151
+  },
+  {
+    "enemy": "drown-shadow-hunter",
+    "action": "death",
+    "fraction": 0.27,
+    "left": 62,
+    "right": 102,
+    "top": 41,
+    "bottom": 153
+  },
+  {
+    "enemy": "drown-shadow-hunter",
+    "action": "death",
+    "fraction": 0.64,
+    "left": 58,
+    "right": 111,
+    "top": 46,
+    "bottom": 152
+  },
+  {
+    "enemy": "drown-shadow-hunter",
+    "action": "death",
+    "fraction": 0.85,
+    "left": 53,
+    "right": 112,
+    "top": 50,
+    "bottom": 144
+  },
+  {
+    "enemy": "drown-shadow-hunter",
+    "action": "death",
+    "fraction": 1,
+    "left": 51,
+    "right": 110,
+    "top": 54,
+    "bottom": 136
+  }
+]

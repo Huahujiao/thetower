@@ -1,0 +1,1487 @@
+[
+  {
+    "enemy": "gnawer",
+    "action": "idle",
+    "fraction": 0,
+    "left": 54,
+    "right": 107,
+    "top": 18,
+    "bottom": 159
+  },
+  {
+    "enemy": "gnawer",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 53,
+    "right": 107,
+    "top": 17,
+    "bottom": 158
+  },
+  {
+    "enemy": "gnawer",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 53,
+    "right": 107,
+    "top": 17,
+    "bottom": 157
+  },
+  {
+    "enemy": "gnawer",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 54,
+    "right": 107,
+    "top": 17,
+    "bottom": 158
+  },
+  {
+    "enemy": "gnawer",
+    "action": "idle",
+    "fraction": 1,
+    "left": 54,
+    "right": 107,
+    "top": 18,
+    "bottom": 159
+  },
+  {
+    "enemy": "emberwing-moth",
+    "action": "idle",
+    "fraction": 0,
+    "left": 37,
+    "right": 128,
+    "top": 33,
+    "bottom": 129
+  },
+  {
+    "enemy": "emberwing-moth",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 38,
+    "right": 128,
+    "top": 30,
+    "bottom": 126
+  },
+  {
+    "enemy": "emberwing-moth",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 38,
+    "right": 128,
+    "top": 29,
+    "bottom": 125
+  },
+  {
+    "enemy": "emberwing-moth",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 37,
+    "right": 128,
+    "top": 32,
+    "bottom": 127
+  },
+  {
+    "enemy": "emberwing-moth",
+    "action": "idle",
+    "fraction": 1,
+    "left": 37,
+    "right": 128,
+    "top": 33,
+    "bottom": 129
+  },
+  {
+    "enemy": "rootrot-bud",
+    "action": "idle",
+    "fraction": 0,
+    "left": 43,
+    "right": 115,
+    "top": 4,
+    "bottom": 120
+  },
+  {
+    "enemy": "rootrot-bud",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 39,
+    "right": 118,
+    "top": 4,
+    "bottom": 119
+  },
+  {
+    "enemy": "rootrot-bud",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 37,
+    "right": 119,
+    "top": 3,
+    "bottom": 119
+  },
+  {
+    "enemy": "rootrot-bud",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 40,
+    "right": 117,
+    "top": 4,
+    "bottom": 119
+  },
+  {
+    "enemy": "rootrot-bud",
+    "action": "idle",
+    "fraction": 1,
+    "left": 43,
+    "right": 115,
+    "top": 4,
+    "bottom": 120
+  },
+  {
+    "enemy": "tide-shadow-cub",
+    "action": "idle",
+    "fraction": 0,
+    "left": 40,
+    "right": 122,
+    "top": 3,
+    "bottom": 158
+  },
+  {
+    "enemy": "tide-shadow-cub",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 41,
+    "right": 121,
+    "top": 1,
+    "bottom": 156
+  },
+  {
+    "enemy": "tide-shadow-cub",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 41,
+    "right": 121,
+    "top": 1,
+    "bottom": 155
+  },
+  {
+    "enemy": "tide-shadow-cub",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 41,
+    "right": 121,
+    "top": 2,
+    "bottom": 156
+  },
+  {
+    "enemy": "tide-shadow-cub",
+    "action": "idle",
+    "fraction": 1,
+    "left": 40,
+    "right": 122,
+    "top": 3,
+    "bottom": 158
+  },
+  {
+    "enemy": "nest-spider",
+    "action": "idle",
+    "fraction": 0,
+    "left": 28,
+    "right": 130,
+    "top": 61,
+    "bottom": 107
+  },
+  {
+    "enemy": "nest-spider",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 28,
+    "right": 130,
+    "top": 60,
+    "bottom": 106
+  },
+  {
+    "enemy": "nest-spider",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 28,
+    "right": 130,
+    "top": 59,
+    "bottom": 106
+  },
+  {
+    "enemy": "nest-spider",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 28,
+    "right": 130,
+    "top": 60,
+    "bottom": 107
+  },
+  {
+    "enemy": "nest-spider",
+    "action": "idle",
+    "fraction": 1,
+    "left": 28,
+    "right": 130,
+    "top": 61,
+    "bottom": 107
+  },
+  {
+    "enemy": "beetle-guard",
+    "action": "idle",
+    "fraction": 0,
+    "left": 44,
+    "right": 109,
+    "top": 49,
+    "bottom": 110
+  },
+  {
+    "enemy": "beetle-guard",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 44,
+    "right": 110,
+    "top": 49,
+    "bottom": 109
+  },
+  {
+    "enemy": "beetle-guard",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 44,
+    "right": 109,
+    "top": 49,
+    "bottom": 109
+  },
+  {
+    "enemy": "beetle-guard",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 44,
+    "right": 109,
+    "top": 49,
+    "bottom": 110
+  },
+  {
+    "enemy": "beetle-guard",
+    "action": "idle",
+    "fraction": 1,
+    "left": 44,
+    "right": 109,
+    "top": 49,
+    "bottom": 110
+  },
+  {
+    "enemy": "rot-walker",
+    "action": "idle",
+    "fraction": 0,
+    "left": 40,
+    "right": 116,
+    "top": 39,
+    "bottom": 156
+  },
+  {
+    "enemy": "rot-walker",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 38,
+    "right": 118,
+    "top": 38,
+    "bottom": 155
+  },
+  {
+    "enemy": "rot-walker",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 38,
+    "right": 118,
+    "top": 38,
+    "bottom": 154
+  },
+  {
+    "enemy": "rot-walker",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 39,
+    "right": 117,
+    "top": 39,
+    "bottom": 155
+  },
+  {
+    "enemy": "rot-walker",
+    "action": "idle",
+    "fraction": 1,
+    "left": 40,
+    "right": 116,
+    "top": 39,
+    "bottom": 156
+  },
+  {
+    "enemy": "shellguard",
+    "action": "idle",
+    "fraction": 0,
+    "left": 35,
+    "right": 112,
+    "top": 12,
+    "bottom": 158
+  },
+  {
+    "enemy": "shellguard",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 34,
+    "right": 114,
+    "top": 12,
+    "bottom": 157
+  },
+  {
+    "enemy": "shellguard",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 34,
+    "right": 115,
+    "top": 12,
+    "bottom": 157
+  },
+  {
+    "enemy": "shellguard",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 35,
+    "right": 113,
+    "top": 12,
+    "bottom": 158
+  },
+  {
+    "enemy": "shellguard",
+    "action": "idle",
+    "fraction": 1,
+    "left": 35,
+    "right": 112,
+    "top": 12,
+    "bottom": 158
+  },
+  {
+    "enemy": "wisp",
+    "action": "idle",
+    "fraction": 0,
+    "left": 28,
+    "right": 118,
+    "top": 11,
+    "bottom": 144
+  },
+  {
+    "enemy": "wisp",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 35,
+    "right": 119,
+    "top": 7,
+    "bottom": 141
+  },
+  {
+    "enemy": "wisp",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 37,
+    "right": 119,
+    "top": 5,
+    "bottom": 140
+  },
+  {
+    "enemy": "wisp",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 32,
+    "right": 119,
+    "top": 8,
+    "bottom": 142
+  },
+  {
+    "enemy": "wisp",
+    "action": "idle",
+    "fraction": 1,
+    "left": 28,
+    "right": 118,
+    "top": 11,
+    "bottom": 144
+  },
+  {
+    "enemy": "patrol-hound",
+    "action": "idle",
+    "fraction": 0,
+    "left": 27,
+    "right": 116,
+    "top": 53,
+    "bottom": 129
+  },
+  {
+    "enemy": "patrol-hound",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 26,
+    "right": 116,
+    "top": 54,
+    "bottom": 127
+  },
+  {
+    "enemy": "patrol-hound",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 25,
+    "right": 116,
+    "top": 54,
+    "bottom": 127
+  },
+  {
+    "enemy": "patrol-hound",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 26,
+    "right": 116,
+    "top": 54,
+    "bottom": 128
+  },
+  {
+    "enemy": "patrol-hound",
+    "action": "idle",
+    "fraction": 1,
+    "left": 27,
+    "right": 116,
+    "top": 53,
+    "bottom": 129
+  },
+  {
+    "enemy": "redneedle-salamander",
+    "action": "idle",
+    "fraction": 0,
+    "left": 45,
+    "right": 138,
+    "top": 42,
+    "bottom": 129
+  },
+  {
+    "enemy": "redneedle-salamander",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 45,
+    "right": 132,
+    "top": 41,
+    "bottom": 127
+  },
+  {
+    "enemy": "redneedle-salamander",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 45,
+    "right": 130,
+    "top": 40,
+    "bottom": 126
+  },
+  {
+    "enemy": "redneedle-salamander",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 45,
+    "right": 135,
+    "top": 41,
+    "bottom": 128
+  },
+  {
+    "enemy": "redneedle-salamander",
+    "action": "idle",
+    "fraction": 1,
+    "left": 45,
+    "right": 138,
+    "top": 42,
+    "bottom": 129
+  },
+  {
+    "enemy": "rot-sac-toad",
+    "action": "idle",
+    "fraction": 0,
+    "left": 26,
+    "right": 121,
+    "top": 47,
+    "bottom": 127
+  },
+  {
+    "enemy": "rot-sac-toad",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 29,
+    "right": 121,
+    "top": 47,
+    "bottom": 126
+  },
+  {
+    "enemy": "rot-sac-toad",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 30,
+    "right": 121,
+    "top": 47,
+    "bottom": 125
+  },
+  {
+    "enemy": "rot-sac-toad",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 28,
+    "right": 121,
+    "top": 47,
+    "bottom": 127
+  },
+  {
+    "enemy": "rot-sac-toad",
+    "action": "idle",
+    "fraction": 1,
+    "left": 26,
+    "right": 121,
+    "top": 47,
+    "bottom": 127
+  },
+  {
+    "enemy": "claw-beast",
+    "action": "idle",
+    "fraction": 0,
+    "left": 28,
+    "right": 122,
+    "top": 58,
+    "bottom": 133
+  },
+  {
+    "enemy": "claw-beast",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 28,
+    "right": 123,
+    "top": 56,
+    "bottom": 132
+  },
+  {
+    "enemy": "claw-beast",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 28,
+    "right": 123,
+    "top": 56,
+    "bottom": 132
+  },
+  {
+    "enemy": "claw-beast",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 28,
+    "right": 122,
+    "top": 57,
+    "bottom": 132
+  },
+  {
+    "enemy": "claw-beast",
+    "action": "idle",
+    "fraction": 1,
+    "left": 28,
+    "right": 122,
+    "top": 58,
+    "bottom": 133
+  },
+  {
+    "enemy": "broodmother",
+    "action": "idle",
+    "fraction": 0,
+    "left": 41,
+    "right": 128,
+    "top": 46,
+    "bottom": 113
+  },
+  {
+    "enemy": "broodmother",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 41,
+    "right": 132,
+    "top": 44,
+    "bottom": 112
+  },
+  {
+    "enemy": "broodmother",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 41,
+    "right": 134,
+    "top": 43,
+    "bottom": 112
+  },
+  {
+    "enemy": "broodmother",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 41,
+    "right": 130,
+    "top": 45,
+    "bottom": 113
+  },
+  {
+    "enemy": "broodmother",
+    "action": "idle",
+    "fraction": 1,
+    "left": 41,
+    "right": 128,
+    "top": 46,
+    "bottom": 113
+  },
+  {
+    "enemy": "moss-colossus",
+    "action": "idle",
+    "fraction": 0,
+    "left": 32,
+    "right": 115,
+    "top": 8,
+    "bottom": 156
+  },
+  {
+    "enemy": "moss-colossus",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 30,
+    "right": 118,
+    "top": 6,
+    "bottom": 155
+  },
+  {
+    "enemy": "moss-colossus",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 29,
+    "right": 119,
+    "top": 6,
+    "bottom": 155
+  },
+  {
+    "enemy": "moss-colossus",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 31,
+    "right": 116,
+    "top": 7,
+    "bottom": 155
+  },
+  {
+    "enemy": "moss-colossus",
+    "action": "idle",
+    "fraction": 1,
+    "left": 32,
+    "right": 115,
+    "top": 8,
+    "bottom": 156
+  },
+  {
+    "enemy": "sentry-crossbow",
+    "action": "idle",
+    "fraction": 0,
+    "left": 40,
+    "right": 126,
+    "top": 31,
+    "bottom": 157
+  },
+  {
+    "enemy": "sentry-crossbow",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 38,
+    "right": 128,
+    "top": 30,
+    "bottom": 156
+  },
+  {
+    "enemy": "sentry-crossbow",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 38,
+    "right": 129,
+    "top": 30,
+    "bottom": 156
+  },
+  {
+    "enemy": "sentry-crossbow",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 39,
+    "right": 127,
+    "top": 31,
+    "bottom": 157
+  },
+  {
+    "enemy": "sentry-crossbow",
+    "action": "idle",
+    "fraction": 1,
+    "left": 40,
+    "right": 126,
+    "top": 31,
+    "bottom": 157
+  },
+  {
+    "enemy": "ash-cannon-bug",
+    "action": "idle",
+    "fraction": 0,
+    "left": 33,
+    "right": 120,
+    "top": 54,
+    "bottom": 106
+  },
+  {
+    "enemy": "ash-cannon-bug",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 33,
+    "right": 120,
+    "top": 53,
+    "bottom": 106
+  },
+  {
+    "enemy": "ash-cannon-bug",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 33,
+    "right": 120,
+    "top": 53,
+    "bottom": 106
+  },
+  {
+    "enemy": "ash-cannon-bug",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 33,
+    "right": 120,
+    "top": 54,
+    "bottom": 106
+  },
+  {
+    "enemy": "ash-cannon-bug",
+    "action": "idle",
+    "fraction": 1,
+    "left": 33,
+    "right": 120,
+    "top": 54,
+    "bottom": 106
+  },
+  {
+    "enemy": "furnace-beetle",
+    "action": "idle",
+    "fraction": 0,
+    "left": 41,
+    "right": 129,
+    "top": 35,
+    "bottom": 116
+  },
+  {
+    "enemy": "furnace-beetle",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 41,
+    "right": 127,
+    "top": 32,
+    "bottom": 116
+  },
+  {
+    "enemy": "furnace-beetle",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 41,
+    "right": 127,
+    "top": 32,
+    "bottom": 116
+  },
+  {
+    "enemy": "furnace-beetle",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 41,
+    "right": 128,
+    "top": 33,
+    "bottom": 116
+  },
+  {
+    "enemy": "furnace-beetle",
+    "action": "idle",
+    "fraction": 1,
+    "left": 41,
+    "right": 129,
+    "top": 35,
+    "bottom": 116
+  },
+  {
+    "enemy": "thorn-shell-flower",
+    "action": "idle",
+    "fraction": 0,
+    "left": 32,
+    "right": 120,
+    "top": 3,
+    "bottom": 125
+  },
+  {
+    "enemy": "thorn-shell-flower",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 24,
+    "right": 121,
+    "top": 5,
+    "bottom": 124
+  },
+  {
+    "enemy": "thorn-shell-flower",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 25,
+    "right": 121,
+    "top": 3,
+    "bottom": 124
+  },
+  {
+    "enemy": "thorn-shell-flower",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 23,
+    "right": 121,
+    "top": 4,
+    "bottom": 125
+  },
+  {
+    "enemy": "thorn-shell-flower",
+    "action": "idle",
+    "fraction": 1,
+    "left": 32,
+    "right": 120,
+    "top": 3,
+    "bottom": 125
+  },
+  {
+    "enemy": "water-leech-swarm",
+    "action": "idle",
+    "fraction": 0,
+    "left": 50,
+    "right": 102,
+    "top": 38,
+    "bottom": 123
+  },
+  {
+    "enemy": "water-leech-swarm",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 50,
+    "right": 101,
+    "top": 34,
+    "bottom": 119
+  },
+  {
+    "enemy": "water-leech-swarm",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 50,
+    "right": 100,
+    "top": 33,
+    "bottom": 118
+  },
+  {
+    "enemy": "water-leech-swarm",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 50,
+    "right": 101,
+    "top": 36,
+    "bottom": 121
+  },
+  {
+    "enemy": "water-leech-swarm",
+    "action": "idle",
+    "fraction": 1,
+    "left": 50,
+    "right": 102,
+    "top": 38,
+    "bottom": 123
+  },
+  {
+    "enemy": "whirlpool-eye-sac",
+    "action": "idle",
+    "fraction": 0,
+    "left": 34,
+    "right": 109,
+    "top": 29,
+    "bottom": 144
+  },
+  {
+    "enemy": "whirlpool-eye-sac",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 33,
+    "right": 111,
+    "top": 26,
+    "bottom": 141
+  },
+  {
+    "enemy": "whirlpool-eye-sac",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 33,
+    "right": 112,
+    "top": 25,
+    "bottom": 140
+  },
+  {
+    "enemy": "whirlpool-eye-sac",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 33,
+    "right": 110,
+    "top": 27,
+    "bottom": 142
+  },
+  {
+    "enemy": "whirlpool-eye-sac",
+    "action": "idle",
+    "fraction": 1,
+    "left": 34,
+    "right": 109,
+    "top": 29,
+    "bottom": 144
+  },
+  {
+    "enemy": "molten-core-beast",
+    "action": "idle",
+    "fraction": 0,
+    "left": 45,
+    "right": 116,
+    "top": 48,
+    "bottom": 129
+  },
+  {
+    "enemy": "molten-core-beast",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 45,
+    "right": 116,
+    "top": 46,
+    "bottom": 127
+  },
+  {
+    "enemy": "molten-core-beast",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 45,
+    "right": 117,
+    "top": 46,
+    "bottom": 127
+  },
+  {
+    "enemy": "molten-core-beast",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 45,
+    "right": 116,
+    "top": 47,
+    "bottom": 128
+  },
+  {
+    "enemy": "molten-core-beast",
+    "action": "idle",
+    "fraction": 1,
+    "left": 45,
+    "right": 116,
+    "top": 48,
+    "bottom": 129
+  },
+  {
+    "enemy": "redwheel-fire-crow",
+    "action": "idle",
+    "fraction": 0,
+    "left": 0,
+    "right": 159,
+    "top": 33,
+    "bottom": 157
+  },
+  {
+    "enemy": "redwheel-fire-crow",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 2,
+    "right": 157,
+    "top": 32,
+    "bottom": 154
+  },
+  {
+    "enemy": "redwheel-fire-crow",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 5,
+    "right": 154,
+    "top": 32,
+    "bottom": 153
+  },
+  {
+    "enemy": "redwheel-fire-crow",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 0,
+    "right": 159,
+    "top": 33,
+    "bottom": 156
+  },
+  {
+    "enemy": "redwheel-fire-crow",
+    "action": "idle",
+    "fraction": 1,
+    "left": 0,
+    "right": 159,
+    "top": 33,
+    "bottom": 157
+  },
+  {
+    "enemy": "cinder-curse-lamp-swarm",
+    "action": "idle",
+    "fraction": 0,
+    "left": 35,
+    "right": 114,
+    "top": 23,
+    "bottom": 129
+  },
+  {
+    "enemy": "cinder-curse-lamp-swarm",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 35,
+    "right": 115,
+    "top": 19,
+    "bottom": 125
+  },
+  {
+    "enemy": "cinder-curse-lamp-swarm",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 35,
+    "right": 115,
+    "top": 18,
+    "bottom": 124
+  },
+  {
+    "enemy": "cinder-curse-lamp-swarm",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 35,
+    "right": 115,
+    "top": 21,
+    "bottom": 127
+  },
+  {
+    "enemy": "cinder-curse-lamp-swarm",
+    "action": "idle",
+    "fraction": 1,
+    "left": 35,
+    "right": 114,
+    "top": 23,
+    "bottom": 129
+  },
+  {
+    "enemy": "tide-rite-matriarch",
+    "action": "idle",
+    "fraction": 0,
+    "left": 40,
+    "right": 115,
+    "top": 7,
+    "bottom": 151
+  },
+  {
+    "enemy": "tide-rite-matriarch",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 38,
+    "right": 117,
+    "top": 6,
+    "bottom": 150
+  },
+  {
+    "enemy": "tide-rite-matriarch",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 38,
+    "right": 117,
+    "top": 6,
+    "bottom": 149
+  },
+  {
+    "enemy": "tide-rite-matriarch",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 39,
+    "right": 116,
+    "top": 6,
+    "bottom": 150
+  },
+  {
+    "enemy": "tide-rite-matriarch",
+    "action": "idle",
+    "fraction": 1,
+    "left": 40,
+    "right": 115,
+    "top": 7,
+    "bottom": 151
+  },
+  {
+    "enemy": "drown-shadow-hunter",
+    "action": "idle",
+    "fraction": 0,
+    "left": 40,
+    "right": 119,
+    "top": 10,
+    "bottom": 156
+  },
+  {
+    "enemy": "drown-shadow-hunter",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 38,
+    "right": 123,
+    "top": 9,
+    "bottom": 156
+  },
+  {
+    "enemy": "drown-shadow-hunter",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 38,
+    "right": 125,
+    "top": 9,
+    "bottom": 155
+  },
+  {
+    "enemy": "drown-shadow-hunter",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 39,
+    "right": 121,
+    "top": 9,
+    "bottom": 156
+  },
+  {
+    "enemy": "drown-shadow-hunter",
+    "action": "idle",
+    "fraction": 1,
+    "left": 40,
+    "right": 119,
+    "top": 10,
+    "bottom": 156
+  },
+  {
+    "enemy": "tidal-spore-sac",
+    "action": "idle",
+    "fraction": 0,
+    "left": 32,
+    "right": 120,
+    "top": 3,
+    "bottom": 150
+  },
+  {
+    "enemy": "tidal-spore-sac",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 24,
+    "right": 121,
+    "top": 4,
+    "bottom": 150
+  },
+  {
+    "enemy": "tidal-spore-sac",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 25,
+    "right": 121,
+    "top": 5,
+    "bottom": 150
+  },
+  {
+    "enemy": "tidal-spore-sac",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 23,
+    "right": 121,
+    "top": 4,
+    "bottom": 150
+  },
+  {
+    "enemy": "tidal-spore-sac",
+    "action": "idle",
+    "fraction": 1,
+    "left": 32,
+    "right": 120,
+    "top": 3,
+    "bottom": 150
+  },
+  {
+    "enemy": "revenant-guard",
+    "action": "idle",
+    "fraction": 0,
+    "left": 31,
+    "right": 112,
+    "top": 1,
+    "bottom": 160
+  },
+  {
+    "enemy": "revenant-guard",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 27,
+    "right": 115,
+    "top": 0,
+    "bottom": 159
+  },
+  {
+    "enemy": "revenant-guard",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 26,
+    "right": 116,
+    "top": 0,
+    "bottom": 159
+  },
+  {
+    "enemy": "revenant-guard",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 29,
+    "right": 113,
+    "top": 1,
+    "bottom": 159
+  },
+  {
+    "enemy": "revenant-guard",
+    "action": "idle",
+    "fraction": 1,
+    "left": 31,
+    "right": 112,
+    "top": 1,
+    "bottom": 160
+  },
+  {
+    "enemy": "bomb-wisp",
+    "action": "idle",
+    "fraction": 0,
+    "left": 54,
+    "right": 105,
+    "top": 29,
+    "bottom": 144
+  },
+  {
+    "enemy": "bomb-wisp",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 54,
+    "right": 105,
+    "top": 26,
+    "bottom": 141
+  },
+  {
+    "enemy": "bomb-wisp",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 54,
+    "right": 106,
+    "top": 25,
+    "bottom": 140
+  },
+  {
+    "enemy": "bomb-wisp",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 54,
+    "right": 105,
+    "top": 27,
+    "bottom": 142
+  },
+  {
+    "enemy": "bomb-wisp",
+    "action": "idle",
+    "fraction": 1,
+    "left": 54,
+    "right": 105,
+    "top": 29,
+    "bottom": 144
+  },
+  {
+    "enemy": "cracked-hunter",
+    "action": "idle",
+    "fraction": 0,
+    "left": 32,
+    "right": 113,
+    "top": 28,
+    "bottom": 156
+  },
+  {
+    "enemy": "cracked-hunter",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 31,
+    "right": 116,
+    "top": 27,
+    "bottom": 156
+  },
+  {
+    "enemy": "cracked-hunter",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 31,
+    "right": 117,
+    "top": 27,
+    "bottom": 155
+  },
+  {
+    "enemy": "cracked-hunter",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 31,
+    "right": 115,
+    "top": 28,
+    "bottom": 156
+  },
+  {
+    "enemy": "cracked-hunter",
+    "action": "idle",
+    "fraction": 1,
+    "left": 32,
+    "right": 113,
+    "top": 28,
+    "bottom": 156
+  },
+  {
+    "enemy": "broodling",
+    "action": "idle",
+    "fraction": 0,
+    "left": 33,
+    "right": 110,
+    "top": 65,
+    "bottom": 106
+  },
+  {
+    "enemy": "broodling",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 33,
+    "right": 110,
+    "top": 62,
+    "bottom": 106
+  },
+  {
+    "enemy": "broodling",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 33,
+    "right": 110,
+    "top": 61,
+    "bottom": 106
+  },
+  {
+    "enemy": "broodling",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 33,
+    "right": 110,
+    "top": 64,
+    "bottom": 106
+  },
+  {
+    "enemy": "broodling",
+    "action": "idle",
+    "fraction": 1,
+    "left": 33,
+    "right": 110,
+    "top": 65,
+    "bottom": 106
+  },
+  {
+    "enemy": "leech-larva",
+    "action": "idle",
+    "fraction": 0,
+    "left": 60,
+    "right": 90,
+    "top": 26,
+    "bottom": 156
+  },
+  {
+    "enemy": "leech-larva",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 61,
+    "right": 91,
+    "top": 22,
+    "bottom": 151
+  },
+  {
+    "enemy": "leech-larva",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 62,
+    "right": 93,
+    "top": 21,
+    "bottom": 149
+  },
+  {
+    "enemy": "leech-larva",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 61,
+    "right": 91,
+    "top": 24,
+    "bottom": 153
+  },
+  {
+    "enemy": "leech-larva",
+    "action": "idle",
+    "fraction": 1,
+    "left": 60,
+    "right": 90,
+    "top": 26,
+    "bottom": 156
+  },
+  {
+    "enemy": "tide-shadow",
+    "action": "idle",
+    "fraction": 0,
+    "left": 10,
+    "right": 123,
+    "top": 29,
+    "bottom": 156
+  },
+  {
+    "enemy": "tide-shadow",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 14,
+    "right": 132,
+    "top": 26,
+    "bottom": 153
+  },
+  {
+    "enemy": "tide-shadow",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 16,
+    "right": 135,
+    "top": 25,
+    "bottom": 152
+  },
+  {
+    "enemy": "tide-shadow",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 11,
+    "right": 126,
+    "top": 27,
+    "bottom": 155
+  },
+  {
+    "enemy": "tide-shadow",
+    "action": "idle",
+    "fraction": 1,
+    "left": 10,
+    "right": 123,
+    "top": 29,
+    "bottom": 156
+  }
+]

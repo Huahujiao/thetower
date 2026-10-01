@@ -1,0 +1,227 @@
+[
+  {
+    "enemy": "whirlpool-eye-sac",
+    "action": "idle",
+    "fraction": 0,
+    "left": 25,
+    "right": 110,
+    "top": 32,
+    "bottom": 130
+  },
+  {
+    "enemy": "whirlpool-eye-sac",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 26,
+    "right": 110,
+    "top": 31,
+    "bottom": 129
+  },
+  {
+    "enemy": "whirlpool-eye-sac",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 26,
+    "right": 110,
+    "top": 30,
+    "bottom": 129
+  },
+  {
+    "enemy": "whirlpool-eye-sac",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 25,
+    "right": 110,
+    "top": 31,
+    "bottom": 130
+  },
+  {
+    "enemy": "whirlpool-eye-sac",
+    "action": "idle",
+    "fraction": 1,
+    "left": 25,
+    "right": 110,
+    "top": 32,
+    "bottom": 130
+  },
+  {
+    "enemy": "whirlpool-eye-sac",
+    "action": "move",
+    "fraction": 0,
+    "left": 25,
+    "right": 110,
+    "top": 32,
+    "bottom": 130
+  },
+  {
+    "enemy": "whirlpool-eye-sac",
+    "action": "move",
+    "fraction": 0.27,
+    "left": 25,
+    "right": 112,
+    "top": 31,
+    "bottom": 128
+  },
+  {
+    "enemy": "whirlpool-eye-sac",
+    "action": "move",
+    "fraction": 0.64,
+    "left": 26,
+    "right": 110,
+    "top": 32,
+    "bottom": 131
+  },
+  {
+    "enemy": "whirlpool-eye-sac",
+    "action": "move",
+    "fraction": 0.85,
+    "left": 26,
+    "right": 110,
+    "top": 32,
+    "bottom": 130
+  },
+  {
+    "enemy": "whirlpool-eye-sac",
+    "action": "move",
+    "fraction": 1,
+    "left": 25,
+    "right": 110,
+    "top": 32,
+    "bottom": 130
+  },
+  {
+    "enemy": "whirlpool-eye-sac",
+    "action": "attack",
+    "fraction": 0,
+    "left": 25,
+    "right": 110,
+    "top": 32,
+    "bottom": 130
+  },
+  {
+    "enemy": "whirlpool-eye-sac",
+    "action": "attack",
+    "fraction": 0.27,
+    "left": 23,
+    "right": 114,
+    "top": 32,
+    "bottom": 129
+  },
+  {
+    "enemy": "whirlpool-eye-sac",
+    "action": "attack",
+    "fraction": 0.64,
+    "left": 37,
+    "right": 109,
+    "top": 32,
+    "bottom": 129
+  },
+  {
+    "enemy": "whirlpool-eye-sac",
+    "action": "attack",
+    "fraction": 0.85,
+    "left": 30,
+    "right": 109,
+    "top": 32,
+    "bottom": 130
+  },
+  {
+    "enemy": "whirlpool-eye-sac",
+    "action": "attack",
+    "fraction": 1,
+    "left": 25,
+    "right": 110,
+    "top": 32,
+    "bottom": 130
+  },
+  {
+    "enemy": "whirlpool-eye-sac",
+    "action": "hit",
+    "fraction": 0,
+    "left": 25,
+    "right": 110,
+    "top": 32,
+    "bottom": 130
+  },
+  {
+    "enemy": "whirlpool-eye-sac",
+    "action": "hit",
+    "fraction": 0.27,
+    "left": 31,
+    "right": 113,
+    "top": 33,
+    "bottom": 128
+  },
+  {
+    "enemy": "whirlpool-eye-sac",
+    "action": "hit",
+    "fraction": 0.64,
+    "left": 28,
+    "right": 112,
+    "top": 32,
+    "bottom": 129
+  },
+  {
+    "enemy": "whirlpool-eye-sac",
+    "action": "hit",
+    "fraction": 0.85,
+    "left": 26,
+    "right": 111,
+    "top": 32,
+    "bottom": 130
+  },
+  {
+    "enemy": "whirlpool-eye-sac",
+    "action": "hit",
+    "fraction": 1,
+    "left": 25,
+    "right": 110,
+    "top": 32,
+    "bottom": 130
+  },
+  {
+    "enemy": "whirlpool-eye-sac",
+    "action": "death",
+    "fraction": 0,
+    "left": 25,
+    "right": 110,
+    "top": 32,
+    "bottom": 130
+  },
+  {
+    "enemy": "whirlpool-eye-sac",
+    "action": "death",
+    "fraction": 0.27,
+    "left": 27,
+    "right": 113,
+    "top": 34,
+    "bottom": 132
+  },
+  {
+    "enemy": "whirlpool-eye-sac",
+    "action": "death",
+    "fraction": 0.64,
+    "left": 34,
+    "right": 117,
+    "top": 40,
+    "bottom": 132
+  },
+  {
+    "enemy": "whirlpool-eye-sac",
+    "action": "death",
+    "fraction": 0.85,
+    "left": 42,
+    "right": 117,
+    "top": 47,
+    "bottom": 130
+  },
+  {
+    "enemy": "whirlpool-eye-sac",
+    "action": "death",
+    "fraction": 1,
+    "left": 49,
+    "right": 114,
+    "top": 52,
+    "bottom": 134
+  }
+]

@@ -1,15 +1,16 @@
 import assert from 'node:assert/strict'
 import catalog from '../src/game/data/catalog.json' with { type: 'json' }
-import { createBoss, createEnemyById, createMinion } from '../src/game/data/content.js'
+import { createBoss, createEnemyById, createMinion, synchronizeEnemyBalance } from '../src/game/data/content.js'
 import { ENEMY_DEFS, ENEMY_HP_MULTIPLIER, getEnemyDefinition } from '../src/game/data/enemies.js'
 import { GameRun } from '../src/game/run.js'
 import { stepEnemy } from '../src/game/rules/enemies.js'
 
-assert.equal(ENEMY_HP_MULTIPLIER, 4)
+assert.equal(ENEMY_HP_MULTIPLIER, 1)
 
 const expected = {
   'emberwing-moth': { minFloor: 1, behavior: 'ambush', attribute: 'scorch', deathExplosionDamage: 2 },
-  'rootrot-bud': { minFloor: 1, behavior: 'stationary', attribute: 'wither', regen: 1 },
+  'rootrot-bud': { minFloor: 1, behavior: 'stationary', attribute: 'wither', hp: 20, range: 1, traits: [] },
+  'nest-spider': { minFloor: 2, behavior: 'ambush', hp: 9, attack: 4 },
   'tide-shadow-cub': { minFloor: 1, behavior: 'chaser', attribute: 'drown' },
   'ash-cannon-bug': { minFloor: 3, behavior: 'stationary', attribute: 'scorch', range: 4 },
   'furnace-beetle': { minFloor: 3, behavior: 'chaser', attribute: 'scorch', deathExplosionDamage: 3 },
@@ -17,7 +18,7 @@ const expected = {
   'water-leech-swarm': { minFloor: 3, behavior: 'chaser', attribute: 'drown', splitMinionId: 'leech-larva' },
   'molten-core-beast': { minFloor: 4, behavior: 'stationary', attribute: 'scorch', deathExplosionDamage: 5 },
   'redneedle-salamander': { minFloor: 2, behavior: 'stationary', attribute: 'scorch', traits: ['burning'], burningTurns: 2, burningDamage: 1 },
-  'rot-sac-toad': { minFloor: 2, behavior: 'stationary', attribute: 'wither', deathStatus: 'poison', deathStatusTurns: 10, deathStatusDamage: 2 },
+  'rot-sac-toad': { minFloor: 2, behavior: 'stationary', attribute: 'wither', deathStatus: 'poison', deathStatusTurns: 7, deathStatusDamage: 2 },
   'claw-beast': { minFloor: 2, behavior: 'chaser', attribute: 'drown', traits: ['swift'] },
   'whirlpool-eye-sac': { minFloor: 3, behavior: 'chaser', attribute: 'drown', traits: ['pull'], pullDistance: 1 },
   'redwheel-fire-crow': { minFloor: 4, behavior: 'chaser', attribute: 'scorch', traits: ['burning'], burningTurns: 2 },
@@ -64,7 +65,7 @@ assert.equal(boss.maxHp, catalog.boss.hp * ENEMY_HP_MULTIPLIER)
 assert.equal(ENEMY_DEFS.filter((definition) => !definition.spawnOnly).length, 30)
 
 const availableCounts = [1, 2, 3, 4, 5].map((floor) => ENEMY_DEFS.filter((definition) => !definition.spawnOnly && definition.minFloor <= floor).length)
-assert.deepEqual(availableCounts, [5, 12, 21, 30, 30])
+assert.deepEqual(availableCounts, [5, 13, 21, 30, 30])
 
 function blankRoom(run) {
   const room = run.currentRoom
@@ -93,11 +94,11 @@ burningRun.player.armor = 3
 const salamander = createEnemyById('redneedle-salamander', { c: 1, r: 1 })
 burningRoom.addEntity(salamander)
 burningRun._enemyAttack(salamander)
-assert.equal(burningRun.player.hp, 7)
+assert.equal(burningRun.player.hp, 8)
 assert.equal(burningRun.player.armor, 0)
 assert.equal(burningRun.player.burningTurns, 2)
 burningRun._tickPlayerStatuses()
-assert.equal(burningRun.player.hp, 6)
+assert.equal(burningRun.player.hp, 7)
 assert.equal(burningRun.player.burningTurns, 1)
 
 const poisonRun = new GameRun({ autoLoad: false, random: () => 0.25 })
@@ -108,7 +109,7 @@ poisonRun.player.armor = 5
 const toad = createEnemyById('rot-sac-toad', { c: 2, r: 2 })
 poisonRoom.addEntity(toad)
 poisonRun._defeatEnemy(toad, { suppressLoot: true })
-assert.equal(poisonRun.player.poisonedTurns, 10)
+assert.equal(poisonRun.player.poisonedTurns, 7)
 poisonRun._tickPlayerStatuses()
 assert.equal(poisonRun.player.hp, 8)
 assert.equal(poisonRun.player.armor, 5)
@@ -160,5 +161,38 @@ const spore = createEnemyById('tidal-spore-sac', { c: 2, r: 2 })
 spawnRoom.addEntity(spore)
 spawnRun._defeatEnemy(spore, { suppressLoot: true })
 assert.equal([...spawnRoom.entities.values()].filter((entity) => entity.enemyId === 'tide-shadow').length, 2)
+
+const legacyBud = createEnemyById('rootrot-bud')
+Object.assign(legacyBud, { hp: 14, maxHp: 28, hpMultiplier: 4, range: 2, regen: 1, traits: ['regen'], attackCooldown: 1 })
+synchronizeEnemyBalance(legacyBud)
+assert.equal(legacyBud.hp, 10)
+assert.equal(legacyBud.maxHp, 20)
+assert.equal(legacyBud.range, 1)
+assert.equal(legacyBud.regen, 0)
+assert.deepEqual(legacyBud.traits, [])
+assert.equal(legacyBud.attackCooldown, 1)
+synchronizeEnemyBalance(legacyBud)
+assert.equal(legacyBud.hp, 10, 'save migration must not repeat damage scaling')
+
+const storage = new Map()
+globalThis.localStorage = {
+  getItem: (key) => storage.get(key) ?? null,
+  setItem: (key, value) => storage.set(key, value),
+  removeItem: (key) => storage.delete(key),
+}
+const legacyRun = new GameRun({ autoLoad: false, random: () => 0.25 })
+const legacyRoom = blankRoom(legacyRun)
+const savedBud = createEnemyById('rootrot-bud', { c: 1, r: 1 })
+Object.assign(savedBud, { hp: 14, maxHp: 28, hpMultiplier: 4, range: 2, regen: 1, traits: ['regen'] })
+legacyRoom.addEntity(savedBud)
+const playerHealth = legacyRun.player.hp
+const weaponUid = legacyRun.backpack.items.find((item) => item.type === 'weapon').uid
+legacyRun._persist()
+const loaded = new GameRun({ random: () => 0.25 })
+assert.equal(loaded.currentRoom.entity(savedBud.id).hp, 10)
+assert.equal(loaded.currentRoom.entity(savedBud.id).maxHp, 20)
+assert.equal(loaded.currentRoom.entity(savedBud.id).regen, 0)
+assert.equal(loaded.player.hp, playerHealth)
+assert(loaded.backpack.items.some((item) => item.uid === weaponUid))
 
 console.log('enemies-check passed')

@@ -350,7 +350,7 @@ function drawScene() {
     mesh.renderOrder = orbitMode.value ? 1 : 10 + entry.order
     addObject(mesh, 'part', part.id)
     mesh.userData.sharedGeometry = !textured
-    if (!orbitMode.value) {
+    if (!orbitMode.value && (!textured || (props.selectedKind === 'part' && props.selectedId === part.id))) {
     const outline = new LineSegments(new EdgesGeometry(geometry), new LineBasicMaterial({ color: props.selectedKind === 'part' && props.selectedId === part.id ? '#8fd1ff' : part.stroke, depthTest: false }))
     outline.matrixAutoUpdate = false
     outline.matrix.copy(entry.matrix)

@@ -3,13 +3,13 @@ import { chebyshev, combatDistance, manhattan, neighbors8 } from './core/geometr
 import { TURN_KINDS, TurnLedger } from './core/turns.js'
 import { commitInventoryDrop, moveInventoryToStash, discardInventoryItem } from './core/inventory-actions.js'
 import { attributeLabel } from './data/attributes.js'
-import { createLootEntity, createMinion, getItemDefinition, makeItemById, makeRelicItem, starterWeapon, synchronizeEntityIds, weaponTier } from './data/content.js'
+import { createLootEntity, createMinion, getItemDefinition, makeItemById, makeRelicItem, starterWeapon, synchronizeEnemyBalance, synchronizeEntityIds, weaponTier } from './data/content.js'
 import { applyStatus, bindStatusAccessors, consumeStatus, getStatus, normalizeStatuses, prepareStatusDamage, removeStatus, resolveStatusDamage, statusCounterText, statusSnapshot, tickStatusSnapshot } from './rules/statuses.js'
 import { enemyBehaviorDetailLabel, enemyFeatureDetailLabel } from './data/enemy-features.js'
 import { getMerchantDefinition, merchantSellPrice, refreshMerchantSlot, refreshMerchantStock } from './data/merchants.js'
-import { buildRelicChoices, getRelicDefinition } from './data/relics.js'
+import { buildRelicChoices, getRelicDefinition, RELIC_DEFS } from './data/relics.js'
 import { buildRoomRewardChoices } from './data/rewards.js'
-import { FIXED_GROWTH, PROGRESSION, buildLevelUpChoices, experienceToNextLevel, getLevelUpOption, hasTalent, talentGraphState, unlockableTalents } from './data/progression.js'
+import { LEVEL_UP_OPTIONS, PROGRESSION, buildLevelUpChoices, experienceToNextLevel, getLevelUpOption } from './data/progression.js'
 import { getTrapDefinition } from './data/traps.js'
 import { createChapterDungeon, Dungeon } from './model/dungeon.js'
 import { BackpackGrid } from './model/backpack.js'
@@ -65,7 +65,8 @@ function compatibleSave(data) {
       totems.some(({ room, entity }) => room.id !== data.player.roomId || !getTotemDefinition(entity.totemId) ||
         !Number.isInteger(entity.bornAt) || !Number.isInteger(entity.expiresAt) || entity.expiresAt !== entity.bornAt + TOTEM_DURATION ||
         !Number.isInteger(entity.nextPulse) || entity.nextPulse < entity.bornAt || !room.tiles?.[entity.pos?.r]?.[entity.pos?.c]?.revealed) ||
-      data.player.maxEnergy !== ENERGY_MAX - totems.length || !Number.isInteger(data.player.energy) ||
+      !Number.isInteger(data.player.baseMaxEnergy ?? ENERGY_MAX) || (data.player.baseMaxEnergy ?? ENERGY_MAX) < ENERGY_MAX ||
+      data.player.maxEnergy !== (data.player.baseMaxEnergy ?? ENERGY_MAX) - totems.length || !Number.isInteger(data.player.energy) ||
       data.player.energy < 0 || data.player.energy > data.player.maxEnergy) return false
   const totemState = data.player.itemState?.totems
   if (totems.length && !totemState) return false
@@ -327,14 +328,13 @@ export class GameRun {
       armor: 0,
       energy: ENERGY_MAX,
       maxEnergy: ENERGY_MAX,
+      baseMaxEnergy: ENERGY_MAX,
       gold: 0,
       roomId: generated.startRoomId,
       pos: { ...generated.start },
       level: PROGRESSION.startingLevel,
       experience: 0,
       experienceToNext: experienceToNextLevel(PROGRESSION.startingLevel),
-      talents: [],
-      talentRuntime: { bodyStrength: 0 },
       parry: null,
       poisonedTurns: 0,
       poisonDamage: 0,
@@ -434,8 +434,6 @@ export class GameRun {
     return true
   }
 
-  hasTalent(id) { return hasTalent(this.player, id) }
-
   getStatus(actor, id) { return getStatus(actor, id) }
 
   applyStatus(actor, id, options = {}, refreshOptions = {}) {
@@ -455,13 +453,6 @@ export class GameRun {
   _statusClockSnapshot() {
     const actors = [this.player, ...[...this.dungeon.rooms.values()].flatMap(room => [...room.entities.values()].filter(entity => entity.kind === 'enemy'))]
     return [...actors.flatMap(statusSnapshot), ...statusSnapshot({ statuses: this.itemRules.state.buffs })]
-  }
-
-  _talentRuntime() {
-    if (!this.player.talentRuntime || typeof this.player.talentRuntime !== 'object') this.player.talentRuntime = {}
-    const state = this.player.talentRuntime
-    state.bodyStrength = Math.max(0, Math.floor(Number(state.bodyStrength) || 0))
-    return state
   }
 
   remainingEnemies(room = this.currentRoom) {
@@ -539,7 +530,12 @@ export class GameRun {
 
   _queueLevelUp() {
     if (this.levelUp || this.gameOver || this.player.experience < this.player.experienceToNext) return false
-    const choices = buildLevelUpChoices(this.player, { count: PROGRESSION.levelChoiceCount, random: this.random })
+    const choices = buildLevelUpChoices({ random: this.random })
+    // A placeholder and missing targets must never leave an upgrade blocked.
+    if (!choices.some(id => this.canChooseLevelUpOption(id))) {
+      const available = LEVEL_UP_OPTIONS.filter(option => this.canChooseLevelUpOption(option.id))
+      choices[0] = available[Math.floor(this.random() * available.length)].id
+    }
     this.levelUp = { choices }
     this.phase = 'level-up'
     this._log(`\u5347\u81f3 ${this.player.level + 1} \u7ea7\uff0c\u8bf7\u9009\u62e9\u6210\u957f\u3002`)
@@ -555,25 +551,60 @@ export class GameRun {
   }
 
   chooseLevelUpOption(id) {
-    if (this.phase !== 'level-up' || !this.levelUp?.choices.includes(id)) return false
+    if (this.phase !== 'level-up' || this.levelUp?.selectedOption || !this.levelUp?.choices.includes(id) || !this.canChooseLevelUpOption(id)) return false
+    if (id === 'relic' || id === 'weapon-upgrade') {
+      if (id === 'relic' && !this.levelUp.relicChoices) {
+        this.levelUp.relicChoices = buildRelicChoices(this.relics, { random: this.random }).map(relic => relic.id)
+      }
+      this.levelUp.selectedOption = id
+      this._changed()
+      return true
+    }
+    return this._applyLevelUpOption(id)
+  }
+
+  canChooseLevelUpOption(id) {
     const option = getLevelUpOption(id)
-    if (!option) return false
-    this._applyLevelUpOption(id)
+    if (!option || option.disabled) return false
+    if (id === 'weapon-upgrade') return this.backpack.items.some(item => item.type === 'weapon')
+    if (id === 'relic') return RELIC_DEFS.some(relic => !relic.disabled && !this.relics.has(relic.id))
+    return true
+  }
+
+  backToLevelUpChoices() {
+    if (this.phase !== 'level-up' || !this.levelUp?.selectedOption) return false
+    delete this.levelUp.selectedOption
+    this._changed()
+    return true
+  }
+
+  chooseLevelUpRelic(id) {
+    if (this.phase !== 'level-up' || this.levelUp?.selectedOption !== 'relic' || !this.levelUp.relicChoices?.includes(id)) return false
+    if (!this.acquireRelic(id, { notify: false, allowStash: true })) return false
+    this._finishLevelUp()
+    return true
+  }
+
+  levelUpWeapons() { return this.backpack.items.filter(item => item.type === 'weapon') }
+
+  chooseLevelUpWeapon(uid) {
+    if (this.phase !== 'level-up' || this.levelUp?.selectedOption !== 'weapon-upgrade') return false
+    const weapon = this.levelUpWeapons().find(item => item.uid === uid)
+    if (!weapon) return false
+    weapon.attack += 1
+    weapon.reinforcement = (weapon.reinforcement || 0) + 1
+    this._log(`${weapon.name}\u57fa\u7840\u653b\u51fb\u529b+1\u3002`)
+    this._finishLevelUp()
     return true
   }
 
   _applyLevelUpOption(id) {
-    if (id === FIXED_GROWTH.id) {
-      this.player.maxHp += 2
-      this._talentRuntime().bodyStrength += 1
-    } else {
-      const definition = getLevelUpOption(id)
-      if (!definition || definition.fixed || this.player.talents.includes(id)) return false
-      this.player.talents.push(id)
-      const effects = definition.effects || {}
-      if (effects.maxHp) this.player.maxHp += Math.floor(effects.maxHp)
-      if (effects.heal) this._healPlayer(effects.heal, { source: 'talent:survival-vigor' })
-    }
+    if (id === 'heal') this._healPlayer(5, { source: 'level-up:heal' })
+    else if (id === 'max-health') this.player.maxHp += 2
+    else if (id === 'max-energy') {
+      this.player.baseMaxEnergy += 1
+      this.player.maxEnergy += 1
+    } else return false
     const option = getLevelUpOption(id)
     if (option) this._log(`\u6210\u957f\u9009\u62e9\uff1a${option.name}\u3002`)
     this._finishLevelUp()
@@ -593,10 +624,6 @@ export class GameRun {
   levelUpChoices() {
     return (this.levelUp?.choices || []).map((id) => getLevelUpOption(id)).filter(Boolean)
   }
-
-  talentGraph() { return talentGraphState(this.player) }
-
-  unlockableTalents() { return unlockableTalents(this.player) }
 
   showItemDetail(item) {
     if (!item) return false
@@ -1959,9 +1986,10 @@ export class GameRun {
     return true
   }
 
-  _applyPoison(_turns = 10, damage = 2) {
+  _applyPoison(turns = 10, damage = 2) {
+    const duration = Math.max(1, Math.floor(Number(turns) || 10))
     const amount = Math.max(1, Math.floor(Number(damage) || 1))
-    this.applyStatus(this.player, 'player-poison', { turns: 10, damage: amount }, { refresh: true })
+    this.applyStatus(this.player, 'player-poison', { turns: duration, damage: amount }, { refresh: true })
     return true
   }
 
@@ -2051,7 +2079,7 @@ export class GameRun {
       .some((position) => position.c === this.player.pos.c && position.r === this.player.pos.r)
     if (!adjacent) return false
     if (status === 'poison') {
-      const turns = 10
+      const turns = Math.max(1, Math.floor(Number(enemy.deathStatusTurns) || 10))
       const damage = Math.max(1, Math.floor(Number(enemy.deathStatusDamage) || 2))
       this._applyPoison(turns, damage)
       this._log(`${enemy.name}死亡，毒液使你中毒 ${turns} 个全局回合。`)
@@ -2247,20 +2275,30 @@ export class GameRun {
       for (const room of this.dungeon.rooms.values()) {
         for (const entity of room.entities.values()) {
           if (entity.kind === 'enemy') {
+            synchronizeEnemyBalance(entity)
             bindStatusAccessors(entity)
           }
         }
       }
-      this.player.maxEnergy = ENERGY_MAX - [...this.dungeon.rooms.values()].flatMap(room => [...room.entities.values()]).filter(entity => entity.kind === 'totem').length
+      this.player.baseMaxEnergy ??= ENERGY_MAX
+      this.player.maxEnergy = this.player.baseMaxEnergy - [...this.dungeon.rooms.values()].flatMap(room => [...room.entities.values()]).filter(entity => entity.kind === 'totem').length
       this.player.energy = Math.max(0, Math.min(this.player.maxEnergy, Math.floor(Number(this.player.energy) || 0)))
       this.player.level = Math.max(PROGRESSION.startingLevel, Number(this.player.level) || PROGRESSION.startingLevel)
       this.player.experience = Math.max(0, Number(this.player.experience) || 0)
       this.player.experienceToNext = Math.max(1, Number(this.player.experienceToNext) || experienceToNextLevel(this.player.level))
-      this.player.talents = [...new Set(Array.isArray(this.player.talents) ? this.player.talents.filter((id) => !!getLevelUpOption(id) && id !== FIXED_GROWTH.id) : [])]
-      this.player.talentRuntime = this.player.talentRuntime && typeof this.player.talentRuntime === 'object' ? this.player.talentRuntime : {}
-      this._talentRuntime()
+      if (Array.isArray(this.player.talents) && this.player.talents.includes('harmony-switch')) {
+        for (const room of this.dungeon.rooms.values()) {
+          for (const entity of room.entities.values()) {
+            if (entity.kind === 'enemy') removeStatus(entity, 'attack-reduction')
+          }
+        }
+      }
+      delete this.player.talents
+      delete this.player.talentRuntime
       bindStatusAccessors(this.player)
       normalizeStatuses({ statuses: this.itemRules.state.buffs })
+      for (const id of ['flow-relay', 'guard-reply', 'guard-last', 'harmony-resist']) delete this.itemRules.state.buffs[id]
+      delete this.itemRules.state.healthHits
       this.relics = RelicCollection.fromItems([...this.backpack.items, ...this.inventoryStash])
       this.relics.entries = this.relics.entries.filter((entry) => !!getRelicDefinition(entry.id)
         && (this.backpack.placementOf(entry.uid) || this.inventoryStash.some((item) => item.uid === entry.uid)))
@@ -2291,8 +2329,18 @@ export class GameRun {
       this.levelUp = Array.isArray(data.levelUp?.choices)
         ? {
             choices: data.levelUp.choices.filter((id) => !!getLevelUpOption(id)),
+            ...(data.levelUp.selectedOption && data.levelUp.choices.includes(data.levelUp.selectedOption) && ['relic', 'weapon-upgrade'].includes(data.levelUp.selectedOption)
+              ? { selectedOption: data.levelUp.selectedOption } : {}),
+            ...(Array.isArray(data.levelUp.relicChoices) ? { relicChoices: [...new Set(data.levelUp.relicChoices)].filter(id => getRelicDefinition(id) && !getRelicDefinition(id).disabled && !this.relics.has(id)).slice(0, 3) } : {}),
           }
         : null
+      if (this.levelUp && (this.levelUp.choices.length !== PROGRESSION.levelChoiceCount || new Set(this.levelUp.choices).size !== PROGRESSION.levelChoiceCount || !this.levelUp.choices.some(id => this.canChooseLevelUpOption(id)))) {
+        this.levelUp = null
+        this.phase = 'explore'
+      }
+      if (this.levelUp?.relicChoices && !this.levelUp.relicChoices.length) delete this.levelUp.relicChoices
+      if (this.levelUp?.selectedOption === 'relic' && !this.levelUp.relicChoices?.length) delete this.levelUp.selectedOption
+      if (this.levelUp?.selectedOption === 'weapon-upgrade' && !this.levelUpWeapons().length) delete this.levelUp.selectedOption
       this.relicEventQueue = []
       this.relicRuntime = data.relicRuntime && typeof data.relicRuntime === 'object' ? clone(data.relicRuntime) : {}
       this.detailPanel = null

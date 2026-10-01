@@ -1,0 +1,227 @@
+[
+  {
+    "enemy": "water-leech-swarm",
+    "action": "idle",
+    "fraction": 0,
+    "left": 37,
+    "right": 142,
+    "top": 53,
+    "bottom": 109
+  },
+  {
+    "enemy": "water-leech-swarm",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 38,
+    "right": 143,
+    "top": 51,
+    "bottom": 109
+  },
+  {
+    "enemy": "water-leech-swarm",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 39,
+    "right": 144,
+    "top": 50,
+    "bottom": 108
+  },
+  {
+    "enemy": "water-leech-swarm",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 38,
+    "right": 143,
+    "top": 52,
+    "bottom": 109
+  },
+  {
+    "enemy": "water-leech-swarm",
+    "action": "idle",
+    "fraction": 1,
+    "left": 37,
+    "right": 142,
+    "top": 53,
+    "bottom": 109
+  },
+  {
+    "enemy": "water-leech-swarm",
+    "action": "move",
+    "fraction": 0,
+    "left": 37,
+    "right": 142,
+    "top": 53,
+    "bottom": 109
+  },
+  {
+    "enemy": "water-leech-swarm",
+    "action": "move",
+    "fraction": 0.27,
+    "left": 40,
+    "right": 146,
+    "top": 46,
+    "bottom": 108
+  },
+  {
+    "enemy": "water-leech-swarm",
+    "action": "move",
+    "fraction": 0.64,
+    "left": 35,
+    "right": 137,
+    "top": 53,
+    "bottom": 110
+  },
+  {
+    "enemy": "water-leech-swarm",
+    "action": "move",
+    "fraction": 0.85,
+    "left": 37,
+    "right": 145,
+    "top": 52,
+    "bottom": 112
+  },
+  {
+    "enemy": "water-leech-swarm",
+    "action": "move",
+    "fraction": 1,
+    "left": 37,
+    "right": 142,
+    "top": 53,
+    "bottom": 109
+  },
+  {
+    "enemy": "water-leech-swarm",
+    "action": "attack",
+    "fraction": 0,
+    "left": 37,
+    "right": 142,
+    "top": 53,
+    "bottom": 109
+  },
+  {
+    "enemy": "water-leech-swarm",
+    "action": "attack",
+    "fraction": 0.27,
+    "left": 33,
+    "right": 139,
+    "top": 52,
+    "bottom": 110
+  },
+  {
+    "enemy": "water-leech-swarm",
+    "action": "attack",
+    "fraction": 0.64,
+    "left": 49,
+    "right": 148,
+    "top": 50,
+    "bottom": 107
+  },
+  {
+    "enemy": "water-leech-swarm",
+    "action": "attack",
+    "fraction": 0.85,
+    "left": 41,
+    "right": 146,
+    "top": 52,
+    "bottom": 109
+  },
+  {
+    "enemy": "water-leech-swarm",
+    "action": "attack",
+    "fraction": 1,
+    "left": 37,
+    "right": 142,
+    "top": 53,
+    "bottom": 109
+  },
+  {
+    "enemy": "water-leech-swarm",
+    "action": "hit",
+    "fraction": 0,
+    "left": 37,
+    "right": 142,
+    "top": 53,
+    "bottom": 109
+  },
+  {
+    "enemy": "water-leech-swarm",
+    "action": "hit",
+    "fraction": 0.27,
+    "left": 38,
+    "right": 140,
+    "top": 45,
+    "bottom": 108
+  },
+  {
+    "enemy": "water-leech-swarm",
+    "action": "hit",
+    "fraction": 0.64,
+    "left": 38,
+    "right": 142,
+    "top": 50,
+    "bottom": 109
+  },
+  {
+    "enemy": "water-leech-swarm",
+    "action": "hit",
+    "fraction": 0.85,
+    "left": 37,
+    "right": 142,
+    "top": 53,
+    "bottom": 109
+  },
+  {
+    "enemy": "water-leech-swarm",
+    "action": "hit",
+    "fraction": 1,
+    "left": 37,
+    "right": 142,
+    "top": 53,
+    "bottom": 109
+  },
+  {
+    "enemy": "water-leech-swarm",
+    "action": "death",
+    "fraction": 0,
+    "left": 37,
+    "right": 142,
+    "top": 53,
+    "bottom": 109
+  },
+  {
+    "enemy": "water-leech-swarm",
+    "action": "death",
+    "fraction": 0.27,
+    "left": 37,
+    "right": 142,
+    "top": 50,
+    "bottom": 112
+  },
+  {
+    "enemy": "water-leech-swarm",
+    "action": "death",
+    "fraction": 0.64,
+    "left": 39,
+    "right": 146,
+    "top": 52,
+    "bottom": 112
+  },
+  {
+    "enemy": "water-leech-swarm",
+    "action": "death",
+    "fraction": 0.85,
+    "left": 42,
+    "right": 147,
+    "top": 52,
+    "bottom": 110
+  },
+  {
+    "enemy": "water-leech-swarm",
+    "action": "death",
+    "fraction": 1,
+    "left": 42,
+    "right": 144,
+    "top": 53,
+    "bottom": 107
+  }
+]

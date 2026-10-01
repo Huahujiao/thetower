@@ -1,0 +1,1052 @@
+[
+  {
+    "id": "furnace-beetle",
+    "action": "idle",
+    "fraction": 0,
+    "played": "97 / 1400 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-furnace-beetle-idle-0.png"
+  },
+  {
+    "id": "furnace-beetle",
+    "action": "idle",
+    "fraction": 0.27,
+    "played": "97 / 1400 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-furnace-beetle-idle-0.27.png"
+  },
+  {
+    "id": "furnace-beetle",
+    "action": "idle",
+    "fraction": 0.64,
+    "played": "97 / 1400 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-furnace-beetle-idle-0.64.png"
+  },
+  {
+    "id": "furnace-beetle",
+    "action": "idle",
+    "fraction": 0.85,
+    "played": "97 / 1400 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-furnace-beetle-idle-0.85.png"
+  },
+  {
+    "id": "furnace-beetle",
+    "action": "idle",
+    "fraction": 1,
+    "played": "97 / 1400 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-furnace-beetle-idle-1.png"
+  },
+  {
+    "id": "furnace-beetle",
+    "action": "move",
+    "fraction": 0,
+    "played": "121 / 700 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-furnace-beetle-move-0.png"
+  },
+  {
+    "id": "furnace-beetle",
+    "action": "move",
+    "fraction": 0.27,
+    "played": "121 / 700 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-furnace-beetle-move-0.27.png"
+  },
+  {
+    "id": "furnace-beetle",
+    "action": "move",
+    "fraction": 0.64,
+    "played": "121 / 700 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-furnace-beetle-move-0.64.png"
+  },
+  {
+    "id": "furnace-beetle",
+    "action": "move",
+    "fraction": 0.85,
+    "played": "121 / 700 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-furnace-beetle-move-0.85.png"
+  },
+  {
+    "id": "furnace-beetle",
+    "action": "move",
+    "fraction": 1,
+    "played": "121 / 700 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-furnace-beetle-move-1.png"
+  },
+  {
+    "id": "furnace-beetle",
+    "action": "attack",
+    "fraction": 0,
+    "played": "125 / 500 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-furnace-beetle-attack-0.png"
+  },
+  {
+    "id": "furnace-beetle",
+    "action": "attack",
+    "fraction": 0.27,
+    "played": "125 / 500 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-furnace-beetle-attack-0.27.png"
+  },
+  {
+    "id": "furnace-beetle",
+    "action": "attack",
+    "fraction": 0.64,
+    "played": "125 / 500 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-furnace-beetle-attack-0.64.png"
+  },
+  {
+    "id": "furnace-beetle",
+    "action": "attack",
+    "fraction": 0.85,
+    "played": "125 / 500 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-furnace-beetle-attack-0.85.png"
+  },
+  {
+    "id": "furnace-beetle",
+    "action": "attack",
+    "fraction": 1,
+    "played": "125 / 500 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-furnace-beetle-attack-1.png"
+  },
+  {
+    "id": "furnace-beetle",
+    "action": "hit",
+    "fraction": 0,
+    "played": "117 / 380 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-furnace-beetle-hit-0.png"
+  },
+  {
+    "id": "furnace-beetle",
+    "action": "hit",
+    "fraction": 0.27,
+    "played": "117 / 380 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-furnace-beetle-hit-0.27.png"
+  },
+  {
+    "id": "furnace-beetle",
+    "action": "hit",
+    "fraction": 0.64,
+    "played": "117 / 380 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-furnace-beetle-hit-0.64.png"
+  },
+  {
+    "id": "furnace-beetle",
+    "action": "hit",
+    "fraction": 0.85,
+    "played": "117 / 380 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-furnace-beetle-hit-0.85.png"
+  },
+  {
+    "id": "furnace-beetle",
+    "action": "hit",
+    "fraction": 1,
+    "played": "117 / 380 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-furnace-beetle-hit-1.png"
+  },
+  {
+    "id": "furnace-beetle",
+    "action": "death",
+    "fraction": 0,
+    "played": "90 / 800 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-furnace-beetle-death-0.png"
+  },
+  {
+    "id": "furnace-beetle",
+    "action": "death",
+    "fraction": 0.27,
+    "played": "90 / 800 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-furnace-beetle-death-0.27.png"
+  },
+  {
+    "id": "furnace-beetle",
+    "action": "death",
+    "fraction": 0.64,
+    "played": "90 / 800 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-furnace-beetle-death-0.64.png"
+  },
+  {
+    "id": "furnace-beetle",
+    "action": "death",
+    "fraction": 0.85,
+    "played": "90 / 800 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-furnace-beetle-death-0.85.png"
+  },
+  {
+    "id": "furnace-beetle",
+    "action": "death",
+    "fraction": 1,
+    "played": "90 / 800 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-furnace-beetle-death-1.png"
+  },
+  {
+    "id": "thorn-shell-flower",
+    "action": "idle",
+    "fraction": 0,
+    "played": "90 / 1400 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-thorn-shell-flower-idle-0.png"
+  },
+  {
+    "id": "thorn-shell-flower",
+    "action": "idle",
+    "fraction": 0.27,
+    "played": "90 / 1400 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-thorn-shell-flower-idle-0.27.png"
+  },
+  {
+    "id": "thorn-shell-flower",
+    "action": "idle",
+    "fraction": 0.64,
+    "played": "90 / 1400 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-thorn-shell-flower-idle-0.64.png"
+  },
+  {
+    "id": "thorn-shell-flower",
+    "action": "idle",
+    "fraction": 0.85,
+    "played": "90 / 1400 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-thorn-shell-flower-idle-0.85.png"
+  },
+  {
+    "id": "thorn-shell-flower",
+    "action": "idle",
+    "fraction": 1,
+    "played": "90 / 1400 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-thorn-shell-flower-idle-1.png"
+  },
+  {
+    "id": "thorn-shell-flower",
+    "action": "move",
+    "fraction": 0,
+    "played": "104 / 700 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-thorn-shell-flower-move-0.png"
+  },
+  {
+    "id": "thorn-shell-flower",
+    "action": "move",
+    "fraction": 0.27,
+    "played": "104 / 700 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-thorn-shell-flower-move-0.27.png"
+  },
+  {
+    "id": "thorn-shell-flower",
+    "action": "move",
+    "fraction": 0.64,
+    "played": "104 / 700 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-thorn-shell-flower-move-0.64.png"
+  },
+  {
+    "id": "thorn-shell-flower",
+    "action": "move",
+    "fraction": 0.85,
+    "played": "104 / 700 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-thorn-shell-flower-move-0.85.png"
+  },
+  {
+    "id": "thorn-shell-flower",
+    "action": "move",
+    "fraction": 1,
+    "played": "104 / 700 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-thorn-shell-flower-move-1.png"
+  },
+  {
+    "id": "thorn-shell-flower",
+    "action": "attack",
+    "fraction": 0,
+    "played": "123 / 500 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-thorn-shell-flower-attack-0.png"
+  },
+  {
+    "id": "thorn-shell-flower",
+    "action": "attack",
+    "fraction": 0.27,
+    "played": "123 / 500 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-thorn-shell-flower-attack-0.27.png"
+  },
+  {
+    "id": "thorn-shell-flower",
+    "action": "attack",
+    "fraction": 0.64,
+    "played": "123 / 500 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-thorn-shell-flower-attack-0.64.png"
+  },
+  {
+    "id": "thorn-shell-flower",
+    "action": "attack",
+    "fraction": 0.85,
+    "played": "123 / 500 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-thorn-shell-flower-attack-0.85.png"
+  },
+  {
+    "id": "thorn-shell-flower",
+    "action": "attack",
+    "fraction": 1,
+    "played": "123 / 500 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-thorn-shell-flower-attack-1.png"
+  },
+  {
+    "id": "thorn-shell-flower",
+    "action": "hit",
+    "fraction": 0,
+    "played": "88 / 380 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-thorn-shell-flower-hit-0.png"
+  },
+  {
+    "id": "thorn-shell-flower",
+    "action": "hit",
+    "fraction": 0.27,
+    "played": "88 / 380 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-thorn-shell-flower-hit-0.27.png"
+  },
+  {
+    "id": "thorn-shell-flower",
+    "action": "hit",
+    "fraction": 0.64,
+    "played": "88 / 380 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-thorn-shell-flower-hit-0.64.png"
+  },
+  {
+    "id": "thorn-shell-flower",
+    "action": "hit",
+    "fraction": 0.85,
+    "played": "88 / 380 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-thorn-shell-flower-hit-0.85.png"
+  },
+  {
+    "id": "thorn-shell-flower",
+    "action": "hit",
+    "fraction": 1,
+    "played": "88 / 380 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-thorn-shell-flower-hit-1.png"
+  },
+  {
+    "id": "thorn-shell-flower",
+    "action": "death",
+    "fraction": 0,
+    "played": "111 / 800 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-thorn-shell-flower-death-0.png"
+  },
+  {
+    "id": "thorn-shell-flower",
+    "action": "death",
+    "fraction": 0.27,
+    "played": "111 / 800 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-thorn-shell-flower-death-0.27.png"
+  },
+  {
+    "id": "thorn-shell-flower",
+    "action": "death",
+    "fraction": 0.64,
+    "played": "111 / 800 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-thorn-shell-flower-death-0.64.png"
+  },
+  {
+    "id": "thorn-shell-flower",
+    "action": "death",
+    "fraction": 0.85,
+    "played": "111 / 800 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-thorn-shell-flower-death-0.85.png"
+  },
+  {
+    "id": "thorn-shell-flower",
+    "action": "death",
+    "fraction": 1,
+    "played": "111 / 800 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-thorn-shell-flower-death-1.png"
+  },
+  {
+    "id": "water-leech-swarm",
+    "action": "idle",
+    "fraction": 0,
+    "played": "94 / 1400 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-water-leech-swarm-idle-0.png"
+  },
+  {
+    "id": "water-leech-swarm",
+    "action": "idle",
+    "fraction": 0.27,
+    "played": "94 / 1400 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-water-leech-swarm-idle-0.27.png"
+  },
+  {
+    "id": "water-leech-swarm",
+    "action": "idle",
+    "fraction": 0.64,
+    "played": "94 / 1400 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-water-leech-swarm-idle-0.64.png"
+  },
+  {
+    "id": "water-leech-swarm",
+    "action": "idle",
+    "fraction": 0.85,
+    "played": "94 / 1400 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-water-leech-swarm-idle-0.85.png"
+  },
+  {
+    "id": "water-leech-swarm",
+    "action": "idle",
+    "fraction": 1,
+    "played": "94 / 1400 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-water-leech-swarm-idle-1.png"
+  },
+  {
+    "id": "water-leech-swarm",
+    "action": "move",
+    "fraction": 0,
+    "played": "89 / 700 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-water-leech-swarm-move-0.png"
+  },
+  {
+    "id": "water-leech-swarm",
+    "action": "move",
+    "fraction": 0.27,
+    "played": "89 / 700 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-water-leech-swarm-move-0.27.png"
+  },
+  {
+    "id": "water-leech-swarm",
+    "action": "move",
+    "fraction": 0.64,
+    "played": "89 / 700 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-water-leech-swarm-move-0.64.png"
+  },
+  {
+    "id": "water-leech-swarm",
+    "action": "move",
+    "fraction": 0.85,
+    "played": "89 / 700 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-water-leech-swarm-move-0.85.png"
+  },
+  {
+    "id": "water-leech-swarm",
+    "action": "move",
+    "fraction": 1,
+    "played": "89 / 700 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-water-leech-swarm-move-1.png"
+  },
+  {
+    "id": "water-leech-swarm",
+    "action": "attack",
+    "fraction": 0,
+    "played": "116 / 500 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-water-leech-swarm-attack-0.png"
+  },
+  {
+    "id": "water-leech-swarm",
+    "action": "attack",
+    "fraction": 0.27,
+    "played": "116 / 500 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-water-leech-swarm-attack-0.27.png"
+  },
+  {
+    "id": "water-leech-swarm",
+    "action": "attack",
+    "fraction": 0.64,
+    "played": "116 / 500 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-water-leech-swarm-attack-0.64.png"
+  },
+  {
+    "id": "water-leech-swarm",
+    "action": "attack",
+    "fraction": 0.85,
+    "played": "116 / 500 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-water-leech-swarm-attack-0.85.png"
+  },
+  {
+    "id": "water-leech-swarm",
+    "action": "attack",
+    "fraction": 1,
+    "played": "116 / 500 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-water-leech-swarm-attack-1.png"
+  },
+  {
+    "id": "water-leech-swarm",
+    "action": "hit",
+    "fraction": 0,
+    "played": "113 / 380 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-water-leech-swarm-hit-0.png"
+  },
+  {
+    "id": "water-leech-swarm",
+    "action": "hit",
+    "fraction": 0.27,
+    "played": "113 / 380 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-water-leech-swarm-hit-0.27.png"
+  },
+  {
+    "id": "water-leech-swarm",
+    "action": "hit",
+    "fraction": 0.64,
+    "played": "113 / 380 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-water-leech-swarm-hit-0.64.png"
+  },
+  {
+    "id": "water-leech-swarm",
+    "action": "hit",
+    "fraction": 0.85,
+    "played": "113 / 380 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-water-leech-swarm-hit-0.85.png"
+  },
+  {
+    "id": "water-leech-swarm",
+    "action": "hit",
+    "fraction": 1,
+    "played": "113 / 380 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-water-leech-swarm-hit-1.png"
+  },
+  {
+    "id": "water-leech-swarm",
+    "action": "death",
+    "fraction": 0,
+    "played": "99 / 800 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-water-leech-swarm-death-0.png"
+  },
+  {
+    "id": "water-leech-swarm",
+    "action": "death",
+    "fraction": 0.27,
+    "played": "99 / 800 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-water-leech-swarm-death-0.27.png"
+  },
+  {
+    "id": "water-leech-swarm",
+    "action": "death",
+    "fraction": 0.64,
+    "played": "99 / 800 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-water-leech-swarm-death-0.64.png"
+  },
+  {
+    "id": "water-leech-swarm",
+    "action": "death",
+    "fraction": 0.85,
+    "played": "99 / 800 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-water-leech-swarm-death-0.85.png"
+  },
+  {
+    "id": "water-leech-swarm",
+    "action": "death",
+    "fraction": 1,
+    "played": "99 / 800 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-water-leech-swarm-death-1.png"
+  },
+  {
+    "id": "whirlpool-eye-sac",
+    "action": "idle",
+    "fraction": 0,
+    "played": "100 / 1400 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-whirlpool-eye-sac-idle-0.png"
+  },
+  {
+    "id": "whirlpool-eye-sac",
+    "action": "idle",
+    "fraction": 0.27,
+    "played": "100 / 1400 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-whirlpool-eye-sac-idle-0.27.png"
+  },
+  {
+    "id": "whirlpool-eye-sac",
+    "action": "idle",
+    "fraction": 0.64,
+    "played": "100 / 1400 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-whirlpool-eye-sac-idle-0.64.png"
+  },
+  {
+    "id": "whirlpool-eye-sac",
+    "action": "idle",
+    "fraction": 0.85,
+    "played": "100 / 1400 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-whirlpool-eye-sac-idle-0.85.png"
+  },
+  {
+    "id": "whirlpool-eye-sac",
+    "action": "idle",
+    "fraction": 1,
+    "played": "100 / 1400 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-whirlpool-eye-sac-idle-1.png"
+  },
+  {
+    "id": "whirlpool-eye-sac",
+    "action": "move",
+    "fraction": 0,
+    "played": "99 / 700 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-whirlpool-eye-sac-move-0.png"
+  },
+  {
+    "id": "whirlpool-eye-sac",
+    "action": "move",
+    "fraction": 0.27,
+    "played": "99 / 700 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-whirlpool-eye-sac-move-0.27.png"
+  },
+  {
+    "id": "whirlpool-eye-sac",
+    "action": "move",
+    "fraction": 0.64,
+    "played": "99 / 700 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-whirlpool-eye-sac-move-0.64.png"
+  },
+  {
+    "id": "whirlpool-eye-sac",
+    "action": "move",
+    "fraction": 0.85,
+    "played": "99 / 700 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-whirlpool-eye-sac-move-0.85.png"
+  },
+  {
+    "id": "whirlpool-eye-sac",
+    "action": "move",
+    "fraction": 1,
+    "played": "99 / 700 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-whirlpool-eye-sac-move-1.png"
+  },
+  {
+    "id": "whirlpool-eye-sac",
+    "action": "attack",
+    "fraction": 0,
+    "played": "114 / 500 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-whirlpool-eye-sac-attack-0.png"
+  },
+  {
+    "id": "whirlpool-eye-sac",
+    "action": "attack",
+    "fraction": 0.27,
+    "played": "114 / 500 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-whirlpool-eye-sac-attack-0.27.png"
+  },
+  {
+    "id": "whirlpool-eye-sac",
+    "action": "attack",
+    "fraction": 0.64,
+    "played": "114 / 500 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-whirlpool-eye-sac-attack-0.64.png"
+  },
+  {
+    "id": "whirlpool-eye-sac",
+    "action": "attack",
+    "fraction": 0.85,
+    "played": "114 / 500 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-whirlpool-eye-sac-attack-0.85.png"
+  },
+  {
+    "id": "whirlpool-eye-sac",
+    "action": "attack",
+    "fraction": 1,
+    "played": "114 / 500 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-whirlpool-eye-sac-attack-1.png"
+  },
+  {
+    "id": "whirlpool-eye-sac",
+    "action": "hit",
+    "fraction": 0,
+    "played": "93 / 380 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-whirlpool-eye-sac-hit-0.png"
+  },
+  {
+    "id": "whirlpool-eye-sac",
+    "action": "hit",
+    "fraction": 0.27,
+    "played": "93 / 380 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-whirlpool-eye-sac-hit-0.27.png"
+  },
+  {
+    "id": "whirlpool-eye-sac",
+    "action": "hit",
+    "fraction": 0.64,
+    "played": "93 / 380 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-whirlpool-eye-sac-hit-0.64.png"
+  },
+  {
+    "id": "whirlpool-eye-sac",
+    "action": "hit",
+    "fraction": 0.85,
+    "played": "93 / 380 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-whirlpool-eye-sac-hit-0.85.png"
+  },
+  {
+    "id": "whirlpool-eye-sac",
+    "action": "hit",
+    "fraction": 1,
+    "played": "93 / 380 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-whirlpool-eye-sac-hit-1.png"
+  },
+  {
+    "id": "whirlpool-eye-sac",
+    "action": "death",
+    "fraction": 0,
+    "played": "106 / 800 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-whirlpool-eye-sac-death-0.png"
+  },
+  {
+    "id": "whirlpool-eye-sac",
+    "action": "death",
+    "fraction": 0.27,
+    "played": "106 / 800 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-whirlpool-eye-sac-death-0.27.png"
+  },
+  {
+    "id": "whirlpool-eye-sac",
+    "action": "death",
+    "fraction": 0.64,
+    "played": "106 / 800 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-whirlpool-eye-sac-death-0.64.png"
+  },
+  {
+    "id": "whirlpool-eye-sac",
+    "action": "death",
+    "fraction": 0.85,
+    "played": "106 / 800 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-whirlpool-eye-sac-death-0.85.png"
+  },
+  {
+    "id": "whirlpool-eye-sac",
+    "action": "death",
+    "fraction": 1,
+    "played": "106 / 800 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-whirlpool-eye-sac-death-1.png"
+  },
+  {
+    "id": "cinder-curse-lamp-swarm",
+    "action": "idle",
+    "fraction": 0,
+    "played": "128 / 1400 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-cinder-curse-lamp-swarm-idle-0.png"
+  },
+  {
+    "id": "cinder-curse-lamp-swarm",
+    "action": "idle",
+    "fraction": 0.27,
+    "played": "128 / 1400 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-cinder-curse-lamp-swarm-idle-0.27.png"
+  },
+  {
+    "id": "cinder-curse-lamp-swarm",
+    "action": "idle",
+    "fraction": 0.64,
+    "played": "128 / 1400 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-cinder-curse-lamp-swarm-idle-0.64.png"
+  },
+  {
+    "id": "cinder-curse-lamp-swarm",
+    "action": "idle",
+    "fraction": 0.85,
+    "played": "128 / 1400 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-cinder-curse-lamp-swarm-idle-0.85.png"
+  },
+  {
+    "id": "cinder-curse-lamp-swarm",
+    "action": "idle",
+    "fraction": 1,
+    "played": "128 / 1400 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-cinder-curse-lamp-swarm-idle-1.png"
+  },
+  {
+    "id": "cinder-curse-lamp-swarm",
+    "action": "move",
+    "fraction": 0,
+    "played": "111 / 700 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-cinder-curse-lamp-swarm-move-0.png"
+  },
+  {
+    "id": "cinder-curse-lamp-swarm",
+    "action": "move",
+    "fraction": 0.27,
+    "played": "111 / 700 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-cinder-curse-lamp-swarm-move-0.27.png"
+  },
+  {
+    "id": "cinder-curse-lamp-swarm",
+    "action": "move",
+    "fraction": 0.64,
+    "played": "111 / 700 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-cinder-curse-lamp-swarm-move-0.64.png"
+  },
+  {
+    "id": "cinder-curse-lamp-swarm",
+    "action": "move",
+    "fraction": 0.85,
+    "played": "111 / 700 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-cinder-curse-lamp-swarm-move-0.85.png"
+  },
+  {
+    "id": "cinder-curse-lamp-swarm",
+    "action": "move",
+    "fraction": 1,
+    "played": "111 / 700 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-cinder-curse-lamp-swarm-move-1.png"
+  },
+  {
+    "id": "cinder-curse-lamp-swarm",
+    "action": "attack",
+    "fraction": 0,
+    "played": "102 / 500 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-cinder-curse-lamp-swarm-attack-0.png"
+  },
+  {
+    "id": "cinder-curse-lamp-swarm",
+    "action": "attack",
+    "fraction": 0.27,
+    "played": "102 / 500 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-cinder-curse-lamp-swarm-attack-0.27.png"
+  },
+  {
+    "id": "cinder-curse-lamp-swarm",
+    "action": "attack",
+    "fraction": 0.64,
+    "played": "102 / 500 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-cinder-curse-lamp-swarm-attack-0.64.png"
+  },
+  {
+    "id": "cinder-curse-lamp-swarm",
+    "action": "attack",
+    "fraction": 0.85,
+    "played": "102 / 500 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-cinder-curse-lamp-swarm-attack-0.85.png"
+  },
+  {
+    "id": "cinder-curse-lamp-swarm",
+    "action": "attack",
+    "fraction": 1,
+    "played": "102 / 500 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-cinder-curse-lamp-swarm-attack-1.png"
+  },
+  {
+    "id": "cinder-curse-lamp-swarm",
+    "action": "hit",
+    "fraction": 0,
+    "played": "96 / 380 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-cinder-curse-lamp-swarm-hit-0.png"
+  },
+  {
+    "id": "cinder-curse-lamp-swarm",
+    "action": "hit",
+    "fraction": 0.27,
+    "played": "96 / 380 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-cinder-curse-lamp-swarm-hit-0.27.png"
+  },
+  {
+    "id": "cinder-curse-lamp-swarm",
+    "action": "hit",
+    "fraction": 0.64,
+    "played": "96 / 380 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-cinder-curse-lamp-swarm-hit-0.64.png"
+  },
+  {
+    "id": "cinder-curse-lamp-swarm",
+    "action": "hit",
+    "fraction": 0.85,
+    "played": "96 / 380 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-cinder-curse-lamp-swarm-hit-0.85.png"
+  },
+  {
+    "id": "cinder-curse-lamp-swarm",
+    "action": "hit",
+    "fraction": 1,
+    "played": "96 / 380 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-cinder-curse-lamp-swarm-hit-1.png"
+  },
+  {
+    "id": "cinder-curse-lamp-swarm",
+    "action": "death",
+    "fraction": 0,
+    "played": "113 / 800 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-cinder-curse-lamp-swarm-death-0.png"
+  },
+  {
+    "id": "cinder-curse-lamp-swarm",
+    "action": "death",
+    "fraction": 0.27,
+    "played": "113 / 800 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-cinder-curse-lamp-swarm-death-0.27.png"
+  },
+  {
+    "id": "cinder-curse-lamp-swarm",
+    "action": "death",
+    "fraction": 0.64,
+    "played": "113 / 800 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-cinder-curse-lamp-swarm-death-0.64.png"
+  },
+  {
+    "id": "cinder-curse-lamp-swarm",
+    "action": "death",
+    "fraction": 0.85,
+    "played": "113 / 800 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-cinder-curse-lamp-swarm-death-0.85.png"
+  },
+  {
+    "id": "cinder-curse-lamp-swarm",
+    "action": "death",
+    "fraction": 1,
+    "played": "113 / 800 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-cinder-curse-lamp-swarm-death-1.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "action": "idle",
+    "fraction": 0,
+    "played": "94 / 1400 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-idle-0.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "action": "idle",
+    "fraction": 0.27,
+    "played": "94 / 1400 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-idle-0.27.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "action": "idle",
+    "fraction": 0.64,
+    "played": "94 / 1400 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-idle-0.64.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "action": "idle",
+    "fraction": 0.85,
+    "played": "94 / 1400 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-idle-0.85.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "action": "idle",
+    "fraction": 1,
+    "played": "94 / 1400 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-idle-1.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "action": "move",
+    "fraction": 0,
+    "played": "116 / 700 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-move-0.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "action": "move",
+    "fraction": 0.27,
+    "played": "116 / 700 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-move-0.27.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "action": "move",
+    "fraction": 0.64,
+    "played": "116 / 700 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-move-0.64.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "action": "move",
+    "fraction": 0.85,
+    "played": "116 / 700 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-move-0.85.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "action": "move",
+    "fraction": 1,
+    "played": "116 / 700 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-move-1.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "action": "attack",
+    "fraction": 0,
+    "played": "89 / 500 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-attack-0.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "action": "attack",
+    "fraction": 0.27,
+    "played": "89 / 500 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-attack-0.27.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "action": "attack",
+    "fraction": 0.64,
+    "played": "89 / 500 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-attack-0.64.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "action": "attack",
+    "fraction": 0.85,
+    "played": "89 / 500 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-attack-0.85.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "action": "attack",
+    "fraction": 1,
+    "played": "89 / 500 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-attack-1.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "action": "hit",
+    "fraction": 0,
+    "played": "97 / 380 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-hit-0.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "action": "hit",
+    "fraction": 0.27,
+    "played": "97 / 380 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-hit-0.27.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "action": "hit",
+    "fraction": 0.64,
+    "played": "97 / 380 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-hit-0.64.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "action": "hit",
+    "fraction": 0.85,
+    "played": "97 / 380 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-hit-0.85.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "action": "hit",
+    "fraction": 1,
+    "played": "97 / 380 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-hit-1.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "action": "death",
+    "fraction": 0,
+    "played": "114 / 800 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-death-0.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "action": "death",
+    "fraction": 0.27,
+    "played": "114 / 800 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-death-0.27.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "action": "death",
+    "fraction": 0.64,
+    "played": "114 / 800 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-death-0.64.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "action": "death",
+    "fraction": 0.85,
+    "played": "114 / 800 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-death-0.85.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "action": "death",
+    "fraction": 1,
+    "played": "114 / 800 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-death-1.png"
+  }
+]

@@ -1,0 +1,227 @@
+[
+  {
+    "enemy": "tide-shadow-cub",
+    "action": "idle",
+    "fraction": 0,
+    "left": 40,
+    "right": 122,
+    "top": 3,
+    "bottom": 158
+  },
+  {
+    "enemy": "tide-shadow-cub",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 41,
+    "right": 121,
+    "top": 1,
+    "bottom": 156
+  },
+  {
+    "enemy": "tide-shadow-cub",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 41,
+    "right": 121,
+    "top": 1,
+    "bottom": 155
+  },
+  {
+    "enemy": "tide-shadow-cub",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 41,
+    "right": 121,
+    "top": 2,
+    "bottom": 156
+  },
+  {
+    "enemy": "tide-shadow-cub",
+    "action": "idle",
+    "fraction": 1,
+    "left": 40,
+    "right": 122,
+    "top": 3,
+    "bottom": 158
+  },
+  {
+    "enemy": "tide-shadow-cub",
+    "action": "move",
+    "fraction": 0,
+    "left": 40,
+    "right": 122,
+    "top": 3,
+    "bottom": 158
+  },
+  {
+    "enemy": "tide-shadow-cub",
+    "action": "move",
+    "fraction": 0.27,
+    "left": 42,
+    "right": 116,
+    "top": -1,
+    "bottom": 149
+  },
+  {
+    "enemy": "tide-shadow-cub",
+    "action": "move",
+    "fraction": 0.64,
+    "left": 40,
+    "right": 122,
+    "top": 3,
+    "bottom": 158
+  },
+  {
+    "enemy": "tide-shadow-cub",
+    "action": "move",
+    "fraction": 0.85,
+    "left": 39,
+    "right": 124,
+    "top": 3,
+    "bottom": 158
+  },
+  {
+    "enemy": "tide-shadow-cub",
+    "action": "move",
+    "fraction": 1,
+    "left": 40,
+    "right": 122,
+    "top": 3,
+    "bottom": 158
+  },
+  {
+    "enemy": "tide-shadow-cub",
+    "action": "attack",
+    "fraction": 0,
+    "left": 40,
+    "right": 122,
+    "top": 3,
+    "bottom": 158
+  },
+  {
+    "enemy": "tide-shadow-cub",
+    "action": "attack",
+    "fraction": 0.27,
+    "left": 36,
+    "right": 123,
+    "top": 2,
+    "bottom": 157
+  },
+  {
+    "enemy": "tide-shadow-cub",
+    "action": "attack",
+    "fraction": 0.64,
+    "left": 47,
+    "right": 116,
+    "top": 3,
+    "bottom": 150
+  },
+  {
+    "enemy": "tide-shadow-cub",
+    "action": "attack",
+    "fraction": 0.85,
+    "left": 43,
+    "right": 119,
+    "top": 4,
+    "bottom": 156
+  },
+  {
+    "enemy": "tide-shadow-cub",
+    "action": "attack",
+    "fraction": 1,
+    "left": 40,
+    "right": 122,
+    "top": 3,
+    "bottom": 158
+  },
+  {
+    "enemy": "tide-shadow-cub",
+    "action": "hit",
+    "fraction": 0,
+    "left": 40,
+    "right": 122,
+    "top": 3,
+    "bottom": 158
+  },
+  {
+    "enemy": "tide-shadow-cub",
+    "action": "hit",
+    "fraction": 0.27,
+    "left": 39,
+    "right": 126,
+    "top": 4,
+    "bottom": 153
+  },
+  {
+    "enemy": "tide-shadow-cub",
+    "action": "hit",
+    "fraction": 0.64,
+    "left": 38,
+    "right": 124,
+    "top": 3,
+    "bottom": 156
+  },
+  {
+    "enemy": "tide-shadow-cub",
+    "action": "hit",
+    "fraction": 0.85,
+    "left": 39,
+    "right": 123,
+    "top": 3,
+    "bottom": 158
+  },
+  {
+    "enemy": "tide-shadow-cub",
+    "action": "hit",
+    "fraction": 1,
+    "left": 40,
+    "right": 122,
+    "top": 3,
+    "bottom": 158
+  },
+  {
+    "enemy": "tide-shadow-cub",
+    "action": "death",
+    "fraction": 0,
+    "left": 40,
+    "right": 122,
+    "top": 3,
+    "bottom": 158
+  },
+  {
+    "enemy": "tide-shadow-cub",
+    "action": "death",
+    "fraction": 0.27,
+    "left": 43,
+    "right": 119,
+    "top": 12,
+    "bottom": 164
+  },
+  {
+    "enemy": "tide-shadow-cub",
+    "action": "death",
+    "fraction": 0.64,
+    "left": 39,
+    "right": 126,
+    "top": 27,
+    "bottom": 166
+  },
+  {
+    "enemy": "tide-shadow-cub",
+    "action": "death",
+    "fraction": 0.85,
+    "left": 40,
+    "right": 131,
+    "top": 36,
+    "bottom": 154
+  },
+  {
+    "enemy": "tide-shadow-cub",
+    "action": "death",
+    "fraction": 1,
+    "left": 36,
+    "right": 129,
+    "top": 43,
+    "bottom": 150
+  }
+]

@@ -12,13 +12,17 @@ const els = {
   mergeRadius:$('#mergeRadius'), mergeRadiusValue:$('#mergeRadiusValue'),
   connectivity:$('#connectivity'), showOriginal:$('#showOriginal'), dimOutside:$('#dimOutside'), showBounds:$('#showBounds'),
   stats:$('#stats'), partList:$('#partList'), zoomOutBtn:$('#zoomOutBtn'), zoomInBtn:$('#zoomInBtn'),
-  fitBtn:$('#fitBtn'), actualBtn:$('#actualBtn'), zoomLabel:$('#zoomLabel')
+  fitBtn:$('#fitBtn'), actualBtn:$('#actualBtn'), zoomLabel:$('#zoomLabel'), checkerTheme:$('#checkerTheme'),
+  mergeDialog:$('#mergeDialog'), mergeTitle:$('#mergeTitle'), mergeSearch:$('#mergeSearch'), mergeTargetList:$('#mergeTargetList'), closeMergeBtn:$('#closeMergeBtn'),
+  mergeFeedback:$('#mergeFeedback'), mergeStatus:$('#mergeStatus'), undoMergeBtn:$('#undoMergeBtn'), manualMergeHint:$('#manualMergeHint')
 };
 const ctx=els.canvas.getContext('2d',{willReadFrequently:true});
 const assets=[]; let selectedId=null,outputDir=null;
 let previewActive=false;
 let selectedPartId=null;
 let sidebarMode='assets';
+let mergeSourceId=null,mergeTargetId=null;
+let mergeThumbObserver=null;
 const worker=new Worker('./worker.js');
 
 let fitScale=1;
@@ -37,6 +41,7 @@ function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','
 function getSelected(){return assets.find(a=>a.id===selectedId)}
 
 function setSidebarMode(mode){
+  if(mode!=='parts') closeMergeDialog();
   sidebarMode=mode==='parts'?'parts':'assets';
   els.assetsTabBtn.classList.toggle('active',sidebarMode==='assets');
   els.partsTabBtn.classList.toggle('active',sidebarMode==='parts');
@@ -97,6 +102,7 @@ function renderAssetList(){
   els.exportAllBtn.disabled=!assets.some(a=>a.analysis);
 }
 function selectAsset(id){
+  closeMergeDialog();
   selectedId=id;
   previewActive=false;
   selectedPartId=null;
@@ -116,6 +122,7 @@ function selectAsset(id){
 }
 
 function setPreviewUi(active){
+  if(!active) closeMergeDialog();
   previewActive=active;
   if(!active) selectedPartId=null;
   els.analyzeBtn.textContent=active?'更新预览':'抠图预览';
@@ -131,6 +138,7 @@ function setPreviewUi(active){
 
 function renderPartList(){
   const a=getSelected();
+  updateMergeUi();
   els.partsAssetName.textContent=a?.name || '未选择素材';
 
   const count=a?.analysis?.components?.length || 0;
@@ -151,8 +159,21 @@ function renderPartList(){
       <div class="part-id">#${String(c.id).padStart(2,'0')}</div>
       <div class="part-size">${c.width} × ${c.height}</div>
       <div class="part-area">${c.area} px</div>`;
+    const mergeBtn=document.createElement('button');
+    mergeBtn.type='button';
+    mergeBtn.className='part-merge-btn';
+    mergeBtn.disabled=count<2 || !!a.analyzing;
+    mergeBtn.title=count<2 ? '\u81f3\u5c11\u9700\u8981\u4e24\u4e2a\u90e8\u4ef6' : '\u5408\u5e76\u5230\u5176\u4ed6\u90e8\u4ef6';
+    mergeBtn.setAttribute('aria-label',`\u5c06 #${String(c.id).padStart(2,'0')} \u5408\u5e76\u5230\u5176\u4ed6\u90e8\u4ef6`);
+    mergeBtn.setAttribute('aria-haspopup','dialog');
+    mergeBtn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h3l5 8h8M4 20h3l5-8M16 8l4 4-4 4"/></svg>';
+    mergeBtn.addEventListener('click',e=>{
+      e.stopPropagation();
+      openMergeDialog(c.id,mergeBtn);
+    });
+    row.appendChild(mergeBtn);
     row.addEventListener('click',()=>{
-      selectPart(c.id,true);
+      selectPart(selectedPartId===c.id ? null : c.id,true);
     });
     els.partList.appendChild(row);
   }
@@ -161,13 +182,13 @@ function renderPartList(){
 function selectPart(id,focusList=false){
   const a=getSelected();
   if(!previewActive || !a?.analysis)return;
-  if(!a.analysis.components.some(c=>c.id===id))return;
+  if(id!==null && !a.analysis.components.some(c=>c.id===id))return;
 
   selectedPartId=id;
   renderPartList();
   drawSelected();
 
-  const row=els.partList.querySelector(`[data-part-id="${id}"]`);
+  const row=id===null ? null : els.partList.querySelector(`[data-part-id="${id}"]`);
   if(row){
     row.scrollIntoView({block:'nearest'});
   }
@@ -179,14 +200,196 @@ function stepPart(delta){
   if(!previewActive || !a?.analysis?.components?.length)return;
 
   const parts=a.analysis.components;
-  let index=selectedPartId==null
-    ? (delta>0 ? -1 : 0)
-    : parts.findIndex(c=>c.id===selectedPartId);
+  let index=parts.findIndex(c=>c.id===selectedPartId);
 
-  if(index<0) index=0;
+  if(index<0) index=delta>0 ? -1 : 0;
   index=(index+delta+parts.length)%parts.length;
   selectPart(parts[index].id,false);
 }
+
+function updateMergeUi(){
+  const a=getSelected();
+  const canUndo=!!a?.mergeHistory?.length;
+  els.undoMergeBtn.disabled=!canUndo || !!a?.analyzing;
+  els.mergeFeedback.classList.toggle('hidden',!previewActive || !a?.mergeMessage);
+  els.mergeStatus.textContent=a?.mergeMessage || '';
+  els.manualMergeHint.classList.toggle('hidden',!canUndo);
+}
+
+function openMergeDialog(sourceId,anchor){
+  const a=getSelected();
+  if(!previewActive || !a?.analysis || a.analyzing || a.analysis.components.length<2)return;
+  if(!a.analysis.components.some(c=>c.id===sourceId))return;
+  mergeSourceId=sourceId;
+  mergeTargetId=null;
+  els.mergeTitle.textContent=`\u5c06 #${String(sourceId).padStart(2,'0')} \u5408\u5e76\u5230\u2026`;
+  els.mergeSearch.value='';
+  els.mergeDialog.showModal();
+  renderMergeTargets();
+  const anchorRect=anchor.getBoundingClientRect();
+  const dialogRect=els.mergeDialog.getBoundingClientRect();
+  const left=anchorRect.right+8+dialogRect.width<=window.innerWidth-12
+    ? anchorRect.right+8 : anchorRect.left-dialogRect.width-8;
+  els.mergeDialog.style.left=`${Math.max(12,Math.min(left,window.innerWidth-dialogRect.width-12))}px`;
+  els.mergeDialog.style.top=`${Math.max(12,Math.min(anchorRect.top,window.innerHeight-dialogRect.height-12))}px`;
+  els.mergeSearch.focus();
+  drawSelected();
+}
+
+function closeMergeDialog(){
+  const wasOpen=mergeSourceId!==null;
+  mergeSourceId=null;
+  mergeTargetId=null;
+  mergeThumbObserver?.disconnect();
+  mergeThumbObserver=null;
+  if(els.mergeDialog.open)els.mergeDialog.close();
+  els.mergeTargetList.innerHTML='';
+  if(wasOpen)drawSelected();
+}
+
+function previewMergeTarget(id){
+  if(mergeSourceId===null || mergeTargetId===id)return;
+  mergeTargetId=id;
+  drawSelected();
+}
+
+function renderMergeTargets(){
+  const a=getSelected();
+  if(mergeSourceId===null || !a?.analysis)return;
+  mergeThumbObserver?.disconnect();
+  els.mergeTargetList.innerHTML='';
+  previewMergeTarget(null);
+  const query=els.mergeSearch.value.trim().replace(/^#/,'');
+  const targets=a.analysis.components.filter(c=>c.id!==mergeSourceId &&
+    (!query || String(c.id).includes(query) || String(c.id).padStart(2,'0').includes(query)));
+  if(!targets.length){
+    els.mergeTargetList.innerHTML='<div class="part-list-empty">\u6ca1\u6709\u5339\u914d\u7684\u90e8\u4ef6</div>';
+    return;
+  }
+  a.partThumbs ??= new Map();
+  mergeThumbObserver=new IntersectionObserver(entries=>{
+    if(mergeSourceId===null || getSelected()!==a)return;
+    for(const entry of entries){
+      if(!entry.isIntersecting)continue;
+      const thumb=entry.target;
+      const c=a.analysis.components.find(c=>c.id===Number(thumb.dataset.partId));
+      if(c){
+        if(!a.partThumbs.has(c.id))a.partThumbs.set(c.id,makePartThumbnail(a,c));
+        thumb.src=a.partThumbs.get(c.id);
+      }
+      mergeThumbObserver?.unobserve(thumb);
+    }
+  },{root:els.mergeTargetList,rootMargin:'48px'});
+  for(const c of targets){
+    const button=document.createElement('button');
+    button.type='button';
+    button.className='merge-target';
+    button.dataset.partId=String(c.id);
+    button.setAttribute('aria-label',`\u5408\u5e76\u5230 #${String(c.id).padStart(2,'0')}`);
+    const thumb=document.createElement('img');
+    thumb.className='merge-thumb';
+    thumb.alt='';
+    thumb.dataset.partId=String(c.id);
+    if(a.partThumbs.has(c.id))thumb.src=a.partThumbs.get(c.id);
+    button.appendChild(thumb);
+    const text=document.createElement('span');
+    text.className='merge-target-text';
+    text.innerHTML=`<strong>#${String(c.id).padStart(2,'0')}</strong><span>${c.width} \u00d7 ${c.height} \u00b7 ${c.area} px</span>`;
+    button.appendChild(text);
+    button.addEventListener('mouseenter',()=>previewMergeTarget(c.id));
+    button.addEventListener('focus',()=>previewMergeTarget(c.id));
+    button.addEventListener('mouseleave',()=>{
+      if(document.activeElement!==button && mergeTargetId===c.id)previewMergeTarget(null);
+    });
+    button.addEventListener('blur',()=>{
+      if(mergeTargetId===c.id)previewMergeTarget(null);
+    });
+    button.addEventListener('click',()=>mergeParts(mergeSourceId,c.id));
+    els.mergeTargetList.appendChild(button);
+    if(!thumb.src)mergeThumbObserver.observe(thumb);
+  }
+}
+
+function makePartThumbnail(a,c){
+  const {canvas}=createPartCanvas(a,c);
+  const thumb=document.createElement('canvas');
+  thumb.width=thumb.height=44;
+  const scale=Math.min(44/c.width,44/c.height);
+  const width=c.width*scale,height=c.height*scale;
+  thumb.getContext('2d').drawImage(canvas,(44-width)/2,(44-height)/2,width,height);
+  return thumb.toDataURL('image/png');
+}
+
+function mergeParts(sourceId,targetId){
+  const a=getSelected();
+  if(!previewActive || !a?.analysis || a.analyzing || sourceId===targetId)return;
+  const {components,labels}=a.analysis;
+  const sourceIndex=components.findIndex(c=>c.id===sourceId);
+  const source=components[sourceIndex],target=components.find(c=>c.id===targetId);
+  if(!source || !target)return;
+  const pixels=[];
+  for(let i=0;i<labels.length;i++)if(labels[i]===sourceId)pixels.push(i);
+  const entry={source,sourceIndex,target,selectedPartId,pixels:Uint32Array.from(pixels)};
+  const merged={...target,area:source.area+target.area,
+    minX:Math.min(source.minX,target.minX),minY:Math.min(source.minY,target.minY),
+    maxX:Math.max(source.maxX,target.maxX),maxY:Math.max(source.maxY,target.maxY)};
+  merged.width=merged.maxX-merged.minX+1;
+  merged.height=merged.maxY-merged.minY+1;
+  closeMergeDialog();
+  for(const i of entry.pixels)labels[i]=targetId;
+  a.analysis.components=components.filter(c=>c.id!==sourceId).map(c=>c.id===targetId?merged:c);
+  (a.mergeHistory ??= []).push(entry);
+  a.partThumbs=new Map();
+  a.mergeMessage=`\u5df2\u5c06 #${String(sourceId).padStart(2,'0')} \u5408\u5e76\u5230 #${String(targetId).padStart(2,'0')}`;
+  selectedPartId=targetId;
+  refreshMergedParts(a);
+  const row=els.partList.querySelector(`[data-part-id="${targetId}"]`);
+  row?.scrollIntoView({block:'nearest'});
+  els.partList.focus({preventScroll:true});
+}
+
+function undoMerge(){
+  const a=getSelected();
+  if(!previewActive || a?.analyzing || !a?.mergeHistory?.length)return;
+  closeMergeDialog();
+  const entry=a.mergeHistory.pop();
+  for(const i of entry.pixels)a.analysis.labels[i]=entry.source.id;
+  a.analysis.components=a.analysis.components.map(c=>c.id===entry.target.id?entry.target:c);
+  a.analysis.components.splice(entry.sourceIndex,0,entry.source);
+  selectedPartId=entry.selectedPartId;
+  a.partThumbs=new Map();
+  a.mergeMessage=`\u5df2\u64a4\u9500 #${String(entry.source.id).padStart(2,'0')} \u2192 #${String(entry.target.id).padStart(2,'0')} \u7684\u5408\u5e76`;
+  refreshMergedParts(a);
+  if(selectedPartId!==null)els.partList.querySelector(`[data-part-id="${selectedPartId}"]`)?.scrollIntoView({block:'nearest'});
+  els.partList.focus({preventScroll:true});
+}
+
+function refreshMergedParts(a){
+  renderAssetList();
+  renderPartList();
+  drawSelected();
+  updateStats(a);
+}
+
+els.undoMergeBtn.addEventListener('click',undoMerge);
+els.closeMergeBtn.addEventListener('click',closeMergeDialog);
+els.mergeSearch.addEventListener('input',renderMergeTargets);
+els.mergeDialog.addEventListener('cancel',e=>{e.preventDefault();closeMergeDialog()});
+els.mergeDialog.addEventListener('click',e=>{
+  if(e.target!==els.mergeDialog)return;
+  const rect=els.mergeDialog.getBoundingClientRect();
+  if(e.clientX<rect.left || e.clientX>rect.right || e.clientY<rect.top || e.clientY>rect.bottom)closeMergeDialog();
+});
+els.mergeDialog.addEventListener('keydown',e=>{
+  if(e.key!=='ArrowDown' && e.key!=='ArrowUp')return;
+  const buttons=[...els.mergeTargetList.querySelectorAll('.merge-target')];
+  if(!buttons.length)return;
+  e.preventDefault();
+  const delta=e.key==='ArrowDown'?1:-1;
+  let index=buttons.indexOf(document.activeElement);
+  if(index<0)index=delta>0?-1:0;
+  buttons[(index+delta+buttons.length)%buttons.length].focus();
+});
 
 function drawSelected(){
   const a=getSelected(); if(!a)return;
@@ -219,16 +422,20 @@ function drawSelected(){
   const overlay=octx.createImageData(a.width,a.height);
   const d=overlay.data;
 
-  const hasSelection=selectedPartId!=null;
+  const highlightIds=mergeSourceId!==null
+    ? new Set([mergeSourceId,mergeTargetId].filter(id=>id!==null))
+    : selectedPartId!==null ? new Set([selectedPartId]) : null;
+  const hasSelection=highlightIds!==null;
   for(let i=0;i<labels.length;i++){
     const p=i*4;
     const label=labels[i];
 
     if(label!==0){
       if(hasSelection){
-        if(label===selectedPartId){
+        if(highlightIds.has(label)){
           // 当前选中项：更亮、更清晰。
-          d[p]=86; d[p+1]=173; d[p+2]=255; d[p+3]=showOriginal?72:185;
+          const isSource=mergeSourceId!==null && label===mergeSourceId;
+          d[p]=isSource?255:86; d[p+1]=isSource?180:173; d[p+2]=isSource?84:255; d[p+3]=showOriginal?72:185;
         }else{
           // 其他已识别孤岛统一压暗。
           d[p]=0; d[p+1]=0; d[p+2]=0; d[p+3]=showOriginal?155:185;
@@ -243,7 +450,7 @@ function drawSelected(){
   octx.putImageData(overlay,0,0);
   ctx.drawImage(overlayCanvas,0,0);
 
-  drawBoundaries(a,hasSelection?selectedPartId:null);
+  drawBoundaries(a,highlightIds);
 
   if(els.showBounds.checked){
     ctx.save();
@@ -251,9 +458,11 @@ function drawSelected(){
     ctx.font=`${Math.max(18,Math.round(a.width/70))}px Segoe UI`;
     ctx.textBaseline='top';
     for(const c of components){
-      const active=!hasSelection || c.id===selectedPartId;
+      const active=!hasSelection || highlightIds.has(c.id);
       ctx.globalAlpha=active?1:0.22;
-      ctx.strokeStyle=active?'rgba(110,190,255,.98)':'rgba(110,190,255,.48)';
+      ctx.strokeStyle=active
+        ? (c.id===mergeSourceId?'rgba(255,180,84,.98)':'rgba(110,190,255,.98)')
+        : 'rgba(110,190,255,.48)';
       ctx.setLineDash([10,7]);
       ctx.strokeRect(c.minX+.5,c.minY+.5,c.width,c.height);
       ctx.setLineDash([]);
@@ -270,14 +479,14 @@ function drawSelected(){
   applyZoom();
 }
 
-function drawBoundaries(a,onlyId=null){
+function drawBoundaries(a,highlightIds=null){
   const {labels}=a.analysis,w=a.width,h=a.height;
   ctx.save();
   ctx.fillStyle='rgba(235,245,255,.96)';
   for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
     const i=y*w+x,l=labels[i];
     if(!l)continue;
-    if(onlyId!=null && l!==onlyId)continue;
+    if(highlightIds!==null && !highlightIds.has(l))continue;
     if(labels[i-1]!==l||labels[i+1]!==l||labels[i-w]!==l||labels[i+w]!==l){
       if(((x+y)&3)<2)ctx.fillRect(x,y,1,1);
     }
@@ -353,6 +562,9 @@ els.zoomInBtn.addEventListener('click',()=>zoomBy(1.2));
 els.zoomOutBtn.addEventListener('click',()=>zoomBy(1/1.2));
 els.fitBtn.addEventListener('click',fitToViewport);
 els.actualBtn.addEventListener('click',()=>setAbsoluteScale(1));
+els.checkerTheme.addEventListener('change',()=>{
+  els.stage.dataset.checkerTheme=els.checkerTheme.value;
+});
 
 els.viewport.addEventListener('wheel',e=>{
   if(!getSelected())return;
@@ -362,7 +574,6 @@ els.viewport.addEventListener('wheel',e=>{
 
 els.viewport.addEventListener('mousedown',e=>{
   if(!getSelected() || e.button!==0) return;
-  if(e.target.closest('.zoom-toolbar')) return;
   isDragging=true;
   dragStartX=e.clientX;
   dragStartY=e.clientY;
@@ -395,9 +606,13 @@ resizeObserver.observe(els.viewport);
 
 els.analyzeBtn.addEventListener('click',async()=>{
   const a=getSelected();if(!a)return;
+  if(a.analyzing)return;
+  closeMergeDialog();
+  a.analyzing=true;
   const enteringPreview=!previewActive;
   els.busy.classList.remove('hidden');
   els.analyzeBtn.disabled=true;
+  renderPartList();
 
   requestAnimationFrame(async()=>{
     try{
@@ -436,6 +651,9 @@ els.analyzeBtn.addEventListener('click',async()=>{
           connectivity:+els.connectivity.value
         }
       };
+      a.mergeHistory=[];
+      a.mergeMessage='';
+      a.partThumbs=new Map();
 
       if(enteringPreview){
         els.showOriginal.checked=true;
@@ -453,8 +671,10 @@ els.analyzeBtn.addEventListener('click',async()=>{
       console.error(err);
       alert(`分析失败：${err.message}`);
     }finally{
+      a.analyzing=false;
       els.busy.classList.add('hidden');
       els.analyzeBtn.disabled=false;
+      renderPartList();
     }
   });
 });
@@ -481,7 +701,7 @@ els.partList.addEventListener('keydown',e=>{
 });
 
 window.addEventListener('keydown',e=>{
-  if(!previewActive || sidebarMode!=='parts')return;
+  if(e.defaultPrevented || mergeSourceId!==null || !previewActive || sidebarMode!=='parts')return;
   const tag=document.activeElement?.tagName;
   // 参数滑杆、select、文本输入保持自己的方向键行为。
   if(tag==='INPUT' || tag==='SELECT' || tag==='TEXTAREA')return;
@@ -539,6 +759,24 @@ els.exportAllBtn.addEventListener('click',async()=>{
   const ready=assets.filter(a=>a.analysis);for(const a of ready)await exportAsset(a);alert(`已导出 ${ready.length} 个素材。`);
 });
 
+function createPartCanvas(a,c,padding=0){
+  const x=Math.max(0,c.minX-padding),y=Math.max(0,c.minY-padding);
+  const x2=Math.min(a.width,c.maxX+1+padding),y2=Math.min(a.height,c.maxY+1+padding);
+  const width=x2-x,height=y2-y;
+  const canvas=document.createElement('canvas');
+  canvas.width=width;canvas.height=height;
+  const context=canvas.getContext('2d');
+  const out=context.createImageData(width,height),src=a.sourceImageData.data,dst=out.data;
+  for(let yy=0;yy<height;yy++)for(let xx=0;xx<width;xx++){
+    const index=(y+yy)*a.width+x+xx;
+    if(a.analysis.labels[index]!==c.id)continue;
+    const sp=index*4,dp=(yy*width+xx)*4;
+    dst[dp]=src[sp];dst[dp+1]=src[sp+1];dst[dp+2]=src[sp+2];dst[dp+3]=src[sp+3];
+  }
+  context.putImageData(out,0,0);
+  return {canvas,bounds:{x,y,width,height}};
+}
+
 async function exportAsset(a){
   const folder=await outputDir.getDirectoryHandle(safeName(baseName(a.name)),{create:true});
   const partsDir=await folder.getDirectoryHandle('parts',{create:true});
@@ -546,13 +784,9 @@ async function exportAsset(a){
   const manifest={source:{name:a.name,width:a.width,height:a.height,type:a.file.type,size:a.file.size},settings:{...a.analysis.settings},generatedAt:new Date().toISOString(),parts:[]};
 
   for(const c of a.analysis.components){
-    const x=Math.max(0,c.minX-padding),y=Math.max(0,c.minY-padding),x2=Math.min(a.width,c.maxX+1+padding),y2=Math.min(a.height,c.maxY+1+padding),w=x2-x,h=y2-y;
-    const pc=document.createElement('canvas');pc.width=w;pc.height=h;const pctx=pc.getContext('2d',{willReadFrequently:true});
-    const out=pctx.createImageData(w,h),src=a.sourceImageData.data,dst=out.data,labels=a.analysis.labels;
-    for(let yy=0;yy<h;yy++){const sy=y+yy;for(let xx=0;xx<w;xx++){const sx=x+xx,si=sy*a.width+sx;if(labels[si]!==c.id)continue;const sp=si*4,dp=(yy*w+xx)*4;dst[dp]=src[sp];dst[dp+1]=src[sp+1];dst[dp+2]=src[sp+2];dst[dp+3]=src[sp+3];}}
-    pctx.putImageData(out,0,0);
+    const {canvas:pc,bounds}=createPartCanvas(a,c,padding);
     const filename=`part_${String(c.id).padStart(3,'0')}.png`;await writeCanvas(partsDir,filename,pc);
-    manifest.parts.push({id:c.id,file:`parts/${filename}`,sourceBounds:{x:c.minX,y:c.minY,width:c.width,height:c.height},exportBounds:{x,y,width:w,height:h},area:c.area});
+    manifest.parts.push({id:c.id,file:`parts/${filename}`,sourceBounds:{x:c.minX,y:c.minY,width:c.width,height:c.height},exportBounds:bounds,area:c.area});
   }
 
   const preview=document.createElement('canvas');preview.width=a.width;preview.height=a.height;const pctx=preview.getContext('2d');pctx.drawImage(a.bitmap,0,0);

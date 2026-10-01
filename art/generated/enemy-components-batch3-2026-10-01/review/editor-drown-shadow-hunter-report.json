@@ -1,0 +1,177 @@
+[
+  {
+    "id": "drown-shadow-hunter",
+    "action": "idle",
+    "fraction": 0,
+    "played": "88 / 1400 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-idle-0.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "action": "idle",
+    "fraction": 0.27,
+    "played": "88 / 1400 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-idle-0.27.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "action": "idle",
+    "fraction": 0.64,
+    "played": "88 / 1400 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-idle-0.64.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "action": "idle",
+    "fraction": 0.85,
+    "played": "88 / 1400 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-idle-0.85.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "action": "idle",
+    "fraction": 1,
+    "played": "88 / 1400 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-idle-1.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "action": "move",
+    "fraction": 0,
+    "played": "76 / 700 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-move-0.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "action": "move",
+    "fraction": 0.27,
+    "played": "76 / 700 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-move-0.27.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "action": "move",
+    "fraction": 0.64,
+    "played": "76 / 700 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-move-0.64.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "action": "move",
+    "fraction": 0.85,
+    "played": "76 / 700 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-move-0.85.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "action": "move",
+    "fraction": 1,
+    "played": "76 / 700 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-move-1.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "action": "attack",
+    "fraction": 0,
+    "played": "90 / 500 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-attack-0.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "action": "attack",
+    "fraction": 0.27,
+    "played": "90 / 500 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-attack-0.27.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "action": "attack",
+    "fraction": 0.64,
+    "played": "90 / 500 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-attack-0.64.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "action": "attack",
+    "fraction": 0.85,
+    "played": "90 / 500 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-attack-0.85.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "action": "attack",
+    "fraction": 1,
+    "played": "90 / 500 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-attack-1.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "action": "hit",
+    "fraction": 0,
+    "played": "121 / 380 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-hit-0.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "action": "hit",
+    "fraction": 0.27,
+    "played": "121 / 380 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-hit-0.27.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "action": "hit",
+    "fraction": 0.64,
+    "played": "121 / 380 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-hit-0.64.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "action": "hit",
+    "fraction": 0.85,
+    "played": "121 / 380 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-hit-0.85.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "action": "hit",
+    "fraction": 1,
+    "played": "121 / 380 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-hit-1.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "action": "death",
+    "fraction": 0,
+    "played": "119 / 800 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-death-0.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "action": "death",
+    "fraction": 0.27,
+    "played": "119 / 800 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-death-0.27.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "action": "death",
+    "fraction": 0.64,
+    "played": "119 / 800 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-death-0.64.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "action": "death",
+    "fraction": 0.85,
+    "played": "119 / 800 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-death-0.85.png"
+  },
+  {
+    "id": "drown-shadow-hunter",
+    "action": "death",
+    "fraction": 1,
+    "played": "119 / 800 ms",
+    "path": "art/generated/enemy-components-batch3-2026-10-01/review/editor-drown-shadow-hunter-death-1.png"
+  }
+]

@@ -1,0 +1,29 @@
+<!doctype html><html lang="zh-CN"><meta charset="UTF-8"><title>Enemy component review</title>
+<style>body{margin:0;background:#1b242d;color:#ddd;font:14px sans-serif}main{display:grid;grid-template-columns:repeat(5,320px);width:1600px}figure{margin:0;text-align:center}canvas{display:block}h1{font-size:20px;margin:12px}</style>
+<h1></h1><main></main>
+<script type="module">
+import { createEnemyShadowProjects } from '/src/animation/shadow-enemies.js'
+import { prepareEnemyPuppets, drawEnemyPuppet } from '/src/render/enemy-puppet.js'
+const params = new URLSearchParams(location.search)
+const enemy = params.get('enemy') || 'gnawer'
+const projects = createEnemyShadowProjects()
+const targets = enemy === 'all' ? projects.slice(0, 6) : projects.filter(p => p.enemyId === enemy)
+prepareEnemyPuppets(() => {})
+await Promise.all(targets.flatMap(p => [...new Set(p.parts.map(s => s.visual.texture))].map(src => new Promise((resolve,reject) => {
+  const img = new Image(); img.onload = resolve; img.onerror = () => reject(new Error(src)); img.src = src
+}))))
+// Prime the runtime renderer's own cache as well.
+for (const p of targets) drawEnemyPuppet(document.createElement('canvas').getContext('2d'), p.enemyId)
+await new Promise(resolve => setTimeout(resolve, 300))
+document.querySelector('h1').textContent = targets.map(p => p.name).join(' / ')
+for (const p of targets) for (const action of enemy === 'all' ? ['idle'] : ['idle','move','attack','hit','death']) for (const fraction of enemy === 'all' ? [0] : [0,.27,.64,.85,1]) {
+  const f = document.createElement('figure'), c = document.createElement('canvas'), label = document.createElement('figcaption')
+  c.width = c.height = 320
+  const ctx = c.getContext('2d'); ctx.fillStyle = '#1b242d';ctx.fillRect(0,0,320,320)
+  ctx.translate(20,23.5);ctx.scale(1.75,1.75)
+  drawEnemyPuppet(ctx, p.enemyId, action, p.animations[action].duration * fraction)
+  label.textContent = `${p.enemyId} ${action} ${fraction}`
+  f.append(c,label);document.querySelector('main').append(f)
+}
+window.reviewReady = true
+</script></html>

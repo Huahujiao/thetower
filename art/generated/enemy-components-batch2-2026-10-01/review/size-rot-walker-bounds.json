@@ -1,0 +1,227 @@
+[
+  {
+    "enemy": "rot-walker",
+    "action": "idle",
+    "fraction": 0,
+    "left": 47,
+    "right": 111,
+    "top": 12,
+    "bottom": 155
+  },
+  {
+    "enemy": "rot-walker",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 47,
+    "right": 111,
+    "top": 12,
+    "bottom": 154
+  },
+  {
+    "enemy": "rot-walker",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 47,
+    "right": 112,
+    "top": 11,
+    "bottom": 154
+  },
+  {
+    "enemy": "rot-walker",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 47,
+    "right": 111,
+    "top": 12,
+    "bottom": 154
+  },
+  {
+    "enemy": "rot-walker",
+    "action": "idle",
+    "fraction": 1,
+    "left": 47,
+    "right": 111,
+    "top": 12,
+    "bottom": 155
+  },
+  {
+    "enemy": "rot-walker",
+    "action": "move",
+    "fraction": 0,
+    "left": 47,
+    "right": 111,
+    "top": 12,
+    "bottom": 155
+  },
+  {
+    "enemy": "rot-walker",
+    "action": "move",
+    "fraction": 0.27,
+    "left": 48,
+    "right": 113,
+    "top": 11,
+    "bottom": 149
+  },
+  {
+    "enemy": "rot-walker",
+    "action": "move",
+    "fraction": 0.64,
+    "left": 36,
+    "right": 110,
+    "top": 11,
+    "bottom": 153
+  },
+  {
+    "enemy": "rot-walker",
+    "action": "move",
+    "fraction": 0.85,
+    "left": 48,
+    "right": 110,
+    "top": 11,
+    "bottom": 153
+  },
+  {
+    "enemy": "rot-walker",
+    "action": "move",
+    "fraction": 1,
+    "left": 47,
+    "right": 111,
+    "top": 12,
+    "bottom": 155
+  },
+  {
+    "enemy": "rot-walker",
+    "action": "attack",
+    "fraction": 0,
+    "left": 47,
+    "right": 111,
+    "top": 12,
+    "bottom": 155
+  },
+  {
+    "enemy": "rot-walker",
+    "action": "attack",
+    "fraction": 0.27,
+    "left": 49,
+    "right": 110,
+    "top": 12,
+    "bottom": 155
+  },
+  {
+    "enemy": "rot-walker",
+    "action": "attack",
+    "fraction": 0.64,
+    "left": 45,
+    "right": 114,
+    "top": 13,
+    "bottom": 154
+  },
+  {
+    "enemy": "rot-walker",
+    "action": "attack",
+    "fraction": 0.85,
+    "left": 45,
+    "right": 112,
+    "top": 12,
+    "bottom": 154
+  },
+  {
+    "enemy": "rot-walker",
+    "action": "attack",
+    "fraction": 1,
+    "left": 47,
+    "right": 111,
+    "top": 12,
+    "bottom": 155
+  },
+  {
+    "enemy": "rot-walker",
+    "action": "hit",
+    "fraction": 0,
+    "left": 47,
+    "right": 111,
+    "top": 12,
+    "bottom": 155
+  },
+  {
+    "enemy": "rot-walker",
+    "action": "hit",
+    "fraction": 0.27,
+    "left": 54,
+    "right": 123,
+    "top": 14,
+    "bottom": 150
+  },
+  {
+    "enemy": "rot-walker",
+    "action": "hit",
+    "fraction": 0.64,
+    "left": 51,
+    "right": 115,
+    "top": 13,
+    "bottom": 154
+  },
+  {
+    "enemy": "rot-walker",
+    "action": "hit",
+    "fraction": 0.85,
+    "left": 49,
+    "right": 113,
+    "top": 12,
+    "bottom": 155
+  },
+  {
+    "enemy": "rot-walker",
+    "action": "hit",
+    "fraction": 1,
+    "left": 47,
+    "right": 111,
+    "top": 12,
+    "bottom": 155
+  },
+  {
+    "enemy": "rot-walker",
+    "action": "death",
+    "fraction": 0,
+    "left": 47,
+    "right": 111,
+    "top": 12,
+    "bottom": 155
+  },
+  {
+    "enemy": "rot-walker",
+    "action": "death",
+    "fraction": 0.27,
+    "left": 45,
+    "right": 112,
+    "top": 14,
+    "bottom": 157
+  },
+  {
+    "enemy": "rot-walker",
+    "action": "death",
+    "fraction": 0.64,
+    "left": 45,
+    "right": 125,
+    "top": 22,
+    "bottom": 155
+  },
+  {
+    "enemy": "rot-walker",
+    "action": "death",
+    "fraction": 0.85,
+    "left": 44,
+    "right": 126,
+    "top": 26,
+    "bottom": 148
+  },
+  {
+    "enemy": "rot-walker",
+    "action": "death",
+    "fraction": 1,
+    "left": 41,
+    "right": 121,
+    "top": 27,
+    "bottom": 141
+  }
+]

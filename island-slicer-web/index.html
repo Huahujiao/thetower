@@ -41,6 +41,10 @@
 
       <div id="partsPane" class="sidebar-pane">
         <div id="partsAssetName" class="parts-asset-name">未选择素材</div>
+        <div id="mergeFeedback" class="merge-feedback hidden">
+          <span id="mergeStatus" role="status" aria-live="polite"></span>
+          <button id="undoMergeBtn" class="zoom-btn wide" disabled>撤销合并</button>
+        </div>
         <div id="partList" class="part-list sidebar-part-list" tabindex="0">
           <div class="part-list-empty">进入抠图预览后显示</div>
         </div>
@@ -49,12 +53,29 @@
 
     <main class="main">
       <section class="topbar">
-        <div>
+        <div class="current-info">
           <div id="currentName" class="current-name">未选择素材</div>
           <div id="currentMeta" class="current-meta">导入 PNG 后开始</div>
         </div>
+        <div class="zoom-toolbar">
+          <button id="zoomOutBtn" class="zoom-btn" title="缩小">−</button>
+          <button id="zoomInBtn" class="zoom-btn" title="放大">＋</button>
+          <button id="fitBtn" class="zoom-btn wide" title="适应容器">适应</button>
+          <button id="actualBtn" class="zoom-btn wide" title="100%">100%</button>
+          <span id="zoomLabel" class="zoom-label">—</span>
+          <label class="checker-control" for="checkerTheme">
+            <span>透明背景</span>
+            <select id="checkerTheme">
+              <option value="dark" selected>深色格子</option>
+              <option value="light">浅色格子</option>
+            </select>
+          </label>
+        </div>
         <div class="top-actions">
-          <button id="analyzeBtn" class="btn primary" disabled>抠图预览</button>
+          <div class="analyze-action">
+            <button id="analyzeBtn" class="btn primary" disabled>抠图预览</button>
+            <span id="manualMergeHint" class="manual-merge-hint hidden">重新分析会重置手动合并</span>
+          </div>
           <button id="cancelPreviewBtn" class="btn hidden" disabled>取消预览</button>
           <button id="exportBtn" class="btn success" disabled>确认并导出当前</button>
           <button id="exportAllBtn" class="btn" disabled>导出全部已分析</button>
@@ -71,13 +92,6 @@
           <div id="emptyHint" class="empty-hint">一次可导入多张透明图片</div>
           <div id="busy" class="busy hidden">正在分析孤岛…</div>
 
-          <div class="zoom-toolbar">
-            <button id="zoomOutBtn" class="zoom-btn" title="缩小">−</button>
-            <button id="zoomInBtn" class="zoom-btn" title="放大">＋</button>
-            <button id="fitBtn" class="zoom-btn wide" title="适应容器">适应</button>
-            <button id="actualBtn" class="zoom-btn wide" title="100%">100%</button>
-            <span id="zoomLabel" class="zoom-label">—</span>
-          </div>
         </div>
 
         <aside class="panel">
@@ -159,6 +173,16 @@
       </section>
     </main>
   </div>
+
+  <dialog id="mergeDialog" class="merge-dialog" aria-labelledby="mergeTitle">
+    <div class="merge-dialog-head">
+      <strong id="mergeTitle"></strong>
+      <button id="closeMergeBtn" class="zoom-btn" aria-label="关闭合并列表" title="关闭">×</button>
+    </div>
+    <p class="merge-dialog-hint">悬停查看两个部件，点击目标完成合并。</p>
+    <input id="mergeSearch" class="merge-search" type="search" placeholder="搜索部件编号" aria-label="搜索目标部件编号" autocomplete="off" />
+    <div id="mergeTargetList" class="merge-target-list" aria-label="合并目标"></div>
+  </dialog>
 
   <script src="./app.js"></script>
 </body>

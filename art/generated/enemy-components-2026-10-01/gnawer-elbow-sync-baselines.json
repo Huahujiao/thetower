@@ -1,0 +1,8 @@
+{
+    "src/animation/shadow-enemy-components.js":  "8fff7ac0b2fe5f9814632b1938d2809b823116c8f1bace7485595f24df842804",
+    "src/animation/shadow-enemies.js":  "3e6629f862a53f48318344fb5abe70cabf8cd70257e8c02ff3a25c21f7e909ce",
+    "scripts/shadow-rig-check.mjs":  "0d88d2f11e1b737fa38fcb823741a803dc3948a7c4440985da5b3f8af3581acf",
+    "tools/sync-enemy-components.mjs":  "6056d41bbede5ecf38335450e35fbce0c50df21bf66691d07434c9b684480b65",
+    "tools/enemy-component-browser.mjs":  "b39a9e9accc80a8923a1eadf9e702d451ac90dc29c8d04880edb4fcd13a87b5c",
+    "scripts/build-enemy-component-review.py":  "e991bc75336340c3f8e54a8650eed202ad29fe4d36779a484abcb94531cc4428"
+}

@@ -1,0 +1,227 @@
+[
+  {
+    "enemy": "furnace-beetle",
+    "action": "idle",
+    "fraction": 0,
+    "left": 38,
+    "right": 124,
+    "top": 54,
+    "bottom": 111
+  },
+  {
+    "enemy": "furnace-beetle",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 38,
+    "right": 123,
+    "top": 53,
+    "bottom": 110
+  },
+  {
+    "enemy": "furnace-beetle",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 38,
+    "right": 123,
+    "top": 52,
+    "bottom": 110
+  },
+  {
+    "enemy": "furnace-beetle",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 38,
+    "right": 123,
+    "top": 53,
+    "bottom": 110
+  },
+  {
+    "enemy": "furnace-beetle",
+    "action": "idle",
+    "fraction": 1,
+    "left": 38,
+    "right": 124,
+    "top": 54,
+    "bottom": 111
+  },
+  {
+    "enemy": "furnace-beetle",
+    "action": "move",
+    "fraction": 0,
+    "left": 38,
+    "right": 124,
+    "top": 54,
+    "bottom": 111
+  },
+  {
+    "enemy": "furnace-beetle",
+    "action": "move",
+    "fraction": 0.27,
+    "left": 38,
+    "right": 124,
+    "top": 46,
+    "bottom": 112
+  },
+  {
+    "enemy": "furnace-beetle",
+    "action": "move",
+    "fraction": 0.64,
+    "left": 38,
+    "right": 124,
+    "top": 54,
+    "bottom": 111
+  },
+  {
+    "enemy": "furnace-beetle",
+    "action": "move",
+    "fraction": 0.85,
+    "left": 38,
+    "right": 124,
+    "top": 56,
+    "bottom": 112
+  },
+  {
+    "enemy": "furnace-beetle",
+    "action": "move",
+    "fraction": 1,
+    "left": 38,
+    "right": 124,
+    "top": 54,
+    "bottom": 111
+  },
+  {
+    "enemy": "furnace-beetle",
+    "action": "attack",
+    "fraction": 0,
+    "left": 38,
+    "right": 124,
+    "top": 54,
+    "bottom": 111
+  },
+  {
+    "enemy": "furnace-beetle",
+    "action": "attack",
+    "fraction": 0.27,
+    "left": 38,
+    "right": 127,
+    "top": 60,
+    "bottom": 114
+  },
+  {
+    "enemy": "furnace-beetle",
+    "action": "attack",
+    "fraction": 0.64,
+    "left": 39,
+    "right": 121,
+    "top": 41,
+    "bottom": 115
+  },
+  {
+    "enemy": "furnace-beetle",
+    "action": "attack",
+    "fraction": 0.85,
+    "left": 38,
+    "right": 122,
+    "top": 49,
+    "bottom": 112
+  },
+  {
+    "enemy": "furnace-beetle",
+    "action": "attack",
+    "fraction": 1,
+    "left": 38,
+    "right": 124,
+    "top": 54,
+    "bottom": 111
+  },
+  {
+    "enemy": "furnace-beetle",
+    "action": "hit",
+    "fraction": 0,
+    "left": 38,
+    "right": 124,
+    "top": 54,
+    "bottom": 111
+  },
+  {
+    "enemy": "furnace-beetle",
+    "action": "hit",
+    "fraction": 0.27,
+    "left": 46,
+    "right": 131,
+    "top": 46,
+    "bottom": 118
+  },
+  {
+    "enemy": "furnace-beetle",
+    "action": "hit",
+    "fraction": 0.64,
+    "left": 43,
+    "right": 129,
+    "top": 49,
+    "bottom": 115
+  },
+  {
+    "enemy": "furnace-beetle",
+    "action": "hit",
+    "fraction": 0.85,
+    "left": 40,
+    "right": 126,
+    "top": 52,
+    "bottom": 113
+  },
+  {
+    "enemy": "furnace-beetle",
+    "action": "hit",
+    "fraction": 1,
+    "left": 38,
+    "right": 124,
+    "top": 54,
+    "bottom": 111
+  },
+  {
+    "enemy": "furnace-beetle",
+    "action": "death",
+    "fraction": 0,
+    "left": 38,
+    "right": 124,
+    "top": 54,
+    "bottom": 111
+  },
+  {
+    "enemy": "furnace-beetle",
+    "action": "death",
+    "fraction": 0.27,
+    "left": 40,
+    "right": 126,
+    "top": 56,
+    "bottom": 119
+  },
+  {
+    "enemy": "furnace-beetle",
+    "action": "death",
+    "fraction": 0.64,
+    "left": 48,
+    "right": 129,
+    "top": 57,
+    "bottom": 129
+  },
+  {
+    "enemy": "furnace-beetle",
+    "action": "death",
+    "fraction": 0.85,
+    "left": 49,
+    "right": 127,
+    "top": 56,
+    "bottom": 132
+  },
+  {
+    "enemy": "furnace-beetle",
+    "action": "death",
+    "fraction": 1,
+    "left": 49,
+    "right": 125,
+    "top": 51,
+    "bottom": 133
+  }
+]

@@ -10,15 +10,29 @@ import { consumableTargetCells } from '../src/game/rules/attack-range.js'
 import { createMerchantEntity } from '../src/game/data/merchants.js'
 import { enemyOverheadHints } from '../src/game/data/enemy-features.js'
 
-// At the reduced health baseline, most ordinary, unmodified weapons still need
-// at least four neutral hits on ordinary enemies.
-const ordinary = ALL_ITEM_DEFS.filter(item => item.type === 'weapon' && !item.crafted)
-const firstEnemies = ['gnawer', 'emberwing-moth', 'rootrot-bud', 'tide-shadow-cub', 'beetle-guard']
-let slowKills = 0
-for (const id of firstEnemies) for (const weapon of ordinary) {
-  if (Math.ceil(createEnemyById(id).hp / weapon.attack) >= 4) slowKills++
+// The starter sword can defeat the early plant while recovering energy,
+// without a relic, another weapon, or a permanently regenerating stalemate.
+{
+  const run = fixture()
+  const weapon = add(run, 'rust-sword')
+  select(run, weapon)
+  const bud = createEnemyById('rootrot-bud', { c: 4, r: 3 })
+  bud.noLoot = true
+  bud.noExperience = true
+  run.currentRoom.addEntity(bud)
+  let attacks = 0
+  while (run.currentRoom.entity(bud.id) && !run.gameOver && run.globalTurn < 30) {
+    if (run.player.energy >= weapon.energyCost) {
+      assert(run._attack(bud))
+      run.bus.emit('animate:attack-complete', { actor: 'player' })
+      attacks++
+    } else run._endTurn()
+  }
+  assert.equal(run.gameOver, false)
+  assert.equal(run.currentRoom.entity(bud.id), null)
+  assert.equal(attacks, 5)
+  assert(run.player.hp >= 10, 'early plant should leave a useful health reserve')
 }
-assert(slowKills / (ordinary.length * firstEnemies.length) >= 0.9)
 
 {
   const run = new GameRun({ autoLoad: false })

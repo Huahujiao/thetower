@@ -6,6 +6,24 @@ const images = new Map()
 let projects = null
 let assetReady = null
 
+// Align enlarged silhouettes in the 160px card texture without reducing
+// their requested 1.2x display scale.
+const TILE_OFFSETS = {
+  'rootrot-bud': [0, 4],
+  'tide-shadow-cub': [0, -18],
+  'rot-walker': [0, -22],
+  'moss-colossus': [0, 0],
+  wisp: [0, -17],
+  'thorn-shell-flower': [0, 20],
+  'redwheel-fire-crow': [5, 0],
+  'drown-shadow-hunter': [-3, -6],
+  'cinder-curse-lamp-swarm': [-4, -4],
+  'tidal-spore-sac': [0, 35],
+  'revenant-guard': [0, -2.5],
+  'cracked-hunter': [0, -6],
+  'leech-larva': [0, -12],
+}
+
 function imageFor(url) {
   if (!url) return null
   if (!images.has(url)) {
@@ -89,8 +107,9 @@ export function drawEnemyPuppet(context, enemyId, action = 'idle', time = 0) {
   const scale = family === 'humanoid' || family === 'winged' || family === 'quadruped' ? .34
     : family === 'arthropod' ? .35 : .4
   context.save()
-  context.translate(80, 78)
-  context.scale(scale, scale)
+  const [offsetX, offsetY] = TILE_OFFSETS[enemyId] || [0, 0]
+  context.translate(80 + offsetX, 78 + offsetY)
+  context.scale(scale * 1.2, scale * 1.2)
   let drawn = false
   const commands = [
     ...projectShadowFaces(evaluation),

@@ -1,0 +1,325 @@
+{
+  "source": {
+    "name": "08重甲卫士.png",
+    "width": 1254,
+    "height": 1254,
+    "type": "image/png",
+    "size": 2473953
+  },
+  "settings": {
+    "alphaThreshold": 28,
+    "minArea": 201,
+    "padding": 0,
+    "mergeRadius": 0,
+    "connectivity": 8
+  },
+  "generatedAt": "2026-10-01T11:18:10.367Z",
+  "parts": [
+    {
+      "id": 1,
+      "file": "parts/part_001.png",
+      "sourceBounds": {
+        "x": 17,
+        "y": 6,
+        "width": 305,
+        "height": 568
+      },
+      "exportBounds": {
+        "x": 17,
+        "y": 6,
+        "width": 305,
+        "height": 568
+      },
+      "area": 128587
+    },
+    {
+      "id": 2,
+      "file": "parts/part_002.png",
+      "sourceBounds": {
+        "x": 798,
+        "y": 6,
+        "width": 279,
+        "height": 568
+      },
+      "exportBounds": {
+        "x": 798,
+        "y": 6,
+        "width": 279,
+        "height": 568
+      },
+      "area": 117963
+    },
+    {
+      "id": 3,
+      "file": "parts/part_003.png",
+      "sourceBounds": {
+        "x": 326,
+        "y": 9,
+        "width": 290,
+        "height": 616
+      },
+      "exportBounds": {
+        "x": 326,
+        "y": 9,
+        "width": 290,
+        "height": 616
+      },
+      "area": 130944
+    },
+    {
+      "id": 4,
+      "file": "parts/part_004.png",
+      "sourceBounds": {
+        "x": 633,
+        "y": 21,
+        "width": 157,
+        "height": 557
+      },
+      "exportBounds": {
+        "x": 633,
+        "y": 21,
+        "width": 157,
+        "height": 557
+      },
+      "area": 60003
+    },
+    {
+      "id": 5,
+      "file": "parts/part_005.png",
+      "sourceBounds": {
+        "x": 1067,
+        "y": 142,
+        "width": 175,
+        "height": 249
+      },
+      "exportBounds": {
+        "x": 1067,
+        "y": 142,
+        "width": 175,
+        "height": 249
+      },
+      "area": 28582
+    },
+    {
+      "id": 6,
+      "file": "parts/part_006.png",
+      "sourceBounds": {
+        "x": 1083,
+        "y": 393,
+        "width": 139,
+        "height": 105
+      },
+      "exportBounds": {
+        "x": 1083,
+        "y": 393,
+        "width": 139,
+        "height": 105
+      },
+      "area": 8413
+    },
+    {
+      "id": 7,
+      "file": "parts/part_007.png",
+      "sourceBounds": {
+        "x": 36,
+        "y": 552,
+        "width": 273,
+        "height": 303
+      },
+      "exportBounds": {
+        "x": 36,
+        "y": 552,
+        "width": 273,
+        "height": 303
+      },
+      "area": 45523
+    },
+    {
+      "id": 8,
+      "file": "parts/part_008.png",
+      "sourceBounds": {
+        "x": 575,
+        "y": 554,
+        "width": 143,
+        "height": 459
+      },
+      "exportBounds": {
+        "x": 575,
+        "y": 554,
+        "width": 143,
+        "height": 459
+      },
+      "area": 25605
+    },
+    {
+      "id": 9,
+      "file": "parts/part_009.png",
+      "sourceBounds": {
+        "x": 714,
+        "y": 557,
+        "width": 274,
+        "height": 303
+      },
+      "exportBounds": {
+        "x": 714,
+        "y": 557,
+        "width": 274,
+        "height": 303
+      },
+      "area": 45606
+    },
+    {
+      "id": 10,
+      "file": "parts/part_010.png",
+      "sourceBounds": {
+        "x": 338,
+        "y": 598,
+        "width": 258,
+        "height": 334
+      },
+      "exportBounds": {
+        "x": 338,
+        "y": 598,
+        "width": 258,
+        "height": 334
+      },
+      "area": 53797
+    },
+    {
+      "id": 11,
+      "file": "parts/part_011.png",
+      "sourceBounds": {
+        "x": 1175,
+        "y": 607,
+        "width": 61,
+        "height": 247
+      },
+      "exportBounds": {
+        "x": 1175,
+        "y": 607,
+        "width": 61,
+        "height": 247
+      },
+      "area": 7727
+    },
+    {
+      "id": 12,
+      "file": "parts/part_012.png",
+      "sourceBounds": {
+        "x": 994,
+        "y": 613,
+        "width": 53,
+        "height": 237
+      },
+      "exportBounds": {
+        "x": 994,
+        "y": 613,
+        "width": 53,
+        "height": 237
+      },
+      "area": 6791
+    },
+    {
+      "id": 13,
+      "file": "parts/part_013.png",
+      "sourceBounds": {
+        "x": 1115,
+        "y": 615,
+        "width": 48,
+        "height": 247
+      },
+      "exportBounds": {
+        "x": 1115,
+        "y": 615,
+        "width": 48,
+        "height": 247
+      },
+      "area": 6434
+    },
+    {
+      "id": 14,
+      "file": "parts/part_014.png",
+      "sourceBounds": {
+        "x": 1056,
+        "y": 636,
+        "width": 52,
+        "height": 210
+      },
+      "exportBounds": {
+        "x": 1056,
+        "y": 636,
+        "width": 52,
+        "height": 210
+      },
+      "area": 5388
+    },
+    {
+      "id": 15,
+      "file": "parts/part_015.png",
+      "sourceBounds": {
+        "x": 10,
+        "y": 847,
+        "width": 242,
+        "height": 360
+      },
+      "exportBounds": {
+        "x": 10,
+        "y": 847,
+        "width": 242,
+        "height": 360
+      },
+      "area": 44958
+    },
+    {
+      "id": 16,
+      "file": "parts/part_016.png",
+      "sourceBounds": {
+        "x": 996,
+        "y": 852,
+        "width": 248,
+        "height": 355
+      },
+      "exportBounds": {
+        "x": 996,
+        "y": 852,
+        "width": 248,
+        "height": 355
+      },
+      "area": 44926
+    },
+    {
+      "id": 17,
+      "file": "parts/part_017.png",
+      "sourceBounds": {
+        "x": 632,
+        "y": 891,
+        "width": 395,
+        "height": 355
+      },
+      "exportBounds": {
+        "x": 632,
+        "y": 891,
+        "width": 395,
+        "height": 355
+      },
+      "area": 49550
+    },
+    {
+      "id": 18,
+      "file": "parts/part_018.png",
+      "sourceBounds": {
+        "x": 212,
+        "y": 893,
+        "width": 385,
+        "height": 348
+      },
+      "exportBounds": {
+        "x": 212,
+        "y": 893,
+        "width": 385,
+        "height": 348
+      },
+      "area": 46316
+    }
+  ]
+}

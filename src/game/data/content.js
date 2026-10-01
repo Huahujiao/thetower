@@ -186,6 +186,22 @@ export function createMonster(floor, index = 0) {
   return createEnemy(enemyDefinitionFor(floor, index))
 }
 
+// Update old saves once, preserving damage already dealt and combat state.
+export function synchronizeEnemyBalance(enemy) {
+  if (enemy.hpMultiplier === ENEMY_HP_MULTIPLIER) return
+  const definition = enemy.enemyId === BOSS.id ? BOSS : getEnemyDefinition(enemy.enemyId)
+  if (!definition) return
+  const fraction = Math.max(0, Math.min(1, enemy.hp / enemy.maxHp))
+  enemy.maxHp = definition.hp * ENEMY_HP_MULTIPLIER
+  enemy.hp = Math.ceil(enemy.maxHp * fraction)
+  enemy.hpMultiplier = ENEMY_HP_MULTIPLIER
+  enemy.attack = definition.attack
+  enemy.range = definition.range
+  enemy.traits = [...(definition.traits || [])]
+  enemy.regen = definition.regen || 0
+  enemy.deathStatusTurns = definition.deathStatusTurns || 0
+}
+
 export function createEnemyById(enemyId, position = null) {
   return createEnemy(getEnemyDefinition(enemyId), { position })
 }

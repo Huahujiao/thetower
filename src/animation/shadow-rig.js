@@ -94,8 +94,8 @@ export function shadowTargetKey(kind, id) {
   return `${kind}:${id}`
 }
 
-export function createShadowJoint({ id = nextId('joint'), name = '\u5173\u8282', x = 0, y = 0, z = 0, rotationX = 0, rotationY = 0, rotationZ = 0 } = {}) {
-  return { id, name, x, y, z, rotationX, rotationY, rotationZ }
+export function createShadowJoint({ id = nextId('joint'), name = '\u5173\u8282', x = 0, y = 0, z = 0, rotationX = 0, rotationY = 0, rotationZ = 0, scaleX = 1 } = {}) {
+  return { id, name, x, y, z, rotationX, rotationY, rotationZ, scaleX }
 }
 
 export function createShadowBone({ id = nextId('bone'), name = '\u9aa8\u9abc', fromJointId, toJointId } = {}) {
@@ -156,6 +156,7 @@ function normalizeJoint(source, index) {
     rotationX: finite(source?.rotationX, 0),
     rotationY: finite(source?.rotationY, 0),
     rotationZ: finite(source?.rotationZ ?? source?.rotation, 0),
+    scaleX: Math.max(.01, finite(source?.scaleX, 1)),
   })
 }
 
@@ -591,7 +592,7 @@ export function evaluateShadowProject(project, animationId = null, time = 0) {
     if (jointCache.has(joint.id)) return jointCache.get(joint.id)
     const pose = animationEntry ? sampleShadowTrack(animationEntry, shadowTargetKey('joint', joint.id), time) : defaultShadowPose()
     if (resolving.has(joint.id)) {
-      const matrix = shadowTransformMatrix({ x: joint.x + pose.dx, y: joint.y + pose.dy, z: joint.z + pose.dz, rotationX: joint.rotationX + pose.rotationX, rotationY: joint.rotationY + pose.rotationY, rotationZ: joint.rotationZ + pose.rotationZ, scaleX: pose.scaleX, scaleY: pose.scaleY, scaleZ: pose.scaleZ })
+      const matrix = shadowTransformMatrix({ x: joint.x + pose.dx, y: joint.y + pose.dy, z: joint.z + pose.dz, rotationX: joint.rotationX + pose.rotationX, rotationY: joint.rotationY + pose.rotationY, rotationZ: joint.rotationZ + pose.rotationZ, scaleX: (joint.scaleX ?? 1) * pose.scaleX, scaleY: pose.scaleY, scaleZ: pose.scaleZ })
       return { joint, pose, matrix, parentMatrix: new Matrix4() }
     }
     resolving.add(joint.id)
@@ -599,7 +600,7 @@ export function evaluateShadowProject(project, animationId = null, time = 0) {
     const parent = bone ? jointsById.get(bone.fromJointId) : null
     const parentEntry = parent ? resolveJoint(parent) : null
     const parentMatrix = parentEntry?.matrix || new Matrix4()
-    const local = shadowTransformMatrix({ x: joint.x + pose.dx, y: joint.y + pose.dy, z: joint.z + pose.dz, rotationX: joint.rotationX + pose.rotationX, rotationY: joint.rotationY + pose.rotationY, rotationZ: joint.rotationZ + pose.rotationZ, scaleX: pose.scaleX, scaleY: pose.scaleY, scaleZ: pose.scaleZ })
+    const local = shadowTransformMatrix({ x: joint.x + pose.dx, y: joint.y + pose.dy, z: joint.z + pose.dz, rotationX: joint.rotationX + pose.rotationX, rotationY: joint.rotationY + pose.rotationY, rotationZ: joint.rotationZ + pose.rotationZ, scaleX: (joint.scaleX ?? 1) * pose.scaleX, scaleY: pose.scaleY, scaleZ: pose.scaleZ })
     const matrix = parent ? multiplyShadowMatrices(parentMatrix, local) : local
     resolving.delete(joint.id)
     const result = { joint, pose, matrix, parentMatrix }

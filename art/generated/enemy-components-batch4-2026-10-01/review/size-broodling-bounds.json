@@ -1,0 +1,227 @@
+[
+  {
+    "enemy": "broodling",
+    "action": "idle",
+    "fraction": 0,
+    "left": 38,
+    "right": 112,
+    "top": 65,
+    "bottom": 108
+  },
+  {
+    "enemy": "broodling",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 38,
+    "right": 112,
+    "top": 65,
+    "bottom": 108
+  },
+  {
+    "enemy": "broodling",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 39,
+    "right": 112,
+    "top": 65,
+    "bottom": 108
+  },
+  {
+    "enemy": "broodling",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 38,
+    "right": 112,
+    "top": 65,
+    "bottom": 108
+  },
+  {
+    "enemy": "broodling",
+    "action": "idle",
+    "fraction": 1,
+    "left": 38,
+    "right": 112,
+    "top": 65,
+    "bottom": 108
+  },
+  {
+    "enemy": "broodling",
+    "action": "move",
+    "fraction": 0,
+    "left": 38,
+    "right": 112,
+    "top": 65,
+    "bottom": 108
+  },
+  {
+    "enemy": "broodling",
+    "action": "move",
+    "fraction": 0.27,
+    "left": 41,
+    "right": 111,
+    "top": 64,
+    "bottom": 108
+  },
+  {
+    "enemy": "broodling",
+    "action": "move",
+    "fraction": 0.64,
+    "left": 36,
+    "right": 113,
+    "top": 65,
+    "bottom": 107
+  },
+  {
+    "enemy": "broodling",
+    "action": "move",
+    "fraction": 0.85,
+    "left": 37,
+    "right": 112,
+    "top": 65,
+    "bottom": 108
+  },
+  {
+    "enemy": "broodling",
+    "action": "move",
+    "fraction": 1,
+    "left": 38,
+    "right": 112,
+    "top": 65,
+    "bottom": 108
+  },
+  {
+    "enemy": "broodling",
+    "action": "attack",
+    "fraction": 0,
+    "left": 38,
+    "right": 112,
+    "top": 65,
+    "bottom": 108
+  },
+  {
+    "enemy": "broodling",
+    "action": "attack",
+    "fraction": 0.27,
+    "left": 35,
+    "right": 111,
+    "top": 64,
+    "bottom": 109
+  },
+  {
+    "enemy": "broodling",
+    "action": "attack",
+    "fraction": 0.64,
+    "left": 42,
+    "right": 113,
+    "top": 63,
+    "bottom": 109
+  },
+  {
+    "enemy": "broodling",
+    "action": "attack",
+    "fraction": 0.85,
+    "left": 40,
+    "right": 112,
+    "top": 65,
+    "bottom": 108
+  },
+  {
+    "enemy": "broodling",
+    "action": "attack",
+    "fraction": 1,
+    "left": 38,
+    "right": 112,
+    "top": 65,
+    "bottom": 108
+  },
+  {
+    "enemy": "broodling",
+    "action": "hit",
+    "fraction": 0,
+    "left": 38,
+    "right": 112,
+    "top": 65,
+    "bottom": 108
+  },
+  {
+    "enemy": "broodling",
+    "action": "hit",
+    "fraction": 0.27,
+    "left": 43,
+    "right": 120,
+    "top": 64,
+    "bottom": 111
+  },
+  {
+    "enemy": "broodling",
+    "action": "hit",
+    "fraction": 0.64,
+    "left": 41,
+    "right": 116,
+    "top": 65,
+    "bottom": 109
+  },
+  {
+    "enemy": "broodling",
+    "action": "hit",
+    "fraction": 0.85,
+    "left": 39,
+    "right": 114,
+    "top": 65,
+    "bottom": 108
+  },
+  {
+    "enemy": "broodling",
+    "action": "hit",
+    "fraction": 1,
+    "left": 38,
+    "right": 112,
+    "top": 65,
+    "bottom": 108
+  },
+  {
+    "enemy": "broodling",
+    "action": "death",
+    "fraction": 0,
+    "left": 38,
+    "right": 112,
+    "top": 65,
+    "bottom": 108
+  },
+  {
+    "enemy": "broodling",
+    "action": "death",
+    "fraction": 0.27,
+    "left": 41,
+    "right": 113,
+    "top": 67,
+    "bottom": 113
+  },
+  {
+    "enemy": "broodling",
+    "action": "death",
+    "fraction": 0.64,
+    "left": 48,
+    "right": 115,
+    "top": 67,
+    "bottom": 119
+  },
+  {
+    "enemy": "broodling",
+    "action": "death",
+    "fraction": 0.85,
+    "left": 52,
+    "right": 115,
+    "top": 65,
+    "bottom": 123
+  },
+  {
+    "enemy": "broodling",
+    "action": "death",
+    "fraction": 1,
+    "left": 55,
+    "right": 114,
+    "top": 63,
+    "bottom": 124
+  }
+]

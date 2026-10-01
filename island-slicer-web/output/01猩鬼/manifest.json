@@ -1,0 +1,393 @@
+{
+  "source": {
+    "name": "01猩鬼.png",
+    "width": 1254,
+    "height": 1254,
+    "type": "image/png",
+    "size": 2542199
+  },
+  "settings": {
+    "alphaThreshold": 28,
+    "minArea": 201,
+    "padding": 0,
+    "mergeRadius": 0,
+    "connectivity": 8
+  },
+  "generatedAt": "2026-10-01T07:00:59.027Z",
+  "parts": [
+    {
+      "id": 1,
+      "file": "parts/part_001.png",
+      "sourceBounds": {
+        "x": 497,
+        "y": 9,
+        "width": 300,
+        "height": 343
+      },
+      "exportBounds": {
+        "x": 497,
+        "y": 9,
+        "width": 300,
+        "height": 343
+      },
+      "area": 67627
+    },
+    {
+      "id": 2,
+      "file": "parts/part_002.png",
+      "sourceBounds": {
+        "x": 194,
+        "y": 12,
+        "width": 304,
+        "height": 320
+      },
+      "exportBounds": {
+        "x": 194,
+        "y": 12,
+        "width": 304,
+        "height": 320
+      },
+      "area": 60777
+    },
+    {
+      "id": 3,
+      "file": "parts/part_003.png",
+      "sourceBounds": {
+        "x": 803,
+        "y": 13,
+        "width": 268,
+        "height": 158
+      },
+      "exportBounds": {
+        "x": 803,
+        "y": 13,
+        "width": 268,
+        "height": 158
+      },
+      "area": 21959
+    },
+    {
+      "id": 4,
+      "file": "parts/part_004.png",
+      "sourceBounds": {
+        "x": 17,
+        "y": 76,
+        "width": 174,
+        "height": 324
+      },
+      "exportBounds": {
+        "x": 17,
+        "y": 76,
+        "width": 174,
+        "height": 324
+      },
+      "area": 35982
+    },
+    {
+      "id": 5,
+      "file": "parts/part_005.png",
+      "sourceBounds": {
+        "x": 1073,
+        "y": 77,
+        "width": 163,
+        "height": 324
+      },
+      "exportBounds": {
+        "x": 1073,
+        "y": 77,
+        "width": 163,
+        "height": 324
+      },
+      "area": 35124
+    },
+    {
+      "id": 6,
+      "file": "parts/part_006.png",
+      "sourceBounds": {
+        "x": 939,
+        "y": 173,
+        "width": 128,
+        "height": 164
+      },
+      "exportBounds": {
+        "x": 939,
+        "y": 173,
+        "width": 128,
+        "height": 164
+      },
+      "area": 14801
+    },
+    {
+      "id": 7,
+      "file": "parts/part_007.png",
+      "sourceBounds": {
+        "x": 802,
+        "y": 175,
+        "width": 132,
+        "height": 184
+      },
+      "exportBounds": {
+        "x": 802,
+        "y": 175,
+        "width": 132,
+        "height": 184
+      },
+      "area": 15508
+    },
+    {
+      "id": 8,
+      "file": "parts/part_008.png",
+      "sourceBounds": {
+        "x": 43,
+        "y": 303,
+        "width": 390,
+        "height": 941
+      },
+      "exportBounds": {
+        "x": 43,
+        "y": 303,
+        "width": 390,
+        "height": 941
+      },
+      "area": 132640
+    },
+    {
+      "id": 9,
+      "file": "parts/part_009.png",
+      "sourceBounds": {
+        "x": 833,
+        "y": 321,
+        "width": 396,
+        "height": 923
+      },
+      "exportBounds": {
+        "x": 833,
+        "y": 321,
+        "width": 396,
+        "height": 923
+      },
+      "area": 124924
+    },
+    {
+      "id": 10,
+      "file": "parts/part_010.png",
+      "sourceBounds": {
+        "x": 705,
+        "y": 343,
+        "width": 178,
+        "height": 288
+      },
+      "exportBounds": {
+        "x": 705,
+        "y": 343,
+        "width": 178,
+        "height": 288
+      },
+      "area": 32710
+    },
+    {
+      "id": 11,
+      "file": "parts/part_011.png",
+      "sourceBounds": {
+        "x": 398,
+        "y": 344,
+        "width": 177,
+        "height": 288
+      },
+      "exportBounds": {
+        "x": 398,
+        "y": 344,
+        "width": 177,
+        "height": 288
+      },
+      "area": 32785
+    },
+    {
+      "id": 12,
+      "file": "parts/part_012.png",
+      "sourceBounds": {
+        "x": 565,
+        "y": 359,
+        "width": 151,
+        "height": 280
+      },
+      "exportBounds": {
+        "x": 565,
+        "y": 359,
+        "width": 151,
+        "height": 280
+      },
+      "area": 30706
+    },
+    {
+      "id": 13,
+      "file": "parts/part_013.png",
+      "sourceBounds": {
+        "x": 1070,
+        "y": 408,
+        "width": 174,
+        "height": 446
+      },
+      "exportBounds": {
+        "x": 1070,
+        "y": 408,
+        "width": 174,
+        "height": 446
+      },
+      "area": 43573
+    },
+    {
+      "id": 14,
+      "file": "parts/part_014.png",
+      "sourceBounds": {
+        "x": 10,
+        "y": 409,
+        "width": 178,
+        "height": 434
+      },
+      "exportBounds": {
+        "x": 10,
+        "y": 409,
+        "width": 178,
+        "height": 434
+      },
+      "area": 42358
+    },
+    {
+      "id": 15,
+      "file": "parts/part_015.png",
+      "sourceBounds": {
+        "x": 499,
+        "y": 601,
+        "width": 283,
+        "height": 278
+      },
+      "exportBounds": {
+        "x": 499,
+        "y": 601,
+        "width": 283,
+        "height": 278
+      },
+      "area": 48616
+    },
+    {
+      "id": 16,
+      "file": "parts/part_016.png",
+      "sourceBounds": {
+        "x": 180,
+        "y": 778,
+        "width": 54,
+        "height": 131
+      },
+      "exportBounds": {
+        "x": 180,
+        "y": 778,
+        "width": 54,
+        "height": 131
+      },
+      "area": 4128
+    },
+    {
+      "id": 17,
+      "file": "parts/part_017.png",
+      "sourceBounds": {
+        "x": 1021,
+        "y": 779,
+        "width": 54,
+        "height": 131
+      },
+      "exportBounds": {
+        "x": 1021,
+        "y": 779,
+        "width": 54,
+        "height": 131
+      },
+      "area": 4150
+    },
+    {
+      "id": 18,
+      "file": "parts/part_018.png",
+      "sourceBounds": {
+        "x": 397,
+        "y": 818,
+        "width": 509,
+        "height": 422
+      },
+      "exportBounds": {
+        "x": 397,
+        "y": 818,
+        "width": 509,
+        "height": 422
+      },
+      "area": 130348
+    },
+    {
+      "id": 19,
+      "file": "parts/part_019.png",
+      "sourceBounds": {
+        "x": 113,
+        "y": 848,
+        "width": 63,
+        "height": 143
+      },
+      "exportBounds": {
+        "x": 113,
+        "y": 848,
+        "width": 63,
+        "height": 143
+      },
+      "area": 4960
+    },
+    {
+      "id": 20,
+      "file": "parts/part_020.png",
+      "sourceBounds": {
+        "x": 28,
+        "y": 851,
+        "width": 79,
+        "height": 134
+      },
+      "exportBounds": {
+        "x": 28,
+        "y": 851,
+        "width": 79,
+        "height": 134
+      },
+      "area": 4777
+    },
+    {
+      "id": 21,
+      "file": "parts/part_021.png",
+      "sourceBounds": {
+        "x": 1077,
+        "y": 853,
+        "width": 64,
+        "height": 141
+      },
+      "exportBounds": {
+        "x": 1077,
+        "y": 853,
+        "width": 64,
+        "height": 141
+      },
+      "area": 4910
+    },
+    {
+      "id": 22,
+      "file": "parts/part_022.png",
+      "sourceBounds": {
+        "x": 1151,
+        "y": 854,
+        "width": 76,
+        "height": 131
+      },
+      "exportBounds": {
+        "x": 1151,
+        "y": 854,
+        "width": 76,
+        "height": 131
+      },
+      "area": 4504
+    }
+  ]
+}

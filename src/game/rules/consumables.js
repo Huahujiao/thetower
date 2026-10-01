@@ -74,8 +74,7 @@ export class ConsumableRules {
   }
   perform(item, position, multiplier) {
     const { run } = this
-    if (item.type === 'potion') run._healPlayer(item.heal + (run.hasTalent('survival-heal') ? 2 : 0) +
-      (run.hasTalent('survival-last') && run.player.hp <= run.player.maxHp / 4 ? 5 : 0), { source: 'item:potion' })
+    if (item.type === 'potion') run._healPlayer(item.heal, { source: 'item:potion' })
     if (item.type === 'energy') run._recoverEnergy(item.energy)
     if (item.type === 'armor') run.itemRules.armor(item.armor)
     if (item.type === 'cleanse') {

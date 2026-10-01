@@ -1,0 +1,227 @@
+[
+  {
+    "enemy": "cracked-hunter",
+    "action": "idle",
+    "fraction": 0,
+    "left": 63,
+    "right": 98,
+    "top": 41,
+    "bottom": 143
+  },
+  {
+    "enemy": "cracked-hunter",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 63,
+    "right": 98,
+    "top": 41,
+    "bottom": 143
+  },
+  {
+    "enemy": "cracked-hunter",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 63,
+    "right": 97,
+    "top": 41,
+    "bottom": 143
+  },
+  {
+    "enemy": "cracked-hunter",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 63,
+    "right": 98,
+    "top": 41,
+    "bottom": 143
+  },
+  {
+    "enemy": "cracked-hunter",
+    "action": "idle",
+    "fraction": 1,
+    "left": 63,
+    "right": 98,
+    "top": 41,
+    "bottom": 143
+  },
+  {
+    "enemy": "cracked-hunter",
+    "action": "move",
+    "fraction": 0,
+    "left": 63,
+    "right": 98,
+    "top": 41,
+    "bottom": 143
+  },
+  {
+    "enemy": "cracked-hunter",
+    "action": "move",
+    "fraction": 0.27,
+    "left": 62,
+    "right": 102,
+    "top": 41,
+    "bottom": 141
+  },
+  {
+    "enemy": "cracked-hunter",
+    "action": "move",
+    "fraction": 0.64,
+    "left": 63,
+    "right": 97,
+    "top": 41,
+    "bottom": 142
+  },
+  {
+    "enemy": "cracked-hunter",
+    "action": "move",
+    "fraction": 0.85,
+    "left": 63,
+    "right": 97,
+    "top": 40,
+    "bottom": 142
+  },
+  {
+    "enemy": "cracked-hunter",
+    "action": "move",
+    "fraction": 1,
+    "left": 63,
+    "right": 98,
+    "top": 41,
+    "bottom": 143
+  },
+  {
+    "enemy": "cracked-hunter",
+    "action": "attack",
+    "fraction": 0,
+    "left": 63,
+    "right": 98,
+    "top": 41,
+    "bottom": 143
+  },
+  {
+    "enemy": "cracked-hunter",
+    "action": "attack",
+    "fraction": 0.27,
+    "left": 63,
+    "right": 102,
+    "top": 41,
+    "bottom": 143
+  },
+  {
+    "enemy": "cracked-hunter",
+    "action": "attack",
+    "fraction": 0.64,
+    "left": 60,
+    "right": 124,
+    "top": 41,
+    "bottom": 144
+  },
+  {
+    "enemy": "cracked-hunter",
+    "action": "attack",
+    "fraction": 0.85,
+    "left": 63,
+    "right": 107,
+    "top": 41,
+    "bottom": 144
+  },
+  {
+    "enemy": "cracked-hunter",
+    "action": "attack",
+    "fraction": 1,
+    "left": 63,
+    "right": 98,
+    "top": 41,
+    "bottom": 143
+  },
+  {
+    "enemy": "cracked-hunter",
+    "action": "hit",
+    "fraction": 0,
+    "left": 63,
+    "right": 98,
+    "top": 41,
+    "bottom": 143
+  },
+  {
+    "enemy": "cracked-hunter",
+    "action": "hit",
+    "fraction": 0.27,
+    "left": 62,
+    "right": 118,
+    "top": 42,
+    "bottom": 138
+  },
+  {
+    "enemy": "cracked-hunter",
+    "action": "hit",
+    "fraction": 0.64,
+    "left": 63,
+    "right": 110,
+    "top": 41,
+    "bottom": 141
+  },
+  {
+    "enemy": "cracked-hunter",
+    "action": "hit",
+    "fraction": 0.85,
+    "left": 63,
+    "right": 103,
+    "top": 41,
+    "bottom": 142
+  },
+  {
+    "enemy": "cracked-hunter",
+    "action": "hit",
+    "fraction": 1,
+    "left": 63,
+    "right": 98,
+    "top": 41,
+    "bottom": 143
+  },
+  {
+    "enemy": "cracked-hunter",
+    "action": "death",
+    "fraction": 0,
+    "left": 63,
+    "right": 98,
+    "top": 41,
+    "bottom": 143
+  },
+  {
+    "enemy": "cracked-hunter",
+    "action": "death",
+    "fraction": 0.27,
+    "left": 61,
+    "right": 104,
+    "top": 43,
+    "bottom": 144
+  },
+  {
+    "enemy": "cracked-hunter",
+    "action": "death",
+    "fraction": 0.64,
+    "left": 58,
+    "right": 109,
+    "top": 49,
+    "bottom": 143
+  },
+  {
+    "enemy": "cracked-hunter",
+    "action": "death",
+    "fraction": 0.85,
+    "left": 56,
+    "right": 106,
+    "top": 53,
+    "bottom": 137
+  },
+  {
+    "enemy": "cracked-hunter",
+    "action": "death",
+    "fraction": 1,
+    "left": 55,
+    "right": 106,
+    "top": 57,
+    "bottom": 132
+  }
+]

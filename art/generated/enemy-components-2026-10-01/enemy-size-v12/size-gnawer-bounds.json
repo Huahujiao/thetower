@@ -1,0 +1,227 @@
+[
+  {
+    "enemy": "gnawer",
+    "action": "idle",
+    "fraction": 0,
+    "left": 54,
+    "right": 107,
+    "top": 18,
+    "bottom": 159
+  },
+  {
+    "enemy": "gnawer",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 53,
+    "right": 107,
+    "top": 17,
+    "bottom": 158
+  },
+  {
+    "enemy": "gnawer",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 53,
+    "right": 107,
+    "top": 17,
+    "bottom": 157
+  },
+  {
+    "enemy": "gnawer",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 54,
+    "right": 107,
+    "top": 17,
+    "bottom": 158
+  },
+  {
+    "enemy": "gnawer",
+    "action": "idle",
+    "fraction": 1,
+    "left": 54,
+    "right": 107,
+    "top": 18,
+    "bottom": 159
+  },
+  {
+    "enemy": "gnawer",
+    "action": "move",
+    "fraction": 0,
+    "left": 54,
+    "right": 107,
+    "top": 18,
+    "bottom": 159
+  },
+  {
+    "enemy": "gnawer",
+    "action": "move",
+    "fraction": 0.27,
+    "left": 37,
+    "right": 115,
+    "top": 14,
+    "bottom": 153
+  },
+  {
+    "enemy": "gnawer",
+    "action": "move",
+    "fraction": 0.64,
+    "left": 39,
+    "right": 102,
+    "top": 16,
+    "bottom": 156
+  },
+  {
+    "enemy": "gnawer",
+    "action": "move",
+    "fraction": 0.85,
+    "left": 43,
+    "right": 104,
+    "top": 16,
+    "bottom": 157
+  },
+  {
+    "enemy": "gnawer",
+    "action": "move",
+    "fraction": 1,
+    "left": 54,
+    "right": 107,
+    "top": 18,
+    "bottom": 159
+  },
+  {
+    "enemy": "gnawer",
+    "action": "attack",
+    "fraction": 0,
+    "left": 54,
+    "right": 107,
+    "top": 18,
+    "bottom": 159
+  },
+  {
+    "enemy": "gnawer",
+    "action": "attack",
+    "fraction": 0.27,
+    "left": 55,
+    "right": 120,
+    "top": 18,
+    "bottom": 163
+  },
+  {
+    "enemy": "gnawer",
+    "action": "attack",
+    "fraction": 0.64,
+    "left": 23,
+    "right": 125,
+    "top": 18,
+    "bottom": 159
+  },
+  {
+    "enemy": "gnawer",
+    "action": "attack",
+    "fraction": 0.85,
+    "left": 37,
+    "right": 118,
+    "top": 18,
+    "bottom": 159
+  },
+  {
+    "enemy": "gnawer",
+    "action": "attack",
+    "fraction": 1,
+    "left": 54,
+    "right": 107,
+    "top": 18,
+    "bottom": 159
+  },
+  {
+    "enemy": "gnawer",
+    "action": "hit",
+    "fraction": 0,
+    "left": 54,
+    "right": 107,
+    "top": 18,
+    "bottom": 159
+  },
+  {
+    "enemy": "gnawer",
+    "action": "hit",
+    "fraction": 0.27,
+    "left": 50,
+    "right": 111,
+    "top": 19,
+    "bottom": 163
+  },
+  {
+    "enemy": "gnawer",
+    "action": "hit",
+    "fraction": 0.64,
+    "left": 52,
+    "right": 107,
+    "top": 18,
+    "bottom": 161
+  },
+  {
+    "enemy": "gnawer",
+    "action": "hit",
+    "fraction": 0.85,
+    "left": 54,
+    "right": 105,
+    "top": 18,
+    "bottom": 160
+  },
+  {
+    "enemy": "gnawer",
+    "action": "hit",
+    "fraction": 1,
+    "left": 54,
+    "right": 107,
+    "top": 18,
+    "bottom": 159
+  },
+  {
+    "enemy": "gnawer",
+    "action": "death",
+    "fraction": 0,
+    "left": 54,
+    "right": 107,
+    "top": 18,
+    "bottom": 159
+  },
+  {
+    "enemy": "gnawer",
+    "action": "death",
+    "fraction": 0.27,
+    "left": 49,
+    "right": 119,
+    "top": 33,
+    "bottom": 173
+  },
+  {
+    "enemy": "gnawer",
+    "action": "death",
+    "fraction": 0.64,
+    "left": 36,
+    "right": 109,
+    "top": 55,
+    "bottom": 185
+  },
+  {
+    "enemy": "gnawer",
+    "action": "death",
+    "fraction": 0.85,
+    "left": 17,
+    "right": 126,
+    "top": 84,
+    "bottom": 183
+  },
+  {
+    "enemy": "gnawer",
+    "action": "death",
+    "fraction": 1,
+    "left": 11,
+    "right": 129,
+    "top": 93,
+    "bottom": 174
+  }
+]

@@ -1,0 +1,227 @@
+[
+  {
+    "enemy": "tidal-spore-sac",
+    "action": "idle",
+    "fraction": 0,
+    "left": 48,
+    "right": 106,
+    "top": 63,
+    "bottom": 144
+  },
+  {
+    "enemy": "tidal-spore-sac",
+    "action": "idle",
+    "fraction": 0.27,
+    "left": 47,
+    "right": 106,
+    "top": 62,
+    "bottom": 144
+  },
+  {
+    "enemy": "tidal-spore-sac",
+    "action": "idle",
+    "fraction": 0.64,
+    "left": 47,
+    "right": 106,
+    "top": 62,
+    "bottom": 143
+  },
+  {
+    "enemy": "tidal-spore-sac",
+    "action": "idle",
+    "fraction": 0.85,
+    "left": 48,
+    "right": 106,
+    "top": 62,
+    "bottom": 144
+  },
+  {
+    "enemy": "tidal-spore-sac",
+    "action": "idle",
+    "fraction": 1,
+    "left": 48,
+    "right": 106,
+    "top": 63,
+    "bottom": 144
+  },
+  {
+    "enemy": "tidal-spore-sac",
+    "action": "move",
+    "fraction": 0,
+    "left": 48,
+    "right": 106,
+    "top": 63,
+    "bottom": 144
+  },
+  {
+    "enemy": "tidal-spore-sac",
+    "action": "move",
+    "fraction": 0.27,
+    "left": 45,
+    "right": 105,
+    "top": 62,
+    "bottom": 143
+  },
+  {
+    "enemy": "tidal-spore-sac",
+    "action": "move",
+    "fraction": 0.64,
+    "left": 48,
+    "right": 106,
+    "top": 62,
+    "bottom": 143
+  },
+  {
+    "enemy": "tidal-spore-sac",
+    "action": "move",
+    "fraction": 0.85,
+    "left": 49,
+    "right": 107,
+    "top": 62,
+    "bottom": 143
+  },
+  {
+    "enemy": "tidal-spore-sac",
+    "action": "move",
+    "fraction": 1,
+    "left": 48,
+    "right": 106,
+    "top": 63,
+    "bottom": 144
+  },
+  {
+    "enemy": "tidal-spore-sac",
+    "action": "attack",
+    "fraction": 0,
+    "left": 48,
+    "right": 106,
+    "top": 63,
+    "bottom": 144
+  },
+  {
+    "enemy": "tidal-spore-sac",
+    "action": "attack",
+    "fraction": 0.27,
+    "left": 42,
+    "right": 106,
+    "top": 66,
+    "bottom": 144
+  },
+  {
+    "enemy": "tidal-spore-sac",
+    "action": "attack",
+    "fraction": 0.64,
+    "left": 53,
+    "right": 106,
+    "top": 64,
+    "bottom": 144
+  },
+  {
+    "enemy": "tidal-spore-sac",
+    "action": "attack",
+    "fraction": 0.85,
+    "left": 50,
+    "right": 106,
+    "top": 62,
+    "bottom": 144
+  },
+  {
+    "enemy": "tidal-spore-sac",
+    "action": "attack",
+    "fraction": 1,
+    "left": 48,
+    "right": 106,
+    "top": 63,
+    "bottom": 144
+  },
+  {
+    "enemy": "tidal-spore-sac",
+    "action": "hit",
+    "fraction": 0,
+    "left": 48,
+    "right": 106,
+    "top": 63,
+    "bottom": 144
+  },
+  {
+    "enemy": "tidal-spore-sac",
+    "action": "hit",
+    "fraction": 0.27,
+    "left": 53,
+    "right": 110,
+    "top": 65,
+    "bottom": 146
+  },
+  {
+    "enemy": "tidal-spore-sac",
+    "action": "hit",
+    "fraction": 0.64,
+    "left": 52,
+    "right": 109,
+    "top": 64,
+    "bottom": 145
+  },
+  {
+    "enemy": "tidal-spore-sac",
+    "action": "hit",
+    "fraction": 0.85,
+    "left": 49,
+    "right": 107,
+    "top": 63,
+    "bottom": 144
+  },
+  {
+    "enemy": "tidal-spore-sac",
+    "action": "hit",
+    "fraction": 1,
+    "left": 48,
+    "right": 106,
+    "top": 63,
+    "bottom": 144
+  },
+  {
+    "enemy": "tidal-spore-sac",
+    "action": "death",
+    "fraction": 0,
+    "left": 48,
+    "right": 106,
+    "top": 63,
+    "bottom": 144
+  },
+  {
+    "enemy": "tidal-spore-sac",
+    "action": "death",
+    "fraction": 0.27,
+    "left": 43,
+    "right": 109,
+    "top": 67,
+    "bottom": 148
+  },
+  {
+    "enemy": "tidal-spore-sac",
+    "action": "death",
+    "fraction": 0.64,
+    "left": 36,
+    "right": 113,
+    "top": 75,
+    "bottom": 154
+  },
+  {
+    "enemy": "tidal-spore-sac",
+    "action": "death",
+    "fraction": 0.85,
+    "left": 33,
+    "right": 115,
+    "top": 81,
+    "bottom": 156
+  },
+  {
+    "enemy": "tidal-spore-sac",
+    "action": "death",
+    "fraction": 1,
+    "left": 31,
+    "right": 115,
+    "top": 84,
+    "bottom": 158
+  }
+]

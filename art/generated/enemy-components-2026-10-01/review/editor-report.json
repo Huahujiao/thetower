@@ -1,0 +1,1052 @@
+[
+  {
+    "id": "gnawer",
+    "action": "idle",
+    "fraction": 0,
+    "played": "117 / 1400 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-gnawer-idle-0.png"
+  },
+  {
+    "id": "gnawer",
+    "action": "idle",
+    "fraction": 0.27,
+    "played": "117 / 1400 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-gnawer-idle-0.27.png"
+  },
+  {
+    "id": "gnawer",
+    "action": "idle",
+    "fraction": 0.64,
+    "played": "117 / 1400 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-gnawer-idle-0.64.png"
+  },
+  {
+    "id": "gnawer",
+    "action": "idle",
+    "fraction": 0.85,
+    "played": "117 / 1400 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-gnawer-idle-0.85.png"
+  },
+  {
+    "id": "gnawer",
+    "action": "idle",
+    "fraction": 1,
+    "played": "117 / 1400 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-gnawer-idle-1.png"
+  },
+  {
+    "id": "gnawer",
+    "action": "move",
+    "fraction": 0,
+    "played": "112 / 700 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-gnawer-move-0.png"
+  },
+  {
+    "id": "gnawer",
+    "action": "move",
+    "fraction": 0.27,
+    "played": "112 / 700 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-gnawer-move-0.27.png"
+  },
+  {
+    "id": "gnawer",
+    "action": "move",
+    "fraction": 0.64,
+    "played": "112 / 700 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-gnawer-move-0.64.png"
+  },
+  {
+    "id": "gnawer",
+    "action": "move",
+    "fraction": 0.85,
+    "played": "112 / 700 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-gnawer-move-0.85.png"
+  },
+  {
+    "id": "gnawer",
+    "action": "move",
+    "fraction": 1,
+    "played": "112 / 700 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-gnawer-move-1.png"
+  },
+  {
+    "id": "gnawer",
+    "action": "attack",
+    "fraction": 0,
+    "played": "119 / 500 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-gnawer-attack-0.png"
+  },
+  {
+    "id": "gnawer",
+    "action": "attack",
+    "fraction": 0.27,
+    "played": "119 / 500 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-gnawer-attack-0.27.png"
+  },
+  {
+    "id": "gnawer",
+    "action": "attack",
+    "fraction": 0.64,
+    "played": "119 / 500 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-gnawer-attack-0.64.png"
+  },
+  {
+    "id": "gnawer",
+    "action": "attack",
+    "fraction": 0.85,
+    "played": "119 / 500 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-gnawer-attack-0.85.png"
+  },
+  {
+    "id": "gnawer",
+    "action": "attack",
+    "fraction": 1,
+    "played": "119 / 500 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-gnawer-attack-1.png"
+  },
+  {
+    "id": "gnawer",
+    "action": "hit",
+    "fraction": 0,
+    "played": "111 / 380 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-gnawer-hit-0.png"
+  },
+  {
+    "id": "gnawer",
+    "action": "hit",
+    "fraction": 0.27,
+    "played": "111 / 380 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-gnawer-hit-0.27.png"
+  },
+  {
+    "id": "gnawer",
+    "action": "hit",
+    "fraction": 0.64,
+    "played": "111 / 380 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-gnawer-hit-0.64.png"
+  },
+  {
+    "id": "gnawer",
+    "action": "hit",
+    "fraction": 0.85,
+    "played": "111 / 380 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-gnawer-hit-0.85.png"
+  },
+  {
+    "id": "gnawer",
+    "action": "hit",
+    "fraction": 1,
+    "played": "111 / 380 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-gnawer-hit-1.png"
+  },
+  {
+    "id": "gnawer",
+    "action": "death",
+    "fraction": 0,
+    "played": "104 / 800 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-gnawer-death-0.png"
+  },
+  {
+    "id": "gnawer",
+    "action": "death",
+    "fraction": 0.27,
+    "played": "104 / 800 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-gnawer-death-0.27.png"
+  },
+  {
+    "id": "gnawer",
+    "action": "death",
+    "fraction": 0.64,
+    "played": "104 / 800 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-gnawer-death-0.64.png"
+  },
+  {
+    "id": "gnawer",
+    "action": "death",
+    "fraction": 0.85,
+    "played": "104 / 800 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-gnawer-death-0.85.png"
+  },
+  {
+    "id": "gnawer",
+    "action": "death",
+    "fraction": 1,
+    "played": "104 / 800 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-gnawer-death-1.png"
+  },
+  {
+    "id": "emberwing-moth",
+    "action": "idle",
+    "fraction": 0,
+    "played": "111 / 1400 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-emberwing-moth-idle-0.png"
+  },
+  {
+    "id": "emberwing-moth",
+    "action": "idle",
+    "fraction": 0.27,
+    "played": "111 / 1400 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-emberwing-moth-idle-0.27.png"
+  },
+  {
+    "id": "emberwing-moth",
+    "action": "idle",
+    "fraction": 0.64,
+    "played": "111 / 1400 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-emberwing-moth-idle-0.64.png"
+  },
+  {
+    "id": "emberwing-moth",
+    "action": "idle",
+    "fraction": 0.85,
+    "played": "111 / 1400 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-emberwing-moth-idle-0.85.png"
+  },
+  {
+    "id": "emberwing-moth",
+    "action": "idle",
+    "fraction": 1,
+    "played": "111 / 1400 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-emberwing-moth-idle-1.png"
+  },
+  {
+    "id": "emberwing-moth",
+    "action": "move",
+    "fraction": 0,
+    "played": "90 / 700 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-emberwing-moth-move-0.png"
+  },
+  {
+    "id": "emberwing-moth",
+    "action": "move",
+    "fraction": 0.27,
+    "played": "90 / 700 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-emberwing-moth-move-0.27.png"
+  },
+  {
+    "id": "emberwing-moth",
+    "action": "move",
+    "fraction": 0.64,
+    "played": "90 / 700 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-emberwing-moth-move-0.64.png"
+  },
+  {
+    "id": "emberwing-moth",
+    "action": "move",
+    "fraction": 0.85,
+    "played": "90 / 700 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-emberwing-moth-move-0.85.png"
+  },
+  {
+    "id": "emberwing-moth",
+    "action": "move",
+    "fraction": 1,
+    "played": "90 / 700 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-emberwing-moth-move-1.png"
+  },
+  {
+    "id": "emberwing-moth",
+    "action": "attack",
+    "fraction": 0,
+    "played": "110 / 500 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-emberwing-moth-attack-0.png"
+  },
+  {
+    "id": "emberwing-moth",
+    "action": "attack",
+    "fraction": 0.27,
+    "played": "110 / 500 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-emberwing-moth-attack-0.27.png"
+  },
+  {
+    "id": "emberwing-moth",
+    "action": "attack",
+    "fraction": 0.64,
+    "played": "110 / 500 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-emberwing-moth-attack-0.64.png"
+  },
+  {
+    "id": "emberwing-moth",
+    "action": "attack",
+    "fraction": 0.85,
+    "played": "110 / 500 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-emberwing-moth-attack-0.85.png"
+  },
+  {
+    "id": "emberwing-moth",
+    "action": "attack",
+    "fraction": 1,
+    "played": "110 / 500 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-emberwing-moth-attack-1.png"
+  },
+  {
+    "id": "emberwing-moth",
+    "action": "hit",
+    "fraction": 0,
+    "played": "108 / 380 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-emberwing-moth-hit-0.png"
+  },
+  {
+    "id": "emberwing-moth",
+    "action": "hit",
+    "fraction": 0.27,
+    "played": "108 / 380 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-emberwing-moth-hit-0.27.png"
+  },
+  {
+    "id": "emberwing-moth",
+    "action": "hit",
+    "fraction": 0.64,
+    "played": "108 / 380 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-emberwing-moth-hit-0.64.png"
+  },
+  {
+    "id": "emberwing-moth",
+    "action": "hit",
+    "fraction": 0.85,
+    "played": "108 / 380 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-emberwing-moth-hit-0.85.png"
+  },
+  {
+    "id": "emberwing-moth",
+    "action": "hit",
+    "fraction": 1,
+    "played": "108 / 380 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-emberwing-moth-hit-1.png"
+  },
+  {
+    "id": "emberwing-moth",
+    "action": "death",
+    "fraction": 0,
+    "played": "113 / 800 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-emberwing-moth-death-0.png"
+  },
+  {
+    "id": "emberwing-moth",
+    "action": "death",
+    "fraction": 0.27,
+    "played": "113 / 800 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-emberwing-moth-death-0.27.png"
+  },
+  {
+    "id": "emberwing-moth",
+    "action": "death",
+    "fraction": 0.64,
+    "played": "113 / 800 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-emberwing-moth-death-0.64.png"
+  },
+  {
+    "id": "emberwing-moth",
+    "action": "death",
+    "fraction": 0.85,
+    "played": "113 / 800 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-emberwing-moth-death-0.85.png"
+  },
+  {
+    "id": "emberwing-moth",
+    "action": "death",
+    "fraction": 1,
+    "played": "113 / 800 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-emberwing-moth-death-1.png"
+  },
+  {
+    "id": "rootrot-bud",
+    "action": "idle",
+    "fraction": 0,
+    "played": "113 / 1400 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-rootrot-bud-idle-0.png"
+  },
+  {
+    "id": "rootrot-bud",
+    "action": "idle",
+    "fraction": 0.27,
+    "played": "113 / 1400 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-rootrot-bud-idle-0.27.png"
+  },
+  {
+    "id": "rootrot-bud",
+    "action": "idle",
+    "fraction": 0.64,
+    "played": "113 / 1400 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-rootrot-bud-idle-0.64.png"
+  },
+  {
+    "id": "rootrot-bud",
+    "action": "idle",
+    "fraction": 0.85,
+    "played": "113 / 1400 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-rootrot-bud-idle-0.85.png"
+  },
+  {
+    "id": "rootrot-bud",
+    "action": "idle",
+    "fraction": 1,
+    "played": "113 / 1400 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-rootrot-bud-idle-1.png"
+  },
+  {
+    "id": "rootrot-bud",
+    "action": "move",
+    "fraction": 0,
+    "played": "121 / 700 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-rootrot-bud-move-0.png"
+  },
+  {
+    "id": "rootrot-bud",
+    "action": "move",
+    "fraction": 0.27,
+    "played": "121 / 700 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-rootrot-bud-move-0.27.png"
+  },
+  {
+    "id": "rootrot-bud",
+    "action": "move",
+    "fraction": 0.64,
+    "played": "121 / 700 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-rootrot-bud-move-0.64.png"
+  },
+  {
+    "id": "rootrot-bud",
+    "action": "move",
+    "fraction": 0.85,
+    "played": "121 / 700 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-rootrot-bud-move-0.85.png"
+  },
+  {
+    "id": "rootrot-bud",
+    "action": "move",
+    "fraction": 1,
+    "played": "121 / 700 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-rootrot-bud-move-1.png"
+  },
+  {
+    "id": "rootrot-bud",
+    "action": "attack",
+    "fraction": 0,
+    "played": "97 / 500 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-rootrot-bud-attack-0.png"
+  },
+  {
+    "id": "rootrot-bud",
+    "action": "attack",
+    "fraction": 0.27,
+    "played": "97 / 500 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-rootrot-bud-attack-0.27.png"
+  },
+  {
+    "id": "rootrot-bud",
+    "action": "attack",
+    "fraction": 0.64,
+    "played": "97 / 500 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-rootrot-bud-attack-0.64.png"
+  },
+  {
+    "id": "rootrot-bud",
+    "action": "attack",
+    "fraction": 0.85,
+    "played": "97 / 500 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-rootrot-bud-attack-0.85.png"
+  },
+  {
+    "id": "rootrot-bud",
+    "action": "attack",
+    "fraction": 1,
+    "played": "97 / 500 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-rootrot-bud-attack-1.png"
+  },
+  {
+    "id": "rootrot-bud",
+    "action": "hit",
+    "fraction": 0,
+    "played": "107 / 380 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-rootrot-bud-hit-0.png"
+  },
+  {
+    "id": "rootrot-bud",
+    "action": "hit",
+    "fraction": 0.27,
+    "played": "107 / 380 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-rootrot-bud-hit-0.27.png"
+  },
+  {
+    "id": "rootrot-bud",
+    "action": "hit",
+    "fraction": 0.64,
+    "played": "107 / 380 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-rootrot-bud-hit-0.64.png"
+  },
+  {
+    "id": "rootrot-bud",
+    "action": "hit",
+    "fraction": 0.85,
+    "played": "107 / 380 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-rootrot-bud-hit-0.85.png"
+  },
+  {
+    "id": "rootrot-bud",
+    "action": "hit",
+    "fraction": 1,
+    "played": "107 / 380 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-rootrot-bud-hit-1.png"
+  },
+  {
+    "id": "rootrot-bud",
+    "action": "death",
+    "fraction": 0,
+    "played": "109 / 800 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-rootrot-bud-death-0.png"
+  },
+  {
+    "id": "rootrot-bud",
+    "action": "death",
+    "fraction": 0.27,
+    "played": "109 / 800 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-rootrot-bud-death-0.27.png"
+  },
+  {
+    "id": "rootrot-bud",
+    "action": "death",
+    "fraction": 0.64,
+    "played": "109 / 800 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-rootrot-bud-death-0.64.png"
+  },
+  {
+    "id": "rootrot-bud",
+    "action": "death",
+    "fraction": 0.85,
+    "played": "109 / 800 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-rootrot-bud-death-0.85.png"
+  },
+  {
+    "id": "rootrot-bud",
+    "action": "death",
+    "fraction": 1,
+    "played": "109 / 800 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-rootrot-bud-death-1.png"
+  },
+  {
+    "id": "tide-shadow-cub",
+    "action": "idle",
+    "fraction": 0,
+    "played": "124 / 1400 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-tide-shadow-cub-idle-0.png"
+  },
+  {
+    "id": "tide-shadow-cub",
+    "action": "idle",
+    "fraction": 0.27,
+    "played": "124 / 1400 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-tide-shadow-cub-idle-0.27.png"
+  },
+  {
+    "id": "tide-shadow-cub",
+    "action": "idle",
+    "fraction": 0.64,
+    "played": "124 / 1400 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-tide-shadow-cub-idle-0.64.png"
+  },
+  {
+    "id": "tide-shadow-cub",
+    "action": "idle",
+    "fraction": 0.85,
+    "played": "124 / 1400 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-tide-shadow-cub-idle-0.85.png"
+  },
+  {
+    "id": "tide-shadow-cub",
+    "action": "idle",
+    "fraction": 1,
+    "played": "124 / 1400 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-tide-shadow-cub-idle-1.png"
+  },
+  {
+    "id": "tide-shadow-cub",
+    "action": "move",
+    "fraction": 0,
+    "played": "108 / 700 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-tide-shadow-cub-move-0.png"
+  },
+  {
+    "id": "tide-shadow-cub",
+    "action": "move",
+    "fraction": 0.27,
+    "played": "108 / 700 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-tide-shadow-cub-move-0.27.png"
+  },
+  {
+    "id": "tide-shadow-cub",
+    "action": "move",
+    "fraction": 0.64,
+    "played": "108 / 700 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-tide-shadow-cub-move-0.64.png"
+  },
+  {
+    "id": "tide-shadow-cub",
+    "action": "move",
+    "fraction": 0.85,
+    "played": "108 / 700 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-tide-shadow-cub-move-0.85.png"
+  },
+  {
+    "id": "tide-shadow-cub",
+    "action": "move",
+    "fraction": 1,
+    "played": "108 / 700 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-tide-shadow-cub-move-1.png"
+  },
+  {
+    "id": "tide-shadow-cub",
+    "action": "attack",
+    "fraction": 0,
+    "played": "105 / 500 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-tide-shadow-cub-attack-0.png"
+  },
+  {
+    "id": "tide-shadow-cub",
+    "action": "attack",
+    "fraction": 0.27,
+    "played": "105 / 500 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-tide-shadow-cub-attack-0.27.png"
+  },
+  {
+    "id": "tide-shadow-cub",
+    "action": "attack",
+    "fraction": 0.64,
+    "played": "105 / 500 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-tide-shadow-cub-attack-0.64.png"
+  },
+  {
+    "id": "tide-shadow-cub",
+    "action": "attack",
+    "fraction": 0.85,
+    "played": "105 / 500 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-tide-shadow-cub-attack-0.85.png"
+  },
+  {
+    "id": "tide-shadow-cub",
+    "action": "attack",
+    "fraction": 1,
+    "played": "105 / 500 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-tide-shadow-cub-attack-1.png"
+  },
+  {
+    "id": "tide-shadow-cub",
+    "action": "hit",
+    "fraction": 0,
+    "played": "115 / 380 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-tide-shadow-cub-hit-0.png"
+  },
+  {
+    "id": "tide-shadow-cub",
+    "action": "hit",
+    "fraction": 0.27,
+    "played": "115 / 380 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-tide-shadow-cub-hit-0.27.png"
+  },
+  {
+    "id": "tide-shadow-cub",
+    "action": "hit",
+    "fraction": 0.64,
+    "played": "115 / 380 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-tide-shadow-cub-hit-0.64.png"
+  },
+  {
+    "id": "tide-shadow-cub",
+    "action": "hit",
+    "fraction": 0.85,
+    "played": "115 / 380 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-tide-shadow-cub-hit-0.85.png"
+  },
+  {
+    "id": "tide-shadow-cub",
+    "action": "hit",
+    "fraction": 1,
+    "played": "115 / 380 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-tide-shadow-cub-hit-1.png"
+  },
+  {
+    "id": "tide-shadow-cub",
+    "action": "death",
+    "fraction": 0,
+    "played": "119 / 800 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-tide-shadow-cub-death-0.png"
+  },
+  {
+    "id": "tide-shadow-cub",
+    "action": "death",
+    "fraction": 0.27,
+    "played": "119 / 800 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-tide-shadow-cub-death-0.27.png"
+  },
+  {
+    "id": "tide-shadow-cub",
+    "action": "death",
+    "fraction": 0.64,
+    "played": "119 / 800 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-tide-shadow-cub-death-0.64.png"
+  },
+  {
+    "id": "tide-shadow-cub",
+    "action": "death",
+    "fraction": 0.85,
+    "played": "119 / 800 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-tide-shadow-cub-death-0.85.png"
+  },
+  {
+    "id": "tide-shadow-cub",
+    "action": "death",
+    "fraction": 1,
+    "played": "119 / 800 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-tide-shadow-cub-death-1.png"
+  },
+  {
+    "id": "nest-spider",
+    "action": "idle",
+    "fraction": 0,
+    "played": "120 / 1400 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-nest-spider-idle-0.png"
+  },
+  {
+    "id": "nest-spider",
+    "action": "idle",
+    "fraction": 0.27,
+    "played": "120 / 1400 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-nest-spider-idle-0.27.png"
+  },
+  {
+    "id": "nest-spider",
+    "action": "idle",
+    "fraction": 0.64,
+    "played": "120 / 1400 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-nest-spider-idle-0.64.png"
+  },
+  {
+    "id": "nest-spider",
+    "action": "idle",
+    "fraction": 0.85,
+    "played": "120 / 1400 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-nest-spider-idle-0.85.png"
+  },
+  {
+    "id": "nest-spider",
+    "action": "idle",
+    "fraction": 1,
+    "played": "120 / 1400 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-nest-spider-idle-1.png"
+  },
+  {
+    "id": "nest-spider",
+    "action": "move",
+    "fraction": 0,
+    "played": "113 / 700 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-nest-spider-move-0.png"
+  },
+  {
+    "id": "nest-spider",
+    "action": "move",
+    "fraction": 0.27,
+    "played": "113 / 700 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-nest-spider-move-0.27.png"
+  },
+  {
+    "id": "nest-spider",
+    "action": "move",
+    "fraction": 0.64,
+    "played": "113 / 700 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-nest-spider-move-0.64.png"
+  },
+  {
+    "id": "nest-spider",
+    "action": "move",
+    "fraction": 0.85,
+    "played": "113 / 700 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-nest-spider-move-0.85.png"
+  },
+  {
+    "id": "nest-spider",
+    "action": "move",
+    "fraction": 1,
+    "played": "113 / 700 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-nest-spider-move-1.png"
+  },
+  {
+    "id": "nest-spider",
+    "action": "attack",
+    "fraction": 0,
+    "played": "104 / 500 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-nest-spider-attack-0.png"
+  },
+  {
+    "id": "nest-spider",
+    "action": "attack",
+    "fraction": 0.27,
+    "played": "104 / 500 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-nest-spider-attack-0.27.png"
+  },
+  {
+    "id": "nest-spider",
+    "action": "attack",
+    "fraction": 0.64,
+    "played": "104 / 500 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-nest-spider-attack-0.64.png"
+  },
+  {
+    "id": "nest-spider",
+    "action": "attack",
+    "fraction": 0.85,
+    "played": "104 / 500 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-nest-spider-attack-0.85.png"
+  },
+  {
+    "id": "nest-spider",
+    "action": "attack",
+    "fraction": 1,
+    "played": "104 / 500 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-nest-spider-attack-1.png"
+  },
+  {
+    "id": "nest-spider",
+    "action": "hit",
+    "fraction": 0,
+    "played": "106 / 380 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-nest-spider-hit-0.png"
+  },
+  {
+    "id": "nest-spider",
+    "action": "hit",
+    "fraction": 0.27,
+    "played": "106 / 380 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-nest-spider-hit-0.27.png"
+  },
+  {
+    "id": "nest-spider",
+    "action": "hit",
+    "fraction": 0.64,
+    "played": "106 / 380 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-nest-spider-hit-0.64.png"
+  },
+  {
+    "id": "nest-spider",
+    "action": "hit",
+    "fraction": 0.85,
+    "played": "106 / 380 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-nest-spider-hit-0.85.png"
+  },
+  {
+    "id": "nest-spider",
+    "action": "hit",
+    "fraction": 1,
+    "played": "106 / 380 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-nest-spider-hit-1.png"
+  },
+  {
+    "id": "nest-spider",
+    "action": "death",
+    "fraction": 0,
+    "played": "116 / 800 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-nest-spider-death-0.png"
+  },
+  {
+    "id": "nest-spider",
+    "action": "death",
+    "fraction": 0.27,
+    "played": "116 / 800 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-nest-spider-death-0.27.png"
+  },
+  {
+    "id": "nest-spider",
+    "action": "death",
+    "fraction": 0.64,
+    "played": "116 / 800 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-nest-spider-death-0.64.png"
+  },
+  {
+    "id": "nest-spider",
+    "action": "death",
+    "fraction": 0.85,
+    "played": "116 / 800 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-nest-spider-death-0.85.png"
+  },
+  {
+    "id": "nest-spider",
+    "action": "death",
+    "fraction": 1,
+    "played": "116 / 800 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-nest-spider-death-1.png"
+  },
+  {
+    "id": "beetle-guard",
+    "action": "idle",
+    "fraction": 0,
+    "played": "110 / 1400 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-beetle-guard-idle-0.png"
+  },
+  {
+    "id": "beetle-guard",
+    "action": "idle",
+    "fraction": 0.27,
+    "played": "110 / 1400 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-beetle-guard-idle-0.27.png"
+  },
+  {
+    "id": "beetle-guard",
+    "action": "idle",
+    "fraction": 0.64,
+    "played": "110 / 1400 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-beetle-guard-idle-0.64.png"
+  },
+  {
+    "id": "beetle-guard",
+    "action": "idle",
+    "fraction": 0.85,
+    "played": "110 / 1400 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-beetle-guard-idle-0.85.png"
+  },
+  {
+    "id": "beetle-guard",
+    "action": "idle",
+    "fraction": 1,
+    "played": "110 / 1400 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-beetle-guard-idle-1.png"
+  },
+  {
+    "id": "beetle-guard",
+    "action": "move",
+    "fraction": 0,
+    "played": "117 / 700 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-beetle-guard-move-0.png"
+  },
+  {
+    "id": "beetle-guard",
+    "action": "move",
+    "fraction": 0.27,
+    "played": "117 / 700 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-beetle-guard-move-0.27.png"
+  },
+  {
+    "id": "beetle-guard",
+    "action": "move",
+    "fraction": 0.64,
+    "played": "117 / 700 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-beetle-guard-move-0.64.png"
+  },
+  {
+    "id": "beetle-guard",
+    "action": "move",
+    "fraction": 0.85,
+    "played": "117 / 700 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-beetle-guard-move-0.85.png"
+  },
+  {
+    "id": "beetle-guard",
+    "action": "move",
+    "fraction": 1,
+    "played": "117 / 700 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-beetle-guard-move-1.png"
+  },
+  {
+    "id": "beetle-guard",
+    "action": "attack",
+    "fraction": 0,
+    "played": "107 / 500 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-beetle-guard-attack-0.png"
+  },
+  {
+    "id": "beetle-guard",
+    "action": "attack",
+    "fraction": 0.27,
+    "played": "107 / 500 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-beetle-guard-attack-0.27.png"
+  },
+  {
+    "id": "beetle-guard",
+    "action": "attack",
+    "fraction": 0.64,
+    "played": "107 / 500 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-beetle-guard-attack-0.64.png"
+  },
+  {
+    "id": "beetle-guard",
+    "action": "attack",
+    "fraction": 0.85,
+    "played": "107 / 500 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-beetle-guard-attack-0.85.png"
+  },
+  {
+    "id": "beetle-guard",
+    "action": "attack",
+    "fraction": 1,
+    "played": "107 / 500 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-beetle-guard-attack-1.png"
+  },
+  {
+    "id": "beetle-guard",
+    "action": "hit",
+    "fraction": 0,
+    "played": "103 / 380 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-beetle-guard-hit-0.png"
+  },
+  {
+    "id": "beetle-guard",
+    "action": "hit",
+    "fraction": 0.27,
+    "played": "103 / 380 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-beetle-guard-hit-0.27.png"
+  },
+  {
+    "id": "beetle-guard",
+    "action": "hit",
+    "fraction": 0.64,
+    "played": "103 / 380 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-beetle-guard-hit-0.64.png"
+  },
+  {
+    "id": "beetle-guard",
+    "action": "hit",
+    "fraction": 0.85,
+    "played": "103 / 380 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-beetle-guard-hit-0.85.png"
+  },
+  {
+    "id": "beetle-guard",
+    "action": "hit",
+    "fraction": 1,
+    "played": "103 / 380 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-beetle-guard-hit-1.png"
+  },
+  {
+    "id": "beetle-guard",
+    "action": "death",
+    "fraction": 0,
+    "played": "116 / 800 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-beetle-guard-death-0.png"
+  },
+  {
+    "id": "beetle-guard",
+    "action": "death",
+    "fraction": 0.27,
+    "played": "116 / 800 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-beetle-guard-death-0.27.png"
+  },
+  {
+    "id": "beetle-guard",
+    "action": "death",
+    "fraction": 0.64,
+    "played": "116 / 800 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-beetle-guard-death-0.64.png"
+  },
+  {
+    "id": "beetle-guard",
+    "action": "death",
+    "fraction": 0.85,
+    "played": "116 / 800 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-beetle-guard-death-0.85.png"
+  },
+  {
+    "id": "beetle-guard",
+    "action": "death",
+    "fraction": 1,
+    "played": "116 / 800 ms",
+    "path": "art/generated/enemy-components-2026-10-01/review/editor-beetle-guard-death-1.png"
+  }
+]
