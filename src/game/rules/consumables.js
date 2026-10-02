@@ -5,6 +5,7 @@ import { manhattan } from '../core/geometry.js'
 const CONSUMABLE_TYPES = new Set(['potion', 'armor', 'energy', 'buff', 'teleport', 'throwable'])
 const CLOCKWISE = [[0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1]]
 export function isConsumable(item) { return CONSUMABLE_TYPES.has(item?.type) }
+export function consumableEnergyCost(item) { return item?.type === 'energy' ? 0 : 1 }
 
 export class ConsumableRules {
   constructor(run) { this.run = run }
@@ -23,7 +24,7 @@ export class ConsumableRules {
     return plan
   }
   boosted(item, active) {
-    return active && item.tier === 2 && adjacentItems(this.run.backpack, item).some(source => source.id === 'r-launcher')
+    return active && item.type !== 'energy' && item.tier === 2 && adjacentItems(this.run.backpack, item).some(source => source.id === 'r-launcher')
   }
   targets(item) {
     if (item.type === 'throwable') return consumableTargetCells(this.run.currentRoom, this.run.player.pos, item)

@@ -75,15 +75,17 @@ assert.throws(() => ledger.advance('invalid'))
   assert(run.player.hp < 20)
 }
 
-// Exhaustion ends the round exactly once and interrupts a longer movement route.
+// Exhaustion interrupts a route but keeps the player turn until manually ended.
 {
   const run = fixture(); activate(run)
   const path = Array.from({ length: 8 }, (_, index) => ({ c: index % 2 ? 3 : 2, r: 3 }))
   assert.equal(run._walk(path).stopped, true)
-  assert.equal(run.globalTurn, 1); assert.equal(run.player.energy, 0)
-  assert.equal(run.player.hp, 18)
+  assert.equal(run.globalTurn, 0); assert.equal(run.player.energy, 0)
+  assert.equal(run.player.hp, 20)
   assert.deepEqual(run.player.pos, { c: 3, r: 3 })
-  idle(run); assert.equal(run.player.energy, 6)
+  idle(run); assert.equal(run.player.energy, 0)
+  assert(run.endPlayerTurn()); idle(run); assert.equal(run.player.energy, 6)
+  assert.equal(run.globalTurn, 1); assert.equal(run.player.hp, 18)
 }
 
 // Ambush happens on reveal, ignoring ordinary reveal delay, only once.
@@ -170,7 +172,7 @@ assert.throws(() => ledger.advance('invalid'))
   assert.equal(loaded.battle.active, false)
 }
 
-// Failed routes are atomic; food refunds happen before exhaustion is checked.
+// Food is selectable and free at zero; a launcher never prevents eating it.
 {
   const run = fixture(); activate(run, { actionDelay: 2 })
   const target = hiddenEnemy(run, { pos: { c: 0, r: 0 } })
@@ -179,14 +181,20 @@ assert.throws(() => ledger.advance('invalid'))
   assert.equal(run._flipAt(target.pos), false)
   assert.deepEqual(run.player.pos, position); assert.equal(run.player.energy, 1)
   assert.equal(run.currentRoom.isRevealed(target.pos), false)
-  const food = add(run, 'food-3'); select(run, food)
+  const food = add(run, 'food-3')
+  run.player.energy = 0
+  assert(run.selectInventory(run.backpack.originIndex(run.backpack.placementOf(food.uid))))
+  assert(run.useSelected()); assert.equal(run.player.energy, 3); assert.equal(run.globalTurn, 0)
+  const food2 = add(run, 'food-3'); select(run, food2); run.player.energy = 0
+  add(run, 'r-launcher', 4, 0); food2.tier = 2
   assert(run.useSelected()); assert.equal(run.player.energy, 3); assert.equal(run.globalTurn, 0)
   const potion = add(run, 'health-potion'); select(run, potion); run.player.energy = 1
-  assert(run.useSelected()); assert.equal(run.globalTurn, 1); assert.equal(run.roundResolving, true)
+  assert(run.useSelected()); assert.equal(run.globalTurn, 0); assert.equal(run.roundResolving, false)
+  assert.equal(run.player.energy, 0); assert(run.endPlayerTurn())
   idle(run); assert.equal(run.player.energy, 6)
 }
 
-// Exhaustion plus a level-up and full-bag loot pauses the round until choices finish.
+// Exhaustion plus a level-up and full-bag loot never schedules automatic enemies.
 {
   const run = fixture(), sword = add(run, 'rust-sword')
   add(run, 'r-loot-pouch')
@@ -197,17 +205,17 @@ assert.throws(() => ledger.advance('invalid'))
   run._revealEnemy(run.currentRoom, remaining)
   run.player.energy = sword.energyCost; select(run, sword)
   assert(run._attack(target)); idle(run)
-  assert.equal(run.phase, 'level-up'); assert.equal(run.pendingRoundEnd, true)
+  assert.equal(run.phase, 'level-up'); assert.equal(run.pendingRoundEnd, false)
   assert.equal(run.globalTurn, 0); assert.equal(run.player.hp, 20)
   assert.equal(run.inventoryStash.length, 1)
   const loaded = restore(run.serialize())
-  assert.equal(loaded.pendingRoundEnd, true); assert.equal(loaded.globalTurn, 0)
+  assert.equal(loaded.pendingRoundEnd, false); assert.equal(loaded.globalTurn, 0)
   assert(loaded.discardInventoryItem(loaded.inventoryStash[0].uid))
   assert.equal(loaded.player.energy, 0); assert.equal(loaded.globalTurn, 0)
   loaded.levelUp.choices = ['heal', 'max-health', 'max-energy']
   assert(loaded.chooseLevelUpOption('heal'))
-  assert.equal(loaded.globalTurn, 1); assert.equal(loaded.roundResolving, true)
-  assert(loaded.player.hp < 20); idle(loaded)
+  assert.equal(loaded.globalTurn, 0); assert.equal(loaded.roundResolving, false)
+  assert.equal(loaded.player.hp, 20); assert(loaded.endPlayerTurn()); idle(loaded)
   assert.equal(loaded.player.energy, 6); assert.equal(loaded.battle.round, 2)
 }
 
@@ -229,14 +237,14 @@ assert.throws(() => ledger.advance('invalid'))
   assert(run.currentRoom.entity(hidden.id)); assert.equal(run.globalTurn, 1)
 }
 
-// Ordinary delays/cooldowns tick once per enemy stage, never per player action.
+// Delay ticks once per enemy stage; normal attacks fire every stage afterward.
 {
   const run = fixture(), target = activate(run, { actionDelay: 1, attackCooldownMax: 2 })
   assert(run._moveTo({ c: 2, r: 3 })); assert(run._moveTo({ c: 3, r: 3 }))
   assert.equal(target.actionDelay, 1)
   run.endPlayerTurn(); idle(run); assert.equal(target.actionDelay, 0); assert.equal(run.player.hp, 20)
-  run.endPlayerTurn(); idle(run); assert.equal(run.player.hp, 18); assert.equal(target.attackCooldown, 1)
   run.endPlayerTurn(); idle(run); assert.equal(run.player.hp, 18); assert.equal(target.attackCooldown, 0)
-  run.endPlayerTurn(); idle(run); assert.equal(run.player.hp, 16)
+  run.endPlayerTurn(); idle(run); assert.equal(run.player.hp, 16); assert.equal(target.attackCooldown, 0)
+  run.endPlayerTurn(); idle(run); assert.equal(run.player.hp, 14)
 }
 console.log('turns-check passed: exploration, activation, costs, phases, ambush, refunds, control and saves')

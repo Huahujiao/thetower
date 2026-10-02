@@ -262,7 +262,7 @@ for (const trigger of ['move', 'knockback', 'death', 'poison-death']) {
   const food = add(run, 'food-3', 2, 0), bomb = add(run, 'explosive', 3, 0)
   const target = enemy(run); run._synchronizeBattle(); run.player.energy = 1; run.player.armor = 0
   select(run, food); assert(run.useSelected())
-  assert.equal(target.hp, 90); assert.equal(run.player.energy, 3); assert.equal(run.player.armor, 4)
+  assert.equal(target.hp, 90); assert.equal(run.player.energy, 4); assert.equal(run.player.armor, 4)
   assert.equal(run.backpack.placementOf(bomb.uid), null); assert.equal(run.globalTurn, 0)
 }
 // No valid target leaves the next item intact; no recursion through missing target or player death.
@@ -310,7 +310,7 @@ for (const id of ['poison', 'explosive', 'thunder-charm']) {
   run.player.energy = 3
   assert.equal(run._throwConsumable({ c: 0, r: 0 }), false)
   assert.equal(run.player.energy, 3)
-  assert(run._throwConsumable(target.pos)); assert.equal(run.player.energy, 0); assert.equal(run.globalTurn, 1)
+  assert(run._throwConsumable(target.pos)); assert.equal(run.player.energy, 0); assert.equal(run.globalTurn, 0)
   if (id === 'poison') assert.equal(getStatus(target, 'enemy-poison').damage, Math.floor(item.poisonDamage * 1.5))
   if (id === 'explosive') { assert.equal(target.hp, 85); assert.equal(bounce.hp, 85) }
   if (id === 'thunder-charm') {

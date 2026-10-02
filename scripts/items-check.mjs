@@ -416,13 +416,14 @@ for(let i=0;i<100;i++) {
   assert.equal(makeItemById(m.stock[3].itemId).type,'material')
   assert.equal(new Set(m.stock.map(s=>s.itemId)).size,4)
 }
-// Zero energy ends the round; a poison kill cannot continue a queued walk past level-up.
+// Zero energy stops the walk; poison ticks only after an explicit end turn.
 {
   const run=fixture()
   enemy(run,{hp:1,itemPoisonTurns:2,attack:1,range:3,actionDelay:0,noExperience:false,experience:run.player.experienceToNext})
   run._synchronizeBattle(); run.player.energy=1
   const result=run._walk([{c:2,r:3},{c:1,r:3}])
-  assert.equal(result.stopped,true);assert.equal(run.phase,'level-up')
+  assert.equal(result.stopped,true);assert.equal(run.phase,'explore')
+  assert.equal(run.globalTurn,0); assert(run.endPlayerTurn());assert.equal(run.phase,'level-up')
   assert.equal(run.globalTurn,1);assert.deepEqual(run.player.pos,{c:2,r:3})
 }
 // Generated tactical approach markers stay in bounds and survive serialization.

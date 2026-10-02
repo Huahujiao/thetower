@@ -129,7 +129,7 @@ export class TotemRules {
     this.remove(totem, '被攻击摧毁')
     enemy.hasActed = true
     enemy.totemActionTurn = run.globalTurn
-    enemy.attackCooldown = Math.max(0, (enemy.attackCooldownMax || 1) - 1)
+    enemy.attackCooldown = 0
     const reduction = getStatus(enemy, 'attack-reduction')
     const damage = Math.max(0, run.itemRules.expansion.enemyAttackDamage(enemy, Math.max(1, enemy.attack || 1), poison) - (reduction?.amount || 0))
     if (reduction) consumeStatus(enemy, 'attack-reduction', reduction)

@@ -5,7 +5,6 @@
       "name": "猩鬼",
       "minFloor": 1,
       "attribute": "scorch",
-      "behavior": "stationary",
       "traits": [
         "alert"
       ],
@@ -18,8 +17,9 @@
         "chance": 0.25,
         "itemId": "spring"
       },
-      "attackCooldownMax": 1,
-      "initialActionDelay": 1
+      "attackCooldownMax": 0,
+      "initialActionDelay": 0,
+      "speed": 1
     },
     {
       "id": "emberwing-moth",
@@ -34,49 +34,50 @@
       "attack": 2,
       "experience": 2,
       "relicDropChance": 0,
-      "attackCooldownMax": 2,
+      "attackCooldownMax": 0,
       "initialActionDelay": 0,
       "drop": {
         "chance": 0.25,
         "itemId": "scope"
-      }
+      },
+      "speed": 1
     },
     {
       "id": "rootrot-bud",
       "name": "腐根芽",
       "minFloor": 1,
       "attribute": "wither",
-      "behavior": "stationary",
       "traits": [],
       "range": 1,
       "hp": 20,
       "attack": 2,
       "experience": 2,
       "relicDropChance": 0,
-      "attackCooldownMax": 2,
-      "initialActionDelay": 1,
+      "attackCooldownMax": 0,
+      "initialActionDelay": 0,
       "drop": {
         "chance": 0.25,
         "itemId": "venom-sac"
-      }
+      },
+      "speed": 0
     },
     {
       "id": "tide-shadow-cub",
       "name": "潮影幼兽",
       "minFloor": 1,
       "attribute": "drown",
-      "behavior": "chaser",
       "range": 1,
       "hp": 12,
       "attack": 1,
       "experience": 2,
       "relicDropChance": 0,
-      "attackCooldownMax": 1,
-      "initialActionDelay": 1,
+      "attackCooldownMax": 0,
+      "initialActionDelay": 0,
       "drop": {
         "chance": 0.25,
         "itemId": "chain"
-      }
+      },
+      "speed": 1
     },
     {
       "id": "nest-spider",
@@ -93,15 +94,15 @@
         "chance": 0.35,
         "itemId": "venom-sac"
       },
-      "attackCooldownMax": 2,
-      "initialActionDelay": 0
+      "attackCooldownMax": 0,
+      "initialActionDelay": 0,
+      "speed": 1
     },
     {
       "id": "beetle-guard",
       "name": "甲壳虫卫",
       "minFloor": 1,
       "attribute": "wither",
-      "behavior": "stationary",
       "traits": [
         "shield"
       ],
@@ -117,15 +118,15 @@
           "wood-shield"
         ]
       },
-      "attackCooldownMax": 2,
-      "initialActionDelay": 1
+      "attackCooldownMax": 0,
+      "initialActionDelay": 0,
+      "speed": 1
     },
     {
       "id": "rot-walker",
       "name": "腐肉行者",
       "minFloor": 2,
       "attribute": "wither",
-      "behavior": "chaser",
       "traits": [
         "alert"
       ],
@@ -138,15 +139,15 @@
         "chance": 0.2,
         "itemId": "venom-sac"
       },
-      "attackCooldownMax": 1,
-      "initialActionDelay": 1
+      "attackCooldownMax": 0,
+      "initialActionDelay": 0,
+      "speed": 1
     },
     {
       "id": "shellguard",
       "name": "重甲卫士",
       "minFloor": 2,
       "attribute": "wither",
-      "behavior": "stationary",
       "range": 1,
       "traits": [
         "heavy-armor"
@@ -163,15 +164,15 @@
           "light-armor"
         ]
       },
-      "attackCooldownMax": 3,
-      "initialActionDelay": 1
+      "attackCooldownMax": 0,
+      "initialActionDelay": 0,
+      "speed": 1
     },
     {
       "id": "wisp",
       "name": "幽光投矛者",
       "minFloor": 2,
       "attribute": "drown",
-      "behavior": "stationary",
       "traits": [
         "alert"
       ],
@@ -187,15 +188,15 @@
           "tide-shield"
         ]
       },
-      "attackCooldownMax": 1,
-      "initialActionDelay": 1
+      "attackCooldownMax": 0,
+      "initialActionDelay": 0,
+      "speed": 1
     },
     {
       "id": "patrol-hound",
       "name": "巡路犬",
       "minFloor": 2,
       "attribute": "scorch",
-      "behavior": "chaser",
       "traits": [
         "alert"
       ],
@@ -208,15 +209,15 @@
         "chance": 0.25,
         "itemId": "spring"
       },
-      "attackCooldownMax": 1,
-      "initialActionDelay": 1
+      "attackCooldownMax": 0,
+      "initialActionDelay": 0,
+      "speed": 1
     },
     {
       "id": "redneedle-salamander",
       "name": "赤针火蜥",
       "minFloor": 2,
       "attribute": "scorch",
-      "behavior": "stationary",
       "traits": [
         "burning"
       ],
@@ -227,19 +228,19 @@
       "attack": 5,
       "experience": 3,
       "relicDropChance": 0,
-      "attackCooldownMax": 2,
-      "initialActionDelay": 2,
+      "attackCooldownMax": 0,
+      "initialActionDelay": 0,
       "drop": {
         "chance": 0.25,
         "itemId": "scope"
-      }
+      },
+      "speed": 1
     },
     {
       "id": "rot-sac-toad",
       "name": "腐囊蟇",
       "minFloor": 2,
       "attribute": "wither",
-      "behavior": "stationary",
       "deathStatus": "poison",
       "deathStatusTurns": 7,
       "deathStatusDamage": 2,
@@ -248,40 +249,38 @@
       "attack": 3,
       "experience": 3,
       "relicDropChance": 0,
-      "attackCooldownMax": 2,
-      "initialActionDelay": 1,
+      "attackCooldownMax": 0,
+      "initialActionDelay": 0,
       "drop": {
         "chance": 0.25,
         "itemId": "venom-sac"
-      }
+      },
+      "speed": 1
     },
     {
       "id": "claw-beast",
       "name": "溺爪兽",
       "minFloor": 2,
       "attribute": "drown",
-      "behavior": "chaser",
-      "traits": [
-        "swift"
-      ],
+      "traits": [],
       "range": 1,
       "hp": 17,
       "attack": 3,
       "experience": 3,
       "relicDropChance": 0,
-      "attackCooldownMax": 1,
-      "initialActionDelay": 1,
+      "attackCooldownMax": 0,
+      "initialActionDelay": 0,
       "drop": {
         "chance": 0.25,
         "itemId": "spring"
-      }
+      },
+      "speed": 2
     },
     {
       "id": "broodmother",
       "name": "裂腹虫母",
       "minFloor": 3,
       "attribute": "wither",
-      "behavior": "stationary",
       "traits": [
         "split",
         "alert"
@@ -293,19 +292,19 @@
       "elite": true,
       "experience": 4,
       "relicDropChance": 0,
-      "attackCooldownMax": 2,
-      "initialActionDelay": 1,
+      "attackCooldownMax": 0,
+      "initialActionDelay": 0,
       "drop": {
         "chance": 0.5,
         "itemId": "venom-sac"
-      }
+      },
+      "speed": 1
     },
     {
       "id": "moss-colossus",
       "name": "苔藓巨像",
       "minFloor": 3,
       "attribute": "wither",
-      "behavior": "stationary",
       "traits": [
         "regen"
       ],
@@ -323,15 +322,15 @@
           "vine-armor"
         ]
       },
-      "attackCooldownMax": 2,
-      "initialActionDelay": 1
+      "attackCooldownMax": 0,
+      "initialActionDelay": 0,
+      "speed": 1
     },
     {
       "id": "sentry-crossbow",
       "name": "哨戒弩手",
       "minFloor": 3,
       "attribute": "wither",
-      "behavior": "chaser",
       "traits": [
         "alert"
       ],
@@ -345,33 +344,33 @@
         "chance": 0.6,
         "itemId": "scope"
       },
-      "attackCooldownMax": 2,
-      "initialActionDelay": 1
+      "attackCooldownMax": 0,
+      "initialActionDelay": 0,
+      "speed": 0
     },
     {
       "id": "ash-cannon-bug",
       "name": "灰烬炮虫",
       "minFloor": 3,
       "attribute": "scorch",
-      "behavior": "stationary",
       "range": 4,
       "hp": 20,
       "attack": 7,
       "experience": 4,
       "relicDropChance": 0,
-      "attackCooldownMax": 3,
+      "attackCooldownMax": 0,
       "initialActionDelay": 2,
       "drop": {
         "chance": 0.25,
         "itemId": "scope"
-      }
+      },
+      "speed": 0
     },
     {
       "id": "furnace-beetle",
       "name": "炉爆甲虫",
       "minFloor": 3,
       "attribute": "scorch",
-      "behavior": "chaser",
       "explosionRadius": 1,
       "deathExplosionDamage": 3,
       "range": 1,
@@ -379,22 +378,22 @@
       "attack": 6,
       "experience": 3,
       "relicDropChance": 0,
-      "attackCooldownMax": 2,
-      "initialActionDelay": 1,
+      "attackCooldownMax": 0,
+      "initialActionDelay": 0,
       "drop": {
         "chance": 0.25,
         "itemIds": [
           "shield-core",
           "red-shield"
         ]
-      }
+      },
+      "speed": 1
     },
     {
       "id": "thorn-shell-flower",
       "name": "棘壳花",
       "minFloor": 3,
       "attribute": "wither",
-      "behavior": "stationary",
       "traits": [
         "shield",
         "regen"
@@ -405,22 +404,22 @@
       "attack": 4,
       "experience": 4,
       "relicDropChance": 0,
-      "attackCooldownMax": 2,
-      "initialActionDelay": 1,
+      "attackCooldownMax": 0,
+      "initialActionDelay": 0,
       "drop": {
         "chance": 0.25,
         "itemIds": [
           "shield-core",
           "thorn-shield"
         ]
-      }
+      },
+      "speed": 0
     },
     {
       "id": "water-leech-swarm",
       "name": "水尸蛭群",
       "minFloor": 3,
       "attribute": "drown",
-      "behavior": "chaser",
       "traits": [
         "split"
       ],
@@ -430,19 +429,19 @@
       "attack": 4,
       "experience": 3,
       "relicDropChance": 0,
-      "attackCooldownMax": 1,
-      "initialActionDelay": 1,
+      "attackCooldownMax": 0,
+      "initialActionDelay": 0,
       "drop": {
         "chance": 0.25,
         "itemId": "venom-sac"
-      }
+      },
+      "speed": 1
     },
     {
       "id": "whirlpool-eye-sac",
       "name": "涡眼浮囊",
       "minFloor": 3,
       "attribute": "drown",
-      "behavior": "chaser",
       "traits": [
         "pull"
       ],
@@ -452,19 +451,19 @@
       "attack": 4,
       "experience": 4,
       "relicDropChance": 0,
-      "attackCooldownMax": 2,
-      "initialActionDelay": 1,
+      "attackCooldownMax": 0,
+      "initialActionDelay": 0,
       "drop": {
         "chance": 0.25,
         "itemId": "chain"
-      }
+      },
+      "speed": 1
     },
     {
       "id": "molten-core-beast",
       "name": "熔核囊兽",
       "minFloor": 4,
       "attribute": "scorch",
-      "behavior": "stationary",
       "explosionRadius": 2,
       "deathExplosionDamage": 5,
       "range": 2,
@@ -472,19 +471,19 @@
       "attack": 8,
       "experience": 5,
       "relicDropChance": 0,
-      "attackCooldownMax": 3,
+      "attackCooldownMax": 0,
       "initialActionDelay": 2,
       "drop": {
         "chance": 0.25,
         "itemId": "weight"
-      }
+      },
+      "speed": 0
     },
     {
       "id": "redwheel-fire-crow",
       "name": "赤轮火鸦",
       "minFloor": 4,
       "attribute": "scorch",
-      "behavior": "chaser",
       "traits": [
         "burning"
       ],
@@ -495,12 +494,13 @@
       "attack": 7,
       "experience": 5,
       "relicDropChance": 0,
-      "attackCooldownMax": 2,
-      "initialActionDelay": 1,
+      "attackCooldownMax": 0,
+      "initialActionDelay": 0,
       "drop": {
         "chance": 0.25,
         "itemId": "spring"
-      }
+      },
+      "speed": 1
     },
     {
       "id": "cinder-curse-lamp-swarm",
@@ -518,19 +518,19 @@
       "attack": 6,
       "experience": 4,
       "relicDropChance": 0,
-      "attackCooldownMax": 2,
+      "attackCooldownMax": 0,
       "initialActionDelay": 0,
       "drop": {
         "chance": 0.25,
         "itemId": "scope"
-      }
+      },
+      "speed": 1
     },
     {
       "id": "tide-rite-matriarch",
       "name": "潮祀母体",
       "minFloor": 4,
       "attribute": "drown",
-      "behavior": "stationary",
       "traits": [
         "summon"
       ],
@@ -542,21 +542,20 @@
       "attack": 4,
       "experience": 6,
       "relicDropChance": 0,
-      "attackCooldownMax": 3,
-      "initialActionDelay": 1,
+      "attackCooldownMax": 0,
+      "initialActionDelay": 0,
       "drop": {
         "chance": 0.25,
         "itemId": "scope"
-      }
+      },
+      "speed": 0
     },
     {
       "id": "drown-shadow-hunter",
       "name": "溺影猎手",
       "minFloor": 4,
       "attribute": "drown",
-      "behavior": "chaser",
       "traits": [
-        "swift",
         "pull"
       ],
       "pullDistance": 1,
@@ -565,19 +564,19 @@
       "attack": 6,
       "experience": 5,
       "relicDropChance": 0,
-      "attackCooldownMax": 2,
-      "initialActionDelay": 1,
+      "attackCooldownMax": 0,
+      "initialActionDelay": 0,
       "drop": {
         "chance": 0.25,
         "itemId": "chain"
-      }
+      },
+      "speed": 2
     },
     {
       "id": "tidal-spore-sac",
       "name": "群潮孢囊",
       "minFloor": 4,
       "attribute": "drown",
-      "behavior": "chaser",
       "traits": [
         "death-spawn"
       ],
@@ -588,19 +587,19 @@
       "attack": 5,
       "experience": 5,
       "relicDropChance": 0,
-      "attackCooldownMax": 2,
-      "initialActionDelay": 1,
+      "attackCooldownMax": 0,
+      "initialActionDelay": 0,
       "drop": {
         "chance": 0.25,
         "itemId": "venom-sac"
-      }
+      },
+      "speed": 0
     },
     {
       "id": "revenant-guard",
       "name": "还魂侍卫",
       "minFloor": 4,
       "attribute": "drown",
-      "behavior": "stationary",
       "deathRule": "revive",
       "range": 1,
       "hp": 34,
@@ -615,15 +614,15 @@
           "tide-cloak"
         ]
       },
-      "attackCooldownMax": 2,
-      "initialActionDelay": 1
+      "attackCooldownMax": 0,
+      "initialActionDelay": 0,
+      "speed": 1
     },
     {
       "id": "bomb-wisp",
       "name": "自爆灯灵",
       "minFloor": 4,
       "attribute": "scorch",
-      "behavior": "stationary",
       "explosionRadius": 2,
       "deathExplosionDamage": 6,
       "selfDestructOnAttack": true,
@@ -633,7 +632,7 @@
       "elite": true,
       "experience": 4,
       "relicDropChance": 0,
-      "attackCooldownMax": 1,
+      "attackCooldownMax": 0,
       "initialActionDelay": 3,
       "drop": {
         "chance": 0.5,
@@ -641,14 +640,14 @@
           "weight",
           "red-armor"
         ]
-      }
+      },
+      "speed": 1
     },
     {
       "id": "cracked-hunter",
       "name": "裂甲追猎者",
       "minFloor": 4,
       "attribute": "wither",
-      "behavior": "chaser",
       "traits": [
         "shield",
         "alert"
@@ -663,53 +662,54 @@
         "chance": 0.5,
         "itemId": "shield-core"
       },
-      "attackCooldownMax": 2,
-      "initialActionDelay": 1
+      "attackCooldownMax": 0,
+      "initialActionDelay": 0,
+      "speed": 1
     },
     {
       "id": "broodling",
       "name": "裂腹幼体",
       "minFloor": 3,
       "attribute": "wither",
-      "behavior": "stationary",
       "spawnOnly": true,
       "noLoot": true,
       "range": 1,
       "hp": 9,
       "attack": 2,
-      "attackCooldownMax": 1,
-      "initialActionDelay": 1,
-      "relicDropChance": 0
+      "attackCooldownMax": 0,
+      "initialActionDelay": 0,
+      "relicDropChance": 0,
+      "speed": 1
     },
     {
       "id": "leech-larva",
       "name": "尸蛭幼体",
       "minFloor": 3,
       "attribute": "drown",
-      "behavior": "chaser",
       "spawnOnly": true,
       "noLoot": true,
       "range": 1,
       "hp": 6,
       "attack": 2,
-      "attackCooldownMax": 1,
-      "initialActionDelay": 1,
-      "relicDropChance": 0
+      "attackCooldownMax": 0,
+      "initialActionDelay": 0,
+      "relicDropChance": 0,
+      "speed": 1
     },
     {
       "id": "tide-shadow",
       "name": "潮影",
       "minFloor": 4,
       "attribute": "drown",
-      "behavior": "chaser",
       "spawnOnly": true,
       "noLoot": true,
       "range": 1,
       "hp": 9,
       "attack": 2,
-      "attackCooldownMax": 1,
-      "initialActionDelay": 1,
-      "relicDropChance": 0
+      "attackCooldownMax": 0,
+      "initialActionDelay": 0,
+      "relicDropChance": 0,
+      "speed": 1
     }
   ],
   "boss": {
@@ -717,12 +717,12 @@
     "name": "监视者",
     "minFloor": 5,
     "attribute": "wither",
-    "behavior": "stationary",
     "hp": 101,
     "attack": 9,
     "range": 2,
-    "attackCooldownMax": 2,
-    "initialActionDelay": 1
+    "attackCooldownMax": 0,
+    "initialActionDelay": 1,
+    "speed": 0
   },
   "weapons": [
     {

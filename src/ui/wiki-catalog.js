@@ -2,7 +2,7 @@ import catalog from '../game/data/catalog.json' with { type: 'json' }
 import { ALL_ITEM_DEFS } from '../game/data/content.js'
 import { attributeLabel } from '../game/data/attributes.js'
 import { ENEMY_HP_MULTIPLIER } from '../game/data/enemies.js'
-import { enemyBehaviorLabel, enemyFeatureLabel } from '../game/data/enemy-features.js'
+import { enemyFeatureLabel } from '../game/data/enemy-features.js'
 import { RELIC_DEFS } from '../game/data/relics.js'
 import { LEVEL_UP_OPTIONS } from '../game/data/progression.js'
 import { TRAP_DEFS } from '../game/data/traps.js'
@@ -122,9 +122,9 @@ function enemyCards() {
       stat(COPY.attack, enemy.attack),
       stat(COPY.range, `${enemy.range} ${COPY.cell}`),
       stat(COPY.delay, `${enemy.initialActionDelay} ${COPY.turn}`),
-      stat(COPY.normalAttackCooldown, `${enemy.attackCooldownMax || 0} ${COPY.turn}`),
+      stat(COPY.normalAttackCooldown, '无，每个敌人阶段可攻击一次'),
       stat(COPY.attribute, attributeLabel(enemy.attribute)),
-      stat(COPY.behavior, enemyBehaviorLabel(enemy.behavior)),
+      stat('速度', `${enemy.speed || 0} 格／回合`),
       enemyFeatureLabel(enemy) ? stat(COPY.features, enemyFeatureLabel(enemy)) : '',
       enemy.regen > 0 ? stat(COPY.regen, enemy.regen) : '',
       enemy.deathExplosionDamage > 0 ? stat(COPY.deathExplosion, `\u534a\u5f84 ${enemy.explosionRadius || enemy.range || 1} \u00b7 ${enemy.deathExplosionDamage} ${COPY.damage}`) : '',

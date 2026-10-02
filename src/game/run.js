@@ -5,7 +5,7 @@ import { commitInventoryDrop, moveInventoryToStash, discardInventoryItem } from 
 import { attributeLabel } from './data/attributes.js'
 import { createLootEntity, createMinion, getItemDefinition, makeItemById, makeRelicItem, starterWeapon, synchronizeEnemyBalance, synchronizeEntityIds, weaponTier } from './data/content.js'
 import { applyStatus, bindStatusAccessors, consumeStatus, getStatus, normalizeStatuses, prepareStatusDamage, removeStatus, resolveStatusDamage, statusCounterText, statusSnapshot, tickStatusSnapshot } from './rules/statuses.js'
-import { enemyBehaviorDetailLabel, enemyFeatureDetailLabel } from './data/enemy-features.js'
+import { enemyFeatureDetailLabel } from './data/enemy-features.js'
 import { getMerchantDefinition, merchantSellPrice, refreshMerchantSlot, refreshMerchantStock } from './data/merchants.js'
 import { buildRelicChoices, getRelicDefinition, RELIC_DEFS } from './data/relics.js'
 import { buildRoomRewardChoices } from './data/rewards.js'
@@ -16,7 +16,7 @@ import { BackpackGrid } from './model/backpack.js'
 import { RelicCollection } from './model/relics.js'
 import { resolveDamage } from './rules/modifiers.js'
 import { ItemRules } from './rules/items.js'
-import { ConsumableRules, isConsumable } from './rules/consumables.js'
+import { ConsumableRules, consumableEnergyCost, isConsumable } from './rules/consumables.js'
 import { TotemRules } from './rules/totems.js'
 import { PetRules } from './rules/pets.js'
 import { getTotemDefinition, isTotemBadge, TOTEM_DURATION } from './data/totems.js'
@@ -131,7 +131,7 @@ const DETAIL_LABELS = Object.freeze({
   cooldown: '\u51b7\u5374',
   normalAttack: '\u666e\u901a\u653b\u51fb',
   normalAttackCooldown: '\u666e\u653b\u51b7\u5374',
-  behavior: '\u884c\u4e3a',
+  speed: '\u901f\u5ea6',
   features: '\u7279\u6027',
   explosion: '\u89e6\u53d1\u540e\u5bf9\u516b\u90bb\u57df\u9020\u6210\u4f24\u5bb3\u3002',
   alarm: '\u89e6\u53d1\u540e\u7ffb\u5f00\u9644\u8fd1\u7684\u724c\u3002',
@@ -154,16 +154,6 @@ function weaponEnergyCost(weapon) {
 }
 
 function normalizedCounter(value) { return Math.max(0, Number(value) || 0) }
-
-function cooldownWaitTurns(interval) { return Math.max(0, normalizedCounter(interval) - 1) }
-
-function normalizedCooldownInterval(value) { return Math.max(1, normalizedCounter(value)) }
-
-function cooldownStatus(remaining, interval) {
-  const current = normalizedCounter(remaining)
-  const label = `${normalizedCooldownInterval(interval)}\u56de\u5408`
-  return current > 0 ? `${label} \u00b7 \u5269\u4f59 ${current} \u56de\u5408` : `${label} \u00b7 \u5c31\u7eea`
-}
 
 function damageReductionLog({ healthDamage = 0, absorbed = 0 } = {}) {
   const health = Math.max(0, Number(healthDamage) || 0)
@@ -652,7 +642,7 @@ export class GameRun {
     const outcome = this._enemyAttack(enemy)
     if (!outcome.cancelled && this.currentRoom.entity(enemy.id)) {
       this._onEnemyAction(enemy)
-      enemy.attackCooldown = cooldownWaitTurns(enemy.attackCooldownMax)
+      enemy.attackCooldown = 0
       enemy.actionDelay = 0
     }
   }
@@ -704,7 +694,7 @@ export class GameRun {
     this.levelUp = null
     this.phase = 'explore'
     this._queueLevelUp()
-    if (this.pendingRoundEnd && this.phase === 'explore' && this.battle.active && !this.roundResolving && !this.combatResolving) this._resolveBattleRound()
+    this.pendingRoundEnd = false
     this._changed()
   }
 
@@ -771,10 +761,10 @@ export class GameRun {
       const features = enemyFeatureDetailLabel(entity)
       const lines = [
         `${DETAIL_LABELS.health} ${entity.hp}/${entity.maxHp}`,
-        `${DETAIL_LABELS.behavior} ${enemyBehaviorDetailLabel(entity.behavior)}`,
+        `${DETAIL_LABELS.speed} ${entity.speed || 0} 格／回合`,
         `${DETAIL_LABELS.normalAttack} ${this.itemRules.expansion.enemyAttackDamage(entity, entity.attack)} \u00b7 ${DETAIL_LABELS.range} ${entity.range || 1}`,
         `${DETAIL_LABELS.actionDelay} ${normalizedCounter(entity.actionDelay)}`,
-        `${DETAIL_LABELS.normalAttackCooldown} ${cooldownStatus(entity.attackCooldown, entity.attackCooldownMax)}`,
+        `${DETAIL_LABELS.normalAttackCooldown} 无，每个敌人阶段可攻击一次`,
       ]
       if (features) lines.push(`${DETAIL_LABELS.features} ${features}`)
       const poison = getStatus(entity, 'enemy-poison')
@@ -964,7 +954,7 @@ export class GameRun {
   }
 
   selectInventory(index) {
-    if (!this._canOrganizeBackpack() || this.itemTargeting) return false
+    if (!this._canSelectInventory() || this.itemTargeting) return false
     if (!Number.isInteger(index) || index < 0 || index >= INVENTORY_CAPACITY) return false
     const placement = this.backpack.placementForCellIndex(index)
     if (!placement) return this.clearSelection()
@@ -1217,8 +1207,9 @@ export class GameRun {
   _consumeItems(item, position = null) {
     if (!isConsumable(item) || !this.backpack.placementOf(item.uid)) return false
     if (this.consumables.target(item, position, true) === false) return this._reject('请选择有效目标。')
-    const cost = 1 + (this.consumables.boosted(item, true) ? 2 : 0)
-    if (!this.canPayAction(cost) || !this._payAction(1)) return this._reject('体力不足。')
+    const baseCost = consumableEnergyCost(item)
+    const cost = baseCost + (this.consumables.boosted(item, true) ? 2 : 0)
+    if (!this.canPayAction(cost) || !this._payAction(baseCost)) return this._reject('体力不足。')
     if (!this.consumables.useSequence(item, position)) return false
     this._endTurn({ action: item.type === 'teleport' ? 'teleport' : 'consume' })
     this._changed()
@@ -1735,16 +1726,12 @@ export class GameRun {
     return { stopped: false }
   }
 
-  // Complete a player operation. Only exhaustion ends the enclosing player turn.
+  // Complete an operation; the player explicitly decides when to end the turn.
   _endTurn({ turnKind = TURN_KINDS.ACTION, action = turnKind } = {}) {
     this.itemRules.action(action)
     this.turns.advance(turnKind)
     this.bus.emit('player:action', { action, turnKind, round: this.battle.round, energy: this.player.energy })
     this._synchronizeBattle()
-    if (this.battle.active && this.player.energy <= 0 && !this.roundResolving) {
-      if (this.phase === 'explore') this._resolveBattleRound()
-      else this.pendingRoundEnd = true
-    }
   }
 
   _resolveBattleRound() {
@@ -1854,7 +1841,7 @@ export class GameRun {
     }
     this._log(result.evaded ? `\u4f60\u95ea\u907f\u4e86${enemy.name}\u7684\u653b\u51fb\u3002` : `${enemy.name} \u653b\u51fb\u4f60\uff0c${damageReductionLog(result)}\u3002`)
     if (!this.currentRoom.entity(enemy.id) || enemy.downed) return result
-    enemy.attackCooldown = cooldownWaitTurns(enemy.attackCooldownMax)
+    enemy.attackCooldown = 0
     if (result.evaded) return result
     if (!this.gameOver && enemy.traits?.includes('burning')) {
       const turns = Math.max(1, Math.floor(Number(enemy.burningTurns) || 2))
@@ -2284,10 +2271,14 @@ export class GameRun {
     return this.phase === 'explore' && !this.gameOver && this.initialRelicChoices.length === 0 && !this.merchantEntering && !this.roomEntering && !this.combatResolving && !this.roundResolving && (!this.battle.active || this.battle.stage === 'player')
   }
 
-  _canOrganizeBackpack() {
+  _canSelectInventory() {
     const phaseAllows = ['explore', 'merchant'].includes(this.phase)
       || (this.phase === 'level-up' && !!this.levelUp && !this.enemyDeathAnimationsPending)
-    return !this.gameOver && this.initialRelicChoices.length === 0 && phaseAllows && !this.merchantEntering && !this.roomEntering && !this.combatResolving && !this.roundResolving && (this.phase !== 'explore' || this.canPayAction(1))
+    return !this.gameOver && this.initialRelicChoices.length === 0 && phaseAllows && !this.merchantEntering && !this.roomEntering && !this.combatResolving && !this.roundResolving && (!this.battle.active || this.battle.stage === 'player')
+  }
+
+  _canOrganizeBackpack() {
+    return this._canSelectInventory() && (this.phase !== 'explore' || this.canPayAction(1))
   }
 
   _reject(message) {
@@ -2378,7 +2369,7 @@ export class GameRun {
       this.player = data.player
       this.battle = data.battle && typeof data.battle.active === 'boolean' ? { ...data.battle } : { active: false, stage: 'explore', round: 0 }
       this.roundResolving = false
-      this.pendingRoundEnd = !!data.pendingRoundEnd
+      this.pendingRoundEnd = false
       this.backpack = BackpackGrid.hydrate(data.backpack)
       this.inventoryStash = Array.isArray(data.inventoryStash) ? data.inventoryStash.filter((item) => item?.uid) : []
       const refreshItemCopy = item => {
@@ -2490,10 +2481,6 @@ export class GameRun {
         this._persist()
       } else {
         this._synchronizeBattle()
-        if (this.pendingRoundEnd && this.phase === 'explore' && this.battle.active) {
-          this._resolveBattleRound()
-          this._persist()
-        }
         if (attributeItemsMigrated || bigRoundsMigrated) this._persist()
       }
       return true

@@ -1,12 +1,7 @@
 import { getStatus } from '../rules/statuses.js'
 
-export const ENEMY_BEHAVIOR_LABELS = Object.freeze({
-  stationary: '\u9a7b\u5b88',
-  ambush: '\u4f0f\u51fb',
-  chaser: '\u8ffd\u51fb',
-})
-
 export const ENEMY_TRAIT_LABELS = Object.freeze({
+  ambush: '\u4f0f\u51fb',
   shield: '\u62a4\u76fe',
   'heavy-armor': '\u91cd\u7532\uff08\u6bcf\u6b21\u53d7\u4f24 -1\uff09',
   split: '\u5206\u88c2',
@@ -14,7 +9,6 @@ export const ENEMY_TRAIT_LABELS = Object.freeze({
   revive: '\u590d\u751f',
   alert: '\u8b66\u62a5',
   burning: '\u71c3\u70e7',
-  swift: '\u75be\u884c',
   pull: '\u7275\u5f15',
   summon: '\u53ec\u5524',
   'death-spawn': '\u6b7b\u4ea1\u5b73\u751f',
@@ -28,8 +22,7 @@ export const ENEMY_STATUS_LABELS = Object.freeze({
 })
 
 export const ENEMY_OVERHEAD_HINTS = Object.freeze({
-  'behavior:ambush': Object.freeze({ icon: '\u26a0', label: ENEMY_BEHAVIOR_LABELS.ambush }),
-  'behavior:chaser': Object.freeze({ icon: '\u27a4', label: ENEMY_BEHAVIOR_LABELS.chaser }),
+  ambush: Object.freeze({ icon: '\u26a0', label: ENEMY_TRAIT_LABELS.ambush }),
   shield: Object.freeze({ icon: '\u25c8', label: ENEMY_TRAIT_LABELS.shield }),
   'heavy-armor': Object.freeze({ icon: '\u25a3', label: ENEMY_TRAIT_LABELS['heavy-armor'] }),
   split: Object.freeze({ icon: '\u2442', label: ENEMY_TRAIT_LABELS.split }),
@@ -37,7 +30,6 @@ export const ENEMY_OVERHEAD_HINTS = Object.freeze({
   revive: Object.freeze({ icon: '\u21bb', label: ENEMY_TRAIT_LABELS.revive }),
   alert: Object.freeze({ icon: '\u25ce', label: ENEMY_TRAIT_LABELS.alert }),
   burning: Object.freeze({ icon: '\u2668', label: ENEMY_TRAIT_LABELS.burning }),
-  swift: Object.freeze({ icon: '\u00bb', label: ENEMY_TRAIT_LABELS.swift }),
   pull: Object.freeze({ icon: '\u21a4', label: ENEMY_TRAIT_LABELS.pull }),
   summon: Object.freeze({ icon: '\u2726', label: ENEMY_TRAIT_LABELS.summon }),
   'death-spawn': Object.freeze({ icon: '\u273a', label: ENEMY_TRAIT_LABELS['death-spawn'] }),
@@ -51,8 +43,6 @@ export const ENEMY_OVERHEAD_HINTS = Object.freeze({
 const DEATH_EXPLOSION_LABEL = '\u6b7b\u4ea1\u7206\u70b8'
 const DEATH_STATUS_LABELS = Object.freeze({ poison: '\u6b7b\u4ea1\u4e2d\u6bd2' })
 
-export function enemyBehaviorLabel(behavior) { return ENEMY_BEHAVIOR_LABELS[behavior] || behavior || '' }
-
 function hintedLabel(key, label) {
   const hint = ENEMY_OVERHEAD_HINTS[key]
   return hint ? `${hint.icon} ${label}` : label
@@ -61,6 +51,7 @@ function hintedLabel(key, label) {
 function enemyFeatureEntries(entity) {
   return [
     entity?.boss ? { key: 'boss', label: '\u9996\u9886' } : null,
+    entity?.behavior === 'ambush' ? { key: 'ambush', label: ENEMY_TRAIT_LABELS.ambush } : null,
     ...(entity?.traits || []).map((trait) => ({ key: trait, label: ENEMY_TRAIT_LABELS[trait] || trait })),
     entity?.deathRule ? { key: entity.deathRule, label: ENEMY_TRAIT_LABELS[entity.deathRule] || entity.deathRule } : null,
     entity?.deathExplosionDamage > 0 ? { key: 'death-explosion', label: DEATH_EXPLOSION_LABEL } : null,
@@ -69,10 +60,6 @@ function enemyFeatureEntries(entity) {
     getStatus(entity, 'enemy-poison') ? { key: 'poisoned', label: ENEMY_STATUS_LABELS.poisoned } : null,
     ...['counter', 'dodge'].filter(id => getStatus(entity, id)).map(id => ({ key: id, label: ENEMY_STATUS_LABELS[id] })),
   ].filter(Boolean)
-}
-
-export function enemyBehaviorDetailLabel(behavior) {
-  return hintedLabel(`behavior:${behavior}`, enemyBehaviorLabel(behavior))
 }
 
 export function enemyFeatureLabel(entity) {
@@ -85,7 +72,7 @@ export function enemyFeatureDetailLabel(entity) {
 
 export function enemyOverheadHints(entity) {
   const keys = [
-    entity?.behavior && entity.behavior !== 'stationary' ? `behavior:${entity.behavior}` : '',
+    entity?.behavior === 'ambush' ? 'ambush' : '',
     ...(entity?.traits || []),
     entity?.deathRule || '',
     entity?.deathExplosionDamage > 0 ? 'death-explosion' : '',
@@ -97,5 +84,5 @@ export function enemyOverheadHints(entity) {
 }
 
 export function enemyCardSubtitle(entity) {
-  return [enemyBehaviorLabel(entity?.behavior), enemyFeatureLabel(entity)].filter(Boolean).join('\u00b7')
+  return [`速度 ${entity?.speed || 0}`, enemyFeatureLabel(entity)].filter(Boolean).join('\u00b7')
 }

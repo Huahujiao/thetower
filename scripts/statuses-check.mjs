@@ -66,7 +66,7 @@ import { playerStatusEntries } from '../src/ui/status-presentation.js'
 
 // Poison IDs cannot be applied to the wrong side and have different triggers.
 {
-  const run = fixture(), target = enemy(run, { attack: 2, actionDelay: 0, attackCooldown: 2 })
+  const run = fixture(), target = enemy(run, { attack: 2, actionDelay: 2 })
   assert.equal(run.applyStatus(run.player, 'enemy-poison'), null)
   assert.equal(run.applyStatus(target, 'player-poison'), null)
   run.player.armor = 10; run.player.hp = 40

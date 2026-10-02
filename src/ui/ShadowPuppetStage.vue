@@ -189,7 +189,8 @@ function fitFigureToTile() {
   const scale = Math.min(1, 120 / Math.max(1, maxX - minX, maxZ - minZ))
   figureGroup.scale.setScalar(scale)
   figureGroup.position.set(-(minX + maxX) * scale / 2, 0, -(minZ + maxZ) * scale / 2)
-  floorGroup.position.y = minY * scale - (props.project.stage.floorOffset ?? 8) * scale
+  floorGroup.position.y = props.project.grounding && !props.project.grounding.floating
+    ? props.project.grounding.floorY * scale : minY * scale - (props.project.stage.floorOffset ?? 8) * scale
   return { height: (maxY - minY) * scale }
 }
 

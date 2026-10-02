@@ -9,23 +9,23 @@ assert.equal(ENEMY_HP_MULTIPLIER, 1)
 
 const expected = {
   'emberwing-moth': { minFloor: 1, behavior: 'ambush', attribute: 'scorch', deathExplosionDamage: 2 },
-  'rootrot-bud': { minFloor: 1, behavior: 'stationary', attribute: 'wither', hp: 20, range: 1, traits: [] },
+  'rootrot-bud': { minFloor: 1, speed: 0, attribute: 'wither', hp: 20, range: 1, traits: [] },
   'nest-spider': { minFloor: 2, behavior: 'ambush', hp: 9, attack: 4 },
-  'tide-shadow-cub': { minFloor: 1, behavior: 'chaser', attribute: 'drown' },
-  'ash-cannon-bug': { minFloor: 3, behavior: 'stationary', attribute: 'scorch', range: 4 },
-  'furnace-beetle': { minFloor: 3, behavior: 'chaser', attribute: 'scorch', deathExplosionDamage: 3 },
-  'thorn-shell-flower': { minFloor: 3, behavior: 'stationary', attribute: 'wither', shield: true, regen: 1 },
-  'water-leech-swarm': { minFloor: 3, behavior: 'chaser', attribute: 'drown', splitMinionId: 'leech-larva' },
-  'molten-core-beast': { minFloor: 4, behavior: 'stationary', attribute: 'scorch', deathExplosionDamage: 5 },
-  'redneedle-salamander': { minFloor: 2, behavior: 'stationary', attribute: 'scorch', traits: ['burning'], burningTurns: 2, burningDamage: 1 },
-  'rot-sac-toad': { minFloor: 2, behavior: 'stationary', attribute: 'wither', deathStatus: 'poison', deathStatusTurns: 7, deathStatusDamage: 2 },
-  'claw-beast': { minFloor: 2, behavior: 'chaser', attribute: 'drown', traits: ['swift'] },
-  'whirlpool-eye-sac': { minFloor: 3, behavior: 'chaser', attribute: 'drown', traits: ['pull'], pullDistance: 1 },
-  'redwheel-fire-crow': { minFloor: 4, behavior: 'chaser', attribute: 'scorch', traits: ['burning'], burningTurns: 2 },
+  'tide-shadow-cub': { minFloor: 1, speed: 1, attribute: 'drown' },
+  'ash-cannon-bug': { minFloor: 3, speed: 0, attribute: 'scorch', range: 4 },
+  'furnace-beetle': { minFloor: 3, speed: 1, attribute: 'scorch', deathExplosionDamage: 3 },
+  'thorn-shell-flower': { minFloor: 3, speed: 0, attribute: 'wither', shield: true, regen: 1 },
+  'water-leech-swarm': { minFloor: 3, speed: 1, attribute: 'drown', splitMinionId: 'leech-larva' },
+  'molten-core-beast': { minFloor: 4, speed: 0, attribute: 'scorch', deathExplosionDamage: 5 },
+  'redneedle-salamander': { minFloor: 2, speed: 1, attribute: 'scorch', traits: ['burning'], burningTurns: 2, burningDamage: 1 },
+  'rot-sac-toad': { minFloor: 2, speed: 1, attribute: 'wither', deathStatus: 'poison', deathStatusTurns: 7, deathStatusDamage: 2 },
+  'claw-beast': { minFloor: 2, speed: 2, attribute: 'drown', traits: [] },
+  'whirlpool-eye-sac': { minFloor: 3, speed: 1, attribute: 'drown', traits: ['pull'], pullDistance: 1 },
+  'redwheel-fire-crow': { minFloor: 4, speed: 1, attribute: 'scorch', traits: ['burning'], burningTurns: 2 },
   'cinder-curse-lamp-swarm': { minFloor: 4, behavior: 'ambush', attribute: 'scorch', traits: ['burning'], burningTurns: 2 },
-  'tide-rite-matriarch': { minFloor: 4, behavior: 'stationary', attribute: 'drown', traits: ['summon'], summonEvery: 3, summonMinionId: 'tide-shadow', summonLimit: 2 },
-  'drown-shadow-hunter': { minFloor: 4, behavior: 'chaser', attribute: 'drown', traits: ['swift', 'pull'], pullDistance: 1 },
-  'tidal-spore-sac': { minFloor: 4, behavior: 'chaser', attribute: 'drown', traits: ['death-spawn'], deathSpawnMinionId: 'tide-shadow', deathSpawnCount: 2 },
+  'tide-rite-matriarch': { minFloor: 4, speed: 0, attribute: 'drown', traits: ['summon'], summonEvery: 3, summonMinionId: 'tide-shadow', summonLimit: 2 },
+  'drown-shadow-hunter': { minFloor: 4, speed: 2, attribute: 'drown', traits: ['pull'], pullDistance: 1 },
+  'tidal-spore-sac': { minFloor: 4, speed: 0, attribute: 'drown', traits: ['death-spawn'], deathSpawnMinionId: 'tide-shadow', deathSpawnCount: 2 },
 }
 
 for (const [id, values] of Object.entries(expected)) {
@@ -128,7 +128,7 @@ const swiftOutcome = stepEnemy(swiftBeast, {
   move: (enemy, position) => swiftRoom.moveEntity(enemy.id, position),
 })
 assert.equal(swiftOutcome.acted, true)
-assert.equal(swiftOutcome.skipAttack, true)
+assert.equal(swiftOutcome.skipAttack, false)
 assert.equal(swiftBeast.pos.c, 3)
 assert.equal(swiftAttacked, false)
 
@@ -170,7 +170,7 @@ assert.equal(legacyBud.maxHp, 20)
 assert.equal(legacyBud.range, 1)
 assert.equal(legacyBud.regen, 0)
 assert.deepEqual(legacyBud.traits, [])
-assert.equal(legacyBud.attackCooldown, 1)
+assert.equal(legacyBud.attackCooldown, 0)
 synchronizeEnemyBalance(legacyBud)
 assert.equal(legacyBud.hp, 10, 'save migration must not repeat damage scaling')
 

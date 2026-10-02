@@ -77,7 +77,7 @@ for (const definition of PETS) {
   const food = feed(run, 'food-5'), target = enemy(run)
   phase(run); assert.equal(food.energy, 4)
   run.player.energy = 1; select(run, food); assert(run.useSelected())
-  assert.equal(run.player.energy, 4); assert(!run.backpack.placementOf(food.uid)); assert.equal(target.hp, 96)
+  assert.equal(run.player.energy, 5); assert(!run.backpack.placementOf(food.uid)); assert.equal(target.hp, 96)
 }
 // Pet phase precedes enemy attacks; fatal pet hits prevent enemy action entirely.
 {

@@ -137,7 +137,7 @@ for (const badge of TOTEM_BADGES) {
 // Bind interrupts swift movement and suppresses both ordinary and totem attacks for one turn.
 {
   const run = fixture(); place(run, 'bind', { c: 3, r: 2 })
-  const target = enemy(run, { pos: { c: 4, r: 1 }, attack: 4, behavior: 'chaser', actionDelay: 0, traits: ['swift'] })
+  const target = enemy(run, { pos: { c: 4, r: 1 }, attack: 4, speed: 2, actionDelay: 0 })
   run.player.pos = { c: 1, r: 1 }
   round(run)
   const rooted = getStatus(target, 'rooted'); assert(rooted); assert.equal(rooted.turns, 1); assert.equal(rooted.layers, 100)
@@ -166,11 +166,11 @@ for (const badge of TOTEM_BADGES) {
   const totem = place(run, 'ward', { c: 1, r: 0 })
   for (const row of run.currentRoom.tiles) for (const tile of row) tile.revealed = false
   for (const pos of [{ c: 0, r: 0 }, { c: 1, r: 0 }, { c: 2, r: 0 }]) run.currentRoom.tile(pos).revealed = true
-  const attacker = enemy(run, { pos: { c: 2, r: 0 }, attack: 3, range: 1, behavior: 'chaser', actionDelay: 0, attackCooldownMax: 3 })
+  const attacker = enemy(run, { pos: { c: 2, r: 0 }, attack: 3, range: 1, speed: 1, actionDelay: 0, attackCooldownMax: 3 })
   run.player.energy = 2; const hp = run.player.hp
   round(run)
   assert.equal(run.currentRoom.entity(totem.id), null); assert.equal(run.player.maxEnergy, 6); assert.equal(run.player.energy, 6)
-  assert.equal(run.player.hp, hp); assert.equal(attacker.attackCooldown, 2); assert.equal(attacker.ownActionCount, 1)
+  assert.equal(run.player.hp, hp); assert.equal(attacker.attackCooldown, 0); assert.equal(attacker.ownActionCount, 1)
   assert.deepEqual(attacker.pos, { c: 2, r: 0 })
 }
 // A normal enemy can take a shorter free route, and rooted enemies cannot hit a blocker.
@@ -179,7 +179,7 @@ for (const badge of TOTEM_BADGES) {
   const totem = place(run, 'ward', { c: 1, r: 0 })
   for (const row of run.currentRoom.tiles) for (const tile of row) tile.revealed = false
   for (let c = 0; c <= 3; c++) run.currentRoom.tile({ c, r: 0 }).revealed = true
-  const attacker = enemy(run, { pos: { c: 3, r: 0 }, attack: 3, behavior: 'chaser', actionDelay: 0 })
+  const attacker = enemy(run, { pos: { c: 3, r: 0 }, attack: 3, speed: 1, actionDelay: 0 })
   round(run)
   assert.deepEqual(attacker.pos, { c: 2, r: 0 }); assert(run.currentRoom.entity(totem.id))
   round(run)
@@ -188,7 +188,7 @@ for (const badge of TOTEM_BADGES) {
 // A normal enemy can take a shorter free route, and rooted enemies cannot hit a blocker.
 {
   const run = fixture(); run.player.pos = { c: 0, r: 0 }
-  const totem = place(run, 'drum', { c: 2, r: 0 }), attacker = enemy(run, { pos: { c: 2, r: 1 }, attack: 3, behavior: 'chaser', actionDelay: 0 })
+  const totem = place(run, 'drum', { c: 2, r: 0 }), attacker = enemy(run, { pos: { c: 2, r: 1 }, attack: 3, speed: 1, actionDelay: 0 })
   assert.equal(run.totems.obstacle(attacker), null)
   run.applyStatus(attacker, 'rooted', { turns: 1 })
   const outcome = stepEnemy(attacker, { room: run.currentRoom, player: run.player, attack: () => assert.fail('rooted attack') })
@@ -255,7 +255,7 @@ for (const badge of TOTEM_BADGES) {
   const run = fixture(); run.player.pos = { c: 0, r: 0 }
   add(run, 'r-totem-drum'); add(run, 'r-totem-gas')
   place(run, 'soul', { c: 2, r: 3 }); place(run, 'bind', { c: 3, r: 2 })
-  const target = enemy(run, { pos: { c: 4, r: 3 }, attack: 3, actionDelay: 0, behavior: 'chaser' })
+  const target = enemy(run, { pos: { c: 4, r: 3 }, attack: 3, actionDelay: 0, speed: 1 })
   round(run)
   round(run)
   assert.deepEqual(target.pos, { c: 3, r: 3 }); assert.equal(getStatus(target, 'rooted'), null)

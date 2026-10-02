@@ -8,8 +8,6 @@ function tickCounter(enemy, key) {
   return true
 }
 
-function cooldownWaitTurns(interval) { return Math.max(0, Number(interval) - 1) }
-
 function hasNormalAttack(enemy) {
   return (enemy.attack || 0) > 0 && (enemy.range || 0) > 0
 }
@@ -25,15 +23,16 @@ function moveTowardPlayer(enemy, context) {
   if (hasNormalAttack(enemy) && combatDistance(enemy.pos, context.player.pos, enemy.range) <= enemy.range) {
     return { acted: false, reason: 'in-range' }
   }
-  const maxSteps = enemy.traits?.includes('swift') ? 2 : 1
+  const maxSteps = Math.max(0, Math.floor(Number(enemy.speed) || 0))
+  if (maxSteps === 0) return { acted: false, reason: 'immobile' }
   let movedSteps = 0
   while (movedSteps < maxSteps) {
     if (getStatus(enemy, 'rooted')) break
+    if (hasNormalAttack(enemy) && combatDistance(enemy.pos, context.player.pos, enemy.range) <= enemy.range) break
     const route = context.path ? context.path(enemy) : findPath(context.room, enemy.pos, context.player.pos)
     const next = route?.[0]
     const obstacle = next && context.room.entityAt(next)?.kind === 'totem' ? context.room.entityAt(next) : null
     if (obstacle && context.attackObstacle) {
-      if ((enemy.attackCooldown || 0) > 0) break
       context.attackObstacle?.(enemy, obstacle)
       return { acted: true, reason: 'totem-attack', movedSteps, skipAttack: true }
     }
@@ -46,41 +45,26 @@ function moveTowardPlayer(enemy, context) {
     acted: true,
     reason: 'move',
     movedSteps,
-    skipAttack: movedSteps >= 2 || !!getStatus(enemy, 'rooted')?.blocksAttack,
+    skipAttack: !!getStatus(enemy, 'rooted')?.blocksAttack,
   }
 }
 
-export function stationaryBehavior() { return { acted: false, reason: 'idle' } }
-
-export function chaserBehavior(enemy, context) { return moveTowardPlayer(enemy, context) }
-
-export function ambushBehavior() { return stationaryBehavior() }
-
-export const ENEMY_BEHAVIORS = Object.freeze({
-  stationary: stationaryBehavior,
-  chaser: chaserBehavior,
-  ambush: ambushBehavior,
-})
-
 export function stepEnemy(enemy, context) {
+  enemy.attackCooldown = 0
   const rooted = getStatus(enemy, 'rooted')
   if (rooted) {
     consumeStatus(enemy, 'rooted', rooted)
-    tickCounter(enemy, 'actionDelay'); tickCounter(enemy, 'attackCooldown')
+    tickCounter(enemy, 'actionDelay')
     return { acted: false, reason: 'rooted' }
   }
   if (tickCounter(enemy, 'actionDelay')) return { acted: false, reason: 'action-delay' }
 
-  const behavior = ENEMY_BEHAVIORS[enemy.behavior] || stationaryBehavior
-  const movement = behavior(enemy, context)
+  const movement = moveTowardPlayer(enemy, context)
   if (movement.acted) enemy.hasActed = true
   if (movement.reason === 'totem-attack') return movement
-  const attackCooling = tickCounter(enemy, 'attackCooldown')
-
-  if (!movement.skipAttack && !attackCooling) {
+  if (!movement.skipAttack) {
     const attack = attackIfInRange(enemy, context)
     if (attack.acted) {
-      enemy.attackCooldown = cooldownWaitTurns(enemy.attackCooldownMax)
       enemy.hasActed = true
       return { ...attack, moved: movement.acted }
     }

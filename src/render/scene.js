@@ -10,7 +10,7 @@ import { DEFAULT_CAMERA_ELEVATION, panAzimuth } from './camera-view.js'
 import { cardBodyGeometry, styleCardBody, cardFaceY, CARD_FACE_CLEARANCE, HIDDEN_CARD_THICKNESS, HIDDEN_CARD_SCALE } from './card-body.js'
 import { boundaryPillarPoint, createDoorFrame, createLowPolyPillar, createLowPolyWall, evenPillarOffsets } from './wall-kit.js'
 import { goldSpriteSources, itemSpriteSources } from '../ui/item-sprites.js'
-import { drawEnemyPuppet, enemyPuppetProject, ENEMY_PUPPET_PADDING, prepareEnemyPuppets } from './enemy-puppet.js'
+import { createEnemyFigure, drawEnemyPuppet, enemyPuppetProject, ENEMY_PUPPET_PADDING, prepareEnemyPuppets, updateEnemyFigure } from './enemy-puppet.js'
 import { drawTotemToken, totemFaceData } from './totem-token.js'
 import { weaponTierRoman } from '../game/data/content.js'
 
@@ -54,7 +54,6 @@ const GROUND_WEAPON_GLOW_OPACITY = 0.28
 const ATTACK_ANIMATION_DURATION = 0.5
 const EXPLOSION_FLASH_COLOR = new THREE.Color(0xff9b43)
 const PLAYER_ATTACK_LIFT = 0.045
-const ENEMY_ATTACK_LIFT = 0.075
 const TILE_RENDER_ORDER_BASE = 100
 const TILE_RENDER_ORDER_ROW_STEP = 16
 const FOOTPRINT_PRESS_DEPTH = 0.1
@@ -228,20 +227,13 @@ function drawEmptyCardBase(context) {
   context.strokeRect(4, 4, 152, 152)
 }
 
-function drawStandingToken(context, card, { headLift = 0, bodySway = 0 } = {}) {
+function drawMerchantToken(context, card) {
   context.clearRect(0, 0, 160, 160)
-  const merchant = card.type === 'merchant'
-  const attribute = !merchant ? getAttributeDefinition(card.attribute) : null
-  const color = merchant ? '#d5a85d' : card.boss ? '#ff7777' : '#e36b6b'
-  context.fillStyle = color
-  context.strokeStyle = merchant ? '#ffe3a3' : '#ffc0c0'
+  context.fillStyle = '#d5a85d'
+  context.strokeStyle = '#ffe3a3'
   context.lineWidth = 4
   const drawSilhouette = ({ fill = false } = {}) => {
     context.save()
-    context.translate(bodySway * 5, 0)
-    context.translate(80, 100)
-    context.rotate(bodySway * 0.055)
-    context.translate(-80, -100)
     context.beginPath()
     context.moveTo(34, 142)
     context.lineTo(126, 142)
@@ -251,27 +243,19 @@ function drawStandingToken(context, card, { headLift = 0, bodySway = 0 } = {}) {
     context.stroke()
     context.restore()
     context.beginPath()
-    context.arc(80, 42 - headLift * 8, 27, 0, Math.PI * 2)
+    context.arc(80, 42, 27, 0, Math.PI * 2)
     if (fill) context.fill()
     context.stroke()
   }
   drawSilhouette({ fill: true })
-  if (attribute) {
-    // Keep the red danger outline and add a quieter attribute-colored trim.
-    context.strokeStyle = attribute.color
-    context.globalAlpha = 0.78
-    context.lineWidth = 2
-    drawSilhouette()
-    context.globalAlpha = 1
-  }
   const glyph = Array.from(String(card.title || '?'))[0] || '?'
   context.fillStyle = '#241c24'
   context.font = 'bold 29px sans-serif'
   context.textAlign = 'center'
   context.textBaseline = 'middle'
-  context.fillText(glyph, 80, 42 - headLift * 8)
+  context.fillText(glyph, 80, 42)
   context.font = 'bold 23px sans-serif'
-  context.fillText(String(card.value ?? ''), 80 + bodySway * 5, 112)
+  context.fillText(String(card.value ?? ''), 80, 112)
 }
 
 function tileKey(position) { return `${position.c}:${position.r}` }
@@ -402,6 +386,10 @@ export class GameScene {
     prepareEnemyPuppets(() => {
       const room = this.run.currentRoom
       if (room?.id !== this.framedRoomId) return
+      if (this.movementAnimation || this.attackAnimation || this.flipAnimations.length || this.animationQueue.length) {
+        this.pendingRebuild = true
+        return
+      }
       for (const face of this.tileMeshes) {
         if (face.userData.enemyId) this._refreshTile(room, face.userData.position, { force: true })
       }
@@ -551,6 +539,7 @@ export class GameScene {
     face.userData.visualKey = visual.key
     if (face.userData.groundFace) this.roomGroup.add(face.userData.groundFace)
     this.roomGroup.add(face)
+    this._attachEnemyFigure(face, revealed && card?.type === 'monster' ? card.enemyId : null)
     this._attachGroundSprite(face, card, point, position, revealed)
     this._setEnemyStatusOverlay(face, face.userData.groundFace, revealed && card?.type === 'monster' ? room.entityAt(position) : null)
     this.tileMeshes.push(face)
@@ -596,6 +585,37 @@ export class GameScene {
     face.userData.groundSprite = null
     face.userData.groundSpriteState = null
     face.userData.groundSpriteRequestKey = null
+  }
+
+  _attachEnemyFigure(face, enemyId) {
+    let figure = face.userData.enemyFigure
+    if (figure && figure.userData.enemyId !== enemyId) {
+      face.remove(figure)
+      disposeObject(figure)
+      figure = face.userData.enemyFigure = null
+    }
+    if (!enemyId) return
+    if (!figure) {
+      figure = createEnemyFigure(enemyId, CARD_SIZE)
+      if (!figure) return
+      figure.matrixAutoUpdate = false
+      face.add(figure)
+      face.userData.enemyFigure = figure
+    }
+    this._poseEnemyFigure(face)
+  }
+
+  _poseEnemyFigure(face, action = 'idle', time = 0, effects = {}) {
+    const figure = face?.userData.enemyFigure
+    if (!figure) return
+    // The face still carries interaction/status overlays. Cancel its billboard
+    // lean, scaling and vertical motion for the actual actor's floor pivot.
+    face.updateMatrix()
+    const world = new THREE.Matrix4().makeTranslation(face.position.x, CARD_THICKNESS / 2 + CARD_FACE_CLEARANCE, face.position.z)
+      .multiply(new THREE.Matrix4().makeRotationY(this.cameraAzimuth))
+    figure.matrix.copy(face.matrix).invert().multiply(world)
+    figure.matrixWorldNeedsUpdate = true
+    updateEnemyFigure(figure, action, time, effects)
   }
 
   _groundItem(card, position) {
@@ -778,15 +798,6 @@ export class GameScene {
         total: Math.max(actionDelay, turnCounter(enemy.initialActionDelay)),
         remaining: actionDelay,
         color: 0xf4d56d,
-      })
-    } else if (turnCounter(enemy.attackCooldown) > 0) {
-      this._addEnemyTurnMeter(turnOverlay, {
-        axis: 'horizontal',
-        x: 0,
-        y: ENEMY_STATUS_BOTTOM_Y,
-        total: Math.max(1, turnCounter(enemy.attackCooldownMax) - 1, turnCounter(enemy.attackCooldown)),
-        remaining: turnCounter(enemy.attackCooldown),
-        color: 0xff7777,
       })
     }
 
@@ -1310,6 +1321,7 @@ export class GameScene {
     this._setEnemyStatusOverlay(face, face.userData.groundFace, revealed && card?.type === 'monster' ? room.entityAt(position) : null)
     face.userData.visualKey = visual.key
     face.userData.enemyId = card?.type === 'monster' ? card.enemyId : null
+    this._attachEnemyFigure(face, revealed && card?.type === 'monster' ? card.enemyId : null)
     return true
   }
 
@@ -1323,6 +1335,21 @@ export class GameScene {
   }
 
   _queueAnimation(type, payload) {
+    if (type === 'enemy-move') {
+      const moving = this.movementAnimation
+      if (moving?.actor === 'enemy' && moving.enemyId === payload.enemyId && moving.elapsed === 0 && samePosition(moving.to, payload.from)) {
+        moving.route.push({ ...payload.to })
+        moving.to = { ...payload.to }
+        moving.duration += .24
+        return
+      }
+      const queued = this.animationQueue.at(-1)
+      if (queued?.type === type && queued.payload.enemyId === payload.enemyId && samePosition(queued.payload.to, payload.from)) {
+        queued.payload.path = [...(queued.payload.path || [queued.payload.to]), { ...payload.to }]
+        queued.payload.to = { ...payload.to }
+        return
+      }
+    }
     const animation = { type, payload }
     if (type === 'flip') animation.sourceBackTexture = this._snapshotFlipBack(payload)
     if (type === 'flip-batch') {
@@ -1396,27 +1423,34 @@ export class GameScene {
     group.rotation.x = Math.PI
     const card = this._cardFaceData(room, position)
     const flippingEnemy = card?.type === 'monster'
-    const frontTexture = this._makeFrontTexture(card, position, true)
-    // The floor belongs to every grid cell, including the short interval in
-    // which its hidden card is replaced by an enemy reveal animation.
-    const flipGround = flippingEnemy ? this._makeEmptyGroundFace(point, position) : null
-    if (flipGround) {
-      flipGround.renderOrder = tileRenderOrder(position, 0)
-      this.roomGroup.add(flipGround)
+    if (flippingEnemy) {
+      sourceBackTexture?.dispose()
+      const figure = createEnemyFigure(card.enemyId, CARD_SIZE)
+      if (!figure) return false
+      const ground = this._makeEmptyGroundFace(point, position)
+      this.roomGroup.add(ground)
+      group.scale.setScalar(1)
+      group.position.y = CARD_THICKNESS / 2 + CARD_FACE_CLEARANCE
+      group.rotation.set(0, this.cameraAzimuth, 0)
+      const hinge = new THREE.Group()
+      hinge.rotation.x = -Math.PI
+      hinge.add(figure)
+      group.add(hinge)
+      face.visible = false
+      face.userData.body.visible = false
+      this.roomGroup.add(group)
+      this.flipAnimations.push({ key, group, hinge, figure, ground, elapsed: 0, duration: .52 })
+      return true
     }
-    // An enemy's flip is a transparent reveal of the figure. It is not a card
-    // with a substitute back: no back plane or textured body is created.
-    if (flippingEnemy) sourceBackTexture?.dispose()
-    const backTexture = flippingEnemy
-      ? null
-      : sourceBackTexture || this._makeBackTexture(this._backAttributeFor(room, position), { unflippable: backUnflippable })
+    const frontTexture = this._makeFrontTexture(card, position, true)
+    const backTexture = sourceBackTexture || this._makeBackTexture(this._backAttributeFor(room, position), { unflippable: backUnflippable })
     const front = new THREE.Mesh(
       new THREE.PlaneGeometry(CARD_SIZE * (frontTexture.userData.canvasExtent || 1), CARD_SIZE * (frontTexture.userData.canvasExtent || 1)),
       new THREE.MeshBasicMaterial({ map: frontTexture, side: THREE.DoubleSide, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -4 }),
     )
     front.rotation.x = -Math.PI / 2
     front.position.y = HIDDEN_CARD_THICKNESS / 2 + CARD_FACE_CLEARANCE
-    const back = flippingEnemy ? null : new THREE.Mesh(
+    const back = new THREE.Mesh(
       new THREE.PlaneGeometry(CARD_SIZE, CARD_SIZE),
       new THREE.MeshBasicMaterial({ map: backTexture, side: THREE.DoubleSide, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -4 }),
     )
@@ -1424,7 +1458,7 @@ export class GameScene {
       back.rotation.x = Math.PI / 2
       back.position.y = -HIDDEN_CARD_THICKNESS / 2 - CARD_FACE_CLEARANCE
     }
-    const edge = flippingEnemy ? null : new THREE.Mesh(cardBodyGeometry(CARD_SIZE, CARD_THICKNESS), new THREE.MeshStandardMaterial({ roughness: 0.9 }))
+    const edge = new THREE.Mesh(cardBodyGeometry(CARD_SIZE, CARD_THICKNESS), new THREE.MeshStandardMaterial({ roughness: 0.9 }))
     if (edge) {
       this._styleTileBody(edge, room, position, { revealed: false, flippable: !backUnflippable })
       edge.position.y = 0
@@ -1440,7 +1474,7 @@ export class GameScene {
     face.visible = false
     face.userData.body.visible = false
     this.roomGroup.add(group)
-    this.flipAnimations.push({ key, group, front, back, edge, ground: flipGround, startY, frontTexture, backTexture, elapsed: 0, duration: 0.34 })
+    this.flipAnimations.push({ key, group, front, back, edge, startY, frontTexture, backTexture, elapsed: 0, duration: 0.34 })
     return true
   }
 
@@ -1514,20 +1548,22 @@ export class GameScene {
     return true
   }
 
-  _startEnemyMove({ roomId, from, to } = {}) {
+  _startEnemyMove({ roomId, enemyId, from, to, path } = {}) {
     const room = this.run.currentRoom
     if (!room || room.id !== roomId || room.id !== this.framedRoomId || !from || !to) return false
     const face = this.tileMeshByKey.get(tileKey(from))
     if (!face?.visible || !face.userData?.standing) return false
     this.movementAnimation = {
       actor: 'enemy',
+      enemyId,
       face,
       room,
       from: { ...from },
       to: { ...to },
+      route: [{ ...from }, ...(path || [to]).map(point => ({ ...point }))],
       baseY: face.userData.baseY,
       elapsed: 0,
-      duration: 0.24,
+      duration: .24 * (path?.length || 1),
     }
     return true
   }
@@ -1561,11 +1597,8 @@ export class GameScene {
     const attackCard = actor === 'player' ? null : actorStatus
       ? { type: 'monster', enemyId: actorStatus.enemyId, title: actorStatus.name, attribute: actorStatus.attribute, boss: actorStatus.boss }
       : this._cardFaceData(room, position)
-    const attackTexture = makeCanvasTexture((context) => actor === 'player'
-      ? drawStickFigure(context, { armLift: 0, legSpread: 1 })
-      : drawEnemyPuppet(context, attackCard?.enemyId, 'attack', 0)
-        || drawStandingToken(context, attackCard, { headLift: 0, bodySway: 0 }),
-    { padding: actor === 'enemy' ? ENEMY_PUPPET_PADDING : 0 })
+    if (actor === 'enemy' && attackCard?.enemyId) this._attachEnemyFigure(face, attackCard.enemyId)
+    const attackTexture = actor === 'player' ? makeCanvasTexture((context) => drawStickFigure(context, { armLift: 0, legSpread: 1 })) : null
     if (attackTexture) {
       mesh.material.map = attackTexture
       mesh.material.needsUpdate = true
@@ -1657,28 +1690,30 @@ export class GameScene {
     animation.object.scale.copy(animation.baseScale).multiplyScalar(pose.scale)
     animation.mesh.material.opacity = animation.baseOpacity * pose.opacity
     animation.mesh.material.color.lerpColors(animation.baseColor, EXPLOSION_FLASH_COLOR, pose.flash * 0.8)
+    if (animation.face.userData.enemyFigure) {
+      const project = enemyPuppetProject(animation.face.userData.enemyId)
+      this._poseEnemyFigure(animation.face, 'death', progress * (project?.animations.death.duration || 800), { opacity: pose.opacity, flash: pose.flash * .8 })
+    }
     animation.ring.scale.setScalar(0.4 + progress * 4)
     animation.ring.material.opacity = 0.5 * (1 - progress)
   }
 
   _setAttackPose(animation, progress) {
     const wave = Math.sin(progress * Math.PI)
-    const sway = Math.sin(progress * Math.PI * 4) * wave
+    if (animation.actor === 'enemy') {
+      const project = enemyPuppetProject(animation.face.userData.enemyFigure?.userData.enemyId)
+      this._poseEnemyFigure(animation.face, 'attack', (project?.animations.attack.duration || 500) * progress)
+      return
+    }
     if (animation.attackTexture) {
       if (animation.actor === 'player') {
         redrawCanvasTexture(animation.attackTexture, (context) => drawStickFigure(context, {
           armLift: wave,
           legSpread: 1 - wave * 0.35,
         }))
-      } else {
-        const card = this._cardFaceData(this.run.currentRoom, animation.face.userData.position)
-        const project = enemyPuppetProject(card?.enemyId)
-        redrawCanvasTexture(animation.attackTexture, (context) =>
-          drawEnemyPuppet(context, card?.enemyId, 'attack', (project?.animations.attack.duration || 500) * progress)
-          || drawStandingToken(context, card, { headLift: wave, bodySway: sway }))
       }
     }
-    const lift = animation.actor === 'player' ? wave * PLAYER_ATTACK_LIFT : wave * ENEMY_ATTACK_LIFT
+    const lift = wave * PLAYER_ATTACK_LIFT
     const baseY = animation.tileFace
       ? animation.face.userData.baseY
       : animation.object.userData.baseY || animation.object.position.y
@@ -1686,7 +1721,7 @@ export class GameScene {
       ? (animation.face.userData.lift || 0) + (animation.face.userData.press || 0)
       : (animation.face.userData.press || 0)
     animation.object.position.y = baseY + heldOffset + lift
-    animation.object.rotation.z = animation.baseRotationZ + (animation.actor === 'enemy' ? sway * 0.045 : Math.sin(progress * Math.PI * 2) * 0.035)
+    animation.object.rotation.z = animation.baseRotationZ + Math.sin(progress * Math.PI * 2) * 0.035
   }
 
   _characterBaseY(character) {
@@ -1697,24 +1732,24 @@ export class GameScene {
 
   _setVictimPose(victim, motion, defeated) {
     if (!victim) return
+    if (victim.face?.userData.enemyFigure && victim.tileFace) {
+      const action = defeated && motion.death > 0 ? 'death' : 'hit'
+      const progress = action === 'death' ? motion.death : motion.hit
+      const project = enemyPuppetProject(victim.face.userData.enemyId)
+      this._poseEnemyFigure(victim.face, action, (project?.animations[action].duration || 800) * progress, { opacity: action === 'death' ? deathMotion(progress).opacity : 1 })
+      return
+    }
     const pose = defeated && motion.death > 0 ? deathMotion(motion.death) : hitMotion(motion.hit)
     victim.object.position.y = this._characterBaseY(victim) + pose.lift
     victim.object.rotation.z = victim.baseRotationZ + pose.tilt
     victim.object.scale.copy(victim.baseScale).multiplyScalar(pose.scale)
     victim.mesh.material.opacity = victim.baseOpacity * (pose.opacity ?? 1)
-    const enemyId = victim.face?.userData.enemyId
-    const project = enemyPuppetProject(enemyId)
-    if (project && victim.mesh.material.map?.isCanvasTexture) {
-      const action = defeated && motion.death > 0 ? 'death' : 'hit'
-      const progress = action === 'death' ? motion.death : motion.hit
-      redrawCanvasTexture(victim.mesh.material.map, (context) =>
-        drawEnemyPuppet(context, enemyId, action, project.animations[action].duration * progress))
-    }
   }
 
   _applyIdlePose(object, face, offset) {
     if (!object?.visible || object === this.attackAnimation?.object
       || object === this.attackAnimation?.victim?.object || object === this.movementAnimation?.face) return
+    if (object === face && face.userData.enemyFigure) return
     const pose = idleMotion(this.characterIdleTime, offset)
     object.position.y = (object === face
       ? face.userData.baseY + (face.userData.lift || 0) + (face.userData.press || 0)
@@ -1743,8 +1778,7 @@ export class GameScene {
       if (refreshArt && project && face !== this.attackAnimation?.object
         && face !== this.attackAnimation?.victim?.object && face !== this.movementAnimation?.face) {
         const offset = (position.c * 0.7 + position.r * 1.3) * 190
-        redrawCanvasTexture(face.material.map, (context) =>
-          drawEnemyPuppet(context, enemyId, 'idle', (this.characterIdleTime * 1000 + offset) % project.animations.idle.duration))
+        this._poseEnemyFigure(face, 'idle', (this.characterIdleTime * 1000 + offset) % project.animations.idle.duration)
       }
     }
     if (this.playerMarker?.visible && !this.run.gameOver) {
@@ -1764,6 +1798,7 @@ export class GameScene {
       animation.object.scale.copy(animation.baseScale)
       animation.object.rotation.z = animation.baseRotationZ
       animation.object.position.y = this._characterBaseY(animation)
+      if (animation.face?.userData.enemyFigure) this._poseEnemyFigure(animation.face)
     }
     if (animation.actor === 'explosion') {
       animation.mesh.material.opacity = animation.baseOpacity
@@ -1778,6 +1813,7 @@ export class GameScene {
       object.rotation.z = baseRotationZ
       mesh.material.opacity = baseOpacity
       object.position.y = this._characterBaseY(animation.victim)
+      if (animation.victim.face?.userData.enemyFigure) this._poseEnemyFigure(animation.victim.face)
     }
     this._applyAttackTargetStatus(animation.targetStatus)
     this.attackAnimation = null
@@ -1858,21 +1894,24 @@ export class GameScene {
     animation.elapsed += delta
     const progress = Math.min(1, animation.elapsed / animation.duration)
     if (animation.actor === 'enemy') {
-      const eased = 1 - Math.pow(1 - progress, 3)
-      const start = this._gridPosition(animation.room, animation.from)
-      const end = this._gridPosition(animation.room, animation.to)
+      const steps = animation.route.length - 1
+      const segment = Math.min(steps - 1, Math.floor(progress * steps))
+      const ratio = progress * steps - segment
+      const eased = 1 - Math.pow(1 - ratio, 3)
+      const from = animation.route[segment], to = animation.route[segment + 1]
+      const start = this._gridPosition(animation.room, from)
+      const end = this._gridPosition(animation.room, to)
       animation.face.position.set(
         THREE.MathUtils.lerp(start.x, end.x, eased),
-        animation.baseY + Math.sin(progress * Math.PI * 2) * 0.045,
+        animation.baseY,
         THREE.MathUtils.lerp(start.z, end.z, eased),
       )
-      animation.face.rotation.z = Math.sin(progress * Math.PI) * 0.09 * Math.sign(end.x - start.x || 1)
-      animation.face.scale.setScalar(1 + Math.sin(progress * Math.PI * 2) * 0.035)
+      animation.face.rotation.z = 0
+      animation.face.scale.setScalar(1)
       const enemyId = animation.face.userData.enemyId
       const project = enemyPuppetProject(enemyId)
-      if (project) redrawCanvasTexture(animation.face.material.map, (context) =>
-        drawEnemyPuppet(context, enemyId, 'move', progress * project.animations.move.duration))
-      animation.face.renderOrder = tileRenderOrder({ r: animation.from.r + (animation.to.r - animation.from.r) * eased }, 4)
+      if (project) this._poseEnemyFigure(animation.face, 'move', progress * steps * project.animations.move.duration)
+      animation.face.renderOrder = tileRenderOrder({ r: from.r + (to.r - from.r) * eased }, 4)
       if (progress < 1) return
       this.movementAnimation = null
       this._refreshTile(animation.room, animation.from, { force: true })
@@ -2100,13 +2139,18 @@ export class GameScene {
       animation.elapsed += delta
       const progress = Math.min(1, animation.elapsed / animation.duration)
       const eased = 1 - Math.pow(1 - progress, 3)
-      animation.group.rotation.x = Math.PI * (1 - eased)
-      animation.group.position.y = THREE.MathUtils.lerp(animation.startY, CARD_THICKNESS / 2, eased) + Math.sin(eased * Math.PI) * 0.28
-      const thickness = HIDDEN_CARD_THICKNESS * (1 - eased)
-      animation.front.position.y = thickness / 2 + 0.002
-      if (animation.back) animation.back.position.y = -thickness / 2 - 0.002
-      if (animation.edge) animation.edge.scale.y = Math.max(0.001, thickness / CARD_THICKNESS)
-      animation.group.scale.x = animation.group.scale.z = THREE.MathUtils.lerp(HIDDEN_CARD_SCALE, 1, eased)
+      if (animation.figure) {
+        animation.hinge.rotation.x = -Math.PI * (1 - eased)
+        animation.group.rotation.y = this.cameraAzimuth
+      } else {
+        animation.group.rotation.x = Math.PI * (1 - eased)
+        animation.group.position.y = THREE.MathUtils.lerp(animation.startY, CARD_THICKNESS / 2, eased) + Math.sin(eased * Math.PI) * 0.28
+        const thickness = HIDDEN_CARD_THICKNESS * (1 - eased)
+        animation.front.position.y = thickness / 2 + 0.002
+        if (animation.back) animation.back.position.y = -thickness / 2 - 0.002
+        if (animation.edge) animation.edge.scale.y = Math.max(0.001, thickness / CARD_THICKNESS)
+        animation.group.scale.x = animation.group.scale.z = THREE.MathUtils.lerp(HIDDEN_CARD_SCALE, 1, eased)
+      }
       if (progress < 1) continue
       this.roomGroup.remove(animation.group)
       disposeObject(animation.group)
@@ -2153,11 +2197,11 @@ export class GameScene {
     if (card.type === 'empty') return this.boardTextures.floor(position)
     return makeCanvasTexture((context) => {
       if (card.type === 'monster') {
-        if (!drawEnemyPuppet(context, card.enemyId)) drawStandingToken(context, card)
+        if (!revealed) drawEnemyPuppet(context, card.enemyId)
         return
       }
       if (card.type === 'merchant') {
-        drawStandingToken(context, card)
+        drawMerchantToken(context, card)
         return
       }
       if (card.type === 'totem') { drawTotemToken(context, card); return }
@@ -2376,7 +2420,10 @@ export class GameScene {
 
   _updateCameraFacingTokens() {
     for (const face of this.tileMeshes) {
-      if (face?.userData?.standing) face.rotation.y = this.cameraAzimuth
+      if (face?.userData?.standing) {
+        face.rotation.y = this.cameraAzimuth
+        if (face.userData.enemyFigure) this._poseEnemyFigure(face)
+      }
       const sprite = face?.userData?.itemSprite
       const spin = sprite?.userData?.itemSpin
       if (sprite && spin) sprite.rotation.y = this.cameraAzimuth + spin.angle

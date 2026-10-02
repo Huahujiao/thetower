@@ -1,4 +1,5 @@
 import { Euler, Matrix4, Quaternion, Vector3 } from 'three'
+import { constrainShadowJoints, constrainShadowParts } from './shadow-grounding.js'
 
 export const SHADOW_PUPPET_STORAGE_KEY = 'thetower-shadow-puppet-project-v3'
 export const SHADOW_PUPPET_ROSTER_STORAGE_KEY = 'thetower-shadow-puppet-roster-v3'
@@ -371,6 +372,11 @@ export function normalizeShadowProject(source) {
     bones,
     parts,
     animations: normalizeAnimations(source.animations, validTargetKeys),
+    ...(source.grounding ? { grounding: {
+      floating: source.grounding.floating === true,
+      floorY: finite(source.grounding.floorY, 0),
+      supports: (source.grounding.supports || []).filter(s => jointIds.has(s.jointId) && jointIds.has(s.contactId) && parts.some(p => p.id === s.partId)).map(s => ({ jointId: s.jointId, contactId: s.contactId, partId: s.partId })),
+    } } : {}),
   }
   if (Number(source.version || 0) < 4) reflectShadowProjectZ(project)
   if (Number(source.version || 0) < 5) reflectShadowProjectY(project)
@@ -582,7 +588,7 @@ export function shadowBoneAttachmentMatrix(bone, t = 0.5, followRotation = true)
   return new Matrix4().compose(start.lerp(end, ratio), rotation, new Vector3(1, 1, 1))
 }
 
-export function evaluateShadowProject(project, animationId = null, time = 0) {
+export function evaluateShadowProject(project, animationId = null, time = 0, { raw = false } = {}) {
   const animationEntry = animationId ? project.animations[animationId] : null
   const jointsById = new Map(project.joints.map((entry) => [entry.id, entry]))
   const incomingBone = new Map(project.bones.map((entry) => [entry.toJointId, entry]))
@@ -608,6 +614,7 @@ export function evaluateShadowProject(project, animationId = null, time = 0) {
     return result
   }
   const joints = project.joints.map(resolveJoint)
+  if (!raw) constrainShadowJoints(project, joints, animationId, () => evaluateShadowProject(project, null, 0, { raw: true }))
   const evaluatedJoints = new Map(joints.map((entry) => [entry.joint.id, entry]))
   const bones = project.bones.flatMap((bone) => {
     const from = evaluatedJoints.get(bone.fromJointId)
@@ -654,6 +661,7 @@ export function evaluateShadowProject(project, animationId = null, time = 0) {
       order,
     }
   }).sort((left, right) => left.part.layer - right.part.layer || left.order - right.order)
+  if (!raw) constrainShadowParts(project, parts, joints, bones, animationId)
   return { joints, bones, parts, jointsById: evaluatedJoints, bonesById: evaluatedBones }
 }
 

@@ -28,7 +28,7 @@ export function add(run, id, x = null, y = null) {
 export function select(run, item) { run.selectedInventoryIndex = run.backpack.originIndex(run.backpack.placementOf(item.uid)) }
 export function enemy(run, { hp = 100, pos = { c: 4, r: 3 }, attribute = null, attack = 0, ...props } = {}) {
   const e = createEnemyById('gnawer', pos)
-  Object.assign(e, { hp, maxHp: hp, attribute, attack, traits: [], actionDelay: 100, noLoot: true, noExperience: true, ...props })
+  Object.assign(e, { hp, maxHp: hp, attribute, attack, speed: 0, traits: [], actionDelay: 100, noLoot: true, noExperience: true, ...props })
   run.currentRoom.addEntity(e)
   return e
 }

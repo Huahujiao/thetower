@@ -288,8 +288,9 @@ for (const project of enemyProjects) {
   if (art.family === 'arthropod') {
     assert.ok(Math.min(...heights) < -50, `${project.enemyId}: crawler lacks ground-reaching feet`)
   } else {
-    const upperLimit = ['quadruped', 'toad'].includes(art.family) ? 10 : 30
-    assert.ok(Math.max(...heights) >= upperLimit && Math.max(...heights) - Math.min(...heights) > 75,
+    const crawling = art.family === 'swarm' && !project.grounding.floating
+    const upperLimit = ['quadruped', 'toad'].includes(art.family) || crawling ? 10 : 30
+    assert.ok(Math.max(...heights) >= upperLimit && Math.max(...heights) - Math.min(...heights) > (crawling ? 25 : 75),
       `${project.enemyId}: skeleton lacks vertical articulation`)
   }
   // Compact component rigs no longer include the draft's unused finger/antenna branches.
@@ -481,7 +482,12 @@ const personalElbowRoster = normalizeShadowRoster({ enemyArtPackVersion: 10, cha
 ] })
 const personalElbowSnapshot = JSON.stringify(personalElbowRoster.characters)
 assert.equal(installEnemyShadowProjects(personalElbowRoster), true)
-assert.equal(JSON.stringify(personalElbowRoster.characters.slice(0, 1)), personalElbowSnapshot)
+const personalBefore = JSON.parse(personalElbowSnapshot)[0].project
+const personalAfter = personalElbowRoster.characters[0].project
+assert.deepEqual(personalAfter.parts, personalBefore.parts)
+assert.deepEqual(personalAfter.animations, personalBefore.animations)
+assert.equal(JSON.stringify(personalAfter.joints.slice(0, personalBefore.joints.length)), JSON.stringify(personalBefore.joints))
+assert.ok(personalAfter.grounding.supports.length)
 
 // V11 -> V12 widens just the two narrow rigs. Custom proportions, poses,
 // associations and detached backups survive, and persisted loads are a no-op.
@@ -589,7 +595,7 @@ for (const id of ['gnawer', 'tide-shadow-cub']) {
   for (const action of [null, 'idle', 'move', 'attack', 'hit', 'death']) {
     for (const fraction of [0, .27, .64, .85, 1]) {
       const time = (wide.animations[action]?.duration || 0) * fraction
-      const a = evaluateShadowProject(wide, action, time), b = evaluateShadowProject(narrow, action, time)
+      const a = evaluateShadowProject(wide, action, time, { raw: true }), b = evaluateShadowProject(narrow, action, time, { raw: true })
       const aRoot = a.jointsById.get('root').matrix, bRoot = b.jointsById.get('root').matrix
       const stretch = aRoot.clone().multiply(bRoot.clone().invert())
       for (const type of ['joints', 'parts']) for (let i = 0; i < a[type].length; i++) {

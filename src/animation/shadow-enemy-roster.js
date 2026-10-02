@@ -7,6 +7,7 @@ import { applyEnemyVariant } from './shadow-enemy-variants.js'
 // These rigs are authored in world coordinates: +Y is up and +Z faces the viewer.
 // Every surface is a zero-thickness paper cutout; depth only places the hinges.
 const DESIGNS = {
+  overseer: ['humanoid', '#31333f', '#737584', '#b5ad9b', 'fist'],
   'tide-shadow-cub': ['quadruped', '#344b58', '#73919a', '#a7c2bd', 'claw'],
   'nest-spider': ['arthropod', '#353b3b', '#777e71', '#b5ad88', 'fang'],
   'beetle-guard': ['arthropod', '#383d32', '#78816c', '#c1ad76', 'shield'],

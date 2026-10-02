@@ -138,7 +138,8 @@ function createEnemy(definition, { position = null, boss = false } = {}) {
     enemyId: definition.id,
     name: definition.name,
     attribute: definition.attribute,
-    behavior: definition.behavior,
+    speed: Math.max(0, Math.floor(Number(definition.speed) || 0)),
+    ...(definition.behavior === 'ambush' ? { behavior: 'ambush' } : {}),
     traits: [...(definition.traits || [])],
     deathRule: definition.deathRule || null,
     splitMinionId: definition.splitMinionId || null,
@@ -170,8 +171,9 @@ function createEnemy(definition, { position = null, boss = false } = {}) {
     hpMultiplier: ENEMY_HP_MULTIPLIER,
     attack: definition.attack,
     range: definition.range,
-    attackCooldownMax: Math.max(1, Number(definition.attackCooldownMax ?? definition.cooldownMax) || 0),
+    attackCooldownMax: 0,
     initialActionDelay: definition.initialActionDelay,
+    actionDelayRevision: 1,
     actionDelay: Math.max(0, Number(definition.initialActionDelay) || 0),
     attackCooldown: 0,
     ownActionCount: 0,
@@ -188,9 +190,22 @@ export function createMonster(floor, index = 0) {
 
 // Update old saves once, preserving damage already dealt and combat state.
 export function synchronizeEnemyBalance(enemy) {
-  if (enemy.hpMultiplier === ENEMY_HP_MULTIPLIER) return
   const definition = enemy.enemyId === BOSS.id ? BOSS : getEnemyDefinition(enemy.enemyId)
   if (!definition) return
+  enemy.speed = Math.max(0, Math.floor(Number(definition.speed) || 0))
+  if (definition.behavior === 'ambush') enemy.behavior = 'ambush'
+  else delete enemy.behavior
+  enemy.traits = (enemy.traits || []).filter(trait => trait !== 'swift')
+  enemy.attackCooldownMax = 0
+  enemy.attackCooldown = 0
+  if (enemy.actionDelayRevision !== 1) {
+    const previousDelay = Math.max(0, Number(enemy.initialActionDelay) || 0)
+    const delay = Math.max(0, Number(definition.initialActionDelay) || 0)
+    enemy.actionDelay = Math.max(0, (Number(enemy.actionDelay) || 0) - (enemy.hasActed ? 0 : previousDelay)) + (enemy.hasActed ? 0 : delay)
+    enemy.initialActionDelay = delay
+    enemy.actionDelayRevision = 1
+  }
+  if (enemy.hpMultiplier === ENEMY_HP_MULTIPLIER) return
   const fraction = Math.max(0, Math.min(1, enemy.hp / enemy.maxHp))
   enemy.maxHp = definition.hp * ENEMY_HP_MULTIPLIER
   enemy.hp = Math.ceil(enemy.maxHp * fraction)

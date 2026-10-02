@@ -1,6 +1,9 @@
 import { createEnemyShadowProjects, ENEMY_ART, installEnemyShadowProjects } from '../animation/shadow-enemies.js'
 import { evaluateShadowProject, loadShadowRoster } from '../animation/shadow-rig.js'
 import { projectShadowFaces } from '../animation/shadow-projection.js'
+import * as THREE from 'three'
+import { shadowPartGeometry } from '../animation/shadow-geometry.js'
+import { shadowPartFloor } from '../animation/shadow-grounding.js'
 
 const images = new Map()
 let projects = null
@@ -25,7 +28,7 @@ function imageFor(url) {
 
 export function prepareEnemyPuppets(onReady) {
   assetReady = onReady
-  projects = new Map(createEnemyShadowProjects().map((project) => [project.enemyId, project]))
+  projects = new Map(createEnemyShadowProjects({ includeBoss: true }).map((project) => [project.enemyId, project]))
   const roster = loadShadowRoster()
   installEnemyShadowProjects(roster)
   for (const { project } of roster.characters) {
@@ -163,4 +166,81 @@ export function drawEnemyPuppet(context, enemyId, action = 'idle', time = 0) {
   const drawn = drawProject(context, project, action, time)
   context.restore()
   return drawn
+}
+
+const partTextures = new Map()
+function puppetTexture(part) {
+  const image = imageFor(part.visual.texture)
+  if (!image) return null
+  const frame = part.visual.textureFrame || {}
+  const key = `${part.visual.texture}|${JSON.stringify(frame)}`
+  if (partTextures.has(key)) return partTextures.get(key)
+  const cellWidth = image.naturalWidth / (frame.columns || 1), cellHeight = image.naturalHeight / (frame.rows || 1)
+  const crop = frame.crop || { left: 0, top: 0, width: 1, height: 1 }
+  const canvas = document.createElement('canvas')
+  canvas.width = Math.max(1, Math.ceil(cellWidth * crop.width))
+  canvas.height = Math.max(1, Math.ceil(cellHeight * crop.height))
+  canvas.getContext('2d').drawImage(image, ((frame.column || 0) + crop.left) * cellWidth, ((frame.row || 0) + crop.top) * cellHeight,
+    cellWidth * crop.width, cellHeight * crop.height, 0, 0, canvas.width, canvas.height)
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.colorSpace = THREE.SRGBColorSpace
+  texture.anisotropy = 4
+  texture.userData.boardShared = true
+  partTextures.set(key, texture)
+  return texture
+}
+
+// Both textured and geometry-only enemies use the same articulated 3D actor.
+export function createEnemyFigure(enemyId, cardSize = 1.14) {
+  const project = enemyPuppetProject(enemyId)
+  if (!project) return null
+  const group = new THREE.Group(), rig = new THREE.Group()
+  group.add(rig)
+  group.userData.enemyId = enemyId
+  group.userData.rig = rig
+  group.userData.cardSize = cardSize
+  group.userData.meshes = new Map()
+  for (const part of project.parts) {
+    const textured = part.visual.type === 'texture'
+    const geometry = textured ? new THREE.PlaneGeometry(part.width, part.height) : shadowPartGeometry(part)
+    if (textured) geometry.translate(part.width * (.5 - part.pivotX), part.height * (part.pivotY - .5), 0)
+    const mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({
+      color: textured ? 0xffffff : part.fill, map: textured ? puppetTexture(part) : null,
+      side: THREE.DoubleSide, transparent: true, alphaTest: textured ? .04 : 0, depthTest: true, depthWrite: true,
+    }))
+    mesh.matrixAutoUpdate = false
+    mesh.raycast = () => {}
+    rig.add(mesh)
+    group.userData.meshes.set(part.id, mesh)
+  }
+  updateEnemyFigure(group)
+  return group
+}
+
+export function updateEnemyFigure(group, action = 'idle', time = 0, { opacity = 1, flash = 0 } = {}) {
+  const project = enemyPuppetProject(group?.userData.enemyId)
+  if (!project) return
+  const layout = enemyPuppetLayout(project.enemyId)
+  const scale = (layout?.scale ?? GNAWER_DISPLAY_SCALE) * group.userData.cardSize / 160
+  const evaluation = evaluateShadowProject(project, action, time)
+  const idle = project.grounding?.floating ? evaluateShadowProject(project, 'idle', 0) : null
+  const floorY = idle ? Math.min(...idle.parts.map(shadowPartFloor)) : project.grounding?.floorY || 0
+  const rig = group.userData.rig
+  rig.scale.setScalar(scale)
+  rig.position.set(-(layout?.centerX || 0) * scale, -floorY * scale + (idle ? group.userData.cardSize * .14 : 0), 0)
+  for (const entry of evaluation.parts) {
+    const mesh = group.userData.meshes.get(entry.part.id)
+    mesh.matrix.copy(entry.matrix)
+    mesh.matrixWorldNeedsUpdate = true
+    mesh.material.opacity = entry.opacity * opacity
+    if (entry.part.visual.type === 'texture') {
+      const texture = puppetTexture(entry.part)
+      if (texture !== mesh.material.map) { mesh.material.map = texture; mesh.material.needsUpdate = true }
+      mesh.visible = !!texture && entry.opacity > .001
+      mesh.material.color.set(0xffffff).lerp(new THREE.Color(0xff9b43), flash)
+    } else {
+      mesh.visible = entry.opacity > .001
+      mesh.material.color.set(entry.part.fill).lerp(new THREE.Color(0xff9b43), flash)
+    }
+  }
 }
