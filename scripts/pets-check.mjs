@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
-import { fixture, add, enemy, select, attack } from './item-test-helpers.mjs'
+import { fixture, add, enemy, select, attack, round } from './item-test-helpers.mjs'
 import { GameRun, SAVE_VERSION } from '../src/game/run.js'
 import { ALL_ITEM_DEFS, makeItemById } from '../src/game/data/content.js'
 import { PETS, PET_RELICS } from '../src/game/data/pets.js'
@@ -14,7 +14,7 @@ function feed(run, id = 'food-3', points = null, x = 0, y = 1) {
   if (points !== null) item[item.type === 'energy' ? 'energy' : 'heal'] = points
   return item
 }
-function phase(run, options = {}) { run._endTurn({ skipEnemyPhase: true, recoverEnergy: false, ...options }) }
+function phase(run) { run._synchronizeBattle(); if (run.battle.active) round(run); else run._endTurn() }
 
 assert.equal(PETS.length, 8)
 assert.equal(ALL_ITEM_DEFS.length, 132)
@@ -37,7 +37,7 @@ assert(Array.from({ length: 100 }, (_, index) => buildSupplyRewardChoices({ floo
   const target = enemy(run); phase(run); assert.equal(first.energy, 1); assert.equal(target.hp, 100)
   const second = feed(run, 'food-3', 2, 1, 1)
   phase(run); assert.equal(target.hp, 92); assert(!run.backpack.placementOf(first.uid)); assert(!run.backpack.placementOf(second.uid))
-  assert(run.backpack.placementOf(pet.uid)); assert.equal(run.globalTurn, 3)
+  assert(run.backpack.placementOf(pet.uid)); assert.equal(run.globalTurn, 2)
 }
 // Every pet's base damage, costs and nearest-target attack run in an independent phase.
 for (const definition of PETS) {
@@ -50,7 +50,7 @@ for (const definition of PETS) {
     const poison = getStatus(target, 'enemy-poison'); assert(poison); assert.equal(poison.turns, 100); assert.equal(poison.layers, 100)
     assert.equal(poison.showTurns, false); assert.equal(poison.showLayers, false)
   }
-  if (pet.id === 'shadow-spider') assert.equal(target.actionDelay, 101)
+  if (pet.id === 'shadow-spider') assert.equal(target.actionDelay, 100)
   if (pet.id === 'thunder-raven') assert.equal(other.hp, 99)
 }
 // Physical backpack order, not acquisition order, including rotated two-cell pets.
@@ -76,7 +76,7 @@ for (const definition of PETS) {
   const run = fixture(); add(run, 'mountain-hound', 0, 0)
   const food = feed(run, 'food-5'), target = enemy(run)
   phase(run); assert.equal(food.energy, 4)
-  run.player.energy = 0; select(run, food); assert(run.useSelected())
+  run.player.energy = 1; select(run, food); assert(run.useSelected())
   assert.equal(run.player.energy, 4); assert(!run.backpack.placementOf(food.uid)); assert.equal(target.hp, 96)
 }
 // Pet phase precedes enemy attacks; fatal pet hits prevent enemy action entirely.
@@ -85,14 +85,16 @@ for (const definition of PETS) {
   enemy(run, { hp: 4, attack: 10, actionDelay: 0 }); const hp = run.player.hp
   const phases = []; run.on('pets:started', () => phases.push('pets'))
   run.on('turn:ended', () => phases.push('end'))
-  run._endTurn({ recoverEnergy: false }); assert.equal(run.player.hp, hp); assert.deepEqual(phases, ['pets', 'end'])
+  round(run); assert.equal(run.player.hp, hp); assert.deepEqual(phases, ['pets', 'end'])
 }
 // Player animation waits before pets, and each player turn resolves pets exactly once.
 {
   const run = fixture(), weapon = add(run, 'hunter-shortbow', 4, 0)
   add(run, 'mountain-hound', 0, 0); const food = feed(run), target = enemy(run)
   select(run, weapon); assert(run._attack(target)); assert.equal(food.energy, 3); assert(getStatus(target, 'prey'))
-  run.bus.emit('animate:attack-complete', { actor: 'player' }); assert.equal(food.energy, 2)
+  run.bus.emit('animate:attack-complete', { actor: 'player' }); assert.equal(food.energy, 3)
+  assert.equal(target.hp, 94); assert(getStatus(target, 'prey'))
+  round(run); assert.equal(food.energy, 2)
   assert.equal(target.hp, 88); assert.equal(getStatus(target, 'prey'), null)
   run.bus.emit('animate:attack-complete', { actor: 'player' }); assert.equal(food.energy, 2)
 }
@@ -100,8 +102,8 @@ for (const definition of PETS) {
 {
   const run = fixture(), pet = add(run, 'shadow-spider', 0, 0); feed(run, 'food-3', 2)
   const target = enemy(run, { actionDelay: 0, attack: 5 }); const hp = run.player.hp
-  run._endTurn({ recoverEnergy: false }); assert.equal(target.actionDelay, 0); assert.equal(run.player.hp, hp)
-  run.backpack.removeByUid(pet.uid); run._endTurn({ recoverEnergy: false }); assert.equal(run.player.hp, hp - 5)
+  round(run); assert.equal(target.actionDelay, 0); assert.equal(run.player.hp, hp)
+  run.backpack.removeByUid(pet.uid); round(run); assert.equal(run.player.hp, hp - 5)
 }
 // Defense piercing ignores BOTH traits without consuming the shield.
 {
@@ -186,7 +188,8 @@ for (const points of [1, 3]) {
 {
   const run = fixture(), weapon = add(run, 'butcher-knife', 0, 0)
   const target = enemy(run, { hp: 5, attack: 4, actionDelay: 0 }); run.applyStatus(target, 'enemy-poison', { damage: 1 })
-  attack(run, weapon, target); assert.equal(run.backpack.items.filter(item => item.id === 'meat-scrap').length, 1)
+  attack(run, weapon, target); assert.equal(run.backpack.items.filter(item => item.id === 'meat-scrap').length, 0)
+  round(run); assert.equal(run.backpack.items.filter(item => item.id === 'meat-scrap').length, 1)
 }
 // Feeding does not activate player-use chains or bath armor, exhaustion counts for furnace.
 {
@@ -206,7 +209,9 @@ for (const points of [1, 3]) {
   globalThis.localStorage = { getItem: () => payload, setItem: (_key, value) => { payload = value }, removeItem: () => { removed++; payload = null } }
   try {
     const loaded = new GameRun({ autoLoad: true })
-    assert.equal(removed, 0); assert.equal(loaded.backpack.items.find(item => item.uid === food.uid).energy, 1)
+    assert.equal(removed, 0); assert.equal(loaded.backpack.items.find(item => item.uid === food.uid).energy, 2)
+    assert.equal(loaded.currentRoom.entity(target.id).hp, 94); assert.equal(loaded.globalTurn, 0)
+    round(loaded); assert.equal(loaded.backpack.items.find(item => item.uid === food.uid).energy, 1)
     assert.equal(loaded.currentRoom.entity(target.id).hp, 88); assert.equal(loaded.globalTurn, 1)
     for (const mutate of [data => { data.version = SAVE_VERSION - 1 }, data => { data.backpack.placements.find(p => p.item.uid === food.uid).item.energy = 0 },
       data => { data.player.itemState.pets.prey = null }]) {

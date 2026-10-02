@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { fixture, enemy, add, attack } from './item-test-helpers.mjs'
+import { fixture, enemy, add, attack, round } from './item-test-helpers.mjs'
 import { GameRun } from '../src/game/run.js'
 import { applyStatus, consumeStatus, getStatus, registerStatusDamageResolver, statusCounterText, statusSnapshot, tickStatusSnapshot } from '../src/game/rules/statuses.js'
 import { playerStatusEntries } from '../src/ui/status-presentation.js'
@@ -29,7 +29,7 @@ import { playerStatusEntries } from '../src/ui/status-presentation.js'
 {
   const run = fixture(), attacker = enemy(run, { attack: 4, actionDelay: 0 })
   run.applyStatus(run.player, 'counter', { layers: 3, turns: 1, damage: 2 })
-  run._endTurn()
+  round(run)
   assert.equal(attacker.hp, 98)
   assert.equal(getStatus(run.player, 'counter'), null)
 }
@@ -38,13 +38,13 @@ import { playerStatusEntries } from '../src/ui/status-presentation.js'
   const a = enemy(run, { attack: 2, actionDelay: 0 })
   const b = enemy(run, { attack: 2, actionDelay: 0, pos: { c: 3, r: 4 } })
   run.applyStatus(run.player, 'counter', { layers: 3, turns: 4, damage: 2 })
-  run._endTurn()
+  round(run)
   assert.equal(a.hp, 98); assert.equal(b.hp, 98)
   assert.equal(getStatus(run.player, 'counter').layers, 1)
   assert.equal(getStatus(run.player, 'counter').turns, 3)
 }
 
-// Duration ages in rooms that are inactive, on hidden enemies and on skipped enemy phases.
+// Hidden and remote enemies freeze; player buffs age only in a combat round.
 {
   const run = fixture()
   const target = enemy(run)
@@ -55,9 +55,12 @@ import { playerStatusEntries } from '../src/ui/status-presentation.js'
   assert(remote)
   run.applyStatus(remote, 'dodge', { layers: 5, turns: 1 })
   run.itemRules.buff('test', { flat: 9, layers: 5, turns: 1 })
-  run._endTurn({ skipEnemyPhase: true })
-  assert.equal(getStatus(target, 'enemy-poison'), null)
-  assert.equal(getStatus(remote, 'dodge'), null)
+  run._endTurn()
+  assert.equal(run.itemRules.state.buffs.test.turns, 1)
+  enemy(run, { pos: { c: 2, r: 3 } })
+  round(run)
+  assert.equal(getStatus(target, 'enemy-poison').turns, 1)
+  assert.equal(getStatus(remote, 'dodge').turns, 1)
   assert.equal(run.itemRules.state.buffs.test, undefined)
 }
 
@@ -72,18 +75,18 @@ import { playerStatusEntries } from '../src/ui/status-presentation.js'
   assert.equal(playerPoison.layers, 100); assert.equal(playerPoison.turns, 10)
   assert.equal(playerPoison.showLayers, false)
   run.applyStatus(target, 'enemy-poison', { layers: 2, damage: 5 })
-  run._endTurn()
+  round(run)
   assert.equal(run.player.hp, 38); assert.equal(run.player.armor, 10)
   assert.equal(playerPoison.layers, 99); assert.equal(playerPoison.turns, 9)
   assert.equal(target.hp, 100); assert.equal(getStatus(target, 'enemy-poison').layers, 2)
   assert.equal(getStatus(target, 'enemy-poison').turns, 99)
-  run._endTurn(); assert.equal(target.hp, 100)
-  run._endTurn(); assert.equal(target.hp, 95)
-  run._endTurn(); assert.equal(target.hp, 90)
+  round(run); assert.equal(target.hp, 100)
+  round(run); assert.equal(target.hp, 95)
+  round(run); assert.equal(target.hp, 90)
   assert.equal(getStatus(target, 'enemy-poison'), null)
   run.removeStatus(run.player, 'player-poison')
   run._applyPoison()
-  for (let i = 0; i < 10; i++) run._endTurn({ skipEnemyPhase: true })
+  for (let i = 0; i < 10; i++) round(run)
   assert.equal(getStatus(run.player, 'player-poison'), null)
 }
 
@@ -159,7 +162,7 @@ import { playerStatusEntries } from '../src/ui/status-presentation.js'
     return 7
   })
   run.applyStatus(run.player, 'counter', { layers: 2, turns: 3, damage: { mode: 'test-stage' } })
-  run._endTurn()
+  round(run)
   assert.equal(target.hp, 93)
   assert.equal(getStatus(run.player, 'counter').layers, 1)
   assert.equal(getStatus(run.player, 'counter').turns, 2)

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { fixture, add, select, enemy, attack } from './item-test-helpers.mjs'
+import { fixture, add, select, enemy, attack, round } from './item-test-helpers.mjs'
 import { GameRun, SAVE_KEY } from '../src/game/run.js'
 import { ALL_ITEM_DEFS, RECIPES, randomNeutralItem, makeItemById } from '../src/game/data/content.js'
 import { createMerchantEntity, buildMerchantStock, refreshMerchantSlot } from '../src/game/data/merchants.js'
@@ -21,22 +21,22 @@ for (let i = 0; i < 100; i++) {
   const b = add(run, 'r-empty', 1, 0)
   const c = add(run, 'r-reverse', 2, 0)
   assert(run.commitInventoryDrop(a.uid, 8))
-  assert.equal(run.globalTurn, 1)
+  assert.equal(run.globalTurn,0)
   assert.equal(run.commitInventoryDrop(a.uid, 8), null)
-  assert.equal(run.globalTurn, 1)
+  assert.equal(run.globalTurn,0)
   const replaced = run.commitInventoryDrop(a.uid, 1)
   assert.deepEqual(replaced.conflicts.map((item) => item.uid), [b.uid])
   assert(run.inventoryStash.some((item) => item.uid === b.uid))
-  assert.equal(run.globalTurn, 2)
+  assert.equal(run.globalTurn,0)
   assert(run.moveInventoryToStash(c.uid))
-  assert.equal(run.globalTurn, 3)
+  assert.equal(run.globalTurn,0)
   assert(run.setStashedInventoryRotation(c.uid, 1))
   assert.equal(c.bagRotation, 1)
-  assert.equal(run.globalTurn, 3)
+  assert.equal(run.globalTurn,0)
   assert(run.discardInventoryItem(a.uid))
-  assert.equal(run.globalTurn, 4)
+  assert.equal(run.globalTurn,0)
   assert(run.discardInventoryItem(b.uid))
-  assert.equal(run.globalTurn, 5)
+  assert.equal(run.globalTurn,0)
 }
 
 // Range overlays follow the same mixed distance rule as combat and conceal unrevealed cells.
@@ -86,7 +86,7 @@ for (const id of ['health-potion', 'iron-powder', 'food-3', 'rage-wine']) {
   run.player.poisonedTurns = 0
   select(run, item)
   assert(run.useSelected())
-  assert.equal(run.globalTurn, 1)
+  assert.equal(run.globalTurn,0)
   assert.equal(run.player.energy, id === 'food-3' ? 6 : 3)
   assert.equal(run.backpack.length, 0)
   if (id === 'health-potion') assert.equal(run.player.hp, 15)
@@ -99,7 +99,7 @@ for (const id of ['health-potion', 'iron-powder', 'food-3', 'rage-wine']) {
   assert(run.useSelected()); assert.equal(run.globalTurn, 0)
   assert.equal(run.clickTile(7, 3), false)
   assert(run.clickTile(5, 3))
-  assert.equal(run.globalTurn, 1); assert.equal(run.player.energy, 4)
+  assert.equal(run.globalTurn,0); assert.equal(run.player.energy, 4)
   assert.equal(run.itemRules.state.travel, 0)
   assert.deepEqual(run.player.pos, { c: 5, r: 3 })
 }
@@ -200,7 +200,7 @@ for (const [id, setup, flat] of [
   const run = fixture(), w = add(run, 'wood-bow', 0, 0); add(run, 'scope', 1, 0)
   run.player.pos = { c: 0, r: 3 }; const e = enemy(run, { pos: { c: 4, r: 3 } })
   assert.equal(run.weaponRange(w), 4)
-  attack(run,w,e); assert.equal(e.hp,96); assert.equal(run.globalTurn,1)
+  attack(run,w,e); assert.equal(e.hp,96); assert.equal(run.globalTurn,0)
 }
 {
   const run = fixture(), w = add(run, 'ash-bow')
@@ -228,7 +228,7 @@ for (const [id, setup, flat] of [
 }
 for (const [id, attr, cost] of [['bone-knife',null,1],['erosion-knife','drown',2],['erosion-knife',null,2]]) {
   const run=fixture(),w=add(run,id),e=enemy(run,{hp:1,attribute:attr})
-  attack(run,w,e); assert.equal(run.player.energy,10-cost)
+  attack(run,w,e); assert.equal(run.player.energy,6-cost)
 }
 {
   const run=fixture(),w=add(run,'return-axe'),e=enemy(run,{hp:1})
@@ -257,32 +257,35 @@ for(const id of ['ember-spear','soul-spear']) {
   run._enemyAttack(e);assert.equal(e.hp,97)
   attack(run,w,e);assert.equal(e.hp,95)
 }
-// Rotation preview is free; placing the rotated item costs one enemy phase.
+// Rotation preview is free; committing costs energy, without an enemy phase.
 {
   const run=fixture(),w=add(run,'rust-sword'),e=enemy(run,{attack:2,actionDelay:0})
+  run._synchronizeBattle()
   run.player.energy=5;select(run,w)
-  assert(run.moveInventory(w.uid,2));assert.equal(run.globalTurn,1);assert.equal(run.player.hp,18)
-  assert.equal(run.player.energy,5)
-  assert.equal(run.moveInventory(w.uid,2),false);assert.equal(run.globalTurn,1)
+  assert(run.moveInventory(w.uid,2));assert.equal(run.globalTurn,0);assert.equal(run.player.hp,20)
+  assert.equal(run.player.energy,4)
+  assert.equal(run.moveInventory(w.uid,2),false);assert.equal(run.globalTurn,0)
   const placement = run.backpack.placementOf(w.uid)
   const anchor = run.backpack.originIndex(placement)
   const rotation = (placement.rotation + 1) % 4
   assert.notEqual(run.previewInventoryDrop(w.uid, anchor, { rotation })?.status, 'blocked')
-  assert.equal(run.globalTurn,1)
+  assert.equal(run.globalTurn,0)
   assert.equal(run.backpack.placementOf(w.uid).rotation,placement.rotation)
   assert.equal(run.commitInventoryDrop(w.uid,32,{ rotation }),null)
-  assert.equal(run.globalTurn,1)
+  assert.equal(run.globalTurn,0)
   assert.equal(run.backpack.placementOf(w.uid).rotation,placement.rotation)
-  assert(run.commitInventoryDrop(w.uid,anchor,{ rotation }));assert.equal(run.globalTurn,2);assert.equal(run.player.hp,16)
-  assert.equal(run.commitInventoryDrop(w.uid,anchor,{ rotation }),null);assert.equal(run.globalTurn,2)
-  assert.equal(run.moveInventory(w.uid,32),false);assert.equal(run.globalTurn,2)
+  assert(run.commitInventoryDrop(w.uid,anchor,{ rotation }));assert.equal(run.globalTurn,0);assert.equal(run.player.hp,20)
+  assert.equal(run.player.energy,3)
+  assert.equal(run.commitInventoryDrop(w.uid,anchor,{ rotation }),null);assert.equal(run.globalTurn,0)
+  assert.equal(run.moveInventory(w.uid,32),false);assert.equal(run.globalTurn,0)
+  round(run); assert.equal(run.globalTurn,1); assert.equal(run.player.hp,18); assert.equal(run.player.energy,6)
   assert(e)
 }
 // Craft transaction success, no recipe chaining, full-bag overflow.
 for(const recipe of RECIPES) {
   const run=fixture();const a=add(run,recipe.a);const b=add(run,recipe.b)
   assert.equal(run.availableRecipes().length,1)
-  assert(run.craft(recipe.result));assert.equal(run.globalTurn,1)
+  assert(run.craft(recipe.result));assert.equal(run.globalTurn,0)
   assert(!run.backpack.placementOf(a.uid));assert(!run.backpack.placementOf(b.uid))
   assert.equal(run.backpack.items[0].id,recipe.result)
   assert.equal(run.availableRecipes().length,0)
@@ -295,7 +298,7 @@ for(const recipe of RECIPES) {
   assert.equal(run.inventoryStash.length,1)
   assert.equal(run.inventoryStash[0].id,'mountain-maul')
   assert(!run.backpack.items.some(item=>['bell-maul','mountain-break-stone'].includes(item.id)))
-  assert.equal(run.backpack.length,27);assert.equal(run.globalTurn,1)
+  assert.equal(run.backpack.length,27);assert.equal(run.globalTurn,0)
 }
 // Suspended attribute relics cannot change combat, even if injected by old code.
 {
@@ -311,14 +314,16 @@ for(const recipe of RECIPES) {
 }
 {
   const run=fixture();add(run,'r-traveler');const w=add(run,'bone-knife'),e=enemy(run)
-  run.player.energy=5;run._walk([{c:2,r:3}]);assert.equal(run.player.energy,6)
+  run._synchronizeBattle()
+  run.player.energy=5;run._walk([{c:2,r:3}]);assert.equal(run.player.energy,4)
   assert.equal(run.weaponEnergyCost(w),2)
   attack(run,w,e);assert.equal(run.weaponEnergyCost(w),2)
-  run.player.energy=5;run._walk([{c:3,r:3}]);assert.equal(run.player.energy,7)
-  run._walk([{c:2,r:3}]);assert.equal(run.player.energy,8)
+  run.player.energy=5;run._walk([{c:3,r:3}]);assert.equal(run.player.energy,5)
+  run._walk([{c:2,r:3}]);assert.equal(run.player.energy,4)
 }
 {
   const run=fixture();add(run,'r-traveler');const w=add(run,'rock-maul'),e=enemy(run,{pos:{c:5,r:3}})
+  run._synchronizeBattle()
   run.player.energy=0;select(run,w)
   assert.equal(run._attack(e),false);assert.deepEqual(run.player.pos,{c:3,r:3});assert.equal(run.globalTurn,0)
 }
@@ -343,7 +348,7 @@ for(const recipe of RECIPES) {
   globalThis.localStorage={getItem:key=>key===SAVE_KEY?stored:null,setItem:(_key,value)=>{stored=value},removeItem(){}}
   try {
     const loaded=new GameRun()
-    assert.equal(loaded.globalTurn,1)
+    assert.equal(loaded.globalTurn,0)
     assert.equal(loaded.attackCount,1)
     assert.equal(loaded.serialize().pendingAttackTurn,false)
     assert.equal(JSON.parse(stored).pendingAttackTurn,false)
@@ -411,10 +416,11 @@ for(let i=0;i<100;i++) {
   assert.equal(makeItemById(m.stock[3].itemId).type,'material')
   assert.equal(new Set(m.stock.map(s=>s.itemId)).size,4)
 }
-// A poison kill finishes this turn but cannot continue a queued walk past level-up.
+// Zero energy ends the round; a poison kill cannot continue a queued walk past level-up.
 {
   const run=fixture()
   enemy(run,{hp:1,itemPoisonTurns:2,attack:1,range:3,actionDelay:0,noExperience:false,experience:run.player.experienceToNext})
+  run._synchronizeBattle(); run.player.energy=1
   const result=run._walk([{c:2,r:3},{c:1,r:3}])
   assert.equal(result.stopped,true);assert.equal(run.phase,'level-up')
   assert.equal(run.globalTurn,1);assert.deepEqual(run.player.pos,{c:2,r:3})

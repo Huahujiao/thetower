@@ -30,10 +30,10 @@ const { GameScene } = await import(`data:text/javascript;base64,${Buffer.from(sc
   assert.notEqual(output.uid, weapon.uid)
   assert.equal(output.attack, getItemDefinition('silver-guard').attack)
   assert.equal(output.reinforcement, undefined); assert.equal(output.compression, undefined)
-  assert.equal(run.globalTurn, 1)
+  assert.equal(run.globalTurn, 0)
   const before = run.backpack.serialize()
   assert.equal(run.craft('silver-guard'), false)
-  assert.deepEqual(run.backpack.serialize(), before); assert.equal(run.globalTurn, 1)
+  assert.deepEqual(run.backpack.serialize(), before); assert.equal(run.globalTurn, 0)
 }
 assert.equal(getItemDefinition('cleanse'), null)
 assert(!ALL_ITEM_DEFS.some(item => item.type === 'cleanse'))

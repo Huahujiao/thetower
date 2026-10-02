@@ -1,5 +1,5 @@
-// One explicit player gesture produces at most one world turn. Displaced items
-// are a consequence of a replacement, not a second player command.
+// A committed gesture costs one combat action; exploration gestures are free.
+// Displaced items are a consequence of a replacement, not a second command.
 export function commitInventoryDrop(run, itemOrUid, index, { rotation = null } = {}) {
   if (!run._canOrganizeBackpack() || run.itemTargeting) return null
   const preview = run.previewInventoryDrop(itemOrUid, index, { rotation })

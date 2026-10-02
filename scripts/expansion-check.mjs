@@ -82,6 +82,7 @@ for (let index = 0; index < 100; index++) {
   const run = fixture(), weapon = add(run, 'bone-knife', 2, 1)
   add(run, 'r-gold-fuel', 3, 1); const pouch = add(run, 'money-pouch', 2, 0)
   run.player.gold = 1; const target = enemy(run)
+  run._synchronizeBattle()
   select(run, weapon); run.player.energy = 0
   assert.equal(run._attack(target), false); assert.equal(run.player.gold, 1)
   attack(run, weapon, target); assert.equal(target.hp, 97); assert.equal(run.player.gold, 0)
@@ -95,7 +96,7 @@ for (let index = 0; index < 100; index++) {
   add(run, 'r-miasma-sac', 3, 0); const target = enemy(run)
   attack(run, weapon, target)
   const poison = getStatus(target, 'enemy-poison')
-  assert.equal(poison.layers, 100); assert.equal(poison.turns, 99)
+  assert.equal(poison.layers, 100); assert.equal(poison.turns, 100)
   assert.equal(poison.showLayers, false); assert.equal(poison.showTurns, false)
   const before = target.hp
   attack(run, weapon, target)
@@ -249,8 +250,8 @@ for (const trigger of ['move', 'knockback', 'death', 'poison-death']) {
   assert.deepEqual(run.consumables.chainPlan(first).map(item => item.uid), [second.uid, third.uid])
   run.player.armor = 0; run.player.energy = 0
   select(run, first); assert(run.useSelected())
-  assert.equal(run.globalTurn, 1); assert.equal(run.attackCount, 0)
-  assert.equal(run.player.energy, 10); assert.equal(run.player.armor, 3)
+  assert.equal(run.globalTurn, 0); assert.equal(run.attackCount, 0)
+  assert.equal(run.player.energy, 6); assert.equal(run.player.armor, 3)
   assert([first, second, third].every(item => !run.backpack.placementOf(item.uid)))
   assert.equal(run.backpack.items.filter(item => item.tier === 2).length, 1)
   assert.equal(run.itemRules.expansion.state.consumedTierOne, 3)
@@ -259,10 +260,10 @@ for (const trigger of ['move', 'knockback', 'death', 'poison-death']) {
 {
   const run = fixture(); add(run, 'r-chain-drink', 2, 1); add(run, 'r-launcher', 4, 0); add(run, 'bath-robe', 5, 0)
   const food = add(run, 'food-3', 2, 0), bomb = add(run, 'explosive', 3, 0)
-  const target = enemy(run); run.player.energy = 0; run.player.armor = 0
+  const target = enemy(run); run._synchronizeBattle(); run.player.energy = 1; run.player.armor = 0
   select(run, food); assert(run.useSelected())
   assert.equal(target.hp, 90); assert.equal(run.player.energy, 3); assert.equal(run.player.armor, 4)
-  assert.equal(run.backpack.placementOf(bomb.uid), null); assert.equal(run.globalTurn, 1)
+  assert.equal(run.backpack.placementOf(bomb.uid), null); assert.equal(run.globalTurn, 0)
 }
 // No valid target leaves the next item intact; no recursion through missing target or player death.
 {
@@ -270,7 +271,7 @@ for (const trigger of ['move', 'knockback', 'death', 'poison-death']) {
   const food = add(run, 'food-3', 2, 0), poison = add(run, 'poison', 3, 0), later = add(run, 'food-5', 3, 1)
   select(run, food); assert(run.useSelected())
   assert(run.backpack.placementOf(poison.uid)); assert(run.backpack.placementOf(later.uid))
-  assert.equal(run.globalTurn, 1)
+  assert.equal(run.globalTurn, 0)
 }
 // Launcher boosts every tier-II damage component; invalid/insufficient-energy use is atomic.
 {
@@ -279,13 +280,13 @@ for (const trigger of ['move', 'knockback', 'death', 'poison-death']) {
   run.player.hp = 2; run.player.energy = 0
   select(run, wine); assert(run.useSelected())
   assert(run.gameOver); assert(run.backpack.placementOf(food.uid)); assert.equal(run.player.energy, 0)
-  assert.equal(run.globalTurn, 1)
+  assert.equal(run.globalTurn, 0)
 }
 {
   const run = fixture(); add(run, 'r-chain-drink', 2, 1)
   const food = add(run, 'food-3', 2, 0), teleport = add(run, 'teleport', 3, 0)
   select(run, food); assert(run.useSelected())
-  assert.deepEqual(run.player.pos, { c: 3, r: 2 }); assert.equal(run.globalTurn, 1)
+  assert.deepEqual(run.player.pos, { c: 3, r: 2 }); assert.equal(run.globalTurn, 0)
   assert.equal(run.backpack.placementOf(teleport.uid), null)
 }
 // Ambushes are real reveals and do not bypass the fifth-card reward counter.
@@ -302,12 +303,13 @@ for (const trigger of ['move', 'knockback', 'death', 'poison-death']) {
 for (const id of ['poison', 'explosive', 'thunder-charm']) {
   const run = fixture(), item = add(run, id, 2, 0); add(run, 'r-launcher', 3, 0)
   const target = enemy(run), bounce = enemy(run, { pos: { c: 5, r: 3 } })
+  run._synchronizeBattle()
   select(run, item); assert(run.useSelected()); run.player.energy = 1
   assert.equal(run._throwConsumable(target.pos), false)
   assert(run.backpack.placementOf(item.uid)); assert.equal(run.globalTurn, 0); assert.equal(run.player.energy, 1)
-  run.player.energy = 2
+  run.player.energy = 3
   assert.equal(run._throwConsumable({ c: 0, r: 0 }), false)
-  assert.equal(run.player.energy, 2)
+  assert.equal(run.player.energy, 3)
   assert(run._throwConsumable(target.pos)); assert.equal(run.player.energy, 0); assert.equal(run.globalTurn, 1)
   if (id === 'poison') assert.equal(getStatus(target, 'enemy-poison').damage, Math.floor(item.poisonDamage * 1.5))
   if (id === 'explosive') { assert.equal(target.hp, 85); assert.equal(bounce.hp, 85) }

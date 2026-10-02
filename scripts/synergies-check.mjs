@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { fixture, add, enemy, attack } from './item-test-helpers.mjs'
+import { fixture, add, enemy, attack, round } from './item-test-helpers.mjs'
 import { activeConduits, conduitCapacity, forkBridgeActive, suggestedSynergyId } from '../src/game/rules/synergies.js'
 import { buildRoomRewardChoices } from '../src/game/data/rewards.js'
 import { GameRun, SAVE_KEY } from '../src/game/run.js'
@@ -66,6 +66,8 @@ import { getItemDefinition } from '../src/game/data/content.js'
   run.itemRules.action('attack')
   run.itemRules.move()
   run._endTurn({ skipEnemyPhase: true, action: 'movement' })
+  assert(run.getStatus(run.player, 'counter'))
+  enemy(run); round(run)
   assert.equal(run.getStatus(run.player, 'counter'), null)
   assert.equal(run.player.armor, 0)
 }
@@ -198,7 +200,7 @@ import { getItemDefinition } from '../src/game/data/content.js'
   const bow = add(run, 'triad-tide')
   const target = enemy(run, { hp: 200, pos: { c: 0, r: 3 } })
   attack(run, bow, target)
-  assert.equal(run.player.energy, 8)
+  assert.equal(run.player.energy, 4)
 }
 
 {

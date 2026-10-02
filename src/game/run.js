@@ -29,13 +29,14 @@ import { terrainDamageModifiers } from './rules/terrain.js'
 import { suggestedSynergyId } from './rules/synergies.js'
 import { migratePlaytestBalance, PLAYTEST_BALANCE_REVISION } from './data/playtest-balance.js'
 import { migrateAttributeItems } from './data/attribute-item-retirement.js'
+import { BASE_ACTION_ENERGY, BIG_ROUND_REVISION, migrateBigRounds } from './data/big-round-migration.js'
 
 // The design notation is rows × columns: four rows, eight columns.
 export const INVENTORY_COLUMNS = 8
 export const INVENTORY_ROWS = 4
 export const INVENTORY_CAPACITY = INVENTORY_COLUMNS * INVENTORY_ROWS
 export const RELIC_SOFT_LIMIT = Infinity
-export const ENERGY_MAX = 10
+export const ENERGY_MAX = BASE_ACTION_ENERGY
 export const TELEPORT_RANGE = 6
 export const SAVE_KEY = 'grid_flip_adventure_v2'
 // Pending attack turns must be recoverable in every accepted save.
@@ -57,6 +58,12 @@ function compatibleSave(data) {
       !Array.isArray(data.backpack.placements) || !Array.isArray(data.dungeon.rooms) ||
       !Number.isInteger(data.turnCounters?.globalTurn) || data.turnCounters.globalTurn < 0 ||
       !Number.isInteger(data.turnCounters?.attackCount) || data.turnCounters.attackCount < 0) return false
+  if (data.bigRoundRevision !== BIG_ROUND_REVISION || typeof data.battle?.active !== 'boolean' ||
+      !Number.isInteger(data.battle.round) || data.battle.round < 0 ||
+      !['explore', 'player', 'pets', 'enemy'].includes(data.battle.stage) ||
+      (data.battle.active ? data.battle.stage === 'explore' || data.battle.round < 1 : data.battle.stage !== 'explore') ||
+      typeof data.roundResolving !== 'boolean' || typeof data.pendingRoundEnd !== 'boolean' ||
+      (data.battle.active && (data.battle.stage === 'pets' || data.battle.stage === 'enemy') && !data.roundResolving)) return false
   if (['poisonedTurns', 'poisonDamage', 'burningTurns', 'burningDamage', 'parry'].some(key => Object.hasOwn(data.player, key))) return false
   if (data.player.itemState && !statusesValid(data.player.itemState.buffs)) return false
   const petState = data.player.itemState?.pets
@@ -144,13 +151,6 @@ function weaponAttackRange(weapon) { return Math.max(1, Number(weapon?.range) ||
 
 function weaponEnergyCost(weapon) {
   return Math.max(1, Math.floor(Number(weapon?.energyCost) || 3))
-}
-
-function energyAfterMovement(player, steps = 0) {
-  const current = Math.max(0, Number(player?.energy) || 0)
-  const maximum = Math.max(current, Number(player?.maxEnergy) || current)
-  const movement = Math.max(0, Math.floor(Number(steps) || 0))
-  return Math.min(maximum, current + movement)
 }
 
 function normalizedCounter(value) { return Math.max(0, Number(value) || 0) }
@@ -267,6 +267,9 @@ export class GameRun {
     this.totems = new TotemRules(this)
     this.pets = new PetRules(this)
     this._turnInProgress = false
+    this.battle = { active: false, stage: 'explore', round: 0 }
+    this.roundResolving = false
+    this.pendingRoundEnd = false
     this.turns = new TurnLedger()
     this._logRevealAnchor = null
     this.merchantEntering = false
@@ -303,6 +306,13 @@ export class GameRun {
       if (targetDefeated) this.deathAnimationPending = false
       this._changed()
     })
+    this.roundCompleteUnsubscribe = this.on('animate:idle', () => {
+      if (this.roundResolving && !this._turnInProgress) {
+        this.roundResolving = false
+        this._beginPlayerTurn()
+        this._changed()
+      }
+    })
     this.random = random
     this._loaded = autoLoad && this.load()
     if (!this._loaded) this.reset({ emit: false })
@@ -322,6 +332,9 @@ export class GameRun {
 
   reset({ emit = true } = {}) {
     this._turnInProgress = false
+    this.battle = { active: false, stage: 'explore', round: 0 }
+    this.roundResolving = false
+    this.pendingRoundEnd = false
     const generated = createChapterDungeon({ random: this.random })
     this.dungeon = generated.dungeon
     this.player = {
@@ -416,11 +429,66 @@ export class GameRun {
   weaponRange(weapon, position) { return this.itemRules.range(weapon, position) }
   weaponEnergyCost(weapon) { return this.itemRules.cost(weapon) }
   energyAfterMovement(steps = 0, path = []) {
-    // Attack routing pairs the final step with the strike; only earlier steps
-    // are movement turns that can activate the traveler's recovery.
-    const bonus = steps > 1 && this.itemRules.has('r-traveler') && this.itemRules.state.lastAction === 'attack' ? 1 : 0
-    const aura = path.reduce((sum, position, index) => sum + this.totems.movementBonus(position, this.globalTurn + index), 0)
-    return energyAfterMovement(this.player, steps + bonus + aura)
+    if (!this.battle.active) return this.player.energy
+    let energy = this.player.energy
+    for (let index = 0; index < steps; index++) {
+      if (energy < 1) return 0
+      const traveler = index === 0 && this.itemRules.has('r-traveler') && this.itemRules.state.lastAction === 'attack' ? 1 : 0
+      const aura = path[index] ? this.totems.movementBonus(path[index], this.globalTurn) : 0
+      energy = Math.min(this.player.maxEnergy, energy - 1 + traveler + aura)
+    }
+    return energy
+  }
+
+  _activatedEnemies() {
+    const room = this.currentRoom
+    return room ? [...room.entities.values()].filter(entity => entity.kind === 'enemy' && room.isRevealed(entity.pos)) : []
+  }
+
+  _synchronizeBattle() {
+    const active = this._activatedEnemies().length > 0 && !this.gameOver
+    if (active && !this.battle.active) {
+      this.battle = { active: true, stage: 'player', round: 1 }
+      this.player.energy = this.player.maxEnergy
+      this._log('进入战斗，开始玩家回合，体力已恢复。')
+      this.bus.emit('battle:started', { round: 1 })
+    } else if (!active && this.battle.active) {
+      this.battle.active = false
+      this.battle.stage = 'explore'
+      this.pendingRoundEnd = false
+      this.pets.endTurn()
+      if (!this.gameOver) this._log('已清除当前激活敌人，返回探索。')
+      this.bus.emit('battle:ended', { round: this.battle.round })
+    }
+    return active
+  }
+
+  _beginPlayerTurn() {
+    if (!this._synchronizeBattle()) return
+    this.battle.stage = 'player'
+    this.battle.round += 1
+    this.player.energy = this.player.maxEnergy
+    this.itemRules.action('turn-start')
+    this.pendingRoundEnd = false
+    this.bus.emit('player-turn:started', { round: this.battle.round })
+  }
+
+  actionEnergyCost(amount = 1) { return this.battle.active ? Math.max(0, amount) : 0 }
+
+  canPayAction(amount = 1) {
+    return !this.battle.active || (this.battle.stage === 'player' && !this.roundResolving && this.player.energy >= amount)
+  }
+
+  _payAction(amount = 1) {
+    return this.canPayAction(amount) && this._spendEnergy(this.actionEnergyCost(amount))
+  }
+
+  endPlayerTurn() {
+    if (!this._canAct() || !this.battle.active || this.battle.stage !== 'player') return false
+    this.itemTargeting = false
+    this._resolveBattleRound()
+    this._changed()
+    return true
   }
 
   _recoverEnergy(amount = 0) {
@@ -453,7 +521,7 @@ export class GameRun {
   removeStatus(actor, id) { removeStatus(actor, id) }
 
   _statusClockSnapshot() {
-    const actors = [this.player, ...[...this.dungeon.rooms.values()].flatMap(room => [...room.entities.values()].filter(entity => entity.kind === 'enemy'))]
+    const actors = [this.player, ...this._activatedEnemies()]
     return [...actors.flatMap(statusSnapshot), ...statusSnapshot({ statuses: this.itemRules.state.buffs })]
   }
 
@@ -489,6 +557,7 @@ export class GameRun {
     if (animate && room.id === this.currentRoom?.id) {
       this.bus.emit('animate:flip', { roomId: room.id, position: { ...enemy.pos }, backUnflippable: !wasFlippable })
     }
+    this._activateRevealedEnemy(room, enemy)
     this._emitRelicEvent('card:revealed', { room, position: enemy.pos, cause })
     this._emitRelicEvent('enemy:revealed', { enemy, room, cause })
     if (triggerAlert) this._triggerEnemyAlert(room, enemy)
@@ -573,6 +642,21 @@ export class GameRun {
     return true
   }
 
+  _activateRevealedEnemy(room, enemy) {
+    if (room?.id !== this.currentRoom?.id || !enemy) return
+    this._synchronizeBattle()
+    if (enemy.behavior !== 'ambush' || enemy.ambushTriggered) return
+    enemy.ambushTriggered = true
+    if (combatDistance(this.player.pos, enemy.pos, enemy.range) > enemy.range) return
+    this._log(`${enemy.name}立即发动伏击。`)
+    const outcome = this._enemyAttack(enemy)
+    if (!outcome.cancelled && this.currentRoom.entity(enemy.id)) {
+      this._onEnemyAction(enemy)
+      enemy.attackCooldown = cooldownWaitTurns(enemy.attackCooldownMax)
+      enemy.actionDelay = 0
+    }
+  }
+
   backToLevelUpChoices() {
     if (this.phase !== 'level-up' || !this.levelUp?.selectedOption) return false
     delete this.levelUp.selectedOption
@@ -620,6 +704,7 @@ export class GameRun {
     this.levelUp = null
     this.phase = 'explore'
     this._queueLevelUp()
+    if (this.pendingRoundEnd && this.phase === 'explore' && this.battle.active && !this.roundResolving && !this.combatResolving) this._resolveBattleRound()
     this._changed()
   }
 
@@ -644,7 +729,7 @@ export class GameRun {
     }
     if (isConsumable(item) && this.backpack.placementOf(item.uid)) {
       if (this.consumables.boosted(item, true)) detail.effectLines.push('投掷器：主动使用额外消耗2体力，伤害效果×1.5')
-      if (this.consumables.chainPlan(item).length) detail.effectLines.push('连饮环：按8邻域顺时针顺序免费使用后续消耗品；整次连锁消耗1回合')
+      if (this.consumables.chainPlan(item).length) detail.effectLines.push('连饮环：按8邻域顺时针免费使用后续消耗品；整次连锁在战斗中消耗1体力')
     }
     detail.lines = [...detail.statLines, ...detail.effectLines]
     if (isTotemBadge(item)) {
@@ -835,7 +920,7 @@ export class GameRun {
     if (!room.isRevealed(target)) {
       const revealDistance = 1
       const route = findRevealPath(room, this.player.pos, target, { distance: revealDistance })
-      return route ? this._pathPreview('flip', target, route.path) : null
+      return route && (!this.battle.active || this.energyAfterMovement(route.path.length, route.path) >= 1) ? this._pathPreview('flip', target, route.path) : null
     }
     const entity = room.entityAt(target)
     if (!entity) {
@@ -1012,7 +1097,11 @@ export class GameRun {
   }
 
   _endInventoryTurn() {
-    if (this.phase !== 'level-up') return this._endTurn({ recoverEnergy: false, action: 'organize' })
+    if (!['level-up', 'reward', 'merchant'].includes(this.phase)) {
+      this._payAction(1)
+      return this._endTurn({ action: 'organize' })
+    }
+    if (this.phase !== 'level-up') return
     // Inventory management during a reward choice keeps the world paused.
     // Removing the last weapon must not strand its nested selection or leave
     // a choice set with only unavailable targets and the compression placeholder.
@@ -1086,6 +1175,7 @@ export class GameRun {
       recipe = candidate; preview = candidatePreview; break
     }
     if (!preview) return this._reject('材料不足。')
+    if (!this._payAction(1)) return this._reject('体力不足。')
     this.backpack.removeByUid(preview.a.uid)
     this.backpack.removeByUid(preview.b.uid)
     const result = makeItemById(recipe.result)
@@ -1093,7 +1183,7 @@ export class GameRun {
     if (!placement) this.stageInventoryItem(result, { notify: false })
     this.selectedInventoryIndex = placement ? this.backpack.originIndex(placement) : null
     this._log(`合成：${preview.a.name} + ${preview.b.name} = ${result.name}。`)
-    this._endTurn({ recoverEnergy: false, action: 'craft' })
+    this._endTurn({ action: 'craft' })
     this._changed()
     return true
   }
@@ -1125,8 +1215,12 @@ export class GameRun {
   }
 
   _consumeItems(item, position = null) {
+    if (!isConsumable(item) || !this.backpack.placementOf(item.uid)) return false
+    if (this.consumables.target(item, position, true) === false) return this._reject('请选择有效目标。')
+    const cost = 1 + (this.consumables.boosted(item, true) ? 2 : 0)
+    if (!this.canPayAction(cost) || !this._payAction(1)) return this._reject('体力不足。')
     if (!this.consumables.useSequence(item, position)) return false
-    this._endTurn({ recoverEnergy: false, action: item.type === 'teleport' ? 'teleport' : 'consume' })
+    this._endTurn({ action: item.type === 'teleport' ? 'teleport' : 'consume' })
     this._changed()
     return true
   }
@@ -1171,6 +1265,7 @@ export class GameRun {
   }
 
   _interactMerchant(merchant) {
+    if (this.battle.active) return this._reject('请先解决当前已激活的敌人。')
     const route = findInteractionPath(this.currentRoom, this.player.pos, merchant)
     if (!route) return this._reject('\u65e0\u6cd5\u9760\u8fd1\u8fd9\u4f4d\u5546\u4eba\u3002')
     this.merchantEntering = route.path.length > 0
@@ -1313,17 +1408,15 @@ export class GameRun {
     const revealDistance = 1
     const route = findRevealPath(this.currentRoom, this.player.pos, position, { distance: revealDistance })
     if (!route) return this._reject('\u65e0\u6cd5\u8d70\u5230\u8fd9\u5f20\u724c\u7684\u9644\u8fd1\u3002')
+    if (this.battle.active && this.energyAfterMovement(route.path.length, route.path) < 1) return this._reject('体力不足。')
     const start = { ...this.player.pos }
     const movement = this._walk(route.path)
-    let flipOutcome = { skipEnemyIds: new Set() }
     if (!movement.stopped) {
+      if (!this._payAction(1)) return this._reject('体力不足。')
       if (this.player.pos.c !== start.c || this.player.pos.r !== start.r) this.bus.emit('change')
-      flipOutcome = this._revealTile(position, { logReveal: true })
+      this._revealTile(position, { logReveal: true })
     }
-    if (!movement.stopped) this._endTurn({
-      skipEnemyIds: flipOutcome.skipEnemyIds,
-      turnKind: TURN_KINDS.ACTION,
-    })
+    if (!movement.stopped) this._endTurn({ turnKind: TURN_KINDS.ACTION })
     this._changed()
     return true
   }
@@ -1331,7 +1424,7 @@ export class GameRun {
   _revealTile(position, { cause = 'player', logReveal = false } = {}) {
     const room = this.currentRoom
     const wasFlippable = this.tileCanBeFlipped(position)
-    if (!room?.reveal(position)) return { skipEnemyIds: new Set() }
+    if (!room?.reveal(position)) return false
     const entity = room.entityAt(position)
     const previousRevealAnchor = this._logRevealAnchor
     if (logReveal) {
@@ -1345,11 +1438,12 @@ export class GameRun {
     try {
       this._emitRelicEvent('card:revealed', { room, position, cause })
       if (entity?.kind === 'enemy') {
+        this._activateRevealedEnemy(room, entity)
         this._emitRelicEvent('enemy:revealed', { enemy: entity, room, cause })
         this._triggerEnemyAlert(room, entity)
       }
       if (entity?.kind === 'trap') return this._triggerTrap(entity, { cause })
-      return { skipEnemyIds: new Set() }
+      return true
     } finally {
       this._logRevealAnchor = previousRevealAnchor
     }
@@ -1358,9 +1452,7 @@ export class GameRun {
   _triggerTrap(trap, { cause = 'player' } = {}) {
     const room = this.currentRoom
     const definition = getTrapDefinition(trap.trapId)
-    const skipEnemyIds = new Set()
-    if (!room || !definition) return { skipEnemyIds }
-    if (trap.triggered === true) return { skipEnemyIds }
+    if (!room || !definition || trap.triggered === true) return false
     if (!this.suppressedTrapIds) this.suppressedTrapIds = new Set()
     this.suppressedTrapIds.delete(trap.id)
     this._emitRelicEvent('trap:before-trigger', { trap, definition, cause })
@@ -1368,7 +1460,7 @@ export class GameRun {
       room.removeEntity(trap.id)
       this.suppressedTrapIds.delete(trap.id)
       this._log(`${definition.name}\u88ab\u5b89\u5168\u62c6\u9664\u3002`)
-      return { skipEnemyIds }
+      return true
     }
     trap.triggered = true
     trap.triggeredAtGlobalTurn = this.globalTurn
@@ -1393,7 +1485,6 @@ export class GameRun {
         this._revealEnemy(room, enemy, { cause: 'trap:alarm', animate: false })
         flips.push({ position: enemy.pos, backUnflippable: !wasFlippable })
         enemy.actionDelay = Math.max(normalizedCounter(enemy.actionDelay), 1)
-        skipEnemyIds.add(enemy.id)
       }
       this._animateEnemyRevealBatch(room, flips)
       this._log(`${definition.name}\u89e6\u53d1\uff0c\u7ffb\u5f00\u4e86 ${targets.length} \u4e2a\u9644\u8fd1\u654c\u4eba\u3002`)
@@ -1407,7 +1498,7 @@ export class GameRun {
       this._log(`${definition.name}\u89e6\u53d1\uff0c\u4e2d\u6bd2 ${this.player.poisonedTurns} \u4e2a\u5168\u5c40\u56de\u5408\uff0c\u6bcf\u56de\u5408\u53d7\u5230 ${this.player.poisonDamage} \u70b9\u65e0\u89c6\u62a4\u7532\u7684\u4f24\u5bb3\u3002`)
     }
     this._emitRelicEvent('trap:triggered', { trap, definition, cause })
-    return { skipEnemyIds }
+    return true
   }
 
   _moveTo(position) {
@@ -1423,8 +1514,10 @@ export class GameRun {
     if (entity.kind === 'item' && entity.item?.type === 'relic' && !getRelicDefinition(entity.item.relicId)) return this._reject('\u65e0\u6cd5\u8bc6\u522b\u8fd9\u4ef6\u5723\u9057\u7269\u3002')
     const route = findPath(room, this.player.pos, entity.pos, { allowGoalOccupied: true })
     if (!route) return this._reject('\u76ee\u6807\u4e0d\u53ef\u8fbe\u3002')
-    const movement = this._walk(route, { deferFinalTurn: true })
+    if (this.battle.active && this.energyAfterMovement(route.length, route) < 1) return this._reject('体力不足。')
+    const movement = this._walk(route)
     if (!movement.stopped) {
+      if (!this._payAction(1)) return this._reject('体力不足。')
       if (entity.kind === 'item') {
         if (entity.item?.type === 'relic') {
           const entry = this.acquireRelic(entity.item.relicId, { notify: false, allowStash: true })
@@ -1459,6 +1552,7 @@ export class GameRun {
   }
 
   _useDoor(door) {
+    if (this.battle.active) return this._reject('请先解决当前已激活的敌人。')
     const edge = this.doorEdge(door)
     if (!edge || edge.sealed) return false
     if (this.isDoorLocked(door)) return this._reject('\u95e8\u88ab\u673a\u5173\u9501\u4f4f\u4e86\u3002')
@@ -1486,9 +1580,10 @@ export class GameRun {
     targetRoom.visited = true
     this.player.roomId = targetRoom.id
     this.player.pos = { ...targetDoor.arrival }
+    this._synchronizeBattle()
     if (targetRoom.tacticalLayout && targetRoom.tacticalLayout !== 'scattered') this._log(`房间布局：${TACTICAL_LAYOUT_LABELS[targetRoom.tacticalLayout]}。`)
     this._log(`\u8fdb\u5165 ${this.roomLabel(targetRoom)}\u3002`)
-    this._endTurn({ skipEnemyPhase: true, turnKind: TURN_KINDS.ACTION })
+    this._endTurn({ turnKind: TURN_KINDS.ACTION })
     this._emitRelicEvent('room:entered', { room: targetRoom, firstVisit })
     this.itemRules.enter(firstVisit)
     if (firstVisit && !this.gameOver && targetRoom.role !== 'entry') {
@@ -1550,23 +1645,16 @@ export class GameRun {
   }
 
   _attack(enemy) {
+    this._synchronizeBattle()
     const weapon = this.selectedItem
     if (weapon?.type !== 'weapon') return this._reject('请先选择武器。')
     const route = this._weaponRoute(weapon, enemy)
     if (!route) return this._reject('没有可达的攻击位置。')
     if (this.energyAfterMovement(route.path.length, route.path) < this.itemRules.cost(weapon, route.path.length)) return this._reject('体力不足。')
-    // Intermediate steps remain ordinary movement turns and can be stopped by
-    // a ranged enemy. The final landing is paired with the selected attack:
-    // it must not open an enemy phase between entering weapon range and
-    // resolving the player's hit.
-    const movement = this._walk(route.path, { deferFinalTurn: true })
+    const movement = this._walk(route.path)
     if (movement.stopped || !this.currentRoom.entity(enemy.id)) { this._changed(); return true }
     const range = this.weaponRange(weapon)
     if (combatDistance(this.player.pos, enemy.pos, range) > range) return this._reject('敌人已经离开射程。')
-    // The deferred final step and this strike are one atomic turn. That step
-    // retains ordinary movement's recovery, then the attack pays its cost.
-    // A stationary strike has no final step and therefore receives no recovery.
-    if (route.path.length > 0) this._recoverEnergy(1)
     const context = this.itemRules.attackContext(weapon, enemy)
     if (!this._spendEnergy(this.weaponEnergyCost(weapon))) return this._reject('体力不足。')
     this.itemRules.expansion.beforeAttack(weapon, context)
@@ -1615,11 +1703,14 @@ export class GameRun {
     return true
   }
 
-  _walk(path, { deferFinalTurn = false } = {}) {
+  _walk(path) {
     const roomId = this.currentRoom?.id
     const startingPhase = this.phase
+    const startingBattle = this.battle.active
+    const startingRound = this.globalTurn
     for (let index = 0; index < path.length; index += 1) {
       const step = path[index]
+      if (!this._payAction(1)) return { stopped: true }
       this.enemyAttackInterruptedRoute = false
       const previous = { ...this.player.pos }
       if (roomId) {
@@ -1630,19 +1721,12 @@ export class GameRun {
         })
       }
       this.player.pos = { ...step }
-      this.itemRules.move({ movementTurn: !(deferFinalTurn && index === path.length - 1) })
+      this.itemRules.move()
       this._discoverNearbyExitDoors()
       this._triggerAmbushes(step)
-      if (deferFinalTurn && index === path.length - 1 && !this.gameOver) continue
-      if (this.gameOver) {
-        this._endTurn({ turnKind: TURN_KINDS.MOVEMENT })
-        return { stopped: true }
-      }
       this._endTurn({ turnKind: TURN_KINDS.MOVEMENT })
-      // A long route ends at the first enemy attack. The player does not
-      // continue toward an already-selected target after being interrupted.
-      if (this.enemyAttackInterruptedRoute) return { stopped: true, interrupted: true }
       if (this.gameOver) return { stopped: true }
+      if (this.enemyAttackInterruptedRoute || (!startingBattle && this.battle.active) || this.globalTurn !== startingRound || this.roundResolving) return { stopped: true, interrupted: true }
       if (this.phase !== startingPhase) {
         this._log('行动已暂停，请先完成当前选择，再重新指定目的地。')
         return { stopped: true }
@@ -1651,19 +1735,35 @@ export class GameRun {
     return { stopped: false }
   }
 
-  _endTurn({ skipEnemyPhase = false, skipEnemyIds = new Set(), turnKind = TURN_KINDS.ACTION, recoverEnergy = true, action = turnKind } = {}) {
-    const clock = this._statusClockSnapshot()
+  // Complete a player operation. Only exhaustion ends the enclosing player turn.
+  _endTurn({ turnKind = TURN_KINDS.ACTION, action = turnKind } = {}) {
     this.itemRules.action(action)
-    const counters = this.turns.advance(turnKind)
+    this.turns.advance(turnKind)
+    this.bus.emit('player:action', { action, turnKind, round: this.battle.round, energy: this.player.energy })
+    this._synchronizeBattle()
+    if (this.battle.active && this.player.energy <= 0 && !this.roundResolving) {
+      if (this.phase === 'explore') this._resolveBattleRound()
+      else this.pendingRoundEnd = true
+    }
+  }
+
+  _resolveBattleRound() {
+    if (!this.battle.active || this.roundResolving || this._turnInProgress) return false
+    const clock = this._statusClockSnapshot()
+    const counters = this.turns.advance(TURN_KINDS.ROUND)
     this._cleanupTriggeredTraps(counters.globalTurn)
-    const turnContext = { turn: counters.globalTurn, turnKind, ...counters }
+    const turnContext = { turn: counters.globalTurn, turnKind: TURN_KINDS.ROUND, ...counters }
     this._turnInProgress = true
+    this.roundResolving = true
+    this.pendingRoundEnd = false
     try {
       this._emitTurnEvent('turn:advanced', turnContext)
       this._emitTurnEvent('turn:started', turnContext)
-      if (recoverEnergy && turnKind !== TURN_KINDS.ATTACK) this._recoverEnergy(1)
-      this._tickPlayerStatuses({ advanceClock: false })
+      this.battle.stage = 'pets'
       if (!this.gameOver) this.pets.act()
+      this.battle.stage = 'enemy'
+      if (!this._activatedEnemies().length || this.gameOver) return true
+      this._tickPlayerStatuses({ advanceClock: false })
       if (!this.gameOver) this.totems.startTurn()
       // Roots granted by a start-of-turn pull block this enemy phase, then
       // expire with this turn. Roots from an enemy's move begin next turn.
@@ -1671,15 +1771,16 @@ export class GameRun {
         const status = getStatus(entity, 'rooted')
         if (status && !clock.some(entry => entry.status === status)) clock.push({ actor: entity, id: 'rooted', status })
       }
-      if (skipEnemyPhase || this.gameOver) return
+      if (this.gameOver) return true
       this._tickEnemyStates()
-      if (this.gameOver) return
+      if (this.gameOver) return true
+      this.bus.emit('enemies:started', turnContext)
       const enemies = this._activeEnemies()
       for (const enemy of this.currentRoom.entities.values()) {
         if (enemy.kind === 'enemy') enemy.movedLastPhase = false
       }
       for (const enemy of enemies) {
-        if (this.gameOver || skipEnemyIds.has(enemy.id) || enemy.totemActionTurn === counters.globalTurn || !this.currentRoom.entity(enemy.id)) continue
+        if (this.gameOver || enemy.totemActionTurn === counters.globalTurn || !this.currentRoom.entity(enemy.id)) continue
         this._applyEnemyTraits(enemy)
         if (!this.currentRoom.entity(enemy.id) || this.gameOver) continue
         const outcome = stepEnemy(enemy, {
@@ -1696,15 +1797,17 @@ export class GameRun {
         })
         if (outcome.acted && this.currentRoom.entity(enemy.id) && !enemy.downed) this._onEnemyAction(enemy)
       }
+      this.bus.emit('enemies:ended', turnContext)
     } finally {
-      // One global clock, including hidden enemies and enemies in other rooms.
-      // New grants during this turn begin counting down on the following turn.
+      // Durations tick once after the pet/enemy stages, never after player actions.
       tickStatusSnapshot(clock)
       this.totems.endTurn()
       this.pets.endTurn()
       this._turnInProgress = false
+      this._synchronizeBattle()
       this._emitTurnEvent('turn:ended', turnContext)
     }
+    return true
   }
 
   _enemyAttack(enemy, multiplier = 1, { animate = true, deferCounter = false } = {}) {
@@ -2025,7 +2128,7 @@ export class GameRun {
   _tickEnemyStates() {
     const room = this.currentRoom
     if (!room) return
-    for (const enemy of [...room.entities.values()].filter((entity) => entity.kind === 'enemy' && entity.downed)) {
+    for (const enemy of [...room.entities.values()].filter((entity) => entity.kind === 'enemy' && entity.downed && room.isRevealed(entity.pos))) {
       enemy.reviveTurns = Math.max(0, (enemy.reviveTurns || 0) - 1)
       if (enemy.reviveTurns > 0) continue
       enemy.downed = false
@@ -2148,33 +2251,10 @@ export class GameRun {
     const ambushers = [...room.entities.values()]
       .filter((entity) => entity.kind === 'enemy' && entity.behavior === 'ambush' && !room.isRevealed(entity.pos))
       .filter((entity) => playerNeighborhood.some((candidate) => candidate.c === entity.pos.c && candidate.r === entity.pos.r))
-    const flips = []
-    const delayedAttacks = []
     for (const enemy of ambushers) {
-      const wasFlippable = this.tileCanBeFlipped(enemy.pos)
-      room.reveal(enemy.pos)
-      this._emitRelicEvent('card:revealed', { room, position: enemy.pos, cause: 'ambush' })
-      flips.push({ position: enemy.pos, backUnflippable: !wasFlippable })
       this._log(`${enemy.name}\u4ece\u4f0f\u51fb\u4e2d\u73b0\u8eab\u3002`)
-      if (normalizedCounter(enemy.actionDelay) === 0 && normalizedCounter(enemy.attackCooldown) === 0) {
-        const targetPosition = { ...this.player.pos }
-        const outcome = this._enemyAttack(enemy, 1, { animate: false, deferCounter: true })
-        if (outcome.cancelled) continue
-        if (outcome.explosion) delayedAttacks.push({ type: 'explode', payload: outcome.explosion })
-        else {
-          delayedAttacks.push({ type: 'attack', result: outcome, payload: { enemyId: enemy.id, actorStatus: enemyStatusSnapshot(enemy), position: { ...enemy.pos }, targetPosition, targetDefeated: this.gameOver, evaded: !!outcome.evaded } })
-          if (this.gameOver) this.deathAnimationPending = true
-        }
-        this._onEnemyAction(enemy)
-        enemy.attackCooldown = cooldownWaitTurns(enemy.attackCooldownMax)
-      }
+      this._revealEnemy(room, enemy, { cause: 'ambush' })
       if (this.gameOver) break
-    }
-    this._animateEnemyRevealBatch(room, flips)
-    for (const attack of delayedAttacks) {
-      if (attack.type === 'explode') this._queueExplosion(attack.payload)
-      else this.bus.emit('animate:attack', { roomId: room.id, actor: 'enemy', ...attack.payload })
-      if (attack.result?.counterPending) this._resolveCounter(attack.result.counterPending.holder, attack.result.counterPending.attacker, attack.result)
     }
     return ambushers.length > 0
   }
@@ -2201,13 +2281,13 @@ export class GameRun {
   }
 
   _canAct() {
-    return this.phase === 'explore' && !this.gameOver && this.initialRelicChoices.length === 0 && !this.merchantEntering && !this.roomEntering && !this.combatResolving
+    return this.phase === 'explore' && !this.gameOver && this.initialRelicChoices.length === 0 && !this.merchantEntering && !this.roomEntering && !this.combatResolving && !this.roundResolving && (!this.battle.active || this.battle.stage === 'player')
   }
 
   _canOrganizeBackpack() {
     const phaseAllows = ['explore', 'merchant'].includes(this.phase)
       || (this.phase === 'level-up' && !!this.levelUp && !this.enemyDeathAnimationsPending)
-    return !this.gameOver && this.initialRelicChoices.length === 0 && phaseAllows && !this.merchantEntering && !this.roomEntering && !this.combatResolving
+    return !this.gameOver && this.initialRelicChoices.length === 0 && phaseAllows && !this.merchantEntering && !this.roomEntering && !this.combatResolving && !this.roundResolving && (this.phase !== 'explore' || this.canPayAction(1))
   }
 
   _reject(message) {
@@ -2247,6 +2327,10 @@ export class GameRun {
     return {
       version: SAVE_VERSION,
       playtestBalanceRevision: PLAYTEST_BALANCE_REVISION,
+      bigRoundRevision: BIG_ROUND_REVISION,
+      battle: { ...this.battle },
+      roundResolving: this.roundResolving,
+      pendingRoundEnd: this.pendingRoundEnd,
       dungeon: this.dungeon.serialize(),
       player: clone(this.player),
       backpack: this.backpack.serialize(clone),
@@ -2283,23 +2367,29 @@ export class GameRun {
       if (!raw) return false
       const data = JSON.parse(raw)
       let attributeItemsMigrated = false
+      let bigRoundsMigrated = false
       if (data?.version === SAVE_VERSION) {
         migratePlaytestBalance(data)
         attributeItemsMigrated = migrateAttributeItems(data, { random: this.random })
+        bigRoundsMigrated = migrateBigRounds(data)
       }
       if (!compatibleSave(data)) return discard()
       this.dungeon = Dungeon.hydrate(data.dungeon)
       this.player = data.player
+      this.battle = data.battle && typeof data.battle.active === 'boolean' ? { ...data.battle } : { active: false, stage: 'explore', round: 0 }
+      this.roundResolving = false
+      this.pendingRoundEnd = !!data.pendingRoundEnd
       this.backpack = BackpackGrid.hydrate(data.backpack)
       this.inventoryStash = Array.isArray(data.inventoryStash) ? data.inventoryStash.filter((item) => item?.uid) : []
-      const refreshFoodName = item => {
+      const refreshItemCopy = item => {
         if (['food-3', 'food-5', 'food-7', 'food-9'].includes(item?.id)) item.name = getItemDefinition(item.id).name
+        if (['r-traveler', 'r-step-boots', 'r-turn-shield', 'r-totem-breath'].includes(item?.id)) item.description = getItemDefinition(item.id).description
       }
-      for (const item of [...this.backpack.items, ...this.inventoryStash]) refreshFoodName(item)
+      for (const item of [...this.backpack.items, ...this.inventoryStash]) refreshItemCopy(item)
       synchronizeEntityIds([...this.backpack.items, ...this.inventoryStash].map(item => item.uid))
       for (const room of this.dungeon.rooms.values()) {
         for (const entity of room.entities.values()) {
-          refreshFoodName(entity.item)
+          refreshItemCopy(entity.item)
           if (entity.kind === 'enemy') {
             synchronizeEnemyBalance(entity)
             bindStatusAccessors(entity)
@@ -2395,7 +2485,17 @@ export class GameRun {
       if (data.pendingAttackTurn === true) {
         this._endTurn({ turnKind: TURN_KINDS.ATTACK })
         this._persist()
-      } else if (attributeItemsMigrated) this._persist()
+      } else if (data.roundResolving === true) {
+        this._beginPlayerTurn()
+        this._persist()
+      } else {
+        this._synchronizeBattle()
+        if (this.pendingRoundEnd && this.phase === 'explore' && this.battle.active) {
+          this._resolveBattleRound()
+          this._persist()
+        }
+        if (attributeItemsMigrated || bigRoundsMigrated) this._persist()
+      }
       return true
     } catch {
       return discard()

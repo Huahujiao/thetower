@@ -26,7 +26,7 @@ export const RELIC_DEFS = Object.freeze([
   {
     "id": "r-traveler",
     "name": "旅者骨牌",
-    "description": "\u653b\u51fb\u540e\u7acb\u5373\u8fdb\u884c\u7684\u79fb\u52a8\u56de\u5408\uff0c\u989d\u5916\u6062\u590d1\u70b9\u4f53\u529b\u3002",
+    "description": "战斗中，攻击后紧接的第一个主动移动操作，额外恢复1点体力。",
     "attribute": null
   },
   {
@@ -87,13 +87,13 @@ export const RELIC_DEFS = Object.freeze([
   {
     "id": "r-step-boots",
     "name": "步痕靴",
-    "description": "\u653b\u51fb\u540e\u7acb\u5373\u8fdb\u884c\u7684\u79fb\u52a8\u56de\u5408\uff0c\u83b7\u5f971\u5c42\u95ea\u907f\uff0c\u6301\u7eed\u672c\u56de\u5408\u3002",
+    "description": "攻击后紧接的第一个主动移动操作，获得1层闪避，持续至当次敌人阶段结束。",
     "attribute": null
   },
   {
     "id": "r-turn-shield",
     "name": "回身盾",
-    "description": "\u653b\u51fb\u540e\u7acb\u5373\u8fdb\u884c\u7684\u79fb\u52a8\u56de\u5408\uff0c\u83b7\u5f971\u5c42\u53cd\u51fb\uff0c\u4f24\u5bb3\u4e3a\u4e0a\u6b21\u6b66\u5668\u653b\u51fb\u529b\u7684\u4e00\u534a\uff0c\u5411\u4e0a\u53d6\u6574\uff0c\u6301\u7eed\u672c\u56de\u5408\u3002",
+    "description": "攻击后紧接的第一个主动移动操作，获得1层反击；伤害为上次武器攻击力的一半，向上取整，持续至当次敌人阶段结束。",
     "attribute": null
   },
   {

@@ -172,7 +172,7 @@ function relicCards() {
     image: itemSpriteSources(relic)?.small,
     description: relic.description,
     accent: '\u2726',
-    stats: relic.totemId ? [stat('图腾召唤', '选择徽章→使用→4格内已翻开的空格'), stat('有效期', '10回合；占用1体力上限'), stat('共享冷却', '2个全局回合')] : [],
+    stats: relic.totemId ? [stat('图腾召唤', '选择徽章→使用→4格内已翻开的空格'), stat('有效期', '10回合；占用1体力上限'), stat('共享冷却', '2个大回合')] : [],
   })).join('')
 }
 

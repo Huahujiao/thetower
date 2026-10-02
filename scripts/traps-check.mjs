@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { GameRun } from '../src/game/run.js'
 import { createTrapEntity, getTrapDefinition, randomTrapId } from '../src/game/data/traps.js'
-import { TURN_KINDS } from '../src/game/core/turns.js'
+import { fixture, enemy, round } from './item-test-helpers.mjs'
 import { findRevealPath } from '../src/game/rules/pathfinding.js'
 
 assert.equal(getTrapDefinition('corrosion')?.effect, 'corrosion')
@@ -35,7 +35,7 @@ const revealLogIndex = revealRun.log.findIndex((line) => line.includes('\u7ffb\u
 const triggerLogIndex = revealRun.log.findIndex((line) => line.includes('\u89e6\u53d1'))
 assert.ok(revealLogIndex >= 0 && triggerLogIndex >= 0 && revealLogIndex < triggerLogIndex)
 
-const corrosionRun = new GameRun({ autoLoad: false, random: () => 0.25 })
+const corrosionRun = fixture()
 corrosionRun.player.energy = 6
 const corrosionTrap = createTrapEntity('corrosion', corrosionRun.player.pos)
 corrosionRun.currentRoom.addEntity(corrosionTrap)
@@ -45,12 +45,14 @@ assert.equal(corrosionTrap.triggered, true)
 assert.equal(corrosionRun.currentRoom.entity(corrosionTrap.id), corrosionTrap)
 corrosionRun._triggerTrap(corrosionTrap)
 assert.equal(corrosionRun.player.energy, 4)
-corrosionRun._endTurn({ skipEnemyPhase: true, turnKind: TURN_KINDS.MOVEMENT })
+corrosionRun._endTurn()
+assert.equal(corrosionRun.globalTurn, 0)
+enemy(corrosionRun); round(corrosionRun)
 assert.equal(corrosionRun.currentRoom.entity(corrosionTrap.id), corrosionTrap)
-corrosionRun._endTurn({ skipEnemyPhase: true, turnKind: TURN_KINDS.MOVEMENT })
+round(corrosionRun)
 assert.equal(corrosionRun.currentRoom.entity(corrosionTrap.id), null)
 
-const poisonRun = new GameRun({ autoLoad: false, random: () => 0.25 })
+const poisonRun = fixture()
 poisonRun.player.hp = 30
 poisonRun.player.armor = 5
 const poisonTrap = createTrapEntity('poison-fog', poisonRun.player.pos)
@@ -62,23 +64,24 @@ assert.equal(poisonRun.player.poisonedTurns, 10)
 assert.equal(poisonTrap.triggered, true)
 assert.equal(poisonRun.currentRoom.entity(poisonTrap.id), poisonTrap)
 
-poisonRun._endTurn({ skipEnemyPhase: true, turnKind: TURN_KINDS.MOVEMENT })
+poisonRun._endTurn(); assert.equal(poisonRun.player.hp, 30)
+enemy(poisonRun); round(poisonRun)
 assert.equal(poisonRun.player.hp, 28)
 assert.equal(poisonRun.player.armor, 5)
 assert.equal(poisonRun.player.poisonedTurns, 9)
 assert.equal(poisonRun.currentRoom.entity(poisonTrap.id), poisonTrap)
-poisonRun._endTurn({ skipEnemyPhase: true, turnKind: TURN_KINDS.MOVEMENT })
+round(poisonRun)
 assert.equal(poisonRun.currentRoom.entity(poisonTrap.id), null)
-poisonRun._endTurn({ skipEnemyPhase: true, turnKind: TURN_KINDS.MOVEMENT })
+round(poisonRun)
 assert.equal(poisonRun.player.hp, 24)
 assert.equal(poisonRun.player.armor, 5)
 assert.equal(poisonRun.player.poisonedTurns, 7)
-poisonRun._endTurn({ skipEnemyPhase: true, turnKind: TURN_KINDS.MOVEMENT })
+round(poisonRun)
 assert.equal(poisonRun.player.hp, 22)
-for (let i = 0; i < 6; i++) poisonRun._endTurn({ skipEnemyPhase: true })
+for (let i = 0; i < 6; i++) round(poisonRun)
 assert.equal(poisonRun.player.hp, 10)
 assert.equal(poisonRun.player.poisonedTurns, 0)
-poisonRun._endTurn({ skipEnemyPhase: true })
+round(poisonRun)
 assert.equal(poisonRun.player.hp, 10)
 
 console.log('traps-check passed')

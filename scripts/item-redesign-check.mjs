@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { fixture, add, enemy, attack, select } from './item-test-helpers.mjs'
+import { fixture, add, enemy, attack, select, round } from './item-test-helpers.mjs'
 import { GameRun, SAVE_KEY, SAVE_VERSION } from '../src/game/run.js'
 import { ALL_ITEM_DEFS, getItemDefinition } from '../src/game/data/content.js'
 import { buildRelicChoices } from '../src/game/data/relics.js'
@@ -13,9 +13,9 @@ import { getStatus, statusCounterText } from '../src/game/rules/statuses.js'
   const status = run.applyStatus(target, 'enemy-poison', { damage: 5 })
   assert.equal(status.layers, 100); assert.equal(status.turns, 100)
   assert.equal(statusCounterText(status), '')
-  for (let turn = 0; turn < 99; turn++) run._endTurn({ skipEnemyPhase: true })
+  for (let turn = 0; turn < 99; turn++) round(run)
   assert.equal(status.turns, 1); assert.equal(status.layers, 100)
-  run._endTurn({ skipEnemyPhase: true })
+  round(run)
   assert.equal(getStatus(target, 'enemy-poison'), null)
   assert.equal(target.hp, 100)
   assert(!getItemDefinition('poison').description.includes('100'))
@@ -44,7 +44,7 @@ import { getStatus, statusCounterText } from '../src/game/rules/statuses.js'
   attack(run, blade, target)
   assert.equal(target.hp, 81)
   assert.equal(getStatus(target, 'enemy-poison'), null)
-  assert.equal(run.player.energy, 8)
+  assert.equal(run.player.energy, 4)
   run.applyStatus(target, 'enemy-poison', { layers: 1, damage: 5 })
   run.applyStatus(target, 'dodge')
   const hp = target.hp
@@ -85,12 +85,15 @@ import { getStatus, statusCounterText } from '../src/game/rules/statuses.js'
   const second = enemy(run, { pos: { c: 1, r: 3 }, attack: 2, actionDelay: 0 })
   run.player.energy = 5
   run._walk([{ c: 2, r: 3 }])
-  assert.equal(run.player.energy, 7); assert.equal(run.player.hp, 18)
+  assert.equal(run.player.energy, 5); assert.equal(run.player.hp, 20)
+  assert(getStatus(run.player, 'dodge')); assert(getStatus(run.player, 'counter'))
+  round(run)
+  assert.equal(run.player.hp, 18)
   assert.equal(first.hp, 100); assert.equal(second.hp, 98)
   assert.equal(getStatus(run.player, 'dodge'), null); assert.equal(getStatus(run.player, 'counter'), null)
   run.currentRoom.removeEntity(first.id); run.currentRoom.removeEntity(second.id)
   run._walk([{ c: 3, r: 3 }])
-  assert.equal(run.player.energy, 8)
+  assert.equal(run.player.energy, 5)
   assert.equal(getStatus(run.player, 'dodge'), null)
 }
 for (const interrupted of [false, true]) {
@@ -101,6 +104,7 @@ for (const interrupted of [false, true]) {
   run.itemRules.move()
   assert.equal(!!getStatus(run.player, 'dodge'), !interrupted)
   run._endTurn({ skipEnemyPhase: true, action: 'movement' })
+  round(run)
   assert.equal(getStatus(run.player, 'dodge'), null); assert.equal(getStatus(run.player, 'counter'), null)
 }
 {
@@ -118,10 +122,10 @@ for (const interrupted of [false, true]) {
   add(run, 'r-step-boots'); add(run, 'r-traveler')
   attack(run, hook, enemy(run))
   const target = enemy(run, { pos: { c: 1, r: 3 } })
-  select(run, hook); run.player.energy = 2
+  select(run, hook); run.player.energy = 3
   assert(run._attack(target)) // One final step is paired with the strike.
   assert.equal(run.player.energy, 0)
-  assert.equal(getStatus(run.player, 'dodge'), null)
+  assert(getStatus(run.player, 'dodge'))
 }
 
 // Single-weapon count ignores staging, and its power is saved before damage multipliers.

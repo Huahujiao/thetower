@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises'
 import { parse, compileScript } from '@vue/compiler-sfc'
 import { createSSRApp } from 'vue'
 import { renderToString } from '@vue/server-renderer'
-import { fixture, add, select, enemy } from './item-test-helpers.mjs'
+import { fixture, add, select, enemy, round, settleAnimations } from './item-test-helpers.mjs'
 import { GameRun } from '../src/game/run.js'
 import { ALL_ITEM_DEFS, createEnemyById, makeItemById, randomNeutralItem } from '../src/game/data/content.js'
 import { consumableTargetCells } from '../src/game/rules/attack-range.js'
@@ -24,9 +24,9 @@ import { enemyOverheadHints } from '../src/game/data/enemy-features.js'
   while (run.currentRoom.entity(bud.id) && !run.gameOver && run.globalTurn < 30) {
     if (run.player.energy >= weapon.energyCost) {
       assert(run._attack(bud))
-      run.bus.emit('animate:attack-complete', { actor: 'player' })
+      run.bus.emit('animate:attack-complete', { actor: 'player' }); settleAnimations(run)
       attacks++
-    } else run._endTurn()
+    } else round(run)
   }
   assert.equal(run.gameOver, false)
   assert.equal(run.currentRoom.entity(bud.id), null)
@@ -84,8 +84,8 @@ for (const points of [3, 5, 7, 9]) {
   assert.equal(food.tier, 1)
   run.player.energy = 1
   select(run, food); assert(run.useSelected())
-  assert.equal(run.player.energy, Math.min(10, 1 + points))
-  assert.equal(run.globalTurn, 1)
+  assert.equal(run.player.energy, Math.min(6, 1 + points))
+  assert.equal(run.globalTurn, 0)
   assert.equal(run.backpack.placementOf(food.uid), null)
   assert.equal(run.useSelected(), false)
 }
@@ -115,16 +115,16 @@ function aim(run, item) {
   assert(run.backpack.placementOf(poison.uid))
   assert.equal(run.globalTurn, 0)
   assert(run.clickTile(3, 5))
-  assert.equal(run.globalTurn, 1)
+  assert.equal(run.globalTurn, 0)
   assert.equal(run.attackCount, 0)
   assert.equal(target.hp, 100) // Out of range: no poison tick on idle.
   assert.equal(target.itemPoisonTurns, 100)
   assert(enemyOverheadHints(target).some(hint => hint.label === '\u4e2d\u6bd2'))
-  run._endTurn(); assert.equal(target.hp, 100)
+  round(run); round(run); assert.equal(target.hp, 100)
   run.player.pos = { c: 3, r: 4 }
-  run._endTurn(); assert.equal(target.hp, 95)
+  round(run); assert.equal(target.hp, 95)
   assert.equal(target.itemPoisonTurns, 99)
-  run._endTurn(); run._endTurn(); run._endTurn()
+  round(run); round(run); round(run)
   assert.equal(target.hp, 80)
   assert.equal(target.itemPoisonTurns, 96)
   assert(enemyOverheadHints(target).some(hint => hint.label === '\u4e2d\u6bd2'))
@@ -134,6 +134,8 @@ function aim(run, item) {
   const target = enemy(run, { hp: 5, attack: 3, actionDelay: 0, traits: ['heavy-armor'] })
   aim(run, poison)
   assert(run.clickTile(4, 3))
+  assert.equal(run.currentRoom.entity(target.id), target)
+  round(run)
   assert.equal(run.currentRoom.entity(target.id), null)
   assert.equal(run.player.hp, 20) // Lethal poison prevents the pending attack.
 }
@@ -151,8 +153,8 @@ function aim(run, item) {
   assert.equal(adjacent.hp, 90); assert.equal(hidden.hp, 90); assert.equal(outside.hp, 100)
   assert.equal(run.currentRoom.entity(corpse.id), null)
   assert(run.currentRoom.isRevealed(hidden.pos))
-  assert.equal(run.player.energy, 10)
-  assert.equal(run.globalTurn, 1)
+  assert.equal(run.player.energy, 6)
+  assert.equal(run.globalTurn, 0)
 }
 {
   const run = fixture(), thunder = add(run, 'thunder-charm')
@@ -162,7 +164,7 @@ function aim(run, item) {
   aim(run, thunder); assert(run.clickTile(3, 5))
   assert.equal(run.currentRoom.entity(primary.id), null)
   assert.equal(nearest.hp, 95); assert.equal(farther.hp, 100)
-  assert.equal(run.globalTurn, 1)
+  assert.equal(run.globalTurn, 0)
 }
 
 // Compatible saves preserve placement and values without migrating anything.

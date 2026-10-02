@@ -2,11 +2,11 @@ export const TURN_KINDS = Object.freeze({
   ATTACK: 'attack',
   ACTION: 'action',
   MOVEMENT: 'movement',
+  ROUND: 'round',
 })
 
-// The ledger is deliberately monotonic: attack <= global. Every completed
-// player operation advances the global turn; movement operations are emitted
-// once per traversed cell by GameRun._walk().
+// Attacks count player strikes; the global clock counts completed battle rounds.
+// Several attacks can happen within one round.
 function counter(value) {
   return Math.max(0, Math.floor(Number(value) || 0))
 }
@@ -14,23 +14,23 @@ function counter(value) {
 export class TurnLedger {
   constructor({ attackCount = 0, globalTurn = 0 } = {}) {
     this.attackCount = counter(attackCount)
-    this.globalTurn = Math.max(this.attackCount, counter(globalTurn))
+    this.globalTurn = counter(globalTurn)
   }
 
   advance(kind = TURN_KINDS.ACTION) {
     if (kind === TURN_KINDS.ATTACK) {
       this.attackCount += 1
-    } else if (kind !== TURN_KINDS.ACTION && kind !== TURN_KINDS.MOVEMENT) {
+    } else if (![TURN_KINDS.ACTION, TURN_KINDS.MOVEMENT, TURN_KINDS.ROUND].includes(kind)) {
       throw new Error(`Unknown turn kind: ${kind}`)
     }
-    if (kind === TURN_KINDS.ATTACK || kind === TURN_KINDS.ACTION || kind === TURN_KINDS.MOVEMENT) {
+    if (kind === TURN_KINDS.ROUND) {
       this.globalTurn += 1
     }
     return this.snapshot()
   }
 
   setGlobalTurn(value) {
-    this.globalTurn = Math.max(this.attackCount, counter(value))
+    this.globalTurn = counter(value)
     return this.snapshot()
   }
 

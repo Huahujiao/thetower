@@ -119,18 +119,17 @@ export class ItemRules {
     }
   }
   move({ movementTurn = true } = {}) {
-    // Grant before ambushes and the enemy phase; the common clock expires these
-    // one-turn reactions at the end of this movement turn, even without a hit.
+    // Grant before ambushes; these reactions last until the enemy stage ends.
     if (movementTurn && this.state.lastAction === 'attack') {
       if (this.has('r-step-boots')) this.run.applyStatus(this.run.player, 'dodge', { layers: 1, turns: 1, source: 'r-step-boots' })
       if (this.has('r-turn-shield')) this.run.applyStatus(this.run.player, 'counter', {
         layers: 1, turns: 1, source: 'r-turn-shield',
         damage: { mode: 'last-player-attack', stage: 'gain', ratio: 0.5, rounding: 'ceil' },
       })
-      if (this.has('r-traveler')) this.run._recoverEnergy(1)
+      if (this.run.battle.active && this.has('r-traveler')) this.run._recoverEnergy(1)
     }
     this.state.steps = (this.state.steps || 0) + 1
-    this.run._recoverEnergy(this.run.totems.movementBonus())
+    if (this.run.battle.active) this.run._recoverEnergy(this.run.totems.movementBonus())
     this.state.travel = (this.state.travel || 0) + 1
     this.state.lastAction = 'movement'
   }

@@ -9,7 +9,7 @@
     "firewall:setup": "scripts\\firewall-setup.bat",
     "build": "vite build",
     "lint": "eslint . --max-warnings=0",
-    "check:turns": "node scripts/turns-check.mjs",
+    "check:turns": "node scripts/turns-check.mjs && node scripts/turns-ui-check.mjs",
     "check:combat-motion": "node scripts/combat-motion-check.mjs",
     "check:traps": "node scripts/traps-check.mjs",
     "check:items": "node scripts/items-check.mjs",

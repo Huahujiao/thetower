@@ -20,7 +20,7 @@ assert.ok(idleMotion(0).scale > 0)
 const killRun = fixture()
 const weapon = add(killRun, 'rust-sword')
 select(killRun, weapon)
-killRun.player.energy = 10
+killRun.player.energy = 6
 const target = enemy(killRun, { hp: 1, noExperience: false, experience: killRun.player.experienceToNext })
 const killEvents = []
 killRun.on('animate:attack', (event) => killEvents.push(event))
@@ -38,14 +38,14 @@ globalThis.localStorage = { getItem: (key) => key === SAVE_KEY ? savedKill : nul
 try {
   const restored = new GameRun()
   assert.equal(restored.combatResolving, false)
-  assert.equal(restored.globalTurn, 1)
+  assert.equal(restored.globalTurn, 0)
   assert.equal(restored.phase, 'level-up')
 } finally {
   globalThis.localStorage = previousStorage
 }
 killRun.bus.emit('animate:attack-complete', { actor: 'player' })
 assert.equal(killRun.combatResolving, false)
-assert.equal(killRun.globalTurn, 1)
+assert.equal(killRun.globalTurn, 0)
 assert.equal(killRun.phase, 'level-up')
 
 const hitRun = fixture()

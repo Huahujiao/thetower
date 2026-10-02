@@ -62,7 +62,7 @@ export class ConsumableRules {
     const target = this.target(item, requested, active)
     if (target === false) return active ? run._reject('\u8bf7\u9009\u62e9\u8303\u56f4\u5185\u7684\u6709\u6548\u76ee\u6807\u3002') : false
     const boosted = this.boosted(item, active)
-    if (boosted && !run._spendEnergy(2)) return run._reject('\u6295\u63b7\u5668\u9700\u8981\u989d\u59162\u70b9\u4f53\u529b\u3002')
+    if (boosted && !run._spendEnergy(run.actionEnergyCost(2))) return run._reject('\u6295\u63b7\u5668\u9700\u8981\u989d\u59162\u70b9\u4f53\u529b\u3002')
     run.backpack.removeByUid(item.uid)
     run.selectedInventoryIndex = null
     run.itemTargeting = false

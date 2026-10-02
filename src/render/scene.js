@@ -1923,7 +1923,9 @@ export class GameScene {
   }
 
   _emitMoveCompleteIfIdle() {
-    if (!this.moveCompletionPending || this.movementAnimation || this.attackAnimation || this.flipAnimations.length || this.animationQueue.length) return
+    if (this.movementAnimation || this.attackAnimation || this.flipAnimations.length || this.animationQueue.length) return
+    if (this.run.roundResolving) this.run.bus?.emit('animate:idle')
+    if (!this.moveCompletionPending) return
     this.moveCompletionPending = false
     this.run.bus?.emit('animate:move-complete')
   }
@@ -2596,6 +2598,7 @@ export class GameScene {
     this._updateHoverLift()
     this._updateCharacterIdle(delta)
     this._updateAttackAnimation(delta)
+    this._emitMoveCompleteIfIdle()
     this.attackRangeOverlay.syncPosition()
     this.attackRangeOverlay.update(delta)
     this.renderer.render(this.scene, this.camera)

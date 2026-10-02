@@ -403,7 +403,7 @@
               class="vital-energy-fill"
               :style="{ width: `${Math.max(0, Math.min(100, state.player.energy / Math.max(1, state.player.maxEnergy) * 100))}%` }"
             ></span><strong>{{
-              state.player.energy }}/{{ state.player.maxEnergy }}</strong>
+              state.player.energy }}/{{ state.player.maxEnergy }} · {{ battleStageLabel }}</strong>
           </div>
         </div>
         <div class="backpack-action-slot act-use-slot">
@@ -413,6 +413,12 @@
             @click="handleAction('use')"
           >
             {{ LABELS.use }}
+          </button>
+          <button
+            v-if="state.battle.active" class="backpack-action act-end-turn" data-action="end-turn"
+            :disabled="!actionsAvailable || state.roundResolving" @click="handleAction('end-turn')"
+          >
+            {{ state.roundResolving ? battleStageLabel : '结束回合' }}
           </button>
         </div>
       </div>
@@ -434,7 +440,7 @@
         <header>
           <h2>{{ LABELS.craft }}</h2><button data-action="craft-close" @click="handleAction('craft-close')">{{ LABELS.close }}</button>
         </header>
-        <p>合成消耗原料并推进 1 回合，成品放不下时进入暂存区。长按配方中的物品查看详情。</p>
+        <p>合成消耗原料，战斗中消耗 1 点体力；探索中免费。成品放不下时进入暂存区。长按配方中的物品查看详情。</p>
         <div>
           <div v-for="recipe in craftRows" :key="recipe.id" class="craft-row">
             <button
@@ -515,8 +521,8 @@ const LABELS = Object.freeze({
 const DETAIL_ICONS = Object.freeze({ enemy: '\u2694', weapon: '\u2694', potion: '\u271a', armor: '\u26e8', energy: '\u26a1', buff: '\u2726', relic: '\u25c6', trap: '!', gold: '\u25cf', key: '\ud83d\udd11', merchant: '\u25c9', item: '\u25a0' })
 const EDGE_NAMES = ['top', 'right', 'bottom', 'left']
 const HELP_SECTIONS = Object.freeze([
-  { title: '\u884c\u52a8\u4e0e\u4f53\u529b', items: ['\u6bcf\u6b21\u79fb\u52a8\u3001\u7ffb\u724c\u3001\u62fe\u53d6\u548c\u666e\u901a\u4ea4\u4e92\u90fd\u4f1a\u63a8\u8fdb\u56de\u5408\u3002', '\u6b66\u5668\u653b\u51fb\u4f1a\u6d88\u8017\u4f53\u529b\uff0c\u4f7f\u7528\u7269\u54c1\u3001\u5408\u6210\u3001\u79fb\u52a8\u548c\u65cb\u8f6c\u4e5f\u53ef\u80fd\u63a8\u8fdb\u56de\u5408\u3002'] },
-  { title: '\u80cc\u5305\u4e0e\u5408\u6210', items: ['\u80cc\u5305\u662f 8 \u5217 4 \u884c\uff0c\u7269\u54c1\u6309\u5f62\u72b6\u5360\u683c\u3002', '\u70b9\u6309\u7269\u54c1\u53ef\u9009\u4e2d\uff1b\u957f\u6309 150ms \u540e\u62d6\u52a8\u79fb\u52a8\uff0c\u4e0d\u518d\u7528\u70b9\u51fb\u7a7a\u683c\u79fb\u7269\u54c1\u3002', '\u62d6\u52a8\u65f6\u4f7f\u7528\u7ea2\u8272\u4e22\u5f03\u533a\u4e0e\u84dd\u8272\u6682\u5b58\u533a\uff0c\u7a7a\u6682\u5b58\u533a\u540e\u63a8\u8fdb\u4e00\u4e2a\u6574\u7406\u56de\u5408\u3002', '\u5408\u6210\u9762\u677f\u53ea\u663e\u793a\u5f53\u524d\u80cc\u5305\u53ef\u5408\u6210\u7684\u914d\u65b9\u3002'] },
+  { title: '行动与体力', items: ['探索时移动、翻牌、拾取和整理免费，不回复体力；首次翻出敌人进入战斗并补满体力，基础上限6。', '玩家回合可连续行动。体力耗尽或点击结束回合后，宠物行动一次，再统一结算敌人阶段，随后补满体力。', '战斗中移动每格、翻牌、拾取、使用物品、成功整理和合成各耗1体力；攻击按武器费用。选择、预览、取消和无效操作免费。'] },
+  { title: '\u80cc\u5305\u4e0e\u5408\u6210', items: ['\u80cc\u5305\u662f 8 \u5217 4 \u884c\uff0c\u7269\u54c1\u6309\u5f62\u72b6\u5360\u683c\u3002', '\u70b9\u6309\u7269\u54c1\u53ef\u9009\u4e2d\uff1b\u957f\u6309 150ms \u540e\u62d6\u52a8\u79fb\u52a8\uff0c\u4e0d\u518d\u7528\u70b9\u51fb\u7a7a\u683c\u79fb\u7269\u54c1\u3002', '拖动时可移入暂存区或红色丢弃区；探索免费，战斗中成功操作耗1体力。升级选择期间整理免费。', '\u5408\u6210\u9762\u677f\u53ea\u663e\u793a\u5f53\u524d\u80cc\u5305\u53ef\u5408\u6210\u7684\u914d\u65b9\u3002'] },
   { title: '\u5347\u7ea7\u4e0e\u5723\u9057\u7269', items: ['\u5347\u7ea7\u65f6\u4ece6\u79cd\u5956\u52b1\u4e2d\u968f\u673a\u63d0\u4f9b3\u9879\uff0c\u9009\u62e91\u9879\u3002\u7269\u54c1\u538b\u7f29\u6682\u672a\u5f00\u653e\u3002', '\u6b66\u5668\u5f3a\u5316\u4ec5\u5f71\u54cd\u6240\u9009\u6b66\u5668\uff0c\u5408\u6210\u540e\u4e0d\u7ee7\u627f\u3002', '\u5723\u9057\u7269\u653e\u5728\u80cc\u5305\u4e2d\u5373\u53ef\u751f\u6548\uff0c\u79bb\u5f00\u623f\u95f4\u4e0d\u4f1a\u91cd\u7f6e\u3002'] },
   { title: '\u6218\u6597\u4e0e\u63a2\u7d22', items: ['\u9009\u62e9\u6b66\u5668\u540e\u70b9\u51fb\u654c\u4eba\u53d1\u8d77\u653b\u51fb\uff0c\u8fdc\u5904\u76ee\u6807\u4f1a\u5148\u9884\u89c8\u8def\u5f84\u3002', '\u957f\u6309\u68cb\u76d8\u6216\u80cc\u5305\u7269\u54c1\u67e5\u770b\u8be6\u60c5\uff0c\u8fde\u7eed\u79fb\u52a8\u89c6\u89d2\u53ef\u4f7f\u7528\u62d6\u62fd\u548c\u6eda\u8f6e\u7f29\u653e\u3002'] },
 ])
@@ -574,12 +580,16 @@ const cameraAngles = computed(() => {
 })
 const selectedItem = computed(() => state.value.selectedItem)
 const actionsAvailable = computed(() => {
-  const current = state.value
-  return current.phase === 'explore' && !current.gameOver && current.initialRelicChoices.length === 0 && !current.merchantEntering && !current.roomEntering && !current.combatResolving
+  state.value
+  return run._canAct()
+})
+const battleStageLabel = computed(() => {
+  const battle = state.value.battle
+  return battle.active ? { player: `玩家回合 ${battle.round}`, pets: '宠物回合', enemy: '敌人回合' }[battle.stage] : '探索'
 })
 const craftAvailable = computed(() => {
-  const current = state.value
-  return !current.gameOver && current.initialRelicChoices.length === 0 && ['explore', 'merchant'].includes(current.phase) && !current.itemTargeting && !current.merchantEntering && !current.roomEntering && !current.combatResolving
+  state.value
+  return run._canOrganizeBackpack() && run.phase !== 'level-up' && !run.itemTargeting
 })
 const selectedUsable = computed(() => {
   const item = selectedItem.value
@@ -587,7 +597,8 @@ const selectedUsable = computed(() => {
 })
 const selectedUseAvailable = computed(() => {
   state.value
-  return selectedUsable.value && (!isTotemBadge(selectedItem.value) || run.totems.available(selectedItem.value))
+  const item = selectedItem.value
+  return selectedUsable.value && run.canPayAction(1 + (run.consumables.boosted(item, true) ? 2 : 0)) && (!isTotemBadge(item) || run.totems.available(item))
 })
 const statusEntries = computed(() => {
   state.value
@@ -756,7 +767,7 @@ const roomRewardOpen = computed(() => {
 })
 const levelUpOpen = computed(() => {
   const current = state.value
-  return current.phase === 'level-up' && !!current.levelUp && !current.combatResolving && !current.enemyDeathAnimationsPending && !inventoryStagingVisible.value
+  return current.phase === 'level-up' && !!current.levelUp && !current.combatResolving && !current.roundResolving && !current.enemyDeathAnimationsPending && !inventoryStagingVisible.value
 })
 const levelUpChoices = computed(() => {
   state.value
@@ -1287,6 +1298,7 @@ function handleAction(action, value = null) {
   if (action === 'craft-open') { if (craftAvailable.value) craftOpen.value = true; return }
   if (action === 'craft-close') { craftOpen.value = false; return }
   if (action === 'use') run.useSelected()
+  if (action === 'end-turn') run.endPlayerTurn()
   if (action === 'camera-pitch-minus') { scene.value?.adjustCameraPitch(-1); uiRevision.value++ }
   if (action === 'camera-pitch-plus') { scene.value?.adjustCameraPitch(1); uiRevision.value++ }
   if (action === 'restart') restartGame()

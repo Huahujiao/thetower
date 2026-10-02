@@ -34,7 +34,20 @@ export function enemy(run, { hp = 100, pos = { c: 4, r: 3 }, attribute = null, a
 }
 export function attack(run, weapon, target) {
   select(run, weapon)
-  run.player.energy = 10
+  run._synchronizeBattle()
+  run.player.energy = run.player.maxEnergy
   assert(run._attack(target))
   run.bus.emit('animate:attack-complete', { actor: 'player' })
+  settleAnimations(run)
+}
+
+export function settleAnimations(run) {
+  while (run.enemyDeathAnimationsPending) run.bus.emit('animate:impact-complete', { target: 'enemy', defeated: true })
+  run.bus.emit('animate:idle')
+}
+
+export function round(run) {
+  run._synchronizeBattle()
+  assert(run.endPlayerTurn(), 'a revealed enemy is required to advance a combat round')
+  settleAnimations(run)
 }
