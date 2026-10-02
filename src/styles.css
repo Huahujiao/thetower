@@ -45,6 +45,15 @@ button { font: inherit; }
 
 #app { position: relative; z-index: 0; isolation: isolate; flex: 1 1 0; min-height: 0; width: 100%; pointer-events: auto; overflow: hidden; background: #111722; border-top: 1px solid rgba(145,167,193,.3); border-bottom: 1px solid rgba(145,167,193,.3); }
 #app canvas { position: absolute; inset: 0; z-index: 0; display: block; width: 100%; height: 100%; touch-action: none; }
+#app.scene-battle-active::after {
+  content: ''; position: absolute; inset: 0; z-index: 20; pointer-events: none;
+  box-shadow: inset 0 0 36px 8px rgba(205,38,42,.36), inset 0 0 9px rgba(239,60,53,.24);
+  animation: scene-battle-glow 2.4s ease-in-out infinite;
+}
+@keyframes scene-battle-glow {
+  0%, 100% { opacity: .52; }
+  50% { opacity: .88; }
+}
 .scene-status-tray { position: absolute; left: 8px; bottom: 8px; z-index: 35; display: flex; flex-flow: row wrap; align-content: flex-end; gap: 4px; max-width: calc(100% - 16px); pointer-events: auto; }
 .scene-status-icon { position: relative; display: grid; width: 28px; height: 28px; padding: 0; place-items: center; border: 1px solid rgba(210,220,235,.36); border-radius: 6px; background: rgba(10,16,28,.84); color: #e8f0ff; font-size: 14px; font-weight: 800; touch-action: none; -webkit-touch-callout: none; }
 .scene-status-icon img { display: block; width: 23px; height: 23px; object-fit: contain; pointer-events: none; user-select: none; }
@@ -316,6 +325,7 @@ button { font: inherit; }
 }
 @media (prefers-reduced-motion: reduce) {
   .bag-adjacency-layer { animation: none !important; }
+  #app.scene-battle-active::after { animation: none; opacity: .65; }
 }
 .bag-shape .bag-name, .bag-shape .bag-detail { z-index: 3; min-width: 0; max-width: 100%; margin: 0; padding: 2px 3px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; pointer-events: none; text-shadow: 0 1px 2px rgba(0,0,0,.9); }
 .bag-shape .bag-name { align-self: start; }

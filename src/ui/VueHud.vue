@@ -56,7 +56,7 @@
         }}/{{ state.player.experienceToNext }}</span>
       </div>
     </div>
-    <div id="app" ref="sceneContainer" aria-label="game board">
+    <div id="app" ref="sceneContainer" :class="{ 'scene-battle-active': state.battle.active }" aria-label="game board">
       <section v-if="statusEntries.length" class="scene-status-tray" :aria-label="LABELS.status">
         <button
           v-for="entry in statusEntries" :key="entry.id" type="button"
