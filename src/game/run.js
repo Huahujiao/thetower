@@ -110,7 +110,7 @@ const DETAIL_LABELS = Object.freeze({
   pet: '\u5ba0\u7269',
   potion: '\u836f\u5242',
   armor: '\u62a4\u7532',
-  defense: '防具', material: '合成材料', teleport: '换位符',
+  defense: '防具', material: '合成材料', teleport: '飞身符',
   throwable: '\u6295\u63b7\u6d88\u8017\u54c1', 'money-pouch': '\u94b1\u888b',
   buff: '\u589e\u76ca',
   relic: '\u5723\u9057\u7269',
@@ -2373,7 +2373,7 @@ export class GameRun {
       this.backpack = BackpackGrid.hydrate(data.backpack)
       this.inventoryStash = Array.isArray(data.inventoryStash) ? data.inventoryStash.filter((item) => item?.uid) : []
       const refreshItemCopy = item => {
-        if (['food-3', 'food-5', 'food-7', 'food-9'].includes(item?.id)) item.name = getItemDefinition(item.id).name
+        if (['food-3', 'food-5', 'food-7', 'food-9', 'teleport'].includes(item?.id)) item.name = getItemDefinition(item.id).name
         if (['r-traveler', 'r-step-boots', 'r-turn-shield', 'r-totem-breath'].includes(item?.id)) item.description = getItemDefinition(item.id).description
       }
       for (const item of [...this.backpack.items, ...this.inventoryStash]) refreshItemCopy(item)

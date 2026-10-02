@@ -2487,8 +2487,7 @@ export class GameScene {
     const position = this._pickTile(event)?.userData?.position
     if (!position) return
     if (this.run.itemTargeting) {
-      this._clearPathPreview()
-      this.run.clickTile(position.c, position.r)
+      // Target selection waits for a click so a touch can still become a pan.
       return
     }
     const hold = {
@@ -2537,6 +2536,7 @@ export class GameScene {
       }
       this._startBoardHold(event)
     } else if (this.activePointers.size === 2) {
+      this.lastDragMoved = true
       this._cancelBoardHold({ close: true })
       this.pinch = { distance: this._pinchDistance(), zoom: this.zoom, moved: false }
       this.drag = null
@@ -2573,7 +2573,8 @@ export class GameScene {
     if (!this.activePointers.has(event.pointerId)) return
     const wasPinching = !!this.pinch
     const pinchMoved = this.pinch?.moved
-    const dragMoved = this.drag?.moved
+    const dragMoved = this.drag?.moved || (this.drag &&
+      Math.abs(event.clientX - this.drag.startX) + Math.abs(event.clientY - this.drag.startY) > DRAG_THRESHOLD)
     const longPressTriggered = this.boardHold?.pointerId === event.pointerId
       ? this._cancelBoardHold({ close: true })
       : false
@@ -2581,7 +2582,7 @@ export class GameScene {
     this.renderer.domElement.releasePointerCapture?.(event.pointerId)
     if (wasPinching) this.pinch = null
     this.drag = null
-    this.lastDragMoved = this.lastDragMoved || !!pinchMoved || !!dragMoved || longPressTriggered
+    this.lastDragMoved = this.lastDragMoved || wasPinching || !!pinchMoved || !!dragMoved || longPressTriggered || event.type === 'pointercancel'
   }
 
   _handleWheel(event) {
@@ -2595,6 +2596,12 @@ export class GameScene {
       return
     }
     if (this.movementAnimation || this.attackAnimation || this.flipAnimations.length || this.animationQueue.length) return
+    if (this.run.itemTargeting) {
+      const position = this._pickTile(event)?.userData?.position
+      this._clearPathPreview()
+      if (position) this.run.clickTile(position.c, position.r)
+      return
+    }
     const door = this._pickDoor(event)
     if (door?.userData?.doorId) {
       const doorId = door.userData.doorId

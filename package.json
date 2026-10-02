@@ -11,6 +11,7 @@
     "lint": "eslint . --max-warnings=0",
     "check:turns": "node scripts/turns-check.mjs && node scripts/turns-ui-check.mjs",
     "check:combat-motion": "node scripts/combat-motion-check.mjs",
+    "check:board-pointer": "node scripts/board-pointer-check.mjs",
     "check:traps": "node scripts/traps-check.mjs",
     "check:items": "node scripts/items-check.mjs",
     "check:basics": "node scripts/basic-rules-check.mjs",

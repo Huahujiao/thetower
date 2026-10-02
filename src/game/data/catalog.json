@@ -1360,7 +1360,7 @@
     },
     {
       "id": "teleport",
-      "name": "换位符",
+      "name": "飞身符",
       "type": "teleport",
       "attribute": "drown",
       "description": "移动到曼哈顿距离6内已翻开的空格；只推进1回合，不累计移动步数。",
