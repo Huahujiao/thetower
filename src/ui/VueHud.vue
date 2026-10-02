@@ -842,8 +842,8 @@ function restartFromSettings() {
   if (window.confirm(LABELS.restartConfirm)) restartGame()
 }
 function roomRewardDisabled(choice) {
-  if (choice.kind === 'relic') return !getRelicDefinition(choice.relicId) || run.relics.has(choice.relicId)
-  if (choice.kind === 'item') return !getItemDefinition(choice.itemId)
+  if (choice.kind === 'relic') return !getRelicDefinition(choice.relicId) || getRelicDefinition(choice.relicId).disabled || run.relics.has(choice.relicId)
+  if (choice.kind === 'item') return !getItemDefinition(choice.itemId) || getItemDefinition(choice.itemId).disabled
   return false
 }
 function roomRewardTitle(choice) {

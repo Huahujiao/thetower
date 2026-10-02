@@ -1,5 +1,5 @@
 import { attributeModifier } from '../data/attributes.js'
-import { makeItemById, randomConsumableOfTier } from '../data/content.js'
+import { getItemDefinition, makeItemById, randomConsumableOfTier } from '../data/content.js'
 import { adjacentItems, emptyPerimeterCells } from './backpack-geometry.js'
 import { getStatus } from './statuses.js'
 import { manhattan, neighbors8 } from '../core/geometry.js'
@@ -9,7 +9,7 @@ export class ExpansionRules {
   get items() { return this.run.itemRules }
   get state() { return this.items.state.expansion ||= { attacksReceived: 0, consumedTierOne: 0, cardsRevealed: 0 } }
   has(id) { return this.items.has(id) }
-  adjacent(weapon, id) { return adjacentItems(this.run.backpack, weapon).some(item => item.id === id) }
+  adjacent(weapon, id) { return !getItemDefinition(id)?.disabled && adjacentItems(this.run.backpack, weapon).some(item => item.id === id) }
   defensesNextTo(weapon) { return adjacentItems(this.run.backpack, weapon).filter(item => item.type === 'defense') }
   relation(weapon, relation) {
     return relation.resisted && this.adjacent(weapon, 'r-neutral-stone') ? attributeModifier(null, null) : relation
@@ -32,7 +32,6 @@ export class ExpansionRules {
   }
   beforeAttack(weapon, context) {
     if (context.fuel) this.run.player.gold--
-    if (this.has('phase-armor') && this.items.state.lastWeapon && this.items.state.lastAttribute !== weapon.attribute) this.items.armor(1, true, 'phase-armor')
     if (this.has('r-armor-ring')) this.items.armor(this.defensesNextTo(weapon).length)
     if (this.adjacent(weapon, 'mountain-shield')) this.give(makeItemById('shield-bash'))
   }

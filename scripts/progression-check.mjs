@@ -170,7 +170,7 @@ for (const full of [false, true]) {
 
 // Nested relic choices are unique, exclude ownership, persist, and cannot be rerolled by returning.
 {
-  const run = fixture(), owned = add(run, 'r-three'), level = run.player.level
+  const run = fixture(), owned = add(run, 'r-empty'), level = run.player.level
   offer(run, 'relic'); assert(run.chooseLevelUpOption('relic'))
   const choices = [...run.levelUp.relicChoices]
   assert.equal(choices.length, 3); assert.equal(new Set(choices).size, 3)

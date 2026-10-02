@@ -28,6 +28,7 @@ import { findAttackPath, findDoorPath, findInteractionPath, findPath, findReveal
 import { terrainDamageModifiers } from './rules/terrain.js'
 import { suggestedSynergyId } from './rules/synergies.js'
 import { migratePlaytestBalance, PLAYTEST_BALANCE_REVISION } from './data/playtest-balance.js'
+import { migrateAttributeItems } from './data/attribute-item-retirement.js'
 
 // The design notation is rows × columns: four rows, eight columns.
 export const INVENTORY_COLUMNS = 8
@@ -409,7 +410,7 @@ export class GameRun {
 
   relicCount() { return this.backpack?.items.filter((item) => item?.type === 'relic').length || 0 }
   relicOverload() { return Math.max(0, this.relicCount() - RELIC_SOFT_LIMIT) }
-  canFitRelic(id) { return !!getRelicDefinition(id) && this.backpack.usedCells < this.backpack.capacity }
+  canFitRelic(id) { return !!getRelicDefinition(id) && !getRelicDefinition(id).disabled && this.backpack.usedCells < this.backpack.capacity }
 
   get itemRules() { return this._itemRules }
   weaponRange(weapon, position) { return this.itemRules.range(weapon, position) }
@@ -788,7 +789,7 @@ export class GameRun {
 
   acquireRelic(id, { notify = true, allowStash = false } = {}) {
     const definition = getRelicDefinition(id)
-    if (!definition) return this._reject('\u672a\u77e5\u5723\u9057\u7269\u3002')
+    if (!definition || definition.disabled) return this._reject('\u672a\u77e5\u5723\u9057\u7269\u3002')
     if (this.relics.has(id)) return this._reject('\u6b64\u5723\u9057\u7269\u5df2\u5728\u80cc\u5305\u4e2d\u3002')
     const item = makeRelicItem(definition)
     if (!item) return this._reject('\u65e0\u6cd5\u521b\u5efa\u5723\u9057\u7269\u3002')
@@ -1216,7 +1217,7 @@ export class GameRun {
     const merchant = this.merchantEntity
     const stock = merchant?.stock?.[index]
     const definition = getItemDefinition(stock?.itemId)
-    if (this.phase !== 'merchant' || !merchant || !stock || !definition) return false
+    if (this.phase !== 'merchant' || !merchant || !stock || !definition || definition.disabled) return false
     const price = this.merchantPrice(stock)
     if (this.player.gold < price) return this._reject('\u91d1\u5e01\u4e0d\u8db3\u3002')
     const item = makeItemById(stock.itemId)
@@ -1284,6 +1285,7 @@ export class GameRun {
       const entry = this.acquireRelic(choice.relicId, { notify: false, allowStash: true })
       if (!entry) return false
     } else if (choice.kind === 'item') {
+      if (getItemDefinition(choice.itemId)?.disabled) return false
       const item = makeItemById(choice.itemId)
       if (!item) return false
       if (!this._putInInventory(item)) this.stageInventoryItem(item, { notify: false })
@@ -2280,7 +2282,11 @@ export class GameRun {
       const raw = localStorage.getItem(SAVE_KEY)
       if (!raw) return false
       const data = JSON.parse(raw)
-      if (data?.version === SAVE_VERSION) migratePlaytestBalance(data)
+      let attributeItemsMigrated = false
+      if (data?.version === SAVE_VERSION) {
+        migratePlaytestBalance(data)
+        attributeItemsMigrated = migrateAttributeItems(data, { random: this.random })
+      }
       if (!compatibleSave(data)) return discard()
       this.dungeon = Dungeon.hydrate(data.dungeon)
       this.player = data.player
@@ -2389,7 +2395,7 @@ export class GameRun {
       if (data.pendingAttackTurn === true) {
         this._endTurn({ turnKind: TURN_KINDS.ATTACK })
         this._persist()
-      }
+      } else if (attributeItemsMigrated) this._persist()
       return true
     } catch {
       return discard()

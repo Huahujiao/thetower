@@ -142,9 +142,9 @@ for (const id of ALL_ITEM_DEFS.filter(i => i.type === 'defense').map(i => i.id))
   const run = fixture(); add(run, 'tide-shield'); add(run, 'red-armor')
   const w = add(run, 'tide-blade'), e = enemy(run)
   attack(run, w, e); attack(run, w, e); attack(run, w, e)
-  assert.equal(run.player.armor, 2)
+  assert.equal(run.player.armor, 0)
   run.player.hp=9;const r = add(run, 'rust-sword'); attack(run, r, e); attack(run, r, e)
-  assert.equal(run.player.armor, 3)
+  assert.equal(run.player.armor, 0)
 }
 {
   const run = fixture(); add(run, 'vine-armor'); run.currentRoom.tile({ c: 2, r: 2 }).revealed = false
@@ -158,7 +158,7 @@ for (const id of ALL_ITEM_DEFS.filter(i => i.type === 'defense').map(i => i.id))
   const e = enemy(run, { attack: 3 }); run.player.armor = 2
   run._enemyAttack(e)
   const w = add(run, 'rust-sword')
-  assert.equal(run.itemRules.attackContext(w, e).flat, 2)
+  assert.equal(run.itemRules.attackContext(w, e).flat, 0)
   attack(run, w, e)
   assert.equal(run.itemRules.attackContext(w, e).flat, 0)
 }
@@ -297,17 +297,17 @@ for(const recipe of RECIPES) {
   assert(!run.backpack.items.some(item=>['bell-maul','mountain-break-stone'].includes(item.id)))
   assert.equal(run.backpack.length,27);assert.equal(run.globalTurn,1)
 }
-// Relics change build rules rather than tracking per-room allowances.
+// Suspended attribute relics cannot change combat, even if injected by old code.
 {
   const run=fixture();add(run,'r-three')
   const ws=['rust-sword','bone-knife','tide-blade'].map(id=>add(run,id))
-  assert.equal(run.itemRules.attackContext(ws[0],enemy(run,{attribute:'wither'})).multiplier,2.2)
-  assert.equal(run.itemRules.attackContext(ws[0],enemy(run,{pos:{c:5,r:3},attribute:'drown'})).multiplier,0.5)
+  assert.equal(run.itemRules.attackContext(ws[0],enemy(run,{attribute:'wither'})).multiplier,1.2)
+  assert.equal(run.itemRules.attackContext(ws[0],enemy(run,{pos:{c:5,r:3},attribute:'drown'})).multiplier,1)
 }
 {
   const run=fixture();add(run,'r-empty');add(run,'r-reverse');const w=add(run,'rust-sword'),e=enemy(run,{attribute:'drown'})
   assert.equal(run.weaponEnergyCost(w),2)
-  assert.equal(run.itemRules.attackContext(w,e).countered,true)
+  assert.equal(run.itemRules.attackContext(w,e).countered,false)
 }
 {
   const run=fixture();add(run,'r-traveler');const w=add(run,'bone-knife'),e=enemy(run)
@@ -385,9 +385,9 @@ for (let i = 0; i < purchasableItems.length; i++) {
 {
   const run = fixture(), merchant = createMerchantEntity('merchant', { c: 2, r: 3 }, { floor: 1, random: () => 0.5 })
   run.currentRoom.addEntity(merchant);run.phase = 'merchant';run.merchant = { entityId: merchant.id };run.player.gold = 99
-  merchant.stock[0] = { itemId: 'r-three', price: 9 }
-  assert(run.buyMerchantItem(0));assert(run.hasActiveRelic('r-three'));assert.equal(run.player.gold, 90)
-  merchant.stock[0] = { itemId: 'r-three', price: 9 }
+  merchant.stock[0] = { itemId: 'r-loot-pouch', price: 9 }
+  assert(run.buyMerchantItem(0));assert(run.hasActiveRelic('r-loot-pouch'));assert.equal(run.player.gold, 90)
+  merchant.stock[0] = { itemId: 'r-loot-pouch', price: 9 }
   assert.equal(run.buyMerchantItem(0), false);assert.equal(run.player.gold, 90)
   const sword = add(run, 'rust-sword');select(run, sword)
   add(run, 'r-scales');select(run, sword);assert(run.sellSelectedMerchantItem())
@@ -445,18 +445,18 @@ for(let i=0;i<100;i++) {
   run._enemyAttack(target);run._enemyAttack(target)
   assert.equal(run.player.armor,8)
 }
-// A zero-damage hit cannot replenish armor. Repeated hits cannot stack its floor.
+// Plain armor does not replenish armor from attacks.
 {
   const run=fixture();add(run,'tide-shield');const w=add(run,'tide-blade'),e=enemy(run)
   w.attack=0;attack(run,w,e);assert.equal(run.player.armor,0)
-  w.attack=3;attack(run,w,e);attack(run,w,e);assert.equal(run.player.armor,2)
+  w.attack=3;attack(run,w,e);attack(run,w,e);assert.equal(run.player.armor,0)
 }
-// Relic inversion is applied before triad amplification.
+// Paused inversion and triad effects leave the ordinary attribute relation intact.
 {
   const run=fixture();add(run,'r-three');add(run,'r-reverse')
   const w=add(run,'rust-sword');add(run,'bone-knife');add(run,'tide-blade')
   const e=enemy(run,{attribute:'drown'})
   const context=run.itemRules.attackContext(w,e)
-  assert.equal(context.multiplier,2.2);assert.equal(context.flat,0)
+  assert.equal(context.multiplier,1);assert.equal(context.flat,0)
 }
 console.log('items-check passed: new inventory, combat, crafting, defenses, relics, save and UI contracts')

@@ -9,7 +9,7 @@ export class RelicEngine {
     if (run?.relicOverload?.() > 0) return []
     return this.collection.active
       .map((entry) => getRelicDefinition(entry.id))
-      .filter(Boolean)
+      .filter(definition => definition && !definition.disabled)
   }
 
   damageModifiers(context) {

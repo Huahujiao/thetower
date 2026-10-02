@@ -10,8 +10,8 @@ import { computeAttackDamage } from '../src/game/rules/modifiers.js'
 
 const removedRelics = ['r-harmonic-echo', 'r-apprentice-mark', 'r-last-stand', 'r-threshold-seal', 'r-no-mercy', 'r-blood-prism', 'r-armor-echo', 'r-inheritance-edge', 'r-breaker-spark']
 const relicIds = new Set(RELIC_DEFS.map((definition) => definition.id))
-assert.equal(RELIC_DEFS.filter(relic => !relic.disabled).length, 47, 'relic pool must contain 47 active definitions')
-const relicDrop = createRelicEntity(RELIC_DEFS[0], { c: 0, r: 0 })
+assert.equal(RELIC_DEFS.filter(relic => !relic.disabled).length, 43, 'relic pool must contain 43 active definitions')
+const relicDrop = createRelicEntity(RELIC_DEFS.find(relic => !relic.disabled), { c: 0, r: 0 })
 assert.equal(relicDrop.kind, 'item')
 assert.equal(relicDrop.item.type, 'relic')
 assert.equal(relicDrop.item.shape.length, 1)
@@ -19,8 +19,14 @@ for (const id of removedRelics) assert.equal(getRelicDefinition(id), null, `${id
 for (const id of ['r-three', 'r-scales']) assert(relicIds.has(id), `${id} must be present`)
 
 assert.equal(ATTRIBUTE_ORDER.join(','), 'scorch,wither,drown')
-assert.equal(attributeModifier('scorch', 'wither').multiplier, 1.6)
-assert.equal(attributeModifier('wither', 'scorch').multiplier, 0.65)
+for (let index = 0; index < ATTRIBUTE_ORDER.length; index++) {
+  const attribute = ATTRIBUTE_ORDER[index]
+  assert.deepEqual(attributeModifier(attribute, ATTRIBUTE_ORDER[(index + 1) % 3]), { multiplier: 1.2, countered: true, resisted: false })
+  assert.deepEqual(attributeModifier(attribute, ATTRIBUTE_ORDER[(index + 2) % 3]), { multiplier: 1, countered: false, resisted: true })
+  assert.equal(attributeModifier(attribute, attribute).multiplier, 1)
+  assert.equal(attributeModifier(attribute, null).multiplier, 1)
+  assert.equal(attributeModifier(null, attribute).multiplier, 1)
+}
 assert.equal(catalog.consumables.length, 11)
 assert.equal(catalog.weapons.length, 23)
 assert.equal(catalog.defenses.length, 8)
@@ -64,7 +70,8 @@ const damage = computeAttackDamage({
   target: { attribute: 'wither' },
   pendingAttackBonus: 2,
 })
-assert.equal(damage.damage, 11)
+assert.equal(damage.damage, 8)
+assert.equal(computeAttackDamage({ weapon: { attack: 5, attribute: 'scorch' }, target: { attribute: 'drown' }, pendingAttackBonus: 2 }).damage, 7)
 
 const serialized = run.serialize()
 assert.equal(serialized.version, SAVE_VERSION)

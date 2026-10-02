@@ -1132,7 +1132,7 @@
         ]
       ],
       "minFloor": 1,
-      "description": "若上一把用于攻击的武器属性不同，本次攻击伤害+1。"
+      "description": "无额外特效。"
     },
     {
       "id": "triad-wither",
@@ -1594,7 +1594,7 @@
           1
         ]
       ],
-      "description": "沉溺武器命中后，将护甲补足至2。"
+      "description": "无额外特效。"
     },
     {
       "id": "red-shield",
@@ -1613,7 +1613,7 @@
           1
         ]
       ],
-      "description": "护甲被敌人打空后，下一次灼热武器攻击+2；不叠加。"
+      "description": "无额外特效。"
     },
     {
       "id": "light-armor",
@@ -1652,7 +1652,7 @@
           1
         ]
       ],
-      "description": "生命不高于50%时，灼热武器命中后将护甲补足至3。"
+      "description": "无额外特效。"
     },
     {
       "id": "vine-armor",

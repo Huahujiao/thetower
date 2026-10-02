@@ -13,6 +13,7 @@ export const EXPANSION_RELICS = Object.freeze([
   },
   {
     "id": "r-neutral-stone",
+    "disabled": true,
     "name": "\u5e73\u76f8\u77f3",
     "description": "\u76f8\u90bb\u6b66\u5668\u653b\u51fb\u5c5e\u6027\u88ab\u514b\u5236\u65f6\uff0c\u6309\u4e2d\u6027\u5c5e\u6027\u8ba1\u7b97\u3002",
     "attribute": null
@@ -186,7 +187,7 @@ export const EXPANSION_DEFENSES = Object.freeze([
   {
     "id": "phase-armor",
     "name": "\u6362\u76f8\u7532",
-    "description": "\u4e0e\u4e0a\u4e00\u6b21\u653b\u51fb\u4f7f\u7528\u7684\u6b66\u5668\u5c5e\u6027\u4e0d\u540c\u65f6\uff0c\u83b7\u5f971\u70b9\u62a4\u7532\u3002",
+    "description": "\u65e0\u989d\u5916\u7279\u6548\u3002",
     "type": "defense",
     "defenseClass": "armor",
     "armorValue": 1,

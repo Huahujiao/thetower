@@ -13,7 +13,7 @@ assert.equal(expansion.length, 30)
 assert.equal(new Set(ALL_ITEM_DEFS.map(item => item.id)).size, ALL_ITEM_DEFS.length)
 for (const definition of expansion) {
   assert(makeItemById(definition.id))
-  assert(catalogContent(definition.type === 'weapon' ? 'weapons' : definition.type === 'defense' ? 'items' : 'relics').includes(definition.name))
+  assert.equal(catalogContent(definition.type === 'weapon' ? 'weapons' : definition.type === 'defense' ? 'items' : 'relics').includes(definition.name), !definition.disabled)
 }
 for (let index = 0; index < 100; index++) {
   const random = () => index / 100
@@ -45,17 +45,17 @@ for (let index = 0; index < 100; index++) {
   run.backpack.removeByUid(run.backpack.items.find(item => item.id === 'r-switch-ring').uid)
   assert.equal(run.weaponEnergyCost(b), 2)
 }
-// Neutralization clears resisted semantics, preserves advantageous attributes, honors reversal.
+// Paused neutralization and reversal do not alter the ordinary relationship.
 {
   const run = fixture(), weapon = add(run, 'bone-knife', 2, 1)
   add(run, 'r-neutral-stone', 3, 1)
   const target = enemy(run, { attribute: 'scorch' })
   let context = run.itemRules.attackContext(weapon, target)
-  assert.equal(context.multiplier, 1); assert.equal(context.resisted, false)
-  target.attribute = 'drown'; assert.equal(run.itemRules.attackContext(weapon, target).multiplier, 1.6)
+  assert.equal(context.multiplier, 1); assert.equal(context.resisted, true)
+  target.attribute = 'drown'; assert.equal(run.itemRules.attackContext(weapon, target).multiplier, 1.2)
   add(run, 'r-reverse', 7, 3)
   context = run.itemRules.attackContext(weapon, target)
-  assert.equal(context.multiplier, 1); assert.equal(context.resisted, false)
+  assert.equal(context.multiplier, 1.2); assert.equal(context.resisted, false)
 }
 // Perimeter uses distinct occupied-cell neighbors, in bounds, including rotated irregular shapes.
 {
@@ -140,14 +140,14 @@ for (const trigger of ['move', 'knockback', 'death', 'poison-death']) {
   assert(run.currentRoom.isRevealed(nearest.pos)); assert(!run.currentRoom.isRevealed(far.pos))
   assert.equal(run.itemRules.expansion.state.cardsRevealed, 1)
 }
-// Attribute change and adjacent armor grants are independent; identical attributes do not grant.
+// Plain phase armor only contributes through the separate adjacent armor relic.
 {
   const run = fixture(), weapon = add(run, 'bone-knife', 2, 0)
   add(run, 'phase-armor', 3, 0); add(run, 'r-armor-ring', 7, 3)
   const target = enemy(run); run.player.armor = 0
   attack(run, weapon, target); assert.equal(run.player.armor, 1)
   attack(run, weapon, target); assert.equal(run.player.armor, 2)
-  weapon.attribute = 'scorch'; attack(run, weapon, target); assert.equal(run.player.armor, 4)
+  weapon.attribute = 'scorch'; attack(run, weapon, target); assert.equal(run.player.armor, 3)
 }
 // Renewal stacks with old armor-break/refund hooks, cooldown counts received attacks, excludes dodge.
 {
@@ -155,7 +155,7 @@ for (const trigger of ['move', 'knockback', 'death', 'poison-death']) {
   const target = enemy(run, { attack: 3 })
   run.player.hp = 100; run.player.armor = 1
   run._damagePlayer(1, { source: 'enemy:attack', enemy: target })
-  assert.equal(run.player.armor, 6); assert(run.itemRules.state.buffs['red-shield'])
+  assert.equal(run.player.armor, 6); assert.equal(run.itemRules.state.buffs['red-shield'], undefined)
   run.applyStatus(run.player, 'dodge', { layers: 1 })
   run._damagePlayer(1, { source: 'enemy:attack', enemy: target })
   assert.equal(run.itemRules.expansion.state.attacksReceived, 1)

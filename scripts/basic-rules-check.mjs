@@ -30,8 +30,8 @@ import { enemyOverheadHints } from '../src/game/data/enemy-features.js'
   }
   assert.equal(run.gameOver, false)
   assert.equal(run.currentRoom.entity(bud.id), null)
-  assert.equal(attacks, 5)
-  assert(run.player.hp >= 10, 'early plant should leave a useful health reserve')
+  assert.equal(attacks, 7)
+  assert(run.player.hp >= 8, 'weaker counter bonus still leaves a useful health reserve')
 }
 
 {

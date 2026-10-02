@@ -22,6 +22,7 @@
     "check:pets": "node scripts/pets-check.mjs",
     "check:weapon-tiers": "node scripts/weapon-progression-check.mjs",
     "check:playtest-balance": "node scripts/playtest-balance-check.mjs",
+    "check:attributes": "node scripts/attribute-items-check.mjs",
     "check:enemies": "node scripts/enemies-check.mjs",
     "check:animation": "node scripts/shadow-rig-check.mjs",
     "preview": "vite preview",

@@ -5,8 +5,9 @@ import { PET_RELICS } from './pets.js'
 export const RELIC_DEFS = Object.freeze([
   {
     "id": "r-three",
+    "disabled": true,
     "name": "三相轮",
-    "description": "背包同时持有三种属性武器时，克制倍率变为2.2，被克制倍率变为0.5。",
+    "description": "背包同时持有三种属性武器时，克制倍率变为2.2，被克制时仍为1倍。",
     "attribute": null
   },
   {
@@ -17,6 +18,7 @@ export const RELIC_DEFS = Object.freeze([
   },
   {
     "id": "r-reverse",
+    "disabled": true,
     "name": "逆克石",
     "description": "所有武器的属性克制关系反转：原本克制变为被克制，原本被克制变为克制。",
     "attribute": null
@@ -53,6 +55,7 @@ export const RELIC_DEFS = Object.freeze([
   },
   {
     "id": "r-phase-pointer",
+    "disabled": true,
     "name": "换相指针",
     "description": "用与上次攻击不同属性的武器有效命中后，下一次武器攻击伤害+1、体力消耗-1；不叠加。",
     "attribute": null

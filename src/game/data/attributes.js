@@ -23,10 +23,10 @@ export function attributeModifier(attackerAttribute, targetAttribute) {
   const targetIndex = ATTRIBUTE_ORDER.indexOf(targetAttribute)
   if (attackerIndex < 0 || targetIndex < 0) return { multiplier: 1, countered: false, resisted: false }
   if (ATTRIBUTE_ORDER[(attackerIndex + 1) % ATTRIBUTE_ORDER.length] === targetAttribute) {
-    return { multiplier: 1.6, countered: true, resisted: false }
+    return { multiplier: 1.2, countered: true, resisted: false }
   }
   if (ATTRIBUTE_ORDER[(attackerIndex + ATTRIBUTE_ORDER.length - 1) % ATTRIBUTE_ORDER.length] === targetAttribute) {
-    return { multiplier: 0.65, countered: false, resisted: true }
+    return { multiplier: 1, countered: false, resisted: true }
   }
   return { multiplier: 1, countered: false, resisted: false }
 }

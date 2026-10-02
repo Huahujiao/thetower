@@ -36,7 +36,7 @@ const ADJACENCY_EFFECT_TARGETS = Object.freeze({
 })
 
 export function adjacencyEffectApplies(source, target, effectiveRange = target?.range || 1) {
-  return !!ADJACENCY_EFFECT_TARGETS[source?.id]?.(target) &&
+  return !getItemDefinition(source?.id)?.disabled && !!ADJACENCY_EFFECT_TARGETS[source?.id]?.(target) &&
     (!['range-disc', 'steady-clip'].includes(source.id) || effectiveRange >= 2)
 }
 
@@ -61,7 +61,7 @@ export class ItemRules {
     return state
   }
   get room() { return this.run._roomRuntime().items ||= {} }
-  has(id) { return this.run.backpack.items.some(i => (i.id || i.relicId) === id) }
+  has(id) { return !getItemDefinition(id)?.disabled && this.run.backpack.items.some(i => (i.id || i.relicId) === id) }
   adjacent(item, id) {
     const range = ['range-disc', 'steady-clip'].includes(id) ? this.range(item) : item.range || 1
     return adjacentItems(this.run.backpack, item)
@@ -178,7 +178,6 @@ export class ItemRules {
     if (weapon.id === 'bell-maul' && this.state.lastAction !== 'attack') flat += 2
     if (weapon.id === 'wall-sword' && run.player.armor > 0) flat += 2
     if (weapon.id === 'mountain-maul' && adjacentItems(run.backpack, weapon).length === 0) flat += 3
-    if (weapon.id === 'triad-ember' && this.state.lastAttribute && this.state.lastAttribute !== weapon.attribute) flat++
     if (weapon.id === 'triad-wither' && enemy.itemPoisonTurns > 0) flat += 2
     if (this.adjacent(weapon, 'weight')) flat += 2
     if (forkBridgeActive(run.backpack, weapon)) flat++
@@ -196,7 +195,7 @@ export class ItemRules {
     const buffs = this.matchingBuffs(weapon)
     flat += buffs.reduce((n,[,b]) => n + (b.flat || 0), 0)
     const triad = this.has('r-three') && new Set(weapons.map(i => i.attribute).filter(Boolean)).size === 3
-    const multiplier = (triad && relation.countered ? 2.2 : triad && relation.resisted ? 0.5 : relation.multiplier) *
+    const multiplier = (triad && relation.countered ? 2.2 : relation.multiplier) *
       buffs.reduce((value, [, buff]) => value * (buff.multiplier || 1), 1)
     const poison = getStatus(enemy, 'enemy-poison')
     return { ...relation, flat, multiplier, attackMultiplier, buffs, distance, range, conduitSpend, sniperSpend, moved, poison,
@@ -257,8 +256,6 @@ export class ItemRules {
     if (this.adjacent(weapon, 'r-relay-badge')) this.buff('r-relay-badge', { other: weapon.uid, multiplier: 1.7 })
     if (hit.damage > 0 && this.has('r-phase-pointer') && this.state.lastAttribute &&
         this.state.lastAttribute !== weapon.attribute) this.buff('r-phase-pointer', { flat: 1, discount: 1 })
-    if (hit.damage > 0 && this.has('tide-shield') && weapon.attribute === 'drown') this.armorFloor(2, true, 'tide-shield')
-    if (hit.damage > 0 && this.has('red-armor') && weapon.attribute === 'scorch' && run.player.hp <= run.player.maxHp / 2) this.armorFloor(3, true, 'red-armor')
     this.expansion.afterAttack(weapon, enemy, hit, context)
     this.state.lastWeapon = weapon.uid
     this.state.lastAttribute = weapon.attribute
@@ -281,9 +278,6 @@ export class ItemRules {
     if (run.gameOver || run.player.hp <= 0 || context.source !== 'enemy:attack') {
       this.expansion.afterDamage(armorBefore, armorAfter)
       return
-    }
-    if (armorBefore > 0 && armorAfter === 0) {
-      if (this.has('red-shield')) this.buff('red-shield', { attribute: 'scorch', flat: 2 })
     }
     if (this.has('r-guard-return') && armorBefore > armorAfter) this.armor(1)
     if (healthDamage > 0 && context.enemy?.range === 1 && this.has('thorn-shield')) run._damageEnemy(context.enemy, 2, { source: 'item:thorns' })
@@ -313,7 +307,6 @@ export class ItemRules {
     if (conduitCapacity(this.run.backpack, weapon)) lines.push(`导流线：可用蓄势 ${this.state.conduitCharge || 0}/3`)
     if (forkBridgeActive(this.run.backpack, weapon)) lines.push('分叉接头：攻击+1')
     if (weapon.id === 'coin-blade') lines.push(`金币 ${this.run.player.gold}/12${this.run.player.gold >= 12 ? '，攻击+2' : ''}`)
-    if (weapon.id === 'triad-ember' && this.state.lastAttribute && this.state.lastAttribute !== weapon.attribute) lines.push('换属性攻击：伤害+1')
     if (weapon.id === 'triad-tide') lines.push('最大射程命中：返还1体力')
     if (this.adjacent(weapon, 'range-disc')) lines.push(`\u6d4b\u8ddd\u76d8\uff1a\u4e0b\u6b21\u653b\u51fb\u84c4\u52bf ${this.state.sniperCharge || 0}/2`)
     if (this.adjacent(weapon, 'bone-nail')) lines.push('裂骨钉：碰撞伤害+2，延迟行动1次')

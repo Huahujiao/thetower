@@ -173,10 +173,10 @@ import { getItemDefinition } from '../src/game/data/content.js'
   attack(run, scorch, target)
   assert.equal(run.itemRules.state.buffs['r-phase-pointer'], undefined)
   attack(run, wither, target)
-  assert.equal(run.itemRules.state.buffs['r-phase-pointer'].flat, 1)
-  assert.equal(run.itemRules.cost(scorch), scorch.energyCost - 1)
+  assert.equal(run.itemRules.state.buffs['r-phase-pointer'], undefined)
+  assert.equal(run.itemRules.cost(scorch), scorch.energyCost)
   attack(run, scorch, target)
-  assert.equal(run.itemRules.state.buffs['r-phase-pointer'].flat, 1)
+  assert.equal(run.itemRules.state.buffs['r-phase-pointer'], undefined)
   attack(run, scorch, target)
   assert.equal(run.itemRules.state.buffs['r-phase-pointer'], undefined)
 }
@@ -187,7 +187,7 @@ import { getItemDefinition } from '../src/game/data/content.js'
   const ember = add(run, 'triad-ember')
   const target = enemy(run, { hp: 200 })
   attack(run, wither, target)
-  assert.equal(run.itemRules.attackContext(ember, target).flat, 1)
+  assert.equal(run.itemRules.attackContext(ember, target).flat, 0)
   const dagger = add(run, 'triad-wither')
   target.itemPoisonTurns = 2
   assert.equal(run.itemRules.attackContext(dagger, target).flat, 2)

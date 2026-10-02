@@ -18,7 +18,7 @@ function phase(run, options = {}) { run._endTurn({ skipEnemyPhase: true, recover
 
 assert.equal(PETS.length, 8)
 assert.equal(ALL_ITEM_DEFS.length, 132)
-assert.equal(ALL_ITEM_DEFS.filter(item => !item.starterOnly && !item.generatedOnly && !item.disabled).length, 127)
+assert.equal(ALL_ITEM_DEFS.filter(item => !item.starterOnly && !item.generatedOnly && !item.disabled).length, 123)
 assert.equal(makeItemById('r-feeding-charm').name, '\u9972\u517d\u7b26')
 for (const pet of PETS) {
   const item = makeItemById(pet.id)

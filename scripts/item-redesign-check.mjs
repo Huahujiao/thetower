@@ -26,6 +26,7 @@ import { getStatus, statusCounterText } from '../src/game/rules/statuses.js'
 {
   const run = fixture(), blade = add(run, 'bone-knife', 0, 0)
   add(run, 'venom-sac', 1, 0)
+  blade.attack = 1 // Force a zero-damage hit independently of attribute penalties.
   const target = enemy(run, { attribute: 'scorch', traits: ['heavy-armor'] })
   attack(run, blade, target)
   assert.equal(target.hp, 100)
