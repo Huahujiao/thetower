@@ -7,7 +7,7 @@ import { adjacentItems } from '../src/game/rules/items.js'
 import { attackRangeCells, enemyThreatCells, weaponTargetCells } from '../src/game/rules/attack-range.js'
 import { rangePulse } from '../src/render/attack-range-overlay.js'
 
-assert.equal(ALL_ITEM_DEFS.length, 133)
+assert.equal(ALL_ITEM_DEFS.length, 132)
 assert.equal(makeItemById('short-sword'), null)
 for (let i = 0; i < 100; i++) {
   const groundItem = randomNeutralItem(1, () => i / 100)
@@ -80,10 +80,10 @@ assert(rangePulse(1.6).scale > rangePulse(1.2).scale)
 }
 
 // Consumables have an exact cost and never receive the exploration recovery.
-for (const id of ['health-potion', 'iron-powder', 'food-3', 'cleanse', 'rage-wine']) {
+for (const id of ['health-potion', 'iron-powder', 'food-3', 'rage-wine']) {
   const run = fixture(), item = add(run, id)
   run.player.hp = 10; run.player.energy = 3
-  run.player.poisonedTurns = id === 'cleanse' ? 2 : 0
+  run.player.poisonedTurns = 0
   select(run, item)
   assert(run.useSelected())
   assert.equal(run.globalTurn, 1)
@@ -92,7 +92,6 @@ for (const id of ['health-potion', 'iron-powder', 'food-3', 'cleanse', 'rage-win
   if (id === 'health-potion') assert.equal(run.player.hp, 15)
   if (id === 'iron-powder') assert.equal(run.player.armor, 5)
   if (id === 'rage-wine') assert.equal(run.player.hp, 8)
-  if (id === 'cleanse') assert.equal(run.player.poisonedTurns, 0)
 }
 {
   const run = fixture(), item = add(run, 'teleport')
@@ -174,12 +173,12 @@ for (const id of ALL_ITEM_DEFS.filter(i => i.type === 'defense').map(i => i.id))
 }
 {
   const run = fixture(), w = add(run, 'mountain-maul', 0, 0), e = enemy(run)
-  assert.equal(run.itemRules.attackContext(w, e).flat, 4)
+  assert.equal(run.itemRules.attackContext(w, e).flat, 3)
   add(run, 'weight', 3, 1)
   assert.equal(run.itemRules.attackContext(w, e).flat, 2)
   const weight = run.backpack.items.find(i => i.id === 'weight')
   run.backpack.move(weight.uid, 4, 0)
-  assert.equal(run.itemRules.attackContext(w, e).flat, 4)
+  assert.equal(run.itemRules.attackContext(w, e).flat, 3)
 }
 {
   const run = fixture(), w = add(run, 'rock-maul', 0, 0), weight = add(run, 'weight', 2, 0)
@@ -188,10 +187,10 @@ for (const id of ALL_ITEM_DEFS.filter(i => i.type === 'defense').map(i => i.id))
 }
 // All weapon-specific conditions, without implicit class effects.
 for (const [id, setup, flat] of [
-  ['root-axe', () => {}, 2],
-  ['tide-blade', r => r.itemRules.move(), 2],
+  ['root-axe', () => {}, 1],
+  ['tide-blade', r => r.itemRules.move(), 1],
   ['thorn-spear', (r,e) => { e.movedLastPhase = true }, 2],
-  ['bell-maul', () => {}, 3],
+  ['bell-maul', () => {}, 2],
   ['wall-sword', r => { r.player.armor = 1 }, 2],
 ]) {
   const run = fixture(), w = add(run, id), e = enemy(run); setup(run,e)
@@ -201,7 +200,7 @@ for (const [id, setup, flat] of [
   const run = fixture(), w = add(run, 'wood-bow', 0, 0); add(run, 'scope', 1, 0)
   run.player.pos = { c: 0, r: 3 }; const e = enemy(run, { pos: { c: 4, r: 3 } })
   assert.equal(run.weaponRange(w), 4)
-  attack(run,w,e); assert.equal(e.hp,95); assert.equal(run.globalTurn,1)
+  attack(run,w,e); assert.equal(e.hp,96); assert.equal(run.globalTurn,1)
 }
 {
   const run = fixture(), w = add(run, 'ash-bow')
@@ -211,7 +210,7 @@ for (const [id, setup, flat] of [
 {
   const run = fixture(), w = add(run, 'eagle-bow')
   run.player.pos = { c: 0, r: 3 }; const e = enemy(run, { pos: { c: 4, r: 3 } })
-  attack(run,w,e); assert.equal(e.hp,92)
+  attack(run,w,e); assert.equal(e.hp,94)
 }
 {
   const run = fixture(), w = add(run, 'rust-sword'), e = enemy(run, { attack: 10 })
@@ -233,7 +232,7 @@ for (const [id, attr, cost] of [['bone-knife',null,1],['erosion-knife','drown',2
 }
 {
   const run=fixture(),w=add(run,'return-axe'),e=enemy(run,{hp:1})
-  attack(run,w,e); assert.equal(run.weaponEnergyCost(w),4)
+  attack(run,w,e); assert.equal(run.weaponEnergyCost(w),3)
   const next=add(run,'bone-knife'),target=enemy(run)
   assert.equal(run.weaponEnergyCost(next),1)
   attack(run,next,target);assert.equal(target.hp,96)
@@ -244,7 +243,7 @@ for(const id of ['ember-spear','soul-spear']) {
   run.player.pos={c:run.currentRoom.width-3,r:3}
   const e=enemy(run,{pos:{c:run.currentRoom.width-1,r:3}})
   attack(run,w,e)
-  assert.equal(e.hp,id==='soul-spear'?90:95)
+  assert.equal(e.hp,id==='soul-spear'?89:95)
 }
 {
   const run=fixture(),w=add(run,'rock-maul'),e=enemy(run,{hp:4,traits:['shield']})
@@ -279,7 +278,7 @@ for(const id of ['ember-spear','soul-spear']) {
   assert.equal(run.moveInventory(w.uid,32),false);assert.equal(run.globalTurn,2)
   assert(e)
 }
-// Craft transaction success, no recipe chaining, full-bag rollback.
+// Craft transaction success, no recipe chaining, full-bag overflow.
 for(const recipe of RECIPES) {
   const run=fixture();const a=add(run,recipe.a);const b=add(run,recipe.b)
   assert.equal(run.availableRecipes().length,1)
@@ -291,10 +290,12 @@ for(const recipe of RECIPES) {
 {
   const run=fixture();add(run,'bell-maul');add(run,'mountain-break-stone')
   for(let i=0;i<27;i++) add(run,'health-potion')
-  const before=run.backpack.serialize()
   assert.equal(run.availableRecipes()[0].canFit,false)
-  assert.equal(run.craft('mountain-maul'),false)
-  assert.deepEqual(run.backpack.serialize(),before);assert.equal(run.globalTurn,0)
+  assert.equal(run.craft('mountain-maul'),true)
+  assert.equal(run.inventoryStash.length,1)
+  assert.equal(run.inventoryStash[0].id,'mountain-maul')
+  assert(!run.backpack.items.some(item=>['bell-maul','mountain-break-stone'].includes(item.id)))
+  assert.equal(run.backpack.length,27);assert.equal(run.globalTurn,1)
 }
 // Relics change build rules rather than tracking per-room allowances.
 {

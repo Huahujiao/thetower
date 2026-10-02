@@ -434,7 +434,7 @@
         <header>
           <h2>{{ LABELS.craft }}</h2><button data-action="craft-close" @click="handleAction('craft-close')">{{ LABELS.close }}</button>
         </header>
-        <p>消耗背包中的原料，合成会推进 1 回合。长按配方中的物品查看详情。</p>
+        <p>合成消耗原料并推进 1 回合，成品放不下时进入暂存区。长按配方中的物品查看详情。</p>
         <div>
           <div v-for="recipe in craftRows" :key="recipe.id" class="craft-row">
             <button
@@ -453,9 +453,8 @@
             >
               {{ getItemDefinition(recipe.b)?.name
               }}
-            </button><span>=</span><button :data-craft-result="recipe.id" :disabled="!recipe.canFit" @click="handleAction('craft-result', recipe.id)">
-              {{
-                recipe.canFit ? '合成' : '空间不足' }}
+            </button><span>=</span><button :data-craft-result="recipe.id" @click="handleAction('craft-result', recipe.id)">
+              合成
             </button>
           </div>
           <p v-if="!craftRows.length">背包内暂无可合成方案。</p>
@@ -584,7 +583,7 @@ const craftAvailable = computed(() => {
 })
 const selectedUsable = computed(() => {
   const item = selectedItem.value
-  return actionsAvailable.value && !!item && (isTotemBadge(item) || ['potion', 'armor', 'energy', 'buff', 'cleanse', 'teleport', 'throwable'].includes(item.type))
+  return actionsAvailable.value && !!item && (isTotemBadge(item) || ['potion', 'armor', 'energy', 'buff', 'teleport', 'throwable'].includes(item.type))
 })
 const selectedUseAvailable = computed(() => {
   state.value
@@ -843,8 +842,8 @@ function restartFromSettings() {
   if (window.confirm(LABELS.restartConfirm)) restartGame()
 }
 function roomRewardDisabled(choice) {
-  if (choice.kind === 'relic') return !run.canFitRelic(choice.relicId)
-  if (choice.kind === 'item') return !run.backpack.canFit({ ...getItemDefinition(choice.itemId), uid: 'reward-preview' })
+  if (choice.kind === 'relic') return !getRelicDefinition(choice.relicId) || run.relics.has(choice.relicId)
+  if (choice.kind === 'item') return !getItemDefinition(choice.itemId)
   return false
 }
 function roomRewardTitle(choice) {

@@ -17,8 +17,8 @@ function feed(run, id = 'food-3', points = null, x = 0, y = 1) {
 function phase(run, options = {}) { run._endTurn({ skipEnemyPhase: true, recoverEnergy: false, ...options }) }
 
 assert.equal(PETS.length, 8)
-assert.equal(ALL_ITEM_DEFS.length, 133)
-assert.equal(ALL_ITEM_DEFS.filter(item => !item.starterOnly && !item.generatedOnly && !item.disabled).length, 128)
+assert.equal(ALL_ITEM_DEFS.length, 132)
+assert.equal(ALL_ITEM_DEFS.filter(item => !item.starterOnly && !item.generatedOnly && !item.disabled).length, 127)
 assert.equal(makeItemById('r-feeding-charm').name, '\u9972\u517d\u7b26')
 for (const pet of PETS) {
   const item = makeItemById(pet.id)
@@ -93,7 +93,7 @@ for (const definition of PETS) {
   add(run, 'mountain-hound', 0, 0); const food = feed(run), target = enemy(run)
   select(run, weapon); assert(run._attack(target)); assert.equal(food.energy, 3); assert(getStatus(target, 'prey'))
   run.bus.emit('animate:attack-complete', { actor: 'player' }); assert.equal(food.energy, 2)
-  assert.equal(target.hp, 90); assert.equal(getStatus(target, 'prey'), null)
+  assert.equal(target.hp, 88); assert.equal(getStatus(target, 'prey'), null)
   run.bus.emit('animate:attack-complete', { actor: 'player' }); assert.equal(food.energy, 2)
 }
 // Spider delays the upcoming enemy action; the following turn can act normally.
@@ -180,12 +180,12 @@ for (const points of [1, 3]) {
 }
 // Butcher instant kills and delayed enemy-poison deaths both award one meat per target.
 {
-  const run = fixture(), weapon = add(run, 'butcher-knife', 0, 0), target = enemy(run, { hp: 5 })
+  const run = fixture(), weapon = add(run, 'butcher-knife', 0, 0), target = enemy(run, { hp: 4 })
   attack(run, weapon, target); assert.equal(run.backpack.items.filter(item => item.id === 'meat-scrap').length, 1)
 }
 {
   const run = fixture(), weapon = add(run, 'butcher-knife', 0, 0)
-  const target = enemy(run, { hp: 6, attack: 4, actionDelay: 0 }); run.applyStatus(target, 'enemy-poison', { damage: 1 })
+  const target = enemy(run, { hp: 5, attack: 4, actionDelay: 0 }); run.applyStatus(target, 'enemy-poison', { damage: 1 })
   attack(run, weapon, target); assert.equal(run.backpack.items.filter(item => item.id === 'meat-scrap').length, 1)
 }
 // Feeding does not activate player-use chains or bath armor, exhaustion counts for furnace.
@@ -207,7 +207,7 @@ for (const points of [1, 3]) {
   try {
     const loaded = new GameRun({ autoLoad: true })
     assert.equal(removed, 0); assert.equal(loaded.backpack.items.find(item => item.uid === food.uid).energy, 1)
-    assert.equal(loaded.currentRoom.entity(target.id).hp, 90); assert.equal(loaded.globalTurn, 1)
+    assert.equal(loaded.currentRoom.entity(target.id).hp, 88); assert.equal(loaded.globalTurn, 1)
     for (const mutate of [data => { data.version = SAVE_VERSION - 1 }, data => { data.backpack.placements.find(p => p.item.uid === food.uid).item.energy = 0 },
       data => { data.player.itemState.pets.prey = null }]) {
       const bad = globalThis.structuredClone(original); mutate(bad); payload = JSON.stringify(bad)

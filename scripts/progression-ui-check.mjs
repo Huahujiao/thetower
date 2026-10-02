@@ -41,5 +41,12 @@ try {
   assert(html.includes(`${weapon.attack} \u2192 ${weapon.attack + 1}`))
   assert(html.includes('\u80cc\u5305\u683c\u4f4d'))
   assert(!html.includes('\ufffd'))
+  while (run.backpack.add(makeItemById('health-potion'))) { /* Fill every cell. */ }
+  run.phase = 'reward'
+  run.roomReward = { roomId: run.currentRoom.id, choices: [{ kind: 'item', itemId: 'rust-sword' }, { kind: 'relic', relicId: 'r-loot-pouch' }] }
+  html = await render()
+  const rewardButtons = html.match(/<button\b[^>]*data-room-reward="[01]"[^>]*>/g) || []
+  assert.equal(rewardButtons.length, 2)
+  for (const button of rewardButtons) assert(!/\bdisabled\b/.test(button), 'full backpack must not disable room item or relic rewards')
   console.log('progression-ui-check passed: staging priority, three cards, disabled placeholder, nested relic and weapon screens, decoded Chinese')
 } finally { await server.close() }

@@ -21,7 +21,7 @@ for (const id of ['r-three', 'r-scales']) assert(relicIds.has(id), `${id} must b
 assert.equal(ATTRIBUTE_ORDER.join(','), 'scorch,wither,drown')
 assert.equal(attributeModifier('scorch', 'wither').multiplier, 1.6)
 assert.equal(attributeModifier('wither', 'scorch').multiplier, 0.65)
-assert.equal(catalog.consumables.length, 12)
+assert.equal(catalog.consumables.length, 11)
 assert.equal(catalog.weapons.length, 23)
 assert.equal(catalog.defenses.length, 8)
 assert(catalog.enemyLoot.every(item => item.type === 'material'))

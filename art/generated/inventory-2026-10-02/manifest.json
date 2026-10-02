@@ -1,0 +1,104 @@
+{
+  "tool": "built-in image_gen",
+  "assets": [
+    {
+      "id": "gold-hook",
+      "stem": "weapon-gold-hook-v2",
+      "path": "C:\\Users\\COMZEN\\.codex\\generated_images\\01a0f511-7646-7db2-a099-a4ac30b0ce53\\exec-901e1f39-cfd4-48d9-9c52-42e7caa122ac.png",
+      "prompt": "Use case: precise-object-edit. Asset type: transparent dark fantasy inventory weapon sprite for a one-column by two-row slot (1x2). Input image 1 is the EDIT TARGET: the existing gold-hook weapon. Correct its orientation and composition only: redraw this exact same worn black iron hook, battered ancient gold coin and short chain as a straight upright vertical object. Hook and gold coin at the TOP, attachment and short chain hanging directly DOWN beneath them. Its overall longitudinal axis must be perfectly vertical, NOT diagonal or tilted, with a compact tall silhouette whose occupied bounding rectangle is about 1:2 width to height. It must fill a tall 1x2 inventory space naturally; any curve belongs to the hook itself while the entire weapon is upright. Preserve the original object's recognizable design, realistic hand-painted dark-fantasy texture, aged iron, tarnished warm gold and detailed highlights. Frontal inventory view, whole object visible, centered, small even transparent margins. Actual transparent background and crisp alpha cutout. No backdrop, no floor, no cast shadow, no frame, no text, no watermark, no extra coins or added objects. The original diagonal pose must be eliminated.",
+      "master": "src/assets/inventory/backup/source/weapon-gold-hook-v2.png",
+      "runtime": [
+        "src/assets/inventory/weapon-gold-hook-v2-small.png",
+        "src/assets/inventory/weapon-gold-hook-v2-medium.png"
+      ]
+    },
+    {
+      "id": "mountain-hound",
+      "stem": "pet-mountain-hound-v1",
+      "path": "C:\\Users\\COMZEN\\.codex\\generated_images\\01a0f511-7646-7db2-a099-a4ac30b0ce53\\exec-f489b7b6-5836-4cc6-8e5f-193d00c1dac6.png",
+      "prompt": "Use case: stylized-concept. Asset type: finished transparent inventory sprite of ONE companion pet for a gritty dark-fantasy dungeon game. Match detailed realistic hand-painted game item illustrations: natural anatomy, tactile fur/feathers/shell/skin, restrained weathered earth colors, crisp silhouettes, warm soft overhead highlights and dark readable edge shading. Not cartoon, not pixel art, not a plastic toy, not an icon on a plaque. Composition: ONE whole animal centered in a broad HORIZONTAL two-column by one-row inventory footprint, approximately 2:1 occupied width to height. Side or three-quarter front view, head facing right where applicable, low compact natural pose. The body itself fills most of the frame with small transparent margins; show every foot, tail and wing tip fully, no cropping. The pet must read clearly at 90x45 pixels. Actual transparent background, clean alpha edges, no floor, no environment, no separate shadow, no frame, no text, no symbols, no watermark, no other creatures or props. Subject: mountain-hound (巡山犬), a sturdy alert mountain hunting dog with rough charcoal brown and tawny fur, short ears, strong paws, a broad muzzle and a thick curled tail. Natural crouched standing pose, back horizontal, all four paws visible, head looking attentively toward the right. Plain rugged dog with no armor or saddle, no magic effects. Warm brown fur highlights and amber eyes, recognizable canine silhouette.",
+      "master": "src/assets/inventory/backup/source/pet-mountain-hound-v1.png",
+      "runtime": [
+        "src/assets/inventory/pet-mountain-hound-v1-small.png",
+        "src/assets/inventory/pet-mountain-hound-v1-medium.png"
+      ]
+    },
+    {
+      "id": "venom-toad",
+      "stem": "pet-venom-toad-v1",
+      "path": "C:\\Users\\COMZEN\\.codex\\generated_images\\01a0f511-7646-7db2-a099-a4ac30b0ce53\\exec-f45c089a-204d-4a7d-9930-54d629081e7c.png",
+      "prompt": "Use case: stylized-concept. Asset type: finished transparent inventory sprite of ONE companion pet for a gritty dark-fantasy dungeon game. Match detailed realistic hand-painted game item illustrations: natural anatomy, tactile fur/feathers/shell/skin, restrained weathered earth colors, crisp silhouettes, warm soft overhead highlights and dark readable edge shading. Not cartoon, not pixel art, not a plastic toy, not an icon on a plaque. Composition: ONE whole animal centered in a broad HORIZONTAL two-column by one-row inventory footprint, approximately 2:1 occupied width to height. Side or three-quarter front view, head facing right where applicable, low compact natural pose. The body itself fills most of the frame with small transparent margins; show every foot, tail and wing tip fully, no cropping. The pet must read clearly at 90x45 pixels. Actual transparent background, clean alpha edges, no floor, no environment, no separate shadow, no frame, no text, no symbols, no watermark, no other creatures or props. Subject: venom-toad (毒囊蟾), a squat wide poisonous toad with warty moss-olive skin, a pale ochre belly, two restrained purple-green poison sacs behind its shoulders and amber eyes. Broad low body in a natural resting crouch, short limbs splayed comfortably, every toe visible. Three-quarter view facing right, wide flat head clearly identifiable as a toad. Subtle wet skin highlights, vivid enough to read against dark inventory cells. No dripping poison, no bubbles floating outside its silhouette, no large magical glow.",
+      "master": "src/assets/inventory/backup/source/pet-venom-toad-v1.png",
+      "runtime": [
+        "src/assets/inventory/pet-venom-toad-v1-small.png",
+        "src/assets/inventory/pet-venom-toad-v1-medium.png"
+      ]
+    },
+    {
+      "id": "thunder-raven",
+      "stem": "pet-thunder-raven-v1",
+      "path": "C:\\Users\\COMZEN\\.codex\\generated_images\\01a0f511-7646-7db2-a099-a4ac30b0ce53\\exec-3ccf1f72-0ba6-4cf6-b84e-953a45bda563.png",
+      "prompt": "Use case: stylized-concept. Asset type: finished transparent inventory sprite of ONE companion pet for a gritty dark-fantasy dungeon game. Match detailed realistic hand-painted game item illustrations: natural anatomy, tactile fur/feathers/shell/skin, restrained weathered earth colors, crisp silhouettes, warm soft overhead highlights and dark readable edge shading. Not cartoon, not pixel art, not a plastic toy, not an icon on a plaque. Composition: ONE whole animal centered in a broad HORIZONTAL two-column by one-row inventory footprint, approximately 2:1 occupied width to height. Side or three-quarter front view, head facing right where applicable, low compact natural pose. The body itself fills most of the frame with small transparent margins; show every foot, tail and wing tip fully, no cropping. The pet must read clearly at 90x45 pixels. Actual transparent background, clean alpha edges, no floor, no environment, no separate shadow, no frame, no text, no symbols, no watermark, no other creatures or props. Subject: thunder-raven (雷羽鸦), a raven companion with charcoal-black and deep slate-blue feathers, a few muted antique-gold feather edges, amber eyes and a sturdy black beak. Flying low in a compact horizontal pose, head pointing right, wings partially opened sideways so the whole bird forms a wide 2:1 silhouette. Both feet tucked visibly underneath, entire tail and both wing tips included. A few short restrained pale blue electrical sparks cling closely to the outer feathers, never forming a surrounding glow cloud. This bird should look physical, feathered and substantial, with crisp silver-blue highlights distinguishing it from a spirit bird.",
+      "master": "src/assets/inventory/backup/source/pet-thunder-raven-v1.png",
+      "runtime": [
+        "src/assets/inventory/pet-thunder-raven-v1-small.png",
+        "src/assets/inventory/pet-thunder-raven-v1-medium.png"
+      ]
+    },
+    {
+      "id": "iron-beetle",
+      "stem": "pet-iron-beetle-v1",
+      "path": "C:\\Users\\COMZEN\\.codex\\generated_images\\01a0f511-7646-7db2-a099-a4ac30b0ce53\\exec-2eea23c6-8cd0-429e-8ec0-10c3fc6288d1.png",
+      "prompt": "Use case: stylized-concept. Asset type: finished transparent inventory sprite of ONE companion pet for a gritty dark-fantasy dungeon game. Match detailed realistic hand-painted game item illustrations: natural anatomy, tactile fur/feathers/shell/skin, restrained weathered earth colors, crisp silhouettes, warm soft overhead highlights and dark readable edge shading. Not cartoon, not pixel art, not a plastic toy, not an icon on a plaque. Composition: ONE whole animal centered in a broad HORIZONTAL two-column by one-row inventory footprint, approximately 2:1 occupied width to height. Side or three-quarter front view, head facing right where applicable, low compact natural pose. The body itself fills most of the frame with small transparent margins; show every foot, tail and wing tip fully, no cropping. The pet must read clearly at 90x45 pixels. Actual transparent background, clean alpha edges, no floor, no environment, no separate shadow, no frame, no text, no symbols, no watermark, no other creatures or props. Subject: iron-beetle (铁甲虫), a powerful low broad rhinoceros beetle companion with six stout articulated legs, short antennae and a short forward-pointing horn. Its natural segmented carapace resembles aged dark gunmetal iron armor, with worn steel highlights and restrained bronze seams, but remains an anatomically convincing living beetle rather than a robot. Wide three-quarter top/front view with body axis horizontal and head toward the right, all six legs and horn included. Heavy squat solid silhouette, dark reddish-brown undershell, clear separation between head, thorax and paired wing covers.",
+      "master": "src/assets/inventory/backup/source/pet-iron-beetle-v1.png",
+      "runtime": [
+        "src/assets/inventory/pet-iron-beetle-v1-small.png",
+        "src/assets/inventory/pet-iron-beetle-v1-medium.png"
+      ]
+    },
+    {
+      "id": "shadow-spider",
+      "stem": "pet-shadow-spider-v1",
+      "path": "C:\\Users\\COMZEN\\.codex\\generated_images\\01a0f511-7646-7db2-a099-a4ac30b0ce53\\exec-8cd167b9-905d-494c-b406-a3e649a0d2ee.png",
+      "prompt": "Use case: stylized-concept. Asset type: finished transparent inventory sprite of ONE companion pet for a gritty dark-fantasy dungeon game. Match detailed realistic hand-painted game item illustrations: natural anatomy, tactile fur/feathers/shell/skin, restrained weathered earth colors, crisp silhouettes, warm soft overhead highlights and dark readable edge shading. Not cartoon, not pixel art, not a plastic toy, not an icon on a plaque. Composition: ONE whole animal centered in a broad HORIZONTAL two-column by one-row inventory footprint, approximately 2:1 occupied width to height. Side or three-quarter front view, head facing right where applicable, low compact natural pose. The body itself fills most of the frame with small transparent margins; show every foot, tail and wing tip fully, no cropping. The pet must read clearly at 90x45 pixels. Actual transparent background, clean alpha edges, no floor, no environment, no separate shadow, no frame, no text, no symbols, no watermark, no other creatures or props. Subject: shadow-spider (缚影蛛), a squat wide eight-legged spider companion with a rounded black-plum abdomen, a smaller graphite thorax, subtle muted violet markings and tiny pale lavender eyes. Three-quarter slightly top-down view, legs carefully arranged in a broad low horizontal silhouette, EXACTLY eight articulated legs all visible and connected correctly. The spider's natural dark chitin has finely etched matte textures with restrained silver highlights. Two tiny silk threads near the forelegs suggest binding, staying close to the body. No background web, no floating particles, no humanoid face, no oversized fangs, no gore.",
+      "master": "src/assets/inventory/backup/source/pet-shadow-spider-v1.png",
+      "runtime": [
+        "src/assets/inventory/pet-shadow-spider-v1-small.png",
+        "src/assets/inventory/pet-shadow-spider-v1-medium.png"
+      ]
+    },
+    {
+      "id": "carrion-rat",
+      "stem": "pet-carrion-rat-v1",
+      "path": "C:\\Users\\COMZEN\\.codex\\generated_images\\01a0f511-7646-7db2-a099-a4ac30b0ce53\\exec-fbd74111-2bcb-41ed-a370-df86ecd02e3e.png",
+      "prompt": "Use case: stylized-concept. Asset type: finished transparent inventory sprite of ONE companion pet for a gritty dark-fantasy dungeon game. Match detailed realistic hand-painted game item illustrations: natural anatomy, tactile fur/feathers/shell/skin, restrained weathered earth colors, crisp silhouettes, warm soft overhead highlights and dark readable edge shading. Not cartoon, not pixel art, not a plastic toy, not an icon on a plaque. Composition: ONE whole animal centered in a broad HORIZONTAL two-column by one-row inventory footprint, approximately 2:1 occupied width to height. Side or three-quarter front view, head facing right where applicable, low compact natural pose. The body itself fills most of the frame with small transparent margins; show every foot, tail and wing tip fully, no cropping. The pet must read clearly at 90x45 pixels. Actual transparent background, clean alpha edges, no floor, no environment, no separate shadow, no frame, no text, no symbols, no watermark, no other creatures or props. Subject: carrion-rat (食尸鼠), a lean scavenger rat companion with coarse ash-brown fur, a slightly patchy charcoal back, rounded ears, a pointed whiskered muzzle and warm red-brown eyes. Long low crouched four-legged body, facing right; its long naked brown tail curls back neatly along the left side to create a compact wide silhouette. All four small paws and the entire tail visible. Rugged survival-worn animal but healthy and alert, restrained dirty ochre highlights, clear readable face. No wounds, no blood, no corpse, no gore, no skull props, no clothing.",
+      "master": "src/assets/inventory/backup/source/pet-carrion-rat-v1.png",
+      "runtime": [
+        "src/assets/inventory/pet-carrion-rat-v1-small.png",
+        "src/assets/inventory/pet-carrion-rat-v1-medium.png"
+      ]
+    },
+    {
+      "id": "spirit-raven",
+      "stem": "pet-spirit-raven-v1",
+      "path": "C:\\Users\\COMZEN\\.codex\\generated_images\\01a0f511-7646-7db2-a099-a4ac30b0ce53\\exec-b419ded3-04d6-41a8-850b-332f091eb239.png",
+      "prompt": "Use case: stylized-concept. Asset type: finished transparent inventory sprite of ONE companion pet for a gritty dark-fantasy dungeon game. Match detailed realistic hand-painted game item illustrations: natural anatomy, tactile fur/feathers/shell/skin, restrained weathered earth colors, crisp silhouettes, warm soft overhead highlights and dark readable edge shading. Not cartoon, not pixel art, not a plastic toy, not an icon on a plaque. Composition: ONE whole animal centered in a broad HORIZONTAL two-column by one-row inventory footprint, approximately 2:1 occupied width to height. Side or three-quarter front view, head facing right where applicable, low compact natural pose. The body itself fills most of the frame with small transparent margins; show every foot, tail and wing tip fully, no cropping. The pet must read clearly at 90x45 pixels. Actual transparent background, clean alpha edges, no floor, no environment, no separate shadow, no frame, no text, no symbols, no watermark, no other creatures or props. Subject: spirit-raven (探灵鸦), a mystical raven companion distinguished by weathered ash-gray and ivory feathers, subtle blue-gray wing tips, pale turquoise eyes and a dark slender raven beak. Flying low in a compact horizontal pose, head pointing right, wings opened softly to the sides with the entire tail and both wing tips visible. Feathers remain opaque and realistically textured, with a very restrained cool cyan highlight along a few feather edges suggesting spirit perception. The silhouette must read as a raven, not an owl, dove or eagle. Quiet ancient-fantasy mood. No electricity or lightning, no surrounding aura cloud, no floating objects or ribbons, no jewelry.",
+      "master": "src/assets/inventory/backup/source/pet-spirit-raven-v1.png",
+      "runtime": [
+        "src/assets/inventory/pet-spirit-raven-v1-small.png",
+        "src/assets/inventory/pet-spirit-raven-v1-medium.png"
+      ]
+    },
+    {
+      "id": "mandrill-beast",
+      "stem": "pet-mandrill-beast-v1",
+      "path": "C:\\Users\\COMZEN\\.codex\\generated_images\\01a0f511-7646-7db2-a099-a4ac30b0ce53\\exec-924c31d3-03ff-4029-a8ca-c8f5834436b7.png",
+      "prompt": "Use case: stylized-concept. Asset type: finished transparent inventory sprite of ONE companion pet for a gritty dark-fantasy dungeon game. Match detailed realistic hand-painted game item illustrations: natural anatomy, tactile fur/feathers/shell/skin, restrained weathered earth colors, crisp silhouettes, warm soft overhead highlights and dark readable edge shading. Not cartoon, not pixel art, not a plastic toy, not an icon on a plaque. Composition: ONE whole animal centered in a broad HORIZONTAL two-column by one-row inventory footprint, approximately 2:1 occupied width to height. Side or three-quarter front view, head facing right where applicable, low compact natural pose. The body itself fills most of the frame with small transparent margins; show every foot, tail and wing tip fully, no cropping. The pet must read clearly at 90x45 pixels. Actual transparent background, clean alpha edges, no floor, no environment, no separate shadow, no frame, no text, no symbols, no watermark, no other creatures or props. Subject: mandrill-beast (山魈兽), a powerful stocky mountain mandrill companion with shaggy dark umber and moss-brown fur, thick muscular forearms, a short stout tail, a distinctive blue-gray ridged muzzle and a restrained rust-red nose. Crouching low on all four limbs in a compact horizontal pose facing right, broad shoulders and a horizontal back, all four hands/feet fully visible. Fierce alert amber eyes, mouth closed, no exaggerated tusks. Slight ancient mountain folklore character while still recognizably an anatomically convincing mandrill, not a human or gorilla. Warm worn fur highlights make the broad shape readable. No armor, weapons, ornaments, blood or surrounding effects.",
+      "master": "src/assets/inventory/backup/source/pet-mandrill-beast-v1.png",
+      "runtime": [
+        "src/assets/inventory/pet-mandrill-beast-v1-small.png",
+        "src/assets/inventory/pet-mandrill-beast-v1-medium.png"
+      ]
+    }
+  ]
+}

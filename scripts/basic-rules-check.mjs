@@ -80,7 +80,7 @@ for (const definition of ALL_ITEM_DEFS.filter(item => item.type === 'defense')) 
 
 for (const points of [3, 5, 7, 9]) {
   const run = fixture(), food = add(run, `food-${points}`)
-  assert.equal(food.name, `\u98df\u7269\uff08${points}\uff09`)
+  assert.equal(food.name, { 3: '\u7cbd\u5b50', 5: '\u70e4\u996d\u56e2', 7: '\u85af\u9999\u996d\u5305', 9: '\u8089\u5e72\u996d\u997c' }[points])
   assert.equal(food.tier, 1)
   run.player.energy = 1
   select(run, food); assert(run.useSelected())
@@ -91,13 +91,13 @@ for (const points of [3, 5, 7, 9]) {
 }
 assert.equal(makeItemById('energy-potion'), null)
 let tier1 = 0, tier2 = 0
-for (let i = 0; i < 390; i++) {
-  const item = randomNeutralItem(1, () => (i + 0.5) / 390)
+for (let i = 0; i < 350; i++) {
+  const item = randomNeutralItem(1, () => (i + 0.5) / 350)
   if (item.tier === 1) tier1++
   else if (item.tier === 2) tier2++
   else assert.fail('Every consumable has a tier')
 }
-assert.equal(tier1, 360); assert.equal(tier2, 30)
+assert.equal(tier1, 320); assert.equal(tier2, 30)
 
 function aim(run, item) {
   select(run, item)

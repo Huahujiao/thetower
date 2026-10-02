@@ -27,6 +27,7 @@ import { stepEnemy } from './rules/enemies.js'
 import { findAttackPath, findDoorPath, findInteractionPath, findPath, findRevealPath } from './rules/pathfinding.js'
 import { terrainDamageModifiers } from './rules/terrain.js'
 import { suggestedSynergyId } from './rules/synergies.js'
+import { migratePlaytestBalance, PLAYTEST_BALANCE_REVISION } from './data/playtest-balance.js'
 
 // The design notation is rows × columns: four rows, eight columns.
 export const INVENTORY_COLUMNS = 8
@@ -101,7 +102,7 @@ const DETAIL_LABELS = Object.freeze({
   pet: '\u5ba0\u7269',
   potion: '\u836f\u5242',
   armor: '\u62a4\u7532',
-  defense: '防具', material: '合成材料', cleanse: '净化', teleport: '换位符',
+  defense: '防具', material: '合成材料', teleport: '换位符',
   throwable: '\u6295\u63b7\u6d88\u8017\u54c1', 'money-pouch': '\u94b1\u888b',
   buff: '\u589e\u76ca',
   relic: '\u5723\u9057\u7269',
@@ -1059,7 +1060,7 @@ export class GameRun {
 
   availableRecipes() {
     return RECIPES.filter(recipe => this.backpack.items.some(i => i.id === recipe.a) && this.backpack.items.some(i => i.id === recipe.b))
-      .map(recipe => ({ ...recipe, canFit: !!this._craftPreview(recipe) }))
+      .map(recipe => ({ ...recipe, canFit: this._craftPreview(recipe)?.canFit === true }))
   }
 
   _craftPreview(recipe) {
@@ -1071,7 +1072,7 @@ export class GameRun {
     preview.removeByUid(a.uid)
     preview.removeByUid(b.uid)
     const result = { ...getItemDefinition(recipe.result), uid: 'craft-preview' }
-    return preview.canFit(result) ? { a, b, result } : null
+    return { a, b, result, canFit: preview.canFit(result) }
   }
 
   craft(recipeIdOrResult) {
@@ -1083,12 +1084,13 @@ export class GameRun {
       if (!candidatePreview) continue
       recipe = candidate; preview = candidatePreview; break
     }
-    if (!preview) return this._reject('材料不足或成品没有放置空间。')
+    if (!preview) return this._reject('材料不足。')
     this.backpack.removeByUid(preview.a.uid)
     this.backpack.removeByUid(preview.b.uid)
     const result = makeItemById(recipe.result)
-    this.backpack.add(result)
-    this.selectedInventoryIndex = this.backpack.originIndex(this.backpack.placementOf(result.uid))
+    const placement = this.backpack.add(result)
+    if (!placement) this.stageInventoryItem(result, { notify: false })
+    this.selectedInventoryIndex = placement ? this.backpack.originIndex(placement) : null
     this._log(`合成：${preview.a.name} + ${preview.b.name} = ${result.name}。`)
     this._endTurn({ recoverEnergy: false, action: 'craft' })
     this._changed()
@@ -1279,12 +1281,12 @@ export class GameRun {
     const choice = this.roomReward?.choices?.[index]
     if (this.phase !== 'reward' || !choice) return false
     if (choice.kind === 'relic') {
-      const entry = this.acquireRelic(choice.relicId)
+      const entry = this.acquireRelic(choice.relicId, { notify: false, allowStash: true })
       if (!entry) return false
     } else if (choice.kind === 'item') {
       const item = makeItemById(choice.itemId)
-      if (!item || !this.backpack.canFit(item)) return this._reject('\u80cc\u5305\u6ca1\u6709\u8db3\u591f\u7a7a\u95f4\u9886\u53d6\u8fd9\u4ef6\u5956\u52b1\u3002')
-      this._putInInventory(item)
+      if (!item) return false
+      if (!this._putInInventory(item)) this.stageInventoryItem(item, { notify: false })
       this._log(`\u65b0\u623f\u95f4\u5956\u52b1\uff1a\u83b7\u5f97 ${item.name}\u3002`)
     } else if (choice.kind === 'gold') {
       this.player.gold += choice.amount
@@ -2242,6 +2244,7 @@ export class GameRun {
   serialize() {
     return {
       version: SAVE_VERSION,
+      playtestBalanceRevision: PLAYTEST_BALANCE_REVISION,
       dungeon: this.dungeon.serialize(),
       player: clone(this.player),
       backpack: this.backpack.serialize(clone),
@@ -2277,14 +2280,20 @@ export class GameRun {
       const raw = localStorage.getItem(SAVE_KEY)
       if (!raw) return false
       const data = JSON.parse(raw)
+      if (data?.version === SAVE_VERSION) migratePlaytestBalance(data)
       if (!compatibleSave(data)) return discard()
       this.dungeon = Dungeon.hydrate(data.dungeon)
       this.player = data.player
       this.backpack = BackpackGrid.hydrate(data.backpack)
       this.inventoryStash = Array.isArray(data.inventoryStash) ? data.inventoryStash.filter((item) => item?.uid) : []
+      const refreshFoodName = item => {
+        if (['food-3', 'food-5', 'food-7', 'food-9'].includes(item?.id)) item.name = getItemDefinition(item.id).name
+      }
+      for (const item of [...this.backpack.items, ...this.inventoryStash]) refreshFoodName(item)
       synchronizeEntityIds([...this.backpack.items, ...this.inventoryStash].map(item => item.uid))
       for (const room of this.dungeon.rooms.values()) {
         for (const entity of room.entities.values()) {
+          refreshFoodName(entity.item)
           if (entity.kind === 'enemy') {
             synchronizeEnemyBalance(entity)
             bindStatusAccessors(entity)

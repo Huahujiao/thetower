@@ -2,6 +2,38 @@
 // Keep every URL literal so Vite fingerprints and copies both runtime sizes.
 // The HUD starts with the small image, then upgrades to medium after decoding.
 const ITEM_SPRITE_SOURCES = Object.freeze({
+  'mountain-hound': {
+    small: new URL('../assets/inventory/pet-mountain-hound-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/pet-mountain-hound-v1-medium.png', import.meta.url).href,
+  },
+  'venom-toad': {
+    small: new URL('../assets/inventory/pet-venom-toad-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/pet-venom-toad-v1-medium.png', import.meta.url).href,
+  },
+  'thunder-raven': {
+    small: new URL('../assets/inventory/pet-thunder-raven-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/pet-thunder-raven-v1-medium.png', import.meta.url).href,
+  },
+  'iron-beetle': {
+    small: new URL('../assets/inventory/pet-iron-beetle-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/pet-iron-beetle-v1-medium.png', import.meta.url).href,
+  },
+  'shadow-spider': {
+    small: new URL('../assets/inventory/pet-shadow-spider-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/pet-shadow-spider-v1-medium.png', import.meta.url).href,
+  },
+  'carrion-rat': {
+    small: new URL('../assets/inventory/pet-carrion-rat-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/pet-carrion-rat-v1-medium.png', import.meta.url).href,
+  },
+  'spirit-raven': {
+    small: new URL('../assets/inventory/pet-spirit-raven-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/pet-spirit-raven-v1-medium.png', import.meta.url).href,
+  },
+  'mandrill-beast': {
+    small: new URL('../assets/inventory/pet-mandrill-beast-v1-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/pet-mandrill-beast-v1-medium.png', import.meta.url).href,
+  },
   'butcher-knife': {
     small: new URL('../assets/inventory/weapon-butcher-knife-v2-small.png', import.meta.url).href,
     medium: new URL('../assets/inventory/weapon-butcher-knife-v2-medium.png', import.meta.url).href,
@@ -251,8 +283,8 @@ const ITEM_SPRITE_SOURCES = Object.freeze({
     medium: new URL('../assets/inventory/relic-trade-voucher-v1-medium.png', import.meta.url).href,
   },
   'gold-hook': {
-    small: new URL('../assets/inventory/relic-gold-hook-v1-small.png', import.meta.url).href,
-    medium: new URL('../assets/inventory/relic-gold-hook-v1-medium.png', import.meta.url).href,
+    small: new URL('../assets/inventory/weapon-gold-hook-v2-small.png', import.meta.url).href,
+    medium: new URL('../assets/inventory/weapon-gold-hook-v2-medium.png', import.meta.url).href,
   },
   'r-ledger': {
     small: new URL('../assets/inventory/relic-ledger-v1-small.png', import.meta.url).href,
@@ -449,10 +481,6 @@ const ITEM_SPRITE_SOURCES = Object.freeze({
   'iron-powder': {
     small: new URL('../assets/inventory/item-iron-powder-v1-small.png', import.meta.url).href,
     medium: new URL('../assets/inventory/item-iron-powder-v1-medium.png', import.meta.url).href,
-  },
-  cleanse: {
-    small: new URL('../assets/inventory/item-cleanse-v1-small.png', import.meta.url).href,
-    medium: new URL('../assets/inventory/item-cleanse-v1-medium.png', import.meta.url).href,
   },
   'rage-wine': {
     small: new URL('../assets/inventory/item-rage-wine-v1-small.png', import.meta.url).href,

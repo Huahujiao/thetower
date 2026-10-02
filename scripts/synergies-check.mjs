@@ -47,7 +47,7 @@ import { getItemDefinition } from '../src/game/data/content.js'
   add(run, 'r-turn-shield', 7, 1)
   const target = enemy(run, { hp: 100 })
   run.itemRules.move()
-  assert.equal(run.itemRules.attackContext(maul, target).flat, 3)
+  assert.equal(run.itemRules.attackContext(maul, target).flat, 2)
   attack(run, maul, target)
   assert.equal(run.player.armor, 0)
   run.itemRules.move()
@@ -159,7 +159,7 @@ import { getItemDefinition } from '../src/game/data/content.js'
   assert.equal(target.itemPoisonTurns, 4)
   const hp = target.hp
   attack(run, sword, target)
-  assert.equal(target.hp, hp - 7)
+  assert.equal(target.hp, hp - 8)
   assert.equal(run.getStatus(target, 'enemy-poison'), null)
 }
 
@@ -198,7 +198,7 @@ import { getItemDefinition } from '../src/game/data/content.js'
   const bow = add(run, 'triad-tide')
   const target = enemy(run, { hp: 200, pos: { c: 0, r: 3 } })
   attack(run, bow, target)
-  assert.equal(run.player.energy, 7)
+  assert.equal(run.player.energy, 8)
 }
 
 {

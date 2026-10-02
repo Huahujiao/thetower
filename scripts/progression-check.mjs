@@ -36,6 +36,29 @@ for (let index = 0; index <= 100; index++) {
 }
 assert.equal(seen.size, 6, 'all six rewards participate in the pool')
 
+// Room rewards overflow without spending turns or granting the choice twice.
+for (const full of [false, true]) {
+  for (const choice of [{ kind: 'item', itemId: 'rust-sword' }, { kind: 'relic', relicId: 'r-loot-pouch' }]) {
+    const run = fixture()
+    if (full) while (run.backpack.add(makeItemById('health-potion'))) { /* Fill every cell. */ }
+    const before = { turn: run.globalTurn, hp: run.player.hp, energy: run.player.energy }
+    run.phase = 'reward'
+    run.roomReward = { roomId: run.currentRoom.id, choices: [choice] }
+    assert(run.chooseRoomReward(0))
+    const id = choice.itemId || choice.relicId
+    assert.equal(run.backpack.items.some(item => item.id === id), !full)
+    assert.equal(run.inventoryStash.filter(item => item.id === id).length, full ? 1 : 0)
+    if (choice.kind === 'relic') assert(run.relics.has(id))
+    assert.equal(run.phase, 'explore')
+    assert.equal(run.roomReward, null)
+    assert.deepEqual({ turn: run.globalTurn, hp: run.player.hp, energy: run.player.energy }, before)
+    assert.equal(run.chooseRoomReward(0), false)
+    const loaded = restore(run)
+    assert.equal(loaded.inventoryStash.filter(item => item.id === id).length, full ? 1 : 0)
+    if (choice.kind === 'relic') assert(loaded.relics.has(id))
+  }
+}
+
 // Loot-pouch overflow and a kill-triggered upgrade must not lock inventory management.
 {
   const run = fixture(), weapon = add(run, 'rust-sword')

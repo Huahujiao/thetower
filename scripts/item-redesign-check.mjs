@@ -41,7 +41,7 @@ import { getStatus, statusCounterText } from '../src/game/rules/statuses.js'
   const target = enemy(run, { traits: ['heavy-armor'] })
   run.applyStatus(target, 'enemy-poison', { layers: 1, damage: 5 })
   attack(run, blade, target)
-  assert.equal(target.hp, 82)
+  assert.equal(target.hp, 81)
   assert.equal(getStatus(target, 'enemy-poison'), null)
   assert.equal(run.player.energy, 8)
   run.applyStatus(target, 'enemy-poison', { layers: 1, damage: 5 })

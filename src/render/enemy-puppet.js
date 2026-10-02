@@ -5,24 +5,11 @@ import { projectShadowFaces } from '../animation/shadow-projection.js'
 const images = new Map()
 let projects = null
 let assetReady = null
-
-// Align enlarged silhouettes in the 160px card texture without reducing
-// their requested 1.2x display scale.
-const TILE_OFFSETS = {
-  'rootrot-bud': [0, 4],
-  'tide-shadow-cub': [0, -18],
-  'rot-walker': [0, -22],
-  'moss-colossus': [0, 0],
-  wisp: [0, -17],
-  'thorn-shell-flower': [0, 20],
-  'redwheel-fire-crow': [5, 0],
-  'drown-shadow-hunter': [-3, -6],
-  'cinder-curse-lamp-swarm': [-4, -4],
-  'tidal-spore-sac': [0, 35],
-  'revenant-guard': [0, -2.5],
-  'cracked-hunter': [0, -6],
-  'leech-larva': [0, -12],
-}
+let silhouettes = new WeakMap()
+const GNAWER_DISPLAY_SCALE = .34 * 1.2
+// Transparent animation margin; the scene enlarges the plane by the same
+// factor, keeping the visible idle figure at its normalized world size.
+export const ENEMY_PUPPET_PADDING = 64
 
 function imageFor(url) {
   if (!url) return null
@@ -43,6 +30,10 @@ export function prepareEnemyPuppets(onReady) {
   installEnemyShadowProjects(roster)
   for (const { project } of roster.characters) {
     if (project.enemyId && projects.has(project.enemyId)) projects.set(project.enemyId, project)
+  }
+  silhouettes = new WeakMap()
+  for (const project of projects.values()) for (const part of project.parts) {
+    if (part.visual.type === 'texture') imageFor(part.visual.texture)
   }
 }
 
@@ -99,17 +90,8 @@ function drawPart(context, entry) {
   return Boolean(image) || part.visual.type !== 'texture'
 }
 
-export function drawEnemyPuppet(context, enemyId, action = 'idle', time = 0) {
-  const project = enemyPuppetProject(enemyId)
-  if (!project) return false
+function drawProject(context, project, action = 'idle', time = 0) {
   const evaluation = evaluateShadowProject(project, action, time)
-  const family = ENEMY_ART[enemyId]?.family
-  const scale = family === 'humanoid' || family === 'winged' || family === 'quadruped' ? .34
-    : family === 'arthropod' ? .35 : .4
-  context.save()
-  const [offsetX, offsetY] = TILE_OFFSETS[enemyId] || [0, 0]
-  context.translate(80 + offsetX, 78 + offsetY)
-  context.scale(scale * 1.2, scale * 1.2)
   let drawn = false
   const commands = [
     ...projectShadowFaces(evaluation),
@@ -130,6 +112,55 @@ export function drawEnemyPuppet(context, enemyId, action = 'idle', time = 0) {
     context.restore()
     drawn = true
   }
+  return drawn
+}
+
+function silhouette(project) {
+  if (silhouettes.has(project)) return silhouettes.get(project)
+  // Measure the visible, cropped texture pixels, not transparent PNG margins.
+  // Wait for every part so an incomplete load cannot lock in a wrong scale.
+  if (project.parts.some(p => p.visual.type === 'texture' && !imageFor(p.visual.texture))) return null
+  const probe = document.createElement('canvas')
+  probe.width = probe.height = 1536
+  const context = probe.getContext('2d', { willReadFrequently: true })
+  context.translate(768, 768)
+  if (!drawProject(context, project)) return null
+  const pixels = context.getImageData(0, 0, probe.width, probe.height).data
+  let left = probe.width, right = -1, top = probe.height, bottom = -1
+  for (let y = 0; y < probe.height; y++) for (let x = 0; x < probe.width; x++) {
+    if (pixels[(y * probe.width + x) * 4 + 3] <= 8) continue
+    left = Math.min(left, x); right = Math.max(right, x)
+    top = Math.min(top, y); bottom = Math.max(bottom, y)
+  }
+  if (right < left || bottom < top) return null
+  const bounds = { width: right - left + 1, height: bottom - top + 1,
+    centerX: (left + right + 1) / 2 - 768, centerY: (top + bottom + 1) / 2 - 768 }
+  bounds.diagonal = Math.hypot(bounds.width, bounds.height)
+  silhouettes.set(project, bounds)
+  return bounds
+}
+
+export function enemyPuppetLayout(enemyId) {
+  const project = enemyPuppetProject(enemyId), reference = enemyPuppetProject('gnawer')
+  if (!project || !reference) return null
+  const bounds = silhouette(project), referenceBounds = silhouette(reference)
+  if (!bounds || !referenceBounds) return null
+  const diagonal = referenceBounds.diagonal * GNAWER_DISPLAY_SCALE
+  return { ...bounds, scale: diagonal / bounds.diagonal, displayDiagonal: diagonal }
+}
+
+export function drawEnemyPuppet(context, enemyId, action = 'idle', time = 0) {
+  const project = enemyPuppetProject(enemyId)
+  if (!project) return false
+  const layout = enemyPuppetLayout(enemyId)
+  // A fixed idle silhouette controls every frame. Animation never changes
+  // the normalization factor or stretches a limb independently.
+  const family = ENEMY_ART[enemyId]?.family
+  const scale = layout?.scale ?? (family === 'arthropod' ? .35 : .34) * 1.2
+  context.save()
+  context.translate(80 - (layout?.centerX || 0) * scale, 80 - (layout?.centerY || 0) * scale)
+  context.scale(scale, scale)
+  const drawn = drawProject(context, project, action, time)
   context.restore()
   return drawn
 }

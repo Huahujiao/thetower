@@ -124,6 +124,7 @@ export const EXPANSION_RELICS = Object.freeze([
 export const EXPANSION_WEAPONS = Object.freeze([
   {
     "id": "demon-seeker",
+    "minFloor": 3,
     "name": "\u5bfb\u5996\u5203",
     "appearance": "sword",
     "attack": 3,
@@ -145,7 +146,7 @@ export const EXPANSION_WEAPONS = Object.freeze([
     "id": "bounty-bow",
     "name": "\u60ac\u8d4f\u5f13",
     "appearance": "bow",
-    "attack": 4,
+    "attack": 5,
     "range": 3,
     "energyCost": 4,
     "description": "\u653b\u51fb\u8ddd\u79bb\u22652\u5e76\u51fb\u6740\u654c\u4eba\u65f6\uff0c\u83b7\u5f971\u91d1\u5e01\u3002",
@@ -166,7 +167,7 @@ export const EXPANSION_WEAPONS = Object.freeze([
     "appearance": "bow",
     "attack": 4,
     "range": 3,
-    "energyCost": 4,
+    "energyCost": 3,
     "description": "\u51fb\u6740\u8ddd\u79bb\u22653\u7684\u654c\u4eba\u65f6\uff0c\u968f\u673a\u7ffb\u5f00\u51768\u90bb\u57df\u51852\u5f20\u672a\u7ffb\u724c\u3002",
     "type": "weapon",
     "attribute": "wither",

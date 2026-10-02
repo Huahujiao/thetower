@@ -20,9 +20,9 @@ export const PET_RELICS = Object.freeze([
 ].map(item => Object.freeze({ ...item, attribute: null })))
 
 export const PET_WEAPONS = Object.freeze([
-  { id: 'hunter-shortbow', name: '\u730e\u624b\u77ed\u5f13', attack: 4, range: 3, energyCost: 3, appearance: 'bow', attribute: 'drown', shape: [[1, 1]],
+  { id: 'hunter-shortbow', name: '\u730e\u624b\u77ed\u5f13', attack: 6, range: 3, energyCost: 3, appearance: 'bow', attribute: 'drown', shape: [[1, 1]],
     description: '\u547d\u4e2d\u540e\u76ee\u6807\u672c\u56de\u5408\u88ab\u6807\u8bb0\u4e3a\u730e\u7269\uff1b\u5ba0\u7269\u4f18\u5148\u653b\u51fb\u730e\u7269\uff0c\u4e14\u5bf9\u5176\u4f24\u5bb3+2\u3002' },
-  { id: 'butcher-knife', name: '\u5272\u8089\u5200', attack: 5, range: 1, energyCost: 3, appearance: 'dagger', attribute: 'drown', shape: [[1, 1]],
+  { id: 'butcher-knife', name: '\u5272\u8089\u5200', attack: 4, range: 1, energyCost: 3, appearance: 'dagger', attribute: 'drown', shape: [[1, 1]],
     description: '\u653b\u51fb\u547d\u4e2d\u7684\u654c\u4eba\u672c\u56de\u5408\u6b7b\u4ea1\u65f6\uff0c\u83b7\u5f971\u4efd2\u70b9\u98df\u7269\u3002' },
 ].map(item => Object.freeze({ ...item, type: 'weapon', rotatable: true, minFloor: 1 })))
 

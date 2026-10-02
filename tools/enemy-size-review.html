@@ -3,10 +3,10 @@
 <h1></h1><main></main>
 <script type="module">
 import { createEnemyShadowProjects, ENEMY_ART_PACK_VERSION } from '/src/animation/shadow-enemies.js'
-import { prepareEnemyPuppets, drawEnemyPuppet } from '/src/render/enemy-puppet.js'
+import { prepareEnemyPuppets, drawEnemyPuppet, ENEMY_PUPPET_PADDING } from '/src/render/enemy-puppet.js'
 document.title = `Enemy size review V${ENEMY_ART_PACK_VERSION}`
-document.querySelector('h1').textContent = `V${ENEMY_ART_PACK_VERSION} / actual 160px game tiles, shown at 2x`
-const params = new URLSearchParams(location.search), enemy = params.get('enemy')
+document.querySelector('h1').textContent = `V${ENEMY_ART_PACK_VERSION} / 160px game tiles + ${ENEMY_PUPPET_PADDING}px transparent animation margin`
+const params = new URLSearchParams(location.search), enemy = params.get('enemy'), allActions = params.has('all-actions')
 const projects = createEnemyShadowProjects().filter(p => !enemy || p.enemyId === enemy)
 prepareEnemyPuppets(() => {})
 await Promise.all(projects.flatMap(p => [...new Set(p.parts.map(s => s.visual.texture).filter(Boolean))].map(src => new Promise((resolve,reject) => {
@@ -15,7 +15,7 @@ await Promise.all(projects.flatMap(p => [...new Set(p.parts.map(s => s.visual.te
 for (const p of projects) drawEnemyPuppet(document.createElement('canvas').getContext('2d'),p.enemyId)
 await new Promise(resolve => setTimeout(resolve,300))
 window.sizeReport = []
-for (const p of projects) for (const action of enemy ? ['idle','move','attack','hit','death'] : ['idle']) for (const fraction of [0,.27,.64,.85,1]) {
+for (const p of projects) for (const action of enemy || allActions ? ['idle','move','attack','hit','death'] : ['idle']) for (const fraction of [0,.27,.64,.85,1]) {
   const probe = document.createElement('canvas');probe.width = probe.height = 480
   const ctx = probe.getContext('2d');ctx.translate(160,160)
   drawEnemyPuppet(ctx,p.enemyId,action,p.animations[action].duration * fraction)
@@ -27,10 +27,11 @@ for (const p of projects) for (const action of enemy ? ['idle','move','attack','
   window.sizeReport.push({enemy:p.enemyId,action,fraction,left:left-160,right:right-160,top:top-160,bottom:bottom-160})
   if (!enemy && fraction !== 0) continue
   const figure = document.createElement('figure'), tile = document.createElement('canvas'), label = document.createElement('figcaption')
-  tile.width = tile.height = 160
-  const tc = tile.getContext('2d');tc.fillStyle = '#263746';tc.fillRect(0,0,160,160)
-  tc.strokeStyle = '#788b9d';tc.strokeRect(.5,.5,159,159)
-  tc.drawImage(probe,160,160,160,160,0,0,160,160)
+  const padding = ENEMY_PUPPET_PADDING, extent = 160 + padding * 2
+  tile.width = tile.height = extent
+  const tc = tile.getContext('2d');tc.fillStyle = '#263746';tc.fillRect(0,0,extent,extent)
+  tc.strokeStyle = '#788b9d';tc.strokeRect(padding+.5,padding+.5,159,159)
+  tc.drawImage(probe,160-padding,160-padding,extent,extent,0,0,extent,extent)
   label.textContent = `${p.enemyId} / ${action} / ${fraction}`
   figure.append(tile,label);document.querySelector('main').append(figure)
 }

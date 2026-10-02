@@ -1,9 +1,8 @@
 import { adjacentItems } from './backpack-geometry.js'
 import { consumableTargetCells } from './attack-range.js'
-import { removeStatus } from './statuses.js'
 import { manhattan } from '../core/geometry.js'
 
-const CONSUMABLE_TYPES = new Set(['potion', 'armor', 'energy', 'buff', 'cleanse', 'teleport', 'throwable'])
+const CONSUMABLE_TYPES = new Set(['potion', 'armor', 'energy', 'buff', 'teleport', 'throwable'])
 const CLOCKWISE = [[0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1]]
 export function isConsumable(item) { return CONSUMABLE_TYPES.has(item?.type) }
 
@@ -77,9 +76,6 @@ export class ConsumableRules {
     if (item.type === 'potion') run._healPlayer(item.heal, { source: 'item:potion' })
     if (item.type === 'energy') run._recoverEnergy(item.energy)
     if (item.type === 'armor') run.itemRules.armor(item.armor)
-    if (item.type === 'cleanse') {
-      removeStatus(run.player, 'player-poison'); removeStatus(run.player, 'burning')
-    }
     if (item.type === 'buff') {
       run.itemRules.buff('rage-wine', { flat: 4 })
       run._damagePlayer(2, { source: 'item:rage-wine', ignoreArmor: true })

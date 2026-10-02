@@ -52,7 +52,6 @@ export function merchantItemPrice(itemOrId) {
   if (item.type === 'relic') return 9
   if (item.type === 'defense' || item.type === 'material') return 4 + item.shape.flat().filter(Boolean).length
   if (item.type === 'teleport') return 6
-  if (item.type === 'cleanse') return 5
   return 4
 }
 

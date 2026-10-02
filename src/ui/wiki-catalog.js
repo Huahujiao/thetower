@@ -70,7 +70,7 @@ function escapeHtml(value) {
 }
 
 function label(value) {
-  const names = { flow: '换势', guard: '守御', harmony: '调和', defense: '防具', material: '合成材料', cleanse: '净化散', teleport: '换位符' }
+  const names = { flow: '换势', guard: '守御', harmony: '调和', defense: '防具', material: '合成材料', teleport: '换位符' }
   if (names[value]) return names[value]
   const aliases = { 'heavy-armor': 'heavyArmor', energy: 'energyPotion' }
   return COPY[aliases[value] || value] || value || ''

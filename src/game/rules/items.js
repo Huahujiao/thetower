@@ -170,14 +170,14 @@ export class ItemRules {
     const moved = this.state.lastAction === 'movement'
     let flat = run.totems.attackBonus()
     if (weapon.id === 'silver-guard' && adjacentItems(run.backpack, weapon).some(i => i.type === 'defense')) flat++
-    if (weapon.id === 'root-axe' && enemy.hp === enemy.maxHp) flat += 2
-    if (weapon.id === 'tide-blade' && moved) flat += 2
+    if (weapon.id === 'root-axe' && enemy.hp === enemy.maxHp) flat += 1
+    if (weapon.id === 'tide-blade' && moved) flat += 1
     if (weapon.id === 'thorn-spear' && enemy.movedLastPhase) flat += 2
-    if (weapon.id === 'wood-bow' && distance === range) flat += 2
-    if (weapon.id === 'eagle-bow' && distance === range) flat += 3
-    if (weapon.id === 'bell-maul' && this.state.lastAction !== 'attack') flat += 3
+    if (weapon.id === 'wood-bow' && distance === range) flat += 1
+    if (weapon.id === 'eagle-bow' && distance === range) flat += 2
+    if (weapon.id === 'bell-maul' && this.state.lastAction !== 'attack') flat += 2
     if (weapon.id === 'wall-sword' && run.player.armor > 0) flat += 2
-    if (weapon.id === 'mountain-maul' && adjacentItems(run.backpack, weapon).length === 0) flat += 4
+    if (weapon.id === 'mountain-maul' && adjacentItems(run.backpack, weapon).length === 0) flat += 3
     if (weapon.id === 'triad-ember' && this.state.lastAttribute && this.state.lastAttribute !== weapon.attribute) flat++
     if (weapon.id === 'triad-wither' && enemy.itemPoisonTurns > 0) flat += 2
     if (this.adjacent(weapon, 'weight')) flat += 2
@@ -309,7 +309,7 @@ export class ItemRules {
     const adjacent = adjacentItems(this.run.backpack, weapon)
     const lines = []
     if (weapon.id === 'silver-guard' && adjacent.some(i => i.type === 'defense')) lines.push('防具邻接：攻击+1')
-    if (weapon.id === 'mountain-maul' && adjacent.length === 0) lines.push('四向留白：攻击+4')
+    if (weapon.id === 'mountain-maul' && adjacent.length === 0) lines.push('四向留白：攻击+3')
     if (conduitCapacity(this.run.backpack, weapon)) lines.push(`导流线：可用蓄势 ${this.state.conduitCharge || 0}/3`)
     if (forkBridgeActive(this.run.backpack, weapon)) lines.push('分叉接头：攻击+1')
     if (weapon.id === 'coin-blade') lines.push(`金币 ${this.run.player.gold}/12${this.run.player.gold >= 12 ? '，攻击+2' : ''}`)

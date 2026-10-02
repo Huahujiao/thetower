@@ -39,17 +39,35 @@ const expectedRecipes = [
   ['tide-blade', 'bone-nail', 'butcher-knife'], ['ember-spear', 'chain', 'thorn-spear'],
   ['wood-bow', 'scope', 'eagle-bow'], ['ash-bow', 'range-disc', 'bounty-bow'],
   ['triad-tide', 'steady-clip', 'scouting-bow'], ['rock-maul', 'weight', 'bell-maul'],
-  ['demon-seeker', 'steady-clip', 'scouting-bow'], ['gold-hook', 'range-disc', 'bounty-bow'],
-  ['silver-guard', 'wall-core', 'wall-sword'], ['ember-axe', 'return-axle', 'return-axe'],
-  ['triad-wither', 'corrosive-heart-core', 'erosion-knife'], ['thorn-spear', 'soul-chain', 'soul-spear'],
+  ['demon-seeker', 'conduit', 'coin-blade'], ['gold-hook', 'conduit', 'coin-blade'],
+  ['silver-guard', 'wall-core', 'wall-sword'], ['coin-blade', 'wall-core', 'wall-sword'],
+  ['ember-axe', 'return-axle', 'return-axe'],
+  ['triad-wither', 'corrosive-heart-core', 'erosion-knife'], ['butcher-knife', 'corrosive-heart-core', 'erosion-knife'],
+  ['thorn-spear', 'soul-chain', 'soul-spear'],
   ['eagle-bow', 'beast-hunting-horn', 'hunter-shortbow'], ['bounty-bow', 'beast-hunting-horn', 'hunter-shortbow'],
   ['scouting-bow', 'beast-hunting-horn', 'hunter-shortbow'], ['bell-maul', 'mountain-break-stone', 'mountain-maul'],
 ]
+// Kind is a route constraint only; spears/mauls share visual renderers with
+// swords/axes, so appearance alone cannot catch every invalid upgrade.
+const routeKinds = [
+  ['rust-sword', 'silver-guard', 'triad-ember', 'coin-blade', 'gold-hook', 'demon-seeker', 'wall-sword'],
+  ['bone-knife', 'triad-wither', 'tide-blade', 'butcher-knife', 'erosion-knife'],
+  ['root-axe', 'ember-axe', 'return-axe'],
+  ['ember-spear', 'thorn-spear', 'soul-spear'],
+  ['wood-bow', 'ash-bow', 'eagle-bow', 'triad-tide', 'bounty-bow', 'scouting-bow', 'hunter-shortbow'],
+  ['rock-maul', 'bell-maul', 'mountain-maul'],
+]
+assert.deepEqual(new Set(routeKinds.flat()), new Set(weapons.map(weapon => weapon.id)))
 assert.deepEqual(RECIPES.map(({ a, b, result }) => [a, b, result]), expectedRecipes)
-assert.equal(RECIPES.length, 20)
+assert.equal(RECIPES.length, 22)
 assert.equal(new Set(RECIPES.map(recipe => recipe.id)).size, RECIPES.length)
 assert.deepEqual(catalog.recipes, [], 'obsolete catalog recipes must remain disabled')
 for (const recipe of RECIPES) {
+  const input = getItemDefinition(recipe.a), output = getItemDefinition(recipe.result)
+  assert.equal(output.appearance, input.appearance, `${recipe.id}: retain appearance`)
+  assert.equal(routeKinds.findIndex(ids => ids.includes(output.id)), routeKinds.findIndex(ids => ids.includes(input.id)), `${recipe.id}: retain weapon kind`)
+  assert(output.attack > input.attack, `${recipe.id}: damage improves`)
+  assert(output.attack / output.energyCost > input.attack / input.energyCost, `${recipe.id}: stamina efficiency improves`)
   assert.equal(getItemDefinition(recipe.a).tier + 1, getItemDefinition(recipe.result).tier, recipe.id)
   assert.equal(getItemDefinition(recipe.b).type, 'material', recipe.id)
   const run = fixture(); add(run, recipe.a); add(run, recipe.b)
@@ -58,8 +76,8 @@ for (const recipe of RECIPES) {
   assert(run.backpack.items.some(item => item.id === recipe.result), recipe.id)
 }
 for (const [a, b, result] of [
-  ['demon-seeker', 'steady-clip', 'scouting-bow'],
-  ['gold-hook', 'range-disc', 'bounty-bow'],
+  ['demon-seeker', 'conduit', 'coin-blade'],
+  ['gold-hook', 'conduit', 'coin-blade'],
   ['bounty-bow', 'beast-hunting-horn', 'hunter-shortbow'],
 ]) {
   const run = fixture(); add(run, a); add(run, b)
@@ -102,4 +120,4 @@ assert(badge.includes("['', 'I', 'II', 'III'][item.tier]"))
   } finally { globalThis.localStorage = previous }
 }
 
-console.log('weapon-progression-check passed: 12/10/6 tiers, 20 exact recipes, alternate routes, advanced materials, UI and saves')
+console.log('weapon-progression-check passed: 12/10/6 tiers, 22 same-kind efficient recipes, alternate routes, advanced materials, UI and saves')

@@ -68,7 +68,7 @@
       "behavior": "chaser",
       "range": 1,
       "hp": 12,
-      "attack": 2,
+      "attack": 1,
       "experience": 2,
       "relicDropChance": 0,
       "attackCooldownMax": 1,
@@ -772,7 +772,7 @@
       "type": "weapon",
       "appearance": "axe",
       "attribute": "scorch",
-      "attack": 4,
+      "attack": 5,
       "range": 1,
       "shape": [
         [
@@ -782,7 +782,7 @@
           1
         ]
       ],
-      "energyCost": 4,
+      "energyCost": 3,
       "description": "主攻击击杀后，对目标八邻域已现身敌人造成2点伤害。"
     },
     {
@@ -791,7 +791,7 @@
       "type": "weapon",
       "appearance": "axe",
       "attribute": "wither",
-      "attack": 5,
+      "attack": 3,
       "range": 1,
       "shape": [
         [
@@ -803,8 +803,8 @@
           1
         ]
       ],
-      "energyCost": 4,
-      "description": "攻击满血敌人时，伤害+2。"
+      "energyCost": 3,
+      "description": "攻击满血敌人时，伤害+1。"
     },
     {
       "id": "bone-knife",
@@ -838,8 +838,8 @@
           1
         ]
       ],
-      "energyCost": 2,
-      "description": "上次实际行动是主动移动时，伤害+2。"
+      "energyCost": 3,
+      "description": "上次实际行动是主动移动时，伤害+1。"
     },
     {
       "id": "ember-spear",
@@ -860,7 +860,7 @@
           1
         ]
       ],
-      "energyCost": 4,
+      "energyCost": 3,
       "description": "距离2命中时，击退1格。"
     },
     {
@@ -885,7 +885,7 @@
           1
         ]
       ],
-      "energyCost": 4,
+      "energyCost": 3,
       "description": "对上一敌人阶段主动移动过的敌人，伤害+2。"
     },
     {
@@ -904,8 +904,8 @@
           1
         ]
       ],
-      "energyCost": 4,
-      "description": "在当前最大射程命中时，伤害+2。"
+      "energyCost": 3,
+      "description": "在当前最大射程命中时，伤害+1。"
     },
     {
       "id": "ash-bow",
@@ -913,7 +913,7 @@
       "type": "weapon",
       "appearance": "bow",
       "attribute": "scorch",
-      "attack": 4,
+      "attack": 3,
       "range": 3,
       "shape": [
         [
@@ -934,7 +934,7 @@
       "type": "weapon",
       "appearance": "axe",
       "attribute": "wither",
-      "attack": 6,
+      "attack": 5,
       "range": 1,
       "shape": [
         [
@@ -968,7 +968,7 @@
         ]
       ],
       "energyCost": 5,
-      "description": "上次实际行动不是攻击时，伤害+3。"
+      "description": "上次实际行动不是攻击时，伤害+2。"
     },
     {
       "id": "wall-sword",
@@ -976,7 +976,7 @@
       "type": "weapon",
       "appearance": "sword",
       "attribute": "drown",
-      "attack": 5,
+      "attack": 6,
       "range": 1,
       "shape": [
         [
@@ -999,7 +999,7 @@
       "type": "weapon",
       "appearance": "axe",
       "attribute": "scorch",
-      "attack": 6,
+      "attack": 7,
       "range": 1,
       "shape": [
         [
@@ -1011,7 +1011,7 @@
           1
         ]
       ],
-      "energyCost": 4,
+      "energyCost": 3,
       "description": "主攻击击杀后，下一次用其他武器攻击伤害+2、体力消耗-1；不可叠加。",
       "crafted": true
     },
@@ -1021,7 +1021,7 @@
       "type": "weapon",
       "appearance": "dagger",
       "attribute": "wither",
-      "attack": 4,
+      "attack": 5,
       "range": 1,
       "shape": [
         [
@@ -1041,7 +1041,7 @@
       "type": "weapon",
       "appearance": "sword",
       "attribute": "scorch",
-      "attack": 5,
+      "attack": 6,
       "range": 2,
       "shape": [
         [
@@ -1057,7 +1057,7 @@
           1
         ]
       ],
-      "energyCost": 4,
+      "energyCost": 3,
       "description": "距离2命中击退1格；撞墙或敌人额外造成3伤害，仅伤害被推动者。",
       "crafted": true
     },
@@ -1067,7 +1067,7 @@
       "type": "weapon",
       "appearance": "bow",
       "attribute": "drown",
-      "attack": 5,
+      "attack": 4,
       "range": 4,
       "shape": [
         [
@@ -1081,8 +1081,8 @@
           0
         ]
       ],
-      "energyCost": 4,
-      "description": "在当前最大射程攻击时，伤害+3。",
+      "energyCost": 3,
+      "description": "在当前最大射程攻击时，伤害+2。",
       "crafted": true
     },
     {
@@ -1111,7 +1111,7 @@
         ]
       ],
       "energyCost": 5,
-      "description": "物品外缘四向无其他物品时，攻击+4；边界不算占用。",
+      "description": "物品外缘四向无其他物品时，攻击+3；边界不算占用。",
       "crafted": true
     },
     {
@@ -1121,7 +1121,7 @@
       "type": "weapon",
       "appearance": "sword",
       "attribute": "scorch",
-      "attack": 4,
+      "attack": 3,
       "range": 1,
       "shape": [
         [
@@ -1153,7 +1153,7 @@
     },
     {
       "id": "triad-tide",
-      "energyCost": 4,
+      "energyCost": 3,
       "name": "潮尺弓",
       "type": "weapon",
       "appearance": "bow",
@@ -1242,7 +1242,7 @@
     },
     {
       "id": "food-3",
-      "name": "食物（3）",
+      "name": "粽子",
       "type": "energy",
       "energy": 3,
       "description": "一次性恢复3体力。",
@@ -1255,7 +1255,7 @@
     },
     {
       "id": "food-5",
-      "name": "食物（5）",
+      "name": "烤饭团",
       "type": "energy",
       "energy": 5,
       "description": "一次性恢复5体力。",
@@ -1268,7 +1268,7 @@
     },
     {
       "id": "food-7",
-      "name": "食物（7）",
+      "name": "薯香饭包",
       "type": "energy",
       "energy": 7,
       "description": "一次性恢复7体力。",
@@ -1281,7 +1281,7 @@
     },
     {
       "id": "food-9",
-      "name": "食物（9）",
+      "name": "肉干饭饼",
       "type": "energy",
       "energy": 9,
       "description": "一次性恢复9体力。",
@@ -1337,18 +1337,6 @@
       "damage": 16,
       "bounceDamage": 5,
       "description": "投掷范围4格，对目标敌人造成16伤害，并弹射到距目标最近的另一个敌人造成5伤害。",
-      "shape": [
-        [
-          1
-        ]
-      ],
-      "energyCost": 0
-    },
-    {
-      "id": "cleanse",
-      "name": "净化散",
-      "type": "cleanse",
-      "description": "清除中毒与燃烧。",
       "shape": [
         [
           1

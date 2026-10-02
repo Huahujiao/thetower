@@ -10,7 +10,7 @@ import { DEFAULT_CAMERA_ELEVATION, panAzimuth } from './camera-view.js'
 import { cardBodyGeometry, styleCardBody, cardFaceY, CARD_FACE_CLEARANCE, HIDDEN_CARD_THICKNESS, HIDDEN_CARD_SCALE } from './card-body.js'
 import { boundaryPillarPoint, createDoorFrame, createLowPolyPillar, createLowPolyWall, evenPillarOffsets } from './wall-kit.js'
 import { goldSpriteSources, itemSpriteSources } from '../ui/item-sprites.js'
-import { drawEnemyPuppet, enemyPuppetProject, prepareEnemyPuppets } from './enemy-puppet.js'
+import { drawEnemyPuppet, enemyPuppetProject, ENEMY_PUPPET_PADDING, prepareEnemyPuppets } from './enemy-puppet.js'
 import { drawTotemToken, totemFaceData } from './totem-token.js'
 import { weaponTierRoman } from '../game/data/content.js'
 
@@ -82,18 +82,21 @@ const CARD_COLORS = Object.freeze({
 
 const NO_RAYCAST = () => {}
 
-function makeCanvasTexture(draw, { width = 480, height = 480, scale = 3 } = {}) {
+function makeCanvasTexture(draw, { width = 480, height = 480, scale = 3, padding = 0 } = {}) {
   const canvas = document.createElement('canvas')
-  canvas.width = width
-  canvas.height = height
+  canvas.width = width + padding * scale * 2
+  canvas.height = height + padding * scale * 2
   const context = canvas.getContext('2d')
   context.save()
   context.scale(scale, scale)
+  context.translate(padding, padding)
   draw(context)
   context.restore()
   const texture = new THREE.CanvasTexture(canvas)
   texture.colorSpace = THREE.SRGBColorSpace
   texture.anisotropy = 4
+  texture.userData.canvasPadding = padding
+  texture.userData.canvasExtent = (width / scale + padding * 2) / (width / scale)
   return texture
 }
 
@@ -107,7 +110,9 @@ function redrawCanvasTexture(texture, draw, { width = 160, height = 160 } = {}) 
   // until only a corner of the character remained visible.
   context.setTransform(1, 0, 0, 1, 0, 0)
   context.clearRect(0, 0, canvas.width, canvas.height)
-  context.scale(canvas.width / width, canvas.height / height)
+  const padding = texture.userData.canvasPadding || 0
+  context.scale(canvas.width / (width + padding * 2), canvas.height / (height + padding * 2))
+  context.translate(padding, padding)
   draw(context)
   context.restore()
   texture.needsUpdate = true
@@ -561,6 +566,10 @@ export class GameScene {
   }
 
   _setFacePose(face, point, standing, hidden = false) {
+    const extent = face.material.map?.userData.canvasExtent || 1
+    const previousExtent = face.userData.canvasExtent || 1
+    if (extent !== previousExtent) face.geometry.scale(extent / previousExtent, extent / previousExtent, 1)
+    face.userData.canvasExtent = extent
     const baseY = standing ? CARD_SIZE / 2 + CARD_THICKNESS / 2 : cardFaceY(hidden, CARD_THICKNESS)
     face.scale.setScalar(hidden ? HIDDEN_CARD_SCALE : 1)
     face.rotation.order = standing ? 'YXZ' : 'XYZ'
@@ -1402,7 +1411,7 @@ export class GameScene {
       ? null
       : sourceBackTexture || this._makeBackTexture(this._backAttributeFor(room, position), { unflippable: backUnflippable })
     const front = new THREE.Mesh(
-      new THREE.PlaneGeometry(CARD_SIZE, CARD_SIZE),
+      new THREE.PlaneGeometry(CARD_SIZE * (frontTexture.userData.canvasExtent || 1), CARD_SIZE * (frontTexture.userData.canvasExtent || 1)),
       new THREE.MeshBasicMaterial({ map: frontTexture, side: THREE.DoubleSide, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -4 }),
     )
     front.rotation.x = -Math.PI / 2
@@ -1555,7 +1564,8 @@ export class GameScene {
     const attackTexture = makeCanvasTexture((context) => actor === 'player'
       ? drawStickFigure(context, { armLift: 0, legSpread: 1 })
       : drawEnemyPuppet(context, attackCard?.enemyId, 'attack', 0)
-        || drawStandingToken(context, attackCard, { headLift: 0, bodySway: 0 }))
+        || drawStandingToken(context, attackCard, { headLift: 0, bodySway: 0 }),
+    { padding: actor === 'enemy' ? ENEMY_PUPPET_PADDING : 0 })
     if (attackTexture) {
       mesh.material.map = attackTexture
       mesh.material.needsUpdate = true
@@ -1922,6 +1932,9 @@ export class GameScene {
     const room = this.run.currentRoom
     if (!room || !preview?.target) return
     this._clearPathPreview()
+    const resolvedDoorId = preview.doorId || doorId
+    const door = resolvedDoorId ? this.run.dungeon.door(resolvedDoorId) : null
+    if (resolvedDoorId && (!door || door.roomId !== room.id)) return
     const group = new THREE.Group()
     const color = preview.danger ? 0xff786f : 0x76dcff
     const linePositions = [{ ...this.run.player.pos }, ...(preview.path || [])]
@@ -1938,15 +1951,21 @@ export class GameScene {
         transparent: true,
         opacity: 0.96,
         depthTest: false,
+        depthWrite: false,
       })
       const line = new THREE.Line(geometry, material)
+      line.renderOrder = 10000
       line.computeLineDistances()
       group.add(line)
     }
     const arrival = preview.arrival || preview.path?.at(-1) || this.run.player.pos
-    const targetPoint = preview.doorId
-      ? this._doorPosition(room, this.run.dungeon.door(preview.doorId).side, this.run.dungeon.door(preview.doorId).offset)
-      : this._gridPosition(room, preview.target)
+    const targetPoint = door ? this._doorPosition(room, door.side, door.offset) : this._gridPosition(room, preview.target)
+    const targetHeight = door ? (WALL_HEIGHT + 0.18) / 2 : CARD_THICKNESS / 2 + 0.055
+    if (door) {
+      const outward = this._doorOutward(door.side)
+      targetPoint.x -= outward.x * (DOOR_DEPTH / 2 + 0.01)
+      targetPoint.z -= outward.z * (DOOR_DEPTH / 2 + 0.01)
+    }
     if (preview.targeted) {
       const arrivalPoint = this._gridPosition(room, arrival)
       const baseHeight = CARD_THICKNESS / 2 + 0.05
@@ -1955,13 +1974,13 @@ export class GameScene {
         const arcHeight = Math.min(1.08, Math.max(0.42, distance * 0.34))
         const controlPoint = new THREE.Vector3(
           (arrivalPoint.x + targetPoint.x) / 2,
-          baseHeight + arcHeight * 2,
+          Math.max(baseHeight, targetHeight) + arcHeight * 2,
           (arrivalPoint.z + targetPoint.z) / 2,
         )
         const curve = new THREE.QuadraticBezierCurve3(
           new THREE.Vector3(arrivalPoint.x, baseHeight, arrivalPoint.z),
           controlPoint,
-          new THREE.Vector3(targetPoint.x, baseHeight, targetPoint.z),
+          new THREE.Vector3(targetPoint.x, targetHeight, targetPoint.z),
         )
         const geometry = new THREE.BufferGeometry().setFromPoints(curve.getPoints(Math.max(12, Math.ceil(distance * 16))))
         const material = new THREE.LineDashedMaterial({
@@ -1971,21 +1990,25 @@ export class GameScene {
           transparent: true,
           opacity: 0.96,
           depthTest: false,
+          depthWrite: false,
         })
         const arc = new THREE.Line(geometry, material)
+        arc.renderOrder = 10000
         arc.computeLineDistances()
         group.add(arc)
       }
     }
     const marker = new THREE.Mesh(
       new THREE.RingGeometry(0.28, 0.35, 32),
-      new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.95, depthTest: false }),
+      new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.95, depthTest: false, depthWrite: false, side: THREE.DoubleSide }),
     )
-    marker.rotation.x = -Math.PI / 2
-    marker.position.set(targetPoint.x, CARD_THICKNESS / 2 + 0.055, targetPoint.z)
+    if (door) marker.rotation.y = { top: 0, bottom: Math.PI, left: Math.PI / 2, right: -Math.PI / 2 }[door.side]
+    else marker.rotation.x = -Math.PI / 2
+    marker.position.set(targetPoint.x, targetHeight, targetPoint.z)
+    marker.renderOrder = 10001
     group.add(marker)
     this.roomGroup.add(group)
-    this.pathPreview = { target: { ...preview.target }, doorId, group }
+    this.pathPreview = { target: { ...preview.target }, doorId: resolvedDoorId, group }
   }
 
   _clearPathPreview() {
@@ -2168,7 +2191,7 @@ export class GameScene {
       if (value) drawCenteredText(context, value, 90, { color: valueColor, size: 36, weight: 'bold' })
       if (!isBuff && detail) drawCenteredText(context, detail, 116, { color: '#d8e4ff', size: 14 })
       if (!isBuff && footer) drawCenteredText(context, footer, 136, { color: card.footerColor || '#ffd56b', size: 13, weight: 'bold' })
-    })
+    }, { padding: card.type === 'monster' ? ENEMY_PUPPET_PADDING : 0 })
   }
 
   _cardFaceData(room, position) {
