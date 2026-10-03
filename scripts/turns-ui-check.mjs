@@ -11,19 +11,20 @@ try {
   const render = () => renderToString(createSSRApp(Hud, { run }))
   const endButton = html => html.match(/<button\b[^>]*data-action="end-turn"[^>]*>/)?.[0]
   const useButton = html => html.match(/<button\b[^>]*data-action="use"[^>]*>/)?.[0]
+  const energyText = html => html.match(/<div\b[^>]*class="vital-energy"[^>]*>[\s\S]*?<strong>([^<]*)<\/strong>/)?.[1].trim()
   let html = await render()
   assert(!endButton(html)); assert(html.includes('6/6'))
-  assert(html.includes('\u63a2\u7d22'))
+  assert.equal(energyText(html), '6/6')
   const target = enemy(run, { attack: 2, actionDelay: 0 })
   run._synchronizeBattle(); select(run, potion)
   html = await render()
   assert(endButton(html)); assert(!endButton(html).includes('disabled'))
-  assert(html.includes('\u73a9\u5bb6\u56de\u5408 1'))
+  assert.equal(energyText(html), '6/6')
   run.endPlayerTurn(); html = await render()
   assert(endButton(html).includes('disabled')); assert(useButton(html).includes('disabled'))
   assert(html.includes('\u654c\u4eba\u56de\u5408'))
   settleAnimations(run); html = await render()
-  assert(!endButton(html).includes('disabled')); assert(html.includes('\u73a9\u5bb6\u56de\u5408 2'))
+  assert(!endButton(html).includes('disabled')); assert.equal(energyText(html), '6/6')
   const food = add(run, 'food-3'); run.player.energy = 0
   assert(run.selectInventory(run.backpack.originIndex(run.backpack.placementOf(food.uid))))
   html = await render()

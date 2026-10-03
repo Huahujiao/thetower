@@ -403,7 +403,7 @@
               class="vital-energy-fill"
               :style="{ width: `${Math.max(0, Math.min(100, state.player.energy / Math.max(1, state.player.maxEnergy) * 100))}%` }"
             ></span><strong>{{
-              state.player.energy }}/{{ state.player.maxEnergy }} · {{ battleStageLabel }}</strong>
+              state.player.energy }}/{{ state.player.maxEnergy }}</strong>
           </div>
         </div>
         <div class="backpack-action-slot act-use-slot">
