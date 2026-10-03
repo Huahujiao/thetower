@@ -7,6 +7,7 @@ import { RELIC_DEFS } from '../game/data/relics.js'
 import { LEVEL_UP_OPTIONS } from '../game/data/progression.js'
 import { TRAP_DEFS } from '../game/data/traps.js'
 import { itemSpriteSources } from './item-sprites.js'
+import { enemyDistribution, itemUnlockFloor } from './wiki-data.js'
 
 const COPY = Object.freeze({
   implemented: '\u5df2\u5b9e\u88c5',
@@ -89,7 +90,7 @@ function stat(labelText, value) {
   return `<div class="wiki-stat${wide}"><dt>${escapeHtml(labelText)}</dt><dd>${escapeHtml(value)}</dd></div>`
 }
 
-function card({ tone, tag, title, description = '', stats = [], accent = '', image = '' }) {
+function card({ tone, tag, title, description = '', stats = [], accent = '', image = '', status = COPY.implemented }) {
   const visibleStats = stats.filter(Boolean)
   const leadStats = visibleStats.slice(0, 4)
   const remainingStats = visibleStats.slice(4)
@@ -99,7 +100,7 @@ function card({ tone, tag, title, description = '', stats = [], accent = '', ima
         ? `<img src="${escapeHtml(image)}" alt="" loading="lazy" decoding="async">`
         : `<span class="wiki-media-placeholder" role="img" aria-label="${COPY.imagePending}"><span aria-hidden="true">${escapeHtml(accent || '\u25c7')}</span><small>${COPY.imagePending}</small></span>`}</div>
       <div class="wiki-card-intro">
-        <div class="wiki-card-head"><span class="wiki-tag">${escapeHtml(tag)}</span><span class="wiki-status">${COPY.implemented}</span></div>
+        <div class="wiki-card-head"><span class="wiki-tag">${escapeHtml(tag)}</span><span class="wiki-status">${escapeHtml(status)}</span></div>
         <h2>${escapeHtml(title)}</h2>
         ${description ? `<p>${escapeHtml(description)}</p>` : ''}
         ${leadStats.length ? `<dl class="wiki-stats wiki-stats-lead">${leadStats.join('')}</dl>` : ''}
@@ -134,7 +135,7 @@ function enemyCards() {
       enemy.pullDistance > 0 ? stat(COPY.pull, `${enemy.pullDistance} ${COPY.cell}`) : '',
       enemy.summonMinionId ? stat(COPY.summon, `\u6bcf ${enemy.summonEvery || 0} \u6b21\u81ea\u8eab\u884c\u52a8 \u00b7 ${catalog.enemies.find((candidate) => candidate.id === enemy.summonMinionId)?.name || enemy.summonMinionId} \u00b7 \u4e0a\u9650 ${enemy.summonLimit || 0}`) : '',
       enemy.deathSpawnMinionId ? stat(COPY.deathSpawn, `${catalog.enemies.find((candidate) => candidate.id === enemy.deathSpawnMinionId)?.name || enemy.deathSpawnMinionId} \u00d7 ${enemy.deathSpawnCount || 0}`) : '',
-      stat(COPY.floor, enemy.spawnOnly ? COPY.generated : enemy.minFloor),
+      stat('生成分布', enemyDistribution(enemy)),
       !enemy.spawnOnly && !enemy.boss ? stat(COPY.experience, enemy.experience || 0) : '',
       enemy.drop ? stat(COPY.loot, `${Math.round(enemy.drop.chance * 100)}% \u00b7 ${(Array.isArray(enemy.drop.itemIds) ? enemy.drop.itemIds : [enemy.drop.itemId]).map((itemId) => lootById.get(itemId)?.name || itemId).join(' / ')}`) : '',
       !enemy.spawnOnly && !enemy.boss && enemy.relicDropChance ? stat(COPY.relicChance, `${Math.round(enemy.relicDropChance * 100)}%`) : '',
@@ -159,6 +160,7 @@ function weaponCards() {
       stat(COPY.attribute, attributeLabel(weapon.attribute)),
       stat(COPY.footprint, shapeText(weapon.shape)),
       stat(COPY.weaponEffect, weapon.description || ''),
+      stat('新局解锁楼层', itemUnlockFloor(weapon)),
     ],
   })).join('')
 }
@@ -182,6 +184,7 @@ function growthCards() {
     tag: '\u5347\u7ea7\u5956\u52b1',
     title: option.name,
     description: option.description,
+    status: option.disabled ? '暂未开放' : COPY.implemented,
     accent: '\u2736',
     stats: [],
   })).join('')
@@ -211,7 +214,7 @@ function itemCards() {
       itemEffect(item),
       item.tier ? stat('\u6d88\u8017\u54c1\u7b49\u7ea7', item.tier) : '',
       stat(COPY.footprint, shapeText(item.shape)),
-      stat(COPY.floor, item.generatedOnly ? (item.id === 'meat-scrap' ? '\u5272\u8089\u5200\u751f\u6210' : '镇岳盾生成') : item.starterOnly ? '\u5f00\u5c40\u81ea\u5e26' : item.dropOnly ? COPY.enemyDrop : item.minFloor || 1),
+      stat(COPY.floor, item.generatedOnly ? (item.id === 'meat-scrap' ? '\u5272\u8089\u5200\u751f\u6210' : '镇岳盾生成') : item.starterOnly ? '\u5f00\u5c40\u81ea\u5e26' : itemUnlockFloor(item)),
       item.type === 'pet' ? stat(COPY.relicSources, '\u666e\u901a\u5546\u5e97\u3001\u8865\u7ed9\u5956\u52b1\uff1b\u6682\u5b58\u533a\u4e0d\u751f\u6548\u3002') : '',
       item.type === 'defense' ? stat(COPY.relicSources, '\u654c\u4eba\u6389\u843d\u3001\u5546\u5e97\u8d2d\u4e70\u3001\u623f\u95f4\u5956\u52b1\uff1b\u4e0d\u4f5c\u4e3a\u5730\u9762\u7269\u54c1\u751f\u6210\u3002') : '',
     ],

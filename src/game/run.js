@@ -28,6 +28,7 @@ import { findAttackPath, findDoorPath, findInteractionPath, findPath, findReveal
 import { terrainDamageModifiers } from './rules/terrain.js'
 import { suggestedSynergyId } from './rules/synergies.js'
 import { migratePlaytestBalance, PLAYTEST_BALANCE_REVISION } from './data/playtest-balance.js'
+import { migrateFoodPoints, FOOD_POINTS_REVISION } from './data/food-point-migration.js'
 import { migrateAttributeItems } from './data/attribute-item-retirement.js'
 import { BASE_ACTION_ENERGY, BIG_ROUND_REVISION, migrateBigRounds } from './data/big-round-migration.js'
 
@@ -422,7 +423,8 @@ export class GameRun {
     if (!this.battle.active) return this.player.energy
     let energy = this.player.energy
     for (let index = 0; index < steps; index++) {
-      if (energy < 1) return 0
+      // Distinguish an unreachable route from arriving with exactly zero energy.
+      if (energy < 1) return -1
       const traveler = index === 0 && this.itemRules.has('r-traveler') && this.itemRules.state.lastAction === 'attack' ? 1 : 0
       const aura = path[index] ? this.totems.movementBonus(path[index], this.globalTurn) : 0
       energy = Math.min(this.player.maxEnergy, energy - 1 + traveler + aura)
@@ -1314,7 +1316,7 @@ export class GameRun {
     if (item.type === 'relic') this.acquireRelic(item.relicId, { notify: false })
     else this._putInInventory(item)
     this._log(`\u8d2d\u4e70 ${item.name}\uff0c\u82b1\u8d39 ${price} \u91d1\u5e01\u3002`)
-    refreshMerchantSlot(merchant, this.currentRoom.floor, index, this.random)
+    refreshMerchantSlot(merchant, this.currentRoom.progressionFloor, index, this.random)
     this._changed()
     return true
   }
@@ -1324,7 +1326,7 @@ export class GameRun {
     const price = this.merchantRestockPrice(merchant)
     if (this.phase !== 'merchant' || !merchant || price <= 0) return false
     if (this.player.gold < price) return this._reject('\u91d1\u5e01\u4e0d\u8db3\u3002')
-    if (!refreshMerchantStock(merchant, this.currentRoom.floor, this.random)) return false
+    if (!refreshMerchantStock(merchant, this.currentRoom.progressionFloor, this.random)) return false
     this.player.gold -= price
     this._log(`\u82b1\u8d39 ${price} \u91d1\u5e01\u5237\u65b0\u4e86\u8d27\u67b6\u3002`)
     this._changed()
@@ -1505,10 +1507,15 @@ export class GameRun {
     if (entity.kind === 'item' && entity.item?.type === 'relic' && !getRelicDefinition(entity.item.relicId)) return this._reject('\u65e0\u6cd5\u8bc6\u522b\u8fd9\u4ef6\u5723\u9057\u7269\u3002')
     const route = findPath(room, this.player.pos, entity.pos, { allowGoalOccupied: true })
     if (!route) return this._reject('\u76ee\u6807\u4e0d\u53ef\u8fbe\u3002')
-    if (this.battle.active && this.energyAfterMovement(route.length, route) < 1) return this._reject('体力不足。')
-    const movement = this._walk(route)
-    if (!movement.stopped) {
-      if (!this._payAction(1)) return this._reject('体力不足。')
+    const pickupCost = route.length === 0 ? 1 : 0
+    if (this.battle.active && this.energyAfterMovement(route.length, route) < pickupCost) return this._reject('体力不足。')
+    this._walk(route)
+    // Arrival and collection are one action. An ambush stops further movement,
+    // but cannot undo a pickup after the player has reached this cell.
+    const arrived = !this.gameOver && this.currentRoom === room
+      && manhattan(this.player.pos, entity.pos) === 0 && !!room.entity(entity.id)
+    if (arrived) {
+      if (pickupCost && !this._payAction(pickupCost)) return this._reject('体力不足。')
       if (entity.kind === 'item') {
         if (entity.item?.type === 'relic') {
           const entry = this.acquireRelic(entity.item.relicId, { notify: false, allowStash: true })
@@ -1537,7 +1544,7 @@ export class GameRun {
         this._emitRelicEvent('key:collected', { key: entity, edge })
       }
     }
-    if (!movement.stopped) this._endTurn({ turnKind: TURN_KINDS.ACTION })
+    if (arrived) this._endTurn({ turnKind: TURN_KINDS.ACTION })
     this._changed()
     return true
   }
@@ -1579,7 +1586,7 @@ export class GameRun {
     this.itemRules.enter(firstVisit)
     if (firstVisit && !this.gameOver && targetRoom.role !== 'entry') {
       const reward = buildRoomRewardChoices(this.relics, {
-        floor: targetRoom.floor,
+        floor: targetRoom.progressionFloor,
         type: targetRoom.role === 'elite' ? 'relic' : targetRoom.role === 'supply' ? 'supply' : this._drawRoomRewardType(),
         random: this.random,
         items: this.backpack.items,
@@ -2318,6 +2325,7 @@ export class GameRun {
     return {
       version: SAVE_VERSION,
       playtestBalanceRevision: PLAYTEST_BALANCE_REVISION,
+      foodPointsRevision: FOOD_POINTS_REVISION,
       bigRoundRevision: BIG_ROUND_REVISION,
       battle: { ...this.battle },
       roundResolving: this.roundResolving,
@@ -2359,8 +2367,10 @@ export class GameRun {
       const data = JSON.parse(raw)
       let attributeItemsMigrated = false
       let bigRoundsMigrated = false
+      let foodPointsMigrated = false
       if (data?.version === SAVE_VERSION) {
         migratePlaytestBalance(data)
+        foodPointsMigrated = migrateFoodPoints(data)
         attributeItemsMigrated = migrateAttributeItems(data, { random: this.random })
         bigRoundsMigrated = migrateBigRounds(data)
       }
@@ -2481,7 +2491,7 @@ export class GameRun {
         this._persist()
       } else {
         this._synchronizeBattle()
-        if (attributeItemsMigrated || bigRoundsMigrated) this._persist()
+        if (attributeItemsMigrated || bigRoundsMigrated || foodPointsMigrated) this._persist()
       }
       return true
     } catch {

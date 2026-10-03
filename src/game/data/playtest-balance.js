@@ -33,19 +33,20 @@ export function migratePlaytestBalance(data) {
     if (!Array.isArray(room.entities)) continue
     room.entities = room.entities.filter(e => !retired(e.item))
     for (const entity of room.entities) {
-      update(entity.item, room.floor)
+      update(entity.item, room.progressionFloor ?? room.floor)
       if (entity.kind === 'enemy' && entity.enemyId === 'tide-shadow-cub') entity.attack = 1
       if (Array.isArray(entity.stock)) {
         entity.stock = entity.stock.filter(stock => stock.itemId !== 'cleanse')
         for (const stock of entity.stock) {
-          if (room.floor < 3 && stock.itemId === 'demon-seeker') stock.itemId = 'rust-sword'
+          if ((room.progressionFloor ?? room.floor) < 3 && stock.itemId === 'demon-seeker') stock.itemId = 'rust-sword'
           if (getItemDefinition(stock.itemId)?.type === 'weapon') stock.price = merchantItemPrice(stock.itemId)
         }
       }
     }
   }
   if (Array.isArray(data.roomReward?.choices)) {
-    const floor = data.dungeon?.rooms?.find(room => room.id === data.roomReward.roomId)?.floor || 1
+    const room = data.dungeon?.rooms?.find(room => room.id === data.roomReward.roomId)
+    const floor = room?.progressionFloor ?? room?.floor ?? 1
     data.roomReward.choices = data.roomReward.choices.map(choice => {
       if (choice.kind !== 'item') return choice
       if (choice.itemId === 'cleanse') return { kind: 'item', itemId: 'health-potion' }

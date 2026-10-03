@@ -1257,8 +1257,8 @@
       "id": "food-5",
       "name": "烤饭团",
       "type": "energy",
-      "energy": 5,
-      "description": "一次性恢复5体力。",
+      "energy": 4,
+      "description": "一次性恢复4体力。",
       "shape": [
         [
           1
@@ -1270,8 +1270,8 @@
       "id": "food-7",
       "name": "薯香饭包",
       "type": "energy",
-      "energy": 7,
-      "description": "一次性恢复7体力。",
+      "energy": 5,
+      "description": "一次性恢复5体力。",
       "shape": [
         [
           1
@@ -1283,8 +1283,8 @@
       "id": "food-9",
       "name": "肉干饭饼",
       "type": "energy",
-      "energy": 9,
-      "description": "一次性恢复9体力。",
+      "energy": 6,
+      "description": "一次性恢复6体力。",
       "shape": [
         [
           1

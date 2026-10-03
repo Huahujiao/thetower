@@ -45,7 +45,7 @@ for (const definition of PETS) {
   const target = enemy(run), other = enemy(run, { pos: { c: 5, r: 3 } })
   phase(run)
   assert.equal(target.hp, 100 - definition.attack, definition.id)
-  assert.equal(food.energy, 9 - definition.foodCost, definition.id)
+  assert.equal(food.energy, 6 - definition.foodCost, definition.id)
   if (pet.id === 'venom-toad') {
     const poison = getStatus(target, 'enemy-poison'); assert(poison); assert.equal(poison.turns, 100); assert.equal(poison.layers, 100)
     assert.equal(poison.showTurns, false); assert.equal(poison.showLayers, false)
@@ -75,9 +75,9 @@ for (const definition of PETS) {
 {
   const run = fixture(); add(run, 'mountain-hound', 0, 0)
   const food = feed(run, 'food-5'), target = enemy(run)
-  phase(run); assert.equal(food.energy, 4)
+  phase(run); assert.equal(food.energy, 3)
   run.player.energy = 1; select(run, food); assert(run.useSelected())
-  assert.equal(run.player.energy, 5); assert(!run.backpack.placementOf(food.uid)); assert.equal(target.hp, 96)
+  assert.equal(run.player.energy, 4); assert(!run.backpack.placementOf(food.uid)); assert.equal(target.hp, 96)
 }
 // Pet phase precedes enemy attacks; fatal pet hits prevent enemy action entirely.
 {
@@ -132,7 +132,7 @@ for (const points of [1, 3]) {
 }
 // Vampire discount is bottle-only; charm is adjacency-only, both clamp to one.
 {
-  const run = fixture(), pet = add(run, 'mandrill-beast', 0, 0), food = feed(run, 'food-5')
+  const run = fixture(), pet = add(run, 'mandrill-beast', 0, 0), food = feed(run, 'food-7')
   add(run, 'r-vampire-fang', 5, 0); enemy(run)
   phase(run); assert.equal(food.energy, 2) // pure ordinary food costs 3
   const bottle = feed(run, 'health-potion', null, 1, 1), healing = bottle.heal

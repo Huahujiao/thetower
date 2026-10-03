@@ -35,6 +35,7 @@ const CAMERA_ELEVATION_STEP = 4 * Math.PI / 180
 const MIN_CAMERA_ELEVATION = 38 * Math.PI / 180
 const MAX_CAMERA_ELEVATION = 78 * Math.PI / 180
 const STANDING_BACK_LEAN = 30 * Math.PI / 180
+const ENEMY_FACING_ANGLE = Math.PI / 6
 const GHOST_ROOM_GAP = TILE_SIZE * 0.54
 const ENEMY_STATUS_LAYER_OFFSET = 0.012
 const ENEMY_STATUS_HEALTH_Y = CARD_SIZE * 0.46
@@ -309,6 +310,7 @@ export class GameScene {
     this.animationQueue = []
     this.attackAnimation = null
     this.characterIdleTime = 0
+    this.enemyFacings = new WeakMap()
     this.movementAnimation = null
     this.moveCompletionPending = false
     this.playerMarker = null
@@ -587,7 +589,7 @@ export class GameScene {
     face.userData.groundSpriteRequestKey = null
   }
 
-  _attachEnemyFigure(face, enemyId) {
+  _attachEnemyFigure(face, enemyId, instanceId = null) {
     let figure = face.userData.enemyFigure
     if (figure && figure.userData.enemyId !== enemyId) {
       face.remove(figure)
@@ -602,20 +604,43 @@ export class GameScene {
       face.add(figure)
       face.userData.enemyFigure = figure
     }
+    figure.userData.enemyInstanceId = instanceId || this.run.currentRoom?.entityAt(face.userData.position)?.id || figure.userData.enemyInstanceId
     this._poseEnemyFigure(face)
   }
 
+  _enemyFacingOffset(figure, position) {
+    const room = this.run.currentRoom
+    if (!room) return 0
+    this.enemyFacings ??= new WeakMap()
+    let facings = this.enemyFacings.get(room)
+    if (!facings) { facings = new Map(); this.enemyFacings.set(room, facings) }
+    const instanceId = figure.userData.enemyInstanceId
+    const enemyPosition = room.entity?.(instanceId)?.pos || position
+    const key = instanceId || figure
+    const side = Math.sign(this.run.player.pos.c - enemyPosition.c)
+    const facing = side || facings.get(key) || -1
+    facings.set(key, facing)
+    const project = enemyPuppetProject(figure.userData.enemyId)
+    const authoredYaw = (project?.joints.find(joint => joint.id === 'root')?.rotationY || 0) * Math.PI / 180
+    return facing * ENEMY_FACING_ANGLE - authoredYaw
+  }
+
   _poseEnemyFigure(face, action = 'idle', time = 0, effects = {}) {
+    const figure = this._positionEnemyFigure(face)
+    if (figure) updateEnemyFigure(figure, action, time, effects)
+  }
+
+  _positionEnemyFigure(face) {
     const figure = face?.userData.enemyFigure
     if (!figure) return
     // The face still carries interaction/status overlays. Cancel its billboard
     // lean, scaling and vertical motion for the actual actor's floor pivot.
     face.updateMatrix()
     const world = new THREE.Matrix4().makeTranslation(face.position.x, CARD_THICKNESS / 2 + CARD_FACE_CLEARANCE, face.position.z)
-      .multiply(new THREE.Matrix4().makeRotationY(this.cameraAzimuth))
+      .multiply(new THREE.Matrix4().makeRotationY(this.cameraAzimuth + this._enemyFacingOffset(figure, face.userData.position)))
     figure.matrix.copy(face.matrix).invert().multiply(world)
     figure.matrixWorldNeedsUpdate = true
-    updateEnemyFigure(figure, action, time, effects)
+    return figure
   }
 
   _groundItem(card, position) {
@@ -1427,6 +1452,8 @@ export class GameScene {
       sourceBackTexture?.dispose()
       const figure = createEnemyFigure(card.enemyId, CARD_SIZE)
       if (!figure) return false
+      figure.userData.enemyInstanceId = room.entityAt(position)?.id
+      figure.rotation.y = this._enemyFacingOffset(figure, position)
       const ground = this._makeEmptyGroundFace(point, position)
       this.roomGroup.add(ground)
       group.scale.setScalar(1)
@@ -1597,7 +1624,7 @@ export class GameScene {
     const attackCard = actor === 'player' ? null : actorStatus
       ? { type: 'monster', enemyId: actorStatus.enemyId, title: actorStatus.name, attribute: actorStatus.attribute, boss: actorStatus.boss }
       : this._cardFaceData(room, position)
-    if (actor === 'enemy' && attackCard?.enemyId) this._attachEnemyFigure(face, attackCard.enemyId)
+    if (actor === 'enemy' && attackCard?.enemyId) this._attachEnemyFigure(face, attackCard.enemyId, enemyId)
     const attackTexture = actor === 'player' ? makeCanvasTexture((context) => drawStickFigure(context, { armLift: 0, legSpread: 1 })) : null
     if (attackTexture) {
       mesh.material.map = attackTexture
@@ -1760,9 +1787,6 @@ export class GameScene {
 
   _updateCharacterIdle(delta) {
     this.characterIdleTime += delta
-    this.enemyArtTick = (this.enemyArtTick || 0) + delta
-    const refreshArt = this.enemyArtTick >= 1 / 12
-    if (refreshArt) this.enemyArtTick = 0
     const room = this.run.currentRoom
     if (!room) return
     for (const face of this.tileMeshes) {
@@ -1775,7 +1799,7 @@ export class GameScene {
       this._applyIdlePose(face, face, position.c * 0.7 + position.r * 1.3)
       const enemyId = !isPlayer ? face.userData.enemyId : null
       const project = enemyPuppetProject(enemyId)
-      if (refreshArt && project && face !== this.attackAnimation?.object
+      if (project && face !== this.attackAnimation?.object
         && face !== this.attackAnimation?.victim?.object && face !== this.movementAnimation?.face) {
         const offset = (position.c * 0.7 + position.r * 1.3) * 190
         this._poseEnemyFigure(face, 'idle', (this.characterIdleTime * 1000 + offset) % project.animations.idle.duration)
@@ -2193,7 +2217,7 @@ export class GameScene {
   }
 
   _makeFrontTexture(card, position = null, revealed = false) {
-    if (revealed && this._groundSpriteDescriptor(card, position)) return this.boardTextures.floor(position)
+    if (revealed && card.type !== 'entry' && this._groundSpriteDescriptor(card, position)) return this.boardTextures.floor(position)
     if (card.type === 'empty') return this.boardTextures.floor(position)
     return makeCanvasTexture((context) => {
       if (card.type === 'monster') {
@@ -2422,7 +2446,7 @@ export class GameScene {
     for (const face of this.tileMeshes) {
       if (face?.userData?.standing) {
         face.rotation.y = this.cameraAzimuth
-        if (face.userData.enemyFigure) this._poseEnemyFigure(face)
+        if (face.userData.enemyFigure) this._positionEnemyFigure(face)
       }
       const sprite = face?.userData?.itemSprite
       const spin = sprite?.userData?.itemSpin
@@ -2642,9 +2666,8 @@ export class GameScene {
     else this._clearPathPreview()
   }
 
-  _animate() {
-    const now = Date.now()
-    const delta = Math.min(0.05, Math.max(0, (now - (this.lastFrameTime || now)) / 1000))
+  _animate(now = globalThis.performance.now()) {
+    const delta = Math.min(0.05, Math.max(0, (now - (this.lastFrameTime ?? now)) / 1000))
     this.lastFrameTime = now
     this._updateMovementAnimation(delta)
     this._updateFlipAnimations(delta)

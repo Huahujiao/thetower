@@ -78,9 +78,10 @@ for (const definition of ALL_ITEM_DEFS.filter(item => item.type === 'defense')) 
   assert.equal(run.player.armor, 2)
 }
 
-for (const points of [3, 5, 7, 9]) {
-  const run = fixture(), food = add(run, `food-${points}`)
-  assert.equal(food.name, { 3: '\u7cbd\u5b50', 5: '\u70e4\u996d\u56e2', 7: '\u85af\u9999\u996d\u5305', 9: '\u8089\u5e72\u996d\u997c' }[points])
+for (const [suffix, points] of [[3, 3], [5, 4], [7, 5], [9, 6]]) {
+  const run = fixture(), food = add(run, `food-${suffix}`)
+  assert.equal(food.name, { 3: '\u7cbd\u5b50', 5: '\u70e4\u996d\u56e2', 7: '\u85af\u9999\u996d\u5305', 9: '\u8089\u5e72\u996d\u997c' }[suffix])
+  assert.equal(food.energy, points)
   assert.equal(food.tier, 1)
   run.player.energy = 1
   select(run, food); assert(run.useSelected())
@@ -228,7 +229,7 @@ function aim(run, item) {
   const armorHtml = await render('wood-shield')
   assert(armorHtml.includes('\u62a4\u7532\u503c'))
   assert(armorHtml.includes('>1</span>'))
-  assert((await render('food-9')).includes('>9</span>'))
+  assert((await render('food-9')).includes('>6</span>'))
   assert((await render('poison')).includes('>II</span>'))
   assert((await render('health-potion')).includes('>I</span>'))
 }

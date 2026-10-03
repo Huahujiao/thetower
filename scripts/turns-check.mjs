@@ -108,11 +108,11 @@ assert.throws(() => ledger.advance('invalid'))
   run.on('enemies:started', () => stages.push('enemies'))
   const potion = add(run, 'health-potion')
   assert(run.moveInventoryToStash(potion.uid))
-  assert.equal(target.hp, 100); assert.equal(food.energy, 9)
+  assert.equal(target.hp, 100); assert.equal(food.energy, 6)
   assert(run.endPlayerTurn()); idle(run)
   assert.deepEqual(stages, ['pets', 'enemies'])
   assert.equal(target.hp, 100 - pet.attack)
-  assert.equal(food.energy, 9 - pet.foodCost)
+  assert.equal(food.energy, 6 - pet.foodCost)
 }
 
 // Refunds can keep a player turn alive; hidden enemies do not prevent exploration.

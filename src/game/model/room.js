@@ -5,12 +5,14 @@ function makeTile() {
 }
 
 export class Room {
-  constructor({ id, floor, width, height = 8, chapter = 1, role = 'entry' }) {
+  constructor({ id, floor, width, height = 8, chapter = 1, role = 'entry', encounterChapter = chapter, progressionFloor = floor }) {
     this.id = id
     this.floor = floor
     this.width = width
     this.height = height
     this.chapter = chapter
+    this.encounterChapter = encounterChapter
+    this.progressionFloor = progressionFloor
     this.role = role
     this.tiles = Array.from({ length: height }, () => Array.from({ length: width }, () => makeTile()))
     this.entities = new Map()
@@ -95,6 +97,8 @@ export class Room {
       width: this.width,
       height: this.height,
       chapter: this.chapter,
+      encounterChapter: this.encounterChapter,
+      progressionFloor: this.progressionFloor,
       role: this.role,
       tiles: this.tiles.map((row) => row.map((tile) => ({ ...tile }))),
       entities: [...this.entities.values()].map((entity) => ({ ...entity, pos: { ...entity.pos }, arrival: entity.arrival ? { ...entity.arrival } : null })),

@@ -34,7 +34,7 @@ export function chapterEncounter(chapter) {
 }
 
 export function enemyCountForRoom(room) {
-  return chapterEncounter(room.chapter).counts[room.role]
+  return chapterEncounter(room.encounterChapter ?? room.chapter).counts[room.role]
 }
 
 function shuffled(values, random) {

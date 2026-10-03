@@ -50,7 +50,8 @@ export function migrateAttributeItems(data, { random = Math.random } = {}) {
     }
   }
   if (Array.isArray(data.roomReward?.choices)) {
-    const floor = data.dungeon?.rooms?.find(room => room.id === data.roomReward.roomId)?.floor || 1
+    const room = data.dungeon?.rooms?.find(room => room.id === data.roomReward.roomId)
+    const floor = room?.progressionFloor ?? room?.floor ?? 1
     data.roomReward.choices = data.roomReward.choices.map(choice => {
       if (!suspended(choice.relicId || choice.itemId)) return choice
       changed = true

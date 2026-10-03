@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { createChapterDungeon, Dungeon, validateDungeonLayout } from '../src/game/model/dungeon.js'
+import { createChapterDungeon, DUNGEON_CONFIG, Dungeon, validateDungeonLayout } from '../src/game/model/dungeon.js'
 import { GameRun } from '../src/game/run.js'
 import { chapterEncounter, getEnemyDefinition } from '../src/game/data/enemies.js'
 import { chebyshev } from '../src/game/core/geometry.js'
@@ -16,16 +16,20 @@ function seeded(seed) {
   return () => ((state = (state * 1664525 + 1013904223) >>> 0) / 0x100000000)
 }
 
+let earlyUnlockedWeapons = 0
 for (let seed = 1; seed <= 100; seed++) {
   const { dungeon } = createChapterDungeon({ random: seeded(seed) })
   assert.equal(validateDungeonLayout(dungeon), true)
-  assert.equal(dungeon.rooms.size, 16)
-  assert.equal(dungeon.edges.size, 19)
-  assert.equal(new Set([...dungeon.rooms.values()].map((room) => room.floor)).size, 12)
-  for (let chapter = 1; chapter <= 4; chapter++) {
+  assert.equal(dungeon.rooms.size, 8)
+  assert.equal(dungeon.edges.size, 9)
+  assert.equal(new Set([...dungeon.rooms.values()].map((room) => room.floor)).size, 6)
+  for (let chapter = 1; chapter <= 2; chapter++) {
     const rooms = [...dungeon.rooms.values()].filter((room) => room.chapter === chapter)
     assert.deepEqual(rooms.map((room) => room.role), ['entry', 'elite', 'supply', 'boss'])
     assert.deepEqual(rooms.map((room) => room.floor), [(chapter - 1) * 3 + 1, (chapter - 1) * 3 + 2, (chapter - 1) * 3 + 2, (chapter - 1) * 3 + 3])
+    assert.deepEqual(rooms.map(room => room.encounterChapter), [chapter * 2 - 1, chapter * 2, chapter * 2, chapter * 2])
+    assert.deepEqual(rooms.map(room => room.progressionFloor), rooms.map(room => (room.floor - 1) * 2 + 1))
+    assert.deepEqual(rooms.map(room => room.width), chapter === 1 ? [6, 7, 7, 7] : [8, 9, 9, 9])
     for (const option of ['elite', 'supply']) {
       const route = [rooms[0], rooms.find((room) => room.role === option), rooms[3]]
       for (let index = 0; index < route.length - 1; index++) {
@@ -34,7 +38,8 @@ for (let seed = 1; seed <= 100; seed++) {
     }
     const boss = [...rooms[3].entities.values()].find((entity) => entity.boss)
     assert(boss)
-    assert.equal(!!boss.finalBoss, chapter === 4)
+    assert.equal(!!boss.finalBoss, chapter === 2)
+    assert.equal(boss.enemyId, chapter === 1 ? 'moss-colossus' : 'overseer')
     const branch = rooms.find((room) => room.role === 'elite')
     const bossEdge = [...dungeon.edges.values()].find((edge) => edge.fromRoomId === branch.id && edge.toRoomId === rooms[3].id)
     assert.equal(bossEdge.locked, true)
@@ -44,15 +49,15 @@ for (let seed = 1; seed <= 100; seed++) {
     const cards = room.width * room.height
     const entities = [...room.entities.values()]
     const enemies = entities.filter((entity) => entity.kind === 'enemy')
-    assert.equal(enemies.length, expectedCounts[room.chapter - 1][room.role])
-    const pool = chapterEncounter(room.chapter)
+    assert.equal(enemies.length, expectedCounts[room.encounterChapter - 1][room.role])
+    const pool = chapterEncounter(room.encounterChapter)
     const mobs = enemies.filter((enemy) => !enemy.boss)
-    const challengeCount = room.role === 'boss' || (room.chapter === 1 && room.role === 'entry')
-      ? 0 : room.role === 'elite' ? (room.chapter === 1 ? 2 : 3) : 1
+    const challengeCount = room.role === 'boss' || (room.encounterChapter === 1 && room.role === 'entry')
+      ? 0 : room.role === 'elite' ? (room.encounterChapter === 1 ? 2 : 3) : 1
     assert.equal(mobs.filter((enemy) => pool.challenge.includes(enemy.enemyId)).length, challengeCount)
     assert(mobs.every((enemy) => pool.standard.includes(enemy.enemyId) || pool.challenge.includes(enemy.enemyId)))
-    assert(mobs.filter((enemy) => enemy.behavior === 'ambush').length <= (room.chapter <= 2 ? 1 : 2))
-    assert(mobs.filter((enemy) => enemy.traits.includes('alert')).length <= (room.chapter === 1 ? 2 : room.chapter === 2 ? 3 : 4))
+    assert(mobs.filter((enemy) => enemy.behavior === 'ambush').length <= (room.encounterChapter <= 2 ? 1 : 2))
+    assert(mobs.filter((enemy) => enemy.traits.includes('alert')).length <= (room.encounterChapter === 1 ? 2 : room.encounterChapter === 2 ? 3 : 4))
     for (const enemy of enemies) {
       const definition = getEnemyDefinition(enemy.enemyId)
       if (!definition) continue // The final boss has its own definition.
@@ -66,12 +71,29 @@ for (let seed = 1; seed <= 100; seed++) {
       assert(mobs.filter((enemy) => chebyshev(enemy.pos, room.entry) <= 1).every((enemy) => enemy.enemyId === 'gnawer'))
     }
     assert.equal(entities.filter((entity) => entity.kind === 'item' && entity.item?.type === 'weapon').length, Math.round(cards * 0.25))
+    if (room.floor === 1) assert(!entities.some(entity => entity.item?.id === 'demon-seeker'))
+    if (room.floor === 2) earlyUnlockedWeapons += entities.filter(entity => entity.item?.id === 'demon-seeker').length
     assert(entities.length / cards >= 0.9, `${room.id} has too many empty cards`)
     assert(!entities.some((entity) => entity.kind === 'item' && entity.item?.type === 'defense'), `${room.id} generated a defense on the ground`)
   }
   const restored = Dungeon.hydrate(dungeon.serialize())
   assert.equal(validateDungeonLayout(restored), true)
   assert.equal(restored.rooms.size, dungeon.rooms.size)
+  assert.deepEqual([...restored.rooms.values()].map(room => [room.encounterChapter, room.progressionFloor]),
+    [...dungeon.rooms.values()].map(room => [room.encounterChapter, room.progressionFloor]))
+}
+assert(earlyUnlockedWeapons > 0, 'floor-3 weapon unlock must advance to the second room stage')
+
+// Existing four-chapter runs hydrate with their original progression and map.
+{
+  const { dungeon } = createChapterDungeon({ config: { ...DUNGEON_CONFIG, chapters: 4, progressionRate: 1 }, random: seeded(10) })
+  const data = dungeon.serialize()
+  for (const room of data.rooms) { delete room.encounterChapter; delete room.progressionFloor }
+  const restored = Dungeon.hydrate(data)
+  assert.equal(restored.rooms.size, 16); assert(validateDungeonLayout(restored))
+  for (const room of restored.rooms.values()) {
+    assert.equal(room.encounterChapter, room.chapter); assert.equal(room.progressionFloor, room.floor)
+  }
 }
 
 for (const option of ['elite', 'supply']) {
@@ -124,21 +146,21 @@ function enter(role) {
   visited.add(fullRun.currentRoom.id)
   if (fullRun.phase === 'reward') fullRun.skipRoomReward()
 }
-for (const option of ['elite', 'supply', 'elite', 'supply']) {
+for (const option of ['elite', 'supply']) {
   if (fullRun.currentRoom.chapter > 1 || visited.size > 1) enter('entry')
   enter(option)
   enter('boss')
-  if (fullRun.currentRoom.chapter < 4) {
+  if (fullRun.currentRoom.chapter < 2) {
     const boss = [...fullRun.currentRoom.entities.values()].find((entity) => entity.boss)
     fullRun._defeatEnemy(boss, { suppressLoot: true, suppressDeathExplosion: true })
   }
 }
-assert.equal(visited.size, 12)
-assert.equal(fullRun.currentRoom.floor, 12)
+assert.equal(visited.size, 6)
+assert.equal(fullRun.currentRoom.floor, 6)
 
 const finalRun = new GameRun({ autoLoad: false, random: seeded(99) })
 finalRun.player.roomId = finalRun.dungeon.roomOrder.at(-1)
 const finalBoss = [...finalRun.currentRoom.entities.values()].find((entity) => entity.finalBoss)
 finalRun._defeatEnemy(finalBoss, { suppressLoot: true, suppressDeathExplosion: true })
 assert.equal(finalRun.win, true)
-console.log('dungeon-check passed: 100 seeds, both routes, 12-room run, save restoration, chapter gates, final win')
+console.log('dungeon-check passed: 100 seeds, both routes, 6-room run, double progression, legacy saves, chapter gates, final win')

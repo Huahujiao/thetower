@@ -12,7 +12,8 @@ const LAYOUT_EPSILON = 0.0001
 const MAX_LAYOUT_GENERATION_ATTEMPTS = 24
 
 export const DUNGEON_CONFIG = Object.freeze({
-  chapters: 4,
+  chapters: 2,
+  progressionRate: 2,
   roomSizes: [6, 7, 8, 9],
   chapterBossIds: ['shellguard', 'moss-colossus', 'molten-core-beast'],
   merchantIds: ['merchant', 'merchant', 'collector', 'collector'],
@@ -392,7 +393,7 @@ function populateRoom(room, reserved, random, config) {
   const targetWeaponCount = Math.round(cardCount * 0.25)
   const targetCount = Math.ceil(cardCount * 0.95)
   const layoutKind = ['scattered', 'firing', 'wall'][(Number(room.id.split('-').at(-1)) - 1) % 3]
-  const encounter = buildEnemyEncounter(room.chapter, role, targetEnemyCount - (role === 'boss' ? 1 : 0), random)
+  const encounter = buildEnemyEncounter(room.encounterChapter, role, targetEnemyCount - (role === 'boss' ? 1 : 0), random)
   const placeEnemy = (position) => room.addEntity(createEnemyById(encounter.shift(), position))
   if (role !== 'boss' && role !== 'supply') arrangeTacticalEnemies(room, reserved, layoutKind, placeEnemy)
   if (role === 'boss') {
@@ -400,7 +401,7 @@ function populateRoom(room, reserved, random, config) {
     if (!position) throw new Error(`Could not place boss in ${room.id}`)
     const boss = room.chapter === config.chapters
       ? createBoss(position)
-      : createEnemyById(config.chapterBossIds[room.chapter - 1], position)
+      : createEnemyById(config.chapterBossIds[room.encounterChapter - 1], position)
     if (!boss) throw new Error(`Missing chapter boss for ${room.id}`)
     boss.boss = true
     boss.finalBoss = room.chapter === config.chapters
@@ -415,11 +416,11 @@ function populateRoom(room, reserved, random, config) {
   }
   addGold(room, reserved, random)
   let weaponCount = [...room.entities.values()].filter((entity) => entity.kind === 'item' && entity.item?.type === 'weapon').length
-  while (weaponCount < targetWeaponCount && addLoot(room, reserved, random, randomWeapon(room.floor, random))) weaponCount += 1
+  while (weaponCount < targetWeaponCount && addLoot(room, reserved, random, randomWeapon(room.progressionFloor, random))) weaponCount += 1
   while (room.entities.size < targetCount) {
     const roll = random()
     if (roll < 0.03 && addTrap(room, reserved, random)) continue
-    if (roll < 0.86 && addLoot(room, reserved, random, randomNeutralItem(room.floor, random))) continue
+    if (roll < 0.86 && addLoot(room, reserved, random, randomNeutralItem(room.progressionFloor, random))) continue
     if (addGold(room, reserved, random)) continue
     break
   }
@@ -431,7 +432,7 @@ function placeMerchant(room, reserved, merchantId, random) {
   const approach = shuffled(neighbors8(position, room.width, room.height)
     .filter((candidate) => !reserved.has(posKey(candidate)) && room.isEmpty(candidate)), random)[0]
   if (!approach) throw new Error(`Could not reserve merchant approach in ${room.id}`)
-  room.addEntity(createMerchantEntity(merchantId, position, { floor: room.floor, random }))
+  room.addEntity(createMerchantEntity(merchantId, position, { floor: room.progressionFloor, random }))
   reserved.add(posKey(approach))
   return approach
 }
@@ -456,8 +457,8 @@ function createChapterDungeonAttempt({ config, random }) {
   const reservations = new Map()
   const doorSidesByRoom = new Map()
   const chapters = []
+  const progressionRate = Math.max(1, Math.floor(config.progressionRate || 1))
   for (let chapter = 1; chapter <= config.chapters; chapter++) {
-    const size = config.roomSizes[chapter - 1]
     const roles = [
       ['entry', 0, { c: 0, r: 0 }],
       ['elite', 1, { c: -1, r: 0 }],
@@ -466,7 +467,11 @@ function createChapterDungeonAttempt({ config, random }) {
     ]
     const rooms = {}
     for (const [role, floorOffset, layout] of roles) {
-      const room = new Room({ id: `room-${dungeon.roomOrder.length + 1}`, floor: (chapter - 1) * 3 + floorOffset + 1, width: size, height: size, chapter, role })
+      const floor = (chapter - 1) * 3 + floorOffset + 1
+      const encounterChapter = Math.min(config.roomSizes.length, (chapter - 1) * progressionRate + 1 + Math.min(floorOffset, progressionRate - 1))
+      const progressionFloor = (floor - 1) * progressionRate + 1
+      const size = config.roomSizes[encounterChapter - 1]
+      const room = new Room({ id: `room-${dungeon.roomOrder.length + 1}`, floor, progressionFloor, encounterChapter, width: size, height: size, chapter, role })
       dungeon.addRoom(room, layout)
       rooms[role] = room
       reservations.set(room.id, new Set())
@@ -514,7 +519,7 @@ function createChapterDungeonAttempt({ config, random }) {
     connect(rooms.supply, rooms.boss, 'right', { chapter, option: 'supply' })
     if (chapters[index + 1]) connect(rooms.boss, chapters[index + 1].entry, 'bottom')
     const room = rooms.supply
-    placeMerchant(room, reservations.get(room.id), config.merchantIds[index], random)
+    placeMerchant(room, reservations.get(room.id), config.merchantIds[Math.min(config.merchantIds.length - 1, (index + 1) * progressionRate - 1)], random)
   })
 
   for (const edge of dungeon.edges.values()) {
