@@ -136,6 +136,82 @@ assert.throws(() => ledger.advance('invalid'))
   assert(run._moveTo({ c: 3, r: 3 })); assert.equal(run.player.energy, remaining)
 }
 
+// The discounted Tide bow loop spends energy after its single shared refund.
+{
+  const run = fixture(), bow = add(run, 'triad-tide')
+  add(run, 'r-empty'); add(run, 'r-single-seal')
+  const target = enemy(run, { pos: { c: 3, r: 0 } })
+  run._synchronizeBattle(); select(run, bow)
+  for (const expected of [5, 4, 3]) {
+    assert(run._attack(target)); idle(run)
+    assert.equal(run.player.energy, expected)
+  }
+  assert(run.itemRules.weaponLines(bow).some(line => line.includes('本回合已触发')))
+  assert(run.endPlayerTurn()); idle(run)
+  assert.equal(run.itemRules.state.tideRefundUsed, false)
+  const cost = run.weaponEnergyCost(bow)
+  assert(run._attack(target)); idle(run)
+  assert.equal(run.player.energy, 6 - cost + 1)
+  assert.equal(run.itemRules.state.tideRefundUsed, true)
+
+  const saved = run.serialize()
+  saved.backpack.placements.find(placement => placement.item.uid === bow.uid).item.description = 'legacy description'
+  const loaded = restore(saved)
+  assert.equal(loaded._loaded, true)
+  assert.equal(loaded.itemRules.state.tideRefundUsed, true)
+  const restoredBow = loaded.backpack.items.find(item => item.uid === bow.uid)
+  assert(restoredBow.description.includes('同名武器共享'))
+  select(loaded, restoredBow)
+  const before = loaded.player.energy, restoredCost = loaded.weaponEnergyCost(restoredBow)
+  assert(loaded._attack(loaded.currentRoom.entity(target.id))); idle(loaded)
+  assert.equal(loaded.player.energy, before - restoredCost)
+}
+
+// Two bow instances share the allowance; organizing and further reveals cannot reset it.
+{
+  const run = fixture(), first = add(run, 'triad-tide'), second = add(run, 'triad-tide')
+  add(run, 'r-empty'); add(run, 'r-single-seal')
+  const target = enemy(run, { pos: { c: 3, r: 0 } })
+  run._synchronizeBattle(); select(run, first)
+  assert(run._attack(target)); idle(run)
+  assert.equal(run.player.energy, 5)
+  run.itemRules.action('organize')
+  const extra = hiddenEnemy(run, { pos: { c: 2, r: 3 } })
+  run._revealEnemy(run.currentRoom, extra)
+  assert.equal(run.itemRules.state.tideRefundUsed, true)
+  select(run, second)
+  const before = run.player.energy, cost = run.weaponEnergyCost(second)
+  assert(run._attack(target)); idle(run)
+  assert.equal(run.player.energy, before - cost)
+  run._damageEnemy(target, 999); run._damageEnemy(extra, 999)
+  run._endTurn(); idle(run)
+  assert.equal(run.battle.active, false)
+  enemy(run, { pos: { c: 3, r: 0 } })
+  run._synchronizeBattle()
+  assert.equal(run.itemRules.state.tideRefundUsed, false)
+}
+
+// Misses, zero damage, and non-maximum range hits do not consume the allowance.
+{
+  const run = fixture(), bow = add(run, 'triad-tide')
+  add(run, 'r-empty'); add(run, 'r-single-seal')
+  const close = enemy(run, { pos: { c: 3, r: 1 } }), far = enemy(run, { pos: { c: 3, r: 0 } })
+  run._synchronizeBattle(); select(run, bow)
+  assert(run._attack(close)); idle(run)
+  assert.equal(run.itemRules.state.tideRefundUsed, false)
+  run.applyStatus(far, 'dodge')
+  assert(run._attack(far)); idle(run)
+  assert.equal(run.itemRules.state.tideRefundUsed, false)
+  bow.attack = 1; far.traits = ['heavy-armor']
+  assert(run._attack(far)); idle(run)
+  assert.equal(run.itemRules.state.tideRefundUsed, false)
+  bow.attack = 3; far.traits = []
+  const before = run.player.energy
+  assert(run._attack(far)); idle(run)
+  assert.equal(run.player.energy, before)
+  assert.equal(run.itemRules.state.tideRefundUsed, true)
+}
+
 // Control and status durations use rounds, not individual actions.
 {
   const run = fixture(), target = activate(run)

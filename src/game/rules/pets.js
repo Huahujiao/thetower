@@ -117,8 +117,9 @@ export class PetRules {
             .sort((a, b) => manhattan(a.pos, position) - manhattan(b.pos, position) || a.pos.r - b.pos.r || a.pos.c - b.pos.c)[0]
           if (bounce) run._damageEnemy(bounce, 1, { source: `pet:${pet.uid}` })
         }
-        run._log(`${pet.name} \u5bf9 ${target.name} \u9020\u6210 ${hit.damage} \u4f24\u5bb3\u3002`)
-        run.bus.emit('pet:attacked', { pet, enemy: target, hit, foodSpent: transaction.refunded ? 0 : plan.reduce((sum, entry) => sum + entry.amount, 0) })
+        const foodSpent = plan.reduce((sum, entry) => sum + entry.amount, 0)
+        run._log(`${pet.name} 对 ${target.name} 造成 ${hit.damage} 伤害，${transaction.refunded ? '击杀返还' : '消耗'}${foodSpent}点供食。`)
+        run.bus.emit('pet:attacked', { pet, enemy: target, hit, foodSpent: transaction.refunded ? 0 : foodSpent })
       } finally {
         this.activeAttack = null
         if (!transaction.refunded) for (const { item } of transaction.foods) {

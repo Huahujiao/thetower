@@ -62,6 +62,7 @@ export class ItemRules {
     return state
   }
   get room() { return this.run._roomRuntime().items ||= {} }
+  startPlayerTurn() { this.state.tideRefundUsed = false }
   has(id) { return !getItemDefinition(id)?.disabled && this.run.backpack.items.some(i => (i.id || i.relicId) === id) }
   adjacent(item, id) {
     const range = ['range-disc', 'steady-clip'].includes(id) ? this.range(item) : item.range || 1
@@ -225,7 +226,10 @@ export class ItemRules {
     if (!purgePoison && !hit.evaded && !enemy.downed && run.currentRoom.entity(enemy.id) && this.adjacent(weapon, 'venom-sac')) {
       run.applyStatus(enemy, 'enemy-poison', { damage: 1 }, { refresh: true })
     }
-    if (hit.damage > 0 && weapon.id === 'triad-tide' && context.distance === this.range(weapon)) run._recoverEnergy(1)
+    if (hit.damage > 0 && weapon.id === 'triad-tide' && context.distance === this.range(weapon) && !this.state.tideRefundUsed) {
+      this.state.tideRefundUsed = true
+      run._recoverEnergy(1)
+    }
     if (hit.damage > 0 && this.adjacent(weapon, 'range-disc') && context.distance === this.range(weapon)) {
       this.state.sniperCharge = 2
     }
@@ -306,7 +310,7 @@ export class ItemRules {
     if (conduitCapacity(this.run.backpack, weapon)) lines.push(`导流线：可用蓄势 ${this.state.conduitCharge || 0}/3`)
     if (forkBridgeActive(this.run.backpack, weapon)) lines.push('分叉接头：攻击+1')
     if (weapon.id === 'coin-blade') lines.push(`金币 ${this.run.player.gold}/12${this.run.player.gold >= 12 ? '，攻击+2' : ''}`)
-    if (weapon.id === 'triad-tide') lines.push('最大射程命中：返还1体力')
+    if (weapon.id === 'triad-tide') lines.push(`最大射程命中：返还1体力，每个玩家回合限1次，同名武器共享${this.run.battle.active && this.state.tideRefundUsed ? '（本回合已触发）' : ''}`)
     if (this.adjacent(weapon, 'range-disc')) lines.push(`\u6d4b\u8ddd\u76d8\uff1a\u4e0b\u6b21\u653b\u51fb\u84c4\u52bf ${this.state.sniperCharge || 0}/2`)
     if (this.adjacent(weapon, 'bone-nail')) lines.push('裂骨钉：碰撞伤害+2，延迟行动1次')
     const extra = this.expansion.attackContext(weapon, { moved: this.state.lastAction === 'movement', distance: 0, range: this.range(weapon) })
@@ -325,7 +329,7 @@ export class ItemRules {
       ['farwatch-armor', true, '击杀时获得攻击距离等量护甲'],
       ['weight', true, '攻击+2，体力消耗+1'],
       ['chain', true, '距离2命中击退1格，碰撞伤害+2'],
-      ['venom-sac', true, '\u4f7f\u654c\u4eba\u4e2d\u6bd2\uff0c5\u5c42'],
+      ['venom-sac', true, '使敌人中毒3回合'],
       ['spring', true, '击杀后，下一击更换武器体力消耗-1'],
       ['steady-clip', this.range(weapon) >= 2, '距离不超过2时攻击+1'],
       ['r-relay-badge', true, '\u653b\u51fb\u540e\uff0c\u4e0b\u6b21\u4f7f\u7528\u76f8\u90bb\u7684\u53e6\u4e00\u628a\u6b66\u5668\u4f24\u5bb3\u00d71.7'],

@@ -17,7 +17,8 @@
       @contextmenu.prevent
     >
       <span class="bag-shape" :style="entry.shapeStyle">
-        <ItemValueBadge :item="entry.item" :gold="gold" />
+        <!-- Snapshot the plain mutable model so in-place food changes reach the child. -->
+        <ItemValueBadge :item="{ ...entry.item }" :gold="gold" />
         <InventorySprite
           v-if="entry.spriteSources" :sources="entry.spriteSources"
           :item-index="entry.originIndex" :style="entry.spriteStyle"

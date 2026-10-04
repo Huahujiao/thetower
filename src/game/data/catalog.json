@@ -96,7 +96,7 @@
       },
       "attackCooldownMax": 0,
       "initialActionDelay": 0,
-      "speed": 1
+      "speed": 2
     },
     {
       "id": "beetle-guard",
@@ -141,7 +141,7 @@
       },
       "attackCooldownMax": 0,
       "initialActionDelay": 0,
-      "speed": 1
+      "speed": 2
     },
     {
       "id": "shellguard",
@@ -166,7 +166,7 @@
       },
       "attackCooldownMax": 0,
       "initialActionDelay": 0,
-      "speed": 1
+      "speed": 2
     },
     {
       "id": "wisp",
@@ -211,7 +211,7 @@
       },
       "attackCooldownMax": 0,
       "initialActionDelay": 0,
-      "speed": 1
+      "speed": 2
     },
     {
       "id": "redneedle-salamander",
@@ -309,7 +309,7 @@
         "regen"
       ],
       "regen": 1,
-      "range": 1,
+      "range": 3,
       "hp": 40,
       "attack": 6,
       "elite": true,
@@ -387,7 +387,7 @@
           "red-shield"
         ]
       },
-      "speed": 1
+      "speed": 2
     },
     {
       "id": "thorn-shell-flower",
@@ -399,7 +399,7 @@
         "regen"
       ],
       "regen": 1,
-      "range": 2,
+      "range": 3,
       "hp": 28,
       "attack": 4,
       "experience": 4,
@@ -435,7 +435,7 @@
         "chance": 0.25,
         "itemId": "venom-sac"
       },
-      "speed": 1
+      "speed": 2
     },
     {
       "id": "whirlpool-eye-sac",
@@ -466,7 +466,7 @@
       "attribute": "scorch",
       "explosionRadius": 2,
       "deathExplosionDamage": 5,
-      "range": 2,
+      "range": 3,
       "hp": 34,
       "attack": 8,
       "experience": 5,
@@ -537,7 +537,7 @@
       "summonEvery": 3,
       "summonMinionId": "tide-shadow",
       "summonLimit": 2,
-      "range": 2,
+      "range": 3,
       "hp": 40,
       "attack": 4,
       "experience": 6,
@@ -582,7 +582,7 @@
       ],
       "deathSpawnMinionId": "tide-shadow",
       "deathSpawnCount": 2,
-      "range": 1,
+      "range": 3,
       "hp": 26,
       "attack": 5,
       "experience": 5,
@@ -616,7 +616,7 @@
       },
       "attackCooldownMax": 0,
       "initialActionDelay": 0,
-      "speed": 1
+      "speed": 2
     },
     {
       "id": "bomb-wisp",
@@ -679,7 +679,7 @@
       "attackCooldownMax": 0,
       "initialActionDelay": 0,
       "relicDropChance": 0,
-      "speed": 1
+      "speed": 2
     },
     {
       "id": "leech-larva",
@@ -694,7 +694,7 @@
       "attackCooldownMax": 0,
       "initialActionDelay": 0,
       "relicDropChance": 0,
-      "speed": 1
+      "speed": 2
     },
     {
       "id": "tide-shadow",
@@ -709,7 +709,7 @@
       "attackCooldownMax": 0,
       "initialActionDelay": 0,
       "relicDropChance": 0,
-      "speed": 1
+      "speed": 2
     }
   ],
   "boss": {
@@ -719,7 +719,7 @@
     "attribute": "wither",
     "hp": 101,
     "attack": 9,
-    "range": 2,
+    "range": 4,
     "attackCooldownMax": 0,
     "initialActionDelay": 1,
     "speed": 0
@@ -1171,7 +1171,7 @@
         ]
       ],
       "minFloor": 3,
-      "description": "在当前最大射程有效命中后，返还1体力。"
+      "description": "在当前最大射程有效命中后，返还1体力；每个玩家回合最多触发1次，同名武器共享次数。"
     },
     {
       "id": "coin-blade",
@@ -1251,7 +1251,8 @@
           1
         ]
       ],
-      "energyCost": 0
+      "energyCost": 0,
+      "supplyWeight": 2
     },
     {
       "id": "food-5",
@@ -1264,7 +1265,8 @@
           1
         ]
       ],
-      "energyCost": 0
+      "energyCost": 0,
+      "supplyWeight": 2
     },
     {
       "id": "food-7",
@@ -1277,7 +1279,8 @@
           1
         ]
       ],
-      "energyCost": 0
+      "energyCost": 0,
+      "supplyWeight": 2
     },
     {
       "id": "food-9",
@@ -1290,7 +1293,8 @@
           1
         ]
       ],
-      "energyCost": 0
+      "energyCost": 0,
+      "supplyWeight": 2
     },
     {
       "id": "poison",

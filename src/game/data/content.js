@@ -193,6 +193,7 @@ export function synchronizeEnemyBalance(enemy) {
   const definition = enemy.enemyId === BOSS.id ? BOSS : getEnemyDefinition(enemy.enemyId)
   if (!definition) return
   enemy.speed = Math.max(0, Math.floor(Number(definition.speed) || 0))
+  enemy.range = definition.range
   if (definition.behavior === 'ambush') enemy.behavior = 'ambush'
   else delete enemy.behavior
   enemy.traits = (enemy.traits || []).filter(trait => trait !== 'swift')

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { createChapterDungeon, DUNGEON_CONFIG, Dungeon, validateDungeonLayout } from '../src/game/model/dungeon.js'
+import { createChapterDungeon, DUNGEON_CONFIG, Dungeon, validateDungeonLayout, GROUND_FOOD_LIMITS } from '../src/game/model/dungeon.js'
 import { GameRun } from '../src/game/run.js'
 import { chapterEncounter, getEnemyDefinition } from '../src/game/data/enemies.js'
 import { chebyshev } from '../src/game/core/geometry.js'
@@ -73,7 +73,10 @@ for (let seed = 1; seed <= 100; seed++) {
     assert.equal(entities.filter((entity) => entity.kind === 'item' && entity.item?.type === 'weapon').length, Math.round(cards * 0.25))
     if (room.floor === 1) assert(!entities.some(entity => entity.item?.id === 'demon-seeker'))
     if (room.floor === 2) earlyUnlockedWeapons += entities.filter(entity => entity.item?.id === 'demon-seeker').length
-    assert(entities.length / cards >= 0.9, `${room.id} has too many empty cards`)
+    const foods = entities.filter(entity => entity.item?.type === 'energy')
+    assert(foods.length <= GROUND_FOOD_LIMITS[room.role], `${room.id} exceeds its food budget`)
+    assert(foods.every(entity => entity.item.energy >= 3 && entity.item.energy <= 6))
+    assert(entities.length <= Math.ceil(cards * 0.95))
     assert(!entities.some((entity) => entity.kind === 'item' && entity.item?.type === 'defense'), `${room.id} generated a defense on the ground`)
   }
   const restored = Dungeon.hydrate(dungeon.serialize())

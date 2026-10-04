@@ -98,7 +98,7 @@
           @touchcancel.stop.prevent="onStashTouchCancel($event)" @contextmenu.prevent
         >
           <span class="bag-shape" :style="entry.shapeStyle">
-            <ItemValueBadge :item="entry.item" :gold="state.player.gold" />
+            <ItemValueBadge :item="{ ...entry.item }" :gold="state.player.gold" />
             <InventorySprite
               v-if="entry.spriteSources" :sources="entry.spriteSources" :item-index="-1"
               :style="entry.spriteStyle" @contextmenu.prevent
@@ -114,7 +114,7 @@
         :style="draggedItemView.previewStyle"
       >
         <span class="bag-shape" :style="draggedItemView.shapeStyle">
-          <ItemValueBadge :item="draggedItemView.item" :gold="state.player.gold" />
+          <ItemValueBadge :item="{ ...draggedItemView.item }" :gold="state.player.gold" />
           <InventorySprite
             v-if="draggedItemView.spriteSources" :sources="draggedItemView.spriteSources" :item-index="-1"
             :style="draggedItemView.spriteStyle" @contextmenu.prevent

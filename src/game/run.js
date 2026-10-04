@@ -442,6 +442,7 @@ export class GameRun {
     const active = this._activatedEnemies().length > 0 && !this.gameOver
     if (active && !this.battle.active) {
       this.battle = { active: true, stage: 'player', round: 1 }
+      this.itemRules.startPlayerTurn()
       this.player.energy = this.player.maxEnergy
       this._log('进入战斗，开始玩家回合，体力已恢复。')
       this.bus.emit('battle:started', { round: 1 })
@@ -461,6 +462,7 @@ export class GameRun {
     if (!this._synchronizeBattle()) return
     this.battle.stage = 'player'
     this.battle.round += 1
+    this.itemRules.startPlayerTurn()
     this.player.energy = this.player.maxEnergy
     this.itemRules.action('turn-start')
     this.pendingRoundEnd = false
@@ -2402,7 +2404,7 @@ export class GameRun {
       this.inventoryStash = Array.isArray(data.inventoryStash) ? data.inventoryStash.filter((item) => item?.uid) : []
       const refreshItemCopy = item => {
         if (['food-3', 'food-5', 'food-7', 'food-9', 'teleport'].includes(item?.id)) item.name = getItemDefinition(item.id).name
-        if (['r-traveler', 'r-step-boots', 'r-turn-shield'].includes(item?.id)) item.description = getItemDefinition(item.id).description
+        if (['r-traveler', 'r-step-boots', 'r-turn-shield', 'triad-tide'].includes(item?.id)) item.description = getItemDefinition(item.id).description
       }
       for (const item of [...this.backpack.items, ...this.inventoryStash]) refreshItemCopy(item)
       synchronizeEntityIds([...this.backpack.items, ...this.inventoryStash].map(item => item.uid))

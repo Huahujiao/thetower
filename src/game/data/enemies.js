@@ -13,7 +13,7 @@ export const CHAPTER_ENCOUNTERS = Object.freeze([
     counts: { entry: 8, supply: 8, elite: 9, boss: 7 },
   },
   {
-    standard: ['rootrot-bud', 'beetle-guard', 'rot-walker', 'patrol-hound', 'claw-beast', 'nest-spider', 'wisp'],
+    standard: ['rot-walker', 'patrol-hound', 'claw-beast', 'nest-spider', 'wisp'],
     challenge: ['shellguard', 'redneedle-salamander', 'rot-sac-toad'],
     counts: { entry: 11, supply: 10, elite: 12, boss: 9 },
   },
