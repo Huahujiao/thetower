@@ -13,7 +13,7 @@ import { readFile } from 'node:fs/promises'
 
 function place(run, type, pos = { c: 2, r: 3 }) {
   const totem = { id: nextEntityId('totem'), kind: 'totem', totemId: type, name: TOTEM_BADGES.find(item => item.totemId === type).name,
-    pos: { ...pos }, bornAt: run.globalTurn, expiresAt: run.globalTurn + 10, nextPulse: run.globalTurn + 2 }
+    pos: { ...pos }, bornAt: run.globalTurn, lifetime: 'battle', nextPulse: run.globalTurn + 2 }
   run.currentRoom.addEntity(totem); run.player.maxEnergy--; run.player.energy = Math.min(run.player.energy, run.player.maxEnergy)
   return totem
 }
@@ -23,7 +23,7 @@ function summon(run, badge, pos = { c: 2, r: 3 }) {
 }
 
 assert.equal(TOTEM_BADGES.length, 7)
-for (const badge of TOTEM_BADGES) {
+for (const badge of TOTEM_BADGES.filter(badge => !badge.disabled)) {
   const item = makeItemById(badge.id)
   assert(isTotemBadge(item)); assert.equal(item.type, 'relic'); assert.equal(item.totemId, badge.totemId)
   assert.deepEqual(item.shape, [[1]])
@@ -63,14 +63,15 @@ for (const badge of TOTEM_BADGES) {
   assert(run.totems.remove(totem)); assert.equal(run.player.maxEnergy, 5); assert.equal(run.player.energy, 2)
   assert.equal(run.totems.remove(totem), false); assert.equal(run.player.maxEnergy, 5)
 }
-// Ten full subsequent global turns, including inventory/action turns, expire the entity exactly once.
+// A long battle does not expire a totem; ending the battle refunds only capacity.
 {
-  const run = fixture(), badge = add(run, 'r-totem-ward'); enemy(run); const totem = summon(run, badge)
+  const run = fixture(), badge = add(run, 'r-totem-ward'), target = enemy(run); const totem = summon(run, badge)
   run.player.energy = 1
-  for (let index = 0; index < 9; index++) round(run)
-  assert(run.currentRoom.entity(totem.id)); assert.equal(totem.expiresAt - run.globalTurn, 1)
-  round(run)
-  assert.equal(run.currentRoom.entity(totem.id), null); assert.equal(run.player.maxEnergy, 6); assert.equal(run.player.energy, 6)
+  for (let index = 0; index < 12; index++) round(run)
+  assert(run.currentRoom.entity(totem.id)); assert.equal(totem.lifetime, 'battle')
+  run.player.energy = 2
+  run._damageEnemy(target, 999); run._endTurn()
+  assert.equal(run.currentRoom.entity(totem.id), null); assert.equal(run.player.maxEnergy, 6); assert.equal(run.player.energy, 2)
   assert(run.totems.available(badge))
 }
 // Leaving clears every old-room entity and only refunds capacity; stashing a badge does not dispel it.
@@ -107,21 +108,16 @@ for (const badge of TOTEM_BADGES) {
   assert.equal(attacker.attack, 5); assert.equal(second.attack, 5)
   run.player.pos = { c: 5, r: 3 }; run._damagePlayer(5, { source: 'enemy:attack' }); assert.equal(run.player.hp, 73)
 }
-// Breath adds recovery on movement, including the final step of a paired attack; forecast agrees.
+// The retired breath badge cannot be summoned or offered; movement has no aura refund.
 {
-  const run = fixture(), weapon = add(run, 'bone-knife'); place(run, 'breath', { c: 2, r: 2 })
-  run.player.energy = 2; run._walk([{ c: 3, r: 2 }]); assert.equal(run.player.energy, 2)
-  run.player.pos = { c: 3, r: 3 }
-  const target = enemy(run, { pos: { c: 5, r: 3 } })
+  const run = fixture(), badge = makeItemById('r-totem-breath')
+  assert(!isTotemBadge(badge)); assert(!run.totems.available(badge))
+  assert(!catalogContent('relics').includes(badge.name))
+  assert(!buildRelicChoices(null, { count: 100 }).some(choice => choice.id === badge.id))
+  const target = enemy(run)
   run._synchronizeBattle(); run.player.energy = 2
-  weapon.energyCost = 2; select(run, weapon)
-  const route = run._weaponRoute(weapon, target)
-  // Outside the aura, a movement costs one. Inside it, the explicit bonus refunds one.
-  assert.equal(run.energyAfterMovement(route.path.length, route.path), 1)
-  run.currentRoom.moveEntity(run.totems.active('breath').id, { c: 4, r: 2 })
-  assert.equal(run.energyAfterMovement(route.path.length, route.path), 2)
-  assert(run._attack(target)); run.bus.emit('animate:attack-complete', { actor: 'player' })
-  assert.equal(run.player.energy, 0); assert.equal(target.hp, 98)
+  assert.equal(run.energyAfterMovement(1), 1)
+  run._walk([{ c: 3, r: 2 }]); assert.equal(run.player.energy, 1); assert.equal(target.hp, 100)
 }
 // Spirit flips one actual neighboring card and honors hidden trap effects and flip rewards.
 {
@@ -155,7 +151,7 @@ for (const badge of TOTEM_BADGES) {
   run.currentRoom.tile(hidden.pos).revealed = false
   const old = run.applyStatus(already, 'enemy-poison', { layers: 5, turns: 12, damage: 7 })
   summon(run, badge)
-  assert(getStatus(hidden, 'enemy-poison')); assert.equal(getStatus(hidden, 'enemy-poison').showTurns, false)
+  assert(getStatus(hidden, 'enemy-poison')); assert.equal(getStatus(hidden, 'enemy-poison').showTurns, true)
   assert.equal(getStatus(already, 'enemy-poison'), old); assert.equal(old.damage, 7)
   const newcomer = enemy(run, { pos: { c: 4, r: 2 } }); assert(run._moveEnemy(newcomer, { c: 3, r: 2 }))
   assert(getStatus(newcomer, 'enemy-poison'))
@@ -234,11 +230,12 @@ for (const badge of TOTEM_BADGES) {
   assert.deepEqual(target.pos, { c: 3, r: 3 }); assert(run.currentRoom.isRevealed(target.pos))
   assert.equal(run.player.maxEnergy, 6); assert.equal(run.player.energy, 5)
 }
-// Poison on an attack against a totem is still triggered first; a lethal last layer cancels the hit.
+// Attacking a totem does not trigger an extra poison tick.
 {
   const run = fixture(); const totem = place(run, 'ward'), target = enemy(run, { hp: 1, attack: 5 })
   run.applyStatus(target, 'enemy-poison', { layers: 1, damage: 1 })
-  assert.equal(run.totems.attack(target, totem), false); assert(run.currentRoom.entity(totem.id)); assert.equal(run.player.maxEnergy, 5)
+  assert.equal(run.totems.attack(target, totem), true); assert.equal(target.hp, 1)
+  assert.equal(run.currentRoom.entity(totem.id), null); assert.equal(run.player.maxEnergy, 6)
 }
 // Saved entities, shared cooldown, reduced capacity and root state survive; malformed/old saves restart.
 {
@@ -282,12 +279,12 @@ for (const badge of TOTEM_BADGES) {
 }
 // Placeholder rendering shows decoded glyphs, labels and remaining duration. UI accepts relic summoning.
 {
-  const card = totemFaceData({ totemId: 'drum', name: '战鼓图腾', expiresAt: 10 }, 3)
-  assert.equal(card.remaining, 7); assert.equal(card.glyph, '鼓')
+  const card = totemFaceData({ totemId: 'drum', name: '战鼓图腾', lifetime: 'battle' })
+  assert.equal(card.lifetimeLabel, '战斗结束消失'); assert.equal(card.glyph, '鼓')
   const labels = [], context = new Proxy({ fillText: text => labels.push(text) }, { get: (target, key) => target[key] || (() => {}) })
-  drawTotemToken(context, card); assert(labels.includes('战鼓图腾')); assert(labels.includes('7回合'))
+  drawTotemToken(context, card); assert(labels.includes('战鼓图腾')); assert(labels.includes('战斗结束消失'))
   const hud = await readFile(new URL('../src/ui/VueHud.vue', import.meta.url), 'utf8')
   assert(hud.includes(':disabled="!selectedUseAvailable"')); assert(hud.includes('isTotemBadge(item)'))
 }
 
-console.log('totems-check passed: seven badges, summoning, shared cooldown, capacity, lifetimes, auras, stun, obstacles, soul swaps and saves')
+console.log('totems-check passed: six active badges, battle lifetime, shared cooldown, capacity, auras, stun, obstacles, soul swaps and saves')

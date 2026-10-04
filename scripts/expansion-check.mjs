@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { fixture, add, enemy, attack, select } from './item-test-helpers.mjs'
+import { fixture, add, enemy, attack, select, round } from './item-test-helpers.mjs'
 import { GameRun, SAVE_VERSION } from '../src/game/run.js'
 import { ALL_ITEM_DEFS, makeItemById, randomConsumableOfTier, randomNeutralItem } from '../src/game/data/content.js'
 import { EXPANSION_RELICS, EXPANSION_DEFENSES, EXPANSION_WEAPONS } from '../src/game/data/expansion-items.js'
@@ -96,19 +96,19 @@ for (let index = 0; index < 100; index++) {
   add(run, 'r-miasma-sac', 3, 0); const target = enemy(run)
   attack(run, weapon, target)
   const poison = getStatus(target, 'enemy-poison')
-  assert.equal(poison.layers, 100); assert.equal(poison.turns, 100)
-  assert.equal(poison.showLayers, false); assert.equal(poison.showTurns, false)
+  assert.equal(poison.layers, 100); assert.equal(poison.turns, 3)
+  assert.equal(poison.showLayers, false); assert.equal(poison.showTurns, true)
   const before = target.hp
   attack(run, weapon, target)
   assert.equal(target.hp, before - weapon.attack - 3); assert.equal(getStatus(target, 'enemy-poison'), null)
 }
-// Last poison layer still halves the attack; poison does not mutate base attack.
+// The last poison round still halves the attack; attacks never tick poison.
 {
   const run = fixture(); add(run, 'r-bone-incense')
-  const target = enemy(run, { attack: 7 })
+  const target = enemy(run, { attack: 7, actionDelay: 0 })
   run.player.armor = 0; run.player.hp = 40
-  run.applyStatus(target, 'enemy-poison', { damage: 1, layers: 1 })
-  run._enemyAttack(target); assert.equal(run.player.hp, 37); assert.equal(target.attack, 7)
+  run.applyStatus(target, 'enemy-poison', { damage: 1, turns: 1 })
+  round(run); assert.equal(run.player.hp, 37); assert.equal(target.attack, 7)
   run._enemyAttack(target); assert.equal(run.player.hp, 30)
 }
 // Movement, forced movement and lethal last-layer poison spread independent remaining counters.
@@ -124,11 +124,11 @@ for (const trigger of ['move', 'knockback', 'death', 'poison-death']) {
   if (trigger === 'move') assert(run._moveEnemy(source, { c: 5, r: 3 }))
   if (trigger === 'knockback') assert(run._knockbackEnemy(source).moved)
   if (trigger === 'death') run._damageEnemy(source, 100)
-  if (trigger === 'poison-death') assert(run._enemyAttack(source).cancelled)
+  if (trigger === 'poison-death') run._tickEnemyPoison(run._statusClockSnapshot())
   const spread = getStatus(target, 'enemy-poison')
   assert(spread, trigger); assert.equal(spread.turns, 17); assert.equal(spread.layers, trigger === 'poison-death' ? 1 : 4)
   assert.equal(getStatus(distant, 'enemy-poison'), null)
-  assert.equal(getStatus(excluded, 'enemy-poison').layers, 8)
+  assert.equal(getStatus(excluded, 'enemy-poison').layers, trigger === 'poison-death' ? 7 : 8)
   spread.damage.value = 9; assert.equal(source.statuses['enemy-poison']?.damage.value || 1, 1)
   consumeStatus(target, 'enemy-poison'); assert.equal(getStatus(source, 'enemy-poison')?.layers || 0, trigger === 'poison-death' ? 0 : 4)
 }

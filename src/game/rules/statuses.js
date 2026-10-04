@@ -1,9 +1,10 @@
 // Status counters are independent. Omitted counters are finite but hidden.
 export const DEFAULT_STATUS_LAYERS = 100
 export const DEFAULT_STATUS_TURNS = 100
+export const POISON_TURNS = 3
 export const STATUS_DEFS = Object.freeze({
-  'player-poison': { name: '\u4e2d\u6bd2', owner: 'player', trigger: 'turn', turns: 10, damage: 2, ignoreArmor: true },
-  'enemy-poison': { name: '\u4e2d\u6bd2', owner: 'enemy', trigger: 'before-attack', damage: 1 },
+  'player-poison': { name: '\u4e2d\u6bd2', owner: 'player', trigger: 'turn', turns: POISON_TURNS, damage: 2, ignoreArmor: true },
+  'enemy-poison': { name: '\u4e2d\u6bd2', owner: 'enemy', trigger: 'turn', turns: POISON_TURNS, damage: 1 },
   burning: { name: '\u71c3\u70e7', owner: 'player', trigger: 'turn', damage: 1 },
   dodge: { name: '\u95ea\u907f', trigger: 'before-hit', layers: 1 },
   rooted: { name: '缠绕', owner: 'enemy', trigger: 'before-action', turns: 1, blocksAttack: true },
@@ -123,7 +124,7 @@ export function bindStatusAccessors(actor) {
   normalizeStatuses(actor)
   const enemy = actor.kind === 'enemy'
   const counters = enemy
-    ? [['itemPoisonTurns', 'enemy-poison', 'layers'], ['itemPoisonDamage', 'enemy-poison', 'damage'], ['nextAttackReduction', 'attack-reduction', 'amount']]
+    ? [['itemPoisonTurns', 'enemy-poison', 'turns'], ['itemPoisonDamage', 'enemy-poison', 'damage'], ['nextAttackReduction', 'attack-reduction', 'amount']]
     : [['poisonedTurns', 'player-poison', 'turns'], ['poisonDamage', 'player-poison', 'damage'], ['burningTurns', 'burning', 'turns'], ['burningDamage', 'burning', 'damage']]
   for (const [field, id, key] of counters) {
     const descriptor = Object.getOwnPropertyDescriptor(actor, field)

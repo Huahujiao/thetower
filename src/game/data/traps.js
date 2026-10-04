@@ -1,4 +1,5 @@
 import { nextEntityId } from './content.js'
+import { POISON_TURNS } from '../rules/statuses.js'
 
 export const TRAP_DEFS = Object.freeze([
   {
@@ -27,9 +28,9 @@ export const TRAP_DEFS = Object.freeze([
     id: 'poison-fog',
     name: '\u6bd2\u96fe\u9677\u9631',
     effect: 'poison',
-    poisonTurns: 10,
+    poisonTurns: POISON_TURNS,
     poisonDamage: 2,
-    description: '\u4e2d\u6bd2 10 \u4e2a\u5168\u5c40\u56de\u5408\uff0c\u4ece\u7ffb\u5f00\u540e\u7684\u4e0b\u4e00\u4e2a\u5168\u5c40\u56de\u5408\u5f00\u59cb\uff0c\u6bcf\u56de\u5408\u65e0\u89c6\u62a4\u7532\u6263 2 \u70b9\u751f\u547d\u3002',
+    description: '中毒3回合，从下一个敌人阶段开始，每阶段无视护甲扣2点生命。探索时不计时。',
   },
 ])
 

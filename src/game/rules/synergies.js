@@ -34,7 +34,7 @@ const HINTS = Object.freeze({
   'gold-pick-armor': ['gold', 'armor'], 'coin-armor': ['gold', 'armor'],
   'r-furnace': ['consumables'], 'r-loot-pouch': ['consumables'], 'r-chain-drink': ['consumables'],
   'bath-robe': ['consumables', 'armor'], 'r-launcher': ['consumables'],
-  'r-totem-drum': ['totem'], 'r-totem-ward': ['totem'], 'r-totem-breath': ['totem', 'movement'],
+  'r-totem-drum': ['totem'], 'r-totem-ward': ['totem'],
   'r-totem-spirit': ['totem', 'reveal'], 'r-totem-bind': ['totem', 'collision'],
   'r-totem-gas': ['totem', 'poison'], 'r-totem-soul': ['totem'],
 })

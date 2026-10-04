@@ -118,17 +118,17 @@ function aim(run, item) {
   assert(run.clickTile(3, 5))
   assert.equal(run.globalTurn, 0)
   assert.equal(run.attackCount, 0)
-  assert.equal(target.hp, 100) // Out of range: no poison tick on idle.
-  assert.equal(target.itemPoisonTurns, 100)
+  assert.equal(target.hp, 100) // Player actions do not tick poison.
+  assert.equal(target.itemPoisonTurns, 3)
   assert(enemyOverheadHints(target).some(hint => hint.label === '\u4e2d\u6bd2'))
-  round(run); round(run); assert.equal(target.hp, 100)
+  round(run); round(run); assert.equal(target.hp, 90)
   run.player.pos = { c: 3, r: 4 }
-  round(run); assert.equal(target.hp, 95)
-  assert.equal(target.itemPoisonTurns, 99)
+  round(run); assert.equal(target.hp, 85)
+  assert.equal(target.itemPoisonTurns, 0)
   round(run); round(run); round(run)
-  assert.equal(target.hp, 80)
-  assert.equal(target.itemPoisonTurns, 96)
-  assert(enemyOverheadHints(target).some(hint => hint.label === '\u4e2d\u6bd2'))
+  assert.equal(target.hp, 85)
+  assert.equal(target.itemPoisonTurns, 0)
+  assert(!enemyOverheadHints(target).some(hint => hint.label === '\u4e2d\u6bd2'))
 }
 {
   const run = fixture(), poison = add(run, 'poison')

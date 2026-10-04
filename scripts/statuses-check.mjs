@@ -64,7 +64,7 @@ import { playerStatusEntries } from '../src/ui/status-presentation.js'
   assert.equal(run.itemRules.state.buffs.test, undefined)
 }
 
-// Poison IDs cannot be applied to the wrong side and have different triggers.
+// Both poison types tick once per enemy phase, even during action delay.
 {
   const run = fixture(), target = enemy(run, { attack: 2, actionDelay: 2 })
   assert.equal(run.applyStatus(run.player, 'enemy-poison'), null)
@@ -72,16 +72,16 @@ import { playerStatusEntries } from '../src/ui/status-presentation.js'
   run.player.armor = 10; run.player.hp = 40
   run._applyPoison()
   const playerPoison = getStatus(run.player, 'player-poison')
-  assert.equal(playerPoison.layers, 100); assert.equal(playerPoison.turns, 10)
+  assert.equal(playerPoison.layers, 100); assert.equal(playerPoison.turns, 3)
   assert.equal(playerPoison.showLayers, false)
   run.applyStatus(target, 'enemy-poison', { layers: 2, damage: 5 })
   round(run)
   assert.equal(run.player.hp, 38); assert.equal(run.player.armor, 10)
-  assert.equal(playerPoison.layers, 99); assert.equal(playerPoison.turns, 9)
-  assert.equal(target.hp, 100); assert.equal(getStatus(target, 'enemy-poison').layers, 2)
-  assert.equal(getStatus(target, 'enemy-poison').turns, 99)
-  round(run); assert.equal(target.hp, 100)
-  round(run); assert.equal(target.hp, 95)
+  assert.equal(playerPoison.layers, 99); assert.equal(playerPoison.turns, 2)
+  assert.equal(target.hp, 95); assert.equal(getStatus(target, 'enemy-poison').layers, 1)
+  assert.equal(getStatus(target, 'enemy-poison').turns, 2)
+  round(run); assert.equal(target.hp, 90)
+  round(run); assert.equal(target.hp, 90)
   round(run); assert.equal(target.hp, 90)
   assert.equal(getStatus(target, 'enemy-poison'), null)
   run.removeStatus(run.player, 'player-poison')
@@ -257,9 +257,92 @@ import { playerStatusEntries } from '../src/ui/status-presentation.js'
     assert.equal(getStatus(loaded.currentRoom.entity(target.id), 'enemy-poison').layers, 2)
     assert.equal(loaded.itemRules.state.buffs.test.layers, 2)
     const entries = playerStatusEntries(loaded)
-    assert.equal(entries.find(entry => entry.id === 'player-poison').badge, '10')
+    assert.equal(entries.find(entry => entry.id === 'player-poison').badge, '3')
     assert(!entries.find(entry => entry.id === 'player-poison').description.includes('100'))
     assert(entries.find(entry => entry.id === 'counter').description.includes('\u5269\u4f593\u5c42'))
   } finally { globalThis.localStorage = previous }
 }
-console.log('statuses-check passed: independent counters, clocks, separate poison, dodge, staged counter damage, reactions, UI and saves')
+// Roots and distance do not suppress poison, and ordinary attacks cannot double-tick it.
+{
+  const run = fixture(), target = enemy(run, { pos: { c: 0, r: 0 }, attack: 2, actionDelay: 0 })
+  run.applyStatus(target, 'enemy-poison', { damage: 5 })
+  run.applyStatus(target, 'rooted')
+  round(run)
+  assert.equal(target.hp, 95)
+  assert.equal(target.itemPoisonTurns, 2)
+  run._enemyAttack(target); run._enemyAttack(target)
+  assert.equal(target.hp, 95)
+  assert.equal(target.itemPoisonTurns, 2)
+  round(run); round(run)
+  assert.equal(target.hp, 85)
+  assert.equal(getStatus(target, 'enemy-poison'), null)
+}
+
+// Poison spread during the enemy phase waits until the next phase, regardless of order.
+for (const sourceFirst of [true, false]) {
+  const run = fixture(); add(run, 'r-plague-bell')
+  let source, target
+  if (sourceFirst) source = enemy(run, { hp: 1 })
+  target = enemy(run, { pos: { c: 5, r: 3 } })
+  if (!sourceFirst) source = enemy(run, { hp: 1 })
+  run.applyStatus(source, 'enemy-poison', { damage: 1 })
+  round(run)
+  assert.equal(run.currentRoom.entity(source.id), null)
+  assert.equal(target.hp, 100)
+  assert.equal(target.itemPoisonTurns, 3)
+  round(run)
+  assert.equal(target.hp, 99)
+  assert.equal(target.itemPoisonTurns, 2)
+}
+
+// Death poison acquired during enemy-phase damage starts next phase at full duration.
+{
+  const run = fixture()
+  const source = enemy(run, { hp: 1, deathStatus: 'poison', deathStatusTurns: 3, deathStatusDamage: 2 })
+  enemy(run, { pos: { c: 0, r: 0 } })
+  run.applyStatus(source, 'enemy-poison')
+  const hp = run.player.hp
+  round(run)
+  assert.equal(run.player.hp, hp)
+  assert.equal(run.player.poisonedTurns, 3)
+  round(run)
+  assert.equal(run.player.hp, hp - 2)
+  assert.equal(run.player.poisonedTurns, 2)
+}
+
+// Downing during the poison phase cannot spend a revival turn in that same phase.
+{
+  const run = fixture(), target = enemy(run, { hp: 1, deathRule: 'revive' })
+  run.applyStatus(target, 'enemy-poison')
+  round(run)
+  assert.equal(target.downed, true)
+  assert.equal(target.reviveTurns, 2)
+  round(run)
+  assert.equal(target.downed, true)
+  assert.equal(target.reviveTurns, 1)
+  round(run)
+  assert.equal(target.downed, false)
+}
+
+// Pets ending the battle skip both damage and duration consumption.
+{
+  const run = fixture(); enemy(run, { hp: 1 })
+  add(run, 'venom-toad'); add(run, 'food-3')
+  run._applyPoison()
+  const hp = run.player.hp
+  round(run)
+  assert.equal(run.battle.active, false)
+  assert.equal(run.player.hp, hp)
+  assert.equal(run.player.poisonedTurns, 3)
+}
+
+// A toad reapplying poison every pet phase must not defer its damage forever.
+{
+  const run = fixture(), target = enemy(run)
+  const pet = add(run, 'venom-toad'); add(run, 'food-3')
+  round(run); round(run)
+  assert.equal(target.hp, 100 - 2 * (pet.attack + 1))
+  assert.equal(target.itemPoisonTurns, 2)
+}
+
+console.log('statuses-check passed: counters, poison phase timing, roots, spread order, revival, pets, reactions, UI and saves')

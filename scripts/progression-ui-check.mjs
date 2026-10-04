@@ -11,12 +11,12 @@ try {
   const run = fixture(), weapon = add(run, 'rust-sword')
   run.player.experience = run.player.experienceToNext
   run.phase = 'level-up'
-  run.levelUp = { choices: ['relic', 'weapon-upgrade', 'item-compression'] }
+  run.levelUp = { choices: ['relic', 'weapon-upgrade', 'max-health'] }
   const render = () => renderToString(createSSRApp(Hud, { run }))
   const upgradeVisible = markup => markup.match(/class="([^"]*relic-choice[^"]*level-up[^"]*)"/)[1].split(/\s+/).includes('show')
   let html = await render()
   assert.equal((html.match(/data-level-up-choice=/g) || []).length, 3)
-  assert.match(html, /disabled[^>]*data-level-up-choice="item-compression"|data-level-up-choice="item-compression"[^>]*disabled/)
+  assert(!html.includes('item-compression')); assert(!html.includes('物品压缩'))
   assert(html.includes('\u9009\u62e9\u5347\u7ea7\u5956\u52b1'))
   assert(!html.includes('\u5929\u8d4b'))
   assert(upgradeVisible(html))
@@ -48,5 +48,5 @@ try {
   const rewardButtons = html.match(/<button\b[^>]*data-room-reward="[01]"[^>]*>/g) || []
   assert.equal(rewardButtons.length, 2)
   for (const button of rewardButtons) assert(!/\bdisabled\b/.test(button), 'full backpack must not disable room item or relic rewards')
-  console.log('progression-ui-check passed: staging priority, three cards, disabled placeholder, nested relic and weapon screens, decoded Chinese')
+  console.log('progression-ui-check passed: staging priority, three cards, no compression, nested relic and weapon screens, decoded Chinese')
 } finally { await server.close() }

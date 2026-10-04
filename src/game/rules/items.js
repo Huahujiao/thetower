@@ -1,4 +1,5 @@
 import { attributeModifier } from '../data/attributes.js'
+import { isSummonedEnemy } from '../data/enemies.js'
 import { getItemDefinition } from '../data/content.js'
 import { combatDistance, neighbors8, chebyshev } from '../core/geometry.js'
 import { adjacentItems } from './backpack-geometry.js'
@@ -129,7 +130,6 @@ export class ItemRules {
       if (this.run.battle.active && this.has('r-traveler')) this.run._recoverEnergy(1)
     }
     this.state.steps = (this.state.steps || 0) + 1
-    if (this.run.battle.active) this.run._recoverEnergy(this.run.totems.movementBonus())
     this.state.travel = (this.state.travel || 0) + 1
     this.state.lastAction = 'movement'
   }
@@ -223,7 +223,7 @@ export class ItemRules {
     if (weapon.id === 'wall-sword') run.player.armor = Math.max(0, run.player.armor - 2)
     if (this.has('r-guard-return') && context.armorBefore > run.player.armor) this.armor(1)
     if (!purgePoison && !hit.evaded && !enemy.downed && run.currentRoom.entity(enemy.id) && this.adjacent(weapon, 'venom-sac')) {
-      run.applyStatus(enemy, 'enemy-poison', { layers: 5, damage: 1 }, { refresh: true })
+      run.applyStatus(enemy, 'enemy-poison', { damage: 1 }, { refresh: true })
     }
     if (hit.damage > 0 && weapon.id === 'triad-tide' && context.distance === this.range(weapon)) run._recoverEnergy(1)
     if (hit.damage > 0 && this.adjacent(weapon, 'range-disc') && context.distance === this.range(weapon)) {
@@ -241,7 +241,7 @@ export class ItemRules {
     if (hit.defeated) {
       if (weapon.id === 'bone-knife') run._recoverEnergy(1)
       if (weapon.id === 'return-axe') this.buff('return-axe', { other: weapon.uid, flat: 2, discount: 1 })
-      if (weapon.id === 'gold-hook') run.player.gold++
+      if (weapon.id === 'gold-hook' && !isSummonedEnemy(enemy)) run.player.gold++
       if (this.adjacent(weapon, 'spring')) this.buff('spring', { other: weapon.uid, discount: 1 })
       if (weapon.id === 'ember-axe') {
         const targets = run._activeEnemies().filter(e => chebyshev(e.pos, enemy.pos) === 1)

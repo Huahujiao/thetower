@@ -24,9 +24,9 @@ function restore(run, mutate = () => {}) {
   } finally { globalThis.localStorage = previous }
 }
 
-assert.equal(LEVEL_UP_OPTIONS.length, 6)
+assert.equal(LEVEL_UP_OPTIONS.length, 5)
 assert.equal(LEVEL_UP_OPTIONS[0].name, '\u56de\u590d5\u70b9\u751f\u547d')
-assert.equal(LEVEL_UP_OPTIONS[5].name, '\u7269\u54c1\u538b\u7f29')
+assert(!LEVEL_UP_OPTIONS.some(option => option.id === 'item-compression'))
 const seen = new Set()
 for (let index = 0; index <= 100; index++) {
   const choices = buildLevelUpChoices({ random: () => index / 101 })
@@ -34,7 +34,7 @@ for (let index = 0; index <= 100; index++) {
   assert.equal(new Set(choices).size, 3)
   choices.forEach(id => seen.add(id))
 }
-assert.equal(seen.size, 6, 'all six rewards participate in the pool')
+assert.equal(seen.size, 5, 'all five rewards participate in the pool')
 
 // Room rewards overflow without spending turns or granting the choice twice.
 for (const full of [false, true]) {
@@ -116,7 +116,7 @@ for (const full of [false, true]) {
   assert(run.backpack.add(weapon))
   run.unstageInventoryItem(weapon.uid, { notify: false })
   for (const relic of RELIC_DEFS.filter(relic => !relic.disabled)) run.relics.acquire(relic.id)
-  run.levelUp.choices = ['weapon-upgrade', 'relic', 'item-compression']
+  run.levelUp.choices = ['weapon-upgrade', 'relic', 'max-health']
   assert(run.discardInventoryItem(weapon.uid))
   assert(run.levelUp.choices.some(id => run.canChooseLevelUpOption(id)), 'removing the sole upgrade target cannot deadlock')
   assert.equal(run.globalTurn, 0)
@@ -201,12 +201,9 @@ for (const full of [false, true]) {
   run.relics.acquire(active.at(-1).id); run.backToLevelUpChoices()
   assert.equal(run.canChooseLevelUpOption('relic'), false)
   assert.equal(run.chooseLevelUpOption('relic'), false)
-  // This shuffle initially offers relic, weapon, and compression: ensure it cannot deadlock.
+  // Even with no relic or weapon targets, the five-option pool offers a usable reward.
   run.levelUp = null; run.phase = 'explore'
-  const sequence = [.4, .2, 0, .99, .99, 0]
-  const preview = [...sequence]
-  assert.deepEqual(buildLevelUpChoices({ random: () => preview.shift() }), ['relic', 'weapon-upgrade', 'item-compression'])
-  run.random = () => sequence.shift() ?? 0
+  run.random = () => .4
   assert(run._queueLevelUp()); assert.equal(run.levelUp.choices.length, 3)
   assert(run.levelUp.choices.some(id => run.canChooseLevelUpOption(id)))
 }
@@ -242,12 +239,12 @@ for (const recipe of RECIPES) {
   assert.equal(output.reinforcement, undefined, recipe.id)
 }
 
-// Compression is visible but cannot consume an upgrade or mutate an item.
+// Compression is absent and cannot consume an upgrade or mutate an item.
 {
   const run = fixture(), weapon = add(run, 'rust-sword')
   offer(run, 'item-compression')
   const before = JSON.stringify(weapon), level = run.player.level
-  assert(run.levelUpChoices().some(choice => choice.id === 'item-compression'))
+  assert(!run.levelUpChoices().some(choice => choice.id === 'item-compression'))
   assert.equal(run.chooseLevelUpOption('item-compression'), false)
   assert.equal(run.player.level, level); assert.equal(JSON.stringify(weapon), before)
   assert.equal(run.chooseLevelUpOption('not-offered'), false)
@@ -280,4 +277,4 @@ for (const recipe of RECIPES) {
 const hud = readFileSync(new URL('../src/ui/VueHud.vue', import.meta.url), 'utf8')
 assert(!hud.includes('talent'))
 assert(hud.includes('data-level-up-relic')); assert(hud.includes('data-level-up-weapon'))
-console.log('progression-check passed: six rewards, nested selections, instance upgrades, recipes, saves, totems and retired effects')
+console.log('progression-check passed: five rewards, nested selections, instance upgrades, recipes, saves, totems and retired effects')

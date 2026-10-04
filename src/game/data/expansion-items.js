@@ -33,7 +33,7 @@ export const EXPANSION_RELICS = Object.freeze([
   {
     "id": "r-miasma-sac",
     "name": "\u8150\u7634\u56ca",
-    "description": "\u76f8\u90bb\u6b66\u5668\u653b\u51fb\u4f7f\u654c\u4eba\u4e2d\u6bd2\uff1b\u654c\u4eba\u6bcf\u6b21\u653b\u51fb\u65f6\u5931\u53bb1\u751f\u547d\u3002",
+    "description": "相邻武器攻击使敌人中毒3回合；每个敌人阶段开始时失去1生命。",
     "attribute": null
   },
   {

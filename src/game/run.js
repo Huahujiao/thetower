@@ -4,7 +4,7 @@ import { TURN_KINDS, TurnLedger } from './core/turns.js'
 import { commitInventoryDrop, moveInventoryToStash, discardInventoryItem } from './core/inventory-actions.js'
 import { attributeLabel } from './data/attributes.js'
 import { createLootEntity, createMinion, getItemDefinition, makeItemById, makeRelicItem, starterWeapon, synchronizeEnemyBalance, synchronizeEntityIds, weaponTier } from './data/content.js'
-import { applyStatus, bindStatusAccessors, consumeStatus, getStatus, normalizeStatuses, prepareStatusDamage, removeStatus, resolveStatusDamage, statusCounterText, statusSnapshot, tickStatusSnapshot } from './rules/statuses.js'
+import { applyStatus, bindStatusAccessors, consumeStatus, getStatus, normalizeStatuses, POISON_TURNS, prepareStatusDamage, removeStatus, resolveStatusDamage, statusCounterText, statusSnapshot, tickStatusSnapshot } from './rules/statuses.js'
 import { enemyFeatureDetailLabel } from './data/enemy-features.js'
 import { getMerchantDefinition, merchantSellPrice, refreshMerchantSlot, refreshMerchantStock } from './data/merchants.js'
 import { buildRelicChoices, getRelicDefinition, RELIC_DEFS } from './data/relics.js'
@@ -19,7 +19,7 @@ import { ItemRules } from './rules/items.js'
 import { ConsumableRules, consumableEnergyCost, isConsumable } from './rules/consumables.js'
 import { TotemRules } from './rules/totems.js'
 import { PetRules } from './rules/pets.js'
-import { getTotemDefinition, isTotemBadge, TOTEM_DURATION } from './data/totems.js'
+import { getTotemDefinition, isTotemBadge } from './data/totems.js'
 import { TACTICAL_LAYOUT_LABELS } from './model/tactical-layouts.js'
 import { RECIPES } from './data/content.js'
 import { RelicEngine } from './rules/relics.js'
@@ -29,6 +29,8 @@ import { terrainDamageModifiers } from './rules/terrain.js'
 import { suggestedSynergyId } from './rules/synergies.js'
 import { migratePlaytestBalance, PLAYTEST_BALANCE_REVISION } from './data/playtest-balance.js'
 import { migrateFoodPoints, FOOD_POINTS_REVISION } from './data/food-point-migration.js'
+import { migrateBattleContent, BATTLE_CONTENT_REVISION } from './data/battle-content-migration.js'
+import { isSummonedEnemy } from './data/enemies.js'
 import { migrateAttributeItems } from './data/attribute-item-retirement.js'
 import { BASE_ACTION_ENERGY, BIG_ROUND_REVISION, migrateBigRounds } from './data/big-round-migration.js'
 
@@ -72,8 +74,8 @@ function compatibleSave(data) {
   const totems = data.dungeon.rooms.flatMap(room => (Array.isArray(room.entities) ? room.entities : [])
     .filter(entity => entity.kind === 'totem').map(entity => ({ room, entity })))
   if (new Set(totems.map(({ entity }) => entity.totemId)).size !== totems.length ||
-      totems.some(({ room, entity }) => room.id !== data.player.roomId || !getTotemDefinition(entity.totemId) ||
-        !Number.isInteger(entity.bornAt) || !Number.isInteger(entity.expiresAt) || entity.expiresAt !== entity.bornAt + TOTEM_DURATION ||
+      totems.some(({ room, entity }) => room.id !== data.player.roomId || !getTotemDefinition(entity.totemId) || getTotemDefinition(entity.totemId).disabled ||
+        !Number.isInteger(entity.bornAt) || entity.lifetime !== 'battle' || Object.hasOwn(entity, 'expiresAt') ||
         !Number.isInteger(entity.nextPulse) || entity.nextPulse < entity.bornAt || !room.tiles?.[entity.pos?.r]?.[entity.pos?.c]?.revealed) ||
       !Number.isInteger(data.player.baseMaxEnergy ?? ENERGY_MAX) || (data.player.baseMaxEnergy ?? ENERGY_MAX) < ENERGY_MAX ||
       data.player.maxEnergy !== (data.player.baseMaxEnergy ?? ENERGY_MAX) - totems.length || !Number.isInteger(data.player.energy) ||
@@ -419,15 +421,14 @@ export class GameRun {
   get itemRules() { return this._itemRules }
   weaponRange(weapon, position) { return this.itemRules.range(weapon, position) }
   weaponEnergyCost(weapon) { return this.itemRules.cost(weapon) }
-  energyAfterMovement(steps = 0, path = []) {
+  energyAfterMovement(steps = 0) {
     if (!this.battle.active) return this.player.energy
     let energy = this.player.energy
     for (let index = 0; index < steps; index++) {
       // Distinguish an unreachable route from arriving with exactly zero energy.
       if (energy < 1) return -1
       const traveler = index === 0 && this.itemRules.has('r-traveler') && this.itemRules.state.lastAction === 'attack' ? 1 : 0
-      const aura = path[index] ? this.totems.movementBonus(path[index], this.globalTurn) : 0
-      energy = Math.min(this.player.maxEnergy, energy - 1 + traveler + aura)
+      energy = Math.min(this.player.maxEnergy, energy - 1 + traveler)
     }
     return energy
   }
@@ -449,6 +450,7 @@ export class GameRun {
       this.battle.stage = 'explore'
       this.pendingRoundEnd = false
       this.pets.endTurn()
+      this.totems.endBattle()
       if (!this.gameOver) this._log('已清除当前激活敌人，返回探索。')
       this.bus.emit('battle:ended', { round: this.battle.round })
     }
@@ -594,7 +596,7 @@ export class GameRun {
   _queueLevelUp() {
     if (this.levelUp || this.gameOver || this.player.experience < this.player.experienceToNext) return false
     const choices = buildLevelUpChoices({ random: this.random })
-    // A placeholder and missing targets must never leave an upgrade blocked.
+    // Missing targets must never leave an upgrade blocked.
     if (!choices.some(id => this.canChooseLevelUpOption(id))) {
       const available = LEVEL_UP_OPTIONS.filter(option => this.canChooseLevelUpOption(option.id))
       choices[0] = available[Math.floor(this.random() * available.length)].id
@@ -607,7 +609,7 @@ export class GameRun {
 
   _gainExperience(enemy) {
     const amount = Math.max(0, Number(enemy?.experience) || 0)
-    if (!amount || enemy?.noExperience || enemy?.finalBoss) return false
+    if (!amount || enemy?.noExperience || isSummonedEnemy(enemy) || enemy?.finalBoss) return false
     this.player.experience += amount
     this._log(`\u83b7\u5f97 ${amount} \u7ecf\u9a8c\u3002`)
     return this._queueLevelUp()
@@ -726,8 +728,8 @@ export class GameRun {
     detail.lines = [...detail.statLines, ...detail.effectLines]
     if (isTotemBadge(item)) {
       const active = this.totems.active(item.totemId)
-      detail.lines.push('召唤范围4；占用1体力上限；持续10回合；所有图腾徽章共享2回合冷却')
-      detail.lines.push(active ? `图腾已存在，剩余${Math.max(0, active.expiresAt - this.globalTurn)}回合` :
+      detail.lines.push('召唤范围4；占用1体力上限；战斗结束消失；所有图腾徽章共享2个大回合冷却')
+      detail.lines.push(active ? '图腾已存在，保留到本次或下一次战斗结束' :
         this.totems.cooldown ? `召唤冷却：剩余${this.totems.cooldown}回合` : '点击使用，再选择场地中的空格召唤')
     }
     return this._showDetail({ position: 'top', ...detail })
@@ -756,7 +758,7 @@ export class GameRun {
     if (entity.kind === 'item') return this._showDetail({ position: 'bottom', ...detailForItem(entity.item, this.player) })
     if (entity.kind === 'totem') return this._showDetail({ position: 'bottom', title: entity.name, type: '图腾', icon: 'relic',
       description: getTotemDefinition(entity.totemId)?.description || '', lines: [
-        `剩余${Math.max(0, entity.expiresAt - this.globalTurn)}回合`, '占用1体力上限；受到一次攻击或离开房间即消失',
+        '保留到本次或下一次战斗结束', '占用1体力上限；受到一次攻击或离开房间即消失',
         ...(entity.totemId === 'soul' ? [`影响范围${1 + this.totems.badges.filter(item => item.totemId !== 'soul').length}`] : []),
       ] })
     if (entity.kind === 'enemy') {
@@ -772,7 +774,7 @@ export class GameRun {
       const poison = getStatus(entity, 'enemy-poison')
       if (getStatus(entity, 'rooted')) lines.push('缠绕：不能移动或攻击，持续1回合')
       if (poison && this.itemRules.has('r-bone-incense')) lines.push('蚀骨香：中毒时攻击力减半')
-      if (poison) lines.push([`\u4e2d\u6bd2\uff1a\u653b\u51fb\u65f6\u5931\u53bb${poison.damage}\u751f\u547d`, statusCounterText(poison)].filter(Boolean).join('\uff0c'))
+      if (poison) lines.push([`中毒：每个敌人阶段开始时失去${poison.damage}生命`, statusCounterText(poison)].filter(Boolean).join('\uff0c'))
       for (const id of ['counter', 'dodge']) {
         const status = getStatus(entity, id)
         if (status) {
@@ -1096,7 +1098,7 @@ export class GameRun {
     if (this.phase !== 'level-up') return
     // Inventory management during a reward choice keeps the world paused.
     // Removing the last weapon must not strand its nested selection or leave
-    // a choice set with only unavailable targets and the compression placeholder.
+    // a choice set with unavailable targets.
     if (this.levelUp.selectedOption === 'weapon-upgrade' && !this.levelUpWeapons().length) delete this.levelUp.selectedOption
     if (!this.levelUp.choices.some(id => this.canChooseLevelUpOption(id))) this.levelUp.choices[0] = 'heal'
   }
@@ -1487,7 +1489,7 @@ export class GameRun {
       this._log(`${definition.name}\u89e6\u53d1\uff0c\u4f53\u529b -${energyLoss}\u3002`)
     } else if (definition.effect === 'poison') {
       const poisonDamage = Math.max(1, Math.floor(Number(definition.poisonDamage) || 1))
-      this._applyPoison(10, poisonDamage)
+      this._applyPoison(definition.poisonTurns, poisonDamage)
       this._log(`${definition.name}\u89e6\u53d1\uff0c\u4e2d\u6bd2 ${this.player.poisonedTurns} \u4e2a\u5168\u5c40\u56de\u5408\uff0c\u6bcf\u56de\u5408\u53d7\u5230 ${this.player.poisonDamage} \u70b9\u65e0\u89c6\u62a4\u7532\u7684\u4f24\u5bb3\u3002`)
     }
     this._emitRelicEvent('trap:triggered', { trap, definition, cause })
@@ -1743,7 +1745,9 @@ export class GameRun {
 
   _resolveBattleRound() {
     if (!this.battle.active || this.roundResolving || this._turnInProgress) return false
-    const clock = this._statusClockSnapshot()
+    const isPeriodic = entry => ['player-poison', 'enemy-poison', 'burning'].includes(entry.id)
+    const clock = this._statusClockSnapshot().filter(entry => !isPeriodic(entry))
+    const periodicTicks = new Set()
     const counters = this.turns.advance(TURN_KINDS.ROUND)
     this._cleanupTriggeredTraps(counters.globalTurn)
     const turnContext = { turn: counters.globalTurn, turnKind: TURN_KINDS.ROUND, ...counters }
@@ -1757,7 +1761,11 @@ export class GameRun {
       if (!this.gameOver) this.pets.act()
       this.battle.stage = 'enemy'
       if (!this._activatedEnemies().length || this.gameOver) return true
-      this._tickPlayerStatuses({ advanceClock: false })
+      clock.push(...this._statusClockSnapshot().filter(isPeriodic))
+      const reviving = this._activatedEnemies().filter(enemy => enemy.downed)
+      this._tickPlayerStatuses({ advanceClock: false, clock, periodicTicks })
+      if (!this.gameOver) this._tickEnemyPoison(clock, periodicTicks)
+      if (!this._activatedEnemies().length || this.gameOver) return true
       if (!this.gameOver) this.totems.startTurn()
       // Roots granted by a start-of-turn pull block this enemy phase, then
       // expire with this turn. Roots from an enemy's move begin next turn.
@@ -1766,7 +1774,7 @@ export class GameRun {
         if (status && !clock.some(entry => entry.status === status)) clock.push({ actor: entity, id: 'rooted', status })
       }
       if (this.gameOver) return true
-      this._tickEnemyStates()
+      this._tickEnemyStates(reviving)
       if (this.gameOver) return true
       this.bus.emit('enemies:started', turnContext)
       const enemies = this._activeEnemies()
@@ -1794,8 +1802,7 @@ export class GameRun {
       this.bus.emit('enemies:ended', turnContext)
     } finally {
       // Durations tick once after the pet/enemy stages, never after player actions.
-      tickStatusSnapshot(clock)
-      this.totems.endTurn()
+      tickStatusSnapshot(clock.filter(entry => !isPeriodic(entry) || periodicTicks.has(entry.status)))
       this.pets.endTurn()
       this._turnInProgress = false
       this._synchronizeBattle()
@@ -1808,11 +1815,6 @@ export class GameRun {
     if (getStatus(enemy, 'rooted')?.blocksAttack) return { healthDamage: 0, cancelled: true }
     if (!enemy || enemy.attack <= 0) return { healthDamage: 0 }
     const poison = getStatus(enemy, 'enemy-poison')
-    if (poison) {
-      this._damageEnemy(enemy, resolveStatusDamage(poison, { run: this, holder: enemy }), { source: 'item:poison', ignoreDefense: true })
-      consumeStatus(enemy, 'enemy-poison', poison)
-      if (this.gameOver || enemy.downed || !this.currentRoom.entity(enemy.id)) return { healthDamage: 0, cancelled: true }
-    }
     this.enemyAttackInterruptedRoute = true
     enemy.hasActed = true
     const targetPosition = { ...this.player.pos }
@@ -2017,7 +2019,7 @@ export class GameRun {
     if (this.remainingEnemies() === 0) this._emitRelicEvent('room:cleared', { room: this.currentRoom })
     this._gainExperience(enemy)
     const dropRule = enemy.drop
-    const itemDropChance = !enemy.boss && !enemy.noLoot && !suppressLoot && dropRule
+    const itemDropChance = !enemy.boss && !enemy.noLoot && !isSummonedEnemy(enemy) && !suppressLoot && dropRule
       ? Math.max(0, Number(dropRule.chance) || 0)
       : 0
     if (itemDropChance > 0 && this.random() < itemDropChance) {
@@ -2096,19 +2098,31 @@ export class GameRun {
     return true
   }
 
-  _applyPoison(turns = 10, damage = 2) {
-    const duration = Math.max(1, Math.floor(Number(turns) || 10))
+  _applyPoison(turns = POISON_TURNS, damage = 2) {
+    const duration = Math.max(1, Math.floor(Number(turns) || POISON_TURNS))
     const amount = Math.max(1, Math.floor(Number(damage) || 1))
     this.applyStatus(this.player, 'player-poison', { turns: duration, damage: amount }, { refresh: true })
     return true
   }
 
-  _tickPlayerStatuses({ advanceClock = true } = {}) {
-    const clock = advanceClock ? statusSnapshot(this.player) : []
+  _tickEnemyPoison(clock, periodicTicks = new Set()) {
+    // Snapshot at enemy-phase start: poison spread during resolution waits
+    // until next round, independent of enemy ordering, movement and attack count.
+    for (const { actor: enemy, id, status } of clock) {
+      if (this.gameOver) break
+      if (id !== 'enemy-poison' || enemy.downed || !this.currentRoom.entity(enemy.id) || getStatus(enemy, id) !== status) continue
+      periodicTicks.add(status)
+      this._damageEnemy(enemy, resolveStatusDamage(status, { run: this, holder: enemy }), { source: 'item:poison', ignoreDefense: true })
+      consumeStatus(enemy, id, status)
+    }
+  }
+
+  _tickPlayerStatuses({ advanceClock = true, clock = statusSnapshot(this.player), periodicTicks = new Set() } = {}) {
     let ticked = false
     for (const id of ['player-poison', 'burning']) {
       const status = getStatus(this.player, id)
-      if (!status || this.gameOver) continue
+      if (!status || this.gameOver || !clock.some(entry => entry.actor === this.player && entry.status === status)) continue
+      periodicTicks.add(status)
       consumeStatus(this.player, id, status)
       const result = this._damagePlayer(resolveStatusDamage(status, { run: this, holder: this.player }),
         { source: id === 'player-poison' ? 'trap:poison-fog' : 'enemy:burning', ignoreArmor: !!status.ignoreArmor })
@@ -2119,10 +2133,11 @@ export class GameRun {
     return ticked
   }
 
-  _tickEnemyStates() {
+  _tickEnemyStates(reviving = null) {
     const room = this.currentRoom
     if (!room) return
-    for (const enemy of [...room.entities.values()].filter((entity) => entity.kind === 'enemy' && entity.downed && room.isRevealed(entity.pos))) {
+    for (const enemy of reviving || [...room.entities.values()].filter((entity) => entity.kind === 'enemy' && entity.downed && room.isRevealed(entity.pos))) {
+      if (!room.entity(enemy.id) || !enemy.downed) continue
       enemy.reviveTurns = Math.max(0, (enemy.reviveTurns || 0) - 1)
       if (enemy.reviveTurns > 0) continue
       enemy.downed = false
@@ -2189,7 +2204,7 @@ export class GameRun {
       .some((position) => position.c === this.player.pos.c && position.r === this.player.pos.r)
     if (!adjacent) return false
     if (status === 'poison') {
-      const turns = Math.max(1, Math.floor(Number(enemy.deathStatusTurns) || 10))
+      const turns = Math.max(1, Math.floor(Number(enemy.deathStatusTurns) || POISON_TURNS))
       const damage = Math.max(1, Math.floor(Number(enemy.deathStatusDamage) || 2))
       this._applyPoison(turns, damage)
       this._log(`${enemy.name}死亡，毒液使你中毒 ${turns} 个全局回合。`)
@@ -2326,6 +2341,7 @@ export class GameRun {
       version: SAVE_VERSION,
       playtestBalanceRevision: PLAYTEST_BALANCE_REVISION,
       foodPointsRevision: FOOD_POINTS_REVISION,
+      battleContentRevision: BATTLE_CONTENT_REVISION,
       bigRoundRevision: BIG_ROUND_REVISION,
       battle: { ...this.battle },
       roundResolving: this.roundResolving,
@@ -2368,11 +2384,13 @@ export class GameRun {
       let attributeItemsMigrated = false
       let bigRoundsMigrated = false
       let foodPointsMigrated = false
+      let battleContentMigrated = false
       if (data?.version === SAVE_VERSION) {
         migratePlaytestBalance(data)
         foodPointsMigrated = migrateFoodPoints(data)
         attributeItemsMigrated = migrateAttributeItems(data, { random: this.random })
         bigRoundsMigrated = migrateBigRounds(data)
+        battleContentMigrated = migrateBattleContent(data, { random: this.random })
       }
       if (!compatibleSave(data)) return discard()
       this.dungeon = Dungeon.hydrate(data.dungeon)
@@ -2384,7 +2402,7 @@ export class GameRun {
       this.inventoryStash = Array.isArray(data.inventoryStash) ? data.inventoryStash.filter((item) => item?.uid) : []
       const refreshItemCopy = item => {
         if (['food-3', 'food-5', 'food-7', 'food-9', 'teleport'].includes(item?.id)) item.name = getItemDefinition(item.id).name
-        if (['r-traveler', 'r-step-boots', 'r-turn-shield', 'r-totem-breath'].includes(item?.id)) item.description = getItemDefinition(item.id).description
+        if (['r-traveler', 'r-step-boots', 'r-turn-shield'].includes(item?.id)) item.description = getItemDefinition(item.id).description
       }
       for (const item of [...this.backpack.items, ...this.inventoryStash]) refreshItemCopy(item)
       synchronizeEntityIds([...this.backpack.items, ...this.inventoryStash].map(item => item.uid))
@@ -2491,7 +2509,7 @@ export class GameRun {
         this._persist()
       } else {
         this._synchronizeBattle()
-        if (attributeItemsMigrated || bigRoundsMigrated || foodPointsMigrated) this._persist()
+        if (attributeItemsMigrated || bigRoundsMigrated || foodPointsMigrated || battleContentMigrated) this._persist()
       }
       return true
     } catch {

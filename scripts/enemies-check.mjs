@@ -18,7 +18,7 @@ const expected = {
   'water-leech-swarm': { minFloor: 3, speed: 1, attribute: 'drown', splitMinionId: 'leech-larva' },
   'molten-core-beast': { minFloor: 4, speed: 0, attribute: 'scorch', deathExplosionDamage: 5 },
   'redneedle-salamander': { minFloor: 2, speed: 1, attribute: 'scorch', traits: ['burning'], burningTurns: 2, burningDamage: 1 },
-  'rot-sac-toad': { minFloor: 2, speed: 1, attribute: 'wither', deathStatus: 'poison', deathStatusTurns: 7, deathStatusDamage: 2 },
+  'rot-sac-toad': { minFloor: 2, speed: 1, attribute: 'wither', deathStatus: 'poison', deathStatusTurns: 3, deathStatusDamage: 2 },
   'claw-beast': { minFloor: 2, speed: 2, attribute: 'drown', traits: [] },
   'whirlpool-eye-sac': { minFloor: 3, speed: 1, attribute: 'drown', traits: ['pull'], pullDistance: 1 },
   'redwheel-fire-crow': { minFloor: 4, speed: 1, attribute: 'scorch', traits: ['burning'], burningTurns: 2 },
@@ -109,7 +109,7 @@ poisonRun.player.armor = 5
 const toad = createEnemyById('rot-sac-toad', { c: 2, r: 2 })
 poisonRoom.addEntity(toad)
 poisonRun._defeatEnemy(toad, { suppressLoot: true })
-assert.equal(poisonRun.player.poisonedTurns, 7)
+assert.equal(poisonRun.player.poisonedTurns, 3)
 poisonRun._tickPlayerStatuses()
 assert.equal(poisonRun.player.hp, 8)
 assert.equal(poisonRun.player.armor, 5)

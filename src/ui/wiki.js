@@ -45,7 +45,7 @@ export class WikiPage {
         <div class="wiki-heading"><div class="wiki-kicker">${escapeHtml(section?.title || '目录')}</div><h1>${escapeHtml(title)}</h1><p class="wiki-summary">${escapeHtml(summary)}</p></div>
       </header>
       ${page || this.id ? '<nav class="wiki-breadcrumb"><a href="/wiki">图鉴目录</a><span aria-hidden="true">/</span><span>' + escapeHtml(title) + '</span></nav>' : ''}
-      ${page?.section === 'planning' ? '<p class="wiki-planning-note">此页为规划或素材记录，可能包含尚未实现或已被替换的内容；当前规则与数值请参阅玩法页和实时清单。</p>' : ''}
+      ${page?.section === 'planning' ? '<p class="wiki-planning-note">此页区分当前问题与未实现候选；具体玩法请参阅规则页和实时清单。</p>' : ''}
       <div data-wiki-content>${!page && !this.id ? WIKI_SECTIONS.map(directorySection).join('') : !page ? '<p class="wiki-loading">请从 <a href="/wiki">图鉴目录</a>选择页面。</p>' : '<p class="wiki-loading">正在加载…</p>'}</div>
     </main>`
     this.content = this.root.querySelector('[data-wiki-content]')

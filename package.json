@@ -19,7 +19,7 @@
     "check:redesign": "node scripts/item-redesign-check.mjs",
     "check:weapons": "node scripts/weapon-rules-check.mjs",
     "check:expansion": "node scripts/expansion-check.mjs",
-    "check:totems": "node scripts/totems-check.mjs",
+    "check:totems": "node scripts/totems-check.mjs && node scripts/battle-content-check.mjs",
     "check:pets": "node scripts/pets-check.mjs",
     "check:weapon-tiers": "node scripts/weapon-progression-check.mjs",
     "check:playtest-balance": "node scripts/playtest-balance-check.mjs",

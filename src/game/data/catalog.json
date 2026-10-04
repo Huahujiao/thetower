@@ -242,7 +242,7 @@
       "minFloor": 2,
       "attribute": "wither",
       "deathStatus": "poison",
-      "deathStatusTurns": 7,
+      "deathStatusTurns": 3,
       "deathStatusDamage": 2,
       "range": 2,
       "hp": 23,
@@ -1301,7 +1301,7 @@
       "range": 4,
       "effect": "poison",
       "poisonDamage": 5,
-      "description": "投掷范围4格，使敌人中毒。敌人每次攻击时失去5生命。",
+      "description": "投掷范围4格，使敌人中毒3回合。每个敌人阶段开始时失去5生命。",
       "shape": [
         [
           1
@@ -1409,7 +1409,7 @@
           1
         ]
       ],
-      "description": "相邻武器攻击使敌人中毒，5层。敌人每次攻击时失去1生命。",
+      "description": "相邻武器攻击使敌人中毒3回合。每个敌人阶段开始时失去1生命。",
       "dropOnly": true
     },
     {

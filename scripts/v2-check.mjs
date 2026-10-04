@@ -10,7 +10,7 @@ import { computeAttackDamage } from '../src/game/rules/modifiers.js'
 
 const removedRelics = ['r-harmonic-echo', 'r-apprentice-mark', 'r-last-stand', 'r-threshold-seal', 'r-no-mercy', 'r-blood-prism', 'r-armor-echo', 'r-inheritance-edge', 'r-breaker-spark']
 const relicIds = new Set(RELIC_DEFS.map((definition) => definition.id))
-assert.equal(RELIC_DEFS.filter(relic => !relic.disabled).length, 43, 'relic pool must contain 43 active definitions')
+assert.equal(RELIC_DEFS.filter(relic => !relic.disabled).length, 42, 'relic pool must contain 42 active definitions')
 const relicDrop = createRelicEntity(RELIC_DEFS.find(relic => !relic.disabled), { c: 0, r: 0 })
 assert.equal(relicDrop.kind, 'item')
 assert.equal(relicDrop.item.type, 'relic')
@@ -31,8 +31,8 @@ assert.equal(catalog.consumables.length, 11)
 assert.equal(catalog.weapons.length, 23)
 assert.equal(catalog.defenses.length, 8)
 assert(catalog.enemyLoot.every(item => item.type === 'material'))
-assert.equal(LEVEL_UP_OPTIONS.length, 6)
-assert.equal(new Set(LEVEL_UP_OPTIONS.map(option => option.id)).size, 6)
+assert.equal(LEVEL_UP_OPTIONS.length, 5)
+assert.equal(new Set(LEVEL_UP_OPTIONS.map(option => option.id)).size, 5)
 
 const initialChoices = buildLevelUpChoices({ random: () => 0.25 })
 assert.equal(initialChoices.length, 3)

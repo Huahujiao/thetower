@@ -99,5 +99,5 @@ for (let index = 0; index < 150; index++) {
     assert.deepEqual(reloaded.levelUp.relicChoices, choices)
   } finally { globalThis.localStorage = previous }
 }
-assert.equal(ALL_ITEM_DEFS.filter(item => !item.disabled && !item.generatedOnly).length, 124)
+assert.equal(ALL_ITEM_DEFS.filter(item => !item.disabled && !item.generatedOnly).length, 123)
 console.log('attribute-items-check passed: acquisition, plain equipment, recipes and save migration')

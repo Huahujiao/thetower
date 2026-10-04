@@ -1,5 +1,6 @@
 import { combatDistance, manhattan, neighbors8 } from '../core/geometry.js'
 import { makeItemById } from '../data/content.js'
+import { isSummonedEnemy } from '../data/enemies.js'
 import { adjacentItems } from './backpack-geometry.js'
 import { removeStatus } from './statuses.js'
 
@@ -139,7 +140,7 @@ export class PetRules {
       if (this.has('beast-armor')) this.run.itemRules.armor(2, true, 'beast-armor')
       if (transaction.pet.id === 'spirit-raven') this.revealNear(enemy, 'pet:spirit-raven')
     }
-    if (this.state.butcher.includes(enemy.id)) {
+    if (this.state.butcher.includes(enemy.id) && !isSummonedEnemy(enemy)) {
       this.state.butcher = this.state.butcher.filter(id => id !== enemy.id)
       this.run.itemRules.expansion.give(makeItemById('meat-scrap'))
     }

@@ -2,6 +2,7 @@ import { attributeModifier } from '../data/attributes.js'
 import { getItemDefinition, makeItemById, randomConsumableOfTier } from '../data/content.js'
 import { adjacentItems, emptyPerimeterCells } from './backpack-geometry.js'
 import { getStatus } from './statuses.js'
+import { isSummonedEnemy } from '../data/enemies.js'
 import { manhattan, neighbors8 } from '../core/geometry.js'
 
 export class ExpansionRules {
@@ -47,7 +48,7 @@ export class ExpansionRules {
       if (nearest) run._revealEnemy(run.currentRoom, nearest, { cause: 'item:demon-seeker' })
     }
     if (hit.defeated) {
-      if (weapon.id === 'bounty-bow' && context.distance >= 2) run.player.gold++
+      if (weapon.id === 'bounty-bow' && context.distance >= 2 && !isSummonedEnemy(enemy)) run.player.gold++
       if (this.adjacent(weapon, 'farwatch-armor')) this.items.armor(context.distance, true, 'farwatch-armor')
       if (weapon.id === 'scouting-bow' && context.distance >= 3) {
         const positions = neighbors8(enemy.pos, run.currentRoom.width, run.currentRoom.height).filter(pos => !run.currentRoom.isRevealed(pos))
@@ -105,7 +106,7 @@ export class ExpansionRules {
     }
     if (event === 'enemy:killed') {
       this.spreadPoison(context.enemy)
-      if (this.has('r-loot-pouch')) this.give(randomConsumableOfTier(1, this.run.random))
+      if (!isSummonedEnemy(context.enemy) && this.has('r-loot-pouch')) this.give(randomConsumableOfTier(1, this.run.random))
     }
     if (event === 'gold:collected' && this.has('gold-pick-armor')) this.items.armor(1, true, 'gold-pick-armor')
   }

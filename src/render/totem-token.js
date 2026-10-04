@@ -1,9 +1,9 @@
 import { getTotemDefinition } from '../game/data/totems.js'
 
-export function totemFaceData(entity, turn) {
+export function totemFaceData(entity) {
   const definition = getTotemDefinition(entity.totemId)
   return { type: 'totem', title: entity.name, glyph: definition?.glyph || '图', color: definition?.color || '#b69cdf',
-    remaining: Math.max(0, entity.expiresAt - turn) }
+    lifetimeLabel: '战斗结束消失' }
 }
 
 export function drawTotemToken(context, card) {
@@ -18,5 +18,5 @@ export function drawTotemToken(context, card) {
   context.fillStyle = '#1b1820'; context.font = 'bold 30px sans-serif'; context.textAlign = 'center'; context.textBaseline = 'middle'
   context.fillText(card.glyph, 80, 69)
   context.fillStyle = '#f1e6ff'; context.font = 'bold 16px sans-serif'; context.fillText(card.title, 80, 16)
-  context.font = 'bold 14px sans-serif'; context.fillText(`${card.remaining}回合`, 80, 115)
+  context.font = 'bold 14px sans-serif'; context.fillText(card.lifetimeLabel, 80, 115)
 }

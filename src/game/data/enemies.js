@@ -75,3 +75,5 @@ export function enemyDefinitionFor(chapter, index) {
 }
 
 export function getEnemyDefinition(id) { return BY_ID.get(id) || null }
+
+export function isSummonedEnemy(enemy) { return getEnemyDefinition(enemy?.enemyId)?.spawnOnly === true }

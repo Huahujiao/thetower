@@ -254,7 +254,8 @@ for(const id of ['ember-spear','soul-spear']) {
   const e=enemy(run);attack(run,w,e);assert.equal(e.hp,98)
   run._endTurn();assert.equal(e.hp,98)
   e.attack = 1
-  run._enemyAttack(e);assert.equal(e.hp,97)
+  run._enemyAttack(e);assert.equal(e.hp,98)
+  round(run);assert.equal(e.hp,97)
   attack(run,w,e);assert.equal(e.hp,95)
 }
 // Rotation preview is free; committing costs energy, without an enemy phase.

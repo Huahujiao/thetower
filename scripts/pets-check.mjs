@@ -18,7 +18,7 @@ function phase(run) { run._synchronizeBattle(); if (run.battle.active) round(run
 
 assert.equal(PETS.length, 8)
 assert.equal(ALL_ITEM_DEFS.length, 132)
-assert.equal(ALL_ITEM_DEFS.filter(item => !item.starterOnly && !item.generatedOnly && !item.disabled).length, 123)
+assert.equal(ALL_ITEM_DEFS.filter(item => !item.starterOnly && !item.generatedOnly && !item.disabled).length, 122)
 assert.equal(makeItemById('r-feeding-charm').name, '\u9972\u517d\u7b26')
 for (const pet of PETS) {
   const item = makeItemById(pet.id)
@@ -44,11 +44,11 @@ for (const definition of PETS) {
   const run = fixture(), pet = add(run, definition.id, 0, 0), food = feed(run, 'food-9')
   const target = enemy(run), other = enemy(run, { pos: { c: 5, r: 3 } })
   phase(run)
-  assert.equal(target.hp, 100 - definition.attack, definition.id)
+  assert.equal(target.hp, 100 - definition.attack - (pet.id === 'venom-toad' ? 1 : 0), definition.id)
   assert.equal(food.energy, 6 - definition.foodCost, definition.id)
   if (pet.id === 'venom-toad') {
-    const poison = getStatus(target, 'enemy-poison'); assert(poison); assert.equal(poison.turns, 100); assert.equal(poison.layers, 100)
-    assert.equal(poison.showTurns, false); assert.equal(poison.showLayers, false)
+    const poison = getStatus(target, 'enemy-poison'); assert(poison); assert.equal(poison.turns, 2); assert.equal(poison.layers, 99)
+    assert.equal(poison.showTurns, true); assert.equal(poison.showLayers, false)
   }
   if (pet.id === 'shadow-spider') assert.equal(target.actionDelay, 100)
   if (pet.id === 'thunder-raven') assert.equal(other.hp, 99)

@@ -144,7 +144,7 @@ import { getItemDefinition } from '../src/game/data/content.js'
   const dagger = add(run, 'bone-knife', 0, 0)
   add(run, 'venom-sac', 0, 1)
   attack(run, dagger, enemy(run, { hp: 100 }))
-  assert.equal(run.currentRoom.entityAt({ c: 4, r: 3 }).itemPoisonTurns, 5)
+  assert.equal(run.currentRoom.entityAt({ c: 4, r: 3 }).itemPoisonTurns, 3)
 }
 
 // Poison from one weapon can be detonated and removed by another weapon.
@@ -155,10 +155,10 @@ import { getItemDefinition } from '../src/game/data/content.js'
   const sword = add(run, 'erosion-knife', 3, 0)
   const target = enemy(run)
   attack(run, dagger, target)
-  assert.equal(target.itemPoisonTurns, 5)
+  assert.equal(target.itemPoisonTurns, 3)
   target.attack = 1
   run._enemyAttack(target)
-  assert.equal(target.itemPoisonTurns, 4)
+  assert.equal(target.itemPoisonTurns, 3)
   const hp = target.hp
   attack(run, sword, target)
   assert.equal(target.hp, hp - 8)

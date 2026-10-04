@@ -9,7 +9,7 @@ export function statusEffectText(status) {
   if (spec?.mode === 'incoming-attack') damage = `\u672c\u6b21\u53d7\u51fb\u4f24\u5bb3\u7684${Math.round((spec.ratio ?? 1) * 100)}%`
   else if (spec && typeof spec === 'object' && spec.mode !== 'fixed') damage = '\u89e6\u53d1\u65f6\u8ba1\u7b97'
   if (status.id === 'counter') return `\u53d7\u5230\u653b\u51fb\u7ed3\u7b97\u540e\u53cd\u51fb\uff0c\u4f24\u5bb3${damage}`
-  if (status.id === 'player-poison') return `\u6bcf\u56de\u5408\u5931\u53bb${damage}\u751f\u547d\uff0c\u65e0\u89c6\u62a4\u7532`
+  if (status.id === 'player-poison') return `每个敌人阶段开始时失去${damage}生命，无视护甲`
   if (status.id === 'burning') return `\u6bcf\u56de\u5408\u53d7\u5230${damage}\u4f24\u5bb3`
   return status.description || ''
 }

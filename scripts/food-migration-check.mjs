@@ -38,14 +38,14 @@ try {
   assert.deepEqual(loaded.currentRoom.entity(merchant.id).stock.map(stock => stock.price), [merchantItemPrice('food-9'), merchantItemPrice('food-5')])
   assert.equal(loaded.roomReward.choices[0].itemId, 'food-9')
   assert.equal(persisted.foodPointsRevision, FOOD_POINTS_REVISION)
-  const snapshot = structuredClone(persisted)
+  const snapshot = globalThis.structuredClone(persisted)
   assert.equal(migrateFoodPoints(persisted), false)
   assert.deepEqual(persisted, snapshot)
   assert.equal(getItemDefinition('meat-scrap').energy, 2)
 } finally { globalThis.localStorage = previousStorage }
 
 for (const energy of [0, -1, 1.5, '9']) {
-  const invalid = structuredClone(data)
+  const invalid = globalThis.structuredClone(data)
   invalid.backpack.placements[0].item.energy = energy
   migrateFoodPoints(invalid)
   assert.equal(invalid.backpack.placements[0].item.energy, energy)

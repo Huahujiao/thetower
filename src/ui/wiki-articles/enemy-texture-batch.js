@@ -1,25 +1,32 @@
-export default `# Enemy puppet texture batch
+import { ENEMY_ART_PACK_VERSION, createEnemyShadowProjects } from '../../animation/shadow-enemies.js'
 
-The three sample monsters in \`/animeedit\` now have transparent sprites on **every part**: 12/12 Bell Pilgrim, 19/19 Tide-Eye Spider Mother, and 11/11 Stitched-Belly Lantern Moth. Their original animated bones, depth, size, and part transforms remain unchanged. The left and right moth wings still use separate outward-facing artwork.
+const projects = createEnemyShadowProjects({ includeBoss: true })
 
-| Sample | Textured parts | Runtime assets |
-| --- | --- | --- |
-| Bell Pilgrim | all 12: robe, ribcage, skull, mouth, eye, two arms, claw, bell, bell mouth, two legs | Existing four sprites, \`bell-pilgrim-mouth-v2-small.png\`, and \`bell-pilgrim-{eye,arm,claw,bell-mouth,leg}-v1-small.png\` |
-| Tide-Eye Spider Mother | all 19: body, head, abdomen, abdomen mark, three eyes, twelve leg segments | Existing four sprites plus \`tide-spider-{body,abdomen-mark,eye}-v1-small.png\` |
-| Stitched-Belly Lantern Moth | all 11: thorax, lantern head, eye, two wing membranes, two wing eyes, abdomen, tail glow, two antennae | Existing five sprites plus \`lantern-moth-{eye,wing-eye,tail-glow,antenna}-v1-small.png\` |
+export default `# 敌人骨架与贴图
 
-The first seven larger parts have \`-small.png\` and \`-medium.png\` variants under \`public/assets/enemies/\`; the editor uses medium. The six newer, genuinely tiny parts ship only a 128px-max \`-small.png\` variant, and the editor uses that small version without progressive replacement. Cropped production sources and uncropped originals are backed up under \`src/assets/enemies/backup/source/\`, outside Vite's served \`public\` tree. The earlier shared vertical moth wing (\`lantern-moth-wing-v1\`) is retained for compatibility and is no longer the sample default.
+当前运行时使用${projects.length}套敌人骨架，敌人资源包版本${ENEMY_ART_PACK_VERSION}。本页记录当前部件制作与验证流程。
 
-Example-pack migration version 5 updates only moth wing parts that still point to the earlier shared default URL. A custom wing image remains untouched. It also fills the new head textures only where the matching example part still has an empty shape visual; deleted parts remain deleted in version-4-and-later saves. All changes share the existing per-part \`visual\` data, localStorage autosave, and Undo.
+## 数据与资源
 
-Version 6 fills the six previously textured part types only where the matching existing example still has its unchanged shape appearance; custom images and recolored shapes remain untouched. The spider upper/lower leg textures each serve all six matching bone-attached segments. These thin strips use centered \`cover\` fitting to retain the authored leg length inside the narrow bone-part boxes; larger parts use \`contain\`. The texture gallery is a horizontal swipe strip so the fixed-height editor panel does not grow as presets are added.
+- 定义与默认骨架：src/animation/shadow-enemies.js、shadow-enemy-roster.js。
+- 分批部件适配：shadow-enemy-components.js及batch2／batch3／batch4模块。
+- 运行时部件贴图：public/assets/enemies/components-v1/；清单与接触轮廓：enemy-component-assets.json、enemy-contact-hulls.json。
+- 原始切片：island-slicer-web/output/。各文件夹编号不要求连续，根目录preview_indexed.png可辅助判断连接关系。
+- 游戏和/animeedit共享角色数据；自定义编辑保存在浏览器本地。升级默认模板时保留自定义旧角色备份。
 
-Version 7 fills the remaining 19 untextured part instances with 13 new reusable sprite designs. It only updates existing example parts that still have the original shape and colors; custom images, recolored parts, and deleted parts are preserved. In particular, the moth's \`eye\` uses its own lampwick sprite rather than the pilgrim's eye. The three new generated component sheets and a separate pilgrim leg source are backed up under \`src/assets/enemies/backup/sheets/\`; \`python scripts/split-enemy-component-sheets.py\` deterministically cuts and reduces them to 128px-max runtime sprites. The leg source was generated vertically and turned sideways at cutting time to preserve an unmistakable foot. The bell's dark aperture is cut from its component cell. \`npm run check:animation\` verifies all 42 part texture URLs resolve to real files.
+## 适配原则
 
-The Texture tab filters preset sprites to the selected sample monster: 10 pilgrim, 7 spider, or 9 moth presets. Switching characters updates this list reactively. A blank custom character still sees all 26 presets so its parts can borrow from any sample; the manual texture path remains available for every character.
+按轮廓与连接关系选择少量必要部件，可改骨架、关节深度和动画，不要求用完全部切片。上臂、前臂等重叠面要错开深度避免z-fighting；透明边距不能参与视觉尺寸基准。
 
-Version 8 replaces only the Bell Pilgrim's old default \`bell-pilgrim-mouth-v1-small.png\` with a shorter, near-frontal \`bell-pilgrim-mouth-v2-small.png\`; the old asset remains as a backup. A previously saved example using the old default URL migrates to v2, while custom mouth textures, part placement, and bone data remain unchanged. The generated v2 source is at \`src/assets/enemies/backup/source/bell-pilgrim-mouth-v2.png\`, with an uncropped backup beside it. Rebuild its runtime sprite with \`python scripts/generate-sprite-resolutions.py --root public/assets/enemies --source-root src/assets/enemies/backup/source --only bell-pilgrim-mouth-v2 --trim-transparent --backup-original --alpha-threshold 8 --small-edge 128 --small-only\`.
+以猩鬼的可见轮廓对角线归一化大小，保留各自宽瘦比例。非漂浮敌人配置地面支撑与接触节点，待机固定脚底、身体晃动；移动、攻击、受击和死亡不得向下穿地。漂浮敌人明确标记，不套用脚底约束。
 
-To regenerate sizes after editing a source, run \`python scripts/generate-sprite-resolutions.py --root public/assets/enemies --source-root src/assets/enemies/backup/source --only NAME\`, where \`NAME\` is the source filename without \`.png\`.
-For a tiny part, add \`--small-edge 128 --small-only\`.
+翻出直接用立体敌人从背面向前翻转，旧红色圆加三角占位已删除。动画按渲染帧推进，平移与缩放相机不重置骨骼姿态。朝向按玩家与敌人的列关系决定，同列保留此前方向。
+
+## 验证
+
+- npm.cmd run check:animation：骨架、纹理路径、地面接触及所有动作采样。
+- npm.cmd run check:combat-motion：动作结算、相机操作不干扰动画、朝向与实例隔离。
+- tools/enemy-component-review.html、tools/enemy-size-review.html：人工检查连接、宽瘦与大小。
+
+自动采样不能代替手机实机检查。切片缺少必要连接、透视不一致或透明轮廓无法贴地时，应重新生成素材。
 `

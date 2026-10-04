@@ -7,17 +7,17 @@ import { buildMerchantStock } from '../src/game/data/merchants.js'
 import { suggestedSynergyId } from '../src/game/rules/synergies.js'
 import { getStatus, statusCounterText } from '../src/game/rules/statuses.js'
 
-// Unmarked poison has two hidden 100 counters, and expires without attacks.
+// Poison deals damage for three enemy phases without requiring attacks.
 {
   const run = fixture(), target = enemy(run)
   const status = run.applyStatus(target, 'enemy-poison', { damage: 5 })
-  assert.equal(status.layers, 100); assert.equal(status.turns, 100)
-  assert.equal(statusCounterText(status), '')
-  for (let turn = 0; turn < 99; turn++) round(run)
-  assert.equal(status.turns, 1); assert.equal(status.layers, 100)
+  assert.equal(status.layers, 100); assert.equal(status.turns, 3)
+  assert.equal(statusCounterText(status), '剩余3回合')
+  for (let turn = 0; turn < 2; turn++) round(run)
+  assert.equal(status.turns, 1); assert.equal(status.layers, 98)
   round(run)
   assert.equal(getStatus(target, 'enemy-poison'), null)
-  assert.equal(target.hp, 100)
+  assert.equal(target.hp, 85)
   assert(!getItemDefinition('poison').description.includes('100'))
 }
 
@@ -30,7 +30,7 @@ import { getStatus, statusCounterText } from '../src/game/rules/statuses.js'
   const target = enemy(run, { attribute: 'scorch', traits: ['heavy-armor'] })
   attack(run, blade, target)
   assert.equal(target.hp, 100)
-  assert.equal(getStatus(target, 'enemy-poison').layers, 5)
+  assert.equal(getStatus(target, 'enemy-poison').turns, 3)
   const fresh = enemy(run, { pos: { c: 2, r: 3 } })
   run.applyStatus(fresh, 'dodge')
   attack(run, blade, fresh)

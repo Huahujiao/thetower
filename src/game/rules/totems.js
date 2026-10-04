@@ -1,7 +1,7 @@
 import { combatDistance, chebyshev, manhattan, neighbors8, samePos } from '../core/geometry.js'
 import { nextEntityId } from '../data/content.js'
-import { isTotemBadge, TOTEM_COOLDOWN, TOTEM_DURATION, TOTEM_SUMMON_RANGE } from '../data/totems.js'
-import { consumeStatus, getStatus, resolveStatusDamage } from './statuses.js'
+import { isTotemBadge, TOTEM_COOLDOWN, TOTEM_SUMMON_RANGE } from '../data/totems.js'
+import { consumeStatus, getStatus } from './statuses.js'
 import { findPath } from './pathfinding.js'
 
 export class TotemRules {
@@ -36,7 +36,7 @@ export class TotemRules {
     if (!run._payAction(1)) return run._reject('体力不足。')
     const bornAt = run.globalTurn
     const totem = { id: nextEntityId('totem'), kind: 'totem', totemId: item.totemId, name: item.name,
-      pos: { ...position }, bornAt, expiresAt: bornAt + TOTEM_DURATION, nextPulse: bornAt + 2 }
+      pos: { ...position }, bornAt, lifetime: 'battle', nextPulse: bornAt + 2 }
     run.currentRoom.addEntity(totem)
     run.player.maxEnergy--
     run.player.energy = Math.min(run.player.energy, run.player.maxEnergy)
@@ -58,10 +58,6 @@ export class TotemRules {
     for (const totem of [...room.entities.values()].filter(entity => entity.kind === 'totem')) this.remove(totem, '随离开房间消失', room)
   }
   attackBonus(position = this.run.player.pos) { return this.nearby('drum', position, 2) ? this.badges.length * 2 : 0 }
-  movementBonus(position = this.run.player.pos, turn = this.run.globalTurn) {
-    const totem = this.active('breath')
-    return Number(!!totem && turn < totem.expiresAt && manhattan(position, totem.pos) <= 2)
-  }
   beforeDamage(damage, context) {
     if (!(context.source === 'enemy:attack' || context.attack === true) || !this.nearby('ward', this.run.player.pos, 2)) return damage
     const turn = this.run._turnInProgress ? this.run.globalTurn : this.run.globalTurn + 1
@@ -98,8 +94,8 @@ export class TotemRules {
     }
     this.poisonNearby()
   }
-  endTurn() {
-    for (const totem of this.entities) if (this.run.globalTurn >= totem.expiresAt) this.remove(totem, '到期消失')
+  endBattle() {
+    for (const totem of this.entities) this.remove(totem, '随战斗结束消失')
   }
   // Ordinary chasers may break a totem on the shortest walkable route. Other
   // cards remain obstacles, and a cheaper unobstructed route takes precedence.
@@ -119,11 +115,6 @@ export class TotemRules {
     const { run } = this, room = run.currentRoom
     if (!room.entity(totem.id) || !room.entity(enemy.id) || enemy.downed || getStatus(enemy, 'rooted')?.blocksAttack) return false
     const poison = getStatus(enemy, 'enemy-poison')
-    if (poison) {
-      run._damageEnemy(enemy, resolveStatusDamage(poison, { run, holder: enemy }), { source: 'item:poison', ignoreDefense: true })
-      consumeStatus(enemy, 'enemy-poison', poison)
-      if (!room.entity(enemy.id) || enemy.downed || run.gameOver) return false
-    }
     const position = { ...totem.pos }
     if (!room.isRevealed(enemy.pos)) run._revealEnemy(room, enemy, { cause: 'totem:attack', triggerAlert: false })
     this.remove(totem, '被攻击摧毁')
