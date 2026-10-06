@@ -13,7 +13,7 @@ export const RELIC_DEFS = Object.freeze([
   {
     "id": "r-empty",
     "name": "空匣印",
-    "description": "背包空格不少于8时，所有武器体力消耗-1。",
+    "description": "背包空格不少于8时，所有武器体力球消耗-1。",
     "attribute": null
   },
   {
@@ -26,7 +26,7 @@ export const RELIC_DEFS = Object.freeze([
   {
     "id": "r-traveler",
     "name": "旅者骨牌",
-    "description": "战斗中，攻击后紧接的第一个主动移动操作，额外恢复1点体力。",
+    "description": "战斗中，攻击后紧接的第一个主动移动操作，额外抽取1个体力球。",
     "attribute": null
   },
   {

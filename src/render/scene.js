@@ -2340,7 +2340,7 @@ export class GameScene {
 
   _itemCardFaceData(item) {
     if (item.type === 'pet') return { type: 'pet', title: item.name, value: '\u5ba0\u7269', valueColor: '#b9efad',
-      detail: `ATK ${item.attack} \u00b7 R ${item.range} \u00b7 \u98df ${item.foodCost}`, footer: '\u53602\u683c\uff0c\u81ea\u52a8\u653b\u51fb', clickHint: '\u70b9\u51fb\u62fe\u53d6' }
+      detail: `ATK ${item.attack} \u00b7 R ${item.range} \u00b7 球 ${item.ballCost}`, footer: '\u53602\u683c\uff0c\u81ea\u52a8\u653b\u51fb', clickHint: '\u70b9\u51fb\u62fe\u53d6' }
     if (item.type === 'defense' || item.type === 'material') {
       return { type: 'item', title: item.name, value: item.type === 'defense' ? '防具' : '材料', valueColor: '#d8ccac', detail: '背包内被动生效', clickHint: '点击拾取' }
     }
@@ -2363,9 +2363,6 @@ export class GameScene {
     }
     if (item.type === 'armor') {
       return { type: 'potion', title: item.name, value: `ARMOR +${item.armor}`, valueColor: '#8ed7ff', detail: '使用后获得护甲', footer: '消耗行动', clickHint: '点击拾取' }
-    }
-    if (item.type === 'energy') {
-      return { type: 'energy', title: item.name, value: `+${item.energy} \u4f53\u529b`, valueColor: '#ffd56b', detail: '\u4f7f\u7528\u540e\u6062\u590d\u4f53\u529b', footer: '\u6d88\u8017\u884c\u52a8', clickHint: '\u70b9\u51fb\u62fe\u53d6' }
     }
     if (item.type === 'throwable') {
       return { type: 'item', title: item.name, value: 'II', valueColor: '#ffd56b',

@@ -4,14 +4,14 @@ import { ACTIVE_ITEMS, REGULAR_ITEMS, SHOP_ITEMS, APPEARANCE_LABELS, shapeText, 
 
 const ofType = type => ACTIVE_ITEMS.filter(item => item.type === type)
 const weapons = ofType('weapon')
-const consumables = ACTIVE_ITEMS.filter(item => ['potion', 'armor', 'energy', 'throwable', 'buff', 'teleport'].includes(item.type) && !item.generatedOnly)
+const consumables = ACTIVE_ITEMS.filter(item => ['potion', 'armor', 'throwable', 'buff', 'teleport'].includes(item.type) && !item.generatedOnly)
 const detailRows = items => itemRows(items, item => [item.name, shapeText(item), item.description])
 
 export default `# 当前物品清单
 
 表格直接读取运行时定义，只列启用物品。当前常规物品${REGULAR_ITEMS.length}种，另有${ACTIVE_ITEMS.filter(item => item.generatedOnly).length}种效果生成物；普通商店候选共${SHOP_ITEMS.length}种，实际货架还受进度门槛影响。钱袋仅开局提供；盾击符与2点肉块仅由物品效果生成。
 
-物品按自身条件独立生效，没有固定套装激活名单。武器保留属性，主攻击克制×1.2，被克制仍×1；属性核心圣遗物已移出池，相关武器和防具保留本体并移除属性特效。暂停内容不混入现役清单。
+物品按自身条件独立生效，没有固定套装激活名单。武器保留属性，属性用于体力球支付，不再参与克制；属性核心圣遗物已移出池，相关武器和防具保留本体并移除属性特效。暂停内容不混入现役清单。
 
 ## 武器（${weapons.length}）
 
@@ -41,11 +41,11 @@ ${itemRows(ofType('defense'), item => [item.name, item.armorValue, shapeText(ite
 
 ## 常规消耗品（${consumables.length}）
 
-玩家使用消耗整份；食物免费恢复剩余点数，常规初始点数为3、4、5、6，宠物可部分消耗。生命药只治疗，不清除负面状态。战斗中其他消耗品基础费用1，投掷器明确的额外费用另计，探索免费。1级翻出权重4，2级权重1。
+玩家使用消耗整份；食物已全部移除。生命药只治疗，不清除负面状态。战斗中其他消耗品基础费用1，投掷器明确的额外费用另计，探索免费。1级翻出权重4，2级权重1。
 
 | 名称 | 等级 | 基础数值 | 效果 |
 | --- | ---: | --- | --- |
-${itemRows(consumables, item => [item.name, item.tier, item.type === 'energy' ? `食物${item.energy}点` : item.type === 'potion' ? `治疗${item.heal}` : item.type === 'armor' ? `护甲${item.armor}` : item.range ? `射程${item.range}` : '—', item.description])}
+${itemRows(consumables, item => [item.name, item.tier, item.type === 'potion' ? `治疗${item.heal}` : item.type === 'armor' ? `护甲${item.armor}` : item.range ? `射程${item.range}` : '—', item.description])}
 
 ## 材料（${ofType('material').length}）
 
@@ -63,21 +63,21 @@ ${detailRows(ofType('material'))}
 | --- | --- | --- |
 ${detailRows(ofType('relic'))}
 
-图腾徽章不消耗，选择后点击4格内已翻开的空格召唤。共享冷却2个大回合，每个实体占用1体力上限，持续到本次战斗结束；探索时放置的保留到下一次战斗结束。受击一次或离房也会消失，只返还上限，不补回体力。回气图腾暂时移除。
+图腾徽章不消耗，选择后点击4格内已翻开的空格召唤。共享冷却2个大回合，持续到本次战斗结束；探索时放置的保留到下一次战斗结束。受击一次或离房也会消失，不改变供球数量。回气图腾暂时移除。
 
-连饮环在使用前记录原有邻域，按顺时针免费使用后续消耗品，每件最多一次，新生成物不加入本次连锁。整次费用按主动使用的第一件计：食物0，其他基础1；免费触发不享受投掷器加成或支付其额外费用。无有效目标或玩家死亡时停止。
+连饮环在使用前记录原有邻域，按顺时针免费使用后续消耗品，每件最多一次，新生成物不加入本次连锁。整次费用按主动使用的第一件计：基础1个任意球；免费触发不享受投掷器加成或支付其额外费用。无有效目标或玩家死亡时停止。
 
 ## 宠物（${ofType('pet').length}）
 
-玩家结束回合后、敌人行动前，按背包从左到右、从上到下行动。射程从玩家位置计算，优先猎物，其次最近的已翻开存活敌人。无目标或四向相邻食物不足时不行动、不扣点数；暂存区不生效。
+玩家结束回合后、敌人行动前，按背包从左到右、从上到下行动。射程从玩家位置计算，优先猎物，其次最近的已翻开存活敌人。无目标或主人剩余球不足时不行动、不扣球；暂存区不生效。
 
-| 名称 | 攻击 | 射程 | 食物消耗 | 形状 | 效果 |
+| 名称 | 攻击 | 射程 | 球消耗 | 形状 | 效果 |
 | --- | ---: | ---: | ---: | --- | --- |
-${itemRows(ofType('pet'), item => [item.name, item.attack, item.range, item.foodCost, shapeText(item), item.description])}
+${itemRows(ofType('pet'), item => [item.name, item.attack, item.range, item.ballCost, shapeText(item), item.description])}
 
-多份相邻食物可合并供食，饲兽符减耗可叠加、最低1。吸血鬼牙允许不足时用血瓶或混合供食，实际吃到血瓶才减耗1。食尸鼠击杀返还原物品的实际消耗点数。供食不触发药浴衣或连饮环，完全耗尽且未返还的1级物品计入炼化炉。
+宠物消耗主人剩余体力球，颜色不限。相邻饲兽符使费用减少1球，最低1；食尸鼠自身击杀返还原球。血瓶不用于宠物供给，宠物支付不触发消耗品效果。
 
-宠物不读取玩家武器加成和属性历史，但受敌人防御、闪避与反击影响。宠物击杀结算公共击杀事件，不触发玩家武器专属收益；召唤物没有经验、掉落或击杀物品及金币奖励。猎物、号角、割肉刀标记及群猎计数在敌人阶段后清除。
+宠物不读取玩家武器加成和属性历史，但受敌人防御、闪避与反击影响。宠物击杀结算公共击杀事件，不触发玩家武器专属收益；召唤物没有经验、掉落或击杀物品及金币奖励。猎物、号角标记及群猎计数在敌人阶段后清除。
 
 ## 效果生成物
 

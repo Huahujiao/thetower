@@ -6,8 +6,7 @@ const HINTS = Object.freeze({
   'r-far-whistle': ['pet', 'range'], 'r-hunting-horn': ['pet'], 'hunter-shortbow': ['pet'],
   'wall-core': ['armor'], 'return-axle': ['switch'], 'corrosive-heart-core': ['poison'],
   'soul-chain': ['collision'], 'beast-hunting-horn': ['pet', 'range'], 'mountain-break-stone': ['empty'],
-  'r-pack-hunt': ['pet'], 'beast-armor': ['pet', 'armor'], 'r-feeding-charm': ['pet', 'food'],
-  'butcher-knife': ['pet', 'food'], 'r-vampire-fang': ['pet', 'food'],
+  'r-pack-hunt': ['pet'], 'beast-armor': ['pet', 'armor'], 'r-feeding-charm': ['pet'],
   'venom-toad': ['poison'], 'spirit-raven': ['reveal'],
   'silver-guard': ['armor'], 'wood-shield': ['armor'], conduit: ['armor'], 'fork-connector': ['armor'], 'shield-core': ['armor'],
   'wall-sword': ['armor'], 'r-guard-return': ['armor'], 'iron-powder': ['armor'],
@@ -41,8 +40,7 @@ const HINTS = Object.freeze({
 
 function tagsOf(item) {
   const tags = new Set(HINTS[item.id] || [])
-  if (item.type === 'pet') { tags.add('pet'); tags.add('food') }
-  if (['energy', 'potion'].includes(item.type)) tags.add('food')
+  if (item.type === 'pet') tags.add('pet')
   if (item.type === 'weapon' && item.range >= 2) tags.add('range')
   if (item.type === 'weapon' && item.energyCost >= 5) tags.add('empty')
   return tags

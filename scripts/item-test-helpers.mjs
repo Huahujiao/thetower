@@ -26,6 +26,15 @@ export function add(run, id, x = null, y = null) {
   return item
 }
 export function select(run, item) { run.selectedInventoryIndex = run.backpack.originIndex(run.backpack.placementOf(item.uid)) }
+export function setBalls(run, count, attribute = null) {
+  run.staminaDeck.discardHand()
+  const pile = [...run.staminaDeck.drawPile, ...run.staminaDeck.discardPile]
+  const rank = ball => !attribute ? 0 : ball.attribute === attribute ? 0 : ball.attribute === 'wild' ? 1 : 2
+  pile.sort((a, b) => rank(a) - rank(b))
+  run.staminaDeck.hand = pile.splice(0, Math.min(count, pile.length))
+  run.staminaDeck.drawPile = pile
+  run.staminaDeck.discardPile = []
+}
 export function enemy(run, { hp = 100, pos = { c: 4, r: 3 }, attribute = null, attack = 0, ...props } = {}) {
   const e = createEnemyById('gnawer', pos)
   Object.assign(e, { hp, maxHp: hp, attribute, attack, speed: 0, traits: [], actionDelay: 100, noLoot: true, noExperience: true, ...props })
@@ -35,7 +44,7 @@ export function enemy(run, { hp = 100, pos = { c: 4, r: 3 }, attribute = null, a
 export function attack(run, weapon, target) {
   select(run, weapon)
   run._synchronizeBattle()
-  run.player.energy = run.player.maxEnergy
+  setBalls(run, Math.max(run.weaponEnergyCost(weapon), run.player.maxEnergy), weapon.attribute)
   assert(run._attack(target))
   run.bus.emit('animate:attack-complete', { actor: 'player' })
   settleAnimations(run)

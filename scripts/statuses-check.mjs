@@ -327,7 +327,7 @@ for (const sourceFirst of [true, false]) {
 // Pets ending the battle skip both damage and duration consumption.
 {
   const run = fixture(); enemy(run, { hp: 1 })
-  add(run, 'venom-toad'); add(run, 'food-3')
+  add(run, 'venom-toad')
   run._applyPoison()
   const hp = run.player.hp
   round(run)
@@ -339,7 +339,7 @@ for (const sourceFirst of [true, false]) {
 // A toad reapplying poison every pet phase must not defer its damage forever.
 {
   const run = fixture(), target = enemy(run)
-  const pet = add(run, 'venom-toad'); add(run, 'food-3')
+  const pet = add(run, 'venom-toad')
   round(run); round(run)
   assert.equal(target.hp, 100 - 2 * (pet.attack + 1))
   assert.equal(target.itemPoisonTurns, 2)

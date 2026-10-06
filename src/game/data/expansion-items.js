@@ -8,7 +8,7 @@ export const EXPANSION_RELICS = Object.freeze([
   {
     "id": "r-single-seal",
     "name": "\u6267\u4e00\u5370",
-    "description": "\u4e0e\u4e0a\u4e00\u6b21\u653b\u51fb\u4f7f\u7528\u540c\u4e00\u628a\u6b66\u5668\u65f6\uff0c\u4f53\u529b\u6d88\u8017-1\uff0c\u6700\u4f4e\u4e3a1\u3002",
+    "description": "使用与上个玩家回合最后使用的同一武器实例时，免除本回合重复使用的递增消耗；不同武器额外消耗2球。上回合未攻击时不触发。",
     "attribute": null
   },
   {

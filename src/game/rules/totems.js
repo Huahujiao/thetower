@@ -17,7 +17,7 @@ export class TotemRules {
   }
   available(item) {
     return isTotemBadge(item) && !!this.run.backpack.placementOf(item.uid) && !this.active(item.totemId) &&
-      this.cooldown === 0 && this.run.player.maxEnergy > 0
+      this.cooldown === 0
   }
   targets(item) {
     if (!this.available(item)) return []
@@ -31,27 +31,24 @@ export class TotemRules {
   }
   summon(item, position) {
     const { run } = this
-    if (!this.available(item)) return run._reject('该图腾已存在、召唤尚未冷却或体力上限不足。')
+    if (!this.available(item)) return run._reject('该图腾已存在、召唤尚未冷却。')
     if (!this.targets(item).some(target => samePos(target, position))) return run._reject('请选择距离4以内已翻开的空格，不能选择角色所在格。')
     if (!run._payAction(1)) return run._reject('体力不足。')
     const bornAt = run.globalTurn
     const totem = { id: nextEntityId('totem'), kind: 'totem', totemId: item.totemId, name: item.name,
       pos: { ...position }, bornAt, lifetime: 'battle', nextPulse: bornAt + 2 }
     run.currentRoom.addEntity(totem)
-    run.player.maxEnergy--
-    run.player.energy = Math.min(run.player.energy, run.player.maxEnergy)
     this.state.readyAt = bornAt + TOTEM_COOLDOWN
     run.selectedInventoryIndex = null; run.itemTargeting = false
     this.poisonNearby()
-    run._log(`召唤${item.name}，暂时占用1点体力上限。`)
+    run._log(`召唤${item.name}。`)
     run._endTurn({ recoverEnergy: false, action: 'summon' })
     run._changed()
     return true
   }
   remove(totem, reason = '消失', room = this.run.currentRoom) {
     if (!room.removeEntity(totem.id)) return false
-    this.run.player.maxEnergy++
-    this.run._log(`${totem.name}${reason}，返还1点体力上限。`)
+    this.run._log(`${totem.name}${reason}。`)
     return true
   }
   leave(room) {

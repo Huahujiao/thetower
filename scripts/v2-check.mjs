@@ -10,7 +10,7 @@ import { computeAttackDamage } from '../src/game/rules/modifiers.js'
 
 const removedRelics = ['r-harmonic-echo', 'r-apprentice-mark', 'r-last-stand', 'r-threshold-seal', 'r-no-mercy', 'r-blood-prism', 'r-armor-echo', 'r-inheritance-edge', 'r-breaker-spark']
 const relicIds = new Set(RELIC_DEFS.map((definition) => definition.id))
-assert.equal(RELIC_DEFS.filter(relic => !relic.disabled).length, 42, 'relic pool must contain 42 active definitions')
+assert.equal(RELIC_DEFS.filter(relic => !relic.disabled).length, 41, 'relic pool must contain 41 active definitions')
 const relicDrop = createRelicEntity(RELIC_DEFS.find(relic => !relic.disabled), { c: 0, r: 0 })
 assert.equal(relicDrop.kind, 'item')
 assert.equal(relicDrop.item.type, 'relic')
@@ -21,13 +21,13 @@ for (const id of ['r-three', 'r-scales']) assert(relicIds.has(id), `${id} must b
 assert.equal(ATTRIBUTE_ORDER.join(','), 'scorch,wither,drown')
 for (let index = 0; index < ATTRIBUTE_ORDER.length; index++) {
   const attribute = ATTRIBUTE_ORDER[index]
-  assert.deepEqual(attributeModifier(attribute, ATTRIBUTE_ORDER[(index + 1) % 3]), { multiplier: 1.2, countered: true, resisted: false })
-  assert.deepEqual(attributeModifier(attribute, ATTRIBUTE_ORDER[(index + 2) % 3]), { multiplier: 1, countered: false, resisted: true })
+  assert.deepEqual(attributeModifier(attribute, ATTRIBUTE_ORDER[(index + 1) % 3]), { multiplier: 1, countered: false, resisted: false })
+  assert.deepEqual(attributeModifier(attribute, ATTRIBUTE_ORDER[(index + 2) % 3]), { multiplier: 1, countered: false, resisted: false })
   assert.equal(attributeModifier(attribute, attribute).multiplier, 1)
   assert.equal(attributeModifier(attribute, null).multiplier, 1)
   assert.equal(attributeModifier(null, attribute).multiplier, 1)
 }
-assert.equal(catalog.consumables.length, 11)
+assert.equal(catalog.consumables.length, 7)
 assert.equal(catalog.weapons.length, 23)
 assert.equal(catalog.defenses.length, 8)
 assert(catalog.enemyLoot.every(item => item.type === 'material'))
@@ -60,7 +60,7 @@ assert.equal(run.activeRelics().length, 1)
 run.player.experience = run.player.experienceToNext
 assert(run._queueLevelUp())
 assert.equal(run.levelUpChoices().length, 3)
-run.levelUp.choices = ['heal', 'max-health', 'max-energy']
+run.levelUp.choices = ['heal', 'max-health', 'wild-ball']
 assert(run.chooseLevelUpOption('max-health'))
 assert.equal(run.player.maxHp, 22)
 assert.equal(run.phase, 'explore')
@@ -70,7 +70,7 @@ const damage = computeAttackDamage({
   target: { attribute: 'wither' },
   pendingAttackBonus: 2,
 })
-assert.equal(damage.damage, 8)
+assert.equal(damage.damage, 7)
 assert.equal(computeAttackDamage({ weapon: { attack: 5, attribute: 'scorch' }, target: { attribute: 'drown' }, pendingAttackBonus: 2 }).damage, 7)
 
 const serialized = run.serialize()

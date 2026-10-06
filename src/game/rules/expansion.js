@@ -17,8 +17,7 @@ export class ExpansionRules {
   }
   cost(weapon) {
     const last = this.items.state.lastWeapon
-    return Number(!!last && last === weapon.uid && this.has('r-single-seal')) +
-      Number(!!last && last !== weapon.uid && this.has('r-switch-ring'))
+    return Number(!!last && last !== weapon.uid && this.has('r-switch-ring'))
   }
   attackContext(weapon, { moved, distance, range }) {
     const { player, backpack } = this.run

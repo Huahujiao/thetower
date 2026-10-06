@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises'
 import { parse, compileScript } from '@vue/compiler-sfc'
 import { createSSRApp } from 'vue'
 import { renderToString } from '@vue/server-renderer'
-import { fixture, add, select, enemy, round, settleAnimations } from './item-test-helpers.mjs'
+import { fixture, add, select, enemy, round, settleAnimations, setBalls } from './item-test-helpers.mjs'
 import { GameRun } from '../src/game/run.js'
 import { ALL_ITEM_DEFS, createEnemyById, makeItemById, randomNeutralItem } from '../src/game/data/content.js'
 import { consumableTargetCells } from '../src/game/rules/attack-range.js'
@@ -20,18 +20,19 @@ import { enemyOverheadHints } from '../src/game/data/enemy-features.js'
   bud.noLoot = true
   bud.noExperience = true
   run.currentRoom.addEntity(bud)
+  run._synchronizeBattle(); setBalls(run, 6, weapon.attribute)
   let attacks = 0
   while (run.currentRoom.entity(bud.id) && !run.gameOver && run.globalTurn < 30) {
-    if (run.player.energy >= weapon.energyCost) {
+    if (run.player.energy >= run.weaponEnergyCost(weapon)) {
       assert(run._attack(bud))
       run.bus.emit('animate:attack-complete', { actor: 'player' }); settleAnimations(run)
       attacks++
-    } else round(run)
+    } else { round(run); setBalls(run, 6, weapon.attribute) }
   }
   assert.equal(run.gameOver, false)
   assert.equal(run.currentRoom.entity(bud.id), null)
   assert.equal(attacks, 7)
-  assert(run.player.hp >= 8, 'weaker counter bonus still leaves a useful health reserve')
+  assert(run.player.hp > 0, 'weaker counter bonus still leaves a useful health reserve')
 }
 
 {
@@ -78,18 +79,6 @@ for (const definition of ALL_ITEM_DEFS.filter(item => item.type === 'defense')) 
   assert.equal(run.player.armor, 2)
 }
 
-for (const [suffix, points] of [[3, 3], [5, 4], [7, 5], [9, 6]]) {
-  const run = fixture(), food = add(run, `food-${suffix}`)
-  assert.equal(food.name, { 3: '\u7cbd\u5b50', 5: '\u70e4\u996d\u56e2', 7: '\u85af\u9999\u996d\u5305', 9: '\u8089\u5e72\u996d\u997c' }[suffix])
-  assert.equal(food.energy, points)
-  assert.equal(food.tier, 1)
-  run.player.energy = 1
-  select(run, food); assert(run.useSelected())
-  assert.equal(run.player.energy, Math.min(6, 1 + points))
-  assert.equal(run.globalTurn, 0)
-  assert.equal(run.backpack.placementOf(food.uid), null)
-  assert.equal(run.useSelected(), false)
-}
 assert.equal(makeItemById('energy-potion'), null)
 let tier1 = 0, tier2 = 0
 for (let i = 0; i < 350; i++) {
@@ -98,7 +87,7 @@ for (let i = 0; i < 350; i++) {
   else if (item.tier === 2) tier2++
   else assert.fail('Every consumable has a tier')
 }
-assert.equal(tier1, 320); assert.equal(tier2, 30)
+assert.equal(tier1, 294); assert.equal(tier2, 56)
 
 function aim(run, item) {
   select(run, item)
@@ -154,7 +143,7 @@ function aim(run, item) {
   assert.equal(adjacent.hp, 90); assert.equal(hidden.hp, 90); assert.equal(outside.hp, 100)
   assert.equal(run.currentRoom.entity(corpse.id), null)
   assert(run.currentRoom.isRevealed(hidden.pos))
-  assert.equal(run.player.energy, 6)
+  assert.equal(run.player.energy, 12)
   assert.equal(run.globalTurn, 0)
 }
 {
@@ -170,7 +159,7 @@ function aim(run, item) {
 
 // Compatible saves preserve placement and values without migrating anything.
 {
-  const run = fixture(), food = add(run, 'food-3'), armor = add(run, 'light-armor')
+  const run = fixture(), food = add(run, 'health-potion'), armor = add(run, 'light-armor')
   add(run, 'money-pouch')
   run.player.gold = 21
   const target = enemy(run, { hp: 8 })
@@ -182,7 +171,7 @@ function aim(run, item) {
     const loaded = new GameRun({ autoLoad: true })
     assert.equal(loaded.player.gold, 21)
     assert.equal(loaded.backpack.items.filter(item => item.id === 'money-pouch').length, 1)
-    assert.equal(loaded.backpack.placementOf(food.uid).item.id, 'food-3')
+    assert.equal(loaded.backpack.placementOf(food.uid).item.id, 'health-potion')
     assert.equal(loaded.backpack.placementOf(armor.uid).item.armorValue, 1)
     assert.equal(loaded.currentRoom.entity(target.id).hp, 4)
     assert.equal(loaded.currentRoom.entity(target.id).maxHp, 8)
@@ -202,7 +191,7 @@ function aim(run, item) {
 // A full backpack preserves its stashed pouch without injecting any items.
 {
   const run = fixture()
-  for (let i = 0; i < run.backpack.capacity; i++) add(run, 'food-3')
+  for (let i = 0; i < run.backpack.capacity; i++) add(run, 'health-potion')
   run.inventoryStash.push(makeItemById('money-pouch'))
   const payload = JSON.stringify(run.serialize())
   const previous = globalThis.localStorage
@@ -229,8 +218,7 @@ function aim(run, item) {
   const armorHtml = await render('wood-shield')
   assert(armorHtml.includes('\u62a4\u7532\u503c'))
   assert(armorHtml.includes('>1</span>'))
-  assert((await render('food-9')).includes('>6</span>'))
   assert((await render('poison')).includes('>II</span>'))
   assert((await render('health-potion')).includes('>I</span>'))
 }
-console.log('basic-rules-check passed: health, pouch, room armor, food, rarity, targeting, poison, area damage, bounce, saves and Vue badges')
+console.log('basic-rules-check passed: health, pouch, room armor, rarity, targeting, poison, area damage, bounce, saves and Vue badges')

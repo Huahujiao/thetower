@@ -10,8 +10,6 @@ const DOOR_SIDES = Object.freeze(['left', 'right', 'top', 'bottom'])
 const ROOM_LAYOUT_GAP = 0.54
 const LAYOUT_EPSILON = 0.0001
 const MAX_LAYOUT_GENERATION_ATTEMPTS = 24
-export const GROUND_FOOD_LIMITS = Object.freeze({ entry: 3, elite: 3, supply: 4, boss: 2 })
-
 export const DUNGEON_CONFIG = Object.freeze({
   chapters: 2,
   progressionRate: 2,
@@ -418,21 +416,12 @@ function populateRoom(room, reserved, random, config) {
   addGold(room, reserved, random)
   let weaponCount = [...room.entities.values()].filter((entity) => entity.kind === 'item' && entity.item?.type === 'weapon').length
   while (weaponCount < targetWeaponCount && addLoot(room, reserved, random, randomWeapon(room.progressionFloor, random))) weaponCount += 1
-  let foodCount = 0, skippedFoodSlots = 0
-  while (room.entities.size + skippedFoodSlots < targetCount) {
+  while (room.entities.size < targetCount) {
     const roll = random()
     if (roll < 0.03 && addTrap(room, reserved, random)) continue
     if (roll < 0.86) {
       const item = randomNeutralItem(room.progressionFloor, random)
-      if (item.type === 'energy' && foodCount >= GROUND_FOOD_LIMITS[role]) {
-        // Leave excess food slots empty instead of replacing them with more loot.
-        skippedFoodSlots++
-        continue
-      }
-      if (addLoot(room, reserved, random, item)) {
-        if (item.type === 'energy') foodCount++
-        continue
-      }
+      if (addLoot(room, reserved, random, item)) continue
     }
     if (addGold(room, reserved, random)) continue
     break

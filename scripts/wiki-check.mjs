@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url'
 import { marked } from 'marked'
 import { ARTICLE_PAGES, CATALOG_PAGES, WIKI_PAGES, WIKI_PAGE_BY_ID, WIKI_SECTIONS } from '../src/ui/wiki-pages.js'
 import { catalogContent } from '../src/ui/wiki-catalog.js'
-import { ALL_ITEM_DEFS, getItemDefinition } from '../src/game/data/content.js'
+import { ALL_ITEM_DEFS } from '../src/game/data/content.js'
 import catalog from '../src/game/data/catalog.json' with { type: 'json' }
 import { ENEMY_HP_MULTIPLIER } from '../src/game/data/enemies.js'
 import { ACTIVE_ITEMS, SHOP_ITEMS, enemyDistribution } from '../src/ui/wiki-data.js'
@@ -67,10 +67,10 @@ for (const item of ACTIVE_ITEMS) {
   assert(itemSpriteSources(item)?.small && itemSpriteSources(item)?.medium, `Missing sprite sizes: ${item.id}`)
   if (item.type === 'weapon') assert(row.includes(`| ${item.attack} | ${item.range} | ${item.energyCost} |`), `Weapon stats drift: ${item.id}`)
 }
-for (const id of ['food-3', 'food-5', 'food-7', 'food-9']) {
-  const item = getItemDefinition(id)
-  assert(itemsArticle.includes(`| ${item.name} | 1 | 食物${item.energy}点 |`))
-}
+assert(!ALL_ITEM_DEFS.some(item => item.type === 'energy'))
+assert(itemsArticle.includes('球消耗'))
+assert(articles.get('03-turn-and-combat').includes('32个球'))
+assert(articles.get('06-progression').includes('万能球+1'))
 for (const item of ALL_ITEM_DEFS.filter(item => item.disabled)) {
   const html = catalogContent(item.type === 'relic' ? 'relics' : 'items')
   assert(!html.includes(`<h2>${item.name}</h2>`), `Disabled item in live catalog: ${item.id}`)

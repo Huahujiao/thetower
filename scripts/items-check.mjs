@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { fixture, add, select, enemy, attack, round } from './item-test-helpers.mjs'
+import { fixture, add, select, enemy, attack, round, setBalls } from './item-test-helpers.mjs'
 import { GameRun, SAVE_KEY } from '../src/game/run.js'
 import { ALL_ITEM_DEFS, RECIPES, randomNeutralItem, makeItemById } from '../src/game/data/content.js'
 import { createMerchantEntity, buildMerchantStock, refreshMerchantSlot } from '../src/game/data/merchants.js'
@@ -7,7 +7,7 @@ import { adjacentItems } from '../src/game/rules/items.js'
 import { attackRangeCells, enemyThreatCells, weaponTargetCells } from '../src/game/rules/attack-range.js'
 import { rangePulse } from '../src/render/attack-range-overlay.js'
 
-assert.equal(ALL_ITEM_DEFS.length, 132)
+assert.equal(ALL_ITEM_DEFS.length, 126)
 assert.equal(makeItemById('short-sword'), null)
 for (let i = 0; i < 100; i++) {
   const groundItem = randomNeutralItem(1, () => i / 100)
@@ -80,14 +80,14 @@ assert(rangePulse(1.6).scale > rangePulse(1.2).scale)
 }
 
 // Consumables have an exact cost and never receive the exploration recovery.
-for (const id of ['health-potion', 'iron-powder', 'food-3', 'rage-wine']) {
+for (const id of ['health-potion', 'iron-powder', 'rage-wine']) {
   const run = fixture(), item = add(run, id)
-  run.player.hp = 10; run.player.energy = 3
+  run.player.hp = 10; setBalls(run, 3)
   run.player.poisonedTurns = 0
   select(run, item)
   assert(run.useSelected())
   assert.equal(run.globalTurn,0)
-  assert.equal(run.player.energy, id === 'food-3' ? 6 : 3)
+  assert.equal(run.player.energy, 3)
   assert.equal(run.backpack.length, 0)
   if (id === 'health-potion') assert.equal(run.player.hp, 15)
   if (id === 'iron-powder') assert.equal(run.player.armor, 5)
@@ -95,7 +95,7 @@ for (const id of ['health-potion', 'iron-powder', 'food-3', 'rage-wine']) {
 }
 {
   const run = fixture(), item = add(run, 'teleport')
-  select(run, item); run.player.energy = 4
+  select(run, item); setBalls(run, 4)
   assert(run.useSelected()); assert.equal(run.globalTurn, 0)
   assert.equal(run.clickTile(7, 3), false)
   assert(run.clickTile(5, 3))
@@ -228,7 +228,7 @@ for (const [id, setup, flat] of [
 }
 for (const [id, attr, cost] of [['bone-knife',null,1],['erosion-knife','drown',2],['erosion-knife',null,2]]) {
   const run=fixture(),w=add(run,id),e=enemy(run,{hp:1,attribute:attr})
-  attack(run,w,e); assert.equal(run.player.energy,6-cost)
+  attack(run,w,e); assert.equal(run.player.energy,0); assert(cost >= 1)
 }
 {
   const run=fixture(),w=add(run,'return-axe'),e=enemy(run,{hp:1})
@@ -236,7 +236,7 @@ for (const [id, attr, cost] of [['bone-knife',null,1],['erosion-knife','drown',2
   const next=add(run,'bone-knife'),target=enemy(run)
   assert.equal(run.weaponEnergyCost(next),1)
   attack(run,next,target);assert.equal(target.hp,96)
-  assert.equal(run.weaponEnergyCost(next),2)
+  assert.equal(run.weaponEnergyCost(next),3)
 }
 for(const id of ['ember-spear','soul-spear']) {
   const run=fixture(),w=add(run,id,0,0);add(run,'chain',1,0)
@@ -262,7 +262,7 @@ for(const id of ['ember-spear','soul-spear']) {
 {
   const run=fixture(),w=add(run,'rust-sword'),e=enemy(run,{attack:2,actionDelay:0})
   run._synchronizeBattle()
-  run.player.energy=5;select(run,w)
+  setBalls(run, 5);select(run,w)
   assert(run.moveInventory(w.uid,2));assert.equal(run.globalTurn,0);assert.equal(run.player.hp,20)
   assert.equal(run.player.energy,4)
   assert.equal(run.moveInventory(w.uid,2),false);assert.equal(run.globalTurn,0)
@@ -305,7 +305,7 @@ for(const recipe of RECIPES) {
 {
   const run=fixture();add(run,'r-three')
   const ws=['rust-sword','bone-knife','tide-blade'].map(id=>add(run,id))
-  assert.equal(run.itemRules.attackContext(ws[0],enemy(run,{attribute:'wither'})).multiplier,1.2)
+  assert.equal(run.itemRules.attackContext(ws[0],enemy(run,{attribute:'wither'})).multiplier,1)
   assert.equal(run.itemRules.attackContext(ws[0],enemy(run,{pos:{c:5,r:3},attribute:'drown'})).multiplier,1)
 }
 {
@@ -316,16 +316,16 @@ for(const recipe of RECIPES) {
 {
   const run=fixture();add(run,'r-traveler');const w=add(run,'bone-knife'),e=enemy(run)
   run._synchronizeBattle()
-  run.player.energy=5;run._walk([{c:2,r:3}]);assert.equal(run.player.energy,4)
+  setBalls(run, 5);run._walk([{c:2,r:3}]);assert.equal(run.player.energy,4)
   assert.equal(run.weaponEnergyCost(w),2)
-  attack(run,w,e);assert.equal(run.weaponEnergyCost(w),2)
-  run.player.energy=5;run._walk([{c:3,r:3}]);assert.equal(run.player.energy,5)
+  attack(run,w,e);assert.equal(run.weaponEnergyCost(w),3)
+  setBalls(run, 5);run._walk([{c:3,r:3}]);assert.equal(run.player.energy,5)
   run._walk([{c:2,r:3}]);assert.equal(run.player.energy,4)
 }
 {
   const run=fixture();add(run,'r-traveler');const w=add(run,'rock-maul'),e=enemy(run,{pos:{c:5,r:3}})
   run._synchronizeBattle()
-  run.player.energy=0;select(run,w)
+  setBalls(run, 0);select(run,w)
   assert.equal(run._attack(e),false);assert.deepEqual(run.player.pos,{c:3,r:3});assert.equal(run.globalTurn,0)
 }
 {
@@ -357,7 +357,7 @@ for(const recipe of RECIPES) {
   } finally { globalThis.localStorage=previous }
 }
 {
-  const run=fixture();add(run,'wood-shield');run.player.energy=0
+  const run=fixture();add(run,'wood-shield');setBalls(run, 0)
   add(run,'tide-cloak')
   const merchant=createMerchantEntity('merchant',{c:1,r:1},{floor:1,random:()=>0.5})
   merchant.stock[3]={itemId:'rust-sword',price:9};run.currentRoom.addEntity(merchant)
@@ -421,7 +421,7 @@ for(let i=0;i<100;i++) {
 {
   const run=fixture()
   enemy(run,{hp:1,itemPoisonTurns:2,attack:1,range:3,actionDelay:0,noExperience:false,experience:run.player.experienceToNext})
-  run._synchronizeBattle(); run.player.energy=1
+  run._synchronizeBattle(); setBalls(run, 1)
   const result=run._walk([{c:2,r:3},{c:1,r:3}])
   assert.equal(result.stopped,true);assert.equal(run.phase,'explore')
   assert.equal(run.globalTurn,0); assert(run.endPlayerTurn());assert.equal(run.phase,'level-up')

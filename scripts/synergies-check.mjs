@@ -176,7 +176,7 @@ import { getItemDefinition } from '../src/game/data/content.js'
   assert.equal(run.itemRules.state.buffs['r-phase-pointer'], undefined)
   attack(run, wither, target)
   assert.equal(run.itemRules.state.buffs['r-phase-pointer'], undefined)
-  assert.equal(run.itemRules.cost(scorch), scorch.energyCost)
+  assert.equal(run.itemRules.cost(scorch), scorch.energyCost + 1)
   attack(run, scorch, target)
   assert.equal(run.itemRules.state.buffs['r-phase-pointer'], undefined)
   attack(run, scorch, target)

@@ -1,6 +1,4 @@
 import { combatDistance, manhattan, neighbors8 } from '../core/geometry.js'
-import { makeItemById } from '../data/content.js'
-import { isSummonedEnemy } from '../data/enemies.js'
 import { adjacentItems } from './backpack-geometry.js'
 import { removeStatus } from './statuses.js'
 
@@ -16,43 +14,11 @@ export class PetRules {
   }
   get pets() { return this.ordered(this.run.backpack.items.filter(item => item.type === 'pet')) }
   cost(pet) {
-    return Math.max(1, pet.foodCost - Number(adjacentItems(this.run.backpack, pet).some(item => item.id === 'r-feeding-charm')))
+    return Math.max(1, pet.ballCost - Number(adjacentItems(this.run.backpack, pet).some(item => item.id === 'r-feeding-charm')))
   }
   range(pet, enemy = null) {
     return pet.range + Number(this.has('r-far-whistle')) +
       (enemy && this.has('r-hunting-horn') && this.state.horn.includes(enemy.id) ? 2 : 0)
-  }
-  foods(pet) {
-    return this.ordered(adjacentItems(this.run.backpack, pet).filter(item => item.type === 'energy' ||
-      (this.has('r-vampire-fang') && item.type === 'potion')))
-  }
-  points(item) { return item.type === 'energy' ? item.energy : item.heal }
-  feedingPlan(pet) {
-    const foods = this.foods(pet), ordinary = foods.filter(item => item.type === 'energy'), cost = this.cost(pet)
-    const budget = values => values.reduce((sum, item) => sum + this.points(item), 0)
-    const spend = (values, remaining, plan = []) => {
-      for (const item of values) {
-        const reserved = plan.find(entry => entry.item === item)?.amount || 0
-        const amount = Math.min(remaining, this.points(item) - reserved)
-        if (amount > 0) {
-          const entry = plan.find(entry => entry.item === item)
-          if (entry) entry.amount += amount
-          else plan.push({ item, amount })
-          remaining -= amount
-        }
-      }
-      return plan
-    }
-    if (budget(ordinary) >= cost) return spend(ordinary, cost)
-    const bottle = foods.find(item => item.type === 'potion' && this.points(item) > 0)
-    const bloodCost = Math.max(1, cost - 1)
-    if (!bottle || budget(foods) < bloodCost) return null
-    // At least one bottle point must actually be spent to earn the discount.
-    const plan = [{ item: bottle, amount: 1 }]
-    let remaining = bloodCost - 1
-    spend(ordinary, remaining, plan)
-    remaining = bloodCost - plan.reduce((sum, entry) => sum + entry.amount, 0)
-    return spend(foods.filter(item => item.type === 'potion'), remaining, plan)
   }
   enemies() {
     const room = this.run.currentRoom
@@ -69,28 +35,14 @@ export class PetRules {
     if (this.has('r-hunting-horn') && !this.state.horn.includes(enemy.id)) this.state.horn.push(enemy.id)
   }
   playerHit(weapon, enemy) {
-    const key = weapon.id === 'hunter-shortbow' ? 'prey' : weapon.id === 'butcher-knife' ? 'butcher' : null
+    const key = weapon.id === 'hunter-shortbow' ? 'prey' : null
     if (key && !this.state[key].includes(enemy.id)) this.state[key].push(enemy.id)
     if (key === 'prey') this.run.applyStatus(enemy, 'prey')
-  }
-  reserve(plan) {
-    const bag = this.run.backpack
-    return plan.map(({ item, amount }) => {
-      const entry = { item, amount, before: this.points(item), placement: { ...bag.placementOf(item.uid) } }
-      item[item.type === 'energy' ? 'energy' : 'heal'] -= amount
-      if (this.points(item) === 0) bag.removeByUid(item.uid)
-      return entry
-    })
   }
   refund(transaction) {
     if (transaction.refunded) return
     transaction.refunded = true
-    for (const { item, before, placement } of transaction.foods) {
-      item[item.type === 'energy' ? 'energy' : 'heal'] = before
-      if (this.run.backpack.placementOf(item.uid)) continue
-      if (this.run.backpack.canPlace(item, placement.x, placement.y, placement.rotation)) this.run.backpack.placements.push(placement)
-      else this.run.itemRules.expansion.give(item)
-    }
+    this.run.staminaDeck.refund(transaction.balls)
   }
   act() {
     const { run } = this, attacked = new Map()
@@ -98,11 +50,11 @@ export class PetRules {
     for (const pet of this.pets) {
       if (run.gameOver) break
       if (!run.backpack.placementOf(pet.uid)) continue
-      const target = this.target(pet), plan = this.feedingPlan(pet)
-      if (!target || !plan) continue
+      const target = this.target(pet), cost = this.cost(pet)
+      if (!target || run.player.energy < cost) continue
       const prior = attacked.get(target.id) || new Set()
       const damage = pet.attack + (this.state.prey.includes(target.id) ? 2 : 0) + (this.has('r-pack-hunt') ? prior.size : 0)
-      const transaction = { pet, targetId: target.id, foods: this.reserve(plan), refunded: false }
+      const transaction = { pet, targetId: target.id, balls: run.staminaDeck.pay(cost, null, { selection: false }).balls, refunded: false }
       this.activeAttack = transaction
       try {
         const position = { ...target.pos }
@@ -117,14 +69,11 @@ export class PetRules {
             .sort((a, b) => manhattan(a.pos, position) - manhattan(b.pos, position) || a.pos.r - b.pos.r || a.pos.c - b.pos.c)[0]
           if (bounce) run._damageEnemy(bounce, 1, { source: `pet:${pet.uid}` })
         }
-        const foodSpent = plan.reduce((sum, entry) => sum + entry.amount, 0)
-        run._log(`${pet.name} 对 ${target.name} 造成 ${hit.damage} 伤害，${transaction.refunded ? '击杀返还' : '消耗'}${foodSpent}点供食。`)
-        run.bus.emit('pet:attacked', { pet, enemy: target, hit, foodSpent: transaction.refunded ? 0 : foodSpent })
+        const ballSpent = transaction.refunded ? 0 : cost
+        run._log(`${pet.name} 对 ${target.name} 造成 ${hit.damage} 伤害，${transaction.refunded ? '击杀返还' : '消耗'}${cost}个体力球。`)
+        run.bus.emit('pet:attacked', { pet, enemy: target, hit, ballSpent: transaction.refunded ? 0 : ballSpent })
       } finally {
         this.activeAttack = null
-        if (!transaction.refunded) for (const { item } of transaction.foods) {
-          if (this.points(item) === 0) run.itemRules.expansion.onConsumableConsumed(item)
-        }
       }
     }
     run.bus.emit('pets:ended', { turn: run.globalTurn })
@@ -140,10 +89,6 @@ export class PetRules {
       if (transaction.pet.id === 'carrion-rat' && enemy.id === transaction.targetId) this.refund(transaction)
       if (this.has('beast-armor')) this.run.itemRules.armor(2, true, 'beast-armor')
       if (transaction.pet.id === 'spirit-raven') this.revealNear(enemy, 'pet:spirit-raven')
-    }
-    if (this.state.butcher.includes(enemy.id) && !isSummonedEnemy(enemy)) {
-      this.state.butcher = this.state.butcher.filter(id => id !== enemy.id)
-      this.run.itemRules.expansion.give(makeItemById('meat-scrap'))
     }
   }
   endTurn() {

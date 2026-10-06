@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { fixture, add, enemy, attack, select, round } from './item-test-helpers.mjs'
+import { fixture, add, enemy, attack, select, round, setBalls } from './item-test-helpers.mjs'
 import { GameRun, SAVE_VERSION } from '../src/game/run.js'
 import { ALL_ITEM_DEFS, makeItemById, randomConsumableOfTier, randomNeutralItem } from '../src/game/data/content.js'
 import { EXPANSION_RELICS, EXPANSION_DEFENSES, EXPANSION_WEAPONS } from '../src/game/data/expansion-items.js'
@@ -40,8 +40,8 @@ for (let index = 0; index < 100; index++) {
   add(run, 'r-single-seal'); add(run, 'r-switch-ring')
   assert.equal(run.weaponEnergyCost(a), 2)
   attack(run, a, enemy(run))
-  assert.equal(run.weaponEnergyCost(a), 1); assert.equal(run.weaponEnergyCost(b), 1)
-  run.itemRules.action('consume'); assert.equal(run.weaponEnergyCost(a), 1)
+  assert.equal(run.weaponEnergyCost(a), 3); assert.equal(run.weaponEnergyCost(b), 1)
+  run.itemRules.action('consume'); assert.equal(run.weaponEnergyCost(a), 3)
   run.backpack.removeByUid(run.backpack.items.find(item => item.id === 'r-switch-ring').uid)
   assert.equal(run.weaponEnergyCost(b), 2)
 }
@@ -51,11 +51,11 @@ for (let index = 0; index < 100; index++) {
   add(run, 'r-neutral-stone', 3, 1)
   const target = enemy(run, { attribute: 'scorch' })
   let context = run.itemRules.attackContext(weapon, target)
-  assert.equal(context.multiplier, 1); assert.equal(context.resisted, true)
-  target.attribute = 'drown'; assert.equal(run.itemRules.attackContext(weapon, target).multiplier, 1.2)
+  assert.equal(context.multiplier, 1); assert.equal(context.resisted, false)
+  target.attribute = 'drown'; assert.equal(run.itemRules.attackContext(weapon, target).multiplier, 1)
   add(run, 'r-reverse', 7, 3)
   context = run.itemRules.attackContext(weapon, target)
-  assert.equal(context.multiplier, 1.2); assert.equal(context.resisted, false)
+  assert.equal(context.multiplier, 1); assert.equal(context.resisted, false)
 }
 // Perimeter uses distinct occupied-cell neighbors, in bounds, including rotated irregular shapes.
 {
@@ -63,7 +63,7 @@ for (let index = 0; index < 100; index++) {
   add(run, 'r-lone-edge', 7, 3)
   assert.equal(emptyPerimeterCells(run.backpack, weapon).length, 2)
   assert.equal(run.itemRules.attackContext(weapon, enemy(run)).flat, 2)
-  add(run, 'food-3', 1, 0); assert.equal(emptyPerimeterCells(run.backpack, weapon).length, 1)
+  add(run, 'health-potion', 1, 0); assert.equal(emptyPerimeterCells(run.backpack, weapon).length, 1)
   weapon.shape = [[1, 0], [1, 1]]
   assert(run.backpack.move(weapon.uid, 3, 1, 1))
   const cells = emptyPerimeterCells(run.backpack, weapon)
@@ -83,7 +83,7 @@ for (let index = 0; index < 100; index++) {
   add(run, 'r-gold-fuel', 3, 1); const pouch = add(run, 'money-pouch', 2, 0)
   run.player.gold = 1; const target = enemy(run)
   run._synchronizeBattle()
-  select(run, weapon); run.player.energy = 0
+  select(run, weapon); setBalls(run, 0)
   assert.equal(run._attack(target), false); assert.equal(run.player.gold, 1)
   attack(run, weapon, target); assert.equal(target.hp, 97); assert.equal(run.player.gold, 0)
   attack(run, weapon, target); assert.equal(target.hp, 95)
@@ -177,7 +177,7 @@ for (const trigger of ['move', 'knockback', 'death', 'poison-death']) {
   select(run, token); assert(run.useSelected()); assert(run._throwConsumable(target.pos))
   assert.equal(target.hp, 93); assert.equal(run.player.armor, 3)
   assert.equal(run.backpack.placementOf(token.uid), null)
-  while (run.backpack.usedCells < run.backpack.capacity) add(run, 'food-3')
+  while (run.backpack.usedCells < run.backpack.capacity) add(run, 'health-potion')
   attack(run, weapon, target)
   assert(run.inventoryStash.some(item => item.id === 'shield-bash'))
 }
@@ -229,7 +229,7 @@ for (const trigger of ['move', 'knockback', 'death', 'poison-death']) {
 {
   const run = fixture(); add(run, 'r-furnace'); add(run, 'bath-robe'); add(run, 'r-pill-ticket'); add(run, 'r-loot-pouch')
   run.player.armor = 0
-  for (let index = 0; index < 2; index++) { const food = add(run, 'food-3'); select(run, food); assert(run.useSelected()) }
+  for (let index = 0; index < 2; index++) { const food = add(run, 'health-potion'); select(run, food); assert(run.useSelected()) }
   assert.equal(run.player.armor, 2)
   assert.equal(run.backpack.items.filter(item => item.tier === 2 && item.type === 'throwable').length, 1)
   for (let index = 0; index < 5; index++) {
@@ -239,19 +239,19 @@ for (const trigger of ['move', 'knockback', 'death', 'poison-death']) {
   assert.equal(run.backpack.items.filter(item => item.id === rewardId).length, 1)
   const target = enemy(run, { hp: 1 }); run._damageEnemy(target, 1)
   assert.equal(run.backpack.items.filter(item => item.id === rewardId).length, 2)
-  while (run.backpack.usedCells < run.backpack.capacity) add(run, 'food-3')
+  while (run.backpack.usedCells < run.backpack.capacity) add(run, 'health-potion')
   run._damageEnemy(enemy(run, { hp: 1 }), 1)
   assert(run.inventoryStash.some(item => item.tier === 1))
 }
 // Clockwise chains consume originals in order and exclude generated replacements from this turn.
 {
   const run = fixture(); add(run, 'r-chain-drink', 2, 1); add(run, 'r-furnace', 7, 3); add(run, 'bath-robe', 5, 0)
-  const first = add(run, 'food-3', 2, 0), second = add(run, 'food-5', 3, 0), third = add(run, 'food-7', 3, 1)
+  const first = add(run, 'health-potion', 2, 0), second = add(run, 'health-potion', 3, 0), third = add(run, 'health-potion', 3, 1)
   assert.deepEqual(run.consumables.chainPlan(first).map(item => item.uid), [second.uid, third.uid])
-  run.player.armor = 0; run.player.energy = 0
+  run.player.armor = 0; setBalls(run, 0)
   select(run, first); assert(run.useSelected())
   assert.equal(run.globalTurn, 0); assert.equal(run.attackCount, 0)
-  assert.equal(run.player.energy, 6); assert.equal(run.player.armor, 3)
+  assert.equal(run.player.energy, 0); assert.equal(run.player.armor, 3)
   assert([first, second, third].every(item => !run.backpack.placementOf(item.uid)))
   assert.equal(run.backpack.items.filter(item => item.tier === 2).length, 1)
   assert.equal(run.itemRules.expansion.state.consumedTierOne, 3)
@@ -259,16 +259,16 @@ for (const trigger of ['move', 'knockback', 'death', 'poison-death']) {
 // Free target effects reuse valid target, cost no launcher energy, retain intrinsic item costs.
 {
   const run = fixture(); add(run, 'r-chain-drink', 2, 1); add(run, 'r-launcher', 4, 0); add(run, 'bath-robe', 5, 0)
-  const food = add(run, 'food-3', 2, 0), bomb = add(run, 'explosive', 3, 0)
-  const target = enemy(run); run._synchronizeBattle(); run.player.energy = 1; run.player.armor = 0
+  const food = add(run, 'health-potion', 2, 0), bomb = add(run, 'explosive', 3, 0)
+  const target = enemy(run); run._synchronizeBattle(); setBalls(run, 1); run.player.armor = 0
   select(run, food); assert(run.useSelected())
-  assert.equal(target.hp, 90); assert.equal(run.player.energy, 4); assert.equal(run.player.armor, 4)
+  assert.equal(target.hp, 90); assert.equal(run.player.energy, 0); assert.equal(run.player.armor, 4)
   assert.equal(run.backpack.placementOf(bomb.uid), null); assert.equal(run.globalTurn, 0)
 }
 // No valid target leaves the next item intact; no recursion through missing target or player death.
 {
   const run = fixture(); add(run, 'r-chain-drink', 2, 1)
-  const food = add(run, 'food-3', 2, 0), poison = add(run, 'poison', 3, 0), later = add(run, 'food-5', 3, 1)
+  const food = add(run, 'health-potion', 2, 0), poison = add(run, 'poison', 3, 0), later = add(run, 'health-potion', 3, 1)
   select(run, food); assert(run.useSelected())
   assert(run.backpack.placementOf(poison.uid)); assert(run.backpack.placementOf(later.uid))
   assert.equal(run.globalTurn, 0)
@@ -276,15 +276,15 @@ for (const trigger of ['move', 'knockback', 'death', 'poison-death']) {
 // Launcher boosts every tier-II damage component; invalid/insufficient-energy use is atomic.
 {
   const run = fixture(); add(run, 'r-chain-drink', 2, 1)
-  const wine = add(run, 'rage-wine', 2, 0), food = add(run, 'food-3', 3, 0)
-  run.player.hp = 2; run.player.energy = 0
+  const wine = add(run, 'rage-wine', 2, 0), food = add(run, 'health-potion', 3, 0)
+  run.player.hp = 2; setBalls(run, 0)
   select(run, wine); assert(run.useSelected())
   assert(run.gameOver); assert(run.backpack.placementOf(food.uid)); assert.equal(run.player.energy, 0)
   assert.equal(run.globalTurn, 0)
 }
 {
   const run = fixture(); add(run, 'r-chain-drink', 2, 1)
-  const food = add(run, 'food-3', 2, 0), teleport = add(run, 'teleport', 3, 0)
+  const food = add(run, 'health-potion', 2, 0), teleport = add(run, 'teleport', 3, 0)
   select(run, food); assert(run.useSelected())
   assert.deepEqual(run.player.pos, { c: 3, r: 2 }); assert.equal(run.globalTurn, 0)
   assert.equal(run.backpack.placementOf(teleport.uid), null)
@@ -304,10 +304,10 @@ for (const id of ['poison', 'explosive', 'thunder-charm']) {
   const run = fixture(), item = add(run, id, 2, 0); add(run, 'r-launcher', 3, 0)
   const target = enemy(run), bounce = enemy(run, { pos: { c: 5, r: 3 } })
   run._synchronizeBattle()
-  select(run, item); assert(run.useSelected()); run.player.energy = 1
+  select(run, item); assert(run.useSelected()); setBalls(run, 1)
   assert.equal(run._throwConsumable(target.pos), false)
   assert(run.backpack.placementOf(item.uid)); assert.equal(run.globalTurn, 0); assert.equal(run.player.energy, 1)
-  run.player.energy = 3
+  setBalls(run, 3)
   assert.equal(run._throwConsumable({ c: 0, r: 0 }), false)
   assert.equal(run.player.energy, 3)
   assert(run._throwConsumable(target.pos)); assert.equal(run.player.energy, 0); assert.equal(run.globalTurn, 0)
@@ -327,7 +327,7 @@ for (const id of ['poison', 'explosive', 'thunder-charm']) {
   globalThis.localStorage = { getItem: () => payload, setItem: (_key, value) => { payload = value }, removeItem: () => { deleted++; payload = null } }
   try {
     const loaded = new GameRun({ autoLoad: true })
-    assert.equal(deleted, 0); assert.equal(loaded.weaponEnergyCost(loaded.backpack.items.find(item => item.uid === weapon.uid)), 1)
+    assert.equal(deleted, 0); assert.equal(loaded.weaponEnergyCost(loaded.backpack.items.find(item => item.uid === weapon.uid)), 3)
     assert.deepEqual(loaded.itemRules.expansion.state, run.itemRules.expansion.state)
     assert(loaded.backpack.items.some(item => item.id === 'shield-bash'))
     payload = JSON.stringify({ ...run.serialize(), version: SAVE_VERSION - 1 })

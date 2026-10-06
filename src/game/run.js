@@ -1,3 +1,4 @@
+import { StaminaDeck, BALL_LABELS } from './model/stamina-deck.js'
 import { createEmitter } from './core/emitter.js'
 import { chebyshev, combatDistance, manhattan, neighbors8 } from './core/geometry.js'
 import { TURN_KINDS, TurnLedger } from './core/turns.js'
@@ -27,12 +28,8 @@ import { stepEnemy } from './rules/enemies.js'
 import { findAttackPath, findDoorPath, findInteractionPath, findPath, findRevealPath } from './rules/pathfinding.js'
 import { terrainDamageModifiers } from './rules/terrain.js'
 import { suggestedSynergyId } from './rules/synergies.js'
-import { migratePlaytestBalance, PLAYTEST_BALANCE_REVISION } from './data/playtest-balance.js'
-import { migrateFoodPoints, FOOD_POINTS_REVISION } from './data/food-point-migration.js'
-import { migrateBattleContent, BATTLE_CONTENT_REVISION } from './data/battle-content-migration.js'
 import { isSummonedEnemy } from './data/enemies.js'
-import { migrateAttributeItems } from './data/attribute-item-retirement.js'
-import { BASE_ACTION_ENERGY, BIG_ROUND_REVISION, migrateBigRounds } from './data/big-round-migration.js'
+import { BASE_ACTION_ENERGY, BIG_ROUND_REVISION } from './data/big-round-migration.js'
 
 // The design notation is rows × columns: four rows, eight columns.
 export const INVENTORY_COLUMNS = 8
@@ -43,7 +40,7 @@ export const ENERGY_MAX = BASE_ACTION_ENERGY
 export const TELEPORT_RANGE = 6
 export const SAVE_KEY = 'grid_flip_adventure_v2'
 // Pending attack turns must be recoverable in every accepted save.
-export const SAVE_VERSION = 35
+export const SAVE_VERSION = 36
 
 function clone(value) { return JSON.parse(JSON.stringify(value)) }
 
@@ -54,9 +51,9 @@ function compatibleSave(data) {
   const itemValid = item => typeof item?.uid === 'string' && !!getItemDefinition(item.id) &&
     !getItemDefinition(item.id).disabled && item.type === getItemDefinition(item.id).type &&
     (item.type !== 'weapon' || item.tier === getItemDefinition(item.id).tier) &&
-    (!['energy', 'potion'].includes(item.type) || (Number.isInteger(item[item.type === 'energy' ? 'energy' : 'heal']) &&
-      item[item.type === 'energy' ? 'energy' : 'heal'] > 0 && item[item.type === 'energy' ? 'energy' : 'heal'] <= getItemDefinition(item.id)[item.type === 'energy' ? 'energy' : 'heal']))
+    (item.type !== 'potion' || (Number.isInteger(item.heal) && item.heal > 0 && item.heal <= getItemDefinition(item.id).heal))
   if (!data || data.version !== SAVE_VERSION || !data.dungeon || !data.player || !data.backpack ||
+      !StaminaDeck.valid(data.staminaDeck) || !Array.isArray(data.battle?.knownEnemyIds) ||
       !statusesValid(data.player.statuses) || !Array.isArray(data.inventoryStash) ||
       !Array.isArray(data.backpack.placements) || !Array.isArray(data.dungeon.rooms) ||
       !Number.isInteger(data.turnCounters?.globalTurn) || data.turnCounters.globalTurn < 0 ||
@@ -69,6 +66,12 @@ function compatibleSave(data) {
       (data.battle.active && (data.battle.stage === 'pets' || data.battle.stage === 'enemy') && !data.roundResolving)) return false
   if (['poisonedTurns', 'poisonDamage', 'burningTurns', 'burningDamage', 'parry'].some(key => Object.hasOwn(data.player, key))) return false
   if (data.player.itemState && !statusesValid(data.player.itemState.buffs)) return false
+  if (new Set(data.battle.knownEnemyIds).size !== data.battle.knownEnemyIds.length ||
+      data.battle.knownEnemyIds.some(id => typeof id !== 'string')) return false
+  const weaponState = data.player.itemState
+  if (weaponState && ((!weaponState.weaponUses || typeof weaponState.weaponUses !== 'object' || Array.isArray(weaponState.weaponUses) ||
+      Object.values(weaponState.weaponUses).some(count => !Number.isInteger(count) || count < 0)) ||
+      [weaponState.previousTurnWeapon, weaponState.turnLastWeapon].some(uid => uid != null && typeof uid !== 'string'))) return false
   const petState = data.player.itemState?.pets
   if (petState && !['horn', 'prey', 'butcher'].every(key => Array.isArray(petState[key]) && petState[key].every(id => typeof id === 'string'))) return false
   const totems = data.dungeon.rooms.flatMap(room => (Array.isArray(room.entities) ? room.entities : [])
@@ -76,10 +79,7 @@ function compatibleSave(data) {
   if (new Set(totems.map(({ entity }) => entity.totemId)).size !== totems.length ||
       totems.some(({ room, entity }) => room.id !== data.player.roomId || !getTotemDefinition(entity.totemId) || getTotemDefinition(entity.totemId).disabled ||
         !Number.isInteger(entity.bornAt) || entity.lifetime !== 'battle' || Object.hasOwn(entity, 'expiresAt') ||
-        !Number.isInteger(entity.nextPulse) || entity.nextPulse < entity.bornAt || !room.tiles?.[entity.pos?.r]?.[entity.pos?.c]?.revealed) ||
-      !Number.isInteger(data.player.baseMaxEnergy ?? ENERGY_MAX) || (data.player.baseMaxEnergy ?? ENERGY_MAX) < ENERGY_MAX ||
-      data.player.maxEnergy !== (data.player.baseMaxEnergy ?? ENERGY_MAX) - totems.length || !Number.isInteger(data.player.energy) ||
-      data.player.energy < 0 || data.player.energy > data.player.maxEnergy) return false
+        !Number.isInteger(entity.nextPulse) || entity.nextPulse < entity.bornAt || !room.tiles?.[entity.pos?.r]?.[entity.pos?.c]?.revealed)) return false
   const totemState = data.player.itemState?.totems
   if (totems.length && !totemState) return false
   if (totemState && (!Number.isInteger(totemState.readyAt) || totemState.readyAt < 0 || !Number.isInteger(totemState.wardTurn))) return false
@@ -212,8 +212,8 @@ function detailForItem(item, player = null) {
     statLines.push(`\u{1F3F9} ${weaponAttackRange(item, player)}`)
     statLines.push(`\u{1F4AA} ${weaponEnergyCost(item)}`)
   } else if (item?.type === 'pet') {
-    statLines.push(`\u2694 ${item.attack}`, `\u5c04\u7a0b ${item.range}`, `\u98df\u7269\u6d88\u8017 ${item.foodCost}`)
-    effectLines.push('\u53602\u683c\uff1b\u73a9\u5bb6\u884c\u52a8\u540e\u81ea\u52a8\u653b\u51fb\uff0c\u7136\u540e\u654c\u4eba\u884c\u52a8\u3002')
+    statLines.push(`\u2694 ${item.attack}`, `\u5c04\u7a0b ${item.range}`, `体力球消耗 ${item.ballCost}`)
+    effectLines.push('占2格；结束玩家回合后消耗剩余体力球攻击，然后敌人行动。')
   } else if (item?.type === 'defense') {
     badges.push(defenseClassLabel(item.defenseClass), itemTierStars(item))
     statLines.push(`\u62a4\u7532 ${item.armorValue || 1}`)
@@ -229,8 +229,6 @@ function detailForItem(item, player = null) {
     effectLines.push(`${DETAIL_LABELS.health} +${item.heal || 0}`)
   } else if (item?.type === 'armor') {
     effectLines.push(`${DETAIL_LABELS.armorValue} +${item.armor || 0}`)
-  } else if (item?.type === 'energy') {
-    effectLines.push(`${DETAIL_LABELS.energy} +${item.energy || 0}`)
   } else if (item?.type === 'buff') {
     const target = item.attackTarget === 'melee' ? '\u4e0b\u6b21\u8fd1\u6218\u653b\u51fb' : DETAIL_LABELS.nextAttack
     effectLines.push(`${target} +${item.attackBonus || 0}`)
@@ -330,13 +328,11 @@ export class GameRun {
     this.pendingRoundEnd = false
     const generated = createChapterDungeon({ random: this.random })
     this.dungeon = generated.dungeon
+    this.staminaDeck = new StaminaDeck(this.random)
     this.player = {
       hp: 20,
       maxHp: 20,
       armor: 0,
-      energy: ENERGY_MAX,
-      maxEnergy: ENERGY_MAX,
-      baseMaxEnergy: ENERGY_MAX,
       gold: 0,
       roomId: generated.startRoomId,
       pos: { ...generated.start },
@@ -351,6 +347,7 @@ export class GameRun {
       statuses: {},
       lastAttackPower: 0,
     }
+    this._bindBallAccessors()
     bindStatusAccessors(this.player)
     this.backpack = new BackpackGrid(INVENTORY_COLUMNS, INVENTORY_ROWS)
     this.inventoryStash = []
@@ -438,17 +435,43 @@ export class GameRun {
     return room ? [...room.entities.values()].filter(entity => entity.kind === 'enemy' && room.isRevealed(entity.pos)) : []
   }
 
+  _bindBallAccessors() {
+    // Derived counts support routing; the deck is the only persisted resource.
+    Object.defineProperties(this.player, {
+      energy: { configurable: true, get: () => this.staminaDeck.hand.length },
+      maxEnergy: { configurable: true, get: () => Math.max(this.staminaDeck.supply, this.staminaDeck.hand.length) },
+    })
+  }
+
+  toggleStaminaBall(id) {
+    if (!this._canAct() || !this.battle.active || this.battle.stage !== 'player') return false
+    const changed = this.staminaDeck.toggle(id)
+    if (changed) this._changed()
+    return changed
+  }
+
+  weaponPayment(weapon) { return this.staminaDeck.plan(this.weaponEnergyCost(weapon), weapon.attribute) }
+
   _synchronizeBattle() {
     const active = this._activatedEnemies().length > 0 && !this.gameOver
     if (active && !this.battle.active) {
-      this.battle = { active: true, stage: 'player', round: 1 }
+      this.battle = { active: true, stage: 'player', round: 1, knownEnemyIds: this._activatedEnemies().map(enemy => enemy.id) }
       this.itemRules.startPlayerTurn()
-      this.player.energy = this.player.maxEnergy
-      this._log('进入战斗，开始玩家回合，体力已恢复。')
+      this.staminaDeck.startTurn(this._activatedEnemies().length)
+      this._log(`进入战斗，抽取${this.player.energy}个体力球。`)
       this.bus.emit('battle:started', { round: 1 })
+    } else if (active && this.battle.active) {
+      this.battle.knownEnemyIds ||= []
+      for (const enemy of this._activatedEnemies()) {
+        if (this.battle.knownEnemyIds.includes(enemy.id)) continue
+        this.battle.knownEnemyIds.push(enemy.id)
+        if (this.battle.stage === 'player') this.staminaDeck.supplement()
+      }
     } else if (!active && this.battle.active) {
       this.battle.active = false
       this.battle.stage = 'explore'
+      this.staminaDeck.discardHand()
+      this.itemRules.endBattle()
       this.pendingRoundEnd = false
       this.pets.endTurn()
       this.totems.endBattle()
@@ -463,7 +486,7 @@ export class GameRun {
     this.battle.stage = 'player'
     this.battle.round += 1
     this.itemRules.startPlayerTurn()
-    this.player.energy = this.player.maxEnergy
+    this.staminaDeck.startTurn(this._activatedEnemies().length)
     this.itemRules.action('turn-start')
     this.pendingRoundEnd = false
     this.bus.emit('player-turn:started', { round: this.battle.round })
@@ -488,17 +511,11 @@ export class GameRun {
   }
 
   _recoverEnergy(amount = 0) {
-    const recovery = Math.max(0, Math.floor(Number(amount) || 0))
-    this.player.energy = Math.min(this.player.maxEnergy, Math.max(0, Number(this.player.energy) || 0) + recovery)
+    if (this.battle.active && this.battle.stage === 'player') this.staminaDeck.draw(Math.max(0, Math.floor(Number(amount) || 0)))
     return this.player.energy
   }
 
-  _spendEnergy(amount = 0) {
-    const cost = Math.max(0, Math.floor(Number(amount) || 0))
-    if ((Number(this.player.energy) || 0) < cost) return false
-    this.player.energy -= cost
-    return true
-  }
+  _spendEnergy(amount = 0) { return !!this.staminaDeck.pay(amount) }
 
   getStatus(actor, id) { return getStatus(actor, id) }
 
@@ -683,10 +700,8 @@ export class GameRun {
   _applyLevelUpOption(id) {
     if (id === 'heal') this._healPlayer(5, { source: 'level-up:heal' })
     else if (id === 'max-health') this.player.maxHp += 2
-    else if (id === 'max-energy') {
-      this.player.baseMaxEnergy += 1
-      this.player.maxEnergy += 1
-    } else return false
+    else if (id === 'wild-ball') this.staminaDeck.add('wild')
+    else return false
     const option = getLevelUpOption(id)
     if (option) this._log(`\u6210\u957f\u9009\u62e9\uff1a${option.name}\u3002`)
     this._finishLevelUp()
@@ -716,12 +731,14 @@ export class GameRun {
       detail.statLines[1] = `\u{1F3F9} ${this.weaponRange(item)}`
       detail.statLines[2] = `\u{1F4AA} ${this.weaponEnergyCost(item)}`
       detail.effectLines.push(...this.itemRules.weaponLines(item))
+      const payment = this.weaponPayment(item)
+      detail.effectLines.push(`消耗${this.weaponEnergyCost(item)}个${BALL_LABELS[item.attribute]}球，万能球可替代；异色支付伤害×0.5`)
+      detail.effectLines.push(!this.battle.active ? '进入战斗后抽球' : !payment ? '当前体力球不足' : payment.offColor ? '本次支付含异色球：伤害×0.5' : '本次可同色支付：完整伤害')
     }
     if (item.type === 'pet' && this.backpack.placementOf(item.uid)) {
       detail.statLines[1] = `\u5c04\u7a0b ${this.pets.range(item)}`
-      detail.statLines[2] = `\u98df\u7269\u6d88\u8017 ${this.pets.cost(item)}`
-      if (this.pets.has('r-vampire-fang')) detail.effectLines.push(`\u8840\u74f6\u4f9b\u98df\u6d88\u8017 ${Math.max(1, this.pets.cost(item) - 1)}`)
-      detail.effectLines.push(`\u76f8\u90bb\u53ef\u7528\u70b9\u6570 ${this.pets.foods(item).reduce((sum, food) => sum + this.pets.points(food), 0)}`)
+      detail.statLines[2] = `体力球消耗 ${this.pets.cost(item)}`
+      detail.effectLines.push(`玩家剩余体力球 ${this.player.energy}；宠物不区分球属性`)
     }
     if (isConsumable(item) && this.backpack.placementOf(item.uid)) {
       if (this.consumables.boosted(item, true)) detail.effectLines.push('投掷器：主动使用额外消耗2体力，伤害效果×1.5')
@@ -730,7 +747,7 @@ export class GameRun {
     detail.lines = [...detail.statLines, ...detail.effectLines]
     if (isTotemBadge(item)) {
       const active = this.totems.active(item.totemId)
-      detail.lines.push('召唤范围4；占用1体力上限；战斗结束消失；所有图腾徽章共享2个大回合冷却')
+      detail.lines.push('召唤范围4；战斗中消耗1个任意体力球；战斗结束消失；所有图腾徽章共享2个大回合冷却')
       detail.lines.push(active ? '图腾已存在，保留到本次或下一次战斗结束' :
         this.totems.cooldown ? `召唤冷却：剩余${this.totems.cooldown}回合` : '点击使用，再选择场地中的空格召唤')
     }
@@ -760,7 +777,7 @@ export class GameRun {
     if (entity.kind === 'item') return this._showDetail({ position: 'bottom', ...detailForItem(entity.item, this.player) })
     if (entity.kind === 'totem') return this._showDetail({ position: 'bottom', title: entity.name, type: '图腾', icon: 'relic',
       description: getTotemDefinition(entity.totemId)?.description || '', lines: [
-        '保留到本次或下一次战斗结束', '占用1体力上限；受到一次攻击或离开房间即消失',
+        '保留到本次或下一次战斗结束', '受到一次攻击或离开房间即消失',
         ...(entity.totemId === 'soul' ? [`影响范围${1 + this.totems.badges.filter(item => item.totemId !== 'soul').length}`] : []),
       ] })
     if (entity.kind === 'enemy') {
@@ -1487,7 +1504,7 @@ export class GameRun {
       this._log(`${definition.name}\u89e6\u53d1\uff0c\u7ffb\u5f00\u4e86 ${targets.length} \u4e2a\u9644\u8fd1\u654c\u4eba\u3002`)
     } else if (definition.effect === 'corrosion') {
       const energyLoss = Math.max(1, Math.floor(Number(definition.energyLoss) || 2))
-      this.player.energy = Math.max(0, this.player.energy - energyLoss)
+      this.staminaDeck.pay(Math.min(this.player.energy, energyLoss))
       this._log(`${definition.name}\u89e6\u53d1\uff0c\u4f53\u529b -${energyLoss}\u3002`)
     } else if (definition.effect === 'poison') {
       const poisonDamage = Math.max(1, Math.floor(Number(definition.poisonDamage) || 1))
@@ -1658,19 +1675,22 @@ export class GameRun {
     const range = this.weaponRange(weapon)
     if (combatDistance(this.player.pos, enemy.pos, range) > range) return this._reject('敌人已经离开射程。')
     const context = this.itemRules.attackContext(weapon, enemy)
-    if (!this._spendEnergy(this.weaponEnergyCost(weapon))) return this._reject('体力不足。')
+    const payment = this.staminaDeck.pay(this.weaponEnergyCost(weapon), weapon.attribute)
+    if (!payment) return this._reject('体力球不足。')
+    this.itemRules.recordWeaponUse(weapon)
     this.itemRules.expansion.beforeAttack(weapon, context)
     this.pets.playerAttack(enemy)
-    const damage = resolveDamage(weapon.attack, [
+    const fullDamage = resolveDamage(weapon.attack, [
       { stage: 'flat', value: context.flat },
       { stage: 'multiply', value: context.attackMultiplier },
       { stage: 'multiply', value: context.multiplier },
       ...terrainDamageModifiers(this.currentRoom, this.player.pos),
     ]).total + context.bonusDamage
+    const damage = Math.max(0, Math.floor(fullDamage * payment.multiplier))
     const targetPosition = { ...enemy.pos }
     this.pendingAttackImpacts = []
     this.pendingAttackExplosions = []
-    this.player.lastAttackPower = Math.max(0, ((Number(weapon.attack) || 0) + context.flat) * context.attackMultiplier)
+    this.player.lastAttackPower = Math.max(0, ((Number(weapon.attack) || 0) + context.flat) * context.attackMultiplier * payment.multiplier)
     this.itemRules.consume(context)
     const logSequence = this._logSequence
     const hit = this._damageEnemy(enemy, damage, { ignoreDefense: context.ignoreDefense, weapon })
@@ -1761,6 +1781,7 @@ export class GameRun {
       this._emitTurnEvent('turn:started', turnContext)
       this.battle.stage = 'pets'
       if (!this.gameOver) this.pets.act()
+      this.staminaDeck.discardHand()
       this.battle.stage = 'enemy'
       if (!this._activatedEnemies().length || this.gameOver) return true
       clock.push(...this._statusClockSnapshot().filter(isPeriodic))
@@ -2341,11 +2362,9 @@ export class GameRun {
   serialize() {
     return {
       version: SAVE_VERSION,
-      playtestBalanceRevision: PLAYTEST_BALANCE_REVISION,
-      foodPointsRevision: FOOD_POINTS_REVISION,
-      battleContentRevision: BATTLE_CONTENT_REVISION,
       bigRoundRevision: BIG_ROUND_REVISION,
-      battle: { ...this.battle },
+      staminaDeck: this.staminaDeck.serialize(),
+      battle: { ...this.battle, knownEnemyIds: [...(this.battle.knownEnemyIds || [])] },
       roundResolving: this.roundResolving,
       pendingRoundEnd: this.pendingRoundEnd,
       dungeon: this.dungeon.serialize(),
@@ -2383,27 +2402,18 @@ export class GameRun {
       const raw = localStorage.getItem(SAVE_KEY)
       if (!raw) return false
       const data = JSON.parse(raw)
-      let attributeItemsMigrated = false
-      let bigRoundsMigrated = false
-      let foodPointsMigrated = false
-      let battleContentMigrated = false
-      if (data?.version === SAVE_VERSION) {
-        migratePlaytestBalance(data)
-        foodPointsMigrated = migrateFoodPoints(data)
-        attributeItemsMigrated = migrateAttributeItems(data, { random: this.random })
-        bigRoundsMigrated = migrateBigRounds(data)
-        battleContentMigrated = migrateBattleContent(data, { random: this.random })
-      }
       if (!compatibleSave(data)) return discard()
       this.dungeon = Dungeon.hydrate(data.dungeon)
       this.player = data.player
+      this.staminaDeck = new StaminaDeck(this.random, data.staminaDeck)
+      this._bindBallAccessors()
       this.battle = data.battle && typeof data.battle.active === 'boolean' ? { ...data.battle } : { active: false, stage: 'explore', round: 0 }
       this.roundResolving = false
       this.pendingRoundEnd = false
       this.backpack = BackpackGrid.hydrate(data.backpack)
       this.inventoryStash = Array.isArray(data.inventoryStash) ? data.inventoryStash.filter((item) => item?.uid) : []
       const refreshItemCopy = item => {
-        if (['food-3', 'food-5', 'food-7', 'food-9', 'teleport'].includes(item?.id)) item.name = getItemDefinition(item.id).name
+        if (item?.id === 'teleport') item.name = getItemDefinition(item.id).name
         if (['r-traveler', 'r-step-boots', 'r-turn-shield', 'triad-tide'].includes(item?.id)) item.description = getItemDefinition(item.id).description
       }
       for (const item of [...this.backpack.items, ...this.inventoryStash]) refreshItemCopy(item)
@@ -2417,9 +2427,6 @@ export class GameRun {
           }
         }
       }
-      this.player.baseMaxEnergy ??= ENERGY_MAX
-      this.player.maxEnergy = this.player.baseMaxEnergy - [...this.dungeon.rooms.values()].flatMap(room => [...room.entities.values()]).filter(entity => entity.kind === 'totem').length
-      this.player.energy = Math.max(0, Math.min(this.player.maxEnergy, Math.floor(Number(this.player.energy) || 0)))
       this.player.level = Math.max(PROGRESSION.startingLevel, Number(this.player.level) || PROGRESSION.startingLevel)
       this.player.experience = Math.max(0, Number(this.player.experience) || 0)
       this.player.experienceToNext = Math.max(1, Number(this.player.experienceToNext) || experienceToNextLevel(this.player.level))
@@ -2511,7 +2518,6 @@ export class GameRun {
         this._persist()
       } else {
         this._synchronizeBattle()
-        if (attributeItemsMigrated || bigRoundsMigrated || foodPointsMigrated || battleContentMigrated) this._persist()
       }
       return true
     } catch {

@@ -181,6 +181,19 @@ button { font: inherit; }
 .vital-health-fill { position: absolute; top: 0; right: auto; bottom: 0; left: 0; display: block; width: 0; height: 100%; background: linear-gradient(90deg, #d9485f, #ff8b91); transition: width .16s ease; }
 .vital-energy { grid-column: 1; grid-row: 2; border: 1px solid rgba(255,213,107,.58); background: rgba(58,45,20,.88); }
 .vital-energy-fill { position: absolute; top: 0; right: auto; bottom: 0; left: 0; display: block; width: 0; height: 100%; background: linear-gradient(90deg, #c18d27, #ffd56b); transition: width .16s ease; }
+.vital-bars:has(.stamina-hand) { height: 42px; row-gap: 3px; }
+.stamina-hand { display: flex; align-items: center; gap: 4px; min-height: 24px; overflow-x: auto; scrollbar-width: thin; pointer-events: auto; }
+.stamina-ball { flex: 0 0 22px; width: 22px; height: 22px; border-radius: 50%; border: 1px solid #ffffff66; padding: 0; color: #201c15; font-size: 10px; font-weight: 800; box-shadow: inset 0 2px 3px #ffffff66, inset 0 -2px 3px #00000044; cursor: pointer; }
+.stamina-ball.scorch { background: #ef5b5b; }
+.stamina-ball.wither { background: #f4d56d; }
+.stamina-ball.drown { background: #69b7ee; }
+.stamina-ball.wild { background: linear-gradient(135deg, #fff2cf, #b8a5ed); }
+.stamina-ball.selected { border: 2px solid #fff; outline: 1px solid #fff; outline-offset: -4px; }
+.stamina-ball:focus-visible { outline: 2px solid white; }
+.stamina-count { flex-shrink: 0; min-width: 16px; text-align: center; font-size: 11px; color: #fff0bd; font-variant-numeric: tabular-nums; }
+.stamina-empty { white-space: nowrap; color: #bcaf92; font-size: 10px; }
+.stamina-payment { position: absolute; bottom: calc(100% + 3px); left: 0; font-size: 11px; color: #ddeddf; padding: 3px 7px; background: #171b20ee; border-radius: 4px; pointer-events: none; }
+.stamina-payment.discounted { color: #ffc16c; }
 .vital-health strong,.vital-energy strong { position: absolute; inset: 0; z-index: 1; display: grid; place-items: center; color: #fff; font-size: 9px; font-variant-numeric: tabular-nums; writing-mode: horizontal-tb; transform: none; text-shadow: 0 1px 2px rgba(0,0,0,.7); }
 /* Disabled during model/animation gates, but visually stable to avoid HUD flicker. */
 .hud-top .hud-icon[data-action='craft-open']:disabled { opacity: 1; cursor: default; }

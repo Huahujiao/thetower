@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { GameRun } from '../src/game/run.js'
 import { createTrapEntity, getTrapDefinition, randomTrapId } from '../src/game/data/traps.js'
-import { fixture, enemy, round } from './item-test-helpers.mjs'
+import { fixture, enemy, round, setBalls } from './item-test-helpers.mjs'
 import { findRevealPath } from '../src/game/rules/pathfinding.js'
 
 assert.equal(getTrapDefinition('corrosion')?.effect, 'corrosion')
@@ -36,7 +36,7 @@ const triggerLogIndex = revealRun.log.findIndex((line) => line.includes('\u89e6\
 assert.ok(revealLogIndex >= 0 && triggerLogIndex >= 0 && revealLogIndex < triggerLogIndex)
 
 const corrosionRun = fixture()
-corrosionRun.player.energy = 6
+setBalls(corrosionRun, 6)
 const corrosionTrap = createTrapEntity('corrosion', corrosionRun.player.pos)
 corrosionRun.currentRoom.addEntity(corrosionTrap)
 corrosionRun._triggerTrap(corrosionTrap)

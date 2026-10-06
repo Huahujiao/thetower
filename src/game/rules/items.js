@@ -59,10 +59,24 @@ export class ItemRules {
   get state() {
     const state = this.run.player.itemState ||= { buffs: {}, lastAction: null, steps: 0, travel: 0 }
     state.buffs ||= {}
+    state.weaponUses ||= {}
     return state
   }
   get room() { return this.run._roomRuntime().items ||= {} }
-  startPlayerTurn() { this.state.tideRefundUsed = false }
+  startPlayerTurn() {
+    this.state.previousTurnWeapon = this.state.turnLastWeapon || null
+    this.state.turnLastWeapon = null
+    this.state.weaponUses = {}
+    this.state.tideRefundUsed = false
+  }
+  endBattle() {
+    this.state.previousTurnWeapon = null; this.state.turnLastWeapon = null; this.state.weaponUses = {}
+  }
+  recordWeaponUse(weapon) {
+    this.state.weaponUses ||= {}
+    this.state.weaponUses[weapon.uid] = (this.state.weaponUses[weapon.uid] || 0) + 1
+    this.state.turnLastWeapon = weapon.uid
+  }
   has(id) { return !getItemDefinition(id)?.disabled && this.run.backpack.items.some(i => (i.id || i.relicId) === id) }
   adjacent(item, id) {
     const range = ['range-disc', 'steady-clip'].includes(id) ? this.range(item) : item.range || 1
@@ -158,7 +172,10 @@ export class ItemRules {
     if (this.has('r-empty') && this.run.backpack.capacity - this.run.backpack.usedCells >= 8) cost--
     if (baseCost >= 5 && this.has('r-heavy-wrist') && adjacentItems(this.run.backpack, weapon).length === 0) cost--
     cost -= this.expansion.cost(weapon)
-    return Math.max(1, cost)
+    const previous = this.state.previousTurnWeapon
+    const seal = this.has('r-single-seal') && !!previous
+    const repeat = seal && previous === weapon.uid ? 0 : (this.state.weaponUses?.[weapon.uid] || 0)
+    return Math.max(1, cost) + repeat + (seal && previous !== weapon.uid ? 2 : 0)
   }
   attackContext(weapon, enemy) {
     const { run } = this
@@ -304,13 +321,14 @@ export class ItemRules {
 
   weaponLines(weapon) {
     const adjacent = adjacentItems(this.run.backpack, weapon)
-    const lines = []
+    const lines = [`本回合已使用 ${this.state.weaponUses?.[weapon.uid] || 0} 次；再次使用同一实例额外消耗递增1球`]
+    if (this.has('r-single-seal')) lines.push('执一印：与上回合最后使用的武器相同则免递增，不同则额外消耗2球；上回合未攻击时不触发')
     if (weapon.id === 'silver-guard' && adjacent.some(i => i.type === 'defense')) lines.push('防具邻接：攻击+1')
     if (weapon.id === 'mountain-maul' && adjacent.length === 0) lines.push('四向留白：攻击+3')
     if (conduitCapacity(this.run.backpack, weapon)) lines.push(`导流线：可用蓄势 ${this.state.conduitCharge || 0}/3`)
     if (forkBridgeActive(this.run.backpack, weapon)) lines.push('分叉接头：攻击+1')
     if (weapon.id === 'coin-blade') lines.push(`金币 ${this.run.player.gold}/12${this.run.player.gold >= 12 ? '，攻击+2' : ''}`)
-    if (weapon.id === 'triad-tide') lines.push(`最大射程命中：返还1体力，每个玩家回合限1次，同名武器共享${this.run.battle.active && this.state.tideRefundUsed ? '（本回合已触发）' : ''}`)
+    if (weapon.id === 'triad-tide') lines.push(`最大射程命中：额外抽1球，每个玩家回合限1次，同名武器共享${this.run.battle.active && this.state.tideRefundUsed ? '（本回合已触发）' : ''}`)
     if (this.adjacent(weapon, 'range-disc')) lines.push(`\u6d4b\u8ddd\u76d8\uff1a\u4e0b\u6b21\u653b\u51fb\u84c4\u52bf ${this.state.sniperCharge || 0}/2`)
     if (this.adjacent(weapon, 'bone-nail')) lines.push('裂骨钉：碰撞伤害+2，延迟行动1次')
     const extra = this.expansion.attackContext(weapon, { moved: this.state.lastAction === 'movement', distance: 0, range: this.range(weapon) })

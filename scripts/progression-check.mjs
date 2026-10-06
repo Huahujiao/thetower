@@ -1,12 +1,12 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { fixture, add, enemy, attack, select } from './item-test-helpers.mjs'
-import { GameRun, ENERGY_MAX } from '../src/game/run.js'
+import { fixture, add, enemy, attack, select, setBalls } from './item-test-helpers.mjs'
+import { GameRun } from '../src/game/run.js'
 import { LEVEL_UP_OPTIONS, buildLevelUpChoices } from '../src/game/data/progression.js'
 import { RELIC_DEFS } from '../src/game/data/relics.js'
 import { RECIPES, getItemDefinition, makeItemById } from '../src/game/data/content.js'
 
-function offer(run, id, other = ['max-health', 'max-energy']) {
+function offer(run, id, other = ['max-health', 'wild-ball']) {
   run.player.experience = run.player.experienceToNext
   run.phase = 'level-up'
   run.levelUp = { choices: [id, ...other.filter(value => value !== id)].slice(0, 3) }
@@ -91,7 +91,7 @@ for (const full of [false, true]) {
   const loaded = restore(run)
   assert.deepEqual(loaded.levelUp, run.levelUp)
   assert.equal(loaded.inventoryStash.length, 0)
-  assert(loaded.chooseLevelUpOption(loaded.levelUp.choices.find(id => ['heal', 'max-health', 'max-energy'].includes(id))))
+  assert(loaded.chooseLevelUpOption(loaded.levelUp.choices.find(id => ['heal', 'max-health', 'wild-ball'].includes(id))))
   assert.equal(loaded.player.level, 2)
   assert.equal(loaded.globalTurn, before.turn)
 }
@@ -132,14 +132,14 @@ for (const full of [false, true]) {
   offer(run, 'heal'); assert(run.chooseLevelUpOption('heal')); assert.equal(run.player.hp, 13)
   offer(run, 'max-health'); assert(run.chooseLevelUpOption('max-health'))
   assert.equal(run.player.maxHp, 22); assert.equal(run.player.hp, 13)
-  run.player.energy = 3
-  offer(run, 'max-energy'); assert(run.chooseLevelUpOption('max-energy'))
-  offer(run, 'max-energy'); assert(run.chooseLevelUpOption('max-energy'))
-  assert.equal(run.player.baseMaxEnergy, ENERGY_MAX + 2)
-  assert.equal(run.player.maxEnergy, ENERGY_MAX + 2); assert.equal(run.player.energy, 3)
+  setBalls(run, 3)
+  offer(run, 'wild-ball'); assert(run.chooseLevelUpOption('wild-ball'))
+  offer(run, 'wild-ball'); assert(run.chooseLevelUpOption('wild-ball'))
+  assert.equal(run.staminaDeck.composition().wild, 4)
+ assert.equal(run.player.energy, 3)
   assert.equal(run.globalTurn, turn)
   const loaded = restore(run)
-  assert.equal(loaded.player.maxEnergy, ENERGY_MAX + 2); assert.equal(loaded.player.energy, 3)
+  assert.equal(loaded.staminaDeck.composition().wild, 4); assert.equal(loaded.player.energy, 3)
 }
 
 // Excess experience queues the next upgrade only after the current selection completes.
@@ -147,11 +147,11 @@ for (const full of [false, true]) {
   const run = fixture()
   run.player.experience = 18
   assert(run._queueLevelUp())
-  run.levelUp.choices = ['heal', 'max-health', 'max-energy']
+  run.levelUp.choices = ['heal', 'max-health', 'wild-ball']
   assert(run.chooseLevelUpOption('max-health'))
   assert.equal(run.player.level, 2); assert.equal(run.phase, 'level-up')
   assert.equal(run.player.experience, 10); assert.equal(run.levelUpChoices().length, 3)
-  run.levelUp.choices = ['heal', 'max-health', 'max-energy']
+  run.levelUp.choices = ['heal', 'max-health', 'wild-ball']
   assert(run.chooseLevelUpOption('max-health'))
   assert.equal(run.player.level, 3); assert.equal(run.player.maxHp, 24)
   assert.equal(run.phase, 'explore'); assert.equal(run.player.experience, 0)
@@ -160,12 +160,12 @@ for (const full of [false, true]) {
 // Permanent capacity survives a totem reserving a point and later returning it.
 {
   const run = fixture(), badge = add(run, 'r-totem-drum')
-  offer(run, 'max-energy'); assert(run.chooseLevelUpOption('max-energy'))
+  offer(run, 'wild-ball'); assert(run.chooseLevelUpOption('wild-ball'))
   select(run, badge); assert(run.useSelected()); assert(run.clickTile(2, 3))
-  assert.equal(run.player.maxEnergy, ENERGY_MAX)
+  assert.equal(run.staminaDeck.composition().wild, 3)
   const loaded = restore(run), totem = loaded.totems.active('drum')
-  assert(totem); assert.equal(loaded.player.baseMaxEnergy, ENERGY_MAX + 1)
-  assert(loaded.totems.remove(totem)); assert.equal(loaded.player.maxEnergy, ENERGY_MAX + 1)
+  assert(totem); assert.equal(loaded.staminaDeck.composition().wild, 3)
+  assert(loaded.totems.remove(totem)); assert.equal(loaded.staminaDeck.composition().wild, 3)
 }
 
 // Nested relic choices are unique, exclude ownership, persist, and cannot be rerolled by returning.

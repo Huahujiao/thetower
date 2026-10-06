@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { fixture, add, enemy, attack, select } from './item-test-helpers.mjs'
+import { fixture, add, enemy, attack, select, setBalls } from './item-test-helpers.mjs'
 import { ALL_ITEM_DEFS, getItemDefinition, makeItem } from '../src/game/data/content.js'
 import { catalogContent } from '../src/ui/wiki-catalog.js'
 
@@ -101,6 +101,7 @@ for (const appearance of appearances) {
     run.player.pos = { c: run.currentRoom.width - 3, r: 3 }
     const target = enemy(run, { pos: { c: run.currentRoom.width - 1, r: 3 } })
     select(run, weapon)
+    run._synchronizeBattle(); setBalls(run, 6, weapon.attribute)
     assert(run._attack(target))
     assert.equal(target.hp, 95)
     assert.equal(target.actionDelay, attachment === 'bone-nail' ? 101 : 100)

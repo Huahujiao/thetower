@@ -1,3 +1,4 @@
+import { setBalls } from './item-test-helpers.mjs'
 import assert from 'node:assert/strict'
 import { fixture, add, select, enemy } from './item-test-helpers.mjs'
 import { GameRun, SAVE_KEY } from '../src/game/run.js'
@@ -20,7 +21,7 @@ assert.ok(idleMotion(0).scale > 0)
 const killRun = fixture()
 const weapon = add(killRun, 'rust-sword')
 select(killRun, weapon)
-killRun.player.energy = 6
+setBalls(killRun, 6)
 const target = enemy(killRun, { hp: 1, noExperience: false, experience: killRun.player.experienceToNext })
 const killEvents = []
 killRun.on('animate:attack', (event) => killEvents.push(event))
@@ -51,7 +52,7 @@ assert.equal(killRun.phase, 'level-up')
 const hitRun = fixture()
 const hitWeapon = add(hitRun, 'rust-sword')
 select(hitRun, hitWeapon)
-hitRun.player.energy = 10
+setBalls(hitRun, 10)
 const survivor = enemy(hitRun, { hp: 100 })
 let hitEvent
 hitRun.on('animate:attack', (event) => { hitEvent = event })
@@ -98,7 +99,7 @@ assert.equal(fallRun.deathAnimationPending, false)
 const explosionRun = fixture()
 const explosionWeapon = add(explosionRun, 'rust-sword')
 select(explosionRun, explosionWeapon)
-explosionRun.player.energy = 10
+setBalls(explosionRun, 10)
 explosionRun.player.hp = 1
 const explosive = enemy(explosionRun, { hp: 1, deathExplosionDamage: 3, explosionRadius: 1 })
 const explosionOrder = []

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { fixture, enemy, settleAnimations } from './item-test-helpers.mjs'
+import { fixture, enemy, settleAnimations, setBalls } from './item-test-helpers.mjs'
 import { createGoldEntity, createKeyEntity, createLootEntity, makeItemById, makeRelicItem } from '../src/game/data/content.js'
 import { RELIC_DEFS } from '../src/game/data/relics.js'
 
@@ -11,7 +11,7 @@ function loot(run, kind, pos) {
     const edge = [...run.dungeon.edges.values()][0]
     edge.unlocked = false
     entity = createKeyEntity(edge.id, pos)
-  } else entity = createLootEntity(kind === 'relic' ? makeRelicItem(relicId) : makeItemById('food-3'), pos)
+  } else entity = createLootEntity(kind === 'relic' ? makeRelicItem(relicId) : makeItemById('health-potion'), pos)
   run.currentRoom.addEntity(entity)
   return entity
 }
@@ -34,7 +34,7 @@ for (const kind of ['item', 'gold', 'key', 'relic']) {
     const run = fixture()
     enemy(run, { pos: { c: 0, r: 0 } }); run._synchronizeBattle()
     const entity = loot(run, kind, { c: 3 - steps, r: 3 })
-    run.player.energy = steps
+    setBalls(run, steps)
     assert(run.clickTile(entity.pos.c, entity.pos.r))
     assert.equal(run.player.energy, 0); assert.equal(run.globalTurn, 0)
     assert.deepEqual(run.player.pos, entity.pos); collected(run, entity)
@@ -43,7 +43,7 @@ for (const kind of ['item', 'gold', 'key', 'relic']) {
   // second charge after exploration becomes a newly refilled player turn.
   const run = fixture(), entity = loot(run, kind, { c: 4, r: 3 })
   const target = ambusher(run, { c: 4, r: 4 })
-  run.player.energy = 0
+  setBalls(run, 0)
   const events = []
   run.on('animate:move', () => events.push('move'))
   run.on('animate:flip', () => events.push('flip'))
@@ -69,7 +69,7 @@ for (const kind of ['item', 'gold', 'key', 'relic']) {
 {
   const run = fixture(); enemy(run, { pos: { c: 0, r: 0 } }); run._synchronizeBattle()
   const entity = loot(run, 'item', { c: 5, r: 3 })
-  run.player.energy = 1
+  setBalls(run, 1)
   assert.equal(run.clickTile(5, 3), false)
   assert.deepEqual(run.player.pos, { c: 3, r: 3 }); assert.equal(run.player.energy, 1)
   assert(run.currentRoom.entity(entity.id))
@@ -78,12 +78,12 @@ for (const kind of ['item', 'gold', 'key', 'relic']) {
 {
   const run = fixture(); enemy(run, { pos: { c: 0, r: 0 } }); run._synchronizeBattle()
   const entity = loot(run, 'item', run.player.pos)
-  run.player.energy = 1
+  setBalls(run, 1)
   assert(run.clickTile(3, 3)); assert.equal(run.player.energy, 0); collected(run, entity)
 }
 {
   const run = fixture()
-  while (run.backpack.add(makeItemById('food-3'))) { /* fill every cell */ }
+  while (run.backpack.add(makeItemById('health-potion'))) { /* fill every cell */ }
   const entity = loot(run, 'item', { c: 4, r: 3 })
   ambusher(run, { c: 4, r: 4 })
   assert(run.clickTile(4, 3)); collected(run, entity)

@@ -1,11 +1,9 @@
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import * as THREE from 'three'
-import { GameRun } from '../src/game/run.js'
-import { ALL_ITEM_DEFS, createEnemyById, createLootEntity, getItemDefinition, makeItemById, randomConsumableDefinition, randomWeapon } from '../src/game/data/content.js'
-import { buildMerchantStock, createMerchantEntity } from '../src/game/data/merchants.js'
+import { ALL_ITEM_DEFS, createEnemyById, getItemDefinition, makeItemById, randomConsumableDefinition, randomWeapon } from '../src/game/data/content.js'
+import { buildMerchantStock } from '../src/game/data/merchants.js'
 import { buildSupplyRewardChoices } from '../src/game/data/rewards.js'
-import { migratePlaytestBalance } from '../src/game/data/playtest-balance.js'
 import { getStatus } from '../src/game/rules/statuses.js'
 import { fixture, add, select } from './item-test-helpers.mjs'
 
@@ -53,44 +51,6 @@ assert.equal(createEnemyById('tide-shadow-cub').attack, 1)
   assert(getStatus(run.player, 'player-poison'), 'healing must not cleanse poison')
 }
 
-// A pre-balance v35 run remains loadable, including retired items in every
-// storage location, pending rewards, old enemies and reinforced weapons.
-{
-  const run = fixture(), weapon = add(run, 'root-axe'), ownedSeeker = add(run, 'demon-seeker')
-  weapon.attack = 7; weapon.reinforcement = 2
-  const potion = add(run, 'health-potion')
-  const retired = uid => ({ id: 'cleanse', uid, type: 'cleanse', shape: [[1]], rotatable: false })
-  run.backpack.add(retired('item-99001')); run.inventoryStash.push(retired('item-99002'))
-  const room = run.currentRoom, cub = createEnemyById('tide-shadow-cub', { c: 0, r: 0 })
-  cub.attack = 2; cub.hp = 3; cub.actionDelay = 7; room.addEntity(cub)
-  room.addEntity(createLootEntity(retired('item-99003'), { c: 1, r: 0 }))
-  const groundSeeker = createLootEntity(makeItemById('demon-seeker'), { c: 2, r: 0 }); room.addEntity(groundSeeker)
-  const merchant = createMerchantEntity('merchant', { c: 3, r: 0 })
-  merchant.stock = [{ itemId: 'cleanse', price: 6 }, { itemId: 'demon-seeker', price: 11 }]; room.addEntity(merchant)
-  run.roomReward = { roomId: room.id, choices: [{ kind: 'item', itemId: 'cleanse' }, { kind: 'item', itemId: 'demon-seeker' }] }
-  run.phase = 'reward'
-  const data = run.serialize(); delete data.playtestBalanceRevision
-  const previousStorage = globalThis.localStorage
-  let removed = 0
-  globalThis.localStorage = { getItem: () => JSON.stringify(data), setItem() {}, removeItem() { removed++ } }
-  try {
-    const loaded = new GameRun({ autoLoad: true })
-    assert.equal(removed, 0)
-    assert.equal(loaded.backpack.items.find(item => item.uid === weapon.uid).attack, 5)
-    assert.equal(loaded.backpack.items.find(item => item.uid === weapon.uid).reinforcement, 2)
-    assert(loaded.backpack.items.some(item => item.uid === ownedSeeker.uid && item.id === 'demon-seeker'))
-    assert(loaded.backpack.items.some(item => item.uid === potion.uid))
-    assert(![...loaded.backpack.items, ...loaded.inventoryStash].some(item => item.id === 'cleanse'))
-    const enemy = loaded.currentRoom.entity(cub.id)
-    assert.equal(enemy.attack, 1); assert.equal(enemy.hp, 3); assert.equal(enemy.actionDelay, 7)
-    assert.equal(loaded.currentRoom.entity(groundSeeker.id).item.id, 'rust-sword')
-    assert.deepEqual(loaded.currentRoom.entity(merchant.id).stock.map(stock => stock.itemId), ['rust-sword'])
-    assert.deepEqual(loaded.roomReward.choices.map(choice => choice.itemId), ['health-potion', 'rust-sword'])
-    const migrated = loaded.serialize(), snapshot = globalThis.structuredClone(migrated)
-    migratePlaytestBalance(migrated); assert.deepEqual(migrated, snapshot)
-  } finally { globalThis.localStorage = previousStorage }
-}
-
 // Transparent animation margins enlarge the plane, keeping visible pixels
 // at the original world scale. Repeated refreshes must not accumulate scale.
 {
@@ -133,4 +93,4 @@ for (const [width, height] of [[6, 6], [8, 7], [10, 10]]) for (const side of ['t
     assert.equal(scene.pathPreview, null)
   }
 }
-console.log(`playtest-balance-check passed: crafting, instance isolation, acquisition gates, retired consumables, save migration, ${doorsChecked} door markers`)
+console.log(`playtest-balance-check passed: crafting, instance isolation, acquisition gates, retired consumables, ${doorsChecked} door markers`)

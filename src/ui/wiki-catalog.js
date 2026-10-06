@@ -27,7 +27,7 @@ const COPY = Object.freeze({
   attack: '\u653b\u51fb',
   health: '\u751f\u547d',
   range: '\u5c04\u7a0b',
-  energy: '\u4f53\u529b\u6d88\u8017',
+  energy: '体力球消耗',
   footprint: '\u5360\u683c',
   weaponEffect: '\u7279\u6548',
   energyLoss: '\u4f53\u529b\u635f\u5931',
@@ -174,7 +174,7 @@ function relicCards() {
     image: itemSpriteSources(relic)?.small,
     description: relic.description,
     accent: '\u2726',
-    stats: relic.totemId ? [stat('图腾召唤', '选择徽章→使用→4格内已翻开的空格'), stat('有效期', '本次或下一次战斗结束消失；占用1体力上限'), stat('共享冷却', '2个大回合')] : [],
+    stats: relic.totemId ? [stat('图腾召唤', '选择徽章→使用→4格内已翻开的空格'), stat('有效期', '本次或下一次战斗结束消失；召唤耗1个任意球'), stat('共享冷却', '2个大回合')] : [],
   })).join('')
 }
 
@@ -191,7 +191,7 @@ function growthCards() {
 }
 
 function itemEffect(item) {
-  if (item.type === 'pet') return stat(COPY.attack, item.attack) + stat(COPY.range, item.range) + stat('\u98df\u7269\u6d88\u8017', item.foodCost)
+  if (item.type === 'pet') return stat(COPY.attack, item.attack) + stat(COPY.range, item.range) + stat('体力球消耗', item.ballCost)
   if (item.type === 'defense') return stat('\u62a4\u7532\u503c', `${item.armorValue} \u00b7 \u9996\u6b21\u8fdb\u5165\u65b0\u623f\u95f4\u65f6\u83b7\u5f97`)
   if (item.type === 'throwable') return stat('\u6295\u63b7\u8303\u56f4', `${item.range} ${COPY.cell}`)
   if (item.type === 'potion') return stat(COPY.healing, `+${item.heal}`)

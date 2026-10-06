@@ -3,7 +3,7 @@ import catalog from './catalog.json' with { type: 'json' }
 import { getRelicDefinition, RELIC_DEFS } from './relics.js'
 import { bindStatusAccessors } from '../rules/statuses.js'
 import { EXPANSION_WEAPONS, EXPANSION_DEFENSES, GENERATED_CONSUMABLES } from './expansion-items.js'
-import { PETS, PET_WEAPONS, PET_DEFENSES, BUTCHER_FOOD } from './pets.js'
+import { PETS, PET_WEAPONS, PET_DEFENSES } from './pets.js'
 import { ADVANCED_CRAFT_MATERIALS, WEAPON_RECIPES, weaponTierForId } from './weapon-progression.js'
 
 function weaponDefinition(source) {
@@ -11,9 +11,8 @@ function weaponDefinition(source) {
   return Object.freeze({ ...source, tier, crafted: tier > 1, energyCost: Math.max(1, Math.floor(Number(source.energyCost) || 3)) })
 }
 const WEAPONS = Object.freeze([...catalog.weapons, ...(catalog.merchantWeapons || []), ...EXPANSION_WEAPONS, ...PET_WEAPONS].map(weaponDefinition))
-const CONSUMABLES = Object.freeze([...catalog.consumables, ...GENERATED_CONSUMABLES, BUTCHER_FOOD].map(item => Object.freeze({ tier: 1, supplyWeight: 4, ...item,
-  ...(item.type === 'energy' ? { description: '\u5ba0\u7269\u53ef\u6309\u70b9\u6570\u90e8\u5206\u6d88\u8017\uff1b\u76f4\u63a5\u4f7f\u7528\u6d88\u8017\u6574\u4efd\uff0c\u6062\u590d\u5269\u4f59\u70b9\u6570\u7684\u4f53\u529b\u3002' } : {}),
-})))
+const CONSUMABLES = Object.freeze([...catalog.consumables, ...GENERATED_CONSUMABLES]
+  .filter(item => item.type !== 'energy').map(item => Object.freeze({ tier: 1, supplyWeight: 4, ...item })))
 const ENEMY_LOOT = Object.freeze([...(catalog.enemyLoot || []), ...ADVANCED_CRAFT_MATERIALS])
 const BOSS = Object.freeze(catalog.boss)
 export const DEFENSES = Object.freeze([...catalog.defenses, ...EXPANSION_DEFENSES, ...PET_DEFENSES].map(item => Object.freeze({ ...item, armorValue: item.armorValue || 1 })))

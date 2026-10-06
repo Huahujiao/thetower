@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { fixture, add, enemy, attack, select, round } from './item-test-helpers.mjs'
+import { fixture, add, enemy, attack, select, round, setBalls } from './item-test-helpers.mjs'
 import { GameRun, SAVE_KEY, SAVE_VERSION } from '../src/game/run.js'
 import { ALL_ITEM_DEFS, getItemDefinition } from '../src/game/data/content.js'
 import { buildRelicChoices } from '../src/game/data/relics.js'
@@ -83,7 +83,7 @@ import { getStatus, statusCounterText } from '../src/game/rules/statuses.js'
   attack(run, hook, enemy(run))
   const first = enemy(run, { pos: { c: 2, r: 2 }, attack: 2, actionDelay: 0 })
   const second = enemy(run, { pos: { c: 1, r: 3 }, attack: 2, actionDelay: 0 })
-  run.player.energy = 5
+  run._synchronizeBattle(); setBalls(run, 5)
   run._walk([{ c: 2, r: 3 }])
   assert.equal(run.player.energy, 5); assert.equal(run.player.hp, 20)
   assert(getStatus(run.player, 'dodge')); assert(getStatus(run.player, 'counter'))
@@ -93,7 +93,7 @@ import { getStatus, statusCounterText } from '../src/game/rules/statuses.js'
   assert.equal(getStatus(run.player, 'dodge'), null); assert.equal(getStatus(run.player, 'counter'), null)
   run.currentRoom.removeEntity(first.id); run.currentRoom.removeEntity(second.id)
   run._walk([{ c: 3, r: 3 }])
-  assert.equal(run.player.energy, 5)
+  assert.equal(run.player.energy, 9)
   assert.equal(getStatus(run.player, 'dodge'), null)
 }
 for (const interrupted of [false, true]) {
@@ -122,7 +122,7 @@ for (const interrupted of [false, true]) {
   add(run, 'r-step-boots'); add(run, 'r-traveler')
   attack(run, hook, enemy(run))
   const target = enemy(run, { pos: { c: 1, r: 3 } })
-  select(run, hook); run.player.energy = 3
+  run._synchronizeBattle(); select(run, hook); setBalls(run, 4, hook.attribute)
   assert(run._attack(target)) // One final step is paired with the strike.
   assert.equal(run.player.energy, 0)
   assert(getStatus(run.player, 'dodge'))

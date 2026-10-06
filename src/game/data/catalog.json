@@ -820,7 +820,7 @@
         ]
       ],
       "energyCost": 2,
-      "description": "主攻击击杀返还1体力。"
+      "description": "主攻击击杀额外抽取1个体力球。"
     },
     {
       "id": "tide-blade",
@@ -1012,7 +1012,7 @@
         ]
       ],
       "energyCost": 3,
-      "description": "主攻击击杀后，下一次用其他武器攻击伤害+2、体力消耗-1；不可叠加。",
+      "description": "主攻击击杀后，下一次用其他武器攻击伤害+2、体力球消耗-1；不可叠加。",
       "crafted": true
     },
     {
@@ -1171,7 +1171,7 @@
         ]
       ],
       "minFloor": 3,
-      "description": "在当前最大射程有效命中后，返还1体力；每个玩家回合最多触发1次，同名武器共享次数。"
+      "description": "在当前最大射程有效命中后，额外抽取1个体力球；每个玩家回合最多触发1次，同名武器共享次数。"
     },
     {
       "id": "coin-blade",
@@ -1239,62 +1239,6 @@
         ]
       ],
       "energyCost": 0
-    },
-    {
-      "id": "food-3",
-      "name": "粽子",
-      "type": "energy",
-      "energy": 3,
-      "description": "一次性恢复3体力。",
-      "shape": [
-        [
-          1
-        ]
-      ],
-      "energyCost": 0,
-      "supplyWeight": 2
-    },
-    {
-      "id": "food-5",
-      "name": "烤饭团",
-      "type": "energy",
-      "energy": 4,
-      "description": "一次性恢复4体力。",
-      "shape": [
-        [
-          1
-        ]
-      ],
-      "energyCost": 0,
-      "supplyWeight": 2
-    },
-    {
-      "id": "food-7",
-      "name": "薯香饭包",
-      "type": "energy",
-      "energy": 5,
-      "description": "一次性恢复5体力。",
-      "shape": [
-        [
-          1
-        ]
-      ],
-      "energyCost": 0,
-      "supplyWeight": 2
-    },
-    {
-      "id": "food-9",
-      "name": "肉干饭饼",
-      "type": "energy",
-      "energy": 6,
-      "description": "一次性恢复6体力。",
-      "shape": [
-        [
-          1
-        ]
-      ],
-      "energyCost": 0,
-      "supplyWeight": 2
     },
     {
       "id": "poison",
@@ -1400,7 +1344,7 @@
           1
         ]
       ],
-      "description": "相邻武器击杀后，下一击更换武器体力消耗-1；不叠加。",
+      "description": "相邻武器击杀后，下一击更换武器体力球消耗-1；不叠加。",
       "dropOnly": true
     },
     {
@@ -1461,7 +1405,7 @@
           1
         ]
       ],
-      "description": "相邻武器攻击+2、体力消耗+1。",
+      "description": "相邻武器攻击+2、体力球消耗+1。",
       "dropOnly": true
     },
     {

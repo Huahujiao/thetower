@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { fixture, add, enemy, attack, select, round } from './item-test-helpers.mjs'
+import { fixture, add, enemy, attack, select, round, setBalls } from './item-test-helpers.mjs'
 import { GameRun, SAVE_VERSION } from '../src/game/run.js'
 import { makeItemById, nextEntityId } from '../src/game/data/content.js'
 import { TOTEM_BADGES, isTotemBadge } from '../src/game/data/totems.js'
@@ -14,11 +14,11 @@ import { readFile } from 'node:fs/promises'
 function place(run, type, pos = { c: 2, r: 3 }) {
   const totem = { id: nextEntityId('totem'), kind: 'totem', totemId: type, name: TOTEM_BADGES.find(item => item.totemId === type).name,
     pos: { ...pos }, bornAt: run.globalTurn, lifetime: 'battle', nextPulse: run.globalTurn + 2 }
-  run.currentRoom.addEntity(totem); run.player.maxEnergy--; run.player.energy = Math.min(run.player.energy, run.player.maxEnergy)
+  run.currentRoom.addEntity(totem);
   return totem
 }
 function summon(run, badge, pos = { c: 2, r: 3 }) {
-  select(run, badge); assert(run.useSelected()); assert(run.itemTargeting)
+  run._synchronizeBattle(); select(run, badge); assert(run.useSelected()); assert(run.itemTargeting)
   assert(run.clickTile(pos.c, pos.r)); return run.totems.active(badge.totemId)
 }
 
@@ -40,10 +40,10 @@ for (const badge of TOTEM_BADGES.filter(badge => !badge.disabled)) {
   assert.equal(run.clickTile(target.pos.c, target.pos.r), false)
   run.currentRoom.tile({ c: 2, r: 3 }).revealed = false
   assert.equal(run.clickTile(2, 3), false)
-  assert.equal(run.player.maxEnergy, 6); assert.equal(run.totems.cooldown, 0); assert.equal(run.globalTurn, 0)
+  assert.equal(run.totems.cooldown, 0); assert.equal(run.globalTurn, 0)
   run.currentRoom.tile({ c: 2, r: 3 }).revealed = true
-  assert(run.clickTile(2, 3)); assert.equal(run.globalTurn, 0)
-  assert(run.backpack.placementOf(badge.uid)); assert.equal(run.player.maxEnergy, 5); assert.equal(run.player.energy, 5)
+  run._synchronizeBattle(); assert(run.clickTile(2, 3)); assert.equal(run.globalTurn, 0)
+  assert(run.backpack.placementOf(badge.uid)); assert.equal(run.player.energy, 5)
   assert.equal(run.itemTargeting, false); assert.equal(run.selectedItem, null)
   assert.equal(run.previewTileAction(2, 3), null); assert.equal(run.clickTile(2, 3), false)
   assert(run.showBoardDetail({ c: 2, r: 3 })); assert(run.detailPanel.description.includes('攻击力+2'))
@@ -58,20 +58,20 @@ for (const badge of TOTEM_BADGES.filter(badge => !badge.disabled)) {
   round(run); assert.equal(run.totems.cooldown, 1)
   round(run); assert.equal(run.totems.cooldown, 0)
   assert.equal(run.totems.available(first), false); assert.equal(run.totems.available(second), true)
-  summon(run, second, { c: 3, r: 2 }); assert.equal(run.player.maxEnergy, 4)
-  run.player.energy = 2
-  assert(run.totems.remove(totem)); assert.equal(run.player.maxEnergy, 5); assert.equal(run.player.energy, 2)
-  assert.equal(run.totems.remove(totem), false); assert.equal(run.player.maxEnergy, 5)
+  summon(run, second, { c: 3, r: 2 });
+  setBalls(run, 2)
+  assert(run.totems.remove(totem)); assert.equal(run.player.energy, 2)
+  assert.equal(run.totems.remove(totem), false);
 }
 // A long battle does not expire a totem; ending the battle refunds only capacity.
 {
   const run = fixture(), badge = add(run, 'r-totem-ward'), target = enemy(run); const totem = summon(run, badge)
-  run.player.energy = 1
+  setBalls(run, 1)
   for (let index = 0; index < 12; index++) round(run)
   assert(run.currentRoom.entity(totem.id)); assert.equal(totem.lifetime, 'battle')
-  run.player.energy = 2
+  setBalls(run, 2)
   run._damageEnemy(target, 999); run._endTurn()
-  assert.equal(run.currentRoom.entity(totem.id), null); assert.equal(run.player.maxEnergy, 6); assert.equal(run.player.energy, 2)
+  assert.equal(run.currentRoom.entity(totem.id), null); assert.equal(run.player.energy, 0)
   assert(run.totems.available(badge))
 }
 // Leaving clears every old-room entity and only refunds capacity; stashing a badge does not dispel it.
@@ -79,10 +79,10 @@ for (const badge of TOTEM_BADGES.filter(badge => !badge.disabled)) {
   const run = fixture(), badge = add(run, 'r-totem-drum')
   const first = summon(run, badge), second = place(run, 'gas', { c: 3, r: 2 })
   run.backpack.removeByUid(badge.uid); run.inventoryStash.push(badge)
-  assert(run.currentRoom.entity(first.id)); run.player.energy = 2
+  assert(run.currentRoom.entity(first.id)); setBalls(run, 2)
   run._emitRelicEvent('room:left', { room: run.currentRoom })
   assert.equal(run.currentRoom.entity(first.id), null); assert.equal(run.currentRoom.entity(second.id), null)
-  assert.equal(run.player.maxEnergy, 6); assert.equal(run.player.energy, 2)
+  assert.equal(run.player.energy, 2)
 }
 // Drum counts backpack badges, includes itself, ignores stash and ordinary relics, and uses live distance.
 {
@@ -115,7 +115,7 @@ for (const badge of TOTEM_BADGES.filter(badge => !badge.disabled)) {
   assert(!catalogContent('relics').includes(badge.name))
   assert(!buildRelicChoices(null, { count: 100 }).some(choice => choice.id === badge.id))
   const target = enemy(run)
-  run._synchronizeBattle(); run.player.energy = 2
+  run._synchronizeBattle(); setBalls(run, 2)
   assert.equal(run.energyAfterMovement(1), 1)
   run._walk([{ c: 3, r: 2 }]); assert.equal(run.player.energy, 1); assert.equal(target.hp, 100)
 }
@@ -163,9 +163,9 @@ for (const badge of TOTEM_BADGES.filter(badge => !badge.disabled)) {
   for (const row of run.currentRoom.tiles) for (const tile of row) tile.revealed = false
   for (const pos of [{ c: 0, r: 0 }, { c: 1, r: 0 }, { c: 2, r: 0 }]) run.currentRoom.tile(pos).revealed = true
   const attacker = enemy(run, { pos: { c: 2, r: 0 }, attack: 3, range: 1, speed: 1, actionDelay: 0, attackCooldownMax: 3 })
-  run.player.energy = 2; const hp = run.player.hp
+  setBalls(run, 2); const hp = run.player.hp
   round(run)
-  assert.equal(run.currentRoom.entity(totem.id), null); assert.equal(run.player.maxEnergy, 6); assert.equal(run.player.energy, 6)
+  assert.equal(run.currentRoom.entity(totem.id), null); assert.equal(run.player.energy, 6)
   assert.equal(run.player.hp, hp); assert.equal(attacker.attackCooldown, 0); assert.equal(attacker.ownActionCount, 1)
   assert.deepEqual(attacker.pos, { c: 2, r: 0 })
 }
@@ -206,7 +206,7 @@ for (const badge of TOTEM_BADGES.filter(badge => !badge.disabled)) {
   round(run); assert.deepEqual(target.pos, { c: 4, r: 3 })
   round(run); assert.deepEqual(target.pos, { c: 3, r: 3 }); assert(run.currentRoom.entity(totem.id))
   round(run); round(run)
-  assert.equal(run.currentRoom.entity(totem.id), null); assert.deepEqual(target.pos, { c: 2, r: 3 }); assert.equal(run.player.maxEnergy, 6)
+  assert.equal(run.currentRoom.entity(totem.id), null); assert.deepEqual(target.pos, { c: 2, r: 3 });
   assert.equal(target.ownActionCount, 1)
 }
 // Near-to-far order vacates cells for the next enemy, each enemy moves at most once per pulse.
@@ -225,17 +225,17 @@ for (const badge of TOTEM_BADGES.filter(badge => !badge.disabled)) {
   const totem = place(run, 'soul', { c: 3, r: 3 }), target = enemy(run, { pos: { c: 4, r: 4 }, attack: 3 })
   run.currentRoom.tile(target.pos).revealed = false
   run.applyStatus(target, 'rooted', { turns: 1 }); run.totems.pull(totem); assert(run.currentRoom.entity(totem.id))
-  run.removeStatus(target, 'rooted'); run.player.energy = 1
+  run.removeStatus(target, 'rooted'); setBalls(run, 1)
   run.totems.pull(totem); assert.equal(run.currentRoom.entity(totem.id), null)
   assert.deepEqual(target.pos, { c: 3, r: 3 }); assert(run.currentRoom.isRevealed(target.pos))
-  assert.equal(run.player.maxEnergy, 6); assert.equal(run.player.energy, 5)
+  assert.equal(run.player.energy, 6)
 }
 // Attacking a totem does not trigger an extra poison tick.
 {
   const run = fixture(); const totem = place(run, 'ward'), target = enemy(run, { hp: 1, attack: 5 })
   run.applyStatus(target, 'enemy-poison', { layers: 1, damage: 1 })
   assert.equal(run.totems.attack(target, totem), true); assert.equal(target.hp, 1)
-  assert.equal(run.currentRoom.entity(totem.id), null); assert.equal(run.player.maxEnergy, 6)
+  assert.equal(run.currentRoom.entity(totem.id), null);
 }
 // Saved entities, shared cooldown, reduced capacity and root state survive; malformed/old saves restart.
 {
@@ -245,7 +245,7 @@ for (const badge of TOTEM_BADGES.filter(badge => !badge.disabled)) {
   run.applyStatus(bomber, 'attack-reduction', { amount: 1 })
   assert(run.totems.attack(bomber, totem))
   assert.equal(run.currentRoom.entity(bomber.id), null); assert.equal(run.currentRoom.entity(totem.id), null)
-  assert.equal(explosions, 1); assert.equal(run.player.maxEnergy, 6)
+  assert.equal(explosions, 1);
 }
 // A root created by a soul pull blocks the upcoming enemy phase and expires with that turn.
 {
@@ -260,19 +260,19 @@ for (const badge of TOTEM_BADGES.filter(badge => !badge.disabled)) {
 // Saved entities, shared cooldown, reduced capacity and root state survive; malformed/old saves restart.
 {
   const run = fixture(), badge = add(run, 'r-totem-gas'), totem = summon(run, badge)
-  const target = enemy(run); run._synchronizeBattle(); run.applyStatus(target, 'rooted', { turns: 1 }); run.player.energy = 3
+  const target = enemy(run); run._synchronizeBattle(); run.applyStatus(target, 'rooted', { turns: 1 }); setBalls(run, 3)
   const original = run.serialize(), previous = globalThis.localStorage
   let payload = JSON.stringify(original), deleted = 0
   globalThis.localStorage = { getItem: () => payload, setItem: (_key, value) => { payload = value }, removeItem: () => { deleted++; payload = null } }
   try {
     const loaded = new GameRun({ autoLoad: true })
-    assert.equal(deleted, 0); assert.equal(loaded.player.maxEnergy, 5); assert.equal(loaded.player.energy, 3)
+    assert.equal(deleted, 0); assert.equal(loaded.player.energy, 3)
     assert.equal(loaded.totems.cooldown, 2); assert(getStatus(loaded.currentRoom.entity(target.id), 'rooted'))
-    loaded.totems.remove(loaded.currentRoom.entity(totem.id)); assert.equal(loaded.player.maxEnergy, 6); assert.equal(loaded.player.energy, 3)
-    for (const mutation of [data => { data.version = SAVE_VERSION - 1 }, data => { data.player.maxEnergy = 10 },
+    loaded.totems.remove(loaded.currentRoom.entity(totem.id)); assert.equal(loaded.player.energy, 3)
+    for (const mutation of [data => { data.version = SAVE_VERSION - 1 }, data => { data.staminaDeck.hand.push(data.staminaDeck.hand[0]) },
       data => { data.player.itemState.totems.readyAt = 'bad' }]) {
       const corrupted = JSON.parse(JSON.stringify(original)); mutation(corrupted); payload = JSON.stringify(corrupted)
-      const fresh = new GameRun({ autoLoad: true }); assert.equal(fresh.player.maxEnergy, 6); assert.equal(fresh.totems.entities.length, 0)
+      const fresh = new GameRun({ autoLoad: true }); assert.equal(fresh.totems.entities.length, 0)
     }
     assert.equal(deleted, 3)
   } finally { globalThis.localStorage = previous }

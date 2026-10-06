@@ -24,7 +24,7 @@ export function playerStatusEntries(run) {
   }))
   const pending = run.itemRules.pendingLines()
   if (run.totems.entities.length) entries.push({ id: 'totem-capacity', name: '图腾', glyph: '图', icon: null,
-    badge: String(run.totems.entities.length), tone: 'neutral', description: `图腾占用${run.totems.entities.length}点体力上限；消失时只恢复上限` })
+    badge: String(run.totems.entities.length), tone: 'neutral', description: `场上有${run.totems.entities.length}个图腾；战斗结束消失` })
   if (run.totems.cooldown) entries.push({ id: 'totem-cooldown', name: '召唤冷却', glyph: '召', icon: null,
     badge: String(run.totems.cooldown), tone: 'neutral', description: `所有图腾徽章共享，剩余${run.totems.cooldown}个全局回合` })
   for (const [id, buff] of Object.entries(run.itemRules.state.buffs)) {
