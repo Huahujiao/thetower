@@ -732,8 +732,8 @@ export class GameRun {
       detail.statLines[2] = `\u{1F4AA} ${this.weaponEnergyCost(item)}`
       detail.effectLines.push(...this.itemRules.weaponLines(item))
       const payment = this.weaponPayment(item)
-      detail.effectLines.push(`消耗${this.weaponEnergyCost(item)}个${BALL_LABELS[item.attribute]}球，万能球可替代；异色支付伤害×0.5`)
-      detail.effectLines.push(!this.battle.active ? '进入战斗后抽球' : !payment ? '当前体力球不足' : payment.offColor ? '本次支付含异色球：伤害×0.5' : '本次可同色支付：完整伤害')
+      detail.effectLines.push(`需要${this.weaponEnergyCost(item)}个${BALL_LABELS[item.attribute]}球，万能球可替代；不足时仅支付可用球，伤害按支付比例降低`)
+      detail.effectLines.push(!this.battle.active ? '进入战斗后抽球' : !payment ? '没有可支付的同色或万能球' : `本次支付${payment.paid}/${payment.cost}球，伤害${Math.floor(payment.multiplier * 100)}%`)
     }
     if (item.type === 'pet' && this.backpack.placementOf(item.uid)) {
       detail.statLines[1] = `\u5c04\u7a0b ${this.pets.range(item)}`
@@ -944,7 +944,7 @@ export class GameRun {
       const selectedWeapon = this.selectedItem
       if (selectedWeapon?.type !== 'weapon') return null
       const route = this._weaponRoute(selectedWeapon, entity)
-      if (!route || this.energyAfterMovement(route.path.length, route.path) < this.itemRules.cost(selectedWeapon, route.path.length)) return null
+      if (!route || this.energyAfterMovement(route.path.length, route.path) < 1 || !this.weaponPayment(selectedWeapon)) return null
       return this._pathPreview('attack', target, route.path)
     }
     if (entity.kind === 'merchant') {
@@ -1669,14 +1669,14 @@ export class GameRun {
     if (weapon?.type !== 'weapon') return this._reject('请先选择武器。')
     const route = this._weaponRoute(weapon, enemy)
     if (!route) return this._reject('没有可达的攻击位置。')
-    if (this.energyAfterMovement(route.path.length, route.path) < this.itemRules.cost(weapon, route.path.length)) return this._reject('体力不足。')
+    if (this.energyAfterMovement(route.path.length, route.path) < 1 || !this.weaponPayment(weapon)) return this._reject('没有可支付的同色或万能球。')
     const movement = this._walk(route.path)
     if (movement.stopped || !this.currentRoom.entity(enemy.id)) { this._changed(); return true }
     const range = this.weaponRange(weapon)
     if (combatDistance(this.player.pos, enemy.pos, range) > range) return this._reject('敌人已经离开射程。')
     const context = this.itemRules.attackContext(weapon, enemy)
     const payment = this.staminaDeck.pay(this.weaponEnergyCost(weapon), weapon.attribute)
-    if (!payment) return this._reject('体力球不足。')
+    if (!payment) return this._reject('没有可支付的同色或万能球。')
     this.itemRules.recordWeaponUse(weapon)
     this.itemRules.expansion.beforeAttack(weapon, context)
     this.pets.playerAttack(enemy)

@@ -19,6 +19,10 @@ try {
   run._synchronizeBattle(); select(run, weapon)
   html = await render()
   assert.equal(ballButtons(html).length, 6)
+  assert(!html.includes('stamina-count'))
+  const renderedBalls = html.match(/<button\b[^>]*class="[^"]*stamina-ball[^>]*>[\s\S]*?<\/button>/g) || []
+  assert(renderedBalls.every(button => !button.replace(/<[^>]+>/g, '').trim()))
+  assert(html.includes('--ball-slots:8'))
   assert(html.includes('原地攻击')); assert(html.includes('球池'))
   assert(!endButton(html).includes('disabled'))
   const id = run.staminaDeck.hand[0].id
@@ -26,7 +30,7 @@ try {
   assert(ballButtons(html).some(button => button.includes('aria-pressed="true"')))
   run.staminaDeck.discardHand()
   html = await render()
-  assert(html.includes('球不足')); assert(!endButton(html).includes('disabled'))
+  assert(html.includes('无可用球')); assert(!endButton(html).includes('disabled'))
   select(run, potion); html = await render()
   assert(html.match(/<button\b[^>]*data-action="use"[^>]*>/)?.[0].includes('disabled'))
   assert(run.endPlayerTurn()); html = await render()

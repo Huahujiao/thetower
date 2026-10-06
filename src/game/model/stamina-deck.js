@@ -67,15 +67,17 @@ export class StaminaDeck {
   }
   plan(amount, attribute = null, { selection = true } = {}) {
     const cost = Math.max(0, Math.floor(Number(amount) || 0))
-    if (cost > this.hand.length) return null
+    if (!attribute && cost > this.hand.length) return null
+    const available = attribute ? this.hand.filter(ball => ball.attribute === attribute || ball.attribute === 'wild') : this.hand
+    if (attribute && cost > 0 && !available.length) return null
     const counts = Object.fromEntries(BALL_ATTRIBUTES.map(key => [key, this.hand.filter(ball => ball.attribute === key).length]))
     const priority = ball => attribute ? (ball.attribute === attribute ? 0 : ball.attribute === 'wild' ? 1 : 2) :
       (ball.attribute === 'wild' ? 100 : -counts[ball.attribute])
-    const chosen = selection ? this.selected.map(id => this.hand.find(ball => ball.id === id)).filter(Boolean).slice(0, cost) : []
-    const remaining = this.hand.filter(ball => !chosen.includes(ball)).sort((a, b) => priority(a) - priority(b))
+    const chosen = selection ? this.selected.map(id => available.find(ball => ball.id === id)).filter(Boolean).slice(0, cost) : []
+    const remaining = available.filter(ball => !chosen.includes(ball)).sort((a, b) => priority(a) - priority(b))
     const balls = [...chosen, ...remaining.slice(0, cost - chosen.length)]
-    const offColor = !!attribute && balls.some(ball => ball.attribute !== attribute && ball.attribute !== 'wild')
-    return { balls, cost, offColor, multiplier: offColor ? 0.5 : 1 }
+    const multiplier = attribute && cost > 0 ? balls.length / cost : 1
+    return { balls, cost, paid: balls.length, partial: multiplier < 1, multiplier }
   }
   pay(amount, attribute = null, options) {
     const plan = this.plan(amount, attribute, options)

@@ -51,17 +51,19 @@ function restore(data, accepted = true) {
   assert(StaminaDeck.valid(deck.serialize()))
   assert.deepEqual(new StaminaDeck(() => 0, deck.serialize()).serialize(), deck.serialize())
 }
-// Matching, wildcard, deliberately selected off-color, insufficient and atomic refunds.
+// Partial matching payment ignores selected off-color balls; generic costs stay exact.
 {
   const run = fixture()
-  hand(run, ['scorch', 'scorch', 'wild', 'drown'])
-  assert.equal(run.staminaDeck.plan(3, 'scorch').multiplier, 1)
-  run.staminaDeck.toggle(run.staminaDeck.hand[3].id)
+  hand(run, ['scorch', 'scorch', 'drown', 'drown'])
+  assert.equal(run.staminaDeck.plan(3, 'scorch').multiplier, 2 / 3)
+  run.staminaDeck.toggle(run.staminaDeck.hand[2].id)
   const plan = run.staminaDeck.pay(3, 'scorch')
-  assert.equal(plan.multiplier, 0.5)
-  assert.equal(run.player.energy, 1)
+  assert.equal(plan.multiplier, 2 / 3)
+  assert.equal(plan.paid, 2)
+  assert.deepEqual(run.staminaDeck.hand.map(ball => ball.attribute), ['drown', 'drown'])
   const snapshot = run.staminaDeck.serialize()
-  assert.equal(run.staminaDeck.pay(2), null)
+  assert.equal(run.staminaDeck.pay(3), null)
+  assert.equal(run.staminaDeck.pay(3, 'scorch'), null)
   assert.deepEqual(run.staminaDeck.serialize(), snapshot)
   run.staminaDeck.refund(plan.balls)
   assert.equal(run.player.energy, 4)
@@ -114,14 +116,21 @@ function restore(data, accepted = true) {
   assert(run.endPlayerTurn()); settleAnimations(run) // a whole turn without attacks
   assert.equal(run.weaponEnergyCost(a), 1)
 }
-// Off-color reduces the full main hit; counter relationships no longer exist.
+// Full/partial hits pay only matching and wildcard balls, including with fewer total balls than the cost.
 {
   const run = fixture(), weapon = add(run, 'rust-sword'), target = enemy(run)
-  run._synchronizeBattle(); weapon.energyCost = 1; weapon.attack = 8
-  hand(run, [weapon.attribute]); assert.equal(strike(run, weapon, target), 8)
-  hand(run, ['wild', 'wild']); assert.equal(strike(run, weapon, target), 8)
+  run._synchronizeBattle(); weapon.energyCost = 3; weapon.attack = 9
+  hand(run, [weapon.attribute, weapon.attribute]); assert.equal(strike(run, weapon, target), 6)
+  assert.equal(run.player.energy, 0)
+  hand(run, [weapon.attribute, weapon.attribute, 'wild']); assert.equal(strike(run, weapon, target), 6) // 3/4, rounded down
   const other = ATTRIBUTE_ORDER.find(attribute => attribute !== weapon.attribute)
-  hand(run, [other, other, other]); assert.equal(strike(run, weapon, target), 4)
+  hand(run, [weapon.attribute, other, other]); assert.equal(strike(run, weapon, target), 1) // 1/5
+  assert.deepEqual(run.staminaDeck.hand.map(ball => ball.attribute), [other, other])
+  const used = { ...run.itemRules.state.weaponUses }
+  assert.equal(run._attack(target), false); assert.deepEqual(run.itemRules.state.weaponUses, used)
+  run.itemRules.startPlayerTurn()
+  hand(run, [weapon.attribute, weapon.attribute, 'wild', other]); assert.equal(strike(run, weapon, target), 9)
+  assert.deepEqual(run.staminaDeck.hand.map(ball => ball.attribute), [other])
   for (const a of ATTRIBUTE_ORDER) for (const b of ATTRIBUTE_ORDER) assert.deepEqual(attributeModifier(a, b), { multiplier: 1, countered: false, resisted: false })
   hand(run, []); const uses = { ...run.itemRules.state.weaponUses }
   assert.equal(run._attack(target), false); assert.deepEqual(run.itemRules.state.weaponUses, uses)
