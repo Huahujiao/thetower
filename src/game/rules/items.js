@@ -64,18 +64,15 @@ export class ItemRules {
   }
   get room() { return this.run._roomRuntime().items ||= {} }
   startPlayerTurn() {
-    this.state.previousTurnWeapon = this.state.turnLastWeapon || null
-    this.state.turnLastWeapon = null
     this.state.weaponUses = {}
     this.state.tideRefundUsed = false
   }
   endBattle() {
-    this.state.previousTurnWeapon = null; this.state.turnLastWeapon = null; this.state.weaponUses = {}
+    this.state.weaponUses = {}
   }
   recordWeaponUse(weapon) {
     this.state.weaponUses ||= {}
     this.state.weaponUses[weapon.uid] = (this.state.weaponUses[weapon.uid] || 0) + 1
-    this.state.turnLastWeapon = weapon.uid
   }
   has(id) { return !getItemDefinition(id)?.disabled && this.run.backpack.items.some(i => (i.id || i.relicId) === id) }
   adjacent(item, id) {
@@ -172,10 +169,8 @@ export class ItemRules {
     if (this.has('r-empty') && this.run.backpack.capacity - this.run.backpack.usedCells >= 8) cost--
     if (baseCost >= 5 && this.has('r-heavy-wrist') && adjacentItems(this.run.backpack, weapon).length === 0) cost--
     cost -= this.expansion.cost(weapon)
-    const previous = this.state.previousTurnWeapon
-    const seal = this.has('r-single-seal') && !!previous
-    const repeat = seal && previous === weapon.uid ? 0 : (this.state.weaponUses?.[weapon.uid] || 0)
-    return Math.max(1, cost) + repeat + (seal && previous !== weapon.uid ? 2 : 0)
+    if (this.has('r-single-seal') && (this.state.weaponUses[weapon.uid] || 0) > 0) cost--
+    return Math.max(1, cost)
   }
   attackContext(weapon, enemy) {
     const { run } = this
@@ -321,8 +316,8 @@ export class ItemRules {
 
   weaponLines(weapon) {
     const adjacent = adjacentItems(this.run.backpack, weapon)
-    const lines = [`本回合已使用 ${this.state.weaponUses?.[weapon.uid] || 0} 次；再次使用同一实例额外消耗递增1球`]
-    if (this.has('r-single-seal')) lines.push('执一印：与上回合最后使用的武器相同则免递增，不同则额外消耗2球；上回合未攻击时不触发')
+    const lines = []
+    if (this.has('r-single-seal')) lines.push(`执一印：本回合再次使用同一武器实例时消耗减1球，最低1球${this.state.weaponUses[weapon.uid] ? '（已生效）' : '（首次使用不减费）'}`)
     if (weapon.id === 'silver-guard' && adjacent.some(i => i.type === 'defense')) lines.push('防具邻接：攻击+1')
     if (weapon.id === 'mountain-maul' && adjacent.length === 0) lines.push('四向留白：攻击+3')
     if (conduitCapacity(this.run.backpack, weapon)) lines.push(`导流线：可用蓄势 ${this.state.conduitCharge || 0}/3`)

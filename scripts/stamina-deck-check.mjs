@@ -86,35 +86,38 @@ function restore(data, accepted = true) {
   assert.equal(run.battle.active, false); assert.equal(run.player.energy, 0)
   assert(run._payAction(1)); assert.equal(run.player.energy, 0)
 }
-// Instance repeat costs survive switching/organizing/load, reset only on next turn.
+// Repeated attacks never increase the weapon cost.
 {
   const run = fixture(), a = add(run, 'rust-sword'), b = add(run, 'rust-sword'), target = enemy(run)
   run._synchronizeBattle(); a.energyCost = b.energyCost = 1
   hand(run, Array(8).fill(a.attribute))
   assert.equal(run.weaponEnergyCost(a), 1)
-  strike(run, a, target); assert.equal(run.weaponEnergyCost(a), 2)
-  strike(run, b, target); assert.equal(run.weaponEnergyCost(a), 2); assert.equal(run.weaponEnergyCost(b), 2)
-  strike(run, a, target); assert.equal(run.weaponEnergyCost(a), 3)
-  run.itemRules.action('organize'); assert.equal(run.weaponEnergyCost(a), 3)
+  strike(run, a, target); assert.equal(run.weaponEnergyCost(a), 1)
+  strike(run, b, target); assert.equal(run.weaponEnergyCost(a), 1); assert.equal(run.weaponEnergyCost(b), 1)
+  strike(run, a, target); assert.equal(run.weaponEnergyCost(a), 1)
+  run.itemRules.action('organize'); assert.equal(run.weaponEnergyCost(a), 1)
   const loaded = restore(run.serialize())
   assert.deepEqual(loaded.staminaDeck.serialize(), run.staminaDeck.serialize())
-  assert.equal(loaded.weaponEnergyCost(loaded.backpack.items.find(item => item.uid === a.uid)), 3)
+  assert.equal(loaded.weaponEnergyCost(loaded.backpack.items.find(item => item.uid === a.uid)), 1)
   assert(run.endPlayerTurn()); settleAnimations(run); assert.equal(run.weaponEnergyCost(a), 1)
 }
-// Seal uses the previous big turn, never the immediately preceding attack.
+// Seal discounts each used instance by exactly one, survives switches, and resets next turn.
 {
   const run = fixture(), a = add(run, 'rust-sword'), b = add(run, 'rust-sword'), target = enemy(run)
-  add(run, 'r-single-seal'); run._synchronizeBattle(); a.energyCost = b.energyCost = 1
-  hand(run, Array(7).fill(a.attribute))
-  strike(run, a, target); strike(run, b, target)
-  assert.equal(run.weaponEnergyCost(a), 2) // no previous player-turn attack
+  const seal = add(run, 'r-single-seal'); run._synchronizeBattle(); a.energyCost = b.energyCost = 3
+  hand(run, Array(10).fill(a.attribute))
+  assert.equal(run.weaponEnergyCost(a), 3)
+  strike(run, a, target); assert.equal(run.weaponEnergyCost(a), 2); assert.equal(run.weaponEnergyCost(b), 3)
+  strike(run, b, target); assert.equal(run.weaponEnergyCost(a), 2); assert.equal(run.weaponEnergyCost(b), 2)
+  strike(run, a, target); assert.equal(run.weaponEnergyCost(a), 2)
+  run.itemRules.action('organize'); assert.equal(run.weaponEnergyCost(a), 2)
+  const loaded = restore(run.serialize())
+  assert.equal(loaded.weaponEnergyCost(loaded.backpack.items.find(item => item.uid === a.uid)), 2)
+  run.backpack.removeByUid(seal.uid); assert.equal(run.weaponEnergyCost(a), 3)
+  assert(run.backpack.add(seal)); a.energyCost = 1; assert.equal(run.weaponEnergyCost(a), 1)
+  a.energyCost = 3
   assert(run.endPlayerTurn()); settleAnimations(run)
-  assert.equal(run.weaponEnergyCost(a), 3); assert.equal(run.weaponEnergyCost(b), 1)
-  hand(run, Array(7).fill(a.attribute)); strike(run, b, target); strike(run, b, target)
-  assert.equal(run.weaponEnergyCost(b), 1)
-  assert(run.endPlayerTurn()); settleAnimations(run)
-  assert(run.endPlayerTurn()); settleAnimations(run) // a whole turn without attacks
-  assert.equal(run.weaponEnergyCost(a), 1)
+  assert.equal(run.weaponEnergyCost(a), 3); assert.equal(run.weaponEnergyCost(b), 3)
 }
 // Full/partial hits pay only matching and wildcard balls, including with fewer total balls than the cost.
 {
@@ -122,9 +125,9 @@ function restore(data, accepted = true) {
   run._synchronizeBattle(); weapon.energyCost = 3; weapon.attack = 9
   hand(run, [weapon.attribute, weapon.attribute]); assert.equal(strike(run, weapon, target), 6)
   assert.equal(run.player.energy, 0)
-  hand(run, [weapon.attribute, weapon.attribute, 'wild']); assert.equal(strike(run, weapon, target), 6) // 3/4, rounded down
+  hand(run, [weapon.attribute, weapon.attribute, 'wild']); assert.equal(strike(run, weapon, target), 9)
   const other = ATTRIBUTE_ORDER.find(attribute => attribute !== weapon.attribute)
-  hand(run, [weapon.attribute, other, other]); assert.equal(strike(run, weapon, target), 1) // 1/5
+  hand(run, [weapon.attribute, other, other]); assert.equal(strike(run, weapon, target), 3) // 1/3
   assert.deepEqual(run.staminaDeck.hand.map(ball => ball.attribute), [other, other])
   const used = { ...run.itemRules.state.weaponUses }
   assert.equal(run._attack(target), false); assert.deepEqual(run.itemRules.state.weaponUses, used)

@@ -69,9 +69,8 @@ function compatibleSave(data) {
   if (new Set(data.battle.knownEnemyIds).size !== data.battle.knownEnemyIds.length ||
       data.battle.knownEnemyIds.some(id => typeof id !== 'string')) return false
   const weaponState = data.player.itemState
-  if (weaponState && ((!weaponState.weaponUses || typeof weaponState.weaponUses !== 'object' || Array.isArray(weaponState.weaponUses) ||
-      Object.values(weaponState.weaponUses).some(count => !Number.isInteger(count) || count < 0)) ||
-      [weaponState.previousTurnWeapon, weaponState.turnLastWeapon].some(uid => uid != null && typeof uid !== 'string'))) return false
+  if (weaponState && (!weaponState.weaponUses || typeof weaponState.weaponUses !== 'object' || Array.isArray(weaponState.weaponUses) ||
+      Object.values(weaponState.weaponUses).some(count => !Number.isInteger(count) || count < 0))) return false
   const petState = data.player.itemState?.pets
   if (petState && !['horn', 'prey', 'butcher'].every(key => Array.isArray(petState[key]) && petState[key].every(id => typeof id === 'string'))) return false
   const totems = data.dungeon.rooms.flatMap(room => (Array.isArray(room.entities) ? room.entities : [])
@@ -2414,7 +2413,7 @@ export class GameRun {
       this.inventoryStash = Array.isArray(data.inventoryStash) ? data.inventoryStash.filter((item) => item?.uid) : []
       const refreshItemCopy = item => {
         if (item?.id === 'teleport') item.name = getItemDefinition(item.id).name
-        if (['r-traveler', 'r-step-boots', 'r-turn-shield', 'triad-tide'].includes(item?.id)) item.description = getItemDefinition(item.id).description
+        if (['r-traveler', 'r-step-boots', 'r-turn-shield', 'triad-tide', 'r-single-seal'].includes(item?.id)) item.description = getItemDefinition(item.id).description
       }
       for (const item of [...this.backpack.items, ...this.inventoryStash]) refreshItemCopy(item)
       synchronizeEntityIds([...this.backpack.items, ...this.inventoryStash].map(item => item.uid))
