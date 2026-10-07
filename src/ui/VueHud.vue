@@ -141,8 +141,9 @@
               }}</span>
             </div>
           </div>
-          <div v-if="detailPanel?.statLines?.length" class="detail-stat-lines">
+          <div v-if="detailPanel?.statLines?.length || detailPanel?.energyCost != null" class="detail-stat-lines">
             <div v-for="(line, index) in detailPanel.statLines" :key="`stat-${index}-${line}`">{{ line }}</div>
+            <StaminaCost v-if="detailPanel.energyCost != null" :cost="detailPanel.energyCost" :attribute="detailPanel.energyAttribute" />
           </div>
           <div v-if="detailPanel?.effectLines?.length || (!detailPanel?.statLines?.length && detailPanel?.lines?.length) || !detailPanel" class="detail-effect-lines">
             <div v-for="(line, index) in (detailPanel?.effectLines?.length ? detailPanel.effectLines : (!detailPanel?.statLines?.length ? (detailPanel?.lines || []) : []))" :key="`effect-${index}-${line}`">{{ line }}</div>
@@ -401,7 +402,7 @@
             ></span><strong>{{
               state.player.hp }}/{{ state.player.maxHp }}</strong>
           </div>
-          <div class="stamina-hand" :title="ballHelp" :style="{ '--ball-slots': Math.max(8, state.staminaDeck.hand.length) }">
+          <div class="stamina-hand" :style="{ '--ball-slots': Math.max(8, state.staminaDeck.hand.length) }">
             <button
               v-for="ball in state.staminaDeck.hand" :key="ball.id" class="stamina-ball"
               :class="[ball.attribute, { selected: state.staminaDeck.selected.includes(ball.id) }]"
@@ -409,7 +410,7 @@
               :aria-pressed="state.staminaDeck.selected.includes(ball.id)" :disabled="!actionsAvailable"
               @click.stop="state.toggleStaminaBall(ball.id)"
             ></button>
-            <span v-if="!state.staminaDeck.hand.length" class="stamina-empty">{{ state.battle.active ? '球已用完' : '翻出敌人后抽球' }}</span>
+            <span v-if="state.battle.active && !state.staminaDeck.hand.length" class="stamina-empty">球已用完</span>
           </div>
         </div>
         <div class="backpack-action-slot act-use-slot">
@@ -428,7 +429,9 @@
           </button>
         </div>
         <div v-if="state.battle.active && selectedItem?.type === 'weapon'" class="stamina-payment" :class="{ discounted: weaponBallPreview?.partial }">
-          {{ weaponPaymentText }}
+          <span>原地攻击</span>
+          <StaminaCost :cost="weaponBallPreview ? `${weaponBallPreview.paid}/${weaponBallPreview.cost}` : state.weaponEnergyCost(selectedItem)" :attribute="selectedItem.attribute" />
+          <span>{{ weaponPaymentText }}</span>
         </div>
       </div>
       <section class="backpack-panel">
@@ -491,6 +494,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref, shallowRef, watch } from 'vue'
 import { BALL_LABELS } from '../game/model/stamina-deck.js'
+import StaminaCost from './StaminaCost.vue'
 import { merchantSellPrice } from '../game/data/merchants.js'
 import { getItemDefinition, upgradeRecipesForItem } from '../game/data/content.js'
 import { getRelicDefinition } from '../game/data/relics.js'
@@ -591,14 +595,12 @@ const cameraAngles = computed(() => {
 })
 const selectedItem = computed(() => state.value.selectedItem)
 const ballComposition = computed(() => Object.entries(state.value.staminaDeck.composition()).map(([attribute, count]) => `${BALL_LABELS[attribute]}${count}`).join(' · '))
-const ballHelp = '每回合抽取2×激活敌人数+4个球，新敌人立即补2球。点击球可优先支付；普通操作用任意球。武器只消耗同色与万能球，不足时按实际支付比例降低伤害。剩余球供宠物使用后弃掉；抽空后洗回弃球堆。'
 const weaponBallPreview = computed(() => selectedItem.value?.type === 'weapon' ? state.value.weaponPayment(selectedItem.value) : null)
 const weaponPaymentText = computed(() => {
   const weapon = selectedItem.value
   if (weapon?.type !== 'weapon') return ''
   const payment = weaponBallPreview.value
-  const cost = state.value.weaponEnergyCost(weapon)
-  return !payment ? `${cost}${BALL_LABELS[weapon.attribute]}球 · 无可用球` : `原地攻击 ${payment.paid}/${cost}${BALL_LABELS[weapon.attribute]}球 · 伤害${Math.floor(payment.multiplier * 100)}%`
+  return !payment ? '无可用球' : `伤害${Math.floor(payment.multiplier * 100)}%`
 })
 const actionsAvailable = computed(() => {
   state.value

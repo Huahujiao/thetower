@@ -1,10 +1,10 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import BackpackGrid from './BackpackGrid.vue'
+import StaminaCost from './StaminaCost.vue'
 import { buildWikiInventory, WIKI_ITEM_COLUMNS } from './wiki-items.js'
 import { detailForItem } from '../game/data/item-details.js'
 import { getItemDefinition, upgradeRecipesForItem } from '../game/data/content.js'
-import { BALL_LABELS } from '../game/model/stamina-deck.js'
 import { itemUnlockFloor } from './wiki-data.js'
 import { itemSpriteSources } from './item-sprites.js'
 
@@ -57,13 +57,14 @@ onBeforeUnmount(() => observer?.disconnect())
         <div class="detail-content">
           <div class="detail-head">
             <h2 class="detail-title">{{ detail.title }}</h2>
-            <div class="detail-badges"><span>{{ detail.type }}</span><span v-for="badge in detail.badges" :key="badge">{{ badge }}</span></div>
           </div>
-          <div class="detail-stat-lines"><div v-for="line in detail.statLines" :key="line">{{ line }}</div></div>
+          <div v-if="detail.statLines.length || detail.energyCost != null" class="detail-stat-lines">
+            <div v-for="line in detail.statLines" :key="line">{{ line }}</div>
+            <StaminaCost v-if="detail.energyCost != null" :cost="detail.energyCost" :attribute="detail.energyAttribute" />
+          </div>
           <div class="detail-effect-lines"><div v-for="line in detail.effectLines" :key="line">{{ line }}</div></div>
-          <p class="detail-description">{{ detail.description }}</p>
-          <p v-if="selected.type === 'weapon'" class="detail-description">消耗 {{ selected.energyCost }} 个{{ BALL_LABELS[selected.attribute] }}球；万能球可替代，不足时按支付比例降低伤害。</p>
-          <p class="wiki-item-source">{{ sourceLine }} · 占 {{ selected.shape.flat().filter(Boolean).length }} 格</p>
+          <p v-if="detail.description" class="detail-description">{{ detail.description }}</p>
+          <p class="wiki-item-source">{{ sourceLine }}</p>
         </div>
         <div v-if="recipes.length" class="wiki-item-recipes">
           <div v-for="recipe in recipes" :key="recipe.result + recipe.b" class="wiki-item-recipe">

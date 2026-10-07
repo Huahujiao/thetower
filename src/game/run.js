@@ -1,5 +1,5 @@
 import { DETAIL_LABELS, detailForItem } from './data/item-details.js'
-import { StaminaDeck, BALL_LABELS } from './model/stamina-deck.js'
+import { StaminaDeck } from './model/stamina-deck.js'
 import { createEmitter } from './core/emitter.js'
 import { chebyshev, combatDistance, manhattan, neighbors8 } from './core/geometry.js'
 import { TURN_KINDS, TurnLedger } from './core/turns.js'
@@ -633,16 +633,12 @@ export class GameRun {
     if (item.type === 'weapon' && this.backpack.placementOf(item.uid)) {
       detail.statLines[0] = `\u2694 ${item.attack || 0}`
       detail.statLines[1] = `\u{1F3F9} ${this.weaponRange(item)}`
-      detail.statLines[2] = `\u{1F4AA} ${this.weaponEnergyCost(item)}`
+      detail.energyCost = this.weaponEnergyCost(item)
       detail.effectLines.push(...this.itemRules.weaponLines(item))
-      const payment = this.weaponPayment(item)
-      detail.effectLines.push(`需要${this.weaponEnergyCost(item)}个${BALL_LABELS[item.attribute]}球，万能球可替代；不足时仅支付可用球，伤害按支付比例降低`)
-      detail.effectLines.push(!this.battle.active ? '进入战斗后抽球' : !payment ? '没有可支付的同色或万能球' : `本次支付${payment.paid}/${payment.cost}球，伤害${Math.floor(payment.multiplier * 100)}%`)
     }
     if (item.type === 'pet' && this.backpack.placementOf(item.uid)) {
       detail.statLines[1] = `\u5c04\u7a0b ${this.pets.range(item)}`
-      detail.statLines[2] = `体力球消耗 ${this.pets.cost(item)}`
-      detail.effectLines.push(`玩家剩余体力球 ${this.player.energy}；宠物不区分球属性`)
+      detail.energyCost = this.pets.cost(item)
     }
     if (isConsumable(item) && this.backpack.placementOf(item.uid)) {
       if (this.consumables.boosted(item, true)) detail.effectLines.push('投掷器：主动使用额外消耗2体力，伤害效果×1.5')
@@ -668,7 +664,6 @@ export class GameRun {
       icon: 'relic',
       itemId: definition.id,
       description: definition.description,
-      lines: ['\u5360\u7528\u80cc\u5305 1 \u683c\uff0c\u6301\u6709\u65f6\u751f\u6548\u3002'],
     })
   }
 

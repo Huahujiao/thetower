@@ -8,7 +8,7 @@ export const REGULAR_ITEMS = ACTIVE_ITEMS.filter(item => !item.generatedOnly)
 export const APPEARANCE_LABELS = Object.freeze({ sword: '剑', dagger: '匕首', axe: '斧', bow: '弓', spear: '枪', maul: '锤' })
 
 export function shapeText(item) {
-  return `${item.shape.map(row => row.map(cell => cell ? '■' : '·').join('')).join('/')}（${item.shape.flat().filter(Boolean).length}格）`
+  return item.shape.map(row => row.map(cell => cell ? '■' : '·').join('')).join('/')
 }
 
 export function markdownCell(value) {

@@ -54,15 +54,18 @@ export function detailForItem(item, player = null) {
   const statLines = []
   const effectLines = []
   const badges = []
+  let energyCost = null
+  let energyAttribute = 'wild'
   if (item?.type === 'weapon') {
     if (item.attribute) badges.push(attributeLabel(item.attribute))
     badges.push(itemTierStars(item))
     statLines.push(`\u2694 ${item.attack || 0}`)
     statLines.push(`\u{1F3F9} ${weaponAttackRange(item, player)}`)
-    statLines.push(`\u{1F4AA} ${weaponEnergyCost(item)}`)
+    energyCost = weaponEnergyCost(item)
+    energyAttribute = item.attribute || 'wild'
   } else if (item?.type === 'pet') {
-    statLines.push(`\u2694 ${item.attack}`, `\u5c04\u7a0b ${item.range}`, `体力球消耗 ${item.ballCost}`)
-    effectLines.push('占2格；结束玩家回合后消耗剩余体力球攻击，然后敌人行动。')
+    statLines.push(`\u2694 ${item.attack}`, `\u5c04\u7a0b ${item.range}`)
+    energyCost = item.ballCost
   } else if (item?.type === 'defense') {
     badges.push(defenseClassLabel(item.defenseClass), itemTierStars(item))
     statLines.push(`\u62a4\u7532 ${item.armorValue || 1}`)
@@ -83,17 +86,18 @@ export function detailForItem(item, player = null) {
     effectLines.push(`${target} +${item.attackBonus || 0}`)
   }
   if (item?.tier && !['weapon', 'defense', 'throwable'].includes(item.type)) badges.push(itemTierStars(item))
-  const description = item?.description || ''
+  const description = item?.type === 'pet' && item.description === '无特殊效果。' ? '' : item?.description || ''
   return {
     title: item?.name || type,
     type,
     icon: item?.type || 'item',
     itemId: item?.id || item?.relicId || null,
     badges,
+    energyCost,
+    energyAttribute,
     statLines,
     effectLines,
     lines: [...statLines, ...effectLines],
     description,
   }
 }
-
