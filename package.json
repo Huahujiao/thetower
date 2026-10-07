@@ -32,7 +32,7 @@
     "check:dungeon": "node scripts/dungeon-check.mjs",
     "check:synergies": "node scripts/synergies-check.mjs",
     "check:progression": "node scripts/progression-check.mjs && node scripts/progression-ui-check.mjs",
-    "check:wiki": "node scripts/wiki-check.mjs",
+    "check:wiki": "node scripts/wiki-check.mjs && node scripts/wiki-items-ui-check.mjs",
     "check:stamina": "node scripts/stamina-deck-check.mjs && node scripts/stamina-ui-check.mjs"
   },
   "dependencies": {

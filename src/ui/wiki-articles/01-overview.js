@@ -45,7 +45,7 @@ export default `# 一局游戏
 | [地牢、卡牌与门](/wiki/02-dungeon) | 房间、卡牌、门与翻牌 |
 | [回合、移动与战斗](/wiki/03-turn-and-combat) | 回合、移动、战斗与属性 |
 | [背包、物品与合成](/wiki/04-inventory) | 背包手势、整理与合成 |
-| [当前物品清单](/wiki/05-items) | 物品数据与效果 |
+| [当前物品清单](/wiki/items) | 物品数据与效果 |
 | [升级、奖励与商店](/wiki/06-progression) | 升级奖励、房间奖励和商人 |
 | [敌人、行为与陷阱](/wiki/07-enemies) | 敌人数据、行为与陷阱 |
 | [游戏界面与交互](/wiki/08-interface) | 根路由界面与视觉反馈 |

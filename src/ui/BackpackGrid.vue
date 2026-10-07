@@ -39,6 +39,7 @@
         <span class="bag-adjacency-layer front"></span>
       </i>
     </div>
+    <slot />
   </div>
 </template>
 
