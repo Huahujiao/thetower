@@ -5,6 +5,8 @@ import { renderToString } from '@vue/server-renderer'
 import { readFileSync } from 'node:fs'
 import { ACTIVE_ITEMS } from '../src/ui/wiki-data.js'
 import { detailForItem } from '../src/game/data/item-details.js'
+import { buildWikiInventory } from '../src/ui/wiki-items.js'
+import { rotateShape } from '../src/game/model/backpack.js'
 
 const server = await createServer({ server: { middlewareMode: true }, appType: 'custom' })
 try {
@@ -20,6 +22,16 @@ try {
   assert(html.includes('weapon-rust-sword-v2-small.png'))
   assert(html.includes('pet-mountain-hound-v1-small.png'))
   assert(!html.includes('\ufffd'))
+  for (const entry of buildWikiInventory().entries.filter(entry => entry.item.type === 'weapon')) {
+    const badge = await renderToString(createSSRApp(Badge, { item: entry.item, shape: entry.shape }))
+    const y = entry.shape.findIndex(row => row.some(Boolean)), x = entry.shape[y].findIndex(Boolean)
+    assert(badge.includes(`grid-column:${x + 1} / span 1;grid-row:${y + 1} / span 1`), `Badge in an empty cell: ${entry.item.id}`)
+  }
+  for (let rotation = 0; rotation < 4; rotation++) {
+    const shape = rotateShape([[0, 1], [1, 1]], rotation)
+    const badge = await renderToString(createSSRApp(Badge, { item: { type: 'weapon', tier: 2 }, shape }))
+    assert(badge.includes(`grid-column:${rotation === 0 ? 2 : 1} / span 1;grid-row:1 / span 1`))
+  }
   for (const item of ACTIVE_ITEMS) {
     const detail = detailForItem(item)
     assert.equal(detail.title, item.name)

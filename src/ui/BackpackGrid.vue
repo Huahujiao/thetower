@@ -18,7 +18,7 @@
     >
       <span class="bag-shape" :style="entry.shapeStyle">
         <!-- Snapshot the plain mutable model so in-place food changes reach the child. -->
-        <ItemValueBadge :item="{ ...entry.item }" :gold="gold" />
+        <ItemValueBadge :item="{ ...entry.item }" :shape="entry.shape" :gold="gold" />
         <InventorySprite
           v-if="entry.spriteSources" :sources="entry.spriteSources"
           :item-index="entry.originIndex" :style="entry.spriteStyle"

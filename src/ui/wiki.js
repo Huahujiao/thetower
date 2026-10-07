@@ -42,7 +42,6 @@ export class WikiPage {
         <a class="wiki-back" href="${page || this.id ? '/wiki' : '/'}" aria-label="${page || this.id ? '返回目录' : '返回游戏'}">←</a>
         <div class="wiki-heading"><h1>${escapeHtml(title)}</h1></div>
       </header>
-      ${page || this.id ? '<nav class="wiki-breadcrumb"><a href="/wiki">图鉴目录</a><span aria-hidden="true">/</span><span>' + escapeHtml(title) + '</span></nav>' : ''}
       ${page?.section === 'planning' ? '<p class="wiki-planning-note">此页区分当前问题与未实现候选；具体玩法请参阅规则页和实时清单。</p>' : ''}
       <div data-wiki-content>${!page && !this.id ? WIKI_SECTIONS.map(directorySection).join('') : !page ? '<p class="wiki-loading">请从 <a href="/wiki">图鉴目录</a>选择页面。</p>' : '<p class="wiki-loading">正在加载…</p>'}</div>
     </main>`

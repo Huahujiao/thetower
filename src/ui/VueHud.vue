@@ -98,7 +98,7 @@
           @touchcancel.stop.prevent="onStashTouchCancel($event)" @contextmenu.prevent
         >
           <span class="bag-shape" :style="entry.shapeStyle">
-            <ItemValueBadge :item="{ ...entry.item }" :gold="state.player.gold" />
+            <ItemValueBadge :item="{ ...entry.item }" :shape="entry.shape" :gold="state.player.gold" />
             <InventorySprite
               v-if="entry.spriteSources" :sources="entry.spriteSources" :item-index="-1"
               :style="entry.spriteStyle" @contextmenu.prevent
@@ -114,7 +114,7 @@
         :style="draggedItemView.previewStyle"
       >
         <span class="bag-shape" :style="draggedItemView.shapeStyle">
-          <ItemValueBadge :item="{ ...draggedItemView.item }" :gold="state.player.gold" />
+          <ItemValueBadge :item="{ ...draggedItemView.item }" :shape="draggedItemView.shape" :gold="state.player.gold" />
           <InventorySprite
             v-if="draggedItemView.spriteSources" :sources="draggedItemView.spriteSources" :item-index="-1"
             :style="draggedItemView.spriteStyle" @contextmenu.prevent
@@ -748,6 +748,7 @@ const stashItems = computed(() => state.value.inventoryStash.map((item, index) =
   const dimensions = inventoryItemLayout(run.backpack, item, rotation, backpackGrid.value?.getBoundingClientRect?.(), INVENTORY_COLUMNS, INVENTORY_ROWS)
   return {
     item,
+    shape,
     cells: layout.cells.map(({ x, y, edges }) => ({ x, y, index: `${item.uid}-${x}-${y}`, style: { gridColumn: x + 1, gridRow: y + 1, borderWidth: edges.map((edge) => edge ? '1px' : '0').join(' ') } })),
     shapeStyle: { gridTemplateColumns: `repeat(${shape[0].length}, 1fr)`, gridTemplateRows: `repeat(${shape.length}, 1fr)` },
     spriteSources: itemSpriteSources(item),
@@ -767,6 +768,7 @@ const draggedItemView = computed(() => {
   const cellHeight = rect ? rect.height / INVENTORY_ROWS : 36
   return {
     item,
+    shape,
     cells: layout.cells.map(({ x, y, edges }) => ({ x, y, index: `${item.uid}-${x}-${y}`, style: { gridColumn: x + 1, gridRow: y + 1, borderWidth: edges.map((edge) => edge ? '1px' : '0').join(' ') } })),
     shapeStyle: { gridTemplateColumns: `repeat(${shape[0].length}, 1fr)`, gridTemplateRows: `repeat(${shape.length}, 1fr)` },
     spriteSources: itemSpriteSources(item),
