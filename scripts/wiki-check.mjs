@@ -11,6 +11,7 @@ import { ACTIVE_ITEMS, SHOP_ITEMS, enemyDistribution } from '../src/ui/wiki-data
 import { itemSpriteSources } from '../src/ui/item-sprites.js'
 import { createEnemyShadowProjects } from '../src/animation/shadow-enemies.js'
 import { buildWikiInventory, WIKI_ITEM_COLUMNS, WIKI_ITEM_VISIBLE_ROWS } from '../src/ui/wiki-items.js'
+import { rotateShape } from '../src/game/model/backpack.js'
 
 assert.equal(ARTICLE_PAGES.length, 15)
 assert.equal(CATALOG_PAGES.length, 4)
@@ -61,7 +62,8 @@ const inventory = buildWikiInventory()
 assert.equal(WIKI_ITEM_COLUMNS, 8)
 assert.equal(WIKI_ITEM_VISIBLE_ROWS, 8)
 assert(inventory.rows > WIKI_ITEM_VISIBLE_ROWS)
-assert.equal(inventory.entries.length, ACTIVE_ITEMS.length)
+assert.equal(inventory.entries.length, ACTIVE_ITEMS.filter(item => item.type !== 'money-pouch').length)
+assert(!inventory.entries.some(entry => entry.item.id === 'money-pouch'))
 assert.deepEqual(inventory.headers.slice(0, 5).map(header => header.id), ['consumables', 'weapons', 'defenses', 'relics', 'materials'])
 const occupied = new Set()
 for (const entry of inventory.entries) {
@@ -78,12 +80,38 @@ for (const entry of inventory.entries) {
 assert(articles.get('06-progression').includes(`候选共${SHOP_ITEMS.length}种`))
 for (const item of ACTIVE_ITEMS) {
   const entry = inventory.entries.find(entry => entry.item.id === item.id)
+  if (item.type === 'money-pouch') continue
   assert(entry, `Missing active item: ${item.id}`)
   for (const url of Object.values(itemSpriteSources(item) || {})) assert(existsSync(fileURLToPath(url)), `Missing sprite file: ${item.id}`)
   assert(itemSpriteSources(item)?.small && itemSpriteSources(item)?.medium, `Missing sprite sizes: ${item.id}`)
   assert.deepEqual(entry.item.shape, item.shape)
+  assert.deepEqual(entry.shape, rotateShape(item.shape, entry.rotation))
+  assert(entry.cells.some(cell => cell.index === entry.originIndex), `Origin must select its item: ${item.id}`)
   if (item.type === 'weapon') assert(entry.itemClasses.includes(`attribute-${item.attribute}`), `Missing weapon tint: ${item.id}`)
 }
+// Backfill the empty upper-right cell of an L rather than starting a new row.
+const fixture = (id, shape, rotatable = false) => ({ id, name: id, type: 'weapon', shape, rotatable })
+const holes = buildWikiInventory([
+  fixture('ell', [[1, 0], [1, 1]]),
+  fixture('block', [Array(6).fill(1), Array(6).fill(1)]),
+  fixture('dot', [[1]]),
+])
+assert.equal(holes.entries[2].originIndex, 9)
+assert.equal(holes.itemByCell.get(9).id, 'dot')
+const rotated = buildWikiInventory([fixture('bar', [Array(6).fill(1)]), fixture('pair', [[1], [1]], true)])
+assert.equal(rotated.entries[1].originIndex, 14)
+assert.equal(rotated.entries[1].rotation, 1)
+assert.deepEqual(rotated.entries[1].shape, [[1, 1]])
+assert.equal(rotated.entries[1].spriteStyle.transform, 'translate(-50%, -50%) rotate(90deg)')
+const fixed = buildWikiInventory([fixture('bar', [Array(6).fill(1)]), fixture('pair', [[1], [1]])])
+assert.equal(fixed.entries[1].rotation, 0)
+assert.deepEqual(fixed.entries[1].shape, [[1], [1]])
+const consumables = buildWikiInventory([
+  { ...fixture('healing', [[1]]), type: 'potion' },
+  { ...fixture('protection', [[1]]), type: 'armor' },
+])
+assert.equal(consumables.entries[0].originIndex, 8)
+assert.equal(consumables.entries[1].originIndex, 9)
 assert(!ALL_ITEM_DEFS.some(item => item.type === 'energy'))
 assert(articles.get('03-turn-and-combat').includes('32个球'))
 assert(articles.get('06-progression').includes('万能球+1'))
