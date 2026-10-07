@@ -172,7 +172,7 @@ body.wiki-items-page #hud { height: 100dvh; min-height: 0; overflow: hidden; }
 .wiki-item-detail .detail-card { grid-template-columns: 70px minmax(0, 1fr); padding: 10px; cursor: default; }
 .wiki-item-detail .detail-icon { width: 70px; height: 95px; overflow: hidden; align-self: start; }
 .wiki-item-detail .detail-sprite { width: 100%; height: 100%; object-fit: contain; }
-.wiki-item-detail .detail-head { padding-right: 20px; flex-wrap: wrap; }
+.wiki-item-detail .detail-head { padding-right: 20px; flex-wrap: nowrap; }
 .wiki-item-detail .detail-title { white-space: normal; font-size: 17px; }
 .wiki-item-detail .detail-badges { flex-wrap: wrap; margin-left: 0; }
 .wiki-item-detail .detail-description { margin-bottom: 0; line-height: 1.5; }

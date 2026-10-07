@@ -136,6 +136,7 @@
         <div class="detail-content">
           <div class="detail-head">
             <div class="detail-title">{{ detailPanel?.title || 'DETAIL PANEL' }}</div>
+            <span v-if="detailPanel?.armorValue != null" class="detail-armor">护甲 {{ detailPanel.armorValue }}</span>
             <div class="detail-badges">
               <span v-for="badge in (detailPanel?.badges || [])" :key="badge">{{ badge
               }}</span>
@@ -149,7 +150,7 @@
             <div v-for="(line, index) in (detailPanel?.effectLines?.length ? detailPanel.effectLines : (!detailPanel?.statLines?.length ? (detailPanel?.lines || []) : []))" :key="`effect-${index}-${line}`">{{ line }}</div>
             <div v-if="!detailPanel">LONG-PRESS AN ITEM TO INSPECT</div>
           </div>
-          <div class="detail-description">{{ detailPanel?.description || '' }}</div>
+          <div v-if="detailPanel?.description" class="detail-description">{{ detailPanel.description }}</div>
         </div>
         <div v-if="detailUpgradeRoutes.length" class="detail-upgrade-routes" aria-hidden="true">
           <div v-for="route in detailUpgradeRoutes" :key="route.key" class="detail-upgrade-route">

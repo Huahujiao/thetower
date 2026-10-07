@@ -34,9 +34,6 @@ export const DETAIL_LABELS = Object.freeze({
   keyHint: '\u62fe\u53d6\u540e\u4f1a\u6c38\u4e45\u5f00\u542f\u5bf9\u5e94\u7684\u623f\u95f4\u95e8\u3002',
 })
 
-const DEFENSE_CLASS_LABELS = Object.freeze({ shield: '\u76fe\u724c', armor: '\u62a4\u7532' })
-
-function defenseClassLabel(value) { return DEFENSE_CLASS_LABELS[value] || DEFENSE_CLASS_LABELS.armor }
 function itemTier(item) {
   const fallback = item?.type === 'weapon' ? weaponTier(item) : 1
   return Math.max(1, Math.min(3, Math.floor(Number(item?.tier) || fallback)))
@@ -56,6 +53,7 @@ export function detailForItem(item, player = null) {
   const badges = []
   let energyCost = null
   let energyAttribute = 'wild'
+  let armorValue = null
   if (item?.type === 'weapon') {
     if (item.attribute) badges.push(attributeLabel(item.attribute))
     badges.push(itemTierStars(item))
@@ -67,9 +65,8 @@ export function detailForItem(item, player = null) {
     statLines.push(`\u2694 ${item.attack}`, `\u5c04\u7a0b ${item.range}`)
     energyCost = item.ballCost
   } else if (item?.type === 'defense') {
-    badges.push(defenseClassLabel(item.defenseClass), itemTierStars(item))
-    statLines.push(`\u62a4\u7532 ${item.armorValue || 1}`)
-    effectLines.push('\u9996\u6b21\u8fdb\u5165\u65b0\u623f\u95f4\u65f6\u83b7\u5f97\u8be5\u62a4\u7532\u503c\u3002')
+    badges.push(itemTierStars(item))
+    armorValue = item.armorValue || 1
   } else if (item?.type === 'money-pouch') {
     statLines.push(`\u91d1\u5e01 ${player?.gold || 0}`)
   } else if (item?.type === 'throwable') {
@@ -86,7 +83,10 @@ export function detailForItem(item, player = null) {
     effectLines.push(`${target} +${item.attackBonus || 0}`)
   }
   if (item?.tier && !['weapon', 'defense', 'throwable'].includes(item.type)) badges.push(itemTierStars(item))
-  const description = item?.type === 'pet' && item.description === '无特殊效果。' ? '' : item?.description || ''
+  let description = (item?.description || '').replace(/无(?:特殊效果|额外特效)[。.]?/g, '').trim()
+  if (item?.type === 'defense') description = description.replace(/首次进入新房间时获得\d+护甲[。；]?/g, '').trim()
+  if (item?.type === 'potion' && /^恢复\d+生命[。.]?$/.test(description)) description = ''
+  if (item?.type === 'armor' && /^获得\d+护甲[。.]?$/.test(description)) description = ''
   return {
     title: item?.name || type,
     type,
@@ -95,6 +95,7 @@ export function detailForItem(item, player = null) {
     badges,
     energyCost,
     energyAttribute,
+    armorValue,
     statLines,
     effectLines,
     lines: [...statLines, ...effectLines],

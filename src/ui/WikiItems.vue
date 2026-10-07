@@ -57,12 +57,13 @@ onBeforeUnmount(() => observer?.disconnect())
         <div class="detail-content">
           <div class="detail-head">
             <h2 class="detail-title">{{ detail.title }}</h2>
+            <span v-if="detail.armorValue != null" class="detail-armor">护甲 {{ detail.armorValue }}</span>
           </div>
           <div v-if="detail.statLines.length || detail.energyCost != null" class="detail-stat-lines">
             <div v-for="line in detail.statLines" :key="line">{{ line }}</div>
             <StaminaCost v-if="detail.energyCost != null" :cost="detail.energyCost" :attribute="detail.energyAttribute" />
           </div>
-          <div class="detail-effect-lines"><div v-for="line in detail.effectLines" :key="line">{{ line }}</div></div>
+          <div v-if="detail.effectLines.length" class="detail-effect-lines"><div v-for="line in detail.effectLines" :key="line">{{ line }}</div></div>
           <p v-if="detail.description" class="detail-description">{{ detail.description }}</p>
           <p class="wiki-item-source">{{ sourceLine }}</p>
         </div>

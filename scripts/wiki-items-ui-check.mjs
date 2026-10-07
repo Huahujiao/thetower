@@ -10,6 +10,7 @@ const server = await createServer({ server: { middlewareMode: true }, appType: '
 try {
   const { default: Page } = await server.ssrLoadModule('/src/ui/WikiItems.vue')
   const { default: Cost } = await server.ssrLoadModule('/src/ui/StaminaCost.vue')
+  const { default: Badge } = await server.ssrLoadModule('/src/ui/ItemValueBadge.vue')
   const html = await renderToString(createSSRApp(Page))
   assert(html.includes('wiki-inventory-viewport'))
   assert.equal((html.match(/class="bag-item /g) || []).length, ACTIVE_ITEMS.filter(item => item.type !== 'money-pouch').length)
@@ -22,7 +23,8 @@ try {
   for (const item of ACTIVE_ITEMS) {
     const detail = detailForItem(item)
     assert.equal(detail.title, item.name)
-    assert.equal(detail.description, item.type === 'pet' && item.description === '无特殊效果。' ? '' : item.description || '')
+    const generic = /^(?:无特殊效果|无额外特效|首次进入新房间时获得\d+护甲|恢复\d+生命|获得\d+护甲)[。.]?$/.test(item.description || '')
+    assert.equal(detail.description, generic ? '' : item.description || '')
     if (item.type === 'weapon') {
       assert.deepEqual(detail.statLines, [`⚔ ${item.attack}`, `🏹 ${item.range}`])
       assert.equal(detail.energyCost, item.energyCost)
@@ -31,6 +33,15 @@ try {
     if (item.type === 'pet') {
       assert.equal(detail.energyCost, item.ballCost)
       assert.equal(detail.energyAttribute, 'wild')
+      assert.equal(detail.effectLines.length, 0)
+    }
+    if (['potion', 'defense'].includes(item.type)) {
+      const badge = await renderToString(createSSRApp(Badge, { item }))
+      assert(!badge.includes('<span'), `Unwanted item badge: ${item.id}`)
+    }
+    if (item.type === 'defense') {
+      assert.equal(detail.armorValue, item.armorValue)
+      assert.equal(detail.statLines.length, 0)
       assert.equal(detail.effectLines.length, 0)
     }
   }
@@ -45,5 +56,6 @@ try {
   assert(/\.wiki-item-stage \.wiki-item-detail\s*\{[^}]*position: absolute/.test(css))
   const source = readFileSync(new URL('../src/ui/WikiItems.vue', import.meta.url), 'utf8')
   assert(!source.includes('detail-badges') && !source.includes('万能球可替代') && !source.includes(' · 占 '))
+  assert(source.indexOf('class="detail-armor"') < source.indexOf('class="detail-stat-lines"'))
   console.log('wiki-items-ui-check passed: shared backpack renders every active item, current details, fixed shell, eight visible rows and absolute detail overlay')
 } finally { await server.close() }

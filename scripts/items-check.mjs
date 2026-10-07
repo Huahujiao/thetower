@@ -77,7 +77,9 @@ assert(rangePulse(1.6).scale > rangePulse(1.2).scale)
   assert.equal(run.detailPanel.energyAttribute, 'scorch')
   assert.equal(run.detailPanel.lines.some((line) => line.includes('\u5360\u683c')), false)
   assert(run.showItemDetail(defense))
-  assert.deepEqual(run.detailPanel.badges, ['\u76fe\u724c', '\u2605'])
+  assert.deepEqual(run.detailPanel.badges, ['\u2605'])
+  assert.equal(run.detailPanel.armorValue, defense.armorValue)
+  assert.equal(run.detailPanel.statLines.length, 0)
   assert.equal(run.detailPanel.lines.some((line) => line.includes('\u5360\u683c')), false)
 }
 

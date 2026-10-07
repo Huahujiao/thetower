@@ -5,6 +5,21 @@ import { rotateShape } from '../game/model/backpack.js'
 
 export const WIKI_ITEM_COLUMNS = 8
 export const WIKI_ITEM_VISIBLE_ROWS = 8
+const WEAPON_COLOR_ORDER = ['scorch', 'wither', 'drown']
+export const WIKI_RELIC_GROUPS = Object.freeze([
+  ['r-scales', 'r-single-seal', 'r-relay-badge', 'r-switch-ring'],
+  ['r-empty', 'r-lone-edge', 'r-heavy-wrist'],
+  ['r-traveler', 'r-step-edge', 'r-step-boots', 'r-turn-shield'],
+  ['r-extreme-range', 'r-range-mirror'],
+  ['r-armor-command', 'r-iron-will', 'r-armor-ring', 'r-guard-return'],
+  ['r-blood'],
+  ['r-miasma-sac', 'r-bone-incense', 'r-plague-bell'],
+  ['r-money-scale', 'r-wealth-scale', 'r-gold-fuel', 'r-trade-voucher', 'r-ledger'],
+  ['r-pill-ticket', 'r-loot-pouch', 'r-furnace', 'r-chain-drink', 'r-launcher'],
+  ['r-totem-drum', 'r-totem-ward', 'r-totem-spirit', 'r-totem-bind', 'r-totem-gas', 'r-totem-soul'],
+  ['r-far-whistle', 'r-hunting-horn', 'r-pack-hunt', 'r-feeding-charm'],
+])
+const RELIC_ORDER = new Map(WIKI_RELIC_GROUPS.flat().map((id, index) => [id, index]))
 export const WIKI_ITEM_CATEGORIES = Object.freeze([
   { id: 'consumables', name: '消耗品', types: ['potion', 'armor', 'buff', 'throwable', 'teleport'] },
   { id: 'weapons', name: '武器', types: ['weapon'] },
@@ -14,7 +29,7 @@ export const WIKI_ITEM_CATEGORIES = Object.freeze([
   { id: 'pets', name: '宠物', types: ['pet'] },
 ])
 
-function placementFor(item, startRow, endRow, occupied) {
+function placementFor(item, startRow, endRow, occupied, minimumIndex) {
   const signatures = new Set()
   const variants = (item.rotatable === false ? [0] : [0, 1, 2, 3]).flatMap(rotation => {
     const shape = rotateShape(item.shape || [[1]], rotation)
@@ -30,6 +45,8 @@ function placementFor(item, startRow, endRow, occupied) {
       const bottom = Math.max(endRow, y + height)
       if (best && bottom > best.bottom) continue
       for (let x = 0; x <= WIKI_ITEM_COLUMNS - width; x++) {
+        const anchor = variant.layout.cells[0]
+        if ((y + anchor.y) * WIKI_ITEM_COLUMNS + x + anchor.x < minimumIndex) continue
         if (variant.layout.cells.some(cell => occupied.has((y + cell.y) * WIKI_ITEM_COLUMNS + x + cell.x))) continue
         if (!best || bottom < best.bottom || (bottom === best.bottom && (y < best.y || (y === best.y && x < best.x)))) {
           best = { ...variant, x, y, width, height, bottom }
@@ -39,6 +56,22 @@ function placementFor(item, startRow, endRow, occupied) {
   }
   if (!best) throw new Error(`Item cannot fit in Wiki: ${item.id}`)
   return best
+}
+
+function itemOrder(a, b) {
+  if (a.type === 'weapon') {
+    const rank = item => WEAPON_COLOR_ORDER.includes(item.attribute) ? WEAPON_COLOR_ORDER.indexOf(item.attribute) : 3
+    const colorOrder = rank(a) - rank(b)
+    if (colorOrder) return colorOrder
+  }
+  if (a.type === 'defense') {
+    const area = item => item.shape.flat().filter(Boolean).length
+    const bounds = item => item.shape.length * Math.max(...item.shape.map(row => row.length))
+    const sizeOrder = area(b) - area(a) || bounds(b) - bounds(a)
+    if (sizeOrder) return sizeOrder
+  }
+  if (a.type === 'relic') return (RELIC_ORDER.get(a.id) ?? Infinity) - (RELIC_ORDER.get(b.id) ?? Infinity)
+  return (a.tier || 1) - (b.tier || 1)
 }
 
 // Fill occupied-cell gaps within each category; prefer rotations that use fewer
@@ -53,13 +86,20 @@ export function buildWikiInventory(definitions = ACTIVE_ITEMS) {
     headers.push({ ...category, row: row++, count: items.length })
     const startRow = row
     for (const type of category.types) {
+      let minimumIndex = startRow * WIKI_ITEM_COLUMNS
+      let color = null, colorEnd = minimumIndex
       const typed = items.filter(item => item.type === type)
-        .sort((a, b) => (a.tier || 1) - (b.tier || 1))
+        .sort(itemOrder)
       for (const definition of typed) {
         const item = { ...definition, uid: `wiki-${definition.id}` }
-        const { shape, rotation, layout, x, y, width, height, bottom } = placementFor(item, startRow, row, occupied)
+        if (type === 'weapon' && color !== item.attribute) {
+          minimumIndex = colorEnd
+          color = item.attribute
+        }
+        const { shape, rotation, layout, x, y, width, height, bottom } = placementFor(item, startRow, row, occupied, minimumIndex)
         const anchor = layout.cells[0]
         const originIndex = (y + anchor.y) * WIKI_ITEM_COLUMNS + x + anchor.x
+        colorEnd = Math.max(colorEnd, originIndex + 1)
         const oddRotation = rotation % 2 === 1
         entries.push({
           item, originIndex, shape, rotation, category: category.id,

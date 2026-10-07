@@ -10,7 +10,7 @@ import { ENEMY_HP_MULTIPLIER } from '../src/game/data/enemies.js'
 import { ACTIVE_ITEMS, SHOP_ITEMS, enemyDistribution } from '../src/ui/wiki-data.js'
 import { itemSpriteSources } from '../src/ui/item-sprites.js'
 import { createEnemyShadowProjects } from '../src/animation/shadow-enemies.js'
-import { buildWikiInventory, WIKI_ITEM_COLUMNS, WIKI_ITEM_VISIBLE_ROWS } from '../src/ui/wiki-items.js'
+import { buildWikiInventory, WIKI_ITEM_COLUMNS, WIKI_ITEM_VISIBLE_ROWS, WIKI_RELIC_GROUPS } from '../src/ui/wiki-items.js'
 import { rotateShape } from '../src/game/model/backpack.js'
 
 assert.equal(ARTICLE_PAGES.length, 15)
@@ -65,6 +65,13 @@ assert(inventory.rows > WIKI_ITEM_VISIBLE_ROWS)
 assert.equal(inventory.entries.length, ACTIVE_ITEMS.filter(item => item.type !== 'money-pouch').length)
 assert(!inventory.entries.some(entry => entry.item.id === 'money-pouch'))
 assert.deepEqual(inventory.headers.slice(0, 5).map(header => header.id), ['consumables', 'weapons', 'defenses', 'relics', 'materials'])
+const colorRanks = inventory.entries.filter(entry => entry.item.type === 'weapon')
+  .sort((a, b) => a.originIndex - b.originIndex).map(entry => ['scorch', 'wither', 'drown'].indexOf(entry.item.attribute))
+assert.deepEqual(colorRanks, [...colorRanks].sort((a, b) => a - b))
+const defenseSizes = inventory.entries.filter(entry => entry.item.type === 'defense').map(entry => entry.cells.length)
+assert.deepEqual(defenseSizes, [...defenseSizes].sort((a, b) => b - a))
+const relicIds = inventory.entries.filter(entry => entry.item.type === 'relic').map(entry => entry.item.id)
+assert.deepEqual(relicIds, WIKI_RELIC_GROUPS.flat().filter(id => ACTIVE_ITEMS.some(item => item.id === id)))
 const occupied = new Set()
 for (const entry of inventory.entries) {
   const header = inventory.headers.find(header => header.id === entry.category)
@@ -112,6 +119,13 @@ const consumables = buildWikiInventory([
 ])
 assert.equal(consumables.entries[0].originIndex, 8)
 assert.equal(consumables.entries[1].originIndex, 9)
+const colors = buildWikiInventory([
+  { ...fixture('blue', [[1]]), attribute: 'drown' },
+  { ...fixture('yellow', [[1]]), attribute: 'wither' },
+  { ...fixture('red', [[1]]), attribute: 'scorch' },
+])
+assert.deepEqual(colors.entries.map(entry => entry.item.id), ['red', 'yellow', 'blue'])
+assert.deepEqual(colors.entries.map(entry => entry.originIndex), [8, 9, 10])
 assert(!ALL_ITEM_DEFS.some(item => item.type === 'energy'))
 assert(articles.get('03-turn-and-combat').includes('32个球'))
 assert(articles.get('06-progression').includes('万能球+1'))

@@ -216,9 +216,8 @@ function aim(run, item) {
   assert(pouchHtml.includes('\u94b1\u888b: 123'))
   assert(pouchHtml.includes('>123</span>'))
   const armorHtml = await render('wood-shield')
-  assert(armorHtml.includes('\u62a4\u7532\u503c'))
-  assert(armorHtml.includes('>1</span>'))
+  assert(!armorHtml.includes('<span'))
   assert((await render('poison')).includes('>II</span>'))
-  assert((await render('health-potion')).includes('>I</span>'))
+  assert(!(await render('health-potion')).includes('<span'))
 }
 console.log('basic-rules-check passed: health, pouch, room armor, rarity, targeting, poison, area damage, bounce, saves and Vue badges')
