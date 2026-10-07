@@ -55,14 +55,15 @@ body.wiki-page #hud {
 .wiki-directory-link {
   position: relative;
   display: grid;
-  place-items: center;
+  align-items: center;
+  justify-items: start;
   min-height: 44px;
-  padding: 9px 30px;
+  padding: 9px 30px 9px 8px;
   border: 1px solid var(--wiki-border);
   border-radius: 12px;
   background: linear-gradient(145deg, rgba(38, 54, 91, .85), rgba(19, 28, 49, .9));
   color: #f0f4ff;
-  text-align: center;
+  text-align: left;
   text-decoration: none;
 }
 .wiki-directory-link:hover, .wiki-directory-link:focus-visible { border-color: #91b3ff; background: #263c6b; }
