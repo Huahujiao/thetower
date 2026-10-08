@@ -21,8 +21,8 @@ export const TRAP_DEFS = Object.freeze([
     id: 'corrosion',
     name: '\u8150\u8680\u9677\u9631',
     effect: 'corrosion',
-    energyLoss: 2,
-    description: '\u89e6\u53d1\u540e\u5931\u53bb 2 \u70b9\u4f53\u529b\u3002',
+    fatigueLayers: 1,
+    description: '获得1层疲劳：战斗中立即减少1个体力球；探索中下个战斗回合少获取1个球。',
   },
   {
     id: 'poison-fog',

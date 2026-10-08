@@ -2,6 +2,7 @@ import { statusCounterText } from '../game/rules/statuses.js'
 import { statusIconSource } from './status-icons.js'
 
 export function statusEffectText(status) {
+  if (status.id === 'fatigue') return '下个战斗回合每层少获取1个体力球，结算后清除'
   if (status.id === 'dodge') return '\u89c4\u907f\u4e00\u6b21\u653b\u51fb\u53ca\u5176\u9644\u52a0\u6548\u679c'
   if (status.id === 'parry') return '\u4e0b\u6b21\u8fd1\u6218\u653b\u51fb\u51cf\u4f2430%'
   const spec = status.damage

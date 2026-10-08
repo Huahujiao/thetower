@@ -6,7 +6,7 @@ import { TURN_KINDS, TurnLedger } from './core/turns.js'
 import { commitInventoryDrop, moveInventoryToStash, discardInventoryItem } from './core/inventory-actions.js'
 import { attributeLabel } from './data/attributes.js'
 import { createLootEntity, createMinion, getItemDefinition, makeItemById, makeRelicItem, starterWeapon, synchronizeEnemyBalance, synchronizeEntityIds } from './data/content.js'
-import { applyStatus, bindStatusAccessors, consumeStatus, getStatus, normalizeStatuses, POISON_TURNS, prepareStatusDamage, removeStatus, resolveStatusDamage, statusCounterText, statusSnapshot, tickStatusSnapshot } from './rules/statuses.js'
+import { applyStatus, bindStatusAccessors, consumeStatus, getStatus, normalizeStatus, normalizeStatuses, POISON_TURNS, prepareStatusDamage, removeStatus, resolveStatusDamage, statusCounterText, statusSnapshot, tickStatusSnapshot } from './rules/statuses.js'
 import { enemyFeatureDetailLabel } from './data/enemy-features.js'
 import { getMerchantDefinition, merchantSellPrice, refreshMerchantSlot, refreshMerchantStock } from './data/merchants.js'
 import { buildRelicChoices, getRelicDefinition, RELIC_DEFS } from './data/relics.js'
@@ -361,7 +361,7 @@ export class GameRun {
     if (active && !this.battle.active) {
       this.battle = { active: true, stage: 'player', round: 1, knownEnemyIds: this._activatedEnemies().map(enemy => enemy.id) }
       this.itemRules.startPlayerTurn()
-      this.staminaDeck.startTurn(this._activatedEnemies().length)
+      this._drawPlayerTurnBalls()
       this._log(`进入战斗，抽取${this.player.energy}个体力球。`)
       this.bus.emit('battle:started', { round: 1 })
     } else if (active && this.battle.active) {
@@ -390,10 +390,16 @@ export class GameRun {
     this.battle.stage = 'player'
     this.battle.round += 1
     this.itemRules.startPlayerTurn()
-    this.staminaDeck.startTurn(this._activatedEnemies().length)
+    this._drawPlayerTurnBalls()
     this.itemRules.action('turn-start')
     this.pendingRoundEnd = false
     this.bus.emit('player-turn:started', { round: this.battle.round })
+  }
+
+  _drawPlayerTurnBalls() {
+    const fatigueLayers = getStatus(this.player, 'fatigue')?.layers || 0
+    removeStatus(this.player, 'fatigue')
+    return this.staminaDeck.startTurn(this._activatedEnemies().length, fatigueLayers)
   }
 
   actionEnergyCost(amount = 1) { return this.battle.active ? Math.max(0, amount) : 0 }
@@ -424,6 +430,17 @@ export class GameRun {
   getStatus(actor, id) { return getStatus(actor, id) }
 
   applyStatus(actor, id, options = {}, refreshOptions = {}) {
+    if (actor === this.player && id === 'fatigue') {
+      const fatigue = normalizeStatus(id, options)
+      if (fatigue.layers <= 0 || fatigue.turns <= 0) return null
+      if (this.battle.active) {
+        // Resolve immediately without ever adding a status-bar entry or future debt.
+        this.staminaDeck.pay(Math.min(this.player.energy, fatigue.layers))
+        return fatigue
+      }
+      fatigue.layers += getStatus(actor, id)?.layers || 0
+      return applyStatus(actor, id, fatigue)
+    }
     return applyStatus(actor, id, prepareStatusDamage(options, { run: this, holder: actor, stage: 'gain' }), refreshOptions)
   }
 
@@ -1402,9 +1419,9 @@ export class GameRun {
       this._animateEnemyRevealBatch(room, flips)
       this._log(`${definition.name}\u89e6\u53d1\uff0c\u7ffb\u5f00\u4e86 ${targets.length} \u4e2a\u9644\u8fd1\u654c\u4eba\u3002`)
     } else if (definition.effect === 'corrosion') {
-      const energyLoss = Math.max(1, Math.floor(Number(definition.energyLoss) || 2))
-      this.staminaDeck.pay(Math.min(this.player.energy, energyLoss))
-      this._log(`${definition.name}\u89e6\u53d1\uff0c\u4f53\u529b -${energyLoss}\u3002`)
+      const layers = Math.max(1, Math.floor(Number(definition.fatigueLayers) || 1))
+      this.applyStatus(this.player, 'fatigue', { layers })
+      this._log(`${definition.name}触发，获得${layers}层疲劳${this.battle.active ? '，立即结算' : ''}。`)
     } else if (definition.effect === 'poison') {
       const poisonDamage = Math.max(1, Math.floor(Number(definition.poisonDamage) || 1))
       this._applyPoison(definition.poisonTurns, poisonDamage)

@@ -52,9 +52,9 @@ export class StaminaDeck {
     }
     return drawn
   }
-  startTurn(enemyCount) {
+  startTurn(enemyCount, fatigueLayers = 0) {
     this.discardHand()
-    this.supply = 2 * enemyCount + 4
+    this.supply = Math.max(0, 2 * enemyCount + 4 - fatigueLayers)
     return this.draw(this.supply)
   }
   supplement() { this.supply += 2; return this.draw(2) }

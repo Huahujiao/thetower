@@ -27,7 +27,7 @@ const COPY = Object.freeze({
   energy: '体力球消耗',
   footprint: '\u5360\u683c',
   weaponEffect: '\u7279\u6548',
-  energyLoss: '\u4f53\u529b\u635f\u5931',
+  fatigue: '疲劳',
   attribute: '\u5c5e\u6027',
   floor: '\u6700\u65e9\u51fa\u73b0\u697c\u5c42',
   delay: '\u884c\u52a8\u5ef6\u8fdf',
@@ -149,7 +149,7 @@ function trapCards() {
     const stats = [stat(COPY.trigger, COPY.revealTrigger), stat(COPY.lifecycle, COPY.trapLifecycle)]
     if (trap.effect === 'explosion') stats.push(stat(COPY.range, '\u516b\u90bb\u57df'))
     if (trap.effect === 'alarm') stats.push(stat(COPY.range, '\u534a\u5f84 2'))
-    if (trap.effect === 'corrosion') stats.push(stat(COPY.energyLoss, `-${trap.energyLoss || 0}`))
+    if (trap.effect === 'corrosion') stats.push(stat(COPY.fatigue, `${trap.fatigueLayers}层`))
     if (trap.effect === 'poison') {
       stats.push(stat(COPY.duration, `${trap.poisonTurns} ${COPY.globalTurns}`))
       stats.push(stat(COPY.damage, `${trap.poisonDamage} ${COPY.health} \u00b7 \u65e0\u89c6\u62a4\u7532`))

@@ -3,6 +3,7 @@ export const DEFAULT_STATUS_LAYERS = 100
 export const DEFAULT_STATUS_TURNS = 100
 export const POISON_TURNS = 3
 export const STATUS_DEFS = Object.freeze({
+  fatigue: { name: '疲劳', owner: 'player', trigger: 'turn-supply', layers: 1 },
   'player-poison': { name: '\u4e2d\u6bd2', owner: 'player', trigger: 'turn', turns: POISON_TURNS, damage: 2, ignoreArmor: true },
   'enemy-poison': { name: '\u4e2d\u6bd2', owner: 'enemy', trigger: 'turn', turns: POISON_TURNS, damage: 1 },
   burning: { name: '\u71c3\u70e7', owner: 'player', trigger: 'turn', damage: 1 },
