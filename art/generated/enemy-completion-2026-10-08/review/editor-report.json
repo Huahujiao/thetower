@@ -1,0 +1,272 @@
+[
+  {
+    "enemyId": "patrol-hound",
+    "action": "idle",
+    "partCount": 27,
+    "played": "74 / 1400 ms"
+  },
+  {
+    "enemyId": "patrol-hound",
+    "action": "move",
+    "partCount": 27,
+    "played": "50 / 700 ms"
+  },
+  {
+    "enemyId": "patrol-hound",
+    "action": "attack",
+    "partCount": 27,
+    "played": "51 / 500 ms"
+  },
+  {
+    "enemyId": "patrol-hound",
+    "action": "hit",
+    "partCount": 27,
+    "played": "50 / 380 ms"
+  },
+  {
+    "enemyId": "patrol-hound",
+    "action": "death",
+    "partCount": 27,
+    "played": "62 / 800 ms"
+  },
+  {
+    "enemyId": "redneedle-salamander",
+    "action": "idle",
+    "partCount": 21,
+    "played": "74 / 1400 ms"
+  },
+  {
+    "enemyId": "redneedle-salamander",
+    "action": "move",
+    "partCount": 21,
+    "played": "54 / 700 ms"
+  },
+  {
+    "enemyId": "redneedle-salamander",
+    "action": "attack",
+    "partCount": 21,
+    "played": "50 / 500 ms"
+  },
+  {
+    "enemyId": "redneedle-salamander",
+    "action": "hit",
+    "partCount": 21,
+    "played": "45 / 380 ms"
+  },
+  {
+    "enemyId": "redneedle-salamander",
+    "action": "death",
+    "partCount": 21,
+    "played": "55 / 800 ms"
+  },
+  {
+    "enemyId": "rot-sac-toad",
+    "action": "idle",
+    "partCount": 22,
+    "played": "77 / 1400 ms"
+  },
+  {
+    "enemyId": "rot-sac-toad",
+    "action": "move",
+    "partCount": 22,
+    "played": "55 / 700 ms"
+  },
+  {
+    "enemyId": "rot-sac-toad",
+    "action": "attack",
+    "partCount": 22,
+    "played": "55 / 500 ms"
+  },
+  {
+    "enemyId": "rot-sac-toad",
+    "action": "hit",
+    "partCount": 22,
+    "played": "47 / 380 ms"
+  },
+  {
+    "enemyId": "rot-sac-toad",
+    "action": "death",
+    "partCount": 22,
+    "played": "59 / 800 ms"
+  },
+  {
+    "enemyId": "claw-beast",
+    "action": "idle",
+    "partCount": 17,
+    "played": "73 / 1400 ms"
+  },
+  {
+    "enemyId": "claw-beast",
+    "action": "move",
+    "partCount": 17,
+    "played": "61 / 700 ms"
+  },
+  {
+    "enemyId": "claw-beast",
+    "action": "attack",
+    "partCount": 17,
+    "played": "59 / 500 ms"
+  },
+  {
+    "enemyId": "claw-beast",
+    "action": "hit",
+    "partCount": 17,
+    "played": "62 / 380 ms"
+  },
+  {
+    "enemyId": "claw-beast",
+    "action": "death",
+    "partCount": 17,
+    "played": "56 / 800 ms"
+  },
+  {
+    "enemyId": "broodmother",
+    "action": "idle",
+    "partCount": 31,
+    "played": "79 / 1400 ms"
+  },
+  {
+    "enemyId": "broodmother",
+    "action": "move",
+    "partCount": 31,
+    "played": "51 / 700 ms"
+  },
+  {
+    "enemyId": "broodmother",
+    "action": "attack",
+    "partCount": 31,
+    "played": "43 / 500 ms"
+  },
+  {
+    "enemyId": "broodmother",
+    "action": "hit",
+    "partCount": 31,
+    "played": "48 / 380 ms"
+  },
+  {
+    "enemyId": "broodmother",
+    "action": "death",
+    "partCount": 31,
+    "played": "59 / 800 ms"
+  },
+  {
+    "enemyId": "molten-core-beast",
+    "action": "idle",
+    "partCount": 27,
+    "played": "77 / 1400 ms"
+  },
+  {
+    "enemyId": "molten-core-beast",
+    "action": "move",
+    "partCount": 27,
+    "played": "63 / 700 ms"
+  },
+  {
+    "enemyId": "molten-core-beast",
+    "action": "attack",
+    "partCount": 27,
+    "played": "53 / 500 ms"
+  },
+  {
+    "enemyId": "molten-core-beast",
+    "action": "hit",
+    "partCount": 27,
+    "played": "47 / 380 ms"
+  },
+  {
+    "enemyId": "molten-core-beast",
+    "action": "death",
+    "partCount": 27,
+    "played": "54 / 800 ms"
+  },
+  {
+    "enemyId": "redwheel-fire-crow",
+    "action": "idle",
+    "partCount": 19,
+    "played": "64 / 1400 ms"
+  },
+  {
+    "enemyId": "redwheel-fire-crow",
+    "action": "move",
+    "partCount": 19,
+    "played": "63 / 700 ms"
+  },
+  {
+    "enemyId": "redwheel-fire-crow",
+    "action": "attack",
+    "partCount": 19,
+    "played": "58 / 500 ms"
+  },
+  {
+    "enemyId": "redwheel-fire-crow",
+    "action": "hit",
+    "partCount": 19,
+    "played": "60 / 380 ms"
+  },
+  {
+    "enemyId": "redwheel-fire-crow",
+    "action": "death",
+    "partCount": 19,
+    "played": "50 / 800 ms"
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "idle",
+    "partCount": 20,
+    "played": "67 / 1400 ms"
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "move",
+    "partCount": 20,
+    "played": "57 / 700 ms"
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "attack",
+    "partCount": 20,
+    "played": "45 / 500 ms"
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "hit",
+    "partCount": 20,
+    "played": "54 / 380 ms"
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "death",
+    "partCount": 20,
+    "played": "58 / 800 ms"
+  },
+  {
+    "enemyId": "overseer",
+    "action": "idle",
+    "partCount": 21,
+    "played": "72 / 1400 ms"
+  },
+  {
+    "enemyId": "overseer",
+    "action": "move",
+    "partCount": 21,
+    "played": "61 / 700 ms"
+  },
+  {
+    "enemyId": "overseer",
+    "action": "attack",
+    "partCount": 21,
+    "played": "50 / 500 ms"
+  },
+  {
+    "enemyId": "overseer",
+    "action": "hit",
+    "partCount": 21,
+    "played": "51 / 380 ms"
+  },
+  {
+    "enemyId": "overseer",
+    "action": "death",
+    "partCount": 21,
+    "played": "55 / 800 ms"
+  }
+]

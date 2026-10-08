@@ -2504,5 +2504,765 @@
         "sha256": "1a8a0816c26e7e1c1cc845929cbe906eb4622ca1ed100b51b2dd45a59218cf9a"
       }
     }
+  },
+  "patrol-hound": {
+    "source": "art/generated/enemy-completion-2026-10-08/sheets/patrol-hound.png",
+    "parts": {
+      "1": {
+        "width": 347,
+        "height": 169,
+        "sha256": "dcc116f113d5e4d54c5e21c489fdf91b1eff2e7f71a95aeafd31104f4afc8bc6"
+      },
+      "2": {
+        "width": 277,
+        "height": 126,
+        "sha256": "f659ba042a4710c5afb5cf01e31068c0f9c91eefffb34a516cdb3e122514b940"
+      },
+      "3": {
+        "width": 236,
+        "height": 310,
+        "sha256": "3f27149c6d65b5af3feb8eda2fd086ad934b5eba3da7a9eb9991a2bad4c95053"
+      },
+      "4": {
+        "width": 158,
+        "height": 367,
+        "sha256": "1d406e05c85cba8412d291e6c327fd52619a28be9ba6e1f793baa9fddc46116f"
+      },
+      "5": {
+        "width": 260,
+        "height": 265,
+        "sha256": "91ee79241e955e3db1b7908c64b1d151ba1d83522c0455ea0e077963e2bc2f7b"
+      },
+      "6": {
+        "width": 103,
+        "height": 292,
+        "sha256": "54c4a1623cef3357061d72b9ee48e90045e36bbdb011dbc4a83a12b1e032bb00"
+      },
+      "7": {
+        "width": 81,
+        "height": 282,
+        "sha256": "35e0f05f59ad67fb3435f7059b7d523aeac95cf10d75c2066ff8d6ce1364b665"
+      },
+      "8": {
+        "width": 217,
+        "height": 212,
+        "sha256": "0bf4581c7b768780db8cbd4672bf6a9cb65fa83e3a84dc7bc5270b360facf7a2"
+      },
+      "9": {
+        "width": 151,
+        "height": 301,
+        "sha256": "dc75e723e87ca027b15b5f31b732825706fd4151cc124e358cd6cb9e65a9b158"
+      },
+      "10": {
+        "width": 95,
+        "height": 307,
+        "sha256": "9d5eb5d6eab2aba50a1ccfaa5ba9959b0429f1cdc28ccf83cdd65ac1190ca8ba"
+      },
+      "11": {
+        "width": 213,
+        "height": 350,
+        "sha256": "e4a2ef44389b6f262f432c2d1832566d3abcc1d19adf270d29c8fd9ddba32fb7"
+      },
+      "12": {
+        "width": 174,
+        "height": 234,
+        "sha256": "f5b21ec969a467917fa75de01d10ce789e417d5eedc9a2d378a7a0680939dfc9"
+      },
+      "13": {
+        "width": 123,
+        "height": 310,
+        "sha256": "3e090dc402b5fa9d099bbc0e5615f3f81c54a7c1b93bafb169f8e87e7ce32e81"
+      },
+      "14": {
+        "width": 325,
+        "height": 240,
+        "sha256": "fc95c6111efa8f478fd02a3ccfa856ff2e18652970ec5cd912dcd375f1801aa9"
+      },
+      "15": {
+        "width": 180,
+        "height": 146,
+        "sha256": "153527394eb9c175dfd696f7c0cd261440782a2b842d11f8bb01022e18050520"
+      },
+      "16": {
+        "width": 134,
+        "height": 277,
+        "sha256": "924253c3b2f3c07dfcd7cf031ee541db65de9d36f832ebc3053e520a1e9bfaea"
+      }
+    }
+  },
+  "redneedle-salamander": {
+    "source": "art/generated/enemy-completion-2026-10-08/sheets/redneedle-salamander.png",
+    "parts": {
+      "1": {
+        "width": 343,
+        "height": 225,
+        "sha256": "e23803153116f432e46d6ebb5bb7f9791cade0770c9e0700ad9d1d1982dad75c"
+      },
+      "2": {
+        "width": 264,
+        "height": 123,
+        "sha256": "ac04fef4b6ae6104a3f05fa20d9ee3aa6aed467f7a273fb9c05c34387c40a6f0"
+      },
+      "3": {
+        "width": 214,
+        "height": 254,
+        "sha256": "26458622bec0a0338f7c02d1778248d7234c4b2908519643108e1612fe90aa3c"
+      },
+      "4": {
+        "width": 95,
+        "height": 255,
+        "sha256": "4b018f8d8a6a23620d9dd45ba869ba947093019b8f0bc857accf24cd778ddf06"
+      },
+      "5": {
+        "width": 294,
+        "height": 210,
+        "sha256": "e903f39282b409e5e9c26b30631f4cbbc4276f9180b2d97199f554e842effdd6"
+      },
+      "6": {
+        "width": 91,
+        "height": 251,
+        "sha256": "05d8a8bf6c742a270a1fa3efa860002f9220ce30089eebe632bd1aae727d83af"
+      },
+      "7": {
+        "width": 91,
+        "height": 246,
+        "sha256": "405c5c4dcf17682d77f4bf28c90bff498050606442d49ff3cea407ab095281eb"
+      },
+      "8": {
+        "width": 274,
+        "height": 180,
+        "sha256": "a8747c5730d867915817e30003baba34f24ec77de2654bebf28bb547e84bbfd5"
+      },
+      "9": {
+        "width": 189,
+        "height": 242,
+        "sha256": "7c07579cd390e86fdc908e582bb1d3e059bd6f9ce3a89caa0bb4a88f01d751e4"
+      },
+      "10": {
+        "width": 109,
+        "height": 241,
+        "sha256": "474ece3d5a290777fb7cc696213a7fb339edd8c1213ce5a323c2d6bdabf1811d"
+      },
+      "11": {
+        "width": 96,
+        "height": 257,
+        "sha256": "729c5b9a3f43c9ae5906c73d6833d41a9751a2732d454e1f57e068ffd4e615ba"
+      },
+      "12": {
+        "width": 253,
+        "height": 146,
+        "sha256": "db869c39b506a024c52a6b9a670b03db44d62a17036c60dbe847c793b1c462c7"
+      },
+      "13": {
+        "width": 86,
+        "height": 253,
+        "sha256": "c00c67b6a472f35880f7ddf12d07d7e3ce5344e2eeb65bcc8142061e0d5f09aa"
+      },
+      "14": {
+        "width": 99,
+        "height": 262,
+        "sha256": "25b547bc0a22b266527e8ad030528db2ef8872e5360b3db907f4d106df897928"
+      },
+      "15": {
+        "width": 69,
+        "height": 241,
+        "sha256": "558d8cec5d7bc46cc0efbcadddbf382d632eb23a60d72fddb1e6eee9c2148880"
+      },
+      "16": {
+        "width": 134,
+        "height": 262,
+        "sha256": "8145588ef947f9bcc8056819e02f514235ed0089a688e797a34c957a83763a71"
+      }
+    }
+  },
+  "rot-sac-toad": {
+    "source": "art/generated/enemy-completion-2026-10-08/sheets/rot-sac-toad.png",
+    "parts": {
+      "1": {
+        "width": 371,
+        "height": 192,
+        "sha256": "7ecfb15a7c71890bd7f64972de9de9c2e83b4a041b6599beb949d66c7215555f"
+      },
+      "2": {
+        "width": 269,
+        "height": 161,
+        "sha256": "2d98096bb92f04c733fb152d1246355976ea3c3522fe6ee57448a79def237dfd"
+      },
+      "3": {
+        "width": 324,
+        "height": 313,
+        "sha256": "1cc74435f0e7630d8c6b27caa9423b5447b8e210889d05cc672a069636ac8d39"
+      },
+      "4": {
+        "width": 277,
+        "height": 236,
+        "sha256": "217e4a2d6f3638c881aad3af5433ad001efda6b26d1375d463b0d1efea4dd678"
+      },
+      "5": {
+        "width": 240,
+        "height": 198,
+        "sha256": "aa5098b8b0451b79880787d16ac9aaf4377abfcf6b9f3246107c210103ea6ace"
+      },
+      "6": {
+        "width": 115,
+        "height": 237,
+        "sha256": "a9ee16c1146d5d194efaca518afbdaacd24c3cea4089c6ae4b8f537e1745aace"
+      },
+      "7": {
+        "width": 107,
+        "height": 199,
+        "sha256": "d7d270fb0442bc4bb68e462bfa04fc58b2e92bd046d6ec0e00ff861682ffafb6"
+      },
+      "8": {
+        "width": 286,
+        "height": 195,
+        "sha256": "e624eb2dddc45ff56bb3f90de6089210f95f5210d0dc64ba88ab146bcaae74c8"
+      },
+      "9": {
+        "width": 234,
+        "height": 298,
+        "sha256": "983e6cf623af40b37bd3ea78ed44364fa45adfb62e2990bc1934c13e06034f3c"
+      },
+      "10": {
+        "width": 120,
+        "height": 283,
+        "sha256": "63dee6b0e67b1247c4268144e12afce636eeca9da2c64351f141aa32fb862b4c"
+      },
+      "11": {
+        "width": 139,
+        "height": 464,
+        "sha256": "9e849b53a58efb79c0cdeb1c4bd619168cacb93ed3e88acd1c1d157484429d66"
+      },
+      "12": {
+        "width": 297,
+        "height": 182,
+        "sha256": "0161cf331a5fbfa046e9cfd13ce8e04e8016de00121bf39a9b3ef150cae2726d"
+      },
+      "13": {
+        "width": 284,
+        "height": 388,
+        "sha256": "00dd40af14dab831454999831b4ec593b3503adb077f6900dfc7e508c14a3919"
+      },
+      "14": {
+        "width": 239,
+        "height": 270,
+        "sha256": "bc61311fb6e0ec8b7b297e9d6b71adfd83ff7a21d474823661917579e7b1c046"
+      },
+      "15": {
+        "width": 86,
+        "height": 210,
+        "sha256": "1f7c51634aa1d322febf447a95a74bd5dbc0fb309f79d4c543c632e4f863f557"
+      },
+      "16": {
+        "width": 264,
+        "height": 274,
+        "sha256": "688ba065ea11be3b5ba16b99fe64640cc4846bddf3871f0beb4771ba9977592a"
+      }
+    }
+  },
+  "claw-beast": {
+    "source": "art/generated/enemy-completion-2026-10-08/sheets/claw-beast.png",
+    "parts": {
+      "1": {
+        "width": 343,
+        "height": 289,
+        "sha256": "2f1119400d61f79121b8bbe9a29d76a1d72825964f04f63ca35e7230be9e1945"
+      },
+      "2": {
+        "width": 247,
+        "height": 205,
+        "sha256": "29753c4be43971428b8d9c66d553ec040cf172630c351a58c42e498362cab6df"
+      },
+      "3": {
+        "width": 296,
+        "height": 304,
+        "sha256": "0c5883229a81af1d9da573e07e8bbded5737b6a268a0237d108b0b850f0ce3d0"
+      },
+      "4": {
+        "width": 150,
+        "height": 306,
+        "sha256": "4a9ea6d5bc8d6ebea7d65717dc3edff8dcf8c050ea0b0f257211472d16d69467"
+      },
+      "5": {
+        "width": 264,
+        "height": 309,
+        "sha256": "31e0eae7a27cdbae89e1b00ebd6120f51fc84217e6479815ecd850cb67998bba"
+      },
+      "6": {
+        "width": 196,
+        "height": 347,
+        "sha256": "f5ba85c60e98885180bcbacfb80f03cd6914c0c352772c3625640ba74b673c39"
+      },
+      "7": {
+        "width": 101,
+        "height": 334,
+        "sha256": "96462b032a5f885d194b7cfb876d97bb2a53775585fb0cac532b6b8964b4d6d3"
+      },
+      "8": {
+        "width": 369,
+        "height": 330,
+        "sha256": "1bfbb9405c023fcf7b2ab6f2531f0e60c8e0ee0159ac3082b08fd26707d990cd"
+      },
+      "9": {
+        "width": 122,
+        "height": 336,
+        "sha256": "bf1dbbf1f69873f64b7a61c19f1d440213dd568e5a019d8233de31e3ae9fa1ce"
+      },
+      "10": {
+        "width": 145,
+        "height": 346,
+        "sha256": "2354e9b0c3ccee59011bb5c6660f5d538a84757fdc0f5bc668bc949235835372"
+      },
+      "11": {
+        "width": 208,
+        "height": 362,
+        "sha256": "4ed241edd468a78b20d498116498a00bbf026c5d2f91309106de9c7bd0dfa065"
+      },
+      "12": {
+        "width": 216,
+        "height": 380,
+        "sha256": "de7e083390e8788da35d7a08e448e85f6d98aa449c86732ba0df85e0369c3f60"
+      },
+      "13": {
+        "width": 286,
+        "height": 255,
+        "sha256": "7fd470b1d7dfa970fd0ca725095deacd61e53ae6b2e3948b9b77f0136c5d2a1a"
+      },
+      "14": {
+        "width": 113,
+        "height": 260,
+        "sha256": "d0868cd7a5712ca8399585cd9a920133fb3ccb22c25ed49d34e2ed58711e6ddf"
+      },
+      "15": {
+        "width": 176,
+        "height": 170,
+        "sha256": "ab49b352eef0bd0bee23f9f223acdacfe2e3c68fe576a621ac5b754617e14b72"
+      },
+      "16": {
+        "width": 271,
+        "height": 233,
+        "sha256": "b5e416c833294560dff8d6731e2e959b384ca8d132e0b3e4b01d4a05cbce0e05"
+      }
+    }
+  },
+  "broodmother": {
+    "source": "art/generated/enemy-completion-2026-10-08/sheets/broodmother.png",
+    "parts": {
+      "1": {
+        "width": 230,
+        "height": 203,
+        "sha256": "ce10018c79bc12bececf1e279571cfe3cbae3aa66b3806c408408b9c7347280a"
+      },
+      "2": {
+        "width": 142,
+        "height": 295,
+        "sha256": "e14695f4238158102513070512b23683b56f28761bf31977681d59e45a25fbed"
+      },
+      "3": {
+        "width": 247,
+        "height": 223,
+        "sha256": "c16d39858863fbf847fef99f0bdab4ec9f946d35993380f4fcd97c42dddcce33"
+      },
+      "4": {
+        "width": 252,
+        "height": 397,
+        "sha256": "91d1625895c559b9b93669384718b5a23a3d5c42ba2d10ece76681fbfe1a6e85"
+      },
+      "5": {
+        "width": 132,
+        "height": 344,
+        "sha256": "1ca4938ee3e3c56b6250411cd1c48580805a9143c1697ac66679503ce387c038"
+      },
+      "6": {
+        "width": 122,
+        "height": 344,
+        "sha256": "037e8e20886a8a954c86fd5bdd9f9ee6b8fe230f741e8e03e5ce045584209ff2"
+      },
+      "7": {
+        "width": 218,
+        "height": 245,
+        "sha256": "8f67773e8246468d63c31d7be315cb60039986027e87305c87f2094cf20f742c"
+      },
+      "8": {
+        "width": 251,
+        "height": 228,
+        "sha256": "043c4d72c31b7ad11f440ee03a76d5cc0a3ac61cfda721e2dadc0be037cea1aa"
+      },
+      "9": {
+        "width": 134,
+        "height": 295,
+        "sha256": "2101836b17b71e3713301dba39f38849dafecb05dd7affbb312e3b9beb1735e1"
+      },
+      "10": {
+        "width": 55,
+        "height": 296,
+        "sha256": "1c232a3340b3db7c2b70eb99a073f5c53d07ac3690c2cc8de0b0cb96e357ee01"
+      },
+      "11": {
+        "width": 267,
+        "height": 194,
+        "sha256": "e3260bfc442fe13b504260bd2de3cee75daf9bc6d3b59c5d9ab90c43a868a63f"
+      },
+      "12": {
+        "width": 124,
+        "height": 300,
+        "sha256": "7b6f553ab456ef7f7416cb7f81c40b9bf607103e0c22af30dbd562f391026017"
+      },
+      "13": {
+        "width": 201,
+        "height": 295,
+        "sha256": "8d7b9e10671ba017660b41dec47f5b29c6fddc7042d84a9a53176813cff1a4a0"
+      },
+      "14": {
+        "width": 148,
+        "height": 288,
+        "sha256": "8693156f0d013c768a8695cda2badc5a341a19ab2673f2ae46bcc32dd9c0bc43"
+      },
+      "15": {
+        "width": 174,
+        "height": 276,
+        "sha256": "01a23c64c79f01e05c95450548eb8abef1c7c6c7c6c5441320af741987711999"
+      },
+      "16": {
+        "width": 219,
+        "height": 274,
+        "sha256": "a575a7d5737a87383e9ce798a43aa00efc4a28780a1687d547ea1be7d07375cf"
+      }
+    }
+  },
+  "molten-core-beast": {
+    "source": "art/generated/enemy-completion-2026-10-08/sheets/molten-core-beast.png",
+    "parts": {
+      "1": {
+        "width": 317,
+        "height": 259,
+        "sha256": "0b810eda81191cdd3ab0808a1adcdf812998f297c4892d7cec860550dd529c8d"
+      },
+      "2": {
+        "width": 241,
+        "height": 167,
+        "sha256": "29b66ce39f5893d4240e04cb7c26723cb38ea763864847a6ae6909d21c379991"
+      },
+      "3": {
+        "width": 344,
+        "height": 297,
+        "sha256": "4bfcac5901d27117f4139c45579f0f5e8a17b1fd5d95c68e76078849c6b64544"
+      },
+      "4": {
+        "width": 196,
+        "height": 371,
+        "sha256": "2ce84bac4f0a901e6e11847583efe216d451c3ca352a4c8eb5d94b407f3bc4c4"
+      },
+      "5": {
+        "width": 272,
+        "height": 196,
+        "sha256": "f9346db646aeabb5b0d06e4d8a385ecaf2ede92ea425943485d57d7e8c9f3cdf"
+      },
+      "6": {
+        "width": 164,
+        "height": 292,
+        "sha256": "c424beb59328218391fa6029a55ce88460148e57f74b51f82037cf037f6a17ef"
+      },
+      "7": {
+        "width": 126,
+        "height": 259,
+        "sha256": "7e0e41eb3d82dee37a070bd95c39508e156ba8d85485909a1b054ebde9029b95"
+      },
+      "8": {
+        "width": 242,
+        "height": 205,
+        "sha256": "33ede06cd710ee005983f1df824a239902058977d4f01dd5a138b8567d4a43fb"
+      },
+      "9": {
+        "width": 222,
+        "height": 293,
+        "sha256": "df41044c8eefae7802646bf50617d6e46b40ba34023f3b11aa1259f630c11cef"
+      },
+      "10": {
+        "width": 131,
+        "height": 285,
+        "sha256": "88410f094ad2608ed962fab97c39f42cce35ff5f20b1552b188cea19aa1cc1a3"
+      },
+      "11": {
+        "width": 124,
+        "height": 312,
+        "sha256": "864a4709095c78c76492e3fb0fbe5ea62470b55c21cb1b7a74e9c9f6f6124e4f"
+      },
+      "12": {
+        "width": 277,
+        "height": 200,
+        "sha256": "91c3a9d24bfa02c3ba49a8c02f912fd13f2c7bb3fefb2bfbf879c813ae548964"
+      },
+      "13": {
+        "width": 259,
+        "height": 337,
+        "sha256": "c51a017b965f46fbfaaff45cd6990829dd7f5f82cb097242250b989f42b266d4"
+      },
+      "14": {
+        "width": 177,
+        "height": 249,
+        "sha256": "a14e133b4ccd735a60cc7f04dbb739b13495b51093a3a1a33afbd48669470177"
+      },
+      "15": {
+        "width": 114,
+        "height": 300,
+        "sha256": "8b1626f48096fe46fd832446f84cb3242585c0081b9729a539dd53b9f0058fbc"
+      },
+      "16": {
+        "width": 146,
+        "height": 213,
+        "sha256": "4310bb88ba6b4a08320ec9edbff51b6f01288b55df25c3538c13983cbe16e956"
+      }
+    }
+  },
+  "redwheel-fire-crow": {
+    "source": "art/generated/enemy-completion-2026-10-08/sheets/redwheel-fire-crow.png",
+    "parts": {
+      "1": {
+        "width": 444,
+        "height": 284,
+        "sha256": "44ae6d1c1bf809c34e5ed485ea12a7622069e184b0e688d57e65ed1726e9ff92"
+      },
+      "2": {
+        "width": 306,
+        "height": 104,
+        "sha256": "81a7d604ef1da934349e4a4e031b2f8bca7562bf292285dc5b25113305306f30"
+      },
+      "3": {
+        "width": 219,
+        "height": 325,
+        "sha256": "fe48b6ef2769d4ee1509e31fabb53c5948cd34431bca165962485fc515c9cfaf"
+      },
+      "4": {
+        "width": 163,
+        "height": 333,
+        "sha256": "78e0c0cb128c14b1c0eeec4ee6e46c49209b7d18f3629f15dbc174f586ea9486"
+      },
+      "5": {
+        "width": 132,
+        "height": 348,
+        "sha256": "060e5302e82b090f31dd852512f6457ceceb308d1629c00dcf2ddf72b2f44e16"
+      },
+      "6": {
+        "width": 153,
+        "height": 352,
+        "sha256": "0b596dadbd5f16f738d4e3442592c420f8734182f60bd5f19010c57504fa873c"
+      },
+      "7": {
+        "width": 64,
+        "height": 343,
+        "sha256": "9927e1e3c2fe83bbd4843d5af4bf764fe86615b519d964f3980f966f85ba670e"
+      },
+      "8": {
+        "width": 196,
+        "height": 199,
+        "sha256": "57485874f9f33e5e99e4682846c24d0d7739a99f1ad101a5b2cd876afed369f4"
+      },
+      "9": {
+        "width": 220,
+        "height": 220,
+        "sha256": "345810fc935a1c8dbc403e14afe221ce0af7767bf031f420a814dd676b139c38"
+      },
+      "10": {
+        "width": 110,
+        "height": 308,
+        "sha256": "e45d02884570716cb869ad2352a048d9ebc58f16371ad39c32ec707eb40a6bc5"
+      },
+      "11": {
+        "width": 84,
+        "height": 309,
+        "sha256": "f416028e8f183c4618bf3ffc1c484871a2afa735f4e087b8207758246190afec"
+      },
+      "12": {
+        "width": 123,
+        "height": 322,
+        "sha256": "4fdb88a4d1dc77813df8c47b4657358b649c995c5342bee06a50a477989fbe44"
+      },
+      "13": {
+        "width": 115,
+        "height": 297,
+        "sha256": "1fbaa8391c2c8544cb1ce07f8f3435cda44108d8e7eced6c0bc6c7cc6550df9e"
+      },
+      "14": {
+        "width": 252,
+        "height": 263,
+        "sha256": "1c0bfc9c8420d8d05561c9c2a3c48a01943b274dd10b00eeb5c508fedae3694c"
+      },
+      "15": {
+        "width": 257,
+        "height": 153,
+        "sha256": "a860896cb49a4f7b85868c65b2b606f3763ceb7e33d3e76890a3cca01fa5efe2"
+      },
+      "16": {
+        "width": 100,
+        "height": 191,
+        "sha256": "9effb124e1c6c1e08d6a089f8374eeb54e9e86a52a2b2009cd76f091525387a4"
+      }
+    }
+  },
+  "overseer": {
+    "source": "art/generated/enemy-completion-2026-10-08/sheets/overseer.png",
+    "parts": {
+      "1": {
+        "width": 326,
+        "height": 335,
+        "sha256": "0294d02a04522c8e21e26902f01745feb8e98a916737473bc18303ede18ac932"
+      },
+      "2": {
+        "width": 274,
+        "height": 175,
+        "sha256": "891ec6bcb641adfee156299ac931fcbff40c33c631315383c817d5ddbc7a6b65"
+      },
+      "3": {
+        "width": 316,
+        "height": 335,
+        "sha256": "e40253ac6d37a99fd252f3d5f0b52ca139a8ec72d9831db556d596f599ab2f0f"
+      },
+      "4": {
+        "width": 167,
+        "height": 341,
+        "sha256": "50856b9314e9707270905eda309490956a14244f09881726bb63a3f2d8d486aa"
+      },
+      "5": {
+        "width": 349,
+        "height": 267,
+        "sha256": "f4edec452f7cf4251a34ea24d895e1b4de6aff1edaa36f8babcf2e649f792ed8"
+      },
+      "6": {
+        "width": 156,
+        "height": 290,
+        "sha256": "5743032b063ec898f7858e355cc15907b8014bc7167a3fd3a365c25fa2401ce3"
+      },
+      "7": {
+        "width": 123,
+        "height": 277,
+        "sha256": "92e7da56f65290e2e8d1d270d20fc7228a81a7beb758ccf152606fc5dc32390d"
+      },
+      "8": {
+        "width": 233,
+        "height": 280,
+        "sha256": "fce53501d799bf4252e1ae0a91d27b913011e006ba69ee16978276e67294c369"
+      },
+      "9": {
+        "width": 162,
+        "height": 294,
+        "sha256": "ca6a7049a234f539e07cefb044450b4deee1ac5657db0f2cb8810642a4837948"
+      },
+      "10": {
+        "width": 134,
+        "height": 280,
+        "sha256": "fc8d5a169333b6bd32a61459f6b3f34c72f4ee6aee0981317b9734090cdc6613"
+      },
+      "11": {
+        "width": 261,
+        "height": 253,
+        "sha256": "37854cb571a318f559f9089f09596c0d623e02a5a3d54c7b28c86c9abdb915fa"
+      },
+      "12": {
+        "width": 255,
+        "height": 279,
+        "sha256": "8f8ad19a796b3cc0c2374d3d29eedf832d00eb7b7799e851f1f8f08f77d6c02b"
+      },
+      "13": {
+        "width": 321,
+        "height": 269,
+        "sha256": "5fc6dc9b0c19f4103028272e4f7c9a312bb821c1ad1ea25428a4ff34a61e29f7"
+      },
+      "14": {
+        "width": 126,
+        "height": 340,
+        "sha256": "94b1e362481b7fccbb680df7d22ccabf0d26ad35e43d0400ef10f8fbb7194d3a"
+      },
+      "15": {
+        "width": 187,
+        "height": 206,
+        "sha256": "3b183078ff8a81490832d04862f3f655df7274aab3c123e3d8c556be0b84a4b8"
+      },
+      "16": {
+        "width": 247,
+        "height": 315,
+        "sha256": "d9972f537b74a767d51c1e603da7d7aba4451e64bdc2484d11cf23f0a60730a2"
+      }
+    }
+  },
+  "tide-rite-matriarch": {
+    "source": "art/generated/enemy-completion-2026-10-08/sheets/tide-rite-matriarch.png",
+    "parts": {
+      "1": {
+        "width": 99,
+        "height": 149,
+        "sha256": "bd5ea0191844789580063d156684e405bf1d7c5c0daa32825d2c5a46ec6bf9c6"
+      },
+      "2": {
+        "width": 51,
+        "height": 46,
+        "sha256": "ca5ea044b8c4e1667dd3b5f1be01d6e6821e79d9ed2f4ec45845e26e877f6e36"
+      },
+      "3": {
+        "width": 252,
+        "height": 284,
+        "sha256": "22582b28770cce3150dca8fddff97d98f000a96edfdc8d2343cd75e48d60d87d"
+      },
+      "4": {
+        "width": 236,
+        "height": 460,
+        "sha256": "576412f3d159ff8e41b4a4e6fc6c9d8fb879fa5446d9e0c73a20866b93bf785c"
+      },
+      "5": {
+        "width": 367,
+        "height": 368,
+        "sha256": "daec5719d9f79a72787f6570f82f2f62d926f100c7a42a5316101ea750f8fbbb"
+      },
+      "6": {
+        "width": 179,
+        "height": 351,
+        "sha256": "47281c94c7e2d36c7f193a00e43822b1c32ce08ccad466f8f91c20de7e877377"
+      },
+      "7": {
+        "width": 356,
+        "height": 450,
+        "sha256": "68ae41c23bca41bc88bb4170b49b9f6eca49c8f1441b1b4ceb08bcf206f6dd57"
+      },
+      "8": {
+        "width": 302,
+        "height": 450,
+        "sha256": "565c327212fe5c64446436a65cc17198c5b5f55f5350f3ec4611a4b0c50c9c4f"
+      },
+      "9": {
+        "width": 250,
+        "height": 279,
+        "sha256": "44721f45a6ab94505582e45fdb50e9f186818fa045d0fb602f16b62ca99f7d2c"
+      },
+      "10": {
+        "width": 241,
+        "height": 281,
+        "sha256": "5af80fbc84aa416fcda2548ca839bced7b9500e81767945473c6bce6a4286a8e"
+      },
+      "11": {
+        "width": 494,
+        "height": 643,
+        "sha256": "a6b04c4fb027c6b6888a575821f427099a9eee07233e49a8665f469c43f78cda"
+      },
+      "12": {
+        "width": 516,
+        "height": 637,
+        "sha256": "f805cd0ee417e9d4757ae0eb890802254ea1c07ee48b4efb89aa9566add9bf2a"
+      },
+      "13": {
+        "width": 231,
+        "height": 1016,
+        "sha256": "6477eb28e9b0fa70b8d4d117bee249690b8c734c77d081d0165181c7c929f3ea"
+      },
+      "14": {
+        "width": 49,
+        "height": 309,
+        "sha256": "a946581f7f2042fdddb488e06df6fc02757a5d461e6d2b63dc8c192d4dd4fb1c"
+      },
+      "15": {
+        "width": 50,
+        "height": 308,
+        "sha256": "4c5c8629f81f98a35c3fb214ea69963d7fdf8ed743262f7b3d88549866e6c671"
+      }
+    }
   }
 }

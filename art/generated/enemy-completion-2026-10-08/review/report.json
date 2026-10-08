@@ -1,0 +1,3542 @@
+[
+  {
+    "enemyId": "patrol-hound",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": -30,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "patrol-hound",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "patrol-hound",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 30,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redneedle-salamander",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": -30,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redneedle-salamander",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redneedle-salamander",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 30,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "rot-sac-toad",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": -30,
+    "parts": 22,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "rot-sac-toad",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 22,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "rot-sac-toad",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 30,
+    "parts": 22,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "claw-beast",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": -30,
+    "parts": 17,
+    "visible": 17,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "claw-beast",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 17,
+    "visible": 17,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "claw-beast",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 30,
+    "parts": 17,
+    "visible": 17,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "broodmother",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": -30,
+    "parts": 31,
+    "visible": 31,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "broodmother",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 31,
+    "visible": 31,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "broodmother",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 30,
+    "parts": 31,
+    "visible": 31,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "molten-core-beast",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": -30,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "molten-core-beast",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "molten-core-beast",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 30,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redwheel-fire-crow",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": -30,
+    "parts": 19,
+    "visible": 19,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redwheel-fire-crow",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 19,
+    "visible": 19,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redwheel-fire-crow",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 30,
+    "parts": 19,
+    "visible": 19,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": -30,
+    "parts": 20,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 20,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 30,
+    "parts": 20,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "overseer",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": -30,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "overseer",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "overseer",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 30,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "gnawer",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": -30,
+    "parts": 22,
+    "visible": 22,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "gnawer",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 22,
+    "visible": 22,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "gnawer",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 30,
+    "parts": 22,
+    "visible": 22,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "emberwing-moth",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": -30,
+    "parts": 30,
+    "visible": 30,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "emberwing-moth",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 30,
+    "visible": 30,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "emberwing-moth",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 30,
+    "parts": 30,
+    "visible": 30,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "rootrot-bud",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": -30,
+    "parts": 19,
+    "visible": 19,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "rootrot-bud",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 19,
+    "visible": 19,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "rootrot-bud",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 30,
+    "parts": 19,
+    "visible": 19,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "tide-shadow-cub",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": -30,
+    "parts": 14,
+    "visible": 14,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "tide-shadow-cub",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 14,
+    "visible": 14,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "tide-shadow-cub",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 30,
+    "parts": 14,
+    "visible": 14,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "nest-spider",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": -30,
+    "parts": 30,
+    "visible": 30,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "nest-spider",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 30,
+    "visible": 30,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "nest-spider",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 30,
+    "parts": 30,
+    "visible": 30,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "beetle-guard",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": -30,
+    "parts": 25,
+    "visible": 25,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "beetle-guard",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 25,
+    "visible": 25,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "beetle-guard",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 30,
+    "parts": 25,
+    "visible": 25,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "rot-walker",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": -30,
+    "parts": 18,
+    "visible": 18,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "rot-walker",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 18,
+    "visible": 18,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "rot-walker",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 30,
+    "parts": 18,
+    "visible": 18,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "shellguard",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": -30,
+    "parts": 15,
+    "visible": 15,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "shellguard",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 15,
+    "visible": 15,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "shellguard",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 30,
+    "parts": 15,
+    "visible": 15,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "wisp",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": -30,
+    "parts": 13,
+    "visible": 13,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "wisp",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 13,
+    "visible": 13,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "wisp",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 30,
+    "parts": 13,
+    "visible": 13,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "patrol-hound",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": -30,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "patrol-hound",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "patrol-hound",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 30,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redneedle-salamander",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": -30,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redneedle-salamander",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redneedle-salamander",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 30,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "rot-sac-toad",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": -30,
+    "parts": 22,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "rot-sac-toad",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 22,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "rot-sac-toad",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 30,
+    "parts": 22,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "claw-beast",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": -30,
+    "parts": 17,
+    "visible": 17,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "claw-beast",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 17,
+    "visible": 17,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "claw-beast",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 30,
+    "parts": 17,
+    "visible": 17,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "broodmother",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": -30,
+    "parts": 31,
+    "visible": 31,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "broodmother",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 31,
+    "visible": 31,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "broodmother",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 30,
+    "parts": 31,
+    "visible": 31,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "moss-colossus",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": -30,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "moss-colossus",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "moss-colossus",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 30,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "sentry-crossbow",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": -30,
+    "parts": 17,
+    "visible": 17,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "sentry-crossbow",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 17,
+    "visible": 17,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "sentry-crossbow",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 30,
+    "parts": 17,
+    "visible": 17,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "ash-cannon-bug",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": -30,
+    "parts": 26,
+    "visible": 26,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "ash-cannon-bug",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 26,
+    "visible": 26,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "ash-cannon-bug",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 30,
+    "parts": 26,
+    "visible": 26,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "furnace-beetle",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": -30,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "furnace-beetle",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "furnace-beetle",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 30,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "thorn-shell-flower",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": -30,
+    "parts": 17,
+    "visible": 17,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "thorn-shell-flower",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 17,
+    "visible": 17,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "thorn-shell-flower",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 30,
+    "parts": 17,
+    "visible": 17,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "water-leech-swarm",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": -30,
+    "parts": 18,
+    "visible": 18,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "water-leech-swarm",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 18,
+    "visible": 18,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "water-leech-swarm",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 30,
+    "parts": 18,
+    "visible": 18,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "whirlpool-eye-sac",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": -30,
+    "parts": 13,
+    "visible": 13,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "whirlpool-eye-sac",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 13,
+    "visible": 13,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "whirlpool-eye-sac",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 30,
+    "parts": 13,
+    "visible": 13,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "molten-core-beast",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": -30,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "molten-core-beast",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "molten-core-beast",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 30,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redwheel-fire-crow",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": -30,
+    "parts": 19,
+    "visible": 19,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redwheel-fire-crow",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 19,
+    "visible": 19,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redwheel-fire-crow",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 30,
+    "parts": 19,
+    "visible": 19,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "cinder-curse-lamp-swarm",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": -30,
+    "parts": 30,
+    "visible": 30,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "cinder-curse-lamp-swarm",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 30,
+    "visible": 30,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "cinder-curse-lamp-swarm",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 30,
+    "parts": 30,
+    "visible": 30,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": -30,
+    "parts": 20,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 20,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 30,
+    "parts": 20,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "drown-shadow-hunter",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": -30,
+    "parts": 22,
+    "visible": 22,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "drown-shadow-hunter",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 22,
+    "visible": 22,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "drown-shadow-hunter",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 30,
+    "parts": 22,
+    "visible": 22,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "tidal-spore-sac",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": -30,
+    "parts": 14,
+    "visible": 14,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "tidal-spore-sac",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 14,
+    "visible": 14,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "tidal-spore-sac",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 30,
+    "parts": 14,
+    "visible": 14,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "revenant-guard",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": -30,
+    "parts": 18,
+    "visible": 18,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "revenant-guard",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 18,
+    "visible": 18,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "revenant-guard",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 30,
+    "parts": 18,
+    "visible": 18,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "bomb-wisp",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": -30,
+    "parts": 12,
+    "visible": 12,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "bomb-wisp",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 12,
+    "visible": 12,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "bomb-wisp",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 30,
+    "parts": 12,
+    "visible": 12,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "cracked-hunter",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": -30,
+    "parts": 19,
+    "visible": 19,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "cracked-hunter",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 19,
+    "visible": 19,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "cracked-hunter",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 30,
+    "parts": 19,
+    "visible": 19,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "broodling",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": -30,
+    "parts": 18,
+    "visible": 18,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "broodling",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 18,
+    "visible": 18,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "broodling",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 30,
+    "parts": 18,
+    "visible": 18,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "leech-larva",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": -30,
+    "parts": 12,
+    "visible": 12,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "leech-larva",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 12,
+    "visible": 12,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "leech-larva",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 30,
+    "parts": 12,
+    "visible": 12,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "tide-shadow",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": -30,
+    "parts": 15,
+    "visible": 15,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "tide-shadow",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 15,
+    "visible": 15,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "tide-shadow",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 30,
+    "parts": 15,
+    "visible": 15,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "overseer",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": -30,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "overseer",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "overseer",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 30,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "patrol-hound",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "patrol-hound",
+    "action": "idle",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "patrol-hound",
+    "action": "idle",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "patrol-hound",
+    "action": "idle",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "patrol-hound",
+    "action": "idle",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "patrol-hound",
+    "action": "move",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "patrol-hound",
+    "action": "move",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "patrol-hound",
+    "action": "move",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "patrol-hound",
+    "action": "move",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "patrol-hound",
+    "action": "move",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "patrol-hound",
+    "action": "attack",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "patrol-hound",
+    "action": "attack",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "patrol-hound",
+    "action": "attack",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "patrol-hound",
+    "action": "attack",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "patrol-hound",
+    "action": "attack",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "patrol-hound",
+    "action": "hit",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "patrol-hound",
+    "action": "hit",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "patrol-hound",
+    "action": "hit",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "patrol-hound",
+    "action": "hit",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "patrol-hound",
+    "action": "hit",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "patrol-hound",
+    "action": "death",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "patrol-hound",
+    "action": "death",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "patrol-hound",
+    "action": "death",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "patrol-hound",
+    "action": "death",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "patrol-hound",
+    "action": "death",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redneedle-salamander",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redneedle-salamander",
+    "action": "idle",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redneedle-salamander",
+    "action": "idle",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redneedle-salamander",
+    "action": "idle",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redneedle-salamander",
+    "action": "idle",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redneedle-salamander",
+    "action": "move",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redneedle-salamander",
+    "action": "move",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redneedle-salamander",
+    "action": "move",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redneedle-salamander",
+    "action": "move",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redneedle-salamander",
+    "action": "move",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redneedle-salamander",
+    "action": "attack",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redneedle-salamander",
+    "action": "attack",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redneedle-salamander",
+    "action": "attack",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redneedle-salamander",
+    "action": "attack",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redneedle-salamander",
+    "action": "attack",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redneedle-salamander",
+    "action": "hit",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redneedle-salamander",
+    "action": "hit",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redneedle-salamander",
+    "action": "hit",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redneedle-salamander",
+    "action": "hit",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redneedle-salamander",
+    "action": "hit",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redneedle-salamander",
+    "action": "death",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redneedle-salamander",
+    "action": "death",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redneedle-salamander",
+    "action": "death",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redneedle-salamander",
+    "action": "death",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redneedle-salamander",
+    "action": "death",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "rot-sac-toad",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 22,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "rot-sac-toad",
+    "action": "idle",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 22,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "rot-sac-toad",
+    "action": "idle",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 22,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "rot-sac-toad",
+    "action": "idle",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 22,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "rot-sac-toad",
+    "action": "idle",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 22,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "rot-sac-toad",
+    "action": "move",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 22,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "rot-sac-toad",
+    "action": "move",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 22,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "rot-sac-toad",
+    "action": "move",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 22,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "rot-sac-toad",
+    "action": "move",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 22,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "rot-sac-toad",
+    "action": "move",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 22,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "rot-sac-toad",
+    "action": "attack",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 22,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "rot-sac-toad",
+    "action": "attack",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 22,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "rot-sac-toad",
+    "action": "attack",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 22,
+    "visible": 22,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "rot-sac-toad",
+    "action": "attack",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 22,
+    "visible": 22,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "rot-sac-toad",
+    "action": "attack",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 22,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "rot-sac-toad",
+    "action": "hit",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 22,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "rot-sac-toad",
+    "action": "hit",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 22,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "rot-sac-toad",
+    "action": "hit",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 22,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "rot-sac-toad",
+    "action": "hit",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 22,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "rot-sac-toad",
+    "action": "hit",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 22,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "rot-sac-toad",
+    "action": "death",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 22,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "rot-sac-toad",
+    "action": "death",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 22,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "rot-sac-toad",
+    "action": "death",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 22,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "rot-sac-toad",
+    "action": "death",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 22,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "rot-sac-toad",
+    "action": "death",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 22,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "claw-beast",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 17,
+    "visible": 17,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "claw-beast",
+    "action": "idle",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 17,
+    "visible": 17,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "claw-beast",
+    "action": "idle",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 17,
+    "visible": 17,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "claw-beast",
+    "action": "idle",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 17,
+    "visible": 17,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "claw-beast",
+    "action": "idle",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 17,
+    "visible": 17,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "claw-beast",
+    "action": "move",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 17,
+    "visible": 17,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "claw-beast",
+    "action": "move",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 17,
+    "visible": 17,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "claw-beast",
+    "action": "move",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 17,
+    "visible": 17,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "claw-beast",
+    "action": "move",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 17,
+    "visible": 17,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "claw-beast",
+    "action": "move",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 17,
+    "visible": 17,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "claw-beast",
+    "action": "attack",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 17,
+    "visible": 17,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "claw-beast",
+    "action": "attack",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 17,
+    "visible": 17,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "claw-beast",
+    "action": "attack",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 17,
+    "visible": 17,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "claw-beast",
+    "action": "attack",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 17,
+    "visible": 17,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "claw-beast",
+    "action": "attack",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 17,
+    "visible": 17,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "claw-beast",
+    "action": "hit",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 17,
+    "visible": 17,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "claw-beast",
+    "action": "hit",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 17,
+    "visible": 17,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "claw-beast",
+    "action": "hit",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 17,
+    "visible": 17,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "claw-beast",
+    "action": "hit",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 17,
+    "visible": 17,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "claw-beast",
+    "action": "hit",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 17,
+    "visible": 17,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "claw-beast",
+    "action": "death",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 17,
+    "visible": 17,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "claw-beast",
+    "action": "death",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 17,
+    "visible": 17,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "claw-beast",
+    "action": "death",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 17,
+    "visible": 17,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "claw-beast",
+    "action": "death",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 17,
+    "visible": 17,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "claw-beast",
+    "action": "death",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 17,
+    "visible": 17,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "broodmother",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 31,
+    "visible": 31,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "broodmother",
+    "action": "idle",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 31,
+    "visible": 31,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "broodmother",
+    "action": "idle",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 31,
+    "visible": 31,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "broodmother",
+    "action": "idle",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 31,
+    "visible": 31,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "broodmother",
+    "action": "idle",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 31,
+    "visible": 31,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "broodmother",
+    "action": "move",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 31,
+    "visible": 31,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "broodmother",
+    "action": "move",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 31,
+    "visible": 31,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "broodmother",
+    "action": "move",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 31,
+    "visible": 31,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "broodmother",
+    "action": "move",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 31,
+    "visible": 31,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "broodmother",
+    "action": "move",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 31,
+    "visible": 31,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "broodmother",
+    "action": "attack",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 31,
+    "visible": 31,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "broodmother",
+    "action": "attack",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 31,
+    "visible": 31,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "broodmother",
+    "action": "attack",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 31,
+    "visible": 31,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "broodmother",
+    "action": "attack",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 31,
+    "visible": 31,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "broodmother",
+    "action": "attack",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 31,
+    "visible": 31,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "broodmother",
+    "action": "hit",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 31,
+    "visible": 31,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "broodmother",
+    "action": "hit",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 31,
+    "visible": 31,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "broodmother",
+    "action": "hit",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 31,
+    "visible": 31,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "broodmother",
+    "action": "hit",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 31,
+    "visible": 31,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "broodmother",
+    "action": "hit",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 31,
+    "visible": 31,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "broodmother",
+    "action": "death",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 31,
+    "visible": 31,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "broodmother",
+    "action": "death",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 31,
+    "visible": 31,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "broodmother",
+    "action": "death",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 31,
+    "visible": 31,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "broodmother",
+    "action": "death",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 31,
+    "visible": 31,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "broodmother",
+    "action": "death",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 31,
+    "visible": 31,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "molten-core-beast",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "molten-core-beast",
+    "action": "idle",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "molten-core-beast",
+    "action": "idle",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "molten-core-beast",
+    "action": "idle",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "molten-core-beast",
+    "action": "idle",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "molten-core-beast",
+    "action": "move",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "molten-core-beast",
+    "action": "move",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "molten-core-beast",
+    "action": "move",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "molten-core-beast",
+    "action": "move",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "molten-core-beast",
+    "action": "move",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "molten-core-beast",
+    "action": "attack",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "molten-core-beast",
+    "action": "attack",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "molten-core-beast",
+    "action": "attack",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "molten-core-beast",
+    "action": "attack",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "molten-core-beast",
+    "action": "attack",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "molten-core-beast",
+    "action": "hit",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "molten-core-beast",
+    "action": "hit",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "molten-core-beast",
+    "action": "hit",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "molten-core-beast",
+    "action": "hit",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "molten-core-beast",
+    "action": "hit",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "molten-core-beast",
+    "action": "death",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "molten-core-beast",
+    "action": "death",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "molten-core-beast",
+    "action": "death",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "molten-core-beast",
+    "action": "death",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "molten-core-beast",
+    "action": "death",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 27,
+    "visible": 27,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redwheel-fire-crow",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 19,
+    "visible": 19,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redwheel-fire-crow",
+    "action": "idle",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 19,
+    "visible": 19,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redwheel-fire-crow",
+    "action": "idle",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 19,
+    "visible": 19,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redwheel-fire-crow",
+    "action": "idle",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 19,
+    "visible": 19,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redwheel-fire-crow",
+    "action": "idle",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 19,
+    "visible": 19,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redwheel-fire-crow",
+    "action": "move",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 19,
+    "visible": 19,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redwheel-fire-crow",
+    "action": "move",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 19,
+    "visible": 19,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redwheel-fire-crow",
+    "action": "move",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 19,
+    "visible": 19,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redwheel-fire-crow",
+    "action": "move",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 19,
+    "visible": 19,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redwheel-fire-crow",
+    "action": "move",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 19,
+    "visible": 19,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redwheel-fire-crow",
+    "action": "attack",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 19,
+    "visible": 19,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redwheel-fire-crow",
+    "action": "attack",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 19,
+    "visible": 19,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redwheel-fire-crow",
+    "action": "attack",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 19,
+    "visible": 19,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redwheel-fire-crow",
+    "action": "attack",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 19,
+    "visible": 19,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redwheel-fire-crow",
+    "action": "attack",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 19,
+    "visible": 19,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redwheel-fire-crow",
+    "action": "hit",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 19,
+    "visible": 19,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redwheel-fire-crow",
+    "action": "hit",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 19,
+    "visible": 19,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redwheel-fire-crow",
+    "action": "hit",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 19,
+    "visible": 19,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redwheel-fire-crow",
+    "action": "hit",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 19,
+    "visible": 19,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redwheel-fire-crow",
+    "action": "hit",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 19,
+    "visible": 19,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redwheel-fire-crow",
+    "action": "death",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 19,
+    "visible": 19,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redwheel-fire-crow",
+    "action": "death",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 19,
+    "visible": 19,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redwheel-fire-crow",
+    "action": "death",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 19,
+    "visible": 19,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redwheel-fire-crow",
+    "action": "death",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 19,
+    "visible": 19,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "redwheel-fire-crow",
+    "action": "death",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 19,
+    "visible": 19,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 20,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "idle",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 20,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "idle",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 20,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "idle",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 20,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "idle",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 20,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "move",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 20,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "move",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 20,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "move",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 20,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "move",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 20,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "move",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 20,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "attack",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 20,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "attack",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 20,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "attack",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 20,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "attack",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 20,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "attack",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 20,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "hit",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 20,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "hit",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 20,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "hit",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 20,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "hit",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 20,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "hit",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 20,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "death",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 20,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "death",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 20,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "death",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 20,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "death",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 20,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "death",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 20,
+    "visible": 20,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "overseer",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "overseer",
+    "action": "idle",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "overseer",
+    "action": "idle",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "overseer",
+    "action": "idle",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "overseer",
+    "action": "idle",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "overseer",
+    "action": "move",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "overseer",
+    "action": "move",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "overseer",
+    "action": "move",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "overseer",
+    "action": "move",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "overseer",
+    "action": "move",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "overseer",
+    "action": "attack",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "overseer",
+    "action": "attack",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "overseer",
+    "action": "attack",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "overseer",
+    "action": "attack",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "overseer",
+    "action": "attack",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "overseer",
+    "action": "hit",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "overseer",
+    "action": "hit",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "overseer",
+    "action": "hit",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "overseer",
+    "action": "hit",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "overseer",
+    "action": "hit",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "overseer",
+    "action": "death",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "overseer",
+    "action": "death",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "overseer",
+    "action": "death",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "overseer",
+    "action": "death",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  },
+  {
+    "enemyId": "overseer",
+    "action": "death",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 21,
+    "visible": 21,
+    "textured": true,
+    "diagonal": 151.32895453283223
+  }
+]

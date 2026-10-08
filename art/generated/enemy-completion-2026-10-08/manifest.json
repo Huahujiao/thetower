@@ -1,0 +1,4808 @@
+{
+  "version": 17,
+  "date": "2026-10-08",
+  "generated": [
+    {
+      "id": "patrol-hound",
+      "promptFile": "patrol-hound.txt",
+      "source": "C:/Users/COMZEN/.codex/generated_images/01a0f511-7646-7db2-a099-a4ac30b0ce53/exec-85a65600-1f06-4d41-b31c-584ed63def07.png",
+      "sheet": "sheets/patrol-hound.png",
+      "provider": "built-in image_gen",
+      "transparent": true
+    },
+    {
+      "id": "redneedle-salamander",
+      "promptFile": "redneedle-salamander.txt",
+      "source": "C:/Users/COMZEN/.codex/generated_images/01a0f511-7646-7db2-a099-a4ac30b0ce53/exec-79d29f65-9fd5-47f9-a0f9-3bca0c84a974.png",
+      "sheet": "sheets/redneedle-salamander.png",
+      "provider": "built-in image_gen",
+      "transparent": true
+    },
+    {
+      "id": "rot-sac-toad",
+      "promptFile": "rot-sac-toad.txt",
+      "source": "C:/Users/COMZEN/.codex/generated_images/01a0f511-7646-7db2-a099-a4ac30b0ce53/exec-eb1eb3c4-ca58-47ef-a208-89b85e602c2a.png",
+      "sheet": "sheets/rot-sac-toad.png",
+      "provider": "built-in image_gen",
+      "transparent": true
+    },
+    {
+      "id": "claw-beast",
+      "promptFile": "claw-beast.txt",
+      "source": "C:/Users/COMZEN/.codex/generated_images/01a0f511-7646-7db2-a099-a4ac30b0ce53/exec-f86602df-f29d-41fb-ae81-3010cd1e5229.png",
+      "sheet": "sheets/claw-beast.png",
+      "provider": "built-in image_gen",
+      "transparent": true
+    },
+    {
+      "id": "broodmother",
+      "promptFile": "broodmother.txt",
+      "source": "C:/Users/COMZEN/.codex/generated_images/01a0f511-7646-7db2-a099-a4ac30b0ce53/exec-27b46673-c61b-435b-acde-9274be37a182.png",
+      "sheet": "sheets/broodmother.png",
+      "provider": "built-in image_gen",
+      "transparent": true
+    },
+    {
+      "id": "molten-core-beast",
+      "promptFile": "molten-core-beast.txt",
+      "source": "C:/Users/COMZEN/.codex/generated_images/01a0f511-7646-7db2-a099-a4ac30b0ce53/exec-5bd705ec-5a23-42a7-ac75-86743a053ddd.png",
+      "sheet": "sheets/molten-core-beast.png",
+      "provider": "built-in image_gen",
+      "transparent": true
+    },
+    {
+      "id": "redwheel-fire-crow",
+      "promptFile": "redwheel-fire-crow.txt",
+      "source": "C:/Users/COMZEN/.codex/generated_images/01a0f511-7646-7db2-a099-a4ac30b0ce53/exec-43e8995e-3e08-4d4c-b436-cfc8daf448ab.png",
+      "sheet": "sheets/redwheel-fire-crow.png",
+      "provider": "built-in image_gen",
+      "transparent": true
+    },
+    {
+      "id": "overseer",
+      "promptFile": "overseer.txt",
+      "source": "C:/Users/COMZEN/.codex/generated_images/01a0f511-7646-7db2-a099-a4ac30b0ce53/exec-32d1bf6e-4fe9-4859-8c17-796356c64ffb.png",
+      "sheet": "sheets/overseer.png",
+      "provider": "built-in image_gen",
+      "transparent": true
+    }
+  ],
+  "reused": [
+    {
+      "enemyId": "tide-rite-matriarch",
+      "source": "art/enemies/25潮祀母体.png",
+      "sheet": "sheets/tide-rite-matriarch.png"
+    }
+  ],
+  "verification": {
+    "enemyCount": 34,
+    "animationFrames": 5610,
+    "groundingFrames": 5125,
+    "threePoses": 354,
+    "editorPlaybacks": 45
+  },
+  "rigs": [
+    {
+      "enemyId": "gnawer",
+      "name": "猩鬼 · 骨架预览",
+      "parts": [
+        {
+          "id": "skull",
+          "name": "颅骨与鬃毛",
+          "texture": "/assets/enemies/components-v1/gnawer/part_001.png",
+          "joint": "head"
+        },
+        {
+          "id": "jaw-shell",
+          "name": "下颌骨",
+          "texture": "/assets/enemies/components-v1/gnawer/part_001.png",
+          "joint": "jaw"
+        },
+        {
+          "id": "collar",
+          "name": "锁骨披肩",
+          "texture": "/assets/enemies/components-v1/gnawer/part_003.png",
+          "joint": "root"
+        },
+        {
+          "id": "left-ribs",
+          "name": "左肋骨",
+          "texture": "/assets/enemies/components-v1/gnawer/part_011.png",
+          "joint": "root"
+        },
+        {
+          "id": "right-ribs",
+          "name": "右肋骨",
+          "texture": "/assets/enemies/components-v1/gnawer/part_010.png",
+          "joint": "root"
+        },
+        {
+          "id": "sternum",
+          "name": "胸骨饰甲",
+          "texture": "/assets/enemies/components-v1/gnawer/part_012.png",
+          "joint": "root"
+        },
+        {
+          "id": "pelvis-shell",
+          "name": "骨盆",
+          "texture": "/assets/enemies/components-v1/gnawer/part_015.png",
+          "joint": "pelvis"
+        },
+        {
+          "id": "coat",
+          "name": "破衣下摆",
+          "texture": "/assets/enemies/components-v1/gnawer/part_018.png",
+          "joint": "pelvis"
+        },
+        {
+          "id": "left-upper-arm",
+          "name": "左上臂",
+          "texture": "/assets/enemies/components-v1/gnawer/part_004.png",
+          "joint": "left-shoulder"
+        },
+        {
+          "id": "left-forearm",
+          "name": "左前臂",
+          "texture": "/assets/enemies/components-v1/gnawer/part_014.png",
+          "joint": "left-elbow"
+        },
+        {
+          "id": "left-palm",
+          "name": "左手爪",
+          "texture": "/assets/enemies/components-v1/gnawer/part_014.png",
+          "joint": "left-wrist"
+        },
+        {
+          "id": "left-thigh",
+          "name": "左大腿",
+          "texture": "/assets/enemies/components-v1/gnawer/part_008.png",
+          "joint": "left-hip"
+        },
+        {
+          "id": "left-knee-guard",
+          "name": "左膝甲与中节",
+          "texture": "/assets/enemies/components-v1/gnawer/part_008.png",
+          "joint": "left-knee"
+        },
+        {
+          "id": "left-shin",
+          "name": "左胫骨",
+          "texture": "/assets/enemies/components-v1/gnawer/part_008.png",
+          "joint": "left-hock"
+        },
+        {
+          "id": "left-foot",
+          "name": "左足爪",
+          "texture": "/assets/enemies/components-v1/gnawer/part_008.png",
+          "joint": "left-ankle"
+        },
+        {
+          "id": "right-upper-arm",
+          "name": "右上臂",
+          "texture": "/assets/enemies/components-v1/gnawer/part_005.png",
+          "joint": "right-shoulder"
+        },
+        {
+          "id": "right-forearm",
+          "name": "右前臂",
+          "texture": "/assets/enemies/components-v1/gnawer/part_013.png",
+          "joint": "right-elbow"
+        },
+        {
+          "id": "right-palm",
+          "name": "右手爪",
+          "texture": "/assets/enemies/components-v1/gnawer/part_013.png",
+          "joint": "right-wrist"
+        },
+        {
+          "id": "right-thigh",
+          "name": "右大腿",
+          "texture": "/assets/enemies/components-v1/gnawer/part_009.png",
+          "joint": "right-hip"
+        },
+        {
+          "id": "right-knee-guard",
+          "name": "右膝甲与中节",
+          "texture": "/assets/enemies/components-v1/gnawer/part_009.png",
+          "joint": "right-knee"
+        },
+        {
+          "id": "right-shin",
+          "name": "右胫骨",
+          "texture": "/assets/enemies/components-v1/gnawer/part_009.png",
+          "joint": "right-hock"
+        },
+        {
+          "id": "right-foot",
+          "name": "右足爪",
+          "texture": "/assets/enemies/components-v1/gnawer/part_009.png",
+          "joint": "right-ankle"
+        }
+      ],
+      "actions": [
+        "idle",
+        "attack",
+        "hit",
+        "death",
+        "move"
+      ],
+      "floating": false,
+      "supports": [
+        "left-foot",
+        "right-foot"
+      ]
+    },
+    {
+      "enemyId": "emberwing-moth",
+      "name": "烬翅蛾 · 骨架预览",
+      "parts": [
+        {
+          "id": "thorax",
+          "name": "胸甲",
+          "texture": "/assets/enemies/components-v1/emberwing-moth/part_009.png",
+          "joint": "root"
+        },
+        {
+          "id": "head-shell",
+          "name": "角首外壳",
+          "texture": "/assets/enemies/components-v1/emberwing-moth/part_003.png",
+          "joint": "head"
+        },
+        {
+          "id": "left-eye",
+          "name": "左复眼",
+          "texture": "/assets/enemies/components-v1/emberwing-moth/part_004.png",
+          "joint": "head"
+        },
+        {
+          "id": "right-eye",
+          "name": "右复眼",
+          "texture": "/assets/enemies/components-v1/emberwing-moth/part_005.png",
+          "joint": "head"
+        },
+        {
+          "id": "abdomen-shell",
+          "name": "环节腹部",
+          "texture": "/assets/enemies/components-v1/emberwing-moth/part_008.png",
+          "joint": "abdomen"
+        },
+        {
+          "id": "tail-flame",
+          "name": "尾端甲",
+          "texture": "/assets/enemies/components-v1/emberwing-moth/part_011.png",
+          "joint": "tail"
+        },
+        {
+          "id": "left-inner-wing",
+          "name": "左内翅硬甲",
+          "texture": "/assets/enemies/components-v1/emberwing-moth/part_001.png",
+          "joint": "left-wing"
+        },
+        {
+          "id": "left-outer-wing",
+          "name": "左外翅垂膜",
+          "texture": "/assets/enemies/components-v1/emberwing-moth/part_001.png",
+          "joint": "left-wing-elbow"
+        },
+        {
+          "id": "left-mandible",
+          "name": "左颚钩",
+          "texture": "/assets/enemies/components-v1/emberwing-moth/part_007.png",
+          "joint": "left-mandible-hinge"
+        },
+        {
+          "id": "left-leg-0-part",
+          "name": "左足股节 1",
+          "texture": "/assets/enemies/components-v1/emberwing-moth/part_013.png",
+          "joint": "left-leg-0"
+        },
+        {
+          "id": "left-leg-0-lower",
+          "name": "左足胫节 1",
+          "texture": "/assets/enemies/components-v1/emberwing-moth/part_013.png",
+          "joint": "left-leg-0-knee"
+        },
+        {
+          "id": "left-leg-0-claw",
+          "name": "左爪尖 1",
+          "texture": "/assets/enemies/components-v1/emberwing-moth/part_013.png",
+          "joint": "left-leg-0-tip"
+        },
+        {
+          "id": "left-leg-1-part",
+          "name": "左足股节 2",
+          "texture": "/assets/enemies/components-v1/emberwing-moth/part_015.png",
+          "joint": "left-leg-1"
+        },
+        {
+          "id": "left-leg-1-lower",
+          "name": "左足胫节 2",
+          "texture": "/assets/enemies/components-v1/emberwing-moth/part_015.png",
+          "joint": "left-leg-1-knee"
+        },
+        {
+          "id": "left-leg-1-claw",
+          "name": "左爪尖 2",
+          "texture": "/assets/enemies/components-v1/emberwing-moth/part_015.png",
+          "joint": "left-leg-1-tip"
+        },
+        {
+          "id": "left-leg-2-part",
+          "name": "左足股节 3",
+          "texture": "/assets/enemies/components-v1/emberwing-moth/part_016.png",
+          "joint": "left-leg-2"
+        },
+        {
+          "id": "left-leg-2-lower",
+          "name": "左足胫节 3",
+          "texture": "/assets/enemies/components-v1/emberwing-moth/part_016.png",
+          "joint": "left-leg-2-knee"
+        },
+        {
+          "id": "left-leg-2-claw",
+          "name": "左爪尖 3",
+          "texture": "/assets/enemies/components-v1/emberwing-moth/part_016.png",
+          "joint": "left-leg-2-tip"
+        },
+        {
+          "id": "right-inner-wing",
+          "name": "右内翅硬甲",
+          "texture": "/assets/enemies/components-v1/emberwing-moth/part_002.png",
+          "joint": "right-wing"
+        },
+        {
+          "id": "right-outer-wing",
+          "name": "右外翅垂膜",
+          "texture": "/assets/enemies/components-v1/emberwing-moth/part_002.png",
+          "joint": "right-wing-elbow"
+        },
+        {
+          "id": "right-mandible",
+          "name": "右颚钩",
+          "texture": "/assets/enemies/components-v1/emberwing-moth/part_006.png",
+          "joint": "right-mandible-hinge"
+        },
+        {
+          "id": "right-leg-0-part",
+          "name": "右足股节 1",
+          "texture": "/assets/enemies/components-v1/emberwing-moth/part_012.png",
+          "joint": "right-leg-0"
+        },
+        {
+          "id": "right-leg-0-lower",
+          "name": "右足胫节 1",
+          "texture": "/assets/enemies/components-v1/emberwing-moth/part_012.png",
+          "joint": "right-leg-0-knee"
+        },
+        {
+          "id": "right-leg-0-claw",
+          "name": "右爪尖 1",
+          "texture": "/assets/enemies/components-v1/emberwing-moth/part_012.png",
+          "joint": "right-leg-0-tip"
+        },
+        {
+          "id": "right-leg-1-part",
+          "name": "右足股节 2",
+          "texture": "/assets/enemies/components-v1/emberwing-moth/part_014.png",
+          "joint": "right-leg-1"
+        },
+        {
+          "id": "right-leg-1-lower",
+          "name": "右足胫节 2",
+          "texture": "/assets/enemies/components-v1/emberwing-moth/part_014.png",
+          "joint": "right-leg-1-knee"
+        },
+        {
+          "id": "right-leg-1-claw",
+          "name": "右爪尖 2",
+          "texture": "/assets/enemies/components-v1/emberwing-moth/part_014.png",
+          "joint": "right-leg-1-tip"
+        },
+        {
+          "id": "right-leg-2-part",
+          "name": "右足股节 3",
+          "texture": "/assets/enemies/components-v1/emberwing-moth/part_017.png",
+          "joint": "right-leg-2"
+        },
+        {
+          "id": "right-leg-2-lower",
+          "name": "右足胫节 3",
+          "texture": "/assets/enemies/components-v1/emberwing-moth/part_017.png",
+          "joint": "right-leg-2-knee"
+        },
+        {
+          "id": "right-leg-2-claw",
+          "name": "右爪尖 3",
+          "texture": "/assets/enemies/components-v1/emberwing-moth/part_017.png",
+          "joint": "right-leg-2-tip"
+        }
+      ],
+      "actions": [
+        "idle",
+        "attack",
+        "hit",
+        "death",
+        "move"
+      ],
+      "floating": true,
+      "supports": []
+    },
+    {
+      "enemyId": "rootrot-bud",
+      "name": "腐根芽 · 骨架预览",
+      "parts": [
+        {
+          "id": "bulb",
+          "name": "根球基座",
+          "texture": "/assets/enemies/components-v1/rootrot-bud/part_012.png",
+          "joint": "root"
+        },
+        {
+          "id": "lower-stem-part",
+          "name": "下茎",
+          "texture": "/assets/enemies/components-v1/rootrot-bud/part_011.png",
+          "joint": "lower-stem"
+        },
+        {
+          "id": "upper-stem-part",
+          "name": "上茎",
+          "texture": "/assets/enemies/components-v1/rootrot-bud/part_008.png",
+          "joint": "upper-stem"
+        },
+        {
+          "id": "bud-shell",
+          "name": "闭合眼芽",
+          "texture": "/assets/enemies/components-v1/rootrot-bud/part_006.png",
+          "joint": "bud"
+        },
+        {
+          "id": "crown",
+          "name": "后花冠",
+          "texture": "/assets/enemies/components-v1/rootrot-bud/part_001.png",
+          "joint": "crown-hinge"
+        },
+        {
+          "id": "left-petal-part",
+          "name": "左叶根",
+          "texture": "/assets/enemies/components-v1/rootrot-bud/part_002.png",
+          "joint": "left-petal"
+        },
+        {
+          "id": "left-petal-tip-part",
+          "name": "左大叶尖",
+          "texture": "/assets/enemies/components-v1/rootrot-bud/part_002.png",
+          "joint": "left-petal-tip"
+        },
+        {
+          "id": "left-thorn-part",
+          "name": "左刺枝",
+          "texture": "/assets/enemies/components-v1/rootrot-bud/part_005.png",
+          "joint": "left-thorn"
+        },
+        {
+          "id": "left-leaf-part",
+          "name": "左枯叶",
+          "texture": "/assets/enemies/components-v1/rootrot-bud/part_009.png",
+          "joint": "left-leaf"
+        },
+        {
+          "id": "left-root-part",
+          "name": "左行根",
+          "texture": "/assets/enemies/components-v1/rootrot-bud/part_013.png",
+          "joint": "left-root"
+        },
+        {
+          "id": "left-root-tip-part",
+          "name": "左根爪",
+          "texture": "/assets/enemies/components-v1/rootrot-bud/part_013.png",
+          "joint": "left-root-tip"
+        },
+        {
+          "id": "left-root-spur",
+          "name": "左根刺",
+          "texture": "/assets/enemies/components-v1/rootrot-bud/part_015.png",
+          "joint": "left-root-tip"
+        },
+        {
+          "id": "right-petal-part",
+          "name": "右叶根",
+          "texture": "/assets/enemies/components-v1/rootrot-bud/part_003.png",
+          "joint": "right-petal"
+        },
+        {
+          "id": "right-petal-tip-part",
+          "name": "右大叶尖",
+          "texture": "/assets/enemies/components-v1/rootrot-bud/part_003.png",
+          "joint": "right-petal-tip"
+        },
+        {
+          "id": "right-thorn-part",
+          "name": "右刺枝",
+          "texture": "/assets/enemies/components-v1/rootrot-bud/part_004.png",
+          "joint": "right-thorn"
+        },
+        {
+          "id": "right-leaf-part",
+          "name": "右枯叶",
+          "texture": "/assets/enemies/components-v1/rootrot-bud/part_010.png",
+          "joint": "right-leaf"
+        },
+        {
+          "id": "right-root-part",
+          "name": "右行根",
+          "texture": "/assets/enemies/components-v1/rootrot-bud/part_014.png",
+          "joint": "right-root"
+        },
+        {
+          "id": "right-root-tip-part",
+          "name": "右根爪",
+          "texture": "/assets/enemies/components-v1/rootrot-bud/part_014.png",
+          "joint": "right-root-tip"
+        },
+        {
+          "id": "right-root-spur",
+          "name": "右根刺",
+          "texture": "/assets/enemies/components-v1/rootrot-bud/part_016.png",
+          "joint": "right-root-tip"
+        }
+      ],
+      "actions": [
+        "idle",
+        "attack",
+        "hit",
+        "death",
+        "move"
+      ],
+      "floating": false,
+      "supports": [
+        "left-root-tip-part",
+        "right-root-tip-part"
+      ]
+    },
+    {
+      "enemyId": "tide-shadow-cub",
+      "name": "潮影幼兽 · 骨架预览",
+      "parts": [
+        {
+          "id": "mask",
+          "name": "潮骨面甲",
+          "texture": "/assets/enemies/components-v1/tide-shadow-cub/part_005.png",
+          "joint": "head"
+        },
+        {
+          "id": "lantern",
+          "name": "胸腔灯笼",
+          "texture": "/assets/enemies/components-v1/tide-shadow-cub/part_006.png",
+          "joint": "root"
+        },
+        {
+          "id": "eye",
+          "name": "潮眼",
+          "texture": "/assets/enemies/components-v1/tide-shadow-cub/part_012.png",
+          "joint": "eye-hinge"
+        },
+        {
+          "id": "cloak-upper",
+          "name": "悬裾上段",
+          "texture": "/assets/enemies/components-v1/tide-shadow-cub/part_014.png",
+          "joint": "cloak-hinge"
+        },
+        {
+          "id": "cloak-lower",
+          "name": "悬裾下段",
+          "texture": "/assets/enemies/components-v1/tide-shadow-cub/part_014.png",
+          "joint": "cloak-tip"
+        },
+        {
+          "id": "flame-tail",
+          "name": "游焰拖尾",
+          "texture": "/assets/enemies/components-v1/tide-shadow-cub/part_015.png",
+          "joint": "flame-hinge"
+        },
+        {
+          "id": "left-fin-root",
+          "name": "左潮鳍根片",
+          "texture": "/assets/enemies/components-v1/tide-shadow-cub/part_002.png",
+          "joint": "left-fin-hinge"
+        },
+        {
+          "id": "left-fin",
+          "name": "左潮鳍外片",
+          "texture": "/assets/enemies/components-v1/tide-shadow-cub/part_002.png",
+          "joint": "left-fin-tip"
+        },
+        {
+          "id": "left-arm",
+          "name": "左游裾上段",
+          "texture": "/assets/enemies/components-v1/tide-shadow-cub/part_009.png",
+          "joint": "left-arm-hinge"
+        },
+        {
+          "id": "left-arm-tail",
+          "name": "左游裾尾段",
+          "texture": "/assets/enemies/components-v1/tide-shadow-cub/part_009.png",
+          "joint": "left-arm-tip"
+        },
+        {
+          "id": "right-fin-root",
+          "name": "右潮鳍根片",
+          "texture": "/assets/enemies/components-v1/tide-shadow-cub/part_003.png",
+          "joint": "right-fin-hinge"
+        },
+        {
+          "id": "right-fin",
+          "name": "右潮鳍外片",
+          "texture": "/assets/enemies/components-v1/tide-shadow-cub/part_003.png",
+          "joint": "right-fin-tip"
+        },
+        {
+          "id": "right-arm",
+          "name": "右游裾上段",
+          "texture": "/assets/enemies/components-v1/tide-shadow-cub/part_010.png",
+          "joint": "right-arm-hinge"
+        },
+        {
+          "id": "right-arm-tail",
+          "name": "右游裾尾段",
+          "texture": "/assets/enemies/components-v1/tide-shadow-cub/part_010.png",
+          "joint": "right-arm-tip"
+        }
+      ],
+      "actions": [
+        "idle",
+        "attack",
+        "hit",
+        "death",
+        "move"
+      ],
+      "floating": true,
+      "supports": []
+    },
+    {
+      "enemyId": "nest-spider",
+      "name": "伏巢蜘蛛 · 骨架预览",
+      "parts": [
+        {
+          "id": "thorax",
+          "name": "胸甲",
+          "texture": "/assets/enemies/components-v1/nest-spider/part_005.png",
+          "joint": "root"
+        },
+        {
+          "id": "carapace",
+          "name": "腹部背壳",
+          "texture": "/assets/enemies/components-v1/nest-spider/part_004.png",
+          "joint": "abdomen"
+        },
+        {
+          "id": "head-shell",
+          "name": "头壳",
+          "texture": "/assets/enemies/components-v1/nest-spider/part_002.png",
+          "joint": "head"
+        },
+        {
+          "id": "spinneret-sheet",
+          "name": "吐丝器",
+          "texture": "/assets/enemies/components-v1/nest-spider/part_006.png",
+          "joint": "spinneret-hinge"
+        },
+        {
+          "id": "left-fang",
+          "name": "左毒颚",
+          "texture": "/assets/enemies/components-v1/nest-spider/part_007.png",
+          "joint": "left-fang-hinge"
+        },
+        {
+          "id": "right-fang",
+          "name": "右毒颚",
+          "texture": "/assets/enemies/components-v1/nest-spider/part_008.png",
+          "joint": "right-fang-hinge"
+        },
+        {
+          "id": "left-leg-0-femur",
+          "name": "左第1足股节",
+          "texture": "/assets/enemies/components-v1/nest-spider/part_011.png",
+          "joint": "left-leg-0-coxa"
+        },
+        {
+          "id": "left-leg-0-tibia",
+          "name": "左第1足胫节",
+          "texture": "/assets/enemies/components-v1/nest-spider/part_011.png",
+          "joint": "left-leg-0-knee"
+        },
+        {
+          "id": "left-leg-0-claw-part",
+          "name": "左第1足爪钩",
+          "texture": "/assets/enemies/components-v1/nest-spider/part_011.png",
+          "joint": "left-leg-0-claw"
+        },
+        {
+          "id": "left-leg-1-femur",
+          "name": "左第2足股节",
+          "texture": "/assets/enemies/components-v1/nest-spider/part_013.png",
+          "joint": "left-leg-1-coxa"
+        },
+        {
+          "id": "left-leg-1-tibia",
+          "name": "左第2足胫节",
+          "texture": "/assets/enemies/components-v1/nest-spider/part_013.png",
+          "joint": "left-leg-1-knee"
+        },
+        {
+          "id": "left-leg-1-claw-part",
+          "name": "左第2足爪钩",
+          "texture": "/assets/enemies/components-v1/nest-spider/part_013.png",
+          "joint": "left-leg-1-claw"
+        },
+        {
+          "id": "left-leg-2-femur",
+          "name": "左第3足股节",
+          "texture": "/assets/enemies/components-v1/nest-spider/part_013.png",
+          "joint": "left-leg-2-coxa"
+        },
+        {
+          "id": "left-leg-2-tibia",
+          "name": "左第3足胫节",
+          "texture": "/assets/enemies/components-v1/nest-spider/part_013.png",
+          "joint": "left-leg-2-knee"
+        },
+        {
+          "id": "left-leg-2-claw-part",
+          "name": "左第3足爪钩",
+          "texture": "/assets/enemies/components-v1/nest-spider/part_013.png",
+          "joint": "left-leg-2-claw"
+        },
+        {
+          "id": "left-leg-3-femur",
+          "name": "左第4足股节",
+          "texture": "/assets/enemies/components-v1/nest-spider/part_014.png",
+          "joint": "left-leg-3-coxa"
+        },
+        {
+          "id": "left-leg-3-tibia",
+          "name": "左第4足胫节",
+          "texture": "/assets/enemies/components-v1/nest-spider/part_014.png",
+          "joint": "left-leg-3-knee"
+        },
+        {
+          "id": "left-leg-3-claw-part",
+          "name": "左第4足爪钩",
+          "texture": "/assets/enemies/components-v1/nest-spider/part_014.png",
+          "joint": "left-leg-3-claw"
+        },
+        {
+          "id": "right-leg-0-femur",
+          "name": "右第1足股节",
+          "texture": "/assets/enemies/components-v1/nest-spider/part_010.png",
+          "joint": "right-leg-0-coxa"
+        },
+        {
+          "id": "right-leg-0-tibia",
+          "name": "右第1足胫节",
+          "texture": "/assets/enemies/components-v1/nest-spider/part_010.png",
+          "joint": "right-leg-0-knee"
+        },
+        {
+          "id": "right-leg-0-claw-part",
+          "name": "右第1足爪钩",
+          "texture": "/assets/enemies/components-v1/nest-spider/part_010.png",
+          "joint": "right-leg-0-claw"
+        },
+        {
+          "id": "right-leg-1-femur",
+          "name": "右第2足股节",
+          "texture": "/assets/enemies/components-v1/nest-spider/part_012.png",
+          "joint": "right-leg-1-coxa"
+        },
+        {
+          "id": "right-leg-1-tibia",
+          "name": "右第2足胫节",
+          "texture": "/assets/enemies/components-v1/nest-spider/part_012.png",
+          "joint": "right-leg-1-knee"
+        },
+        {
+          "id": "right-leg-1-claw-part",
+          "name": "右第2足爪钩",
+          "texture": "/assets/enemies/components-v1/nest-spider/part_012.png",
+          "joint": "right-leg-1-claw"
+        },
+        {
+          "id": "right-leg-2-femur",
+          "name": "右第3足股节",
+          "texture": "/assets/enemies/components-v1/nest-spider/part_012.png",
+          "joint": "right-leg-2-coxa"
+        },
+        {
+          "id": "right-leg-2-tibia",
+          "name": "右第3足胫节",
+          "texture": "/assets/enemies/components-v1/nest-spider/part_012.png",
+          "joint": "right-leg-2-knee"
+        },
+        {
+          "id": "right-leg-2-claw-part",
+          "name": "右第3足爪钩",
+          "texture": "/assets/enemies/components-v1/nest-spider/part_012.png",
+          "joint": "right-leg-2-claw"
+        },
+        {
+          "id": "right-leg-3-femur",
+          "name": "右第4足股节",
+          "texture": "/assets/enemies/components-v1/nest-spider/part_015.png",
+          "joint": "right-leg-3-coxa"
+        },
+        {
+          "id": "right-leg-3-tibia",
+          "name": "右第4足胫节",
+          "texture": "/assets/enemies/components-v1/nest-spider/part_015.png",
+          "joint": "right-leg-3-knee"
+        },
+        {
+          "id": "right-leg-3-claw-part",
+          "name": "右第4足爪钩",
+          "texture": "/assets/enemies/components-v1/nest-spider/part_015.png",
+          "joint": "right-leg-3-claw"
+        }
+      ],
+      "actions": [
+        "idle",
+        "attack",
+        "hit",
+        "death",
+        "move"
+      ],
+      "floating": false,
+      "supports": [
+        "left-leg-0-claw-part",
+        "left-leg-1-claw-part",
+        "left-leg-2-claw-part",
+        "left-leg-3-claw-part",
+        "right-leg-0-claw-part",
+        "right-leg-1-claw-part",
+        "right-leg-2-claw-part",
+        "right-leg-3-claw-part"
+      ]
+    },
+    {
+      "enemyId": "beetle-guard",
+      "name": "甲壳虫卫 · 骨架预览",
+      "parts": [
+        {
+          "id": "thorax",
+          "name": "胸甲",
+          "texture": "/assets/enemies/components-v1/beetle-guard/part_003.png",
+          "joint": "root"
+        },
+        {
+          "id": "carapace",
+          "name": "腹部背壳",
+          "texture": "/assets/enemies/components-v1/beetle-guard/part_004.png",
+          "joint": "abdomen"
+        },
+        {
+          "id": "head-shell",
+          "name": "头壳",
+          "texture": "/assets/enemies/components-v1/beetle-guard/part_006.png",
+          "joint": "head"
+        },
+        {
+          "id": "belly",
+          "name": "腹下护甲",
+          "texture": "/assets/enemies/components-v1/beetle-guard/part_007.png",
+          "joint": "abdomen"
+        },
+        {
+          "id": "left-gate-sheet",
+          "name": "左盾门鞘翅",
+          "texture": "/assets/enemies/components-v1/beetle-guard/part_001.png",
+          "joint": "left-gate-hinge"
+        },
+        {
+          "id": "right-gate-sheet",
+          "name": "右盾门鞘翅",
+          "texture": "/assets/enemies/components-v1/beetle-guard/part_002.png",
+          "joint": "right-gate-hinge"
+        },
+        {
+          "id": "battering-horn-sheet",
+          "name": "撞门长角",
+          "texture": "/assets/enemies/components-v1/beetle-guard/part_005.png",
+          "joint": "battering-horn-hinge"
+        },
+        {
+          "id": "left-leg-0-femur",
+          "name": "左第1足股甲",
+          "texture": "/assets/enemies/components-v1/beetle-guard/part_015.png",
+          "joint": "left-leg-0-coxa"
+        },
+        {
+          "id": "left-leg-0-tibia",
+          "name": "左第1足胫甲",
+          "texture": "/assets/enemies/components-v1/beetle-guard/part_015.png",
+          "joint": "left-leg-0-knee"
+        },
+        {
+          "id": "left-leg-0-claw",
+          "name": "左第1足爪足",
+          "texture": "/assets/enemies/components-v1/beetle-guard/part_015.png",
+          "joint": "left-leg-0-tip"
+        },
+        {
+          "id": "left-leg-1-femur",
+          "name": "左第2足股甲",
+          "texture": "/assets/enemies/components-v1/beetle-guard/part_016.png",
+          "joint": "left-leg-1-coxa"
+        },
+        {
+          "id": "left-leg-1-tibia",
+          "name": "左第2足胫甲",
+          "texture": "/assets/enemies/components-v1/beetle-guard/part_016.png",
+          "joint": "left-leg-1-knee"
+        },
+        {
+          "id": "left-leg-1-claw",
+          "name": "左第2足爪足",
+          "texture": "/assets/enemies/components-v1/beetle-guard/part_016.png",
+          "joint": "left-leg-1-tip"
+        },
+        {
+          "id": "left-leg-2-femur",
+          "name": "左第3足股甲",
+          "texture": "/assets/enemies/components-v1/beetle-guard/part_017.png",
+          "joint": "left-leg-2-coxa"
+        },
+        {
+          "id": "left-leg-2-tibia",
+          "name": "左第3足胫甲",
+          "texture": "/assets/enemies/components-v1/beetle-guard/part_017.png",
+          "joint": "left-leg-2-knee"
+        },
+        {
+          "id": "left-leg-2-claw",
+          "name": "左第3足爪足",
+          "texture": "/assets/enemies/components-v1/beetle-guard/part_017.png",
+          "joint": "left-leg-2-tip"
+        },
+        {
+          "id": "right-leg-0-femur",
+          "name": "右第1足股甲",
+          "texture": "/assets/enemies/components-v1/beetle-guard/part_020.png",
+          "joint": "right-leg-0-coxa"
+        },
+        {
+          "id": "right-leg-0-tibia",
+          "name": "右第1足胫甲",
+          "texture": "/assets/enemies/components-v1/beetle-guard/part_020.png",
+          "joint": "right-leg-0-knee"
+        },
+        {
+          "id": "right-leg-0-claw",
+          "name": "右第1足爪足",
+          "texture": "/assets/enemies/components-v1/beetle-guard/part_020.png",
+          "joint": "right-leg-0-tip"
+        },
+        {
+          "id": "right-leg-1-femur",
+          "name": "右第2足股甲",
+          "texture": "/assets/enemies/components-v1/beetle-guard/part_019.png",
+          "joint": "right-leg-1-coxa"
+        },
+        {
+          "id": "right-leg-1-tibia",
+          "name": "右第2足胫甲",
+          "texture": "/assets/enemies/components-v1/beetle-guard/part_019.png",
+          "joint": "right-leg-1-knee"
+        },
+        {
+          "id": "right-leg-1-claw",
+          "name": "右第2足爪足",
+          "texture": "/assets/enemies/components-v1/beetle-guard/part_019.png",
+          "joint": "right-leg-1-tip"
+        },
+        {
+          "id": "right-leg-2-femur",
+          "name": "右第3足股甲",
+          "texture": "/assets/enemies/components-v1/beetle-guard/part_018.png",
+          "joint": "right-leg-2-coxa"
+        },
+        {
+          "id": "right-leg-2-tibia",
+          "name": "右第3足胫甲",
+          "texture": "/assets/enemies/components-v1/beetle-guard/part_018.png",
+          "joint": "right-leg-2-knee"
+        },
+        {
+          "id": "right-leg-2-claw",
+          "name": "右第3足爪足",
+          "texture": "/assets/enemies/components-v1/beetle-guard/part_018.png",
+          "joint": "right-leg-2-tip"
+        }
+      ],
+      "actions": [
+        "idle",
+        "attack",
+        "hit",
+        "death",
+        "move"
+      ],
+      "floating": false,
+      "supports": [
+        "left-leg-0-claw",
+        "left-leg-1-claw",
+        "left-leg-2-claw",
+        "right-leg-0-claw",
+        "right-leg-1-claw",
+        "right-leg-2-claw"
+      ]
+    },
+    {
+      "enemyId": "rot-walker",
+      "name": "腐肉行者 · 骨架预览",
+      "parts": [
+        {
+          "id": "rib-cage",
+          "name": "肋笼与肋间口",
+          "texture": "/assets/enemies/components-v1/rot-walker/part_007.png",
+          "joint": "root"
+        },
+        {
+          "id": "spine-art",
+          "name": "腰脊",
+          "texture": "/assets/enemies/components-v1/rot-walker/part_007.png",
+          "joint": "spine"
+        },
+        {
+          "id": "pelvis-art",
+          "name": "腐骨盆",
+          "texture": "/assets/enemies/components-v1/rot-walker/part_007.png",
+          "joint": "pelvis"
+        },
+        {
+          "id": "head-art",
+          "name": "头部",
+          "texture": "/assets/enemies/components-v1/rot-walker/part_001.png",
+          "joint": "head"
+        },
+        {
+          "id": "neck-bones",
+          "name": "颈椎搭接",
+          "texture": "/assets/enemies/components-v1/rot-walker/part_007.png",
+          "joint": "neck"
+        },
+        {
+          "id": "jaw-art",
+          "name": "腐颌",
+          "texture": "/assets/enemies/components-v1/rot-walker/part_005.png",
+          "joint": "jaw"
+        },
+        {
+          "id": "left-arm",
+          "name": "腐生上臂",
+          "texture": "/assets/enemies/components-v1/rot-walker/part_002.png",
+          "joint": "left-shoulder"
+        },
+        {
+          "id": "left-forearm",
+          "name": "前臂",
+          "texture": "/assets/enemies/components-v1/rot-walker/part_009.png",
+          "joint": "left-elbow"
+        },
+        {
+          "id": "left-claw",
+          "name": "腐爪",
+          "texture": "/assets/enemies/components-v1/rot-walker/part_009.png",
+          "joint": "left-wrist"
+        },
+        {
+          "id": "right-arm-upper",
+          "name": "右右腐生臂上段",
+          "texture": "/assets/enemies/components-v1/rot-walker/part_003.png",
+          "joint": "right-arm-root"
+        },
+        {
+          "id": "right-arm-lower",
+          "name": "右右腐生臂下段",
+          "texture": "/assets/enemies/components-v1/rot-walker/part_003.png",
+          "joint": "right-arm-hinge"
+        },
+        {
+          "id": "right-arm-end",
+          "name": "右右腐生臂末端",
+          "texture": "/assets/enemies/components-v1/rot-walker/part_003.png",
+          "joint": "right-arm-tip"
+        },
+        {
+          "id": "left-thigh",
+          "name": "残腿大腿",
+          "texture": "/assets/enemies/components-v1/rot-walker/part_008.png",
+          "joint": "left-hip"
+        },
+        {
+          "id": "left-shin",
+          "name": "残腿胫骨",
+          "texture": "/assets/enemies/components-v1/rot-walker/part_012.png",
+          "joint": "left-knee"
+        },
+        {
+          "id": "left-foot",
+          "name": "腐足",
+          "texture": "/assets/enemies/components-v1/rot-walker/part_012.png",
+          "joint": "left-ankle"
+        },
+        {
+          "id": "rot-stilt-upper",
+          "name": "腐生支脚上段",
+          "texture": "/assets/enemies/components-v1/rot-walker/part_010.png",
+          "joint": "rot-stilt-root"
+        },
+        {
+          "id": "rot-stilt-lower",
+          "name": "腐生支脚下段",
+          "texture": "/assets/enemies/components-v1/rot-walker/part_010.png",
+          "joint": "rot-stilt-hinge"
+        },
+        {
+          "id": "rot-stilt-end",
+          "name": "腐生支脚末端",
+          "texture": "/assets/enemies/components-v1/rot-walker/part_010.png",
+          "joint": "rot-stilt-tip"
+        }
+      ],
+      "actions": [
+        "idle",
+        "attack",
+        "hit",
+        "death",
+        "move"
+      ],
+      "floating": false,
+      "supports": [
+        "left-foot",
+        "rot-stilt-end"
+      ]
+    },
+    {
+      "enemyId": "shellguard",
+      "name": "重甲卫士 · 骨架预览",
+      "parts": [
+        {
+          "id": "breastplate",
+          "name": "重甲胸饰",
+          "texture": "/assets/enemies/components-v1/shellguard/part_010.png",
+          "joint": "root"
+        },
+        {
+          "id": "coffin-keel",
+          "name": "棺底脊",
+          "texture": "/assets/enemies/components-v1/shellguard/part_004.png",
+          "joint": "root"
+        },
+        {
+          "id": "head-art",
+          "name": "头部",
+          "texture": "/assets/enemies/components-v1/shellguard/part_005.png",
+          "joint": "head"
+        },
+        {
+          "id": "left-gate-art",
+          "name": "棺门",
+          "texture": "/assets/enemies/components-v1/shellguard/part_001.png",
+          "joint": "left-gate"
+        },
+        {
+          "id": "left-pauldron",
+          "name": "棺甲肩",
+          "texture": "/assets/enemies/components-v1/shellguard/part_007.png",
+          "joint": "left-shoulder"
+        },
+        {
+          "id": "left-claw",
+          "name": "棺爪",
+          "texture": "/assets/enemies/components-v1/shellguard/part_015.png",
+          "joint": "left-wrist"
+        },
+        {
+          "id": "left-coffin-root-upper",
+          "name": "左拖地棺根上段",
+          "texture": "/assets/enemies/components-v1/shellguard/part_017.png",
+          "joint": "left-coffin-root-root"
+        },
+        {
+          "id": "left-coffin-root-lower",
+          "name": "左拖地棺根下段",
+          "texture": "/assets/enemies/components-v1/shellguard/part_017.png",
+          "joint": "left-coffin-root-hinge"
+        },
+        {
+          "id": "left-seal-spike-art",
+          "name": "封棺钉",
+          "texture": "/assets/enemies/components-v1/shellguard/part_011.png",
+          "joint": "left-seal-spike"
+        },
+        {
+          "id": "right-gate-art",
+          "name": "棺门",
+          "texture": "/assets/enemies/components-v1/shellguard/part_002.png",
+          "joint": "right-gate"
+        },
+        {
+          "id": "right-pauldron",
+          "name": "棺甲肩",
+          "texture": "/assets/enemies/components-v1/shellguard/part_009.png",
+          "joint": "right-shoulder"
+        },
+        {
+          "id": "right-claw",
+          "name": "棺爪",
+          "texture": "/assets/enemies/components-v1/shellguard/part_016.png",
+          "joint": "right-wrist"
+        },
+        {
+          "id": "right-coffin-root-upper",
+          "name": "右拖地棺根上段",
+          "texture": "/assets/enemies/components-v1/shellguard/part_018.png",
+          "joint": "right-coffin-root-root"
+        },
+        {
+          "id": "right-coffin-root-lower",
+          "name": "右拖地棺根下段",
+          "texture": "/assets/enemies/components-v1/shellguard/part_018.png",
+          "joint": "right-coffin-root-hinge"
+        },
+        {
+          "id": "right-seal-spike-art",
+          "name": "封棺钉",
+          "texture": "/assets/enemies/components-v1/shellguard/part_013.png",
+          "joint": "right-seal-spike"
+        }
+      ],
+      "actions": [
+        "idle",
+        "attack",
+        "hit",
+        "death",
+        "move"
+      ],
+      "floating": false,
+      "supports": [
+        "left-coffin-root-lower",
+        "right-coffin-root-lower"
+      ]
+    },
+    {
+      "enemyId": "wisp",
+      "name": "幽光投矛者 · 骨架预览",
+      "parts": [
+        {
+          "id": "rib-body",
+          "name": "幽光肋甲",
+          "texture": "/assets/enemies/components-v1/wisp/part_013.png",
+          "joint": "root"
+        },
+        {
+          "id": "head-art",
+          "name": "头部",
+          "texture": "/assets/enemies/components-v1/wisp/part_002.png",
+          "joint": "head"
+        },
+        {
+          "id": "veil-upper",
+          "name": "幽裾上段",
+          "texture": "/assets/enemies/components-v1/wisp/part_015.png",
+          "joint": "veil-root"
+        },
+        {
+          "id": "veil-lower",
+          "name": "幽裾尾段",
+          "texture": "/assets/enemies/components-v1/wisp/part_015.png",
+          "joint": "veil-tip"
+        },
+        {
+          "id": "ghost-tail-art",
+          "name": "幽光尾焰",
+          "texture": "/assets/enemies/components-v1/wisp/part_014.png",
+          "joint": "ghost-tail"
+        },
+        {
+          "id": "left-arm-upper",
+          "name": "左左投矛臂上段",
+          "texture": "/assets/enemies/components-v1/wisp/part_016.png",
+          "joint": "left-arm-root"
+        },
+        {
+          "id": "left-arm-lower",
+          "name": "左左投矛臂下段",
+          "texture": "/assets/enemies/components-v1/wisp/part_016.png",
+          "joint": "left-arm-hinge"
+        },
+        {
+          "id": "left-arm-end",
+          "name": "左左投矛臂末端",
+          "texture": "/assets/enemies/components-v1/wisp/part_016.png",
+          "joint": "left-arm-tip"
+        },
+        {
+          "id": "right-pauldron",
+          "name": "右肩披片",
+          "texture": "/assets/enemies/components-v1/wisp/part_012.png",
+          "joint": "right-shoulder"
+        },
+        {
+          "id": "right-forearm",
+          "name": "持矛前臂",
+          "texture": "/assets/enemies/components-v1/wisp/part_018.png",
+          "joint": "right-wrist"
+        },
+        {
+          "id": "spear-art",
+          "name": "幽光长矛",
+          "texture": "/assets/enemies/components-v1/wisp/part_003.png",
+          "joint": "spear"
+        },
+        {
+          "id": "left-banner-art",
+          "name": "左飘带",
+          "texture": "/assets/enemies/components-v1/wisp/part_008.png",
+          "joint": "left-banner"
+        },
+        {
+          "id": "right-banner-art",
+          "name": "右飘带",
+          "texture": "/assets/enemies/components-v1/wisp/part_020.png",
+          "joint": "right-banner"
+        }
+      ],
+      "actions": [
+        "idle",
+        "attack",
+        "hit",
+        "death",
+        "move"
+      ],
+      "floating": true,
+      "supports": []
+    },
+    {
+      "enemyId": "patrol-hound",
+      "name": "巡路犬 · 骨架预览",
+      "parts": [
+        {
+          "id": "chest",
+          "name": "胸腹",
+          "texture": "/assets/enemies/components-v1/patrol-hound/part_003.png",
+          "joint": "root"
+        },
+        {
+          "id": "back",
+          "name": "背脊",
+          "texture": "/assets/enemies/components-v1/patrol-hound/part_004.png",
+          "joint": "root"
+        },
+        {
+          "id": "rump",
+          "name": "后身甲",
+          "texture": "/assets/enemies/components-v1/patrol-hound/part_005.png",
+          "joint": "haunch"
+        },
+        {
+          "id": "left-face",
+          "name": "左折面脸",
+          "texture": "/assets/enemies/components-v1/patrol-hound/part_001.png",
+          "joint": "head"
+        },
+        {
+          "id": "right-face",
+          "name": "右折面脸",
+          "texture": "/assets/enemies/components-v1/patrol-hound/part_001.png",
+          "joint": "head"
+        },
+        {
+          "id": "left-jaw",
+          "name": "左折面下颌",
+          "texture": "/assets/enemies/components-v1/patrol-hound/part_002.png",
+          "joint": "jaw"
+        },
+        {
+          "id": "right-jaw",
+          "name": "右折面下颌",
+          "texture": "/assets/enemies/components-v1/patrol-hound/part_002.png",
+          "joint": "jaw"
+        },
+        {
+          "id": "left-front-upper",
+          "name": "左前上肢",
+          "texture": "/assets/enemies/components-v1/patrol-hound/part_006.png",
+          "joint": "left-front-hip"
+        },
+        {
+          "id": "left-front-lower",
+          "name": "左前下肢",
+          "texture": "/assets/enemies/components-v1/patrol-hound/part_007.png",
+          "joint": "left-front-knee"
+        },
+        {
+          "id": "left-front-foot",
+          "name": "左前足爪",
+          "texture": "/assets/enemies/components-v1/patrol-hound/part_008.png",
+          "joint": "left-front-paw"
+        },
+        {
+          "id": "left-hind-upper",
+          "name": "左后上肢",
+          "texture": "/assets/enemies/components-v1/patrol-hound/part_009.png",
+          "joint": "left-hind-hip"
+        },
+        {
+          "id": "left-hind-lower",
+          "name": "左后下肢",
+          "texture": "/assets/enemies/components-v1/patrol-hound/part_010.png",
+          "joint": "left-hind-knee"
+        },
+        {
+          "id": "left-hind-foot",
+          "name": "左后足爪",
+          "texture": "/assets/enemies/components-v1/patrol-hound/part_008.png",
+          "joint": "left-hind-paw"
+        },
+        {
+          "id": "right-front-upper",
+          "name": "右前上肢",
+          "texture": "/assets/enemies/components-v1/patrol-hound/part_006.png",
+          "joint": "right-front-hip"
+        },
+        {
+          "id": "right-front-lower",
+          "name": "右前下肢",
+          "texture": "/assets/enemies/components-v1/patrol-hound/part_007.png",
+          "joint": "right-front-knee"
+        },
+        {
+          "id": "right-front-foot",
+          "name": "右前足爪",
+          "texture": "/assets/enemies/components-v1/patrol-hound/part_008.png",
+          "joint": "right-front-paw"
+        },
+        {
+          "id": "right-hind-upper",
+          "name": "右后上肢",
+          "texture": "/assets/enemies/components-v1/patrol-hound/part_009.png",
+          "joint": "right-hind-hip"
+        },
+        {
+          "id": "right-hind-lower",
+          "name": "右后下肢",
+          "texture": "/assets/enemies/components-v1/patrol-hound/part_010.png",
+          "joint": "right-hind-knee"
+        },
+        {
+          "id": "right-hind-foot",
+          "name": "右后足爪",
+          "texture": "/assets/enemies/components-v1/patrol-hound/part_008.png",
+          "joint": "right-hind-paw"
+        },
+        {
+          "id": "tail-art",
+          "name": "尾",
+          "texture": "/assets/enemies/components-v1/patrol-hound/part_011.png",
+          "joint": "tail"
+        },
+        {
+          "id": "collar",
+          "name": "巡路颈环",
+          "texture": "/assets/enemies/components-v1/patrol-hound/part_014.png",
+          "joint": "neck"
+        },
+        {
+          "id": "nose",
+          "name": "鼻尖合缝",
+          "texture": "/assets/enemies/components-v1/patrol-hound/part_015.png",
+          "joint": "head"
+        },
+        {
+          "id": "bell-art",
+          "name": "巡铃",
+          "texture": "/assets/enemies/components-v1/patrol-hound/part_012.png",
+          "joint": "bell"
+        },
+        {
+          "id": "left-ear-art",
+          "name": "左耳",
+          "texture": "/assets/enemies/components-v1/patrol-hound/part_016.png",
+          "joint": "left-ear"
+        },
+        {
+          "id": "left-scent-art",
+          "name": "左香烟须",
+          "texture": "/assets/enemies/components-v1/patrol-hound/part_013.png",
+          "joint": "left-scent"
+        },
+        {
+          "id": "right-ear-art",
+          "name": "右耳",
+          "texture": "/assets/enemies/components-v1/patrol-hound/part_016.png",
+          "joint": "right-ear"
+        },
+        {
+          "id": "right-scent-art",
+          "name": "右香烟须",
+          "texture": "/assets/enemies/components-v1/patrol-hound/part_013.png",
+          "joint": "right-scent"
+        }
+      ],
+      "actions": [
+        "idle",
+        "attack",
+        "hit",
+        "death",
+        "move"
+      ],
+      "floating": false,
+      "supports": [
+        "left-front-foot",
+        "left-hind-foot",
+        "right-front-foot",
+        "right-hind-foot"
+      ]
+    },
+    {
+      "enemyId": "redneedle-salamander",
+      "name": "赤针火蜥 · 骨架预览",
+      "parts": [
+        {
+          "id": "chest",
+          "name": "胸腹",
+          "texture": "/assets/enemies/components-v1/redneedle-salamander/part_003.png",
+          "joint": "root"
+        },
+        {
+          "id": "back",
+          "name": "背脊",
+          "texture": "/assets/enemies/components-v1/redneedle-salamander/part_004.png",
+          "joint": "root"
+        },
+        {
+          "id": "rump",
+          "name": "后身甲",
+          "texture": "/assets/enemies/components-v1/redneedle-salamander/part_005.png",
+          "joint": "haunch"
+        },
+        {
+          "id": "head-art",
+          "name": "面部",
+          "texture": "/assets/enemies/components-v1/redneedle-salamander/part_001.png",
+          "joint": "head"
+        },
+        {
+          "id": "jaw-art",
+          "name": "下颌",
+          "texture": "/assets/enemies/components-v1/redneedle-salamander/part_002.png",
+          "joint": "jaw"
+        },
+        {
+          "id": "left-front-upper",
+          "name": "左前上肢",
+          "texture": "/assets/enemies/components-v1/redneedle-salamander/part_006.png",
+          "joint": "left-front-hip"
+        },
+        {
+          "id": "left-front-lower",
+          "name": "左前下肢",
+          "texture": "/assets/enemies/components-v1/redneedle-salamander/part_007.png",
+          "joint": "left-front-knee"
+        },
+        {
+          "id": "left-front-foot",
+          "name": "左前足爪",
+          "texture": "/assets/enemies/components-v1/redneedle-salamander/part_008.png",
+          "joint": "left-front-paw"
+        },
+        {
+          "id": "left-hind-upper",
+          "name": "左后上肢",
+          "texture": "/assets/enemies/components-v1/redneedle-salamander/part_009.png",
+          "joint": "left-hind-hip"
+        },
+        {
+          "id": "left-hind-lower",
+          "name": "左后下肢",
+          "texture": "/assets/enemies/components-v1/redneedle-salamander/part_010.png",
+          "joint": "left-hind-knee"
+        },
+        {
+          "id": "left-hind-foot",
+          "name": "左后足爪",
+          "texture": "/assets/enemies/components-v1/redneedle-salamander/part_008.png",
+          "joint": "left-hind-paw"
+        },
+        {
+          "id": "right-front-upper",
+          "name": "右前上肢",
+          "texture": "/assets/enemies/components-v1/redneedle-salamander/part_006.png",
+          "joint": "right-front-hip"
+        },
+        {
+          "id": "right-front-lower",
+          "name": "右前下肢",
+          "texture": "/assets/enemies/components-v1/redneedle-salamander/part_007.png",
+          "joint": "right-front-knee"
+        },
+        {
+          "id": "right-front-foot",
+          "name": "右前足爪",
+          "texture": "/assets/enemies/components-v1/redneedle-salamander/part_008.png",
+          "joint": "right-front-paw"
+        },
+        {
+          "id": "right-hind-upper",
+          "name": "右后上肢",
+          "texture": "/assets/enemies/components-v1/redneedle-salamander/part_009.png",
+          "joint": "right-hind-hip"
+        },
+        {
+          "id": "right-hind-lower",
+          "name": "右后下肢",
+          "texture": "/assets/enemies/components-v1/redneedle-salamander/part_010.png",
+          "joint": "right-hind-knee"
+        },
+        {
+          "id": "right-hind-foot",
+          "name": "右后足爪",
+          "texture": "/assets/enemies/components-v1/redneedle-salamander/part_008.png",
+          "joint": "right-hind-paw"
+        },
+        {
+          "id": "tail-art",
+          "name": "尾",
+          "texture": "/assets/enemies/components-v1/redneedle-salamander/part_011.png",
+          "joint": "tail"
+        },
+        {
+          "id": "needle-0-art",
+          "name": "赤针1",
+          "texture": "/assets/enemies/components-v1/redneedle-salamander/part_013.png",
+          "joint": "needle-0"
+        },
+        {
+          "id": "needle-1-art",
+          "name": "赤针2",
+          "texture": "/assets/enemies/components-v1/redneedle-salamander/part_014.png",
+          "joint": "needle-1"
+        },
+        {
+          "id": "needle-2-art",
+          "name": "赤针3",
+          "texture": "/assets/enemies/components-v1/redneedle-salamander/part_015.png",
+          "joint": "needle-2"
+        }
+      ],
+      "actions": [
+        "idle",
+        "attack",
+        "hit",
+        "death",
+        "move"
+      ],
+      "floating": false,
+      "supports": [
+        "left-front-foot",
+        "left-hind-foot",
+        "right-front-foot",
+        "right-hind-foot"
+      ]
+    },
+    {
+      "enemyId": "rot-sac-toad",
+      "name": "腐囊蟇 · 骨架预览",
+      "parts": [
+        {
+          "id": "chest",
+          "name": "胸腹",
+          "texture": "/assets/enemies/components-v1/rot-sac-toad/part_003.png",
+          "joint": "root"
+        },
+        {
+          "id": "back",
+          "name": "背脊",
+          "texture": "/assets/enemies/components-v1/rot-sac-toad/part_004.png",
+          "joint": "root"
+        },
+        {
+          "id": "rump",
+          "name": "后身甲",
+          "texture": "/assets/enemies/components-v1/rot-sac-toad/part_005.png",
+          "joint": "haunch"
+        },
+        {
+          "id": "head-art",
+          "name": "面部",
+          "texture": "/assets/enemies/components-v1/rot-sac-toad/part_001.png",
+          "joint": "head"
+        },
+        {
+          "id": "jaw-art",
+          "name": "下颌",
+          "texture": "/assets/enemies/components-v1/rot-sac-toad/part_002.png",
+          "joint": "jaw"
+        },
+        {
+          "id": "left-front-upper",
+          "name": "左前上肢",
+          "texture": "/assets/enemies/components-v1/rot-sac-toad/part_006.png",
+          "joint": "left-front-hip"
+        },
+        {
+          "id": "left-front-lower",
+          "name": "左前下肢",
+          "texture": "/assets/enemies/components-v1/rot-sac-toad/part_007.png",
+          "joint": "left-front-knee"
+        },
+        {
+          "id": "left-front-foot",
+          "name": "左前足爪",
+          "texture": "/assets/enemies/components-v1/rot-sac-toad/part_008.png",
+          "joint": "left-front-paw"
+        },
+        {
+          "id": "left-hind-upper",
+          "name": "左后上肢",
+          "texture": "/assets/enemies/components-v1/rot-sac-toad/part_009.png",
+          "joint": "left-hind-hip"
+        },
+        {
+          "id": "left-hind-lower",
+          "name": "左后下肢",
+          "texture": "/assets/enemies/components-v1/rot-sac-toad/part_010.png",
+          "joint": "left-hind-knee"
+        },
+        {
+          "id": "left-hind-foot",
+          "name": "左后足爪",
+          "texture": "/assets/enemies/components-v1/rot-sac-toad/part_016.png",
+          "joint": "left-hind-paw"
+        },
+        {
+          "id": "right-front-upper",
+          "name": "右前上肢",
+          "texture": "/assets/enemies/components-v1/rot-sac-toad/part_006.png",
+          "joint": "right-front-hip"
+        },
+        {
+          "id": "right-front-lower",
+          "name": "右前下肢",
+          "texture": "/assets/enemies/components-v1/rot-sac-toad/part_007.png",
+          "joint": "right-front-knee"
+        },
+        {
+          "id": "right-front-foot",
+          "name": "右前足爪",
+          "texture": "/assets/enemies/components-v1/rot-sac-toad/part_008.png",
+          "joint": "right-front-paw"
+        },
+        {
+          "id": "right-hind-upper",
+          "name": "右后上肢",
+          "texture": "/assets/enemies/components-v1/rot-sac-toad/part_009.png",
+          "joint": "right-hind-hip"
+        },
+        {
+          "id": "right-hind-lower",
+          "name": "右后下肢",
+          "texture": "/assets/enemies/components-v1/rot-sac-toad/part_010.png",
+          "joint": "right-hind-knee"
+        },
+        {
+          "id": "right-hind-foot",
+          "name": "右后足爪",
+          "texture": "/assets/enemies/components-v1/rot-sac-toad/part_016.png",
+          "joint": "right-hind-paw"
+        },
+        {
+          "id": "throat-art",
+          "name": "喉囊",
+          "texture": "/assets/enemies/components-v1/rot-sac-toad/part_014.png",
+          "joint": "throat"
+        },
+        {
+          "id": "left-sac-art",
+          "name": "左腐囊",
+          "texture": "/assets/enemies/components-v1/rot-sac-toad/part_013.png",
+          "joint": "left-sac"
+        },
+        {
+          "id": "right-sac-art",
+          "name": "右腐囊",
+          "texture": "/assets/enemies/components-v1/rot-sac-toad/part_013.png",
+          "joint": "right-sac"
+        },
+        {
+          "id": "tongue-art",
+          "name": "弹舌",
+          "texture": "/assets/enemies/components-v1/rot-sac-toad/part_011.png",
+          "joint": "tongue"
+        },
+        {
+          "id": "tongue-tip-art",
+          "name": "舌尖倒钩",
+          "texture": "/assets/enemies/components-v1/rot-sac-toad/part_015.png",
+          "joint": "tongue-tip"
+        }
+      ],
+      "actions": [
+        "idle",
+        "attack",
+        "hit",
+        "death",
+        "move"
+      ],
+      "floating": false,
+      "supports": [
+        "left-front-foot",
+        "left-hind-foot",
+        "right-front-foot",
+        "right-hind-foot"
+      ]
+    },
+    {
+      "enemyId": "claw-beast",
+      "name": "溺爪兽 · 骨架预览",
+      "parts": [
+        {
+          "id": "chest",
+          "name": "胸腹",
+          "texture": "/assets/enemies/components-v1/claw-beast/part_003.png",
+          "joint": "root"
+        },
+        {
+          "id": "back",
+          "name": "背脊",
+          "texture": "/assets/enemies/components-v1/claw-beast/part_004.png",
+          "joint": "root"
+        },
+        {
+          "id": "rump",
+          "name": "后身甲",
+          "texture": "/assets/enemies/components-v1/claw-beast/part_005.png",
+          "joint": "haunch"
+        },
+        {
+          "id": "head-art",
+          "name": "面部",
+          "texture": "/assets/enemies/components-v1/claw-beast/part_001.png",
+          "joint": "head"
+        },
+        {
+          "id": "jaw-art",
+          "name": "下颌",
+          "texture": "/assets/enemies/components-v1/claw-beast/part_002.png",
+          "joint": "jaw"
+        },
+        {
+          "id": "left-front-upper",
+          "name": "左前上肢",
+          "texture": "/assets/enemies/components-v1/claw-beast/part_006.png",
+          "joint": "left-front-hip"
+        },
+        {
+          "id": "left-front-lower",
+          "name": "左前下肢",
+          "texture": "/assets/enemies/components-v1/claw-beast/part_007.png",
+          "joint": "left-front-knee"
+        },
+        {
+          "id": "left-front-foot",
+          "name": "左前足爪",
+          "texture": "/assets/enemies/components-v1/claw-beast/part_008.png",
+          "joint": "left-front-paw"
+        },
+        {
+          "id": "right-front-upper",
+          "name": "右前上肢",
+          "texture": "/assets/enemies/components-v1/claw-beast/part_006.png",
+          "joint": "right-front-hip"
+        },
+        {
+          "id": "right-front-lower",
+          "name": "右前下肢",
+          "texture": "/assets/enemies/components-v1/claw-beast/part_007.png",
+          "joint": "right-front-knee"
+        },
+        {
+          "id": "right-front-foot",
+          "name": "右前足爪",
+          "texture": "/assets/enemies/components-v1/claw-beast/part_008.png",
+          "joint": "right-front-paw"
+        },
+        {
+          "id": "tail-art",
+          "name": "尾",
+          "texture": "/assets/enemies/components-v1/claw-beast/part_012.png",
+          "joint": "tail"
+        },
+        {
+          "id": "left-fin-art",
+          "name": "左拖潮鳍",
+          "texture": "/assets/enemies/components-v1/claw-beast/part_011.png",
+          "joint": "left-fin"
+        },
+        {
+          "id": "left-claw-art",
+          "name": "左溺爪巨指",
+          "texture": "/assets/enemies/components-v1/claw-beast/part_009.png",
+          "joint": "left-claw"
+        },
+        {
+          "id": "right-fin-art",
+          "name": "右拖潮鳍",
+          "texture": "/assets/enemies/components-v1/claw-beast/part_011.png",
+          "joint": "right-fin"
+        },
+        {
+          "id": "right-claw-art",
+          "name": "右溺爪巨指",
+          "texture": "/assets/enemies/components-v1/claw-beast/part_009.png",
+          "joint": "right-claw"
+        },
+        {
+          "id": "keel-art",
+          "name": "腹下水鳍",
+          "texture": "/assets/enemies/components-v1/claw-beast/part_010.png",
+          "joint": "keel"
+        }
+      ],
+      "actions": [
+        "idle",
+        "attack",
+        "hit",
+        "death",
+        "move"
+      ],
+      "floating": false,
+      "supports": [
+        "left-front-foot",
+        "right-front-foot"
+      ]
+    },
+    {
+      "enemyId": "broodmother",
+      "name": "裂腹虫母 · 骨架预览",
+      "parts": [
+        {
+          "id": "abdomen",
+          "name": "裂腹育巢",
+          "texture": "/assets/enemies/components-v1/broodmother/part_004.png",
+          "joint": "root"
+        },
+        {
+          "id": "thorax-art",
+          "name": "小胸节",
+          "texture": "/assets/enemies/components-v1/broodmother/part_003.png",
+          "joint": "thorax"
+        },
+        {
+          "id": "head-art",
+          "name": "虫首",
+          "texture": "/assets/enemies/components-v1/broodmother/part_001.png",
+          "joint": "head"
+        },
+        {
+          "id": "larva-art",
+          "name": "腹内幼首",
+          "texture": "/assets/enemies/components-v1/broodmother/part_007.png",
+          "joint": "larva"
+        },
+        {
+          "id": "larva-mouth-art",
+          "name": "幼首噬口",
+          "texture": "/assets/enemies/components-v1/broodmother/part_008.png",
+          "joint": "larva-mouth"
+        },
+        {
+          "id": "left-door-art",
+          "name": "左裂腹育门",
+          "texture": "/assets/enemies/components-v1/broodmother/part_005.png",
+          "joint": "left-door"
+        },
+        {
+          "id": "left-jaw-art",
+          "name": "左锯颚",
+          "texture": "/assets/enemies/components-v1/broodmother/part_002.png",
+          "joint": "left-jaw"
+        },
+        {
+          "id": "left-leg-0-upper",
+          "name": "左后足1上肢",
+          "texture": "/assets/enemies/components-v1/broodmother/part_009.png",
+          "joint": "left-leg-0-hip"
+        },
+        {
+          "id": "left-leg-0-lower",
+          "name": "左后足1下肢",
+          "texture": "/assets/enemies/components-v1/broodmother/part_010.png",
+          "joint": "left-leg-0-knee"
+        },
+        {
+          "id": "left-leg-0-foot",
+          "name": "左后足1足爪",
+          "texture": "/assets/enemies/components-v1/broodmother/part_011.png",
+          "joint": "left-leg-0-paw"
+        },
+        {
+          "id": "left-leg-1-upper",
+          "name": "左后足2上肢",
+          "texture": "/assets/enemies/components-v1/broodmother/part_009.png",
+          "joint": "left-leg-1-hip"
+        },
+        {
+          "id": "left-leg-1-lower",
+          "name": "左后足2下肢",
+          "texture": "/assets/enemies/components-v1/broodmother/part_010.png",
+          "joint": "left-leg-1-knee"
+        },
+        {
+          "id": "left-leg-1-foot",
+          "name": "左后足2足爪",
+          "texture": "/assets/enemies/components-v1/broodmother/part_011.png",
+          "joint": "left-leg-1-paw"
+        },
+        {
+          "id": "left-pillar-upper",
+          "name": "左育巢支柱上肢",
+          "texture": "/assets/enemies/components-v1/broodmother/part_012.png",
+          "joint": "left-pillar-hip"
+        },
+        {
+          "id": "left-pillar-lower",
+          "name": "左育巢支柱下肢",
+          "texture": "/assets/enemies/components-v1/broodmother/part_010.png",
+          "joint": "left-pillar-knee"
+        },
+        {
+          "id": "left-pillar-foot",
+          "name": "左育巢支柱足爪",
+          "texture": "/assets/enemies/components-v1/broodmother/part_011.png",
+          "joint": "left-pillar-paw"
+        },
+        {
+          "id": "left-egg-stalk",
+          "name": "左卵柄",
+          "texture": "/assets/enemies/components-v1/broodmother/part_014.png",
+          "joint": "left-egg"
+        },
+        {
+          "id": "left-egg-art",
+          "name": "左卵囊",
+          "texture": "/assets/enemies/components-v1/broodmother/part_013.png",
+          "joint": "left-egg-sac"
+        },
+        {
+          "id": "right-door-art",
+          "name": "右裂腹育门",
+          "texture": "/assets/enemies/components-v1/broodmother/part_006.png",
+          "joint": "right-door"
+        },
+        {
+          "id": "right-jaw-art",
+          "name": "右锯颚",
+          "texture": "/assets/enemies/components-v1/broodmother/part_002.png",
+          "joint": "right-jaw"
+        },
+        {
+          "id": "right-leg-0-upper",
+          "name": "右后足1上肢",
+          "texture": "/assets/enemies/components-v1/broodmother/part_009.png",
+          "joint": "right-leg-0-hip"
+        },
+        {
+          "id": "right-leg-0-lower",
+          "name": "右后足1下肢",
+          "texture": "/assets/enemies/components-v1/broodmother/part_010.png",
+          "joint": "right-leg-0-knee"
+        },
+        {
+          "id": "right-leg-0-foot",
+          "name": "右后足1足爪",
+          "texture": "/assets/enemies/components-v1/broodmother/part_011.png",
+          "joint": "right-leg-0-paw"
+        },
+        {
+          "id": "right-leg-1-upper",
+          "name": "右后足2上肢",
+          "texture": "/assets/enemies/components-v1/broodmother/part_009.png",
+          "joint": "right-leg-1-hip"
+        },
+        {
+          "id": "right-leg-1-lower",
+          "name": "右后足2下肢",
+          "texture": "/assets/enemies/components-v1/broodmother/part_010.png",
+          "joint": "right-leg-1-knee"
+        },
+        {
+          "id": "right-leg-1-foot",
+          "name": "右后足2足爪",
+          "texture": "/assets/enemies/components-v1/broodmother/part_011.png",
+          "joint": "right-leg-1-paw"
+        },
+        {
+          "id": "right-pillar-upper",
+          "name": "右育巢支柱上肢",
+          "texture": "/assets/enemies/components-v1/broodmother/part_012.png",
+          "joint": "right-pillar-hip"
+        },
+        {
+          "id": "right-pillar-lower",
+          "name": "右育巢支柱下肢",
+          "texture": "/assets/enemies/components-v1/broodmother/part_010.png",
+          "joint": "right-pillar-knee"
+        },
+        {
+          "id": "right-pillar-foot",
+          "name": "右育巢支柱足爪",
+          "texture": "/assets/enemies/components-v1/broodmother/part_011.png",
+          "joint": "right-pillar-paw"
+        },
+        {
+          "id": "right-egg-stalk",
+          "name": "右卵柄",
+          "texture": "/assets/enemies/components-v1/broodmother/part_014.png",
+          "joint": "right-egg"
+        },
+        {
+          "id": "right-egg-art",
+          "name": "右卵囊",
+          "texture": "/assets/enemies/components-v1/broodmother/part_013.png",
+          "joint": "right-egg-sac"
+        }
+      ],
+      "actions": [
+        "idle",
+        "attack",
+        "hit",
+        "death",
+        "move"
+      ],
+      "floating": false,
+      "supports": [
+        "left-leg-0-foot",
+        "left-leg-1-foot",
+        "left-pillar-foot",
+        "right-leg-0-foot",
+        "right-leg-1-foot",
+        "right-pillar-foot"
+      ]
+    },
+    {
+      "enemyId": "moss-colossus",
+      "name": "苔藓巨像 · 骨架预览",
+      "parts": [
+        {
+          "id": "torso",
+          "name": "苔石胸腔",
+          "texture": "/assets/enemies/components-v1/moss-colossus/part_005.png",
+          "joint": "root"
+        },
+        {
+          "id": "spine",
+          "name": "苔骨脊",
+          "texture": "/assets/enemies/components-v1/moss-colossus/part_003.png",
+          "joint": "root"
+        },
+        {
+          "id": "head-art",
+          "name": "头部",
+          "texture": "/assets/enemies/components-v1/moss-colossus/part_004.png",
+          "joint": "head"
+        },
+        {
+          "id": "jaw-art",
+          "name": "石颌",
+          "texture": "/assets/enemies/components-v1/moss-colossus/part_004.png",
+          "joint": "jaw"
+        },
+        {
+          "id": "left-pauldron",
+          "name": "苔石肩甲",
+          "texture": "/assets/enemies/components-v1/moss-colossus/part_012.png",
+          "joint": "left-shoulder"
+        },
+        {
+          "id": "left-upper-arm",
+          "name": "石臂上段",
+          "texture": "/assets/enemies/components-v1/moss-colossus/part_007.png",
+          "joint": "left-shoulder"
+        },
+        {
+          "id": "left-forearm",
+          "name": "石臂下段",
+          "texture": "/assets/enemies/components-v1/moss-colossus/part_007.png",
+          "joint": "left-elbow"
+        },
+        {
+          "id": "left-palm",
+          "name": "巨石拳",
+          "texture": "/assets/enemies/components-v1/moss-colossus/part_021.png",
+          "joint": "left-wrist"
+        },
+        {
+          "id": "left-leg-upper",
+          "name": "左苔石腿上段",
+          "texture": "/assets/enemies/components-v1/moss-colossus/part_014.png",
+          "joint": "left-leg-root"
+        },
+        {
+          "id": "left-leg-lower",
+          "name": "左苔石腿下段",
+          "texture": "/assets/enemies/components-v1/moss-colossus/part_014.png",
+          "joint": "left-leg-hinge"
+        },
+        {
+          "id": "left-leg-end",
+          "name": "左苔石腿末端",
+          "texture": "/assets/enemies/components-v1/moss-colossus/part_014.png",
+          "joint": "left-leg-tip"
+        },
+        {
+          "id": "right-pauldron",
+          "name": "苔石肩甲",
+          "texture": "/assets/enemies/components-v1/moss-colossus/part_013.png",
+          "joint": "right-shoulder"
+        },
+        {
+          "id": "right-upper-arm",
+          "name": "石臂上段",
+          "texture": "/assets/enemies/components-v1/moss-colossus/part_009.png",
+          "joint": "right-shoulder"
+        },
+        {
+          "id": "right-forearm",
+          "name": "石臂下段",
+          "texture": "/assets/enemies/components-v1/moss-colossus/part_009.png",
+          "joint": "right-elbow"
+        },
+        {
+          "id": "right-palm",
+          "name": "垂根巨掌",
+          "texture": "/assets/enemies/components-v1/moss-colossus/part_010.png",
+          "joint": "right-wrist"
+        },
+        {
+          "id": "right-leg-upper",
+          "name": "右苔石腿上段",
+          "texture": "/assets/enemies/components-v1/moss-colossus/part_015.png",
+          "joint": "right-leg-root"
+        },
+        {
+          "id": "right-leg-lower",
+          "name": "右苔石腿下段",
+          "texture": "/assets/enemies/components-v1/moss-colossus/part_015.png",
+          "joint": "right-leg-hinge"
+        },
+        {
+          "id": "right-leg-end",
+          "name": "右苔石腿末端",
+          "texture": "/assets/enemies/components-v1/moss-colossus/part_015.png",
+          "joint": "right-leg-tip"
+        },
+        {
+          "id": "shoulder-tree-art",
+          "name": "肩上寄树",
+          "texture": "/assets/enemies/components-v1/moss-colossus/part_002.png",
+          "joint": "shoulder-tree"
+        },
+        {
+          "id": "left-root-tassel-art",
+          "name": "髋部垂根",
+          "texture": "/assets/enemies/components-v1/moss-colossus/part_016.png",
+          "joint": "left-root-tassel"
+        },
+        {
+          "id": "right-root-tassel-art",
+          "name": "髋部垂根",
+          "texture": "/assets/enemies/components-v1/moss-colossus/part_019.png",
+          "joint": "right-root-tassel"
+        }
+      ],
+      "actions": [
+        "idle",
+        "attack",
+        "hit",
+        "death",
+        "move"
+      ],
+      "floating": false,
+      "supports": [
+        "left-leg-end",
+        "right-leg-end"
+      ]
+    },
+    {
+      "enemyId": "sentry-crossbow",
+      "name": "哨戒弩手 · 骨架预览",
+      "parts": [
+        {
+          "id": "torso",
+          "name": "骨弩胸甲",
+          "texture": "/assets/enemies/components-v1/sentry-crossbow/part_001.png",
+          "joint": "root"
+        },
+        {
+          "id": "spine",
+          "name": "弩机脊背",
+          "texture": "/assets/enemies/components-v1/sentry-crossbow/part_005.png",
+          "joint": "root"
+        },
+        {
+          "id": "head-art",
+          "name": "头部",
+          "texture": "/assets/enemies/components-v1/sentry-crossbow/part_002.png",
+          "joint": "head"
+        },
+        {
+          "id": "left-arm-upper",
+          "name": "左弩机手臂上段",
+          "texture": "/assets/enemies/components-v1/sentry-crossbow/part_003.png",
+          "joint": "left-arm-root"
+        },
+        {
+          "id": "left-arm-lower",
+          "name": "左弩机手臂下段",
+          "texture": "/assets/enemies/components-v1/sentry-crossbow/part_003.png",
+          "joint": "left-arm-hinge"
+        },
+        {
+          "id": "left-arm-end",
+          "name": "左弩机手臂末端",
+          "texture": "/assets/enemies/components-v1/sentry-crossbow/part_003.png",
+          "joint": "left-arm-tip"
+        },
+        {
+          "id": "right-arm-upper",
+          "name": "右弩机手臂上段",
+          "texture": "/assets/enemies/components-v1/sentry-crossbow/part_004.png",
+          "joint": "right-arm-root"
+        },
+        {
+          "id": "right-arm-lower",
+          "name": "右弩机手臂下段",
+          "texture": "/assets/enemies/components-v1/sentry-crossbow/part_004.png",
+          "joint": "right-arm-hinge"
+        },
+        {
+          "id": "right-arm-end",
+          "name": "右弩机手臂末端",
+          "texture": "/assets/enemies/components-v1/sentry-crossbow/part_004.png",
+          "joint": "right-arm-tip"
+        },
+        {
+          "id": "bow-stock",
+          "name": "弩身",
+          "texture": "/assets/enemies/components-v1/sentry-crossbow/part_008.png",
+          "joint": "weapon"
+        },
+        {
+          "id": "left-bow-art",
+          "name": "活弩臂",
+          "texture": "/assets/enemies/components-v1/sentry-crossbow/part_008.png",
+          "joint": "left-bow"
+        },
+        {
+          "id": "right-bow-art",
+          "name": "活弩臂",
+          "texture": "/assets/enemies/components-v1/sentry-crossbow/part_008.png",
+          "joint": "right-bow"
+        },
+        {
+          "id": "left-tripod-upper",
+          "name": "左侧弩足上段",
+          "texture": "/assets/enemies/components-v1/sentry-crossbow/part_015.png",
+          "joint": "left-tripod-root"
+        },
+        {
+          "id": "left-tripod-lower",
+          "name": "左侧弩足下段",
+          "texture": "/assets/enemies/components-v1/sentry-crossbow/part_015.png",
+          "joint": "left-tripod-hinge"
+        },
+        {
+          "id": "right-tripod-upper",
+          "name": "右侧弩足上段",
+          "texture": "/assets/enemies/components-v1/sentry-crossbow/part_016.png",
+          "joint": "right-tripod-root"
+        },
+        {
+          "id": "right-tripod-lower",
+          "name": "右侧弩足下段",
+          "texture": "/assets/enemies/components-v1/sentry-crossbow/part_016.png",
+          "joint": "right-tripod-hinge"
+        },
+        {
+          "id": "rear-tripod-art",
+          "name": "后弩足",
+          "texture": "/assets/enemies/components-v1/sentry-crossbow/part_017.png",
+          "joint": "rear-tripod"
+        }
+      ],
+      "actions": [
+        "idle",
+        "attack",
+        "hit",
+        "death",
+        "move"
+      ],
+      "floating": false,
+      "supports": [
+        "left-tripod-lower",
+        "right-tripod-lower",
+        "rear-tripod-art"
+      ]
+    },
+    {
+      "enemyId": "ash-cannon-bug",
+      "name": "灰烬炮虫 · 骨架预览",
+      "parts": [
+        {
+          "id": "thorax",
+          "name": "炮虫胸壳",
+          "texture": "/assets/enemies/components-v1/ash-cannon-bug/part_002.png",
+          "joint": "root"
+        },
+        {
+          "id": "carapace",
+          "name": "腹部背甲",
+          "texture": "/assets/enemies/components-v1/ash-cannon-bug/part_001.png",
+          "joint": "abdomen"
+        },
+        {
+          "id": "belly",
+          "name": "腹下骨甲",
+          "texture": "/assets/enemies/components-v1/ash-cannon-bug/part_003.png",
+          "joint": "abdomen"
+        },
+        {
+          "id": "head-art",
+          "name": "复眼与颚钩",
+          "texture": "/assets/enemies/components-v1/ash-cannon-bug/part_007.png",
+          "joint": "head"
+        },
+        {
+          "id": "left-antenna-art",
+          "name": "触角",
+          "texture": "/assets/enemies/components-v1/ash-cannon-bug/part_007.png",
+          "joint": "left-antenna"
+        },
+        {
+          "id": "left-leg-0-upper",
+          "name": "左炮虫足1上段",
+          "texture": "/assets/enemies/components-v1/ash-cannon-bug/part_020.png",
+          "joint": "left-leg-0-root"
+        },
+        {
+          "id": "left-leg-0-lower",
+          "name": "左炮虫足1下段",
+          "texture": "/assets/enemies/components-v1/ash-cannon-bug/part_020.png",
+          "joint": "left-leg-0-hinge"
+        },
+        {
+          "id": "left-leg-0-end",
+          "name": "左炮虫足1末端",
+          "texture": "/assets/enemies/components-v1/ash-cannon-bug/part_020.png",
+          "joint": "left-leg-0-tip"
+        },
+        {
+          "id": "left-leg-1-upper",
+          "name": "左炮虫足2上段",
+          "texture": "/assets/enemies/components-v1/ash-cannon-bug/part_022.png",
+          "joint": "left-leg-1-root"
+        },
+        {
+          "id": "left-leg-1-lower",
+          "name": "左炮虫足2下段",
+          "texture": "/assets/enemies/components-v1/ash-cannon-bug/part_022.png",
+          "joint": "left-leg-1-hinge"
+        },
+        {
+          "id": "left-leg-1-end",
+          "name": "左炮虫足2末端",
+          "texture": "/assets/enemies/components-v1/ash-cannon-bug/part_022.png",
+          "joint": "left-leg-1-tip"
+        },
+        {
+          "id": "left-leg-2-upper",
+          "name": "左炮虫足3上段",
+          "texture": "/assets/enemies/components-v1/ash-cannon-bug/part_024.png",
+          "joint": "left-leg-2-root"
+        },
+        {
+          "id": "left-leg-2-lower",
+          "name": "左炮虫足3下段",
+          "texture": "/assets/enemies/components-v1/ash-cannon-bug/part_024.png",
+          "joint": "left-leg-2-hinge"
+        },
+        {
+          "id": "left-leg-2-end",
+          "name": "左炮虫足3末端",
+          "texture": "/assets/enemies/components-v1/ash-cannon-bug/part_024.png",
+          "joint": "left-leg-2-tip"
+        },
+        {
+          "id": "right-antenna-art",
+          "name": "触角",
+          "texture": "/assets/enemies/components-v1/ash-cannon-bug/part_007.png",
+          "joint": "right-antenna"
+        },
+        {
+          "id": "right-leg-0-upper",
+          "name": "右炮虫足1上段",
+          "texture": "/assets/enemies/components-v1/ash-cannon-bug/part_021.png",
+          "joint": "right-leg-0-root"
+        },
+        {
+          "id": "right-leg-0-lower",
+          "name": "右炮虫足1下段",
+          "texture": "/assets/enemies/components-v1/ash-cannon-bug/part_021.png",
+          "joint": "right-leg-0-hinge"
+        },
+        {
+          "id": "right-leg-0-end",
+          "name": "右炮虫足1末端",
+          "texture": "/assets/enemies/components-v1/ash-cannon-bug/part_021.png",
+          "joint": "right-leg-0-tip"
+        },
+        {
+          "id": "right-leg-1-upper",
+          "name": "右炮虫足2上段",
+          "texture": "/assets/enemies/components-v1/ash-cannon-bug/part_023.png",
+          "joint": "right-leg-1-root"
+        },
+        {
+          "id": "right-leg-1-lower",
+          "name": "右炮虫足2下段",
+          "texture": "/assets/enemies/components-v1/ash-cannon-bug/part_023.png",
+          "joint": "right-leg-1-hinge"
+        },
+        {
+          "id": "right-leg-1-end",
+          "name": "右炮虫足2末端",
+          "texture": "/assets/enemies/components-v1/ash-cannon-bug/part_023.png",
+          "joint": "right-leg-1-tip"
+        },
+        {
+          "id": "right-leg-2-upper",
+          "name": "右炮虫足3上段",
+          "texture": "/assets/enemies/components-v1/ash-cannon-bug/part_025.png",
+          "joint": "right-leg-2-root"
+        },
+        {
+          "id": "right-leg-2-lower",
+          "name": "右炮虫足3下段",
+          "texture": "/assets/enemies/components-v1/ash-cannon-bug/part_025.png",
+          "joint": "right-leg-2-hinge"
+        },
+        {
+          "id": "right-leg-2-end",
+          "name": "右炮虫足3末端",
+          "texture": "/assets/enemies/components-v1/ash-cannon-bug/part_025.png",
+          "joint": "right-leg-2-tip"
+        },
+        {
+          "id": "cannon-barrel",
+          "name": "灰烬炮管",
+          "texture": "/assets/enemies/components-v1/ash-cannon-bug/part_008.png",
+          "joint": "cannon"
+        },
+        {
+          "id": "cannon-muzzle-art",
+          "name": "炮口骨环",
+          "texture": "/assets/enemies/components-v1/ash-cannon-bug/part_009.png",
+          "joint": "cannon-muzzle"
+        }
+      ],
+      "actions": [
+        "idle",
+        "attack",
+        "hit",
+        "death",
+        "move"
+      ],
+      "floating": false,
+      "supports": [
+        "left-leg-0-end",
+        "left-leg-1-end",
+        "left-leg-2-end",
+        "right-leg-0-end",
+        "right-leg-1-end",
+        "right-leg-2-end"
+      ]
+    },
+    {
+      "enemyId": "furnace-beetle",
+      "name": "炉爆甲虫 · 骨架预览",
+      "parts": [
+        {
+          "id": "carapace",
+          "name": "炉膛与燃烧格栅",
+          "texture": "/assets/enemies/components-v1/furnace-beetle/part_001.png",
+          "joint": "furnace"
+        },
+        {
+          "id": "belly-art",
+          "name": "炉底骨环",
+          "texture": "/assets/enemies/components-v1/furnace-beetle/part_014.png",
+          "joint": "abdomen"
+        },
+        {
+          "id": "head-art",
+          "name": "炉虫熔眼头甲",
+          "texture": "/assets/enemies/components-v1/furnace-beetle/part_011.png",
+          "joint": "head"
+        },
+        {
+          "id": "left-shutter-art",
+          "name": "左炉门",
+          "texture": "/assets/enemies/components-v1/furnace-beetle/part_002.png",
+          "joint": "left-shutter"
+        },
+        {
+          "id": "left-chimney-art",
+          "name": "左烟道与巡铃",
+          "texture": "/assets/enemies/components-v1/furnace-beetle/part_005.png",
+          "joint": "left-chimney"
+        },
+        {
+          "id": "left-leg-0-upper",
+          "name": "左炉足1上段",
+          "texture": "/assets/enemies/components-v1/furnace-beetle/part_012.png",
+          "joint": "left-leg-0"
+        },
+        {
+          "id": "left-leg-0-segment-1",
+          "name": "左炉足1下段",
+          "texture": "/assets/enemies/components-v1/furnace-beetle/part_012.png",
+          "joint": "left-leg-0-hinge-1"
+        },
+        {
+          "id": "left-leg-0-segment-2",
+          "name": "左炉足1末端",
+          "texture": "/assets/enemies/components-v1/furnace-beetle/part_012.png",
+          "joint": "left-leg-0-hinge-2"
+        },
+        {
+          "id": "left-leg-1-upper",
+          "name": "左炉足2上段",
+          "texture": "/assets/enemies/components-v1/furnace-beetle/part_012.png",
+          "joint": "left-leg-1"
+        },
+        {
+          "id": "left-leg-1-segment-1",
+          "name": "左炉足2下段",
+          "texture": "/assets/enemies/components-v1/furnace-beetle/part_012.png",
+          "joint": "left-leg-1-hinge-1"
+        },
+        {
+          "id": "left-leg-1-segment-2",
+          "name": "左炉足2末端",
+          "texture": "/assets/enemies/components-v1/furnace-beetle/part_012.png",
+          "joint": "left-leg-1-hinge-2"
+        },
+        {
+          "id": "left-bell-art",
+          "name": "左炉铃",
+          "texture": "/assets/enemies/components-v1/furnace-beetle/part_007.png",
+          "joint": "left-bell"
+        },
+        {
+          "id": "right-shutter-art",
+          "name": "右炉门",
+          "texture": "/assets/enemies/components-v1/furnace-beetle/part_003.png",
+          "joint": "right-shutter"
+        },
+        {
+          "id": "right-chimney-art",
+          "name": "右烟道与巡铃",
+          "texture": "/assets/enemies/components-v1/furnace-beetle/part_006.png",
+          "joint": "right-chimney"
+        },
+        {
+          "id": "right-leg-0-upper",
+          "name": "右炉足1上段",
+          "texture": "/assets/enemies/components-v1/furnace-beetle/part_013.png",
+          "joint": "right-leg-0"
+        },
+        {
+          "id": "right-leg-0-segment-1",
+          "name": "右炉足1下段",
+          "texture": "/assets/enemies/components-v1/furnace-beetle/part_013.png",
+          "joint": "right-leg-0-hinge-1"
+        },
+        {
+          "id": "right-leg-0-segment-2",
+          "name": "右炉足1末端",
+          "texture": "/assets/enemies/components-v1/furnace-beetle/part_013.png",
+          "joint": "right-leg-0-hinge-2"
+        },
+        {
+          "id": "right-leg-1-upper",
+          "name": "右炉足2上段",
+          "texture": "/assets/enemies/components-v1/furnace-beetle/part_013.png",
+          "joint": "right-leg-1"
+        },
+        {
+          "id": "right-leg-1-segment-1",
+          "name": "右炉足2下段",
+          "texture": "/assets/enemies/components-v1/furnace-beetle/part_013.png",
+          "joint": "right-leg-1-hinge-1"
+        },
+        {
+          "id": "right-leg-1-segment-2",
+          "name": "右炉足2末端",
+          "texture": "/assets/enemies/components-v1/furnace-beetle/part_013.png",
+          "joint": "right-leg-1-hinge-2"
+        },
+        {
+          "id": "right-bell-art",
+          "name": "右炉铃",
+          "texture": "/assets/enemies/components-v1/furnace-beetle/part_007.png",
+          "joint": "right-bell"
+        }
+      ],
+      "actions": [
+        "idle",
+        "attack",
+        "hit",
+        "death",
+        "move"
+      ],
+      "floating": false,
+      "supports": [
+        "left-leg-0-segment-2",
+        "left-leg-1-segment-2",
+        "right-leg-0-segment-2",
+        "right-leg-1-segment-2"
+      ]
+    },
+    {
+      "enemyId": "thorn-shell-flower",
+      "name": "棘壳花 · 骨架预览",
+      "parts": [
+        {
+          "id": "root-ball",
+          "name": "棘壳根球",
+          "texture": "/assets/enemies/components-v1/thorn-shell-flower/part_013.png",
+          "joint": "root"
+        },
+        {
+          "id": "lower-stem-art",
+          "name": "下棘茎",
+          "texture": "/assets/enemies/components-v1/thorn-shell-flower/part_006.png",
+          "joint": "lower-stem"
+        },
+        {
+          "id": "upper-stem-art",
+          "name": "上棘茎",
+          "texture": "/assets/enemies/components-v1/thorn-shell-flower/part_006.png",
+          "joint": "upper-stem"
+        },
+        {
+          "id": "crown-art",
+          "name": "棘壳花冠与口环",
+          "texture": "/assets/enemies/components-v1/thorn-shell-flower/part_003.png",
+          "joint": "crown"
+        },
+        {
+          "id": "eye-art",
+          "name": "花眼",
+          "texture": "/assets/enemies/components-v1/thorn-shell-flower/part_005.png",
+          "joint": "eye"
+        },
+        {
+          "id": "left-shell-art",
+          "name": "左棘壳瓣",
+          "texture": "/assets/enemies/components-v1/thorn-shell-flower/part_001.png",
+          "joint": "left-shell"
+        },
+        {
+          "id": "left-thorn-upper",
+          "name": "左刺枝上段",
+          "texture": "/assets/enemies/components-v1/thorn-shell-flower/part_008.png",
+          "joint": "left-thorn"
+        },
+        {
+          "id": "left-thorn-segment-1",
+          "name": "左刺枝下段",
+          "texture": "/assets/enemies/components-v1/thorn-shell-flower/part_008.png",
+          "joint": "left-thorn-hinge-1"
+        },
+        {
+          "id": "left-leaf-art",
+          "name": "左苔垂叶",
+          "texture": "/assets/enemies/components-v1/thorn-shell-flower/part_009.png",
+          "joint": "left-leaf"
+        },
+        {
+          "id": "left-root-upper",
+          "name": "左行根上段",
+          "texture": "/assets/enemies/components-v1/thorn-shell-flower/part_011.png",
+          "joint": "left-root"
+        },
+        {
+          "id": "left-root-segment-1",
+          "name": "左行根下段",
+          "texture": "/assets/enemies/components-v1/thorn-shell-flower/part_011.png",
+          "joint": "left-root-hinge-1"
+        },
+        {
+          "id": "right-shell-art",
+          "name": "右棘壳瓣",
+          "texture": "/assets/enemies/components-v1/thorn-shell-flower/part_002.png",
+          "joint": "right-shell"
+        },
+        {
+          "id": "right-thorn-upper",
+          "name": "右刺枝上段",
+          "texture": "/assets/enemies/components-v1/thorn-shell-flower/part_007.png",
+          "joint": "right-thorn"
+        },
+        {
+          "id": "right-thorn-segment-1",
+          "name": "右刺枝下段",
+          "texture": "/assets/enemies/components-v1/thorn-shell-flower/part_007.png",
+          "joint": "right-thorn-hinge-1"
+        },
+        {
+          "id": "right-leaf-art",
+          "name": "右苔垂叶",
+          "texture": "/assets/enemies/components-v1/thorn-shell-flower/part_010.png",
+          "joint": "right-leaf"
+        },
+        {
+          "id": "right-root-upper",
+          "name": "右行根上段",
+          "texture": "/assets/enemies/components-v1/thorn-shell-flower/part_012.png",
+          "joint": "right-root"
+        },
+        {
+          "id": "right-root-segment-1",
+          "name": "右行根下段",
+          "texture": "/assets/enemies/components-v1/thorn-shell-flower/part_012.png",
+          "joint": "right-root-hinge-1"
+        }
+      ],
+      "actions": [
+        "idle",
+        "attack",
+        "hit",
+        "death",
+        "move"
+      ],
+      "floating": false,
+      "supports": [
+        "left-root-segment-1",
+        "right-root-segment-1"
+      ]
+    },
+    {
+      "enemyId": "water-leech-swarm",
+      "name": "水尸蛭群 · 骨架预览",
+      "parts": [
+        {
+          "id": "leech-0-body-upper",
+          "name": "尸蛭1环节腹上段",
+          "texture": "/assets/enemies/components-v1/water-leech-swarm/part_003.png",
+          "joint": "leech-0-body"
+        },
+        {
+          "id": "leech-0-body-segment-1",
+          "name": "尸蛭1环节腹下段",
+          "texture": "/assets/enemies/components-v1/water-leech-swarm/part_003.png",
+          "joint": "leech-0-body-hinge-1"
+        },
+        {
+          "id": "leech-0-tail-art",
+          "name": "尸蛭1尾鳍",
+          "texture": "/assets/enemies/components-v1/water-leech-swarm/part_002.png",
+          "joint": "leech-0-tail"
+        },
+        {
+          "id": "leech-0-head-art",
+          "name": "尸蛭1眼颅与上颚",
+          "texture": "/assets/enemies/components-v1/water-leech-swarm/part_004.png",
+          "joint": "leech-0-head"
+        },
+        {
+          "id": "leech-0-jaw-art",
+          "name": "尸蛭1吸附下颚",
+          "texture": "/assets/enemies/components-v1/water-leech-swarm/part_004.png",
+          "joint": "leech-0-jaw"
+        },
+        {
+          "id": "leech-0-fin-art",
+          "name": "尸蛭1背鳍",
+          "texture": "/assets/enemies/components-v1/water-leech-swarm/part_001.png",
+          "joint": "leech-0-fin"
+        },
+        {
+          "id": "leech-1-body-upper",
+          "name": "尸蛭2环节腹上段",
+          "texture": "/assets/enemies/components-v1/water-leech-swarm/part_008.png",
+          "joint": "leech-1-body"
+        },
+        {
+          "id": "leech-1-body-segment-1",
+          "name": "尸蛭2环节腹下段",
+          "texture": "/assets/enemies/components-v1/water-leech-swarm/part_008.png",
+          "joint": "leech-1-body-hinge-1"
+        },
+        {
+          "id": "leech-1-tail-art",
+          "name": "尸蛭2尾鳍",
+          "texture": "/assets/enemies/components-v1/water-leech-swarm/part_007.png",
+          "joint": "leech-1-tail"
+        },
+        {
+          "id": "leech-1-head-art",
+          "name": "尸蛭2眼颅与上颚",
+          "texture": "/assets/enemies/components-v1/water-leech-swarm/part_009.png",
+          "joint": "leech-1-head"
+        },
+        {
+          "id": "leech-1-jaw-art",
+          "name": "尸蛭2吸附下颚",
+          "texture": "/assets/enemies/components-v1/water-leech-swarm/part_009.png",
+          "joint": "leech-1-jaw"
+        },
+        {
+          "id": "leech-1-fin-art",
+          "name": "尸蛭2背鳍",
+          "texture": "/assets/enemies/components-v1/water-leech-swarm/part_006.png",
+          "joint": "leech-1-fin"
+        },
+        {
+          "id": "leech-2-body-upper",
+          "name": "尸蛭3环节腹上段",
+          "texture": "/assets/enemies/components-v1/water-leech-swarm/part_014.png",
+          "joint": "leech-2-body"
+        },
+        {
+          "id": "leech-2-body-segment-1",
+          "name": "尸蛭3环节腹下段",
+          "texture": "/assets/enemies/components-v1/water-leech-swarm/part_014.png",
+          "joint": "leech-2-body-hinge-1"
+        },
+        {
+          "id": "leech-2-tail-art",
+          "name": "尸蛭3尾鳍",
+          "texture": "/assets/enemies/components-v1/water-leech-swarm/part_012.png",
+          "joint": "leech-2-tail"
+        },
+        {
+          "id": "leech-2-head-art",
+          "name": "尸蛭3眼颅与上颚",
+          "texture": "/assets/enemies/components-v1/water-leech-swarm/part_013.png",
+          "joint": "leech-2-head"
+        },
+        {
+          "id": "leech-2-jaw-art",
+          "name": "尸蛭3吸附下颚",
+          "texture": "/assets/enemies/components-v1/water-leech-swarm/part_013.png",
+          "joint": "leech-2-jaw"
+        },
+        {
+          "id": "leech-2-fin-art",
+          "name": "尸蛭3背鳍",
+          "texture": "/assets/enemies/components-v1/water-leech-swarm/part_011.png",
+          "joint": "leech-2-fin"
+        }
+      ],
+      "actions": [
+        "idle",
+        "attack",
+        "hit",
+        "death",
+        "move"
+      ],
+      "floating": false,
+      "supports": [
+        "leech-0-body-upper",
+        "leech-1-body-upper",
+        "leech-2-body-upper"
+      ]
+    },
+    {
+      "enemyId": "whirlpool-eye-sac",
+      "name": "涡眼浮囊 · 骨架预览",
+      "parts": [
+        {
+          "id": "vortex-sac",
+          "name": "涡流浮囊",
+          "texture": "/assets/enemies/components-v1/whirlpool-eye-sac/part_003.png",
+          "joint": "root"
+        },
+        {
+          "id": "crown-art",
+          "name": "潮焰骨冠下环",
+          "texture": "/assets/enemies/components-v1/whirlpool-eye-sac/part_001.png",
+          "joint": "crown"
+        },
+        {
+          "id": "crown-tip-art",
+          "name": "潮焰冠尖",
+          "texture": "/assets/enemies/components-v1/whirlpool-eye-sac/part_001.png",
+          "joint": "crown-tip"
+        },
+        {
+          "id": "eye-ring-art",
+          "name": "眼眶骨环",
+          "texture": "/assets/enemies/components-v1/whirlpool-eye-sac/part_004.png",
+          "joint": "eye-ring"
+        },
+        {
+          "id": "eye-art",
+          "name": "涡眼",
+          "texture": "/assets/enemies/components-v1/whirlpool-eye-sac/part_005.png",
+          "joint": "eye"
+        },
+        {
+          "id": "veil-art",
+          "name": "浮囊垂膜",
+          "texture": "/assets/enemies/components-v1/whirlpool-eye-sac/part_008.png",
+          "joint": "veil"
+        },
+        {
+          "id": "left-fin-upper",
+          "name": "左潮流鳍上段",
+          "texture": "/assets/enemies/components-v1/whirlpool-eye-sac/part_010.png",
+          "joint": "left-fin"
+        },
+        {
+          "id": "left-fin-segment-1",
+          "name": "左潮流鳍下段",
+          "texture": "/assets/enemies/components-v1/whirlpool-eye-sac/part_010.png",
+          "joint": "left-fin-hinge-1"
+        },
+        {
+          "id": "right-fin-upper",
+          "name": "右潮流鳍上段",
+          "texture": "/assets/enemies/components-v1/whirlpool-eye-sac/part_011.png",
+          "joint": "right-fin"
+        },
+        {
+          "id": "right-fin-segment-1",
+          "name": "右潮流鳍下段",
+          "texture": "/assets/enemies/components-v1/whirlpool-eye-sac/part_011.png",
+          "joint": "right-fin-hinge-1"
+        },
+        {
+          "id": "tether-upper",
+          "name": "潮丝触须上段",
+          "texture": "/assets/enemies/components-v1/whirlpool-eye-sac/part_006.png",
+          "joint": "tether"
+        },
+        {
+          "id": "tether-segment-1",
+          "name": "潮丝触须下段",
+          "texture": "/assets/enemies/components-v1/whirlpool-eye-sac/part_006.png",
+          "joint": "tether-hinge-1"
+        },
+        {
+          "id": "tether-segment-2",
+          "name": "潮丝触须末端",
+          "texture": "/assets/enemies/components-v1/whirlpool-eye-sac/part_006.png",
+          "joint": "tether-hinge-2"
+        }
+      ],
+      "actions": [
+        "idle",
+        "attack",
+        "hit",
+        "death",
+        "move"
+      ],
+      "floating": true,
+      "supports": []
+    },
+    {
+      "enemyId": "molten-core-beast",
+      "name": "熔核囊兽 · 骨架预览",
+      "parts": [
+        {
+          "id": "chest",
+          "name": "胸腹",
+          "texture": "/assets/enemies/components-v1/molten-core-beast/part_003.png",
+          "joint": "root"
+        },
+        {
+          "id": "back",
+          "name": "背脊",
+          "texture": "/assets/enemies/components-v1/molten-core-beast/part_004.png",
+          "joint": "root"
+        },
+        {
+          "id": "rump",
+          "name": "后身甲",
+          "texture": "/assets/enemies/components-v1/molten-core-beast/part_005.png",
+          "joint": "haunch"
+        },
+        {
+          "id": "head-art",
+          "name": "面部",
+          "texture": "/assets/enemies/components-v1/molten-core-beast/part_001.png",
+          "joint": "head"
+        },
+        {
+          "id": "jaw-art",
+          "name": "下颌",
+          "texture": "/assets/enemies/components-v1/molten-core-beast/part_002.png",
+          "joint": "jaw"
+        },
+        {
+          "id": "left-front-upper",
+          "name": "左前上肢",
+          "texture": "/assets/enemies/components-v1/molten-core-beast/part_006.png",
+          "joint": "left-front-hip"
+        },
+        {
+          "id": "left-front-lower",
+          "name": "左前下肢",
+          "texture": "/assets/enemies/components-v1/molten-core-beast/part_007.png",
+          "joint": "left-front-knee"
+        },
+        {
+          "id": "left-front-foot",
+          "name": "左前足爪",
+          "texture": "/assets/enemies/components-v1/molten-core-beast/part_008.png",
+          "joint": "left-front-paw"
+        },
+        {
+          "id": "left-hind-upper",
+          "name": "左后上肢",
+          "texture": "/assets/enemies/components-v1/molten-core-beast/part_009.png",
+          "joint": "left-hind-hip"
+        },
+        {
+          "id": "left-hind-lower",
+          "name": "左后下肢",
+          "texture": "/assets/enemies/components-v1/molten-core-beast/part_010.png",
+          "joint": "left-hind-knee"
+        },
+        {
+          "id": "left-hind-foot",
+          "name": "左后足爪",
+          "texture": "/assets/enemies/components-v1/molten-core-beast/part_008.png",
+          "joint": "left-hind-paw"
+        },
+        {
+          "id": "right-front-upper",
+          "name": "右前上肢",
+          "texture": "/assets/enemies/components-v1/molten-core-beast/part_006.png",
+          "joint": "right-front-hip"
+        },
+        {
+          "id": "right-front-lower",
+          "name": "右前下肢",
+          "texture": "/assets/enemies/components-v1/molten-core-beast/part_007.png",
+          "joint": "right-front-knee"
+        },
+        {
+          "id": "right-front-foot",
+          "name": "右前足爪",
+          "texture": "/assets/enemies/components-v1/molten-core-beast/part_008.png",
+          "joint": "right-front-paw"
+        },
+        {
+          "id": "right-hind-upper",
+          "name": "右后上肢",
+          "texture": "/assets/enemies/components-v1/molten-core-beast/part_009.png",
+          "joint": "right-hind-hip"
+        },
+        {
+          "id": "right-hind-lower",
+          "name": "右后下肢",
+          "texture": "/assets/enemies/components-v1/molten-core-beast/part_010.png",
+          "joint": "right-hind-knee"
+        },
+        {
+          "id": "right-hind-foot",
+          "name": "右后足爪",
+          "texture": "/assets/enemies/components-v1/molten-core-beast/part_008.png",
+          "joint": "right-hind-paw"
+        },
+        {
+          "id": "tail-art",
+          "name": "尾",
+          "texture": "/assets/enemies/components-v1/molten-core-beast/part_011.png",
+          "joint": "tail"
+        },
+        {
+          "id": "left-lung-art",
+          "name": "左熔核肺囊",
+          "texture": "/assets/enemies/components-v1/molten-core-beast/part_013.png",
+          "joint": "left-lung"
+        },
+        {
+          "id": "left-auxiliary-upper",
+          "name": "左副上肢",
+          "texture": "/assets/enemies/components-v1/molten-core-beast/part_006.png",
+          "joint": "left-auxiliary-hip"
+        },
+        {
+          "id": "left-auxiliary-lower",
+          "name": "左副下肢",
+          "texture": "/assets/enemies/components-v1/molten-core-beast/part_007.png",
+          "joint": "left-auxiliary-knee"
+        },
+        {
+          "id": "left-auxiliary-foot",
+          "name": "左副足爪",
+          "texture": "/assets/enemies/components-v1/molten-core-beast/part_008.png",
+          "joint": "left-auxiliary-paw"
+        },
+        {
+          "id": "right-lung-art",
+          "name": "右熔核肺囊",
+          "texture": "/assets/enemies/components-v1/molten-core-beast/part_014.png",
+          "joint": "right-lung"
+        },
+        {
+          "id": "right-auxiliary-upper",
+          "name": "右副上肢",
+          "texture": "/assets/enemies/components-v1/molten-core-beast/part_006.png",
+          "joint": "right-auxiliary-hip"
+        },
+        {
+          "id": "right-auxiliary-lower",
+          "name": "右副下肢",
+          "texture": "/assets/enemies/components-v1/molten-core-beast/part_007.png",
+          "joint": "right-auxiliary-knee"
+        },
+        {
+          "id": "right-auxiliary-foot",
+          "name": "右副足爪",
+          "texture": "/assets/enemies/components-v1/molten-core-beast/part_008.png",
+          "joint": "right-auxiliary-paw"
+        },
+        {
+          "id": "dorsal-art",
+          "name": "熔脊",
+          "texture": "/assets/enemies/components-v1/molten-core-beast/part_015.png",
+          "joint": "dorsal"
+        }
+      ],
+      "actions": [
+        "idle",
+        "attack",
+        "hit",
+        "death",
+        "move"
+      ],
+      "floating": false,
+      "supports": [
+        "left-front-foot",
+        "left-hind-foot",
+        "right-front-foot",
+        "right-hind-foot",
+        "left-auxiliary-foot",
+        "right-auxiliary-foot"
+      ]
+    },
+    {
+      "enemyId": "redwheel-fire-crow",
+      "name": "赤轮火鸦 · 骨架预览",
+      "parts": [
+        {
+          "id": "breast",
+          "name": "胸羽",
+          "texture": "/assets/enemies/components-v1/redwheel-fire-crow/part_003.png",
+          "joint": "root"
+        },
+        {
+          "id": "back",
+          "name": "背羽",
+          "texture": "/assets/enemies/components-v1/redwheel-fire-crow/part_004.png",
+          "joint": "root"
+        },
+        {
+          "id": "left-face",
+          "name": "左折面脸",
+          "texture": "/assets/enemies/components-v1/redwheel-fire-crow/part_001.png",
+          "joint": "head"
+        },
+        {
+          "id": "right-face",
+          "name": "右折面脸",
+          "texture": "/assets/enemies/components-v1/redwheel-fire-crow/part_001.png",
+          "joint": "head"
+        },
+        {
+          "id": "left-jaw",
+          "name": "左折面下颌",
+          "texture": "/assets/enemies/components-v1/redwheel-fire-crow/part_002.png",
+          "joint": "jaw"
+        },
+        {
+          "id": "right-jaw",
+          "name": "右折面下颌",
+          "texture": "/assets/enemies/components-v1/redwheel-fire-crow/part_002.png",
+          "joint": "jaw"
+        },
+        {
+          "id": "left-inner-wing",
+          "name": "左内翼",
+          "texture": "/assets/enemies/components-v1/redwheel-fire-crow/part_005.png",
+          "joint": "left-wing"
+        },
+        {
+          "id": "left-outer-wing",
+          "name": "左外翼",
+          "texture": "/assets/enemies/components-v1/redwheel-fire-crow/part_006.png",
+          "joint": "left-wing-tip"
+        },
+        {
+          "id": "left-leg-art",
+          "name": "左鸟胫",
+          "texture": "/assets/enemies/components-v1/redwheel-fire-crow/part_007.png",
+          "joint": "left-leg"
+        },
+        {
+          "id": "left-foot",
+          "name": "左鸟爪",
+          "texture": "/assets/enemies/components-v1/redwheel-fire-crow/part_008.png",
+          "joint": "left-paw"
+        },
+        {
+          "id": "right-inner-wing",
+          "name": "右内翼",
+          "texture": "/assets/enemies/components-v1/redwheel-fire-crow/part_005.png",
+          "joint": "right-wing"
+        },
+        {
+          "id": "right-outer-wing",
+          "name": "右外翼",
+          "texture": "/assets/enemies/components-v1/redwheel-fire-crow/part_006.png",
+          "joint": "right-wing-tip"
+        },
+        {
+          "id": "right-leg-art",
+          "name": "右鸟胫",
+          "texture": "/assets/enemies/components-v1/redwheel-fire-crow/part_007.png",
+          "joint": "right-leg"
+        },
+        {
+          "id": "right-foot",
+          "name": "右鸟爪",
+          "texture": "/assets/enemies/components-v1/redwheel-fire-crow/part_008.png",
+          "joint": "right-paw"
+        },
+        {
+          "id": "wheel-hub",
+          "name": "赤轮核",
+          "texture": "/assets/enemies/components-v1/redwheel-fire-crow/part_009.png",
+          "joint": "wheel"
+        },
+        {
+          "id": "wheel-spoke-0-art",
+          "name": "轮焰羽辐1",
+          "texture": "/assets/enemies/components-v1/redwheel-fire-crow/part_010.png",
+          "joint": "wheel-spoke-0"
+        },
+        {
+          "id": "wheel-spoke-1-art",
+          "name": "轮焰羽辐2",
+          "texture": "/assets/enemies/components-v1/redwheel-fire-crow/part_011.png",
+          "joint": "wheel-spoke-1"
+        },
+        {
+          "id": "wheel-spoke-2-art",
+          "name": "轮焰羽辐3",
+          "texture": "/assets/enemies/components-v1/redwheel-fire-crow/part_012.png",
+          "joint": "wheel-spoke-2"
+        },
+        {
+          "id": "wheel-spoke-3-art",
+          "name": "轮焰羽辐4",
+          "texture": "/assets/enemies/components-v1/redwheel-fire-crow/part_013.png",
+          "joint": "wheel-spoke-3"
+        }
+      ],
+      "actions": [
+        "idle",
+        "attack",
+        "hit",
+        "death",
+        "move"
+      ],
+      "floating": true,
+      "supports": []
+    },
+    {
+      "enemyId": "cinder-curse-lamp-swarm",
+      "name": "烬咒灯群 · 骨架预览",
+      "parts": [
+        {
+          "id": "lamp-0-roof",
+          "name": "咒灯1灯檐",
+          "texture": "/assets/enemies/components-v1/cinder-curse-lamp-swarm/part_007.png",
+          "joint": "lamp-0"
+        },
+        {
+          "id": "lamp-0-core-art",
+          "name": "咒灯1焰眼灯芯",
+          "texture": "/assets/enemies/components-v1/cinder-curse-lamp-swarm/part_013.png",
+          "joint": "lamp-0-core"
+        },
+        {
+          "id": "lamp-0-left-bar-art",
+          "name": "咒灯1左笼栏",
+          "texture": "/assets/enemies/components-v1/cinder-curse-lamp-swarm/part_014.png",
+          "joint": "lamp-0-left-bar"
+        },
+        {
+          "id": "lamp-0-left-cloth-upper",
+          "name": "咒灯1左咒幡上段",
+          "texture": "/assets/enemies/components-v1/cinder-curse-lamp-swarm/part_017.png",
+          "joint": "lamp-0-left-cloth"
+        },
+        {
+          "id": "lamp-0-left-cloth-segment-1",
+          "name": "咒灯1左咒幡下段",
+          "texture": "/assets/enemies/components-v1/cinder-curse-lamp-swarm/part_017.png",
+          "joint": "lamp-0-left-cloth-hinge-1"
+        },
+        {
+          "id": "lamp-0-right-bar-art",
+          "name": "咒灯1右笼栏",
+          "texture": "/assets/enemies/components-v1/cinder-curse-lamp-swarm/part_014.png",
+          "joint": "lamp-0-right-bar"
+        },
+        {
+          "id": "lamp-0-right-cloth-upper",
+          "name": "咒灯1右咒幡上段",
+          "texture": "/assets/enemies/components-v1/cinder-curse-lamp-swarm/part_018.png",
+          "joint": "lamp-0-right-cloth"
+        },
+        {
+          "id": "lamp-0-right-cloth-segment-1",
+          "name": "咒灯1右咒幡下段",
+          "texture": "/assets/enemies/components-v1/cinder-curse-lamp-swarm/part_018.png",
+          "joint": "lamp-0-right-cloth-hinge-1"
+        },
+        {
+          "id": "lamp-0-tassel-art",
+          "name": "咒灯1垂铃咒穗",
+          "texture": "/assets/enemies/components-v1/cinder-curse-lamp-swarm/part_023.png",
+          "joint": "lamp-0-tassel"
+        },
+        {
+          "id": "lamp-0-flame-art",
+          "name": "咒灯1逸焰",
+          "texture": "/assets/enemies/components-v1/cinder-curse-lamp-swarm/part_026.png",
+          "joint": "lamp-0-flame"
+        },
+        {
+          "id": "lamp-1-roof",
+          "name": "咒灯2灯檐",
+          "texture": "/assets/enemies/components-v1/cinder-curse-lamp-swarm/part_007.png",
+          "joint": "lamp-1"
+        },
+        {
+          "id": "lamp-1-core-art",
+          "name": "咒灯2焰眼灯芯",
+          "texture": "/assets/enemies/components-v1/cinder-curse-lamp-swarm/part_013.png",
+          "joint": "lamp-1-core"
+        },
+        {
+          "id": "lamp-1-left-bar-art",
+          "name": "咒灯2左笼栏",
+          "texture": "/assets/enemies/components-v1/cinder-curse-lamp-swarm/part_014.png",
+          "joint": "lamp-1-left-bar"
+        },
+        {
+          "id": "lamp-1-left-cloth-upper",
+          "name": "咒灯2左咒幡上段",
+          "texture": "/assets/enemies/components-v1/cinder-curse-lamp-swarm/part_017.png",
+          "joint": "lamp-1-left-cloth"
+        },
+        {
+          "id": "lamp-1-left-cloth-segment-1",
+          "name": "咒灯2左咒幡下段",
+          "texture": "/assets/enemies/components-v1/cinder-curse-lamp-swarm/part_017.png",
+          "joint": "lamp-1-left-cloth-hinge-1"
+        },
+        {
+          "id": "lamp-1-right-bar-art",
+          "name": "咒灯2右笼栏",
+          "texture": "/assets/enemies/components-v1/cinder-curse-lamp-swarm/part_014.png",
+          "joint": "lamp-1-right-bar"
+        },
+        {
+          "id": "lamp-1-right-cloth-upper",
+          "name": "咒灯2右咒幡上段",
+          "texture": "/assets/enemies/components-v1/cinder-curse-lamp-swarm/part_018.png",
+          "joint": "lamp-1-right-cloth"
+        },
+        {
+          "id": "lamp-1-right-cloth-segment-1",
+          "name": "咒灯2右咒幡下段",
+          "texture": "/assets/enemies/components-v1/cinder-curse-lamp-swarm/part_018.png",
+          "joint": "lamp-1-right-cloth-hinge-1"
+        },
+        {
+          "id": "lamp-1-tassel-art",
+          "name": "咒灯2垂铃咒穗",
+          "texture": "/assets/enemies/components-v1/cinder-curse-lamp-swarm/part_023.png",
+          "joint": "lamp-1-tassel"
+        },
+        {
+          "id": "lamp-1-flame-art",
+          "name": "咒灯2逸焰",
+          "texture": "/assets/enemies/components-v1/cinder-curse-lamp-swarm/part_026.png",
+          "joint": "lamp-1-flame"
+        },
+        {
+          "id": "lamp-2-roof",
+          "name": "咒灯3灯檐",
+          "texture": "/assets/enemies/components-v1/cinder-curse-lamp-swarm/part_007.png",
+          "joint": "lamp-2"
+        },
+        {
+          "id": "lamp-2-core-art",
+          "name": "咒灯3焰眼灯芯",
+          "texture": "/assets/enemies/components-v1/cinder-curse-lamp-swarm/part_013.png",
+          "joint": "lamp-2-core"
+        },
+        {
+          "id": "lamp-2-left-bar-art",
+          "name": "咒灯3左笼栏",
+          "texture": "/assets/enemies/components-v1/cinder-curse-lamp-swarm/part_014.png",
+          "joint": "lamp-2-left-bar"
+        },
+        {
+          "id": "lamp-2-left-cloth-upper",
+          "name": "咒灯3左咒幡上段",
+          "texture": "/assets/enemies/components-v1/cinder-curse-lamp-swarm/part_017.png",
+          "joint": "lamp-2-left-cloth"
+        },
+        {
+          "id": "lamp-2-left-cloth-segment-1",
+          "name": "咒灯3左咒幡下段",
+          "texture": "/assets/enemies/components-v1/cinder-curse-lamp-swarm/part_017.png",
+          "joint": "lamp-2-left-cloth-hinge-1"
+        },
+        {
+          "id": "lamp-2-right-bar-art",
+          "name": "咒灯3右笼栏",
+          "texture": "/assets/enemies/components-v1/cinder-curse-lamp-swarm/part_014.png",
+          "joint": "lamp-2-right-bar"
+        },
+        {
+          "id": "lamp-2-right-cloth-upper",
+          "name": "咒灯3右咒幡上段",
+          "texture": "/assets/enemies/components-v1/cinder-curse-lamp-swarm/part_018.png",
+          "joint": "lamp-2-right-cloth"
+        },
+        {
+          "id": "lamp-2-right-cloth-segment-1",
+          "name": "咒灯3右咒幡下段",
+          "texture": "/assets/enemies/components-v1/cinder-curse-lamp-swarm/part_018.png",
+          "joint": "lamp-2-right-cloth-hinge-1"
+        },
+        {
+          "id": "lamp-2-tassel-art",
+          "name": "咒灯3垂铃咒穗",
+          "texture": "/assets/enemies/components-v1/cinder-curse-lamp-swarm/part_023.png",
+          "joint": "lamp-2-tassel"
+        },
+        {
+          "id": "lamp-2-flame-art",
+          "name": "咒灯3逸焰",
+          "texture": "/assets/enemies/components-v1/cinder-curse-lamp-swarm/part_026.png",
+          "joint": "lamp-2-flame"
+        }
+      ],
+      "actions": [
+        "idle",
+        "attack",
+        "hit",
+        "death",
+        "move"
+      ],
+      "floating": true,
+      "supports": []
+    },
+    {
+      "enemyId": "tide-rite-matriarch",
+      "name": "潮祀母体 · 骨架预览",
+      "parts": [
+        {
+          "id": "chest",
+          "name": "潮祀胸甲",
+          "texture": "/assets/enemies/components-v1/tide-rite-matriarch/part_003.png",
+          "joint": "root"
+        },
+        {
+          "id": "face",
+          "name": "潮祀面",
+          "texture": "/assets/enemies/components-v1/tide-rite-matriarch/part_001.png",
+          "joint": "head"
+        },
+        {
+          "id": "jaw-art",
+          "name": "潮祀下颌",
+          "texture": "/assets/enemies/components-v1/tide-rite-matriarch/part_002.png",
+          "joint": "jaw"
+        },
+        {
+          "id": "crown",
+          "name": "召潮冠",
+          "texture": "/assets/enemies/components-v1/tide-rite-matriarch/part_005.png",
+          "joint": "head"
+        },
+        {
+          "id": "skirt-art",
+          "name": "潮祀悬裾",
+          "texture": "/assets/enemies/components-v1/tide-rite-matriarch/part_004.png",
+          "joint": "skirt"
+        },
+        {
+          "id": "left-arm-part-0",
+          "name": "左主上臂",
+          "texture": "/assets/enemies/components-v1/tide-rite-matriarch/part_007.png",
+          "joint": "left-arm"
+        },
+        {
+          "id": "left-arm-part-1",
+          "name": "左主前臂",
+          "texture": "/assets/enemies/components-v1/tide-rite-matriarch/part_007.png",
+          "joint": "left-arm-hinge-1"
+        },
+        {
+          "id": "left-arm-part-2",
+          "name": "左主手",
+          "texture": "/assets/enemies/components-v1/tide-rite-matriarch/part_007.png",
+          "joint": "left-arm-hinge-2"
+        },
+        {
+          "id": "left-prayer-part-0",
+          "name": "左副祈上臂",
+          "texture": "/assets/enemies/components-v1/tide-rite-matriarch/part_009.png",
+          "joint": "left-prayer"
+        },
+        {
+          "id": "left-prayer-part-1",
+          "name": "左副祈前臂",
+          "texture": "/assets/enemies/components-v1/tide-rite-matriarch/part_009.png",
+          "joint": "left-prayer-hinge-1"
+        },
+        {
+          "id": "left-prayer-part-2",
+          "name": "左副祈手",
+          "texture": "/assets/enemies/components-v1/tide-rite-matriarch/part_009.png",
+          "joint": "left-prayer-hinge-2"
+        },
+        {
+          "id": "left-veil-art",
+          "name": "左祭服潮翼",
+          "texture": "/assets/enemies/components-v1/tide-rite-matriarch/part_011.png",
+          "joint": "left-veil"
+        },
+        {
+          "id": "right-arm-part-0",
+          "name": "右主上臂",
+          "texture": "/assets/enemies/components-v1/tide-rite-matriarch/part_008.png",
+          "joint": "right-arm"
+        },
+        {
+          "id": "right-arm-part-1",
+          "name": "右主前臂",
+          "texture": "/assets/enemies/components-v1/tide-rite-matriarch/part_008.png",
+          "joint": "right-arm-hinge-1"
+        },
+        {
+          "id": "right-arm-part-2",
+          "name": "右主手",
+          "texture": "/assets/enemies/components-v1/tide-rite-matriarch/part_008.png",
+          "joint": "right-arm-hinge-2"
+        },
+        {
+          "id": "right-prayer-part-0",
+          "name": "右副祈上臂",
+          "texture": "/assets/enemies/components-v1/tide-rite-matriarch/part_010.png",
+          "joint": "right-prayer"
+        },
+        {
+          "id": "right-prayer-part-1",
+          "name": "右副祈前臂",
+          "texture": "/assets/enemies/components-v1/tide-rite-matriarch/part_010.png",
+          "joint": "right-prayer-hinge-1"
+        },
+        {
+          "id": "right-prayer-part-2",
+          "name": "右副祈手",
+          "texture": "/assets/enemies/components-v1/tide-rite-matriarch/part_010.png",
+          "joint": "right-prayer-hinge-2"
+        },
+        {
+          "id": "right-veil-art",
+          "name": "右祭服潮翼",
+          "texture": "/assets/enemies/components-v1/tide-rite-matriarch/part_012.png",
+          "joint": "right-veil"
+        },
+        {
+          "id": "staff-art",
+          "name": "召潮杖",
+          "texture": "/assets/enemies/components-v1/tide-rite-matriarch/part_013.png",
+          "joint": "staff"
+        }
+      ],
+      "actions": [
+        "idle",
+        "attack",
+        "hit",
+        "death",
+        "move"
+      ],
+      "floating": true,
+      "supports": []
+    },
+    {
+      "enemyId": "drown-shadow-hunter",
+      "name": "溺影猎手 · 骨架预览",
+      "parts": [
+        {
+          "id": "rib-cage",
+          "name": "猎手胸肋与腰脊",
+          "texture": "/assets/enemies/components-v1/drown-shadow-hunter/part_011.png",
+          "joint": "root"
+        },
+        {
+          "id": "neck-art",
+          "name": "猎手颈椎",
+          "texture": "/assets/enemies/components-v1/drown-shadow-hunter/part_001.png",
+          "joint": "neck"
+        },
+        {
+          "id": "head-art",
+          "name": "猎手颅骨与湿发",
+          "texture": "/assets/enemies/components-v1/drown-shadow-hunter/part_001.png",
+          "joint": "head"
+        },
+        {
+          "id": "jaw-art",
+          "name": "猎手下颌",
+          "texture": "/assets/enemies/components-v1/drown-shadow-hunter/part_007.png",
+          "joint": "jaw"
+        },
+        {
+          "id": "pelvis-art",
+          "name": "猎手骨盆",
+          "texture": "/assets/enemies/components-v1/drown-shadow-hunter/part_020.png",
+          "joint": "pelvis"
+        },
+        {
+          "id": "left-upper-arm",
+          "name": "左上臂",
+          "texture": "/assets/enemies/components-v1/drown-shadow-hunter/part_010.png",
+          "joint": "left-shoulder"
+        },
+        {
+          "id": "left-forearm",
+          "name": "左前臂",
+          "texture": "/assets/enemies/components-v1/drown-shadow-hunter/part_012.png",
+          "joint": "left-elbow"
+        },
+        {
+          "id": "left-claw",
+          "name": "左手爪",
+          "texture": "/assets/enemies/components-v1/drown-shadow-hunter/part_012.png",
+          "joint": "left-wrist"
+        },
+        {
+          "id": "right-arm-upper",
+          "name": "右持镰臂上段",
+          "texture": "/assets/enemies/components-v1/drown-shadow-hunter/part_008.png",
+          "joint": "right-arm"
+        },
+        {
+          "id": "right-arm-segment-1",
+          "name": "右持镰臂下段",
+          "texture": "/assets/enemies/components-v1/drown-shadow-hunter/part_008.png",
+          "joint": "right-arm-hinge-1"
+        },
+        {
+          "id": "right-arm-segment-2",
+          "name": "右持镰臂末端",
+          "texture": "/assets/enemies/components-v1/drown-shadow-hunter/part_008.png",
+          "joint": "right-arm-hinge-2"
+        },
+        {
+          "id": "scythe-art",
+          "name": "溺影钩镰",
+          "texture": "/assets/enemies/components-v1/drown-shadow-hunter/part_002.png",
+          "joint": "scythe"
+        },
+        {
+          "id": "left-thigh-art",
+          "name": "左大腿",
+          "texture": "/assets/enemies/components-v1/drown-shadow-hunter/part_014.png",
+          "joint": "left-hip"
+        },
+        {
+          "id": "left-shin-art",
+          "name": "左胫骨",
+          "texture": "/assets/enemies/components-v1/drown-shadow-hunter/part_019.png",
+          "joint": "left-knee"
+        },
+        {
+          "id": "left-foot-art",
+          "name": "左足爪",
+          "texture": "/assets/enemies/components-v1/drown-shadow-hunter/part_023.png",
+          "joint": "left-ankle"
+        },
+        {
+          "id": "left-cape-upper",
+          "name": "左湿影披缕上段",
+          "texture": "/assets/enemies/components-v1/drown-shadow-hunter/part_003.png",
+          "joint": "left-cape"
+        },
+        {
+          "id": "left-cape-segment-1",
+          "name": "左湿影披缕下段",
+          "texture": "/assets/enemies/components-v1/drown-shadow-hunter/part_003.png",
+          "joint": "left-cape-hinge-1"
+        },
+        {
+          "id": "right-thigh-art",
+          "name": "右大腿",
+          "texture": "/assets/enemies/components-v1/drown-shadow-hunter/part_013.png",
+          "joint": "right-hip"
+        },
+        {
+          "id": "right-shin-art",
+          "name": "右胫骨",
+          "texture": "/assets/enemies/components-v1/drown-shadow-hunter/part_018.png",
+          "joint": "right-knee"
+        },
+        {
+          "id": "right-foot-art",
+          "name": "右足爪",
+          "texture": "/assets/enemies/components-v1/drown-shadow-hunter/part_022.png",
+          "joint": "right-ankle"
+        },
+        {
+          "id": "right-cape-upper",
+          "name": "右湿影披缕上段",
+          "texture": "/assets/enemies/components-v1/drown-shadow-hunter/part_004.png",
+          "joint": "right-cape"
+        },
+        {
+          "id": "right-cape-segment-1",
+          "name": "右湿影披缕下段",
+          "texture": "/assets/enemies/components-v1/drown-shadow-hunter/part_004.png",
+          "joint": "right-cape-hinge-1"
+        }
+      ],
+      "actions": [
+        "idle",
+        "attack",
+        "hit",
+        "death",
+        "move"
+      ],
+      "floating": false,
+      "supports": [
+        "left-foot-art",
+        "right-foot-art"
+      ]
+    },
+    {
+      "enemyId": "tidal-spore-sac",
+      "name": "群潮孢囊 · 骨架预览",
+      "parts": [
+        {
+          "id": "root-body",
+          "name": "三孔孢囊根体",
+          "texture": "/assets/enemies/components-v1/tidal-spore-sac/part_016.png",
+          "joint": "root"
+        },
+        {
+          "id": "stem-0-part-0",
+          "name": "孢茎1上段",
+          "texture": "/assets/enemies/components-v1/tidal-spore-sac/part_001.png",
+          "joint": "stem-0"
+        },
+        {
+          "id": "stem-0-part-1",
+          "name": "孢茎1下段",
+          "texture": "/assets/enemies/components-v1/tidal-spore-sac/part_001.png",
+          "joint": "stem-0-hinge-1"
+        },
+        {
+          "id": "pod-0-art",
+          "name": "吊囊1",
+          "texture": "/assets/enemies/components-v1/tidal-spore-sac/part_002.png",
+          "joint": "pod-0"
+        },
+        {
+          "id": "stem-1-part-0",
+          "name": "孢茎2上段",
+          "texture": "/assets/enemies/components-v1/tidal-spore-sac/part_004.png",
+          "joint": "stem-1"
+        },
+        {
+          "id": "stem-1-part-1",
+          "name": "孢茎2下段",
+          "texture": "/assets/enemies/components-v1/tidal-spore-sac/part_004.png",
+          "joint": "stem-1-hinge-1"
+        },
+        {
+          "id": "pod-1-art",
+          "name": "吊囊2",
+          "texture": "/assets/enemies/components-v1/tidal-spore-sac/part_003.png",
+          "joint": "pod-1"
+        },
+        {
+          "id": "stem-2-part-0",
+          "name": "孢茎3上段",
+          "texture": "/assets/enemies/components-v1/tidal-spore-sac/part_006.png",
+          "joint": "stem-2"
+        },
+        {
+          "id": "stem-2-part-1",
+          "name": "孢茎3下段",
+          "texture": "/assets/enemies/components-v1/tidal-spore-sac/part_006.png",
+          "joint": "stem-2-hinge-1"
+        },
+        {
+          "id": "pod-2-art",
+          "name": "吊囊3",
+          "texture": "/assets/enemies/components-v1/tidal-spore-sac/part_005.png",
+          "joint": "pod-2"
+        },
+        {
+          "id": "left-leaf-art",
+          "name": "左孢叶",
+          "texture": "/assets/enemies/components-v1/tidal-spore-sac/part_014.png",
+          "joint": "left-leaf"
+        },
+        {
+          "id": "left-root-art",
+          "name": "左行根",
+          "texture": "/assets/enemies/components-v1/tidal-spore-sac/part_018.png",
+          "joint": "left-root"
+        },
+        {
+          "id": "right-leaf-art",
+          "name": "右孢叶",
+          "texture": "/assets/enemies/components-v1/tidal-spore-sac/part_015.png",
+          "joint": "right-leaf"
+        },
+        {
+          "id": "right-root-art",
+          "name": "右行根",
+          "texture": "/assets/enemies/components-v1/tidal-spore-sac/part_019.png",
+          "joint": "right-root"
+        }
+      ],
+      "actions": [
+        "idle",
+        "attack",
+        "hit",
+        "death",
+        "move"
+      ],
+      "floating": false,
+      "supports": [
+        "left-root-art",
+        "right-root-art"
+      ]
+    },
+    {
+      "enemyId": "revenant-guard",
+      "name": "还魂侍卫 · 骨架预览",
+      "parts": [
+        {
+          "id": "chest",
+          "name": "还魂胸甲与魂火",
+          "texture": "/assets/enemies/components-v1/revenant-guard/part_011.png",
+          "joint": "root"
+        },
+        {
+          "id": "neck-art",
+          "name": "还魂颈骨",
+          "texture": "/assets/enemies/components-v1/revenant-guard/part_013.png",
+          "joint": "neck"
+        },
+        {
+          "id": "head-art",
+          "name": "还魂冠盔与颅骨",
+          "texture": "/assets/enemies/components-v1/revenant-guard/part_001.png",
+          "joint": "head"
+        },
+        {
+          "id": "jaw-art",
+          "name": "还魂下颌与魂焰",
+          "texture": "/assets/enemies/components-v1/revenant-guard/part_001.png",
+          "joint": "jaw"
+        },
+        {
+          "id": "skirt",
+          "name": "束甲魂裾",
+          "texture": "/assets/enemies/components-v1/revenant-guard/part_024.png",
+          "joint": "pelvis"
+        },
+        {
+          "id": "left-upper-arm",
+          "name": "左上臂",
+          "texture": "/assets/enemies/components-v1/revenant-guard/part_014.png",
+          "joint": "left-shoulder"
+        },
+        {
+          "id": "left-forearm",
+          "name": "左前臂",
+          "texture": "/assets/enemies/components-v1/revenant-guard/part_021.png",
+          "joint": "left-elbow"
+        },
+        {
+          "id": "left-hand",
+          "name": "左骨爪",
+          "texture": "/assets/enemies/components-v1/revenant-guard/part_021.png",
+          "joint": "left-wrist"
+        },
+        {
+          "id": "left-leg-part-0",
+          "name": "左甲足上段",
+          "texture": "/assets/enemies/components-v1/revenant-guard/part_026.png",
+          "joint": "left-leg"
+        },
+        {
+          "id": "left-leg-part-1",
+          "name": "左甲足下段",
+          "texture": "/assets/enemies/components-v1/revenant-guard/part_026.png",
+          "joint": "left-leg-hinge-1"
+        },
+        {
+          "id": "left-leg-part-2",
+          "name": "左甲足末端",
+          "texture": "/assets/enemies/components-v1/revenant-guard/part_026.png",
+          "joint": "left-leg-hinge-2"
+        },
+        {
+          "id": "right-upper-arm",
+          "name": "右上臂",
+          "texture": "/assets/enemies/components-v1/revenant-guard/part_015.png",
+          "joint": "right-shoulder"
+        },
+        {
+          "id": "right-forearm",
+          "name": "右前臂",
+          "texture": "/assets/enemies/components-v1/revenant-guard/part_022.png",
+          "joint": "right-elbow"
+        },
+        {
+          "id": "right-hand",
+          "name": "右骨爪",
+          "texture": "/assets/enemies/components-v1/revenant-guard/part_022.png",
+          "joint": "right-wrist"
+        },
+        {
+          "id": "right-leg-part-0",
+          "name": "右甲足上段",
+          "texture": "/assets/enemies/components-v1/revenant-guard/part_025.png",
+          "joint": "right-leg"
+        },
+        {
+          "id": "right-leg-part-1",
+          "name": "右甲足下段",
+          "texture": "/assets/enemies/components-v1/revenant-guard/part_025.png",
+          "joint": "right-leg-hinge-1"
+        },
+        {
+          "id": "right-leg-part-2",
+          "name": "右甲足末端",
+          "texture": "/assets/enemies/components-v1/revenant-guard/part_025.png",
+          "joint": "right-leg-hinge-2"
+        },
+        {
+          "id": "soul-focus-art",
+          "name": "还魂铃印",
+          "texture": "/assets/enemies/components-v1/revenant-guard/part_028.png",
+          "joint": "soul-focus"
+        }
+      ],
+      "actions": [
+        "idle",
+        "attack",
+        "hit",
+        "death",
+        "move"
+      ],
+      "floating": false,
+      "supports": [
+        "left-leg-part-2",
+        "right-leg-part-2"
+      ]
+    },
+    {
+      "enemyId": "bomb-wisp",
+      "name": "自爆灯灵 · 骨架预览",
+      "parts": [
+        {
+          "id": "shell-art",
+          "name": "焦裂灯壳",
+          "texture": "/assets/enemies/components-v1/bomb-wisp/part_005.png",
+          "joint": "shell"
+        },
+        {
+          "id": "core-art",
+          "name": "焰眼灯芯",
+          "texture": "/assets/enemies/components-v1/bomb-wisp/part_015.png",
+          "joint": "core"
+        },
+        {
+          "id": "roof-art",
+          "name": "自爆灯檐",
+          "texture": "/assets/enemies/components-v1/bomb-wisp/part_002.png",
+          "joint": "roof"
+        },
+        {
+          "id": "tassel-art",
+          "name": "自爆咒穗",
+          "texture": "/assets/enemies/components-v1/bomb-wisp/part_044.png",
+          "joint": "tassel"
+        },
+        {
+          "id": "left-arm-part-0",
+          "name": "左灯爪臂上段",
+          "texture": "/assets/enemies/components-v1/bomb-wisp/part_020.png",
+          "joint": "left-arm"
+        },
+        {
+          "id": "left-arm-part-1",
+          "name": "左灯爪臂下段",
+          "texture": "/assets/enemies/components-v1/bomb-wisp/part_020.png",
+          "joint": "left-arm-hinge-1"
+        },
+        {
+          "id": "left-arm-part-2",
+          "name": "左灯爪臂末端",
+          "texture": "/assets/enemies/components-v1/bomb-wisp/part_020.png",
+          "joint": "left-arm-hinge-2"
+        },
+        {
+          "id": "left-fuse-art",
+          "name": "左倒数灯芯",
+          "texture": "/assets/enemies/components-v1/bomb-wisp/part_010.png",
+          "joint": "left-fuse"
+        },
+        {
+          "id": "right-arm-part-0",
+          "name": "右灯爪臂上段",
+          "texture": "/assets/enemies/components-v1/bomb-wisp/part_018.png",
+          "joint": "right-arm"
+        },
+        {
+          "id": "right-arm-part-1",
+          "name": "右灯爪臂下段",
+          "texture": "/assets/enemies/components-v1/bomb-wisp/part_018.png",
+          "joint": "right-arm-hinge-1"
+        },
+        {
+          "id": "right-arm-part-2",
+          "name": "右灯爪臂末端",
+          "texture": "/assets/enemies/components-v1/bomb-wisp/part_018.png",
+          "joint": "right-arm-hinge-2"
+        },
+        {
+          "id": "right-fuse-art",
+          "name": "右倒数灯芯",
+          "texture": "/assets/enemies/components-v1/bomb-wisp/part_010.png",
+          "joint": "right-fuse"
+        }
+      ],
+      "actions": [
+        "idle",
+        "attack",
+        "hit",
+        "death",
+        "move"
+      ],
+      "floating": true,
+      "supports": []
+    },
+    {
+      "enemyId": "cracked-hunter",
+      "name": "裂甲追猎者 · 骨架预览",
+      "parts": [
+        {
+          "id": "chest",
+          "name": "裂甲胸壳",
+          "texture": "/assets/enemies/components-v1/cracked-hunter/part_001.png",
+          "joint": "root"
+        },
+        {
+          "id": "neck-art",
+          "name": "裂甲颈脊",
+          "texture": "/assets/enemies/components-v1/cracked-hunter/part_003.png",
+          "joint": "neck"
+        },
+        {
+          "id": "head-art",
+          "name": "裂甲头与角冠",
+          "texture": "/assets/enemies/components-v1/cracked-hunter/part_002.png",
+          "joint": "head"
+        },
+        {
+          "id": "pelvis-art",
+          "name": "裂甲髋裙",
+          "texture": "/assets/enemies/components-v1/cracked-hunter/part_013.png",
+          "joint": "pelvis"
+        },
+        {
+          "id": "right-arm-part-0",
+          "name": "右追猎臂上段",
+          "texture": "/assets/enemies/components-v1/cracked-hunter/part_012.png",
+          "joint": "right-arm"
+        },
+        {
+          "id": "right-arm-part-1",
+          "name": "右追猎臂下段",
+          "texture": "/assets/enemies/components-v1/cracked-hunter/part_012.png",
+          "joint": "right-arm-hinge-1"
+        },
+        {
+          "id": "right-arm-part-2",
+          "name": "右追猎臂末端",
+          "texture": "/assets/enemies/components-v1/cracked-hunter/part_012.png",
+          "joint": "right-arm-hinge-2"
+        },
+        {
+          "id": "right-pauldron",
+          "name": "右追猎肩甲",
+          "texture": "/assets/enemies/components-v1/cracked-hunter/part_007.png",
+          "joint": "right-arm"
+        },
+        {
+          "id": "missing-arm-part-0",
+          "name": "裂缝代臂上段",
+          "texture": "/assets/enemies/components-v1/cracked-hunter/part_011.png",
+          "joint": "missing-arm"
+        },
+        {
+          "id": "missing-arm-part-1",
+          "name": "裂缝代臂下段",
+          "texture": "/assets/enemies/components-v1/cracked-hunter/part_011.png",
+          "joint": "missing-arm-hinge-1"
+        },
+        {
+          "id": "hook-art",
+          "name": "追猎钩",
+          "texture": "/assets/enemies/components-v1/cracked-hunter/part_009.png",
+          "joint": "hook"
+        },
+        {
+          "id": "left-plate-art",
+          "name": "左裂甲活片",
+          "texture": "/assets/enemies/components-v1/cracked-hunter/part_004.png",
+          "joint": "left-plate"
+        },
+        {
+          "id": "left-thigh-art",
+          "name": "左大腿甲",
+          "texture": "/assets/enemies/components-v1/cracked-hunter/part_016.png",
+          "joint": "left-hip"
+        },
+        {
+          "id": "left-shin-art",
+          "name": "左胫甲",
+          "texture": "/assets/enemies/components-v1/cracked-hunter/part_017.png",
+          "joint": "left-knee"
+        },
+        {
+          "id": "left-foot-art",
+          "name": "左足爪",
+          "texture": "/assets/enemies/components-v1/cracked-hunter/part_019.png",
+          "joint": "left-ankle"
+        },
+        {
+          "id": "right-plate-art",
+          "name": "右裂甲活片",
+          "texture": "/assets/enemies/components-v1/cracked-hunter/part_005.png",
+          "joint": "right-plate"
+        },
+        {
+          "id": "right-thigh-art",
+          "name": "右大腿甲",
+          "texture": "/assets/enemies/components-v1/cracked-hunter/part_015.png",
+          "joint": "right-hip"
+        },
+        {
+          "id": "right-shin-art",
+          "name": "右胫甲",
+          "texture": "/assets/enemies/components-v1/cracked-hunter/part_018.png",
+          "joint": "right-knee"
+        },
+        {
+          "id": "right-foot-art",
+          "name": "右足爪",
+          "texture": "/assets/enemies/components-v1/cracked-hunter/part_020.png",
+          "joint": "right-ankle"
+        }
+      ],
+      "actions": [
+        "idle",
+        "attack",
+        "hit",
+        "death",
+        "move"
+      ],
+      "floating": false,
+      "supports": [
+        "left-foot-art",
+        "right-foot-art"
+      ]
+    },
+    {
+      "enemyId": "broodling",
+      "name": "裂腹幼体 · 骨架预览",
+      "parts": [
+        {
+          "id": "thorax",
+          "name": "幼体胸皮",
+          "texture": "/assets/enemies/components-v1/broodling/part_004.png",
+          "joint": "root"
+        },
+        {
+          "id": "abdomen-art",
+          "name": "幼体软腹",
+          "texture": "/assets/enemies/components-v1/broodling/part_001.png",
+          "joint": "abdomen"
+        },
+        {
+          "id": "carapace",
+          "name": "幼体背膜",
+          "texture": "/assets/enemies/components-v1/broodling/part_002.png",
+          "joint": "abdomen"
+        },
+        {
+          "id": "head-art",
+          "name": "幼体头壳",
+          "texture": "/assets/enemies/components-v1/broodling/part_008.png",
+          "joint": "head"
+        },
+        {
+          "id": "left-jaw-art",
+          "name": "左锯颚",
+          "texture": "/assets/enemies/components-v1/broodling/part_006.png",
+          "joint": "left-jaw"
+        },
+        {
+          "id": "left-front-part-0",
+          "name": "左前足上段",
+          "texture": "/assets/enemies/components-v1/broodling/part_013.png",
+          "joint": "left-front"
+        },
+        {
+          "id": "left-front-part-1",
+          "name": "左前足下段",
+          "texture": "/assets/enemies/components-v1/broodling/part_013.png",
+          "joint": "left-front-hinge-1"
+        },
+        {
+          "id": "left-front-part-2",
+          "name": "左前足末端",
+          "texture": "/assets/enemies/components-v1/broodling/part_013.png",
+          "joint": "left-front-hinge-2"
+        },
+        {
+          "id": "left-rear-part-0",
+          "name": "左后足上段",
+          "texture": "/assets/enemies/components-v1/broodling/part_016.png",
+          "joint": "left-rear"
+        },
+        {
+          "id": "left-rear-part-1",
+          "name": "左后足下段",
+          "texture": "/assets/enemies/components-v1/broodling/part_016.png",
+          "joint": "left-rear-hinge-1"
+        },
+        {
+          "id": "left-rear-part-2",
+          "name": "左后足末端",
+          "texture": "/assets/enemies/components-v1/broodling/part_016.png",
+          "joint": "left-rear-hinge-2"
+        },
+        {
+          "id": "right-jaw-art",
+          "name": "右锯颚",
+          "texture": "/assets/enemies/components-v1/broodling/part_005.png",
+          "joint": "right-jaw"
+        },
+        {
+          "id": "right-front-part-0",
+          "name": "右前足上段",
+          "texture": "/assets/enemies/components-v1/broodling/part_014.png",
+          "joint": "right-front"
+        },
+        {
+          "id": "right-front-part-1",
+          "name": "右前足下段",
+          "texture": "/assets/enemies/components-v1/broodling/part_014.png",
+          "joint": "right-front-hinge-1"
+        },
+        {
+          "id": "right-front-part-2",
+          "name": "右前足末端",
+          "texture": "/assets/enemies/components-v1/broodling/part_014.png",
+          "joint": "right-front-hinge-2"
+        },
+        {
+          "id": "right-rear-part-0",
+          "name": "右后足上段",
+          "texture": "/assets/enemies/components-v1/broodling/part_015.png",
+          "joint": "right-rear"
+        },
+        {
+          "id": "right-rear-part-1",
+          "name": "右后足下段",
+          "texture": "/assets/enemies/components-v1/broodling/part_015.png",
+          "joint": "right-rear-hinge-1"
+        },
+        {
+          "id": "right-rear-part-2",
+          "name": "右后足末端",
+          "texture": "/assets/enemies/components-v1/broodling/part_015.png",
+          "joint": "right-rear-hinge-2"
+        }
+      ],
+      "actions": [
+        "idle",
+        "attack",
+        "hit",
+        "death",
+        "move"
+      ],
+      "floating": false,
+      "supports": [
+        "left-front-part-2",
+        "left-rear-part-2",
+        "right-front-part-2",
+        "right-rear-part-2"
+      ]
+    },
+    {
+      "enemyId": "leech-larva",
+      "name": "尸蛭幼体 · 骨架预览",
+      "parts": [
+        {
+          "id": "front-body",
+          "name": "幼蛭前腹节",
+          "texture": "/assets/enemies/components-v1/leech-larva/part_002.png",
+          "joint": "body"
+        },
+        {
+          "id": "middle-body-art",
+          "name": "幼蛭中腹节",
+          "texture": "/assets/enemies/components-v1/leech-larva/part_003.png",
+          "joint": "middle-body"
+        },
+        {
+          "id": "rear-body-art",
+          "name": "幼蛭后腹节",
+          "texture": "/assets/enemies/components-v1/leech-larva/part_004.png",
+          "joint": "rear-body"
+        },
+        {
+          "id": "tail-base",
+          "name": "幼蛭尾钩下段",
+          "texture": "/assets/enemies/components-v1/leech-larva/part_005.png",
+          "joint": "tail"
+        },
+        {
+          "id": "tail-tip-art",
+          "name": "幼蛭尾钩尖",
+          "texture": "/assets/enemies/components-v1/leech-larva/part_005.png",
+          "joint": "tail-tip"
+        },
+        {
+          "id": "hood",
+          "name": "幼蛭头罩与上口",
+          "texture": "/assets/enemies/components-v1/leech-larva/part_001.png",
+          "joint": "head"
+        },
+        {
+          "id": "mouth-art",
+          "name": "幼蛭吸附口下缘",
+          "texture": "/assets/enemies/components-v1/leech-larva/part_001.png",
+          "joint": "mouth"
+        },
+        {
+          "id": "eye-art",
+          "name": "幼蛭额眼",
+          "texture": "/assets/enemies/components-v1/leech-larva/part_009.png",
+          "joint": "eye"
+        },
+        {
+          "id": "left-sucker-part-0",
+          "name": "左吸盘触管上段",
+          "texture": "/assets/enemies/components-v1/leech-larva/part_006.png",
+          "joint": "left-sucker"
+        },
+        {
+          "id": "left-sucker-part-1",
+          "name": "左吸盘触管下段",
+          "texture": "/assets/enemies/components-v1/leech-larva/part_006.png",
+          "joint": "left-sucker-hinge-1"
+        },
+        {
+          "id": "right-sucker-part-0",
+          "name": "右吸盘触管上段",
+          "texture": "/assets/enemies/components-v1/leech-larva/part_007.png",
+          "joint": "right-sucker"
+        },
+        {
+          "id": "right-sucker-part-1",
+          "name": "右吸盘触管下段",
+          "texture": "/assets/enemies/components-v1/leech-larva/part_007.png",
+          "joint": "right-sucker-hinge-1"
+        }
+      ],
+      "actions": [
+        "idle",
+        "attack",
+        "hit",
+        "death",
+        "move"
+      ],
+      "floating": false,
+      "supports": [
+        "front-body"
+      ]
+    },
+    {
+      "enemyId": "tide-shadow",
+      "name": "潮影 · 骨架预览",
+      "parts": [
+        {
+          "id": "chest-frame",
+          "name": "潮影空胸骨框",
+          "texture": "/assets/enemies/components-v1/tide-shadow/part_004.png",
+          "joint": "root"
+        },
+        {
+          "id": "crown-art",
+          "name": "潮影冠焰",
+          "texture": "/assets/enemies/components-v1/tide-shadow/part_001.png",
+          "joint": "crown"
+        },
+        {
+          "id": "eye-ring-art",
+          "name": "潮影眼环",
+          "texture": "/assets/enemies/components-v1/tide-shadow/part_005.png",
+          "joint": "eye-ring"
+        },
+        {
+          "id": "eye-art",
+          "name": "潮影魂眼",
+          "texture": "/assets/enemies/components-v1/tide-shadow/part_009.png",
+          "joint": "eye"
+        },
+        {
+          "id": "left-upper-arm",
+          "name": "左上臂与肩缕",
+          "texture": "/assets/enemies/components-v1/tide-shadow/part_002.png",
+          "joint": "left-shoulder"
+        },
+        {
+          "id": "left-forearm",
+          "name": "左前臂",
+          "texture": "/assets/enemies/components-v1/tide-shadow/part_002.png",
+          "joint": "left-elbow"
+        },
+        {
+          "id": "left-claw",
+          "name": "左潮影手爪",
+          "texture": "/assets/enemies/components-v1/tide-shadow/part_002.png",
+          "joint": "left-wrist"
+        },
+        {
+          "id": "right-upper-arm",
+          "name": "右上臂与肩缕",
+          "texture": "/assets/enemies/components-v1/tide-shadow/part_003.png",
+          "joint": "right-shoulder"
+        },
+        {
+          "id": "right-forearm",
+          "name": "右前臂",
+          "texture": "/assets/enemies/components-v1/tide-shadow/part_003.png",
+          "joint": "right-elbow"
+        },
+        {
+          "id": "right-claw",
+          "name": "右潮影手爪",
+          "texture": "/assets/enemies/components-v1/tide-shadow/part_003.png",
+          "joint": "right-wrist"
+        },
+        {
+          "id": "veil-center",
+          "name": "潮影悬裾中缕",
+          "texture": "/assets/enemies/components-v1/tide-shadow/part_016.png",
+          "joint": "veil"
+        },
+        {
+          "id": "left-veil-art",
+          "name": "左悬裾",
+          "texture": "/assets/enemies/components-v1/tide-shadow/part_016.png",
+          "joint": "left-veil"
+        },
+        {
+          "id": "right-veil-art",
+          "name": "右悬裾",
+          "texture": "/assets/enemies/components-v1/tide-shadow/part_016.png",
+          "joint": "right-veil"
+        },
+        {
+          "id": "tail-part-0",
+          "name": "潮影垂缕上段",
+          "texture": "/assets/enemies/components-v1/tide-shadow/part_025.png",
+          "joint": "tail"
+        },
+        {
+          "id": "tail-part-1",
+          "name": "潮影垂缕下段",
+          "texture": "/assets/enemies/components-v1/tide-shadow/part_025.png",
+          "joint": "tail-hinge-1"
+        }
+      ],
+      "actions": [
+        "idle",
+        "attack",
+        "hit",
+        "death",
+        "move"
+      ],
+      "floating": true,
+      "supports": []
+    },
+    {
+      "enemyId": "overseer",
+      "name": "监视者 · 骨架预览",
+      "parts": [
+        {
+          "id": "chest",
+          "name": "监视者胸甲",
+          "texture": "/assets/enemies/components-v1/overseer/part_003.png",
+          "joint": "root"
+        },
+        {
+          "id": "spine",
+          "name": "监视者背脊",
+          "texture": "/assets/enemies/components-v1/overseer/part_004.png",
+          "joint": "root"
+        },
+        {
+          "id": "collar",
+          "name": "监视者颈甲",
+          "texture": "/assets/enemies/components-v1/overseer/part_013.png",
+          "joint": "neck"
+        },
+        {
+          "id": "head-art",
+          "name": "监视者面甲",
+          "texture": "/assets/enemies/components-v1/overseer/part_001.png",
+          "joint": "head"
+        },
+        {
+          "id": "jaw-art",
+          "name": "监视者下颌",
+          "texture": "/assets/enemies/components-v1/overseer/part_002.png",
+          "joint": "jaw"
+        },
+        {
+          "id": "pelvis-art",
+          "name": "监视者腰甲",
+          "texture": "/assets/enemies/components-v1/overseer/part_005.png",
+          "joint": "pelvis"
+        },
+        {
+          "id": "left-pauldron",
+          "name": "左肩甲",
+          "texture": "/assets/enemies/components-v1/overseer/part_012.png",
+          "joint": "left-shoulder"
+        },
+        {
+          "id": "left-upper-arm",
+          "name": "左上臂",
+          "texture": "/assets/enemies/components-v1/overseer/part_006.png",
+          "joint": "left-shoulder"
+        },
+        {
+          "id": "left-forearm",
+          "name": "左前臂",
+          "texture": "/assets/enemies/components-v1/overseer/part_007.png",
+          "joint": "left-elbow"
+        },
+        {
+          "id": "left-fist",
+          "name": "左拳",
+          "texture": "/assets/enemies/components-v1/overseer/part_008.png",
+          "joint": "left-wrist"
+        },
+        {
+          "id": "left-leg-upper",
+          "name": "左腿上肢",
+          "texture": "/assets/enemies/components-v1/overseer/part_009.png",
+          "joint": "left-leg-hip"
+        },
+        {
+          "id": "left-leg-lower",
+          "name": "左腿下肢",
+          "texture": "/assets/enemies/components-v1/overseer/part_010.png",
+          "joint": "left-leg-knee"
+        },
+        {
+          "id": "left-leg-foot",
+          "name": "左腿足爪",
+          "texture": "/assets/enemies/components-v1/overseer/part_011.png",
+          "joint": "left-leg-paw"
+        },
+        {
+          "id": "right-pauldron",
+          "name": "右肩甲",
+          "texture": "/assets/enemies/components-v1/overseer/part_012.png",
+          "joint": "right-shoulder"
+        },
+        {
+          "id": "right-upper-arm",
+          "name": "右上臂",
+          "texture": "/assets/enemies/components-v1/overseer/part_006.png",
+          "joint": "right-shoulder"
+        },
+        {
+          "id": "right-forearm",
+          "name": "右前臂",
+          "texture": "/assets/enemies/components-v1/overseer/part_007.png",
+          "joint": "right-elbow"
+        },
+        {
+          "id": "right-fist",
+          "name": "右拳",
+          "texture": "/assets/enemies/components-v1/overseer/part_008.png",
+          "joint": "right-wrist"
+        },
+        {
+          "id": "right-leg-upper",
+          "name": "右腿上肢",
+          "texture": "/assets/enemies/components-v1/overseer/part_009.png",
+          "joint": "right-leg-hip"
+        },
+        {
+          "id": "right-leg-lower",
+          "name": "右腿下肢",
+          "texture": "/assets/enemies/components-v1/overseer/part_010.png",
+          "joint": "right-leg-knee"
+        },
+        {
+          "id": "right-leg-foot",
+          "name": "右腿足爪",
+          "texture": "/assets/enemies/components-v1/overseer/part_011.png",
+          "joint": "right-leg-paw"
+        },
+        {
+          "id": "banner-art",
+          "name": "监视背幡",
+          "texture": "/assets/enemies/components-v1/overseer/part_014.png",
+          "joint": "banner"
+        }
+      ],
+      "actions": [
+        "idle",
+        "attack",
+        "hit",
+        "death",
+        "move"
+      ],
+      "floating": false,
+      "supports": [
+        "left-leg-foot",
+        "right-leg-foot"
+      ]
+    }
+  ]
+}

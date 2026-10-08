@@ -5,7 +5,7 @@ from pathlib import Path
 from PIL import Image
 
 root = Path(__file__).resolve().parents[1]
-parts = json.loads(subprocess.check_output(['node', '--input-type=module', '-e', "import {createEnemyShadowProjects} from './src/animation/shadow-enemies.js'; console.log(JSON.stringify(createEnemyShadowProjects().flatMap(p=>p.parts)))"], cwd=root).decode('utf-8'))
+parts = json.loads(subprocess.check_output(['node', '--input-type=module', '-e', "import {createEnemyShadowProjects} from './src/animation/shadow-enemies.js'; console.log(JSON.stringify(createEnemyShadowProjects({includeBoss:true}).flatMap(p=>p.parts)))"], cwd=root).decode('utf-8'))
 result = {}
 def hull(points):
     def cross(o, a, b): return (a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0])

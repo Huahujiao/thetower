@@ -2,7 +2,7 @@ import { ENEMY_DEFS } from '../game/data/enemies.js'
 import catalog from '../game/data/catalog.json' with { type: 'json' }
 import { installEnemyGrounding } from './enemy-grounding.js'
 import { createRosterEnemyProject, ROSTER_ENEMY_ART } from './shadow-enemy-roster.js'
-import { applyEnemyComponentArt, COMPONENT_ENEMY_IDS, BATCH2_COMPONENT_ENEMY_IDS, BATCH3_COMPONENT_ENEMY_IDS, BATCH4_COMPONENT_ENEMY_IDS, componentTexturePresets, offsetGnawerForearms, widenEnemyComponentRig } from './shadow-enemy-components.js'
+import { applyEnemyComponentArt, COMPONENT_ENEMY_IDS, BATCH2_COMPONENT_ENEMY_IDS, BATCH3_COMPONENT_ENEMY_IDS, BATCH4_COMPONENT_ENEMY_IDS, BATCH5_COMPONENT_ENEMY_IDS, componentTexturePresets, offsetGnawerForearms, widenEnemyComponentRig } from './shadow-enemy-components.js'
 import {
   createDefaultShadowProject,
   createShadowBone,
@@ -15,7 +15,7 @@ import {
   upsertShadowKeyframe,
 } from './shadow-rig.js'
 
-export const ENEMY_ART_PACK_VERSION = 16
+export const ENEMY_ART_PACK_VERSION = 17
 export const ENEMY_ART = Object.freeze({
   gnawer: { family: 'humanoid' },
   'emberwing-moth': { family: 'winged' },
@@ -456,7 +456,7 @@ export function createEnemyShadowProjects({ includeBoss = false } = {}) {
 }
 
 function replaceComponentTemplate(roster, character, template) {
-  const definition = ENEMY_DEFS.find(({ id }) => id === template.enemyId)
+  const definition = ENEMY_DEFS.find(({ id }) => id === template.enemyId) || (template.enemyId === catalog.boss.id ? catalog.boss : null)
   const previous = normalizeShadowProject(createEnemyShadowProject(definition, { withComponentArt: false }))
   const generic = ROSTER_ENEMY_ART[template.enemyId]
     ? normalizeShadowProject(createRosterEnemyProject(definition, { withVariants: false })) : previous
@@ -479,9 +479,9 @@ export function installEnemyShadowProjects(roster) {
       if (roster.enemyArtPackVersion === 10) offsetGnawerForearms(project)
       if (roster.enemyArtPackVersion < 12) widenEnemyComponentRig(project)
     }
-    const newIds = [...(roster.enemyArtPackVersion < 13 ? BATCH2_COMPONENT_ENEMY_IDS : []), ...(roster.enemyArtPackVersion < 14 ? BATCH3_COMPONENT_ENEMY_IDS : []), ...(roster.enemyArtPackVersion < 15 ? BATCH4_COMPONENT_ENEMY_IDS : [])]
+    const newIds = [...(roster.enemyArtPackVersion < 13 ? BATCH2_COMPONENT_ENEMY_IDS : []), ...(roster.enemyArtPackVersion < 14 ? BATCH3_COMPONENT_ENEMY_IDS : []), ...(roster.enemyArtPackVersion < 15 ? BATCH4_COMPONENT_ENEMY_IDS : []), ...(roster.enemyArtPackVersion < 17 ? BATCH5_COMPONENT_ENEMY_IDS : [])]
     for (const enemyId of newIds) {
-      const template = createEnemyShadowProject(ENEMY_DEFS.find(d => d.id === enemyId))
+      const template = createEnemyShadowProject(ENEMY_DEFS.find(d => d.id === enemyId) || (enemyId === catalog.boss.id ? catalog.boss : null))
       const character = roster.characters.find(({ project }) => project.enemyId === enemyId)
       if (character) replaceComponentTemplate(roster, character, template)
       else roster.characters.push(createShadowCharacter(template))
@@ -491,7 +491,7 @@ export function installEnemyShadowProjects(roster) {
     return true
   }
   let reviewCharacterId = null
-  for (const template of createEnemyShadowProjects()) {
+  for (const template of createEnemyShadowProjects({ includeBoss: true })) {
     const character = roster.characters.find(({ project }) => project.enemyId === template.enemyId)
     // Pre-paper projects contain rejected atlas cutouts. V7/V8 roster rigs
     // share generic anatomy; archive edited versions before replacing them.

@@ -5,6 +5,8 @@ import { applyEnemyComponentBatch3 } from './shadow-enemy-components-batch3.js'
 export { BATCH3_COMPONENT_ENEMY_IDS } from './shadow-enemy-components-batch3.js'
 import { applyEnemyComponentBatch4 } from './shadow-enemy-components-batch4.js'
 export { BATCH4_COMPONENT_ENEMY_IDS } from './shadow-enemy-components-batch4.js'
+import { applyEnemyComponentBatch5 } from './shadow-enemy-components-batch5.js'
+export { BATCH5_COMPONENT_ENEMY_IDS } from './shadow-enemy-components-batch5.js'
 import {
   createDefaultShadowProject, createShadowBone, createShadowJoint, createShadowPart,
   shadowTargetKey, upsertShadowKeyframe,
@@ -339,6 +341,7 @@ export function applyEnemyComponentArt(project) {
   applyEnemyComponentBatch2(project, { joint, imagePart, pixelLink, keys, organMotion })
   applyEnemyComponentBatch3(project, { joint, imagePart, pixelLink, keys, organMotion })
   applyEnemyComponentBatch4(project, { joint, imagePart, pixelLink, keys, organMotion })
+  applyEnemyComponentBatch5(project, { joint, imagePart, pixelLink, keys, organMotion })
   if (adapters[project.enemyId]) {
     adapters[project.enemyId](project)
     const unused = {

@@ -4,7 +4,7 @@ import textureHulls from './enemy-contact-hulls.json' with { type: 'json' }
 
 const vertices = new WeakMap()
 const rests = new WeakMap()
-export const FLOATING_ENEMIES = new Set(['emberwing-moth', 'tide-shadow-cub', 'wisp', 'whirlpool-eye-sac', 'redwheel-fire-crow', 'cinder-curse-lamp-swarm', 'bomb-wisp', 'tide-shadow'])
+export const FLOATING_ENEMIES = new Set(['emberwing-moth', 'tide-shadow-cub', 'wisp', 'whirlpool-eye-sac', 'redwheel-fire-crow', 'cinder-curse-lamp-swarm', 'bomb-wisp', 'tide-shadow', 'tide-rite-matriarch'])
 
 export function shadowContactVertices(part) {
   const stamp = JSON.stringify([part.shape, part.width, part.height, part.depth, part.pivotX, part.pivotY, part.visual])

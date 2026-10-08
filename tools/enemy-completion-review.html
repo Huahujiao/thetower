@@ -1,0 +1,46 @@
+<!doctype html><html lang="zh-CN"><meta charset="UTF-8"><title>Enemy completion review</title>
+<style>body{margin:0;background:#19232b;color:#d9d0bb;font:14px sans-serif}main{display:grid;grid-template-columns:repeat(3,300px);width:900px}figure{margin:0;text-align:center}canvas{display:block;width:300px;height:300px}figcaption{height:24px}h1{font-size:18px;margin:12px}</style>
+<h1>Enemy paper rigs / Three.js</h1><main></main>
+<script type="module">
+import * as THREE from '/node_modules/three/build/three.module.js'
+import { createEnemyShadowProjects } from '/src/animation/shadow-enemies.js'
+import { BATCH5_COMPONENT_ENEMY_IDS } from '/src/animation/shadow-enemy-components-batch5.js'
+import { prepareEnemyPuppets, createEnemyFigure, updateEnemyFigure, enemyPuppetLayout } from '/src/render/enemy-puppet.js'
+const params = new URLSearchParams(location.search), enemy = params.get('enemy')
+const projects = createEnemyShadowProjects({ includeBoss: true }).filter(p => enemy === 'all' || (enemy ? p.enemyId === enemy : BATCH5_COMPONENT_ENEMY_IDS.includes(p.enemyId)))
+prepareEnemyPuppets(() => {})
+await Promise.all([...new Set(createEnemyShadowProjects({ includeBoss: true }).flatMap(p => p.parts.map(s => s.visual.texture)))].map(src => new Promise((resolve, reject) => {
+  const img = new Image(); img.onload = resolve; img.onerror = () => reject(new Error(src)); img.src = src
+})))
+await new Promise(resolve => setTimeout(resolve, 300))
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true })
+renderer.setSize(300, 300); renderer.setPixelRatio(1)
+const scene = new THREE.Scene(); scene.background = new THREE.Color('#19232b')
+const camera = new THREE.OrthographicCamera(-.75, .75, 1.04, -.46, .01, 30)
+camera.position.set(0, 2.7, 5.5); camera.lookAt(0, .5, 0)
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(1.65, 1.65), new THREE.MeshBasicMaterial({ color: '#35454b', side: THREE.DoubleSide }))
+floor.rotation.x = -Math.PI / 2; floor.position.y = -.01; scene.add(floor)
+const grid = new THREE.GridHelper(1.65, 1, '#839496', '#839496'); scene.add(grid)
+window.reviewReport = []
+for (const p of projects) {
+  const actor = createEnemyFigure(p.enemyId); scene.add(actor)
+  const poses = enemy && enemy !== 'all'
+    ? ['idle', 'move', 'attack', 'hit', 'death'].flatMap(action => [0, .27, .64, .85, 1].map(fraction => ({ action, fraction, yaw: 0 })))
+    : [-30, 0, 30].map(yaw => ({ action: 'idle', fraction: 0, yaw }))
+  if (enemy && enemy !== 'all') document.querySelector('main').style.gridTemplateColumns = 'repeat(5,300px)'
+  if (enemy && enemy !== 'all') document.querySelector('main').style.width = '1500px'
+  for (const pose of poses) {
+    actor.rotation.y = THREE.MathUtils.degToRad(pose.yaw)
+    updateEnemyFigure(actor, pose.action, p.animations[pose.action].duration * pose.fraction)
+    renderer.render(scene, camera)
+    const f = document.createElement('figure'), c = document.createElement('canvas'), label = document.createElement('figcaption')
+    c.width = c.height = 300; c.getContext('2d').drawImage(renderer.domElement, 0, 0)
+    label.textContent = `${p.enemyId} / ${pose.action} ${pose.fraction} / yaw ${pose.yaw}`
+    f.append(c, label); document.querySelector('main').append(f)
+    window.reviewReport.push({ enemyId: p.enemyId, ...pose, parts: actor.userData.meshes.size, visible: [...actor.userData.meshes.values()].filter(m => m.visible).length, textured: [...actor.userData.meshes.values()].every(m => m.material.map), diagonal: enemyPuppetLayout(p.enemyId)?.displayDiagonal })
+  }
+  scene.remove(actor)
+  for (const mesh of actor.userData.meshes.values()) { mesh.geometry.dispose(); mesh.material.dispose() }
+}
+renderer.dispose(); window.reviewReady = true
+</script></html>

@@ -4,6 +4,7 @@ import { evaluateShadowProject, normalizeShadowProject } from '../src/animation/
 import { shadowPartFloor } from '../src/animation/shadow-grounding.js'
 import { createEnemyById, synchronizeEnemyBalance } from '../src/game/data/content.js'
 import { ENEMY_DEFS } from '../src/game/data/enemies.js'
+import { BATCH5_COMPONENT_ENEMY_IDS } from '../src/animation/shadow-enemy-components-batch5.js'
 
 let frames = 0, supports = 0
 for (const source of createEnemyShadowProjects({ includeBoss: true })) {
@@ -38,7 +39,7 @@ delete customized.grounding
 customized.parts[0].fill = '#abcdef'
 const roster = { enemyArtPackVersion: 15, characters: [{ id: 'custom', project: customized }], activeCharacterId: 'custom' }
 assert(installEnemyShadowProjects(roster))
-assert.equal(roster.characters.length, 1)
+assert.equal(roster.characters.length, 1 + BATCH5_COMPONENT_ENEMY_IDS.length)
 assert.equal(roster.characters[0].project.parts[0].fill, '#abcdef')
 assert(roster.characters[0].project.grounding.supports.length)
 assert.equal(installEnemyShadowProjects(roster), false)
