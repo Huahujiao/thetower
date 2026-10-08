@@ -10,9 +10,10 @@ try {
   const run = fixture(), weapon = add(run, 'rust-sword'), potion = add(run, 'health-potion')
   const render = () => renderToString(createSSRApp(Hud, { run }))
   const endButton = html => html.match(/<button\b[^>]*data-action="end-turn"[^>]*>/)?.[0]
+  const useButton = html => html.match(/<button\b[^>]*data-action="use"[^>]*>/)?.[0]
   const ballButtons = html => html.match(/<button\b[^>]*class="[^"]*stamina-ball[^>]*>/g) || []
   let html = await render()
-  assert(!endButton(html)); assert.equal(ballButtons(html).length, 0)
+  assert(!endButton(html)); assert(!useButton(html)); assert.equal(ballButtons(html).length, 0)
   assert(!html.includes('翻出敌人后抽球'))
   run.showItemDetail(weapon)
   html = await render()
@@ -45,6 +46,7 @@ try {
   assert(html.includes('原地攻击')); assert(html.includes('球池'))
   assert(/class="(?=[^"]*stamina-ball-icon)(?=[^"]*scorch)[^"]*"/.test(html))
   assert(!endButton(html).includes('disabled'))
+  assert(!useButton(html))
   const id = run.staminaDeck.hand[0].id
   assert(run.toggleStaminaBall(id)); html = await render()
   assert(ballButtons(html).some(button => button.includes('aria-pressed="true"')))
@@ -59,7 +61,9 @@ try {
   html = await render()
   assert(html.includes('体力球不足')); assert(!endButton(html).includes('disabled'))
   select(run, potion); html = await render()
-  assert(html.match(/<button\b[^>]*data-action="use"[^>]*>/)?.[0].includes('disabled'))
+  assert(useButton(html).includes('disabled')); assert(!endButton(html))
+  assert(run.selectInventory(run.selectedInventoryIndex)); html = await render()
+  assert(!useButton(html)); assert(!endButton(html).includes('disabled'))
   assert(run.endPlayerTurn()); html = await render()
   assert(endButton(html).includes('disabled')); assert.equal(ballButtons(html).length, 0)
   settleAnimations(run); html = await render()

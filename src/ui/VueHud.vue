@@ -416,17 +416,17 @@
         </div>
         <div class="backpack-action-slot act-use-slot">
           <button
-            class="backpack-action act-use" data-action="use"
-            :hidden="!selectedUsable" :disabled="!selectedUseAvailable"
+            v-if="selectedUsable" class="backpack-action act-use" data-action="use"
+            :disabled="!selectedUseAvailable"
             @click="handleAction('use')"
           >
             {{ LABELS.use }}
           </button>
           <button
-            v-if="state.battle.active" class="backpack-action act-end-turn" data-action="end-turn"
+            v-else-if="state.battle.active" class="backpack-action act-end-turn" data-action="end-turn"
             :disabled="!actionsAvailable || state.roundResolving" @click="handleAction('end-turn')"
           >
-            {{ state.roundResolving ? battleStageLabel : '结束回合' }}
+            结束回合
           </button>
         </div>
         <div v-if="state.battle.active && selectedItem?.type === 'weapon'" class="stamina-payment" :class="{ unavailable: !weaponBallPreview }">
@@ -601,22 +601,18 @@ const actionsAvailable = computed(() => {
   state.value
   return run._canAct()
 })
-const battleStageLabel = computed(() => {
-  const battle = state.value.battle
-  return battle.active ? { player: `玩家回合 ${battle.round}`, pets: '宠物回合', enemy: '敌人回合' }[battle.stage] : '探索'
-})
 const craftAvailable = computed(() => {
   state.value
   return run._canOrganizeBackpack() && run.phase !== 'level-up' && !run.itemTargeting
 })
 const selectedUsable = computed(() => {
   const item = selectedItem.value
-  return actionsAvailable.value && !!item && (isTotemBadge(item) || ['potion', 'armor', 'buff', 'teleport', 'throwable'].includes(item.type))
+  return !!item && (isTotemBadge(item) || ['potion', 'armor', 'buff', 'teleport', 'throwable'].includes(item.type))
 })
 const selectedUseAvailable = computed(() => {
   state.value
   const item = selectedItem.value
-  return selectedUsable.value && run.canPayAction(consumableEnergyCost(item) + (run.consumables.boosted(item, true) ? 2 : 0)) && (!isTotemBadge(item) || run.totems.available(item))
+  return actionsAvailable.value && selectedUsable.value && run.canPayAction(consumableEnergyCost(item) + (run.consumables.boosted(item, true) ? 2 : 0)) && (!isTotemBadge(item) || run.totems.available(item))
 })
 const statusEntries = computed(() => {
   state.value
