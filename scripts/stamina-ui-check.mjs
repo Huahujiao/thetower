@@ -42,7 +42,7 @@ try {
   assert(!html.includes('stamina-count'))
   const renderedBalls = html.match(/<button\b[^>]*class="[^"]*stamina-ball[^>]*>[\s\S]*?<\/button>/g) || []
   assert(renderedBalls.every(button => !button.replace(/<[^>]+>/g, '').trim()))
-  assert(html.includes('--ball-slots:8'))
+  assert(html.includes('--ball-slots:10'))
   assert(html.includes('原地攻击')); assert(html.includes('球池'))
   assert(/class="(?=[^"]*stamina-ball-icon)(?=[^"]*scorch)[^"]*"/.test(html))
   assert(!endButton(html).includes('disabled'))

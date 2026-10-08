@@ -403,7 +403,7 @@
             ></span><strong>{{
               state.player.hp }}/{{ state.player.maxHp }}</strong>
           </div>
-          <div class="stamina-hand" :style="{ '--ball-slots': Math.max(8, state.staminaDeck.hand.length) }">
+          <div class="stamina-hand" :style="{ '--ball-slots': Math.max(10, state.staminaDeck.hand.length) }">
             <button
               v-for="ball in state.staminaDeck.hand" :key="ball.id" class="stamina-ball"
               :class="[ball.attribute, { selected: state.staminaDeck.selected.includes(ball.id) }]"

@@ -182,8 +182,8 @@ button { font: inherit; }
 .vital-energy { grid-column: 1; grid-row: 2; border: 1px solid rgba(255,213,107,.58); background: rgba(58,45,20,.88); }
 .vital-energy-fill { position: absolute; top: 0; right: auto; bottom: 0; left: 0; display: block; width: 0; height: 100%; background: linear-gradient(90deg, #c18d27, #ffd56b); transition: width .16s ease; }
 .vital-bars:has(.stamina-hand) { height: 42px; row-gap: 3px; }
-.stamina-hand { display: grid; grid-template-columns: repeat(var(--ball-slots, 8), minmax(0, 1fr)); align-items: center; gap: 2px; min-height: 22px; pointer-events: auto; }
-.stamina-ball { justify-self: center; width: min(100%, calc(144px / var(--ball-slots, 8))); height: auto; aspect-ratio: 1; min-width: 0; min-height: 0; border-radius: 50%; border: 0; padding: 0; box-shadow: inset 0 2px 3px #ffffff66, inset 0 -2px 3px #00000044; cursor: pointer; }
+.stamina-hand { display: grid; grid-template-columns: repeat(var(--ball-slots, 10), minmax(0, 1fr)); align-items: center; gap: 2px; min-height: 22px; pointer-events: auto; }
+.stamina-ball { justify-self: center; width: min(100%, calc(144px / var(--ball-slots, 10))); height: auto; aspect-ratio: 1; min-width: 0; min-height: 0; border-radius: 50%; border: 0; padding: 0; box-shadow: inset 0 2px 3px #ffffff66, inset 0 -2px 3px #00000044; cursor: pointer; }
 .stamina-ball.scorch, .stamina-ball-icon.scorch { background: #ef5b5b; }
 .stamina-ball.wither, .stamina-ball-icon.wither { background: #f4d56d; }
 .stamina-ball.drown, .stamina-ball-icon.drown { background: #69b7ee; }
