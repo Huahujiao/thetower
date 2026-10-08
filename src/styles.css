@@ -194,7 +194,7 @@ button { font: inherit; }
 .stamina-ball-icon { display: inline-block; flex: 0 0 12px; width: 12px; height: 12px; border: 0; border-radius: 50%; box-shadow: inset 0 2px 2px #ffffff66, inset 0 -2px 2px #00000033; }
 .stamina-empty { grid-column: 1 / -1; white-space: nowrap; color: #bcaf92; font-size: 10px; }
 .stamina-payment { position: absolute; bottom: calc(100% + 3px); left: 0; display: flex; align-items: center; gap: 6px; font-size: 11px; color: #ddeddf; padding: 3px 7px; background: #171b20ee; border-radius: 4px; pointer-events: none; }
-.stamina-payment.discounted { color: #ffc16c; }
+.stamina-payment.unavailable { color: #ffc16c; }
 .vital-health strong,.vital-energy strong { position: absolute; inset: 0; z-index: 1; display: grid; place-items: center; color: #fff; font-size: 9px; font-variant-numeric: tabular-nums; writing-mode: horizontal-tb; transform: none; text-shadow: 0 1px 2px rgba(0,0,0,.7); }
 /* Disabled during model/animation gates, but visually stable to avoid HUD flicker. */
 .hud-top .hud-icon[data-action='craft-open']:disabled { opacity: 1; cursor: default; }

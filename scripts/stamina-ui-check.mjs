@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { createServer } from 'vite'
 import { createSSRApp } from 'vue'
 import { renderToString } from '@vue/server-renderer'
-import { fixture, add, enemy, select, settleAnimations } from './item-test-helpers.mjs'
+import { fixture, add, enemy, select, settleAnimations, setBalls } from './item-test-helpers.mjs'
 
 const server = await createServer({ server: { middlewareMode: true }, appType: 'custom' })
 try {
@@ -48,9 +48,16 @@ try {
   const id = run.staminaDeck.hand[0].id
   assert(run.toggleStaminaBall(id)); html = await render()
   assert(ballButtons(html).some(button => button.includes('aria-pressed="true"')))
+  weapon.energyCost = 3
+  setBalls(run, 2, weapon.attribute); html = await render()
+  assert(html.includes('体力球不足'))
+  assert(!/伤害\d+%/.test(html))
+  setBalls(run, 3, weapon.attribute); html = await render()
+  assert(!html.includes('体力球不足'))
+  assert(!/伤害\d+%/.test(html))
   run.staminaDeck.discardHand()
   html = await render()
-  assert(html.includes('无可用球')); assert(!endButton(html).includes('disabled'))
+  assert(html.includes('体力球不足')); assert(!endButton(html).includes('disabled'))
   select(run, potion); html = await render()
   assert(html.match(/<button\b[^>]*data-action="use"[^>]*>/)?.[0].includes('disabled'))
   assert(run.endPlayerTurn()); html = await render()

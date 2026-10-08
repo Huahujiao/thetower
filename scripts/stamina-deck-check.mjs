@@ -23,6 +23,20 @@ function strike(run, weapon, target) {
   settleAnimations(run)
   return before - target.hp
 }
+function rejectStrike(run, weapon, target) {
+  select(run, weapon)
+  const deck = run.staminaDeck.serialize(), hp = target.hp
+  const uses = { ...run.itemRules.state.weaponUses }, power = run.player.lastAttackPower
+  let attacks = 0
+  const off = run.on('animate:attack', () => attacks++)
+  assert.equal(run._attack(target), false)
+  off()
+  assert.deepEqual(run.staminaDeck.serialize(), deck)
+  assert.deepEqual(run.itemRules.state.weaponUses, uses)
+  assert.equal(run.player.lastAttackPower, power)
+  assert.equal(target.hp, hp)
+  assert.equal(attacks, 0)
+}
 function restore(data, accepted = true) {
   let raw = JSON.stringify(data), discarded = false
   globalThis.localStorage = { getItem: () => raw, setItem: (_key, value) => { raw = value }, removeItem: () => { discarded = true } }
@@ -51,14 +65,16 @@ function restore(data, accepted = true) {
   assert(StaminaDeck.valid(deck.serialize()))
   assert.deepEqual(new StaminaDeck(() => 0, deck.serialize()).serialize(), deck.serialize())
 }
-// Partial matching payment ignores selected off-color balls; generic costs stay exact.
+// Insufficient matching payments are atomic; selected off-color balls cannot fill a gap.
 {
   const run = fixture()
   hand(run, ['scorch', 'scorch', 'drown', 'drown'])
-  assert.equal(run.staminaDeck.plan(3, 'scorch').multiplier, 2 / 3)
+  assert.equal(run.staminaDeck.plan(3, 'scorch'), null)
   run.staminaDeck.toggle(run.staminaDeck.hand[2].id)
-  const plan = run.staminaDeck.pay(3, 'scorch')
-  assert.equal(plan.multiplier, 2 / 3)
+  const before = run.staminaDeck.serialize()
+  assert.equal(run.staminaDeck.pay(3, 'scorch'), null)
+  assert.deepEqual(run.staminaDeck.serialize(), before)
+  const plan = run.staminaDeck.pay(2, 'scorch')
   assert.equal(plan.paid, 2)
   assert.deepEqual(run.staminaDeck.hand.map(ball => ball.attribute), ['drown', 'drown'])
   const snapshot = run.staminaDeck.serialize()
@@ -119,24 +135,31 @@ function restore(data, accepted = true) {
   assert(run.endPlayerTurn()); settleAnimations(run)
   assert.equal(run.weaponEnergyCost(a), 3); assert.equal(run.weaponEnergyCost(b), 3)
 }
-// Full/partial hits pay only matching and wildcard balls, including with fewer total balls than the cost.
+// Attacks require the full matching/wildcard cost; rejected attacks spend nothing and have no effects.
 {
   const run = fixture(), weapon = add(run, 'rust-sword'), target = enemy(run)
   run._synchronizeBattle(); weapon.energyCost = 3; weapon.attack = 9
-  hand(run, [weapon.attribute, weapon.attribute]); assert.equal(strike(run, weapon, target), 6)
-  assert.equal(run.player.energy, 0)
+  hand(run, [weapon.attribute, weapon.attribute]); rejectStrike(run, weapon, target)
   hand(run, [weapon.attribute, weapon.attribute, 'wild']); assert.equal(strike(run, weapon, target), 9)
   const other = ATTRIBUTE_ORDER.find(attribute => attribute !== weapon.attribute)
-  hand(run, [weapon.attribute, other, other]); assert.equal(strike(run, weapon, target), 3) // 1/3
-  assert.deepEqual(run.staminaDeck.hand.map(ball => ball.attribute), [other, other])
-  const used = { ...run.itemRules.state.weaponUses }
-  assert.equal(run._attack(target), false); assert.deepEqual(run.itemRules.state.weaponUses, used)
+  hand(run, [weapon.attribute, other, other]); rejectStrike(run, weapon, target)
+  hand(run, [weapon.attribute, weapon.attribute, other, other, other]); rejectStrike(run, weapon, target)
   run.itemRules.startPlayerTurn()
   hand(run, [weapon.attribute, weapon.attribute, 'wild', other]); assert.equal(strike(run, weapon, target), 9)
   assert.deepEqual(run.staminaDeck.hand.map(ball => ball.attribute), [other])
   for (const a of ATTRIBUTE_ORDER) for (const b of ATTRIBUTE_ORDER) assert.deepEqual(attributeModifier(a, b), { multiplier: 1, countered: false, resisted: false })
-  hand(run, []); const uses = { ...run.itemRules.state.weaponUses }
-  assert.equal(run._attack(target), false); assert.deepEqual(run.itemRules.state.weaponUses, uses)
+  hand(run, []); rejectStrike(run, weapon, target)
+}
+// Auto-approach requires enough total balls for both movement and the full attack.
+{
+  const run = fixture(), weapon = add(run, 'rust-sword'), target = enemy(run, { pos: { c: 5, r: 3 } })
+  run._synchronizeBattle(); weapon.energyCost = 3; weapon.attack = 9; weapon.range = 1
+  const position = { ...run.player.pos }
+  hand(run, Array(3).fill(weapon.attribute)); rejectStrike(run, weapon, target)
+  assert.deepEqual(run.player.pos, position)
+  hand(run, Array(4).fill(weapon.attribute)); assert.equal(strike(run, weapon, target), 9)
+  assert.equal(run.player.energy, 0)
+  assert.notDeepEqual(run.player.pos, position)
 }
 // Pets share leftover balls, regardless of color and backpack adjacency; potion stays intact.
 {

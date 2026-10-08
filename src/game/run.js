@@ -1585,14 +1585,13 @@ export class GameRun {
     if (weapon?.type !== 'weapon') return this._reject('请先选择武器。')
     const route = this._weaponRoute(weapon, enemy)
     if (!route) return this._reject('没有可达的攻击位置。')
-    if (this.energyAfterMovement(route.path.length, route.path) < 1 || !this.weaponPayment(weapon)) return this._reject('没有可支付的同色或万能球。')
+    if (this.energyAfterMovement(route.path.length, route.path) < this.weaponEnergyCost(weapon) || !this.weaponPayment(weapon)) return this._reject('体力球不足。')
     const movement = this._walk(route.path)
     if (movement.stopped || !this.currentRoom.entity(enemy.id)) { this._changed(); return true }
     const range = this.weaponRange(weapon)
     if (combatDistance(this.player.pos, enemy.pos, range) > range) return this._reject('敌人已经离开射程。')
     const context = this.itemRules.attackContext(weapon, enemy)
-    const payment = this.staminaDeck.pay(this.weaponEnergyCost(weapon), weapon.attribute)
-    if (!payment) return this._reject('没有可支付的同色或万能球。')
+    if (!this.staminaDeck.pay(this.weaponEnergyCost(weapon), weapon.attribute)) return this._reject('体力球不足。')
     this.itemRules.recordWeaponUse(weapon)
     this.itemRules.expansion.beforeAttack(weapon, context)
     this.pets.playerAttack(enemy)
@@ -1602,11 +1601,11 @@ export class GameRun {
       { stage: 'multiply', value: context.multiplier },
       ...terrainDamageModifiers(this.currentRoom, this.player.pos),
     ]).total + context.bonusDamage
-    const damage = Math.max(0, Math.floor(fullDamage * payment.multiplier))
+    const damage = Math.max(0, Math.floor(fullDamage))
     const targetPosition = { ...enemy.pos }
     this.pendingAttackImpacts = []
     this.pendingAttackExplosions = []
-    this.player.lastAttackPower = Math.max(0, ((Number(weapon.attack) || 0) + context.flat) * context.attackMultiplier * payment.multiplier)
+    this.player.lastAttackPower = Math.max(0, ((Number(weapon.attack) || 0) + context.flat) * context.attackMultiplier)
     this.itemRules.consume(context)
     const logSequence = this._logSequence
     const hit = this._damageEnemy(enemy, damage, { ignoreDefense: context.ignoreDefense, weapon })

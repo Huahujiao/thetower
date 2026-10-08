@@ -36,7 +36,7 @@ export default `# 技术结构、存档与验证
 - \`run.applyStatus(actor, id, options)\` 获取状态，\`options.layers\` 和 \`options.turns\` 可独立指定；省略时各为100，明确标注的状态默认值除外。
 - \`run.updateStatus(actor, id, changes)\` 原位修改伤害或其他参数，保留未指定的层数和持续时间。\`run.removeStatus(actor, id)\` 移除状态。
 - 固定反击：\`run.applyStatus(run.player, 'counter', { layers: 1, damage: 5 })\`。
-- 获取时记录上一击攻击力：\`damage: { mode: 'last-player-attack', stage: 'gain', ratio: 1 }\`。上一击攻击力为基础攻击加固定加成后乘攻击力倍率，已乘球支付折扣，未乘地形倍率；获取后保存为数值。
+- 获取时记录上一击攻击力：\`damage: { mode: 'last-player-attack', stage: 'gain', ratio: 1 }\`。上一击攻击力为基础攻击加固定加成后乘攻击力倍率，未乘地形倍率；获取后保存为数值。
 - 每次受击时按比例：\`damage: { mode: 'incoming-attack', stage: 'trigger', ratio: 0.5 }\`。默认按攻击本身的伤害计算；\`basis: 'rawDamage'\` 使用减伤后、护甲前的伤害，\`basis: 'healthDamage'\` 使用实际损失生命。
 - 自定义算法使用 \`registerStatusDamageResolver(name, callback)\` 注册，通过 \`damage.mode\` 引用；存档只保存算法名称和参数。触发阶段的上下文含玩家、持有者、攻击者和已结算的伤害结果。
 - 闪避：\`run.applyStatus(run.player, 'dodge')\` 默认1层；可显式指定更多层。玩家毒使用 \`player-poison\`，敌人毒使用 \`enemy-poison\`，不能跨持有者类型混用。
