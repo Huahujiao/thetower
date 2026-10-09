@@ -187,6 +187,58 @@ export function bringRotWalkerLeftLegForward(project) {
   if (leg) leg.z = 7
 }
 
+// V36: move the character-left support leg farther away from the pelvis.
+export function widenRotWalkerLeftLeg(project) {
+  if (project.enemyId !== 'rot-walker') return
+  const leg = project.joints.find(joint => joint.id === 'rot-stilt-root')
+  if (leg) leg.x += 6
+}
+
+// Add the two unused claw assets as lower arms; keep saved main-arm edits.
+export function addRevenantSecondaryArms(project) {
+  if (project.enemyId !== 'revenant-guard') return
+  for (const [side, sign, n] of [['left', 1, 18], ['right', -1, 23]]) {
+    const id = `${side}-secondary`
+    if (project.joints.some(j => j.id === `${id}-shoulder`)) continue
+    joint(project, `${id}-shoulder`, `${sign > 0 ? '左' : '右'}副臂肩`, 'root', sign * 34, -49, 3)
+    const shoulder = project.joints.find(j => j.id === `${id}-shoulder`)
+    Object.assign(shoulder, { rotationZ: sign * 42, scaleX: sign })
+    const anchors = n === 18 ? [[.35, .08], [.48, .44], [.57, .70]] : [[.62, .10], [.48, .42], [.39, .64]]
+    let target = shoulder.id
+    for (let i = 0; i < anchors.length; i++) {
+      if (i) {
+        const next = `${id}-${i === 1 ? 'elbow' : 'wrist'}`
+        pixelLink(project, next, i === 1 ? '副臂肘' : '副臂腕', target, n, .23, anchors[i - 1], anchors[i], .25)
+        target = next
+      }
+      imagePart(project, `${id}-${['upper', 'forearm', 'hand'][i]}`, ['副臂上段', '副臂前臂', '副臂骨爪'][i], n, target, .23, anchors[i],
+        { crop: [[0, 0, 1, .51], [0, .37, 1, .39], [0, .60, 1, .40]][i], layer: 8 + i })
+      organMotion(project, target, i % 2 ? -sign : sign, i ? 9 : 7)
+    }
+  }
+}
+
+export function exposeFourArmLayouts(project) {
+  if (project.enemyId === 'revenant-guard') {
+    for (const [side, sign] of [['left', -1], ['right', 1]]) {
+      const shoulder = project.joints.find(j => j.id === `${side}-shoulder`)
+      if (shoulder) { shoulder.z = 3; shoulder.rotationZ += sign * 20 }
+      const leg = project.joints.find(j => j.id === `${side}-leg`)
+      if (leg) leg.x += sign * 14
+    }
+  }
+  if (project.enemyId === 'tide-rite-matriarch') {
+    for (const [side, sign] of [['left', -1], ['right', 1]]) {
+      const main = project.joints.find(j => j.id === `${side}-arm`)
+      const secondary = project.joints.find(j => j.id === `${side}-prayer`)
+      const veil = project.joints.find(j => j.id === `${side}-veil`)
+      if (main) { main.z = 4; main.rotationZ += sign * 45 }
+      if (secondary) { secondary.x += sign * 11; secondary.y -= 34; secondary.z = 5; secondary.rotationZ += sign * 6 }
+      if (veil) { veil.x += sign * 44; veil.rotationZ += sign * 35 }
+    }
+  }
+}
+
 // V26: splay the armor at its own pivot, leaving room for the hanging arms.
 export function adjustShellguardStance(project) {
   if (project.enemyId !== 'shellguard') return
@@ -659,6 +711,9 @@ export function applyEnemyComponentArt(project) {
   adjustRotSacToadPose(project)
   reconnectSalamanderRig(project)
   reconnectRotSacToadRig(project)
+  widenRotWalkerLeftLeg(project)
+  addRevenantSecondaryArms(project)
+  exposeFourArmLayouts(project)
   return project
 }
 

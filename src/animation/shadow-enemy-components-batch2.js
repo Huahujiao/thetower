@@ -1,4 +1,5 @@
 import { createDefaultShadowProject } from './shadow-rig.js'
+import { buildMossColossus } from './shadow-moss-colossus.js'
 
 export const BATCH2_COMPONENT_ENEMY_IDS = Object.freeze([
   'rot-walker', 'shellguard', 'wisp', 'moss-colossus', 'sentry-crossbow', 'ash-cannon-bug',
@@ -132,35 +133,7 @@ export function applyEnemyComponentBatch2(p, { joint, imagePart, pixelLink, keys
     motion('left-banner', -1, 11); motion('right-banner', 1, 13)
   }
 
-  if (p.enemyId === 'moss-colossus') {
-    art('torso', '苔石胸腔', 5, 'root', .38, [.5, .4], { layer: 7 })
-    art('spine', '苔骨脊', 3, 'root', .26, [.5, .35], { y: 30, z: -12, layer: 2 })
-    head(4, .35, [.5, .70], [0, 50, 12], [0, 0, 1, .79])
-    link('jaw', '石颌', 'head', 4, .35, [.5, .70], [.5, .76], .5)
-    art('jaw-art', '石颌', 4, 'jaw', .35, [.5, .76], { crop: [0, .73, 1, .27], layer: 11 })
-    motion('jaw', 1, 7)
-    j('pelvis', '石髋', 'root', [0, -61, -6])
-    for (const [side, sign, shoulder, arm, leg] of [['left', -1, 12, 7, 14], ['right', 1, 13, 9, 15]]) {
-      j(`${side}-shoulder`, '石肩', 'root', [sign * 51, 39, sign * 13])
-      art(`${side}-pauldron`, '苔石肩甲', shoulder, `${side}-shoulder`, .24, [.5, .36], { layer: 8 })
-      art(`${side}-upper-arm`, '石臂上段', arm, `${side}-shoulder`, .28, [.5, .13], { crop: [0, 0, 1, .61], layer: 6 })
-      link(`${side}-elbow`, '石肘', `${side}-shoulder`, arm, .28, [.5, .13], [.5, .53], 3)
-      art(`${side}-forearm`, '石臂下段', arm, `${side}-elbow`, .28, [.5, .53], { crop: [0, .46, 1, .54], layer: 7 })
-      link(`${side}-wrist`, '掌根', `${side}-elbow`, arm, .28, [.5, .53], [.5, .85], .5)
-      art(`${side}-palm`, sign < 0 ? '巨石拳' : '垂根巨掌', sign < 0 ? 21 : 10, `${side}-wrist`, sign < 0 ? .27 : .24, [.5, .12], { layer: 9 })
-      motion(`${side}-shoulder`, sign, 19); motion(`${side}-elbow`, -sign, 18); motion(`${side}-wrist`, sign, 13)
-      dividedLimb(`${side}-leg`, '苔石腿', leg, 'pelvis', [sign * 26, -3, sign * 12], .27,
-        [[.5, .11], [.5, .49], [.5, .84]], [[0, 0, 1, .56], [0, .43, 1, .47], [0, .77, 1, .23]], sign)
-    }
-    j('shoulder-tree', '肩上寄树', 'left-shoulder', [-11, 22, -9])
-    art('shoulder-tree-art', '肩上寄树', 2, 'shoulder-tree', .19, [.64, .81], { layer: 3 })
-    motion('shoulder-tree', -1, 6)
-    for (const [side, sign, n] of [['left', -1, 16], ['right', 1, 19]]) {
-      j(`${side}-root-tassel`, '髋部垂根', 'pelvis', [sign * 25, -7, -5])
-      art(`${side}-root-tassel-art`, '髋部垂根', n, `${side}-root-tassel`, .18, [.5, .08], { layer: 3 })
-      motion(`${side}-root-tassel`, sign, 8)
-    }
-  }
+  if (p.enemyId === 'moss-colossus') buildMossColossus(p, { joint, imagePart, pixelLink, organMotion })
 
   if (p.enemyId === 'sentry-crossbow') {
     art('torso', '骨弩胸甲', 1, 'root', .30, [.5, .32], { layer: 7 })

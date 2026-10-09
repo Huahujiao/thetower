@@ -199,6 +199,32 @@ for (const source of projects) {
     const depth = id => rest.jointsById.get(id).matrix.elements[14]
     assert(depth('rot-stilt-root') > depth('pelvis'), 'walker character-left leg should be in front')
     assert.equal(depth('rot-stilt-root'), depth('left-hip'), 'walker legs should have the same root depth')
+    assert(rest.jointsById.get('rot-stilt-root').matrix.elements[12] - rest.jointsById.get('pelvis').matrix.elements[12] >= 33,
+      'walker character-left stilt leg should stand farther outward')
+  }
+  if (p.enemyId === 'moss-colossus') {
+    const used = new Set(p.parts.map(part => Number(/part_(\d+)\.png$/.exec(part.visual.texture)?.[1])))
+    assert.equal(used.size, 23, 'moss colossus should use all 23 anatomy assets')
+    assert(p.parts.find(part => part.id === 'torso').visual.texture.endsWith('/part_001.png'), 'moss chest face must be the main torso')
+    for (const side of ['left', 'right']) {
+      const rest = evaluateShadowProject(p, null, 0, { raw: true })
+      const primary = rest.jointsById.get(`${side}-arm-wrist`).matrix.elements
+      const secondary = rest.jointsById.get(`${side}-secondary-wrist`).matrix.elements
+      assert(primary[13] - secondary[13] > 35, 'moss upper and lower hands should not overlap')
+    }
+  }
+  if (p.enemyId === 'revenant-guard') {
+    for (const n of [18, 21, 22, 23]) assert(p.parts.some(part => part.visual.texture.endsWith(`/part_${String(n).padStart(3, '0')}.png`)),
+      'revenant should retain all four claw-arm assets')
+  }
+  if (p.enemyId === 'tide-rite-matriarch') {
+    for (const side of ['left', 'right']) {
+      const main = p.joints.find(j => j.id === `${side}-arm`)
+      const secondary = p.joints.find(j => j.id === `${side}-prayer`)
+      const veil = p.joints.find(j => j.id === `${side}-veil`)
+      assert(main.y - secondary.y > 50 && Math.abs(veil.x) > Math.abs(main.x) + 30,
+        'matriarch arms and veils should spread in XY as well as depth')
+    }
   }
   if (p.enemyId === 'rot-sac-toad') {
     assert.equal(p.name, '\u8150\u56ca\u86e4\u87c6')
@@ -399,7 +425,7 @@ walker.joints.find(j => j.id === 'neck').z += 4
 walker.joints.find(j => j.id === 'head').y -= 8
 walker.joints.find(j => j.id === 'head').z += 5
 walker.joints.find(j => j.id === 'left-shoulder').z = -11
-walker.joints.find(j => j.id === 'rot-stilt-root').x -= 8
+walker.joints.find(j => j.id === 'rot-stilt-root').x -= 14
 walker.joints.find(j => j.id === 'rot-stilt-root').z = -7
 const keptGnawer = structuredClone(projects.find(p => p.enemyId === 'gnawer'))
 const expectedGnawer = structuredClone(keptGnawer)
@@ -440,6 +466,7 @@ shellguard.parts.find(p => p.id === 'right-gate-art').width += 3
 shellguard.parts[0].fill = '#456789'
 const shellguardMotion = JSON.stringify(shellguard.animations)
 const retainedWalker = structuredClone(expectedWalker)
+retainedWalker.joints.find(j => j.id === 'rot-stilt-root').x -= 6
 retainedWalker.joints.find(j => j.id === 'neck').y -= 8
 retainedWalker.joints.find(j => j.id === 'neck').z += 4
 retainedWalker.joints.find(j => j.id === 'head').y -= 8

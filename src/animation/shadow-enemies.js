@@ -2,6 +2,7 @@ import { ENEMY_DEFS } from '../game/data/enemies.js'
 import catalog from '../game/data/catalog.json' with { type: 'json' }
 import { installEnemyGrounding, rebuildEnemyGrounding } from './enemy-grounding.js'
 import { reconnectRotSacToadRig } from './shadow-enemy-components-batch5.js'
+import { widenRotWalkerLeftLeg, addRevenantSecondaryArms, exposeFourArmLayouts } from './shadow-enemy-components.js'
 import { createRosterEnemyProject, ROSTER_ENEMY_ART } from './shadow-enemy-roster.js'
 import { adjustEnemyComponentSpacing, adjustEnemyUpperBodyPose, adjustRotWalkerLimbs, adjustRotWalkerFeetAndNeck, alignRotWalkerFootContacts, bringRotWalkerLeftLegForward, adjustShellguardStance, adjustPatrolHoundRig, adjustSalamanderBody, alignSalamanderChest, adjustRotSacToadPose, reconnectSalamanderRig, adjustRootrotHands, adjustTideCubHeadDepth, openBeetleElytra, removeNestSpiderTail, alignGnawerRestPose, alignEnemyFrontalSkeleton, applyEnemyComponentArt, COMPONENT_ENEMY_IDS, BATCH2_COMPONENT_ENEMY_IDS, BATCH3_COMPONENT_ENEMY_IDS, BATCH4_COMPONENT_ENEMY_IDS, BATCH5_COMPONENT_ENEMY_IDS, componentTexturePresets, offsetGnawerForearms, widenEnemyComponentRig } from './shadow-enemy-components.js'
 import {
@@ -16,7 +17,7 @@ import {
   upsertShadowKeyframe,
 } from './shadow-rig.js'
 
-export const ENEMY_ART_PACK_VERSION = 35
+export const ENEMY_ART_PACK_VERSION = 36
 export const ENEMY_ART = Object.freeze({
   gnawer: { family: 'humanoid' },
   'emberwing-moth': { family: 'winged' },
@@ -556,6 +557,22 @@ export function installEnemyShadowProjects(roster) {
         if (project.enemyId === 'rot-sac-toad' && roster.enemyArtPackVersion < 35) {
           reconnectRotSacToadRig(project)
           rebuildEnemyGrounding(project)
+        }
+        if (roster.enemyArtPackVersion < 36) {
+          if (project.enemyId === 'moss-colossus') {
+            // The requested anatomy rebuild replaces this rig without adding
+            // old-version backups to the character selector.
+            const template = createEnemyShadowProject(ENEMY_DEFS.find(d => d.id === project.enemyId))
+            character.project = { ...template, name: project.name, stage: project.stage }
+          } else {
+            widenRotWalkerLeftLeg(project)
+            addRevenantSecondaryArms(project)
+            exposeFourArmLayouts(project)
+            if (['rot-walker', 'revenant-guard'].includes(project.enemyId)) {
+              rebuildEnemyGrounding(project)
+              alignRotWalkerFootContacts(project)
+            }
+          }
         }
       }
     }
