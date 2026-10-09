@@ -79,6 +79,18 @@ function assertSalamanderSpine(pose) {
     }
   }
 }
+function assertSalamanderChest(pose) {
+  for (const [chestId, backId] of [['chest', 'back'], ['chest-rear', 'back-mid']]) {
+    const chest = pose.parts.find(p => p.part.id === chestId)
+    const back = pose.parts.find(p => p.part.id === backId)
+    assert.equal(chest.part.attachment.targetId, back.part.attachment.targetId, 'salamander shell must follow the same torso bones as the spine')
+    assert.equal(chest.part.height, back.part.height)
+    assert.equal(chest.part.pivotY, back.part.pivotY)
+    for (let i = 0; i < 12; i++) assert(Math.abs(chest.matrix.elements[i] - back.matrix.elements[i]) < 1e-5, 'salamander shell and spine must share a surface direction')
+    const gap = Math.hypot(...[12, 13, 14].map(i => chest.matrix.elements[i] - back.matrix.elements[i]))
+    assert(gap > .1 && gap < 1, 'salamander torso must not have a separate suspended chest layer')
+  }
+}
 function assertBeetleWings(pose) {
   for (const [side, sign] of [['left', -1], ['right', 1]]) {
     const { part, matrix } = pose.parts.find(p => p.part.id === `${side}-gate-sheet`)
@@ -138,10 +150,14 @@ for (const source of projects) {
     }
   }
   if (p.enemyId === 'redneedle-salamander') {
-    const chest = p.parts.find(part => part.id === 'chest')
-    assert.equal(chest.rotationX, 90, 'salamander sternum should lie along the abdomen')
-    assert(chest.y < 0, 'salamander sternum should sit below the spine')
     assertSalamanderSpine(evaluateShadowProject(p, null, 0, { raw: true }))
+    assertSalamanderChest(evaluateShadowProject(p, null, 0, { raw: true }))
+  }
+  if (p.enemyId === 'rot-walker') {
+    const rest = evaluateShadowProject(p, null, 0, { raw: true })
+    const depth = id => rest.jointsById.get(id).matrix.elements[14]
+    assert(depth('rot-stilt-root') > depth('pelvis'), 'walker character-left leg should be in front')
+    assert.equal(depth('rot-stilt-root'), depth('left-hip'), 'walker legs should have the same root depth')
   }
   if (p.enemyId === 'nest-spider') {
     assert(!p.parts.some(part => part.id.startsWith('spinneret')), 'nest-spider spinneret should be removed')
@@ -159,7 +175,7 @@ for (const source of projects) {
     assert(part.name && part.visual.type === 'texture', `${p.enemyId}/${part.id}: missing named texture`)
     assert(existsSync(new URL(`../public${part.visual.texture}`, import.meta.url)), `${p.enemyId}: missing image`)
     assert.equal(part.depth, 0)
-    if (p.enemyId === 'redneedle-salamander' && ['back', 'back-mid', 'back-tail'].includes(part.id)) {
+    if (p.enemyId === 'redneedle-salamander' && ['back', 'back-mid', 'back-tail', 'chest', 'chest-rear'].includes(part.id)) {
       assert.equal(part.attachment.type, 'bone')
       assert(p.bones.some(bone => bone.id === part.attachment.targetId))
     } else {
@@ -184,7 +200,10 @@ for (const source of projects) {
     }
     for (let i = 0; i <= 32; i++) {
       const pose = evaluateShadowProject(p, action, animation.duration * i / 32)
-      if (p.enemyId === 'redneedle-salamander') assertSalamanderSpine(pose)
+      if (p.enemyId === 'redneedle-salamander') {
+        assertSalamanderSpine(pose)
+        assertSalamanderChest(pose)
+      }
       if (p.enemyId === 'beetle-guard') assertBeetleWings(pose)
       frames++
       for (const part of pose.parts) {
@@ -335,6 +354,7 @@ walker.joints.find(j => j.id === 'head').y -= 8
 walker.joints.find(j => j.id === 'head').z += 5
 walker.joints.find(j => j.id === 'left-shoulder').z = -11
 walker.joints.find(j => j.id === 'rot-stilt-root').x -= 8
+walker.joints.find(j => j.id === 'rot-stilt-root').z = -7
 const keptGnawer = structuredClone(projects.find(p => p.enemyId === 'gnawer'))
 const expectedGnawer = structuredClone(keptGnawer)
 const laterNewCharacter = createDefaultShadowProject()
@@ -378,6 +398,7 @@ retainedWalker.joints.find(j => j.id === 'neck').y -= 8
 retainedWalker.joints.find(j => j.id === 'neck').z += 4
 retainedWalker.joints.find(j => j.id === 'head').y -= 8
 retainedWalker.joints.find(j => j.id === 'head').z += 5
+retainedWalker.joints.find(j => j.id === 'rot-stilt-root').z = -7
 const retainedBackup = { ...structuredClone(expectedWalker), enemyId: null, name: 'Later backup \u00b7 \u65e7\u7248\u5907\u4efd' }
 const shellguardRoster = { enemyArtPackVersion: 25, activeCharacterId: 'shellguard', characters: [
   { id: 'later-blank', project: createDefaultShadowProject() },
@@ -457,12 +478,15 @@ assert.equal(installEnemyShadowProjects(houndRoster), false)
 assert.deepEqual(houndRoster, updatedHoundRoster)
 
 const savedSalamander = structuredClone(projects.find(p => p.enemyId === 'redneedle-salamander'))
-savedSalamander.parts = savedSalamander.parts.filter(p => !['back-mid', 'back-tail'].includes(p.id))
+savedSalamander.parts = savedSalamander.parts.filter(p => !['back-mid', 'back-tail', 'chest-rear'].includes(p.id))
 const oldSpine = savedSalamander.parts.find(p => p.id === 'back')
 Object.assign(oldSpine, { name: oldSpine.name.replace(/ 1$/, ''), height: 111.1, pivotY: .4, rotationX: -72, rotationZ: 0, y: 26, z: -15,
   attachment: { type: 'joint', targetId: 'root', followRotation: true, t: .5 } })
 oldSpine.visual.textureFrame.crop = { left: 0, top: 0, width: 1, height: 1 }
-Object.assign(savedSalamander.parts.find(p => p.id === 'chest'), { rotationX: 0, y: 0 })
+const oldChest = savedSalamander.parts.find(p => p.id === 'chest')
+Object.assign(oldChest, { rotationX: 0, rotationZ: 0, y: 0, height: 101, pivotY: .45,
+  attachment: { type: 'joint', targetId: 'root', followRotation: true, t: .5 } })
+oldChest.visual.textureFrame.crop = { left: 0, top: 0, width: 1, height: 1 }
 oldSpine.fill = '#abcdef'
 savedSalamander.animations.idle.tracks['part:back'] = structuredClone(Object.values(savedSalamander.animations.idle.tracks)[0])
 const preservedSalamanderMotion = structuredClone(savedSalamander.animations)

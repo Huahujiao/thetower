@@ -5,8 +5,8 @@ import { applyEnemyComponentBatch3 } from './shadow-enemy-components-batch3.js'
 export { BATCH3_COMPONENT_ENEMY_IDS } from './shadow-enemy-components-batch3.js'
 import { applyEnemyComponentBatch4 } from './shadow-enemy-components-batch4.js'
 export { BATCH4_COMPONENT_ENEMY_IDS } from './shadow-enemy-components-batch4.js'
-import { applyEnemyComponentBatch5, adjustPatrolHoundRig, adjustSalamanderBody } from './shadow-enemy-components-batch5.js'
-export { BATCH5_COMPONENT_ENEMY_IDS, adjustPatrolHoundRig, adjustSalamanderBody } from './shadow-enemy-components-batch5.js'
+import { applyEnemyComponentBatch5, adjustPatrolHoundRig, adjustSalamanderBody, alignSalamanderChest } from './shadow-enemy-components-batch5.js'
+export { BATCH5_COMPONENT_ENEMY_IDS, adjustPatrolHoundRig, adjustSalamanderBody, alignSalamanderChest } from './shadow-enemy-components-batch5.js'
 import {
   createDefaultShadowProject, createShadowBone, createShadowJoint, createShadowPart,
   shadowTargetKey, upsertShadowKeyframe, shadowTransformMatrix,
@@ -178,6 +178,13 @@ export function alignRotWalkerFootContacts(project) {
     contact.x = m[0] * x + m[4] * y + m[12]
     contact.z = m[2] * x + m[6] * y + m[14]
   }
+}
+
+// V33: the character's left stilt leg belongs in front of the torso.
+export function bringRotWalkerLeftLegForward(project) {
+  if (project.enemyId !== 'rot-walker') return
+  const leg = project.joints.find(joint => joint.id === 'rot-stilt-root')
+  if (leg) leg.z = 7
 }
 
 // V26: splay the armor at its own pivot, leaving room for the hanging arms.
@@ -647,6 +654,8 @@ export function applyEnemyComponentArt(project) {
   adjustTideCubHeadDepth(project)
   openBeetleElytra(project)
   adjustRotWalkerFeetAndNeck(project)
+  alignSalamanderChest(project)
+  bringRotWalkerLeftLegForward(project)
   return project
 }
 

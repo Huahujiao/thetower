@@ -83,6 +83,36 @@ export function adjustSalamanderBody(project) {
   }
 }
 
+// V33: the rib shell shares the spine's surface and its animated bone chain.
+export function alignSalamanderChest(project) {
+  if (project.enemyId !== 'redneedle-salamander') return
+  const chest = project.parts.find(part => part.id === 'chest')
+  const spine = ['back', 'back-mid'].map(id => project.parts.find(part => part.id === id))
+  if (!chest || spine.some(part => !part)) return
+  const source = JSON.parse(JSON.stringify(chest))
+  const crop = source.visual.textureFrame.crop || { left: 0, top: 0, width: 1, height: 1 }
+  const total = spine.reduce((sum, part) => sum + part.height, 0)
+  let start = 0
+  for (const [i, segment] of spine.entries()) {
+    const id = i === 0 ? 'chest' : 'chest-rear'
+    const part = i === 0 ? chest : JSON.parse(JSON.stringify(source))
+    Object.assign(part, { id, name: `${source.name} ${i + 1}`, x: 0, y: .4, z: 0,
+      height: segment.height, pivotY: segment.pivotY,
+      rotationX: segment.rotationX, rotationY: segment.rotationY, rotationZ: segment.rotationZ,
+      attachment: { ...segment.attachment },
+    })
+    const fraction = segment.height / total
+    part.visual.textureFrame.crop = { ...crop, top: crop.top + start * crop.height, height: fraction * crop.height }
+    if (i > 0) {
+      project.parts.push(part)
+      for (const animation of Object.values(project.animations)) {
+        if (animation.tracks['part:chest']) animation.tracks[`part:${id}`] = JSON.parse(JSON.stringify(animation.tracks['part:chest']))
+      }
+    }
+    start += fraction
+  }
+}
+
 // A short set of independent textures carries the anatomy. Eyes already
 // painted on a face are not overlaid with another set of eyes.
 export function applyEnemyComponentBatch5(p, { joint, imagePart, pixelLink, keys, organMotion }) {
