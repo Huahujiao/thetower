@@ -7,6 +7,82 @@ export const BATCH5_COMPONENT_ENEMY_IDS = Object.freeze([
   'tide-rite-matriarch', 'overseer',
 ])
 
+// V27: apply once to templates and existing component rigs.
+export function adjustPatrolHoundRig(project) {
+  if (project.enemyId !== 'patrol-hound') return
+  const joints = new Map(project.joints.map(joint => [joint.id, joint]))
+  const parts = new Map(project.parts.map(part => [part.id, part]))
+  const haunch = joints.get('haunch')
+  const neck = joints.get('neck')
+  if (haunch) haunch.z -= 16
+  if (neck) neck.z += 8
+  const back = parts.get('back')
+  if (back && haunch) {
+    // The long Y axis runs toward the front along the root/haunch segment.
+    back.rotationX = Math.atan2(-haunch.z, -haunch.y) * 180 / Math.PI
+    back.height *= 1.18
+    back.y = 24
+    back.z = -26
+  }
+  for (const side of ['left', 'right']) for (const end of ['front', 'hind']) {
+    const hip = joints.get(`${side}-${end}-hip`)
+    const knee = joints.get(`${side}-${end}-knee`)
+    const paw = joints.get(`${side}-${end}-paw`)
+    const bend = end === 'front' ? 18 : -24
+    if (hip) {
+      hip.rotationX += bend
+      if (end === 'front') hip.z += 6
+    }
+    if (knee) knee.rotationX -= bend * 2
+    if (paw) paw.rotationX += bend
+  }
+  for (const [side, turn] of [['left', -5], ['right', 5]]) {
+    const face = parts.get(`${side}-face`)
+    if (face) {
+      face.rotationY += turn
+      face.z += 1.2
+    }
+  }
+  const nose = parts.get('nose')
+  if (nose) nose.z += 1.2
+}
+
+// V28: map the single spine texture along the neck, trunk and tail bones.
+export function adjustSalamanderBody(project) {
+  if (project.enemyId !== 'redneedle-salamander') return
+  const chest = project.parts.find(part => part.id === 'chest')
+  if (chest) Object.assign(chest, { rotationX: 90, y: -12, z: 0 })
+  const back = project.parts.find(part => part.id === 'back')
+  const joints = new Map(project.joints.map(joint => [joint.id, joint]))
+  const segments = [
+    { id: 'back', to: 'neck', turn: -90, pivot: 1 },
+    { id: 'back-mid', to: 'haunch', turn: 90, pivot: 0 },
+    { id: 'back-tail', to: 'tail', turn: 90, pivot: 0 },
+  ].map(segment => ({ ...segment, joint: joints.get(segment.to), bone: project.bones.find(bone => bone.toJointId === segment.to) }))
+  if (!back || segments.some(segment => !segment.joint || !segment.bone)) return
+  const source = JSON.parse(JSON.stringify(back))
+  const crop = source.visual.textureFrame.crop || { left: 0, top: 0, width: 1, height: 1 }
+  const lengths = segments.map(({ joint }) => Math.hypot(joint.x, joint.y, joint.z))
+  const total = lengths.reduce((sum, length) => sum + length, 0)
+  let start = 0
+  for (const [i, segment] of segments.entries()) {
+    const fraction = lengths[i] / total
+    const part = i === 0 ? back : JSON.parse(JSON.stringify(source))
+    Object.assign(part, { id: segment.id, name: `${source.name} ${i + 1}`, x: 0, y: 0, z: 0,
+      height: lengths[i], pivotY: segment.pivot, rotationX: 90, rotationY: 0, rotationZ: segment.turn,
+      attachment: { type: 'bone', targetId: segment.bone.id, t: 0, followRotation: true },
+    })
+    part.visual.textureFrame.crop = { ...crop, top: crop.top + start * crop.height, height: fraction * crop.height }
+    if (i > 0) {
+      project.parts.push(part)
+      for (const animation of Object.values(project.animations)) {
+        if (animation.tracks['part:back']) animation.tracks[`part:${part.id}`] = JSON.parse(JSON.stringify(animation.tracks['part:back']))
+      }
+    }
+    start += fraction
+  }
+}
+
 // A short set of independent textures carries the anatomy. Eyes already
 // painted on a face are not overlaid with another set of eyes.
 export function applyEnemyComponentBatch5(p, { joint, imagePart, pixelLink, keys, organMotion }) {

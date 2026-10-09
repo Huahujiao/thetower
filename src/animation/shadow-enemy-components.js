@@ -5,8 +5,8 @@ import { applyEnemyComponentBatch3 } from './shadow-enemy-components-batch3.js'
 export { BATCH3_COMPONENT_ENEMY_IDS } from './shadow-enemy-components-batch3.js'
 import { applyEnemyComponentBatch4 } from './shadow-enemy-components-batch4.js'
 export { BATCH4_COMPONENT_ENEMY_IDS } from './shadow-enemy-components-batch4.js'
-import { applyEnemyComponentBatch5 } from './shadow-enemy-components-batch5.js'
-export { BATCH5_COMPONENT_ENEMY_IDS } from './shadow-enemy-components-batch5.js'
+import { applyEnemyComponentBatch5, adjustPatrolHoundRig, adjustSalamanderBody } from './shadow-enemy-components-batch5.js'
+export { BATCH5_COMPONENT_ENEMY_IDS, adjustPatrolHoundRig, adjustSalamanderBody } from './shadow-enemy-components-batch5.js'
 import {
   createDefaultShadowProject, createShadowBone, createShadowJoint, createShadowPart,
   shadowTargetKey, upsertShadowKeyframe,
@@ -444,8 +444,6 @@ function crawlers(p) {
   imagePart(p, 'carapace', '腹部背壳', 4, 'abdomen', spider ? .22 : .25, [.5, .48], { rotationX: -55, layer: 5 })
   imagePart(p, 'head-shell', '头壳', spider ? 2 : 6, 'head', .25, [.5, .5], { rotationX: -30, layer: 8 })
   if (spider) {
-    // Only the silk tube belongs to this rear organ; the skull and hanging sacs are unused alternatives.
-    imagePart(p, 'spinneret-sheet', '吐丝器', 6, 'spinneret-hinge', .1, [.5, .52], { crop: [.15, .48, .7, .52], rotationX: -60, layer: 6 })
     for (const [side, sign, number] of [['left', -1, 7], ['right', 1, 8]]) {
       joint(p, `${side}-fang-hinge`, `${sign < 0 ? '左' : '右'}毒颚根`, 'mandible', sign * 15, 0, 0)
       imagePart(p, `${side}-fang`, `${sign < 0 ? '左' : '右'}毒颚`, number, `${side}-fang-hinge`, .19, [.5, .1], { rotationX: -20, layer: 10 })
@@ -516,6 +514,21 @@ function removeUnusedBranches(project, roots) {
   for (const animation of Object.values(project.animations)) for (const id of removed) delete animation.tracks[`joint:${id}`]
 }
 
+export function removeNestSpiderTail(project) {
+  if (project.enemyId !== 'nest-spider') return
+  const roots = ['abdomen-tip', 'spinneret-hinge', 'tail']
+  const removed = new Set(roots)
+  for (let pass = 0; pass < project.joints.length; pass++) {
+    for (const bone of project.bones) if (removed.has(bone.fromJointId)) removed.add(bone.toJointId)
+  }
+  const bones = new Set(project.bones.filter(bone => removed.has(bone.fromJointId) || removed.has(bone.toJointId)).map(bone => bone.id))
+  const removedParts = project.parts.filter(part => part.id.startsWith('spinneret')
+    || removed.has(part.attachment.targetId) || bones.has(part.attachment.targetId))
+  project.parts = project.parts.filter(part => !removedParts.includes(part))
+  for (const animation of Object.values(project.animations)) for (const part of removedParts) delete animation.tracks[`part:${part.id}`]
+  removeUnusedBranches(project, roots)
+}
+
 export function applyEnemyComponentArt(project) {
   applyEnemyComponentBatch2(project, { joint, imagePart, pixelLink, keys, organMotion })
   applyEnemyComponentBatch3(project, { joint, imagePart, pixelLink, keys, organMotion })
@@ -550,6 +563,9 @@ export function applyEnemyComponentArt(project) {
   adjustEnemyUpperBodyPose(project)
   adjustRotWalkerLimbs(project)
   adjustShellguardStance(project)
+  removeNestSpiderTail(project)
+  adjustPatrolHoundRig(project)
+  adjustSalamanderBody(project)
   return project
 }
 
