@@ -11,6 +11,22 @@ let frames = 0, parts = 0
 for (const source of projects) {
   const p = normalizeShadowProject(source)
   assert.equal(p.joints.find(j => j.id === 'root').rotationY, 0, `${p.enemyId}: angled default facing`)
+  if (p.enemyId === 'gnawer') {
+    const rest = evaluateShadowProject(p)
+    const position = id => rest.jointsById.get(id).matrix.elements
+    assert.equal(position('root')[13], 6, 'gnawer upper body should be raised')
+    assert.equal(position('pelvis')[13], -36, 'gnawer pelvis should follow the raised body')
+    assert.equal(position('left-hip')[13], -48, 'gnawer legs should stay at their original height')
+    for (const id of ['shoulder', 'elbow', 'wrist']) {
+      assert.equal(position(`left-${id}`)[14], position(`right-${id}`)[14], `gnawer hands: mismatched ${id} depth`)
+    }
+    assert.equal(position('left-hip')[14], position('right-hip')[14], 'gnawer hips: mismatched depth')
+    for (const [id, multiplier] of [['knee', 1], ['hock', 2], ['ankle', 3]]) {
+      const depthDelta = position(`right-${id}`)[14] - position(`left-${id}`)[14]
+      assert(Math.abs(depthDelta - .75 * multiplier) < .1,
+        `gnawer legs: expected a slight ${id} depth offset, found ${depthDelta}`)
+    }
+  }
   assert(!p.name.endsWith('\u9aa8\u67b6\u9884\u89c8'), `${p.enemyId}: preview suffix in name`)
   const joints = new Set(p.joints.map(j => j.id))
   assert.equal(joints.size, p.joints.length, `${p.enemyId}: duplicate joints`)
@@ -83,15 +99,27 @@ assert.equal(installEnemyShadowProjects(roster), false)
 const saved = normalizeShadowProject(projects.find(p => p.enemyId === 'gnawer'))
 saved.name = 'Custom gnawer \u00b7 \u9aa8\u67b6\u9884\u89c8'
 saved.joints.find(j => j.id === 'root').rotationY = -30
+saved.joints.find(j => j.id === 'root').y -= 6
+saved.joints.find(j => j.id === 'left-shoulder').z = -13
+saved.joints.find(j => j.id === 'right-shoulder').z = 13
+saved.joints.find(j => j.id === 'left-hip').z = -10
+saved.joints.find(j => j.id === 'right-hip').z = 10
+saved.joints.find(j => j.id === 'left-hip').y += 6
+saved.joints.find(j => j.id === 'right-hip').y += 6
+for (const id of ['right-knee', 'right-hock', 'right-ankle']) saved.joints.find(j => j.id === id).z -= .75
 saved.parts[0].fill = '#123456'
 const savedParts = JSON.stringify(saved.parts), savedAnimations = JSON.stringify(saved.animations)
-const currentRoster = { enemyArtPackVersion: 17, activeCharacterId: 'saved', characters: [{ id: 'saved', project: saved }] }
+const currentRoster = { enemyArtPackVersion: 18, activeCharacterId: 'saved', characters: [{ id: 'saved', project: saved }] }
 assert(installEnemyShadowProjects(currentRoster))
 assert.equal(currentRoster.enemyArtPackVersion, ENEMY_ART_PACK_VERSION)
 assert.equal(currentRoster.characters.length, 1)
 assert.equal(currentRoster.activeCharacterId, 'saved')
 assert.equal(saved.name, 'Custom gnawer')
 assert.equal(saved.joints.find(j => j.id === 'root').rotationY, 0)
+assert.equal(saved.joints.find(j => j.id === 'root').y, 6)
+assert.equal(saved.joints.find(j => j.id === 'pelvis').y, -42)
+assert.equal(saved.joints.find(j => j.id === 'right-hip').y, -12)
+assert.equal(saved.joints.find(j => j.id === 'right-shoulder').z, 14)
 assert.equal(JSON.stringify(saved.parts), savedParts)
 assert.equal(JSON.stringify(saved.animations), savedAnimations)
 saved.joints.find(j => j.id === 'root').rotationY = 18

@@ -37,6 +37,28 @@ export function offsetGnawerForearms(project) {
   }
 }
 
+export function alignGnawerRestPose(project) {
+  if (project.enemyId !== 'gnawer') return
+  const joints = new Map(project.joints.map(joint => [joint.id, joint]))
+  const root = joints.get('root')
+  if (root) root.y += 6
+  for (const id of ['left-shoulder', 'right-shoulder']) {
+    const shoulder = joints.get(id)
+    if (shoulder) shoulder.z = 14
+  }
+  for (const id of ['left-hip', 'right-hip']) {
+    const hip = joints.get(id)
+    if (hip) {
+      hip.y -= 6
+      hip.z = 6
+    }
+  }
+  for (const id of ['right-knee', 'right-hock', 'right-ankle']) {
+    const joint = joints.get(id)
+    if (joint) joint.z += .75
+  }
+}
+
 function joint(p, id, name, parent, x, y, z = 0) {
   const existing = p.joints.find((j) => j.id === id)
   if (existing) {
@@ -365,6 +387,7 @@ export function applyEnemyComponentArt(project) {
     }
   }
   widenEnemyComponentRig(project)
+  alignGnawerRestPose(project)
   return project
 }
 
