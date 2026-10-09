@@ -2,7 +2,7 @@ import { ENEMY_DEFS } from '../game/data/enemies.js'
 import catalog from '../game/data/catalog.json' with { type: 'json' }
 import { installEnemyGrounding, rebuildEnemyGrounding } from './enemy-grounding.js'
 import { createRosterEnemyProject, ROSTER_ENEMY_ART } from './shadow-enemy-roster.js'
-import { adjustEnemyComponentSpacing, adjustEnemyUpperBodyPose, adjustRotWalkerLimbs, adjustRotWalkerFeetAndNeck, alignRotWalkerFootContacts, bringRotWalkerLeftLegForward, adjustShellguardStance, adjustPatrolHoundRig, adjustSalamanderBody, alignSalamanderChest, adjustRootrotHands, adjustTideCubHeadDepth, openBeetleElytra, removeNestSpiderTail, alignGnawerRestPose, alignEnemyFrontalSkeleton, applyEnemyComponentArt, COMPONENT_ENEMY_IDS, BATCH2_COMPONENT_ENEMY_IDS, BATCH3_COMPONENT_ENEMY_IDS, BATCH4_COMPONENT_ENEMY_IDS, BATCH5_COMPONENT_ENEMY_IDS, componentTexturePresets, offsetGnawerForearms, widenEnemyComponentRig } from './shadow-enemy-components.js'
+import { adjustEnemyComponentSpacing, adjustEnemyUpperBodyPose, adjustRotWalkerLimbs, adjustRotWalkerFeetAndNeck, alignRotWalkerFootContacts, bringRotWalkerLeftLegForward, adjustShellguardStance, adjustPatrolHoundRig, adjustSalamanderBody, alignSalamanderChest, adjustRotSacToadPose, adjustRootrotHands, adjustTideCubHeadDepth, openBeetleElytra, removeNestSpiderTail, alignGnawerRestPose, alignEnemyFrontalSkeleton, applyEnemyComponentArt, COMPONENT_ENEMY_IDS, BATCH2_COMPONENT_ENEMY_IDS, BATCH3_COMPONENT_ENEMY_IDS, BATCH4_COMPONENT_ENEMY_IDS, BATCH5_COMPONENT_ENEMY_IDS, componentTexturePresets, offsetGnawerForearms, widenEnemyComponentRig } from './shadow-enemy-components.js'
 import {
   createDefaultShadowProject,
   createShadowBone,
@@ -15,7 +15,7 @@ import {
   upsertShadowKeyframe,
 } from './shadow-rig.js'
 
-export const ENEMY_ART_PACK_VERSION = 33
+export const ENEMY_ART_PACK_VERSION = 34
 export const ENEMY_ART = Object.freeze({
   gnawer: { family: 'humanoid' },
   'emberwing-moth': { family: 'winged' },
@@ -493,7 +493,8 @@ export function installEnemyShadowProjects(roster) {
   let namesUpdated = false
   for (const { project } of roster.characters) {
     if (!project.enemyId) continue
-    const name = project.name.replace(/ \u00b7 \u9aa8\u67b6\u9884\u89c8$/u, '')
+    let name = project.name.replace(/ \u00b7 \u9aa8\u67b6\u9884\u89c8$/u, '')
+    if (project.enemyId === 'rot-sac-toad' && name === '\u8150\u56ca\u87c7') name = '\u8150\u56ca\u86e4\u87c6'
     if (name === project.name) continue
     project.name = name
     namesUpdated = true
@@ -546,6 +547,7 @@ export function installEnemyShadowProjects(roster) {
           alignSalamanderChest(project)
           bringRotWalkerLeftLegForward(project)
         }
+        if (roster.enemyArtPackVersion < 34) adjustRotSacToadPose(project)
       }
     }
   }

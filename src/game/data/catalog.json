@@ -238,7 +238,7 @@
     },
     {
       "id": "rot-sac-toad",
-      "name": "腐囊蟇",
+      "name": "腐囊蛤蟆",
       "minFloor": 2,
       "attribute": "wither",
       "deathStatus": "poison",

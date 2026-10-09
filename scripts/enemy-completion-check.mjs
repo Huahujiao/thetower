@@ -91,6 +91,17 @@ function assertSalamanderChest(pose) {
     assert(gap > .1 && gap < 1, 'salamander torso must not have a separate suspended chest layer')
   }
 }
+function assertToadPose(project) {
+  for (const raw of [true, false]) {
+    const pose = evaluateShadowProject(project, null, 0, { raw })
+    const back = pose.parts.find(p => p.part.id === 'back').matrix.elements
+    assert(back[5] > 0 && back[6] > 0, 'toad back should be higher at the front and lower at the rump')
+    for (const id of ['head-art', 'jaw-art']) {
+      const normal = pose.parts.find(p => p.part.id === id).matrix.elements.slice(8, 11)
+      assert(normal[1] > 0 && normal[2] > 0, 'toad face and mouth should both look slightly upward')
+    }
+  }
+}
 function assertBeetleWings(pose) {
   for (const [side, sign] of [['left', -1], ['right', 1]]) {
     const { part, matrix } = pose.parts.find(p => p.part.id === `${side}-gate-sheet`)
@@ -158,6 +169,10 @@ for (const source of projects) {
     const depth = id => rest.jointsById.get(id).matrix.elements[14]
     assert(depth('rot-stilt-root') > depth('pelvis'), 'walker character-left leg should be in front')
     assert.equal(depth('rot-stilt-root'), depth('left-hip'), 'walker legs should have the same root depth')
+  }
+  if (p.enemyId === 'rot-sac-toad') {
+    assert.equal(p.name, '\u8150\u56ca\u86e4\u87c6')
+    assertToadPose(p)
   }
   if (p.enemyId === 'nest-spider') {
     assert(!p.parts.some(part => part.id.startsWith('spinneret')), 'nest-spider spinneret should be removed')
@@ -523,4 +538,21 @@ assert.equal(elytraRoster.activeCharacterId, 'beetle')
 assert.deepEqual(oldBeetleWings, expectedBeetleWings, 'elytra update should preserve custom art, animation and other bones')
 assert.equal(installEnemyShadowProjects(elytraRoster), false)
 assert.deepEqual(oldBeetleWings, expectedBeetleWings, 'elytra placement must not accumulate on reload')
+const savedToad = structuredClone(projects.find(p => p.enemyId === 'rot-sac-toad'))
+savedToad.parts.find(p => p.id === 'back').width += 3
+savedToad.parts[0].fill = '#abcdef'
+const expectedToad = structuredClone(savedToad)
+savedToad.name = '\u8150\u56ca\u87c7'
+savedToad.parts.find(p => p.id === 'back').rotationX = -72
+savedToad.joints.find(j => j.id === 'head').rotationX += 8
+const toadRoster = { enemyArtPackVersion: 33, activeCharacterId: 'toad', characters: [{ id: 'toad', project: savedToad }] }
+assert(installEnemyShadowProjects(toadRoster))
+assertToadPose(savedToad)
+assert.deepEqual(savedToad, expectedToad, 'toad update should retain custom artwork, mouth animation and other joints')
+assert.equal(toadRoster.activeCharacterId, 'toad')
+assert.equal(installEnemyShadowProjects(toadRoster), false)
+assert.deepEqual(savedToad, expectedToad, 'toad pose must not accumulate on reload')
+savedToad.name = 'Custom toad'
+assert.equal(installEnemyShadowProjects(toadRoster), false)
+assert.equal(savedToad.name, 'Custom toad', 'custom toad names must remain intact')
 console.log(`Enemy completion: ${projects.length} fully textured rigs, ${parts} parts, ${frames} animation frames; folded faces and editor refresh passed.`)

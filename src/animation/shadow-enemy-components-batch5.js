@@ -113,6 +113,16 @@ export function alignSalamanderChest(project) {
   }
 }
 
+// V34: slope the back down toward the rump and lift the face/jaw together.
+export function adjustRotSacToadPose(project) {
+  if (project.enemyId !== 'rot-sac-toad') return
+  const back = project.parts.find(part => part.id === 'back')
+  const haunch = project.joints.find(joint => joint.id === 'haunch')
+  if (back && haunch) back.rotationX = Math.atan2(-haunch.z, -haunch.y) * 180 / Math.PI
+  const head = project.joints.find(joint => joint.id === 'head')
+  if (head) head.rotationX -= 8
+}
+
 // A short set of independent textures carries the anatomy. Eyes already
 // painted on a face are not overlaid with another set of eyes.
 export function applyEnemyComponentBatch5(p, { joint, imagePart, pixelLink, keys, organMotion }) {
