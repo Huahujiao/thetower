@@ -2,7 +2,7 @@ import { ENEMY_DEFS } from '../game/data/enemies.js'
 import catalog from '../game/data/catalog.json' with { type: 'json' }
 import { installEnemyGrounding, rebuildEnemyGrounding } from './enemy-grounding.js'
 import { createRosterEnemyProject, ROSTER_ENEMY_ART } from './shadow-enemy-roster.js'
-import { adjustEnemyComponentSpacing, adjustEnemyUpperBodyPose, adjustRotWalkerLimbs, adjustShellguardStance, adjustPatrolHoundRig, adjustSalamanderBody, adjustRootrotHands, adjustTideCubHeadDepth, openBeetleElytra, removeNestSpiderTail, alignGnawerRestPose, alignEnemyFrontalSkeleton, applyEnemyComponentArt, COMPONENT_ENEMY_IDS, BATCH2_COMPONENT_ENEMY_IDS, BATCH3_COMPONENT_ENEMY_IDS, BATCH4_COMPONENT_ENEMY_IDS, BATCH5_COMPONENT_ENEMY_IDS, componentTexturePresets, offsetGnawerForearms, widenEnemyComponentRig } from './shadow-enemy-components.js'
+import { adjustEnemyComponentSpacing, adjustEnemyUpperBodyPose, adjustRotWalkerLimbs, adjustRotWalkerFeetAndNeck, alignRotWalkerFootContacts, adjustShellguardStance, adjustPatrolHoundRig, adjustSalamanderBody, adjustRootrotHands, adjustTideCubHeadDepth, openBeetleElytra, removeNestSpiderTail, alignGnawerRestPose, alignEnemyFrontalSkeleton, applyEnemyComponentArt, COMPONENT_ENEMY_IDS, BATCH2_COMPONENT_ENEMY_IDS, BATCH3_COMPONENT_ENEMY_IDS, BATCH4_COMPONENT_ENEMY_IDS, BATCH5_COMPONENT_ENEMY_IDS, componentTexturePresets, offsetGnawerForearms, widenEnemyComponentRig } from './shadow-enemy-components.js'
 import {
   createDefaultShadowProject,
   createShadowBone,
@@ -15,7 +15,7 @@ import {
   upsertShadowKeyframe,
 } from './shadow-rig.js'
 
-export const ENEMY_ART_PACK_VERSION = 31
+export const ENEMY_ART_PACK_VERSION = 32
 export const ENEMY_ART = Object.freeze({
   gnawer: { family: 'humanoid' },
   'emberwing-moth': { family: 'winged' },
@@ -450,7 +450,9 @@ export function createEnemyShadowProject(definition, { withComponentArt = true }
   if (!withComponentArt) return project
   applyEnemyComponentArt(project)
   faceEnemyForward(project)
-  return installEnemyGrounding(project)
+  installEnemyGrounding(project)
+  alignRotWalkerFootContacts(project)
+  return project
 }
 
 function faceEnemyForward(project) {
@@ -535,6 +537,11 @@ export function installEnemyShadowProjects(roster) {
         if (roster.enemyArtPackVersion < 29) adjustRootrotHands(project)
         if (roster.enemyArtPackVersion < 30) adjustTideCubHeadDepth(project)
         if (roster.enemyArtPackVersion < 31) openBeetleElytra(project)
+        if (project.enemyId === 'rot-walker' && roster.enemyArtPackVersion < 32) {
+          adjustRotWalkerFeetAndNeck(project)
+          rebuildEnemyGrounding(project)
+          alignRotWalkerFootContacts(project)
+        }
       }
     }
   }

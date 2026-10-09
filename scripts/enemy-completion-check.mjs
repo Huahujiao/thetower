@@ -329,6 +329,10 @@ beetle.parts[0].fill = '#123456'
 const beetleMotion = JSON.stringify(beetle.animations)
 const walker = structuredClone(projects.find(p => p.enemyId === 'rot-walker'))
 const expectedWalker = structuredClone(walker)
+walker.joints.find(j => j.id === 'neck').y -= 8
+walker.joints.find(j => j.id === 'neck').z += 4
+walker.joints.find(j => j.id === 'head').y -= 8
+walker.joints.find(j => j.id === 'head').z += 5
 walker.joints.find(j => j.id === 'left-shoulder').z = -11
 walker.joints.find(j => j.id === 'rot-stilt-root').x -= 8
 const keptGnawer = structuredClone(projects.find(p => p.enemyId === 'gnawer'))
@@ -370,6 +374,10 @@ shellguard.parts.find(p => p.id === 'right-gate-art').width += 3
 shellguard.parts[0].fill = '#456789'
 const shellguardMotion = JSON.stringify(shellguard.animations)
 const retainedWalker = structuredClone(expectedWalker)
+retainedWalker.joints.find(j => j.id === 'neck').y -= 8
+retainedWalker.joints.find(j => j.id === 'neck').z += 4
+retainedWalker.joints.find(j => j.id === 'head').y -= 8
+retainedWalker.joints.find(j => j.id === 'head').z += 5
 const retainedBackup = { ...structuredClone(expectedWalker), enemyId: null, name: 'Later backup \u00b7 \u65e7\u7248\u5907\u4efd' }
 const shellguardRoster = { enemyArtPackVersion: 25, activeCharacterId: 'shellguard', characters: [
   { id: 'later-blank', project: createDefaultShadowProject() },

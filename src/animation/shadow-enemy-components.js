@@ -139,6 +139,47 @@ export function adjustRotWalkerLimbs(project) {
   if (leftLeg) leftLeg.x += 8
 }
 
+// V32: expose the neck and place foot joints at their painted sockets.
+export function adjustRotWalkerFeetAndNeck(project) {
+  if (project.enemyId !== 'rot-walker') return
+  const neck = project.joints.find(joint => joint.id === 'neck')
+  const head = project.joints.find(joint => joint.id === 'head')
+  if (neck) { neck.y += 8; neck.z -= 4 }
+  if (head) { head.y += 8; head.z -= 5 }
+  // Move each ankle to its painted socket and compensate the cropped foot
+  // pivot, keeping the rest-pose artwork in exactly the same place.
+  for (const [jointId, partId, anchor] of [['left-ankle', 'left-foot', [.70, .77]], ['rot-stilt-tip', 'rot-stilt-end', [.46, .86]]]) {
+    const joint = project.joints.find(joint => joint.id === jointId)
+    const part = project.parts.find(part => part.id === partId)
+    if (!joint || !part) continue
+    const crop = part.visual.textureFrame.crop
+    const pivotX = (anchor[0] - crop.left) / crop.width
+    const pivotY = (anchor[1] - crop.top) / crop.height
+    const dx = (pivotX - part.pivotX) * part.width
+    const dy = -(pivotY - part.pivotY) * part.height
+    const m = shadowTransformMatrix(joint).multiply(shadowTransformMatrix(part)).elements
+    joint.x += m[0] * dx + m[4] * dy
+    joint.y += m[1] * dx + m[5] * dy
+    joint.z += m[2] * dx + m[6] * dy
+    Object.assign(part, { pivotX, pivotY })
+  }
+}
+
+export function alignRotWalkerFootContacts(project) {
+  if (project.enemyId !== 'rot-walker') return
+  for (const [partId, toeX] of [['left-foot', .10], ['rot-stilt-end', .91]]) {
+    const part = project.parts.find(part => part.id === partId)
+    const contact = project.joints.find(joint => joint.id === `${partId}-ground-contact`)
+    if (!part || !contact) continue
+    const crop = part.visual.textureFrame.crop
+    const x = ((toeX - crop.left) / crop.width - part.pivotX) * part.width
+    const y = (part.pivotY - (.93 - crop.top) / crop.height) * part.height
+    const m = shadowTransformMatrix(part).elements
+    contact.x = m[0] * x + m[4] * y + m[12]
+    contact.z = m[2] * x + m[6] * y + m[14]
+  }
+}
+
 // V26: splay the armor at its own pivot, leaving room for the hanging arms.
 export function adjustShellguardStance(project) {
   if (project.enemyId !== 'shellguard') return
@@ -605,6 +646,7 @@ export function applyEnemyComponentArt(project) {
   adjustRootrotHands(project)
   adjustTideCubHeadDepth(project)
   openBeetleElytra(project)
+  adjustRotWalkerFeetAndNeck(project)
   return project
 }
 
