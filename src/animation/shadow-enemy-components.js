@@ -81,6 +81,38 @@ export function alignGnawerRestPose(project, previousArtPackVersion = null) {
   }
 }
 
+// Apply once to fresh templates and pre-V23 editor projects.
+export function adjustEnemyComponentSpacing(project) {
+  if (project.enemyId === 'gnawer') {
+    const pelvis = project.parts.find(part => part.id === 'pelvis-shell')
+    if (pelvis) pelvis.y += 4
+  } else if (project.enemyId === 'rootrot-bud') {
+    const bud = project.joints.find(joint => joint.id === 'bud')
+    if (bud) {
+      bud.y -= 8
+      bud.z += 1.5
+    }
+    for (const side of ['left', 'right']) {
+      const root = project.joints.find(joint => joint.id === `${side}-root`)
+      if (root) root.z += 1.5
+    }
+  } else if (project.enemyId === 'tide-shadow-cub') {
+    for (const side of ['left', 'right']) {
+      const sign = side === 'left' ? -1 : 1
+      const fin = project.joints.find(joint => joint.id === `${side}-fin-hinge`)
+      const arm = project.joints.find(joint => joint.id === `${side}-arm-hinge`)
+      if (fin) {
+        fin.z = -17
+        fin.x += sign * 6
+      }
+      if (arm) {
+        arm.z = 11
+        arm.rotationZ += sign * 12
+      }
+    }
+  }
+}
+
 export function alignEnemyFrontalSkeleton(project) {
   if (!['gnawer', 'rootrot-bud'].includes(project.enemyId)) return
   const joints = new Map(project.joints.map(joint => [joint.id, joint]))
@@ -475,6 +507,7 @@ export function applyEnemyComponentArt(project) {
   widenEnemyComponentRig(project)
   alignGnawerRestPose(project)
   alignEnemyFrontalSkeleton(project)
+  adjustEnemyComponentSpacing(project)
   return project
 }
 

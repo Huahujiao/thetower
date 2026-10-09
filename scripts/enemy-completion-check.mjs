@@ -8,6 +8,21 @@ import { BATCH5_COMPONENT_ENEMY_IDS } from '../src/animation/shadow-enemy-compon
 import componentAssets from '../src/animation/enemy-component-assets.json' with { type: 'json' }
 
 const projects = createEnemyShadowProjects({ includeBoss: true })
+function restoreV22Spacing(project) {
+  if (project.enemyId === 'gnawer') project.parts.find(part => part.id === 'pelvis-shell').y -= 4
+  if (project.enemyId === 'rootrot-bud') {
+    const bud = project.joints.find(joint => joint.id === 'bud')
+    bud.y += 8; bud.z -= 1.5
+    for (const side of ['left', 'right']) project.joints.find(joint => joint.id === `${side}-root`).z -= 1.5
+  }
+  if (project.enemyId === 'tide-shadow-cub') for (const side of ['left', 'right']) {
+    const sign = side === 'left' ? -1 : 1
+    const fin = project.joints.find(joint => joint.id === `${side}-fin-hinge`)
+    const arm = project.joints.find(joint => joint.id === `${side}-arm-hinge`)
+    fin.x -= sign * 6; fin.z = sign * 17 - 8
+    arm.rotationZ -= sign * 12; arm.z = sign * 11
+  }
+}
 function assertFrontalSkeleton(project) {
   const incoming = new Map(project.bones.map(bone => [bone.toJointId, bone.fromJointId]))
   const signs = [-1, 1, 1, 1]
@@ -120,6 +135,7 @@ for (const id of ['patrol-hound', 'redwheel-fire-crow']) {
 // The live editor cache must receive all nine templates, including the boss,
 // while an unrelated customized character remains untouched.
 const custom = structuredClone(projects.find(p => p.enemyId === 'gnawer'))
+restoreV22Spacing(custom)
 custom.parts[0].fill = '#abcdef'
 const roster = { enemyArtPackVersion: 16, activeCharacterId: 'custom', characters: [{ id: 'custom', project: custom }] }
 assert(installEnemyShadowProjects(roster))
@@ -130,6 +146,7 @@ assert.equal(installEnemyShadowProjects(roster), false)
 
 // Upgrade the current editor cache in place, preserving custom art and motion.
 const saved = normalizeShadowProject(projects.find(p => p.enemyId === 'gnawer'))
+restoreV22Spacing(saved)
 saved.name = 'Custom gnawer \u00b7 \u9aa8\u67b6\u9884\u89c8'
 saved.joints.find(j => j.id === 'root').rotationY = -30
 saved.joints.find(j => j.id === 'root').y -= 6
@@ -171,6 +188,7 @@ assert.equal(installEnemyShadowProjects(currentRoster), false)
 // V21 already has the raised torso. Correct every paired joint and rebuild
 // its old opaque-edge contacts without lifting the upper body a second time.
 const priorFrontal = structuredClone(projects.find(p => p.enemyId === 'gnawer'))
+restoreV22Spacing(priorFrontal)
 priorFrontal.joints.find(j => j.id === 'right-knee').y += 1
 priorFrontal.joints.find(j => j.id === 'right-knee').z += .75
 priorFrontal.joints.find(j => j.id === 'right-wrist').y -= 2
@@ -195,4 +213,18 @@ assert.equal(budRoster.characters[0].project.parts.length, 11)
 assert(budRoster.characters.some(c => !c.project.enemyId), 'customized former bud should retain an archived copy')
 assert.equal(installEnemyShadowProjects(budRoster), false)
 assert.equal(saved.joints.find(j => j.id === 'root').rotationY, 18)
+
+// V22 spacing updates keep custom textures, poses, grounding and unrelated
+// rigs intact, and must not replay the V22 bud replacement or torso lift.
+const spacingCharacters = projects.filter(p => ['gnawer', 'rootrot-bud', 'tide-shadow-cub', 'nest-spider'].includes(p.enemyId))
+  .map(p => ({ id: p.enemyId, project: structuredClone(p) }))
+for (const { project } of spacingCharacters) project.parts[0].fill = '#abcdef'
+const expectedSpacing = structuredClone(spacingCharacters)
+for (const { project } of spacingCharacters) restoreV22Spacing(project)
+const spacingRoster = { enemyArtPackVersion: 22, activeCharacterId: 'rootrot-bud', characters: spacingCharacters }
+assert(installEnemyShadowProjects(spacingRoster))
+assert.deepEqual(spacingRoster.characters, expectedSpacing, 'V23 should only adjust spacing without replacing customized rigs')
+assert.equal(spacingRoster.activeCharacterId, 'rootrot-bud')
+assert.equal(installEnemyShadowProjects(spacingRoster), false)
+assert.deepEqual(spacingRoster.characters, expectedSpacing, 'spacing must not accumulate on reload')
 console.log(`Enemy completion: ${projects.length} fully textured rigs, ${parts} parts, ${frames} animation frames; folded faces and editor refresh passed.`)
