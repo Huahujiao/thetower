@@ -72,30 +72,31 @@ export function applyEnemyComponentBatch3(p, { joint, imagePart, pixelLink, keys
 
   if (p.enemyId === 'thorn-shell-flower') {
     art('root-ball', '棘壳根球', 13, 'root', .26, [.5, .44], { layer: 5 })
-    j('lower-stem', '下棘茎', 'root', [0, 7, -3])
+    j('lower-stem', '下棘茎', 'root', [0, 7, -2])
     art('lower-stem-art', '下棘茎', 6, 'lower-stem', .22, [.5, .94], { crop: [0, .51, 1, .49], layer: 6 })
     link('upper-stem', '上棘茎', 'lower-stem', 6, .22, [.5, .94], [.5, .54])
     art('upper-stem-art', '上棘茎', 6, 'upper-stem', .22, [.5, .46], { crop: [0, 0, 1, .48], layer: 7 })
     link('crown', '花冠根', 'upper-stem', 6, .22, [.5, .46], [.5, .08])
     art('crown-art', '棘壳花冠与口环', 3, 'crown', .29, [.5, .78], { layer: 8 })
-    j('eye', '花眼', 'crown', [0, 18, 1])
+    j('eye', '花眼', 'crown', [0, 18, 2.4])
     art('eye-art', '花眼', 5, 'eye', .27, [.5, .5], { layer: 11 })
     for (const [id, sign, amp] of [['lower-stem', 1, 3], ['upper-stem', -1, 5], ['crown', 1, 7], ['eye', -1, 3]]) motion(id, sign, amp)
     for (const [side, sign, shell, branch, leaf, root] of [['left', -1, 1, 8, 9, 11], ['right', 1, 2, 7, 10, 12]]) {
       const label = sign < 0 ? '左' : '右'
-      j(`${side}-shell`, `${label}棘壳瓣`, 'crown', [sign * 28, 24, 2])
+      // Spread paired chains in XY; their shared Z keeps the frontal pose balanced.
+      j(`${side}-shell`, `${label}棘壳瓣`, 'crown', [sign * 48, 32, -1], { rotationZ: -sign * 12 })
       art(`${side}-shell-art`, `${label}棘壳瓣`, shell, `${side}-shell`, .18, [sign < 0 ? .70 : .3, .55], { layer: 10 })
       motion(`${side}-shell`, sign, 6)
       attack(`${side}-shell`, { rotationY: sign * 14 }, { rotationY: -sign * 42, rotationZ: -sign * 10 })
-      split(`${side}-thorn`, `${label}刺枝`, branch, 'upper-stem', [sign * 15, 7, sign * 8], .15,
+      split(`${side}-thorn`, `${label}刺枝`, branch, 'upper-stem', [sign * 22, 16, 2.7], .15,
         [[sign < 0 ? .9 : .1, .37], [.5, .45]],
-        [sign < 0 ? [.40, 0, .60, 1] : [0, 0, .6, 1], sign < 0 ? [0, 0, .55, 1] : [.45, 0, .55, 1]], sign)
+        [sign < 0 ? [.40, 0, .60, 1] : [0, 0, .6, 1], sign < 0 ? [0, 0, .55, 1] : [.45, 0, .55, 1]], sign, { rotationZ: sign * 10 })
       attack(`${side}-thorn`, { rotationZ: sign * 14 }, { rotationZ: -sign * 27, rotationY: sign * 15 })
-      j(`${side}-leaf`, `${label}垂叶`, 'lower-stem', [sign * 17, 11, -7])
+      j(`${side}-leaf`, `${label}垂叶`, 'lower-stem', [sign * 34, 23, -2], { rotationZ: sign * 14 })
       art(`${side}-leaf-art`, `${label}苔垂叶`, leaf, `${side}-leaf`, .14, [sign < 0 ? .83 : .17, .17], { layer: 3 })
       motion(`${side}-leaf`, -sign, 9)
-      split(`${side}-root`, `${label}行根`, root, 'root', [sign * 28, -8, sign * 6], .15,
-        [[.5, .12], [.52, .53]], [[0, 0, 1, .63], [0, .45, 1, .55]], sign)
+      split(`${side}-root`, `${label}行根`, root, 'root', [sign * 42, -8, .8], .15,
+        [[.5, .12], [.52, .53]], [[0, 0, 1, .63], [0, .45, 1, .55]], sign, { rotationZ: sign * 16 })
       gait(`${side}-root`, sign, 7)
     }
     attack('upper-stem', { rotationX: -11 }, { rotationX: 14 })
