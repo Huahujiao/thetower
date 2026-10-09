@@ -1,5 +1,92 @@
 import { Vector3 } from 'three'
 import { createShadowBone, createShadowJoint, evaluateShadowProject, shadowTransformMatrix } from './shadow-rig.js'
+import { shadowPartFloor } from './shadow-grounding.js'
+
+const clone = value => JSON.parse(JSON.stringify(value))
+
+function fitBoneTexture(project, part, toId, from, to) {
+  const crop = part.visual.textureFrame.crop
+  const dx = (to[0] - from[0]) * part.width / crop.width
+  const dy = -(to[1] - from[1]) * part.height / crop.height
+  Object.assign(part, { x: 0, y: 0, z: 0,
+    pivotX: (from[0] - crop.left) / crop.width, pivotY: (from[1] - crop.top) / crop.height,
+    rotationX: 0, rotationY: 0, rotationZ: Math.atan2(-dy, dx) * 180 / Math.PI,
+    attachment: { type: 'bone', targetId: project.bones.find(b => b.toJointId === toId).id,
+      t: 0, followRotation: true, orientationJointId: 'root', bindLength: Math.hypot(dx, dy) } })
+  part.visual.textureFit = 'stretch'
+}
+
+// V43: the apparently separate lower limbs are upper arms. Join each pair,
+// expose the waist spine, and place the opposite leg cutouts on their sides.
+export function connectMossAnatomy(project) {
+  if (project.enemyId !== 'moss-colossus' || project.joints.some(j => j.id === 'upper-body')) return
+  const before = evaluateShadowProject(project, null, 0, { raw: true })
+  const floor = Math.min(...before.parts.filter(p => p.part.id.endsWith('-foot')).map(shadowPartFloor))
+  project.joints.push(createShadowJoint({ id: 'upper-body', name: '\u4e0a\u534a\u8eab', y: 44 }))
+  for (const bone of project.bones) if (bone.fromJointId === 'root' && !['pelvis', 'exposed-spine'].includes(bone.toJointId)) bone.fromJointId = 'upper-body'
+  project.bones.push(createShadowBone({ id: 'upper-body-bone', fromJointId: 'root', toJointId: 'upper-body' }))
+  project.parts.find(p => p.id === 'torso').attachment.targetId = 'upper-body'
+  project.joints.find(j => j.id === 'neck').x = -12
+  for (const [side, sign] of [['left', 1], ['right', -1]]) {
+    project.parts.find(p => p.id === `${side}-pauldron`).rotationZ = -sign * 90
+    const upper = project.joints.find(j => j.id === `${side}-arm-shoulder`)
+    Object.assign(upper, { x: sign * 57, y: 27, z: 6, rotationZ: sign * 27 })
+    const forearm = project.joints.find(j => j.id === `${side}-secondary-shoulder`)
+    Object.assign(forearm, { x: 0, y: 0, z: .8, rotationZ: 125, scaleX: 1 })
+    project.bones.find(b => b.toJointId === forearm.id).fromJointId = `${side}-arm-wrist`
+    upper.name = `${side === 'left' ? '\u5de6' : '\u53f3'}\u4e0a\u81c2\u80a9`
+    project.joints.find(j => j.id === `${side}-arm-wrist`).name = '\u4e0a\u81c2\u8098'
+    forearm.name = '\u5c0f\u81c2\u8fde\u63a5'
+    for (const part of project.parts.filter(p => p.id.startsWith(`${side}-arm-`))) part.name = '\u4e0a\u81c2\u82d4\u77f3\u90e8\u4ef6'
+    for (const part of project.parts.filter(p => p.id.startsWith(`${side}-secondary-`))) part.name = '\u5c0f\u81c2\u4e0e\u624b\u90e8\u90e8\u4ef6'
+  }
+  project.parts.find(p => p.id === 'left-root-hand').name = '\u4e0a\u81c2\u8098\u90e8\u5206\u6839'
+
+  // Bind the painted spine endpoints to the raised chest and the pelvic rim.
+  let pose = evaluateShadowProject(project, null, 0, { raw: true })
+  const top = texturePoint(pose.parts.find(p => p.part.id === 'torso'), .5, .92)
+  const bottom = texturePoint(pose.parts.find(p => p.part.id === 'pelvis-art'), .5, .10)
+  const parent = pose.jointsById.get('upper-body').matrix
+  const localTop = top.clone().applyMatrix4(parent.clone().invert())
+  const spinal = project.joints.find(j => j.id === 'exposed-spine')
+  spinal.name = '\u80f8\u9acb\u810a\u9aa8'
+  Object.assign(spinal, { x: localTop.x, y: localTop.y, z: 2, rotationX: 0, rotationY: 0, rotationZ: 0 })
+  project.bones.find(b => b.toJointId === spinal.id).fromJointId = 'upper-body'
+  const length = top.y - bottom.y
+  project.joints.push(createShadowJoint({ id: 'waist-spine-bottom', name: '\u810a\u9aa8\u9acb\u90e8\u63a5\u70b9', y: -length }))
+  project.bones.push(createShadowBone({ id: 'waist-spine-bone', fromJointId: spinal.id, toJointId: 'waist-spine-bottom' }))
+  const spine = project.parts.find(p => p.id === 'spine'), ratio = length / .74 / spine.height
+  spine.name = '\u80f8\u9acb\u8fde\u63a5\u810a\u9aa8'
+  spine.width *= ratio; spine.height *= ratio
+  fitBoneTexture(project, spine, 'waist-spine-bottom', [.5, .12], [.5, .86])
+  delete spine.attachment.orientationJointId
+  for (const animation of Object.values(project.animations)) delete animation.tracks['joint:exposed-spine']
+
+  const saved = Object.fromEntries(project.parts.filter(p => /^(left|right)-(leg-upper|leg-lower|foot)$/.test(p.id)).map(p => [p.id, clone(p)]))
+  for (const [side, other, sign, anchors] of [
+    ['left', 'right', 1, [[.23, .10], [.56, .42], [.46, .78]]],
+    ['right', 'left', -1, [[.77, .10], [.48, .42], [.50, .78]]],
+  ]) {
+    for (const suffix of ['leg-upper', 'leg-lower', 'foot']) {
+      const part = project.parts.find(p => p.id === `${side}-${suffix}`), source = saved[`${other}-${suffix}`]
+      for (const field of ['width', 'height', 'visual', 'shape', 'fill']) part[field] = clone(source[field])
+    }
+    Object.assign(project.joints.find(j => j.id === `${side}-leg-root`), { x: sign * 26, y: -58, z: 1 })
+    Object.assign(project.joints.find(j => j.id === `${side}-leg-hinge`), { x: sign * 6, y: -35, z: .25 })
+    Object.assign(project.joints.find(j => j.id === `${side}-leg-tip`), { x: sign * 4, y: -39, z: .25 })
+    fitBoneTexture(project, project.parts.find(p => p.id === `${side}-leg-upper`), `${side}-leg-hinge`, anchors[0], anchors[1])
+    fitBoneTexture(project, project.parts.find(p => p.id === `${side}-leg-lower`), `${side}-leg-tip`, anchors[1], anchors[2])
+    Object.assign(project.parts.find(p => p.id === `${side}-foot`), { x: 0, y: 0, z: .3, pivotX: .5, pivotY: .1 })
+  }
+  pose = evaluateShadowProject(project, null, 0, { raw: true })
+  for (const [side, uv] of [['left', [.85, .87]], ['right', [.15, .82]]]) {
+    const entry = pose.parts.find(p => p.part.id === `${side}-foot`)
+    entry.part.y += (floor - shadowPartFloor(entry)) / entry.baseMatrix.elements[5]
+    entry.matrix = entry.baseMatrix.clone().multiply(shadowTransformMatrix(entry.part))
+    const point = texturePoint(entry, ...uv).applyMatrix4(pose.jointsById.get(`${side}-leg-tip`).matrix.clone().invert())
+    Object.assign(project.joints.find(j => j.id === `${side}-foot-toe`), { x: point.x, y: point.y, z: point.z })
+  }
+}
 
 function texturePoint(entry, u, v) {
   const { part, matrix } = entry, crop = part.visual.textureFrame.crop
@@ -65,7 +152,7 @@ export function alignMossFootContacts(project) {
 // Legacy "secondary" chains carry the larger hands. Move the complete chains
 // and their extra roots, preserving the painted elbow/wrist connections.
 export function arrangeMossArmsAndJaw(project) {
-  if (project.enemyId !== 'moss-colossus') return
+  if (project.enemyId !== 'moss-colossus' || project.joints.some(j => j.id === 'upper-body')) return
   for (const side of ['left', 'right']) {
     const small = project.joints.find(j => j.id === `${side}-arm-shoulder`)
     const large = project.joints.find(j => j.id === `${side}-secondary-shoulder`)
@@ -93,8 +180,7 @@ export function arrangeMossArmsAndJaw(project) {
   art.pivotY = (.5 - jawCrop.top) / jawCrop.height
 }
 
-// Build around the cut anatomy: a chest face, four unlike arms and a parasitic
-// tree. Rear anatomy is offset sideways so it remains visible from the front.
+// Lay out the cut anatomy before connecting the paired arm segments and waist.
 export function buildMossColossus(p, { joint, imagePart, pixelLink, organMotion }) {
   const j = (id, name, parent, xyz, pose = {}) => {
     joint(p, id, name, parent, ...xyz)

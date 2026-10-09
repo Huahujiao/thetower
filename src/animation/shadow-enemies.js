@@ -3,7 +3,9 @@ import catalog from '../game/data/catalog.json' with { type: 'json' }
 import { installEnemyGrounding, rebuildEnemyGrounding } from './enemy-grounding.js'
 import { reconnectRotSacToadRig } from './shadow-enemy-components-batch5.js'
 import { restoreFourArmMirrors, fitTransparentBeastPanels } from './shadow-enemy-components.js'
-import { arrangeMossArmsAndJaw, refineMossDepthAndFeet, alignMossFootContacts } from './shadow-moss-colossus.js'
+import { arrangeMossArmsAndJaw, refineMossDepthAndFeet, alignMossFootContacts, connectMossAnatomy } from './shadow-moss-colossus.js'
+import { raiseSentryCrossbow, alignSentryFootContacts } from './shadow-sentry-crossbow.js'
+import { refineAshCannonAnatomy } from './shadow-ash-cannon.js'
 import { widenRotWalkerLeftLeg, addRevenantSecondaryArms, exposeFourArmLayouts, splayCrawlerEndLegs, alignBeetleHornTip, tightenRotWalkerArms } from './shadow-enemy-components.js'
 import { createRosterEnemyProject, ROSTER_ENEMY_ART } from './shadow-enemy-roster.js'
 import { adjustEnemyComponentSpacing, adjustEnemyUpperBodyPose, adjustRotWalkerLimbs, adjustRotWalkerFeetAndNeck, alignRotWalkerFootContacts, bringRotWalkerLeftLegForward, adjustShellguardStance, adjustPatrolHoundRig, adjustSalamanderBody, alignSalamanderChest, adjustRotSacToadPose, reconnectSalamanderRig, adjustRootrotHands, adjustTideCubHeadDepth, openBeetleElytra, removeNestSpiderTail, alignGnawerRestPose, alignEnemyFrontalSkeleton, applyEnemyComponentArt, COMPONENT_ENEMY_IDS, BATCH2_COMPONENT_ENEMY_IDS, BATCH3_COMPONENT_ENEMY_IDS, BATCH4_COMPONENT_ENEMY_IDS, BATCH5_COMPONENT_ENEMY_IDS, componentTexturePresets, offsetGnawerForearms, widenEnemyComponentRig } from './shadow-enemy-components.js'
@@ -19,7 +21,7 @@ import {
   upsertShadowKeyframe,
 } from './shadow-rig.js'
 
-export const ENEMY_ART_PACK_VERSION = 42
+export const ENEMY_ART_PACK_VERSION = 43
 export const ENEMY_ART = Object.freeze({
   gnawer: { family: 'humanoid' },
   'emberwing-moth': { family: 'winged' },
@@ -457,6 +459,7 @@ export function createEnemyShadowProject(definition, { withComponentArt = true }
   installEnemyGrounding(project)
   alignRotWalkerFootContacts(project)
   alignMossFootContacts(project)
+  alignSentryFootContacts(project)
   return project
 }
 
@@ -592,6 +595,20 @@ export function installEnemyShadowProjects(roster) {
           refineMossDepthAndFeet(character.project)
           rebuildEnemyGrounding(character.project)
           alignMossFootContacts(character.project)
+        }
+        if (roster.enemyArtPackVersion < 43 && character.project.enemyId === 'moss-colossus') {
+          connectMossAnatomy(character.project)
+          rebuildEnemyGrounding(character.project)
+          alignMossFootContacts(character.project)
+        }
+        if (roster.enemyArtPackVersion < 43 && project.enemyId === 'sentry-crossbow') {
+          raiseSentryCrossbow(project)
+          rebuildEnemyGrounding(project)
+          alignSentryFootContacts(project)
+        }
+        if (roster.enemyArtPackVersion < 43 && project.enemyId === 'ash-cannon-bug') {
+          refineAshCannonAnatomy(project)
+          rebuildEnemyGrounding(project)
         }
       }
     }

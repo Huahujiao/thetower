@@ -36,7 +36,7 @@ try {
 
   entries.set(SHADOW_TEMPLATE_REVISION_KEY, 'previous-code-revision')
   const upgraded = loadCurrentShadowRoster()
-  assert.equal(upgraded.characters.find(c => c.project.enemyId === 'moss-colossus').project.joints.find(j => j.id === 'neck').x, 12, 'code updates discard local model overrides')
+  assert.equal(upgraded.characters.find(c => c.project.enemyId === 'moss-colossus').project.joints.find(j => j.id === 'neck').x, -12, 'code updates discard local model overrides')
   assert(!upgraded.characters.some(c => /\u65e7\u7248\u5907\u4efd/.test(c.project.name)))
 
   entries.set(SHADOW_PUPPET_ROSTER_STORAGE_KEY, '{broken json')

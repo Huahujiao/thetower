@@ -4,12 +4,26 @@ import { Euler, Group, Matrix4, PerspectiveCamera } from 'three'
 
 const server = await createServer({ server: { middlewareMode: true }, appType: 'custom' })
 const previousImage = globalThis.Image
+const previousWindow = globalThis.window
 // Leave textures unloaded: skeleton/animation verification needs no rasterizer.
 globalThis.Image = class { complete = false }
 try {
   const { GameScene } = await server.ssrLoadModule('/src/render/scene.js')
   const { prepareEnemyPuppets, createEnemyFigure, enemyPuppetProject } = await server.ssrLoadModule('/src/render/enemy-puppet.js')
+  const { loadCurrentShadowRoster } = await server.ssrLoadModule('/src/animation/shadow-editor-cache.js')
+  const { saveShadowRoster, SHADOW_PUPPET_ROSTER_STORAGE_KEY } = await server.ssrLoadModule('/src/animation/shadow-rig.js')
+  const cache = new Map()
+  globalThis.window = { localStorage: {
+    getItem: key => cache.get(key) ?? null,
+    setItem: (key, value) => cache.set(key, value),
+    removeItem: key => cache.delete(key),
+  } }
+  const draft = loadCurrentShadowRoster()
+  draft.characters.find(c => c.project.enemyId === 'gnawer').project.joints.find(j => j.id === 'root').x = 777
+  saveShadowRoster(draft)
   prepareEnemyPuppets(() => {})
+  assert.notEqual(enemyPuppetProject('gnawer').joints.find(j => j.id === 'root').x, 777, 'gameplay uses the code model even when a current-version manual draft exists')
+  assert.equal(JSON.parse(cache.get(SHADOW_PUPPET_ROSTER_STORAGE_KEY)).characters.find(c => c.project.enemyId === 'gnawer').project.joints.find(j => j.id === 'root').x, 777, 'same-version editing remains available in the editor')
   const figure = createEnemyFigure('gnawer'), face = new Group(), roomGroup = new Group()
   assert(figure)
   face.add(figure); roomGroup.add(face)
@@ -77,5 +91,7 @@ try {
   console.log('Enemy camera checks passed: per-instance left/right/same-column facing; camera preserves poses; idle advances every frame.')
 } finally {
   globalThis.Image = previousImage
+  if (previousWindow === undefined) delete globalThis.window
+  else globalThis.window = previousWindow
   await server.close()
 }

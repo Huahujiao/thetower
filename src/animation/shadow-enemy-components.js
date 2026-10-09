@@ -1,5 +1,7 @@
 import assets from './enemy-component-assets.json' with { type: 'json' }
-import { arrangeMossArmsAndJaw, refineMossDepthAndFeet } from './shadow-moss-colossus.js'
+import { arrangeMossArmsAndJaw, refineMossDepthAndFeet, connectMossAnatomy } from './shadow-moss-colossus.js'
+import { raiseSentryCrossbow } from './shadow-sentry-crossbow.js'
+import { refineAshCannonAnatomy } from './shadow-ash-cannon.js'
 import { fitTransparentBeastPanels } from './shadow-beast-barrels.js'
 export { fitTransparentBeastPanels } from './shadow-beast-barrels.js'
 import { applyEnemyComponentBatch2 } from './shadow-enemy-components-batch2.js'
@@ -210,7 +212,7 @@ export function tightenRotWalkerArms(project) {
 
 // V38 repairs mirrors already clamped to 0.01 by older save normalization.
 export function restoreFourArmMirrors(project) {
-  const ids = project.enemyId === 'moss-colossus' ? ['right-arm-shoulder', 'right-secondary-shoulder']
+  const ids = project.enemyId === 'moss-colossus' ? (project.joints.some(j => j.id === 'upper-body') ? ['right-arm-shoulder'] : ['right-arm-shoulder', 'right-secondary-shoulder'])
     : project.enemyId === 'revenant-guard' ? ['right-secondary-shoulder'] : []
   for (const id of ids) {
     const shoulder = project.joints.find(j => j.id === id)
@@ -786,6 +788,9 @@ export function applyEnemyComponentArt(project) {
   restoreFourArmMirrors(project)
   arrangeMossArmsAndJaw(project)
   refineMossDepthAndFeet(project)
+  connectMossAnatomy(project)
+  raiseSentryCrossbow(project)
+  refineAshCannonAnatomy(project)
   fitTransparentBeastPanels(project)
   return project
 }
