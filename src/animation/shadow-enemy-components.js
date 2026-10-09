@@ -5,8 +5,8 @@ import { applyEnemyComponentBatch3 } from './shadow-enemy-components-batch3.js'
 export { BATCH3_COMPONENT_ENEMY_IDS } from './shadow-enemy-components-batch3.js'
 import { applyEnemyComponentBatch4 } from './shadow-enemy-components-batch4.js'
 export { BATCH4_COMPONENT_ENEMY_IDS } from './shadow-enemy-components-batch4.js'
-import { applyEnemyComponentBatch5, adjustPatrolHoundRig, adjustSalamanderBody, alignSalamanderChest, adjustRotSacToadPose } from './shadow-enemy-components-batch5.js'
-export { BATCH5_COMPONENT_ENEMY_IDS, adjustPatrolHoundRig, adjustSalamanderBody, alignSalamanderChest, adjustRotSacToadPose } from './shadow-enemy-components-batch5.js'
+import { applyEnemyComponentBatch5, adjustPatrolHoundRig, adjustSalamanderBody, alignSalamanderChest, adjustRotSacToadPose, reconnectSalamanderRig, reconnectRotSacToadRig } from './shadow-enemy-components-batch5.js'
+export { BATCH5_COMPONENT_ENEMY_IDS, adjustPatrolHoundRig, adjustSalamanderBody, alignSalamanderChest, adjustRotSacToadPose, reconnectSalamanderRig, reconnectRotSacToadRig } from './shadow-enemy-components-batch5.js'
 import {
   createDefaultShadowProject, createShadowBone, createShadowJoint, createShadowPart,
   shadowTargetKey, upsertShadowKeyframe, shadowTransformMatrix,
@@ -657,6 +657,8 @@ export function applyEnemyComponentArt(project) {
   alignSalamanderChest(project)
   bringRotWalkerLeftLegForward(project)
   adjustRotSacToadPose(project)
+  reconnectSalamanderRig(project)
+  reconnectRotSacToadRig(project)
   return project
 }
 

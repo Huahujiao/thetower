@@ -21,6 +21,7 @@ export const SHADOW_SHAPES = Object.freeze([
   { id: 'ellipse', label: '\u692d\u5706' },
   { id: 'capsule', label: '\u80f6\u56ca\u5f62' },
   { id: 'diamond', label: '\u83f1\u5f62' },
+  { id: 'hexagon', label: '\u516d\u8fb9\u5f62' },
 ])
 
 const DEFAULT_POSE = Object.freeze({
@@ -180,6 +181,8 @@ function normalizeAttachment(source, jointIds, boneIds) {
     targetId: type === 'free' ? null : targetId,
     t: clamp(finite(source?.t, 0.5), 0, 1),
     followRotation: source?.followRotation !== false,
+    ...(type === 'bone' && jointIds.has(source?.orientationJointId) ? { orientationJointId: source.orientationJointId } : {}),
+    ...(type === 'bone' && finite(source?.bindLength, 0) > 0 ? { bindLength: source.bindLength } : {}),
   }
 }
 
@@ -210,7 +213,9 @@ function normalizePart(source, index, jointIds, boneIds, legacy2D = false) {
     visual: {
       type: visual.type === 'texture' ? 'texture' : 'shape',
       texture: typeof visual.texture === 'string' ? visual.texture : null,
-      textureFit: visual.textureFit === 'cover' ? 'cover' : 'contain',
+      textureFit: ['cover', 'stretch'].includes(visual.textureFit) ? visual.textureFit : 'contain',
+      ...(typeof visual.backingColor === 'string' ? { backingColor: visual.backingColor } : {}),
+      ...(typeof visual.skinTexture === 'string' ? { skinTexture: visual.skinTexture } : {}),
       textureFrame: visual.textureFrame && Number.isInteger(visual.textureFrame.column) && Number.isInteger(visual.textureFrame.row)
         && Number.isInteger(visual.textureFrame.columns) && Number.isInteger(visual.textureFrame.rows)
         && visual.textureFrame.columns > 0 && visual.textureFrame.rows > 0
@@ -577,7 +582,7 @@ export function shadowMatrixEuler(matrix) {
   return { rotationX: euler.x * degrees, rotationY: euler.y * degrees, rotationZ: euler.z * degrees }
 }
 
-export function shadowBoneAttachmentMatrix(bone, t = 0.5, followRotation = true) {
+export function shadowBoneAttachmentMatrix(bone, t = 0.5, followRotation = true, orientationMatrix = null) {
   const ratio = clamp(finite(t, 0.5), 0, 1)
   const start = new Vector3(bone.x1, bone.y1, bone.z1)
   const end = new Vector3(bone.x2, bone.y2, bone.z2)
@@ -585,6 +590,14 @@ export function shadowBoneAttachmentMatrix(bone, t = 0.5, followRotation = true)
   const rotation = followRotation && direction.lengthSq() > 0.000001
     ? new Quaternion().setFromUnitVectors(new Vector3(1, 0, 0), direction.normalize())
     : new Quaternion()
+  if (followRotation && orientationMatrix && direction.lengthSq() > .000001) {
+    const axis = direction.clone().normalize()
+    let up = new Vector3(0, 1, 0).transformDirection(orientationMatrix)
+    if (Math.abs(axis.dot(up)) > .999) up = new Vector3(0, 0, 1).transformDirection(orientationMatrix)
+    const across = axis.clone().cross(up).normalize()
+    up = across.clone().cross(axis).normalize()
+    rotation.setFromRotationMatrix(new Matrix4().makeBasis(axis, up, across))
+  }
   return new Matrix4().compose(start.lerp(end, ratio), rotation, new Vector3(1, 1, 1))
 }
 
@@ -644,7 +657,10 @@ export function evaluateShadowProject(project, animationId = null, time = 0, { r
     if (attachment.type === 'bone') {
       const bone = evaluatedBones.get(attachment.targetId)
       if (!bone) return new Matrix4()
-      return shadowBoneAttachmentMatrix(bone, attachment.t, attachment.followRotation)
+      const orientationMatrix = evaluatedJoints.get(attachment.orientationJointId)?.matrix
+      const matrix = shadowBoneAttachmentMatrix(bone, attachment.t, attachment.followRotation, orientationMatrix)
+      if (attachment.bindLength > 0) matrix.scale(new Vector3(bone.length / attachment.bindLength, 1, 1))
+      return matrix
     }
     return new Matrix4()
   }

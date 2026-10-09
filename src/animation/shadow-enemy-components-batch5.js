@@ -1,5 +1,6 @@
 import assets from './enemy-component-assets.json' with { type: 'json' }
 import { createDefaultShadowProject } from './shadow-rig.js'
+import { buildBeastBarrel, reconnectBeastFrontLimbs } from './shadow-beast-barrels.js'
 
 export const BATCH5_COMPONENT_ENEMY_IDS = Object.freeze([
   'patrol-hound', 'redneedle-salamander', 'rot-sac-toad', 'claw-beast',
@@ -121,6 +122,30 @@ export function adjustRotSacToadPose(project) {
   if (back && haunch) back.rotationX = Math.atan2(-haunch.z, -haunch.y) * 180 / Math.PI
   const head = project.joints.find(joint => joint.id === 'head')
   if (head) head.rotationX -= 8
+}
+
+// V35: a hexagonal torso provides real surfaces for limbs and dorsal needles.
+export function reconnectSalamanderRig(project) {
+  if (project.enemyId !== 'redneedle-salamander') return
+  buildBeastBarrel(project)
+  reconnectBeastFrontLimbs(project)
+  const joints = new Map(project.joints.map(joint => [joint.id, joint]))
+  const parts = new Map(project.parts.map(part => [part.id, part]))
+  for (let i = 0; i < 3; i++) {
+    const needle = joints.get(`needle-${i}`), art = parts.get(`needle-${i}-art`)
+    if (!needle || !art) continue
+    const end = joints.get(needle.z >= 0 ? 'neck' : 'haunch')
+    needle.y = needle.z / end.z * end.y + .25
+    art.pivotY = .905
+  }
+  const head = joints.get('head')
+  if (head) head.rotationX -= 8
+}
+
+export function reconnectRotSacToadRig(project) {
+  if (project.enemyId !== 'rot-sac-toad') return
+  buildBeastBarrel(project)
+  reconnectBeastFrontLimbs(project)
 }
 
 // A short set of independent textures carries the anatomy. Eyes already

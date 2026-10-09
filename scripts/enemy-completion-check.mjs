@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 /* global structuredClone */
 import { existsSync } from 'node:fs'
+import { Vector3 } from 'three'
 import { createEnemyShadowProjects, installEnemyShadowProjects, ENEMY_ART_PACK_VERSION } from '../src/animation/shadow-enemies.js'
 import { createDefaultShadowProject, evaluateShadowProject, normalizeShadowProject } from '../src/animation/shadow-rig.js'
 import { shadowPartFloor } from '../src/animation/shadow-grounding.js'
@@ -88,7 +89,34 @@ function assertSalamanderChest(pose) {
     assert.equal(chest.part.pivotY, back.part.pivotY)
     for (let i = 0; i < 12; i++) assert(Math.abs(chest.matrix.elements[i] - back.matrix.elements[i]) < 1e-5, 'salamander shell and spine must share a surface direction')
     const gap = Math.hypot(...[12, 13, 14].map(i => chest.matrix.elements[i] - back.matrix.elements[i]))
-    assert(gap > .1 && gap < 1, 'salamander torso must not have a separate suspended chest layer')
+    assert(gap > 20 && gap < 40, 'salamander back and belly should bound a torso volume without intersecting')
+  }
+}
+function assertSalamanderConnections(pose) {
+  const position = id => new Vector3().setFromMatrixPosition(pose.jointsById.get(id).matrix)
+  const socket = (id, x, y) => {
+    const { part, matrix } = pose.parts.find(p => p.part.id === id)
+    return new Vector3((x - part.pivotX) * part.width, (part.pivotY - y) * part.height, 0).applyMatrix4(matrix)
+  }
+  const across = new Vector3(1, 0, 0).transformDirection(pose.jointsById.get('root').matrix)
+  for (const id of ['chest', 'chest-rear', 'back', 'back-mid']) {
+    const axis = new Vector3(1, 0, 0).transformDirection(pose.parts.find(p => p.part.id === id).matrix)
+    assert(Math.abs(axis.dot(across)) > .9999, 'salamander torso must not roll from side to side')
+  }
+  for (const side of ['left', 'right']) {
+    const flank = pose.parts.find(p => p.part.id === `chest-${side}-flank`)
+    const shoulder = position(`${side}-front-hip`).applyMatrix4(flank.matrix.clone().invert())
+    assert(Math.abs(shoulder.z) < .01, 'salamander front arm must meet the torso side surface')
+    assert(shoulder.x >= -flank.part.width && shoulder.x <= flank.part.width && shoulder.y >= 0 && shoulder.y <= flank.part.height)
+    assert(socket(`${side}-front-upper`, .36, .89).distanceTo(position(`${side}-front-knee`)) < .1, 'salamander upper arm socket should meet the elbow')
+    assert(socket(`${side}-front-lower`, .45, .90).distanceTo(position(`${side}-front-paw`)) < .1, 'salamander forearm socket should meet the wrist')
+    assert(socket(`${side}-front-foot`, .5, .075).distanceTo(position(`${side}-front-paw`)) < .4, 'salamander front claw should meet its arm')
+  }
+  for (let i = 0; i < 3; i++) {
+    const joint = pose.jointsById.get(`needle-${i}`).joint
+    const end = pose.jointsById.get(joint.z >= 0 ? 'neck' : 'haunch').joint
+    const surface = position('root').lerp(position(end.id), joint.z / end.z)
+    assert(position(joint.id).distanceTo(surface) < .4, 'salamander dorsal needle root should meet its back')
   }
 }
 function assertToadPose(project) {
@@ -163,6 +191,8 @@ for (const source of projects) {
   if (p.enemyId === 'redneedle-salamander') {
     assertSalamanderSpine(evaluateShadowProject(p, null, 0, { raw: true }))
     assertSalamanderChest(evaluateShadowProject(p, null, 0, { raw: true }))
+    assertSalamanderConnections(evaluateShadowProject(p, null, 0, { raw: true }))
+    assert(evaluateShadowProject(p, null, 0, { raw: true }).parts.find(part => part.part.id === 'head-art').matrix.elements[9] > 0, 'salamander face should look slightly upward')
   }
   if (p.enemyId === 'rot-walker') {
     const rest = evaluateShadowProject(p, null, 0, { raw: true })
@@ -190,7 +220,7 @@ for (const source of projects) {
     assert(part.name && part.visual.type === 'texture', `${p.enemyId}/${part.id}: missing named texture`)
     assert(existsSync(new URL(`../public${part.visual.texture}`, import.meta.url)), `${p.enemyId}: missing image`)
     assert.equal(part.depth, 0)
-    if (p.enemyId === 'redneedle-salamander' && ['back', 'back-mid', 'back-tail', 'chest', 'chest-rear'].includes(part.id)) {
+    if (['redneedle-salamander', 'rot-sac-toad'].includes(p.enemyId) && (['back', 'back-mid', 'back-tail', 'chest', 'chest-rear'].includes(part.id) || part.id.endsWith('-flank') || /^(left|right)-front-(upper|lower)$/.test(part.id))) {
       assert.equal(part.attachment.type, 'bone')
       assert(p.bones.some(bone => bone.id === part.attachment.targetId))
     } else {
@@ -218,6 +248,7 @@ for (const source of projects) {
       if (p.enemyId === 'redneedle-salamander') {
         assertSalamanderSpine(pose)
         assertSalamanderChest(pose)
+        assertSalamanderConnections(pose)
       }
       if (p.enemyId === 'beetle-guard') assertBeetleWings(pose)
       frames++
@@ -493,12 +524,31 @@ assert.equal(installEnemyShadowProjects(houndRoster), false)
 assert.deepEqual(houndRoster, updatedHoundRoster)
 
 const savedSalamander = structuredClone(projects.find(p => p.enemyId === 'redneedle-salamander'))
-savedSalamander.parts = savedSalamander.parts.filter(p => !['back-mid', 'back-tail', 'chest-rear'].includes(p.id))
+savedSalamander.parts = savedSalamander.parts.filter(p => !['back-mid', 'back-tail', 'chest-rear', 'torso-front-cap'].includes(p.id) && !p.id.endsWith('-flank'))
+for (const part of savedSalamander.parts) delete part.attachment.orientationJointId
+savedSalamander.joints.find(j => j.id === 'head').rotationX += 8
+savedSalamander.joints.find(j => j.id === 'head').y = 8
+savedSalamander.joints.find(j => j.id === 'neck').y = 12
+for (const [side, sign] of [['left', -1], ['right', 1]]) {
+  Object.assign(savedSalamander.joints.find(j => j.id === `${side}-front-hip`), { x: sign * 101 * .32, y: -23, z: 26 })
+  Object.assign(savedSalamander.joints.find(j => j.id === `${side}-front-knee`), { x: 0, y: -27 * .82 })
+  Object.assign(savedSalamander.joints.find(j => j.id === `${side}-front-paw`), { x: 0, y: -22 * .83 })
+  Object.assign(savedSalamander.parts.find(p => p.id === `${side}-front-upper`), { height: 27, pivotX: .5, pivotY: .08, rotationZ: 0,
+    attachment: { type: 'joint', targetId: `${side}-front-hip`, t: .5, followRotation: true } })
+  Object.assign(savedSalamander.parts.find(p => p.id === `${side}-front-lower`), { height: 22, pivotX: .5, pivotY: .08, z: .3, rotationZ: 0,
+    attachment: { type: 'joint', targetId: `${side}-front-knee`, t: .5, followRotation: true } })
+  Object.assign(savedSalamander.parts.find(p => p.id === `${side}-front-foot`), { pivotX: .5, pivotY: .12, z: .6 })
+}
+for (let i = 0; i < 3; i++) {
+  savedSalamander.joints.find(j => j.id === `needle-${i}`).y = 29
+  savedSalamander.parts.find(p => p.id === `needle-${i}-art`).pivotY = .92
+}
 const oldSpine = savedSalamander.parts.find(p => p.id === 'back')
 Object.assign(oldSpine, { name: oldSpine.name.replace(/ 1$/, ''), height: 111.1, pivotY: .4, rotationX: -72, rotationZ: 0, y: 26, z: -15,
   attachment: { type: 'joint', targetId: 'root', followRotation: true, t: .5 } })
 oldSpine.visual.textureFrame.crop = { left: 0, top: 0, width: 1, height: 1 }
 const oldChest = savedSalamander.parts.find(p => p.id === 'chest')
+oldChest.width *= 2
 Object.assign(oldChest, { rotationX: 0, rotationZ: 0, y: 0, height: 101, pivotY: .45,
   attachment: { type: 'joint', targetId: 'root', followRotation: true, t: .5 } })
 oldChest.visual.textureFrame.crop = { left: 0, top: 0, width: 1, height: 1 }
@@ -539,19 +589,43 @@ assert.deepEqual(oldBeetleWings, expectedBeetleWings, 'elytra update should pres
 assert.equal(installEnemyShadowProjects(elytraRoster), false)
 assert.deepEqual(oldBeetleWings, expectedBeetleWings, 'elytra placement must not accumulate on reload')
 const savedToad = structuredClone(projects.find(p => p.enemyId === 'rot-sac-toad'))
-savedToad.parts.find(p => p.id === 'back').width += 3
 savedToad.parts[0].fill = '#abcdef'
 const expectedToad = structuredClone(savedToad)
+for (const part of expectedToad.parts.filter(p => p.id.startsWith('chest'))) part.fill = '#abcdef'
+savedToad.parts = savedToad.parts.filter(p => !['back-mid', 'chest-rear', 'torso-front-cap'].includes(p.id) && !p.id.endsWith('-flank'))
+const oldToadBack = savedToad.parts.find(p => p.id === 'back')
+Object.assign(oldToadBack, { width: 145.2, height: 145.2 * 236 / 277, pivotX: .5, pivotY: .4, x: 0, y: 26, z: -15, rotationX: -72, rotationZ: 0,
+  attachment: { type: 'joint', targetId: 'root', t: .5, followRotation: true } })
+oldToadBack.visual.textureFrame.crop = { left: 0, top: 0, width: 1, height: 1 }
+const oldToadChest = savedToad.parts.find(p => p.id === 'chest')
+Object.assign(oldToadChest, { width: 132, height: 132 * 313 / 324, pivotX: .5, pivotY: .45, x: 0, y: 0, z: 0, rotationX: 0, rotationZ: 0,
+  attachment: { type: 'joint', targetId: 'root', t: .5, followRotation: true } })
+oldToadChest.visual.textureFrame.crop = { left: 0, top: 0, width: 1, height: 1 }
+Object.assign(savedToad.parts.find(p => p.id === 'rump'), { width: 89.76, height: 89.76 * 198 / 240, pivotX: .5, pivotY: .45, x: 0, y: 0, z: 0, rotationX: -28,
+  attachment: { type: 'joint', targetId: 'haunch', t: .5, followRotation: true } })
+savedToad.joints.find(j => j.id === 'neck').y = 24
+savedToad.joints.find(j => j.id === 'head').y = 18
+for (const [side, sign] of [['left', -1], ['right', 1]]) {
+  Object.assign(savedToad.joints.find(j => j.id === `${side}-front-hip`), { x: sign * 132 * .32, y: -23, z: 26 })
+  Object.assign(savedToad.joints.find(j => j.id === `${side}-front-knee`), { x: 0, y: -30 * .82, z: 0 })
+  Object.assign(savedToad.joints.find(j => j.id === `${side}-front-paw`), { x: 0, y: -26 * .83, z: 0 })
+  Object.assign(savedToad.parts.find(p => p.id === `${side}-front-upper`), { height: 30, pivotX: .5, pivotY: .08, rotationZ: 0,
+    attachment: { type: 'joint', targetId: `${side}-front-hip`, t: .5, followRotation: true } })
+  Object.assign(savedToad.parts.find(p => p.id === `${side}-front-lower`), { height: 26, pivotX: .5, pivotY: .08, z: .3, rotationZ: 0,
+    attachment: { type: 'joint', targetId: `${side}-front-knee`, t: .5, followRotation: true } })
+  Object.assign(savedToad.parts.find(p => p.id === `${side}-front-foot`), { pivotX: .5, pivotY: .12, z: .6 })
+}
 savedToad.name = '\u8150\u56ca\u87c7'
 savedToad.parts.find(p => p.id === 'back').rotationX = -72
 savedToad.joints.find(j => j.id === 'head').rotationX += 8
 const toadRoster = { enemyArtPackVersion: 33, activeCharacterId: 'toad', characters: [{ id: 'toad', project: savedToad }] }
 assert(installEnemyShadowProjects(toadRoster))
 assertToadPose(savedToad)
-assert.deepEqual(savedToad, expectedToad, 'toad update should retain custom artwork, mouth animation and other joints')
+const roundedProject = project => JSON.parse(JSON.stringify(project, (key, value) => typeof value === 'number' ? Math.round(value * 1e6) / 1e6 : value))
+assert.deepEqual(roundedProject(savedToad), roundedProject(expectedToad), 'toad update should retain custom artwork, mouth animation and other joints')
 assert.equal(toadRoster.activeCharacterId, 'toad')
 assert.equal(installEnemyShadowProjects(toadRoster), false)
-assert.deepEqual(savedToad, expectedToad, 'toad pose must not accumulate on reload')
+assert.deepEqual(roundedProject(savedToad), roundedProject(expectedToad), 'toad pose must not accumulate on reload')
 savedToad.name = 'Custom toad'
 assert.equal(installEnemyShadowProjects(toadRoster), false)
 assert.equal(savedToad.name, 'Custom toad', 'custom toad names must remain intact')

@@ -147,7 +147,7 @@
         </div>
         <div v-if="selectedPart" class="rig-texture-fields">
           <label><span>{{ COPY.texturePath }}</span><input :value="selectedPart.visual.texture || ''" :placeholder="COPY.texturePlaceholder" @change="setSelectedTexture($event.target.value)"></label>
-          <label><span>{{ COPY.fit }}</span><select :value="selectedPart.visual.textureFit" @change="selectedPart.visual.textureFit = $event.target.value"><option value="contain">contain</option><option value="cover">cover</option></select></label>
+          <label><span>{{ COPY.fit }}</span><select :value="selectedPart.visual.textureFit" @change="selectedPart.visual.textureFit = $event.target.value"><option value="contain">contain</option><option value="cover">cover</option><option value="stretch">stretch</option></select></label>
           <template v-if="selectedPart.visual.textureFrame">
             <label><span>col</span><input v-model.number="selectedPart.visual.textureFrame.column" type="number" min="0"></label>
             <label><span>row</span><input v-model.number="selectedPart.visual.textureFrame.row" type="number" min="0"></label>

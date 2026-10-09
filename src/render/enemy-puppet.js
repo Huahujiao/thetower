@@ -3,6 +3,7 @@ import { evaluateShadowProject, loadShadowRoster } from '../animation/shadow-rig
 import { projectShadowFaces } from '../animation/shadow-projection.js'
 import * as THREE from 'three'
 import { shadowPartGeometry } from '../animation/shadow-geometry.js'
+import { applyTextureBacking } from './texture-backing.js'
 import { shadowPartFloor } from '../animation/shadow-grounding.js'
 
 const images = new Map()
@@ -169,6 +170,17 @@ export function drawEnemyPuppet(context, enemyId, action = 'idle', time = 0) {
 }
 
 const partTextures = new Map()
+const skinTextures = new Map()
+function skinTexture(url) {
+  if (!url) return null
+  if (!skinTextures.has(url)) {
+    const texture = new THREE.TextureLoader().load(url, () => assetReady?.())
+    texture.colorSpace = THREE.SRGBColorSpace
+    texture.userData.boardShared = true
+    skinTextures.set(url, texture)
+  }
+  return skinTextures.get(url)
+}
 function puppetTexture(part) {
   const image = imageFor(part.visual.texture)
   if (!image) return null
@@ -202,12 +214,17 @@ export function createEnemyFigure(enemyId, cardSize = 1.14) {
   group.userData.meshes = new Map()
   for (const part of project.parts) {
     const textured = part.visual.type === 'texture'
-    const geometry = textured ? new THREE.PlaneGeometry(part.width, part.height) : shadowPartGeometry(part)
-    if (textured) geometry.translate(part.width * (.5 - part.pivotX), part.height * (part.pivotY - .5), 0)
+    const geometry = textured && part.shape !== 'hexagon' ? new THREE.PlaneGeometry(part.width, part.height) : shadowPartGeometry(part)
+    if (textured && part.shape !== 'hexagon') geometry.translate(part.width * (.5 - part.pivotX), part.height * (part.pivotY - .5), 0)
+    if (textured && part.shape === 'hexagon') {
+      const uv = geometry.attributes.uv, position = geometry.attributes.position
+      for (let i = 0; i < uv.count; i++) uv.setXY(i, position.getX(i) / part.width + part.pivotX, position.getY(i) / part.height + 1 - part.pivotY)
+    }
     const mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({
       color: textured ? 0xffffff : part.fill, map: textured ? puppetTexture(part) : null,
       side: THREE.DoubleSide, transparent: true, alphaTest: textured ? .04 : 0, depthTest: true, depthWrite: true,
     }))
+    if (textured) applyTextureBacking(mesh.material, part.visual.backingColor, skinTexture(part.visual.skinTexture))
     mesh.matrixAutoUpdate = false
     mesh.raycast = () => {}
     rig.add(mesh)

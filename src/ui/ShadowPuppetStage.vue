@@ -27,7 +27,8 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { BufferGeometry, Color, DirectionalLight, DoubleSide, EdgesGeometry, Group, HemisphereLight, Line, LineBasicMaterial, LineSegments, Mesh, MeshBasicMaterial, MeshLambertMaterial, OrthographicCamera, PerspectiveCamera, PlaneGeometry, Raycaster, Scene, Shape, ShapeGeometry, SphereGeometry, SRGBColorSpace, TextureLoader, TOUCH, Vector2, Vector3, WebGLRenderer } from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { evaluateShadowProject, shadowMatrixPosition } from '../animation/shadow-rig.js'
-import { shadowPartGeometry } from '../animation/shadow-geometry.js'
+import { shadowPartGeometry, shadowPartShape } from '../animation/shadow-geometry.js'
+import { applyTextureBacking } from '../render/texture-backing.js'
 import { FLOOR_URLS, floorTextureIndex } from '../render/board-textures.js'
 import { DEFAULT_CAMERA_ELEVATION } from '../render/camera-view.js'
 
@@ -269,22 +270,25 @@ function textureGeometry(part, texture) {
   const imageHeight = (image?.naturalHeight || image?.height || part.height) / (frame?.rows || 1) * crop.height
   const imageRatio = imageWidth / imageHeight
   const boxRatio = part.width / part.height
-  const contain = part.visual.textureFit !== 'cover'
+  const cover = part.visual.textureFit === 'cover'
+  const contain = !cover && part.visual.textureFit !== 'stretch'
   const width = contain && imageRatio < boxRatio ? part.height * imageRatio : part.width
   const height = contain && imageRatio > boxRatio ? part.width / imageRatio : part.height
   const left = -part.width * part.pivotX + (part.width - width) / 2
   const top = part.height * part.pivotY - (part.height - height) / 2
-  const shape = new Shape()
-  shape.moveTo(left, top)
-  shape.lineTo(left + width, top)
-  shape.lineTo(left + width, top - height)
-  shape.lineTo(left, top - height)
-  shape.closePath()
+  const shape = part.shape === 'hexagon' ? shadowPartShape(part) : new Shape()
+  if (part.shape !== 'hexagon') {
+    shape.moveTo(left, top)
+    shape.lineTo(left + width, top)
+    shape.lineTo(left + width, top - height)
+    shape.lineTo(left, top - height)
+    shape.closePath()
+  }
   const geometry = new ShapeGeometry(shape)
   const uv = geometry.attributes.uv
   const positions = geometry.attributes.position
-  const cropX = !contain && imageRatio > boxRatio ? (1 - boxRatio / imageRatio) / 2 : 0
-  const cropY = !contain && imageRatio < boxRatio ? (1 - imageRatio / boxRatio) / 2 : 0
+  const cropX = cover && imageRatio > boxRatio ? (1 - boxRatio / imageRatio) / 2 : 0
+  const cropY = cover && imageRatio < boxRatio ? (1 - imageRatio / boxRatio) / 2 : 0
   for (let index = 0; index < uv.count; index += 1) {
     const u = (positions.getX(index) - left) / width
     const v = 1 + (positions.getY(index) - top) / height
@@ -345,6 +349,12 @@ function drawScene() {
       material.map = textureCache.get(part.visual.texture)
       material.color.set('#ffffff')
       material.alphaTest = 0.02
+      if (part.visual.skinTexture && !textureCache.has(part.visual.skinTexture)) {
+        const skin = textureLoader.load(part.visual.skinTexture, drawScene)
+        skin.colorSpace = SRGBColorSpace
+        textureCache.set(part.visual.skinTexture, skin)
+      }
+      applyTextureBacking(material, part.visual.backingColor, textureCache.get(part.visual.skinTexture))
     }
     const mesh = new Mesh(geometry, material)
     mesh.matrixAutoUpdate = false

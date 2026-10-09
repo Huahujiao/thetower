@@ -7,7 +7,13 @@ export function shadowPartShape(part) {
   const top = height * part.pivotY
   const bottom = top - height
   const shape = new Shape()
-  if (part.shape === 'circle' || part.shape === 'ellipse') {
+  if (part.shape === 'hexagon') {
+    for (const [i, [x, y]] of [[.25, 0], [.75, 0], [1, .5], [.75, 1], [.25, 1], [0, .5]].entries()) {
+      if (i === 0) shape.moveTo(left + x * width, top - y * height)
+      else shape.lineTo(left + x * width, top - y * height)
+    }
+    shape.closePath()
+  } else if (part.shape === 'circle' || part.shape === 'ellipse') {
     shape.absellipse(left + width / 2, top - height / 2, width / 2, height / 2, 0, Math.PI * 2, false)
   } else if (part.shape === 'capsule') {
     const r = Math.min(width, height) / 2
