@@ -3,6 +3,25 @@ import { evaluateShadowProject } from './shadow-rig.js'
 
 const clone = value => JSON.parse(JSON.stringify(value))
 
+// Also upgrade saved V35/V36 barrels authored before opaque skins were added.
+export function coverBeastBarrelCutouts(project) {
+  if (!['redneedle-salamander', 'rot-sac-toad'].includes(project.enemyId)) return
+  for (const part of project.parts) {
+    if (!['back', 'back-mid', 'chest', 'chest-rear', 'rump', 'torso-front-cap'].includes(part.id) && !part.id.endsWith('-flank')) continue
+    if (part.visual.type !== 'texture') continue
+    part.visual.textureFit = 'stretch'
+    part.visual.backingColor = project.enemyId === 'rot-sac-toad' ? '#50603a' : '#4d3c2d'
+    part.visual.skinTexture = `/assets/enemies/skins-v1/${project.enemyId}.png`
+    if (part.id.endsWith('-flank')) {
+      // Side walls use an actual opaque image, rather than narrow, perforated
+      // edge crops of the separate chest/back anatomy sheets.
+      part.visual.texture = part.visual.skinTexture
+      part.visual.textureFrame = { columns: 1, rows: 1, column: 0, row: 0,
+        crop: { left: 0, top: 0, width: 1, height: 1 } }
+    }
+  }
+}
+
 // Six longitudinal panels enclose the torso; the same root frame keeps their
 // cross-section level instead of inheriting the bone solver's shortest roll.
 export function buildBeastBarrel(project) {

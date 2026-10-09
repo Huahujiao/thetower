@@ -10,6 +10,10 @@ import componentAssets from '../src/animation/enemy-component-assets.json' with 
 import { rebuildEnemyGrounding } from '../src/animation/enemy-grounding.js'
 
 const projects = createEnemyShadowProjects({ includeBoss: true })
+function restoreV36WalkerArms(project) {
+  project.joints.find(j => j.id === 'right-arm-root').x += 10
+  for (const id of ['left-shoulder', 'left-elbow', 'left-wrist', 'right-arm-root', 'right-arm-hinge', 'right-arm-tip']) project.joints.find(j => j.id === id).z *= 2
+}
 function restoreV23Pose(project) {
   if (project.enemyId === 'rootrot-bud') for (const [side, sign] of [['left', -1], ['right', 1]]) project.joints.find(j => j.id === `${side}-petal`).rotationZ += sign * 12
   if (project.enemyId === 'gnawer') for (const [side, sign] of [['left', -1], ['right', 1]]) {
@@ -55,6 +59,12 @@ function assertFrontalSkeleton(project) {
       })
     }
   }
+}
+function assertBeetleHorn(pose) {
+  const { part, matrix } = pose.parts.find(p => p.part.id === 'battering-horn-sheet')
+  const apex = new Vector3((107.5 / 216 - part.pivotX) * part.width, part.pivotY * part.height, 0).applyMatrix4(matrix)
+  const tip = new Vector3().setFromMatrixPosition(pose.jointsById.get('battering-horn-tip').matrix)
+  assert(apex.distanceTo(tip) < 1e-5, 'beetle horn node must follow its painted apex throughout animation')
 }
 function assertHoundPose(project) {
   const pose = evaluateShadowProject(project, null, 0, { raw: true })
@@ -176,6 +186,17 @@ for (const source of projects) {
     }
   }
   if (['gnawer', 'rootrot-bud', 'beetle-guard', 'shellguard'].includes(p.enemyId)) assertFrontalSkeleton(p)
+  if (['nest-spider', 'beetle-guard'].includes(p.enemyId)) {
+    const last = p.enemyId === 'nest-spider' ? 3 : 2
+    for (const raw of [true, false]) {
+      const pose = evaluateShadowProject(p, null, 0, { raw })
+      for (const side of ['left', 'right']) for (const [index, direction] of [[0, 1], [last, -1]]) {
+        const socket = pose.jointsById.get(`${side}-leg-${index}-coxa`).matrix.elements
+        const foot = pose.jointsById.get(`${side}-leg-${index}-tip`).matrix.elements
+        assert((foot[14] - socket[14]) * direction > 10, `${p.enemyId}: end legs should lean toward the front and rear`)
+      }
+    }
+  }
   if (p.enemyId === 'patrol-hound') assertHoundPose(p)
   if (p.enemyId === 'beetle-guard') {
     const rest = evaluateShadowProject(p, null, 0, { raw: true })
@@ -206,6 +227,9 @@ for (const source of projects) {
     const used = new Set(p.parts.map(part => Number(/part_(\d+)\.png$/.exec(part.visual.texture)?.[1])))
     assert.equal(used.size, 23, 'moss colossus should use all 23 anatomy assets')
     assert(p.parts.find(part => part.id === 'torso').visual.texture.endsWith('/part_001.png'), 'moss chest face must be the main torso')
+    assert.equal(p.joints.find(j => j.id === 'neck').x, 0, 'moss head should be centered above its torso')
+    for (const id of ['right-arm-shoulder', 'right-secondary-shoulder']) assert.equal(p.joints.find(j => j.id === id).scaleX, -1,
+      'saved moss right arms should retain their full mirrored width')
     for (const side of ['left', 'right']) {
       const rest = evaluateShadowProject(p, null, 0, { raw: true })
       const primary = rest.jointsById.get(`${side}-arm-wrist`).matrix.elements
@@ -276,7 +300,7 @@ for (const source of projects) {
         assertSalamanderChest(pose)
         assertSalamanderConnections(pose)
       }
-      if (p.enemyId === 'beetle-guard') assertBeetleWings(pose)
+      if (p.enemyId === 'beetle-guard') { assertBeetleWings(pose); assertBeetleHorn(pose) }
       frames++
       for (const part of pose.parts) {
         assert(part.matrix.elements.every(Number.isFinite))
@@ -288,6 +312,15 @@ for (const source of projects) {
         foot.matrix.elements.forEach((v, k) => assert(Math.abs(v - bind.matrix.elements[k]) < 1e-5, `${p.enemyId}: sliding idle foot`))
       }
     }
+  }
+}
+for (const source of projects.filter(p => ['moss-colossus', 'revenant-guard'].includes(p.enemyId))) {
+  const authored = evaluateShadowProject(source, null, 0, { raw: true })
+  const saved = evaluateShadowProject(normalizeShadowProject(source), null, 0, { raw: true })
+  for (const arm of authored.parts.filter(p => /^(left|right)-(?:arm|secondary)-/.test(p.part.id))) {
+    const restored = saved.parts.find(p => p.part.id === arm.part.id)
+    arm.matrix.elements.forEach((value, i) => assert(Math.abs(value - restored.matrix.elements[i]) < 1e-7,
+      `${source.enemyId}/${arm.part.id}: saving must preserve arm position and width`))
   }
 }
 for (const id of ['patrol-hound', 'redwheel-fire-crow']) {
@@ -420,6 +453,7 @@ beetle.parts[0].fill = '#123456'
 const beetleMotion = JSON.stringify(beetle.animations)
 const walker = structuredClone(projects.find(p => p.enemyId === 'rot-walker'))
 const expectedWalker = structuredClone(walker)
+restoreV36WalkerArms(walker)
 walker.joints.find(j => j.id === 'neck').y -= 8
 walker.joints.find(j => j.id === 'neck').z += 4
 walker.joints.find(j => j.id === 'head').y -= 8
@@ -466,6 +500,7 @@ shellguard.parts.find(p => p.id === 'right-gate-art').width += 3
 shellguard.parts[0].fill = '#456789'
 const shellguardMotion = JSON.stringify(shellguard.animations)
 const retainedWalker = structuredClone(expectedWalker)
+restoreV36WalkerArms(retainedWalker)
 retainedWalker.joints.find(j => j.id === 'rot-stilt-root').x -= 6
 retainedWalker.joints.find(j => j.id === 'neck').y -= 8
 retainedWalker.joints.find(j => j.id === 'neck').z += 4
@@ -549,6 +584,70 @@ assert.equal(houndRoster.activeCharacterId, 'hound')
 const updatedHoundRoster = structuredClone(houndRoster)
 assert.equal(installEnemyShadowProjects(houndRoster), false)
 assert.deepEqual(houndRoster, updatedHoundRoster)
+
+// V36 -> V37 updates the articulated end legs and the painted horn endpoint
+// while retaining custom art, animation, unrelated limbs and active selection.
+const crawlerCharacters = projects.filter(p => ['nest-spider', 'beetle-guard'].includes(p.enemyId)).map(project => ({ id: project.enemyId, project: structuredClone(project) }))
+for (const { project } of crawlerCharacters) {
+  const last = project.enemyId === 'nest-spider' ? 3 : 2
+  for (const side of ['left', 'right']) for (const index of [0, last]) project.joints.find(j => j.id === `${side}-leg-${index}-coxa`).rotationX = 0
+  rebuildEnemyGrounding(project)
+  project.parts[0].fill = '#778899'
+}
+const oldBeetle = crawlerCharacters.find(c => c.id === 'beetle-guard').project
+const horn = oldBeetle.parts.find(p => p.id === 'battering-horn-sheet')
+horn.width += 5
+const customHorn = structuredClone(horn)
+Object.assign(oldBeetle.joints.find(j => j.id === 'battering-horn-tip'), { x: 0, y: 17, z: 46 })
+const customLegMotion = JSON.stringify(oldBeetle.animations.move.tracks['joint:left-leg-0-coxa'])
+const middleLeg = structuredClone(oldBeetle.joints.find(j => j.id === 'left-leg-1-coxa'))
+const crawlerRoster = { enemyArtPackVersion: 36, activeCharacterId: 'beetle-guard', characters: crawlerCharacters }
+assert(installEnemyShadowProjects(crawlerRoster))
+assert.equal(crawlerRoster.characters.length, 2)
+assert.equal(crawlerRoster.activeCharacterId, 'beetle-guard')
+assert.deepEqual(horn, customHorn, 'horn artwork stays in place while its skeleton node moves')
+assertBeetleHorn(evaluateShadowProject(oldBeetle, null, 0))
+assert.deepEqual(oldBeetle.joints.find(j => j.id === middleLeg.id), middleLeg)
+assert.equal(JSON.stringify(oldBeetle.animations.move.tracks['joint:left-leg-0-coxa']), customLegMotion)
+assert(crawlerCharacters.every(c => c.project.parts[0].fill === '#778899'))
+const upgradedCrawlers = structuredClone(crawlerRoster)
+assert.equal(installEnemyShadowProjects(crawlerRoster), false)
+assert.deepEqual(crawlerRoster, upgradedCrawlers)
+
+// V37 saved mirrors could be flattened by normalization, and pre-skin barrel
+// projects need their opaque covers even though the torso geometry is current.
+const repairedCharacters = projects.filter(p => ['moss-colossus', 'revenant-guard', 'redneedle-salamander', 'rot-sac-toad'].includes(p.enemyId)).map(project => ({ id: project.enemyId, project: normalizeShadowProject(project) }))
+for (const { project } of repairedCharacters) {
+  if (project.enemyId === 'moss-colossus') {
+    project.joints.find(j => j.id === 'neck').x = 20
+    for (const id of ['right-arm-shoulder', 'right-secondary-shoulder']) project.joints.find(j => j.id === id).scaleX = .01
+  }
+  if (project.enemyId === 'revenant-guard') project.joints.find(j => j.id === 'right-secondary-shoulder').scaleX = .01
+  for (const part of project.parts.filter(p => p.visual.backingColor)) {
+    delete part.visual.backingColor; delete part.visual.skinTexture
+    part.visual.textureFit = 'contain'
+    if (part.id.endsWith('-flank')) part.visual.texture = project.parts.find(p => p.id === (part.id.startsWith('back') ? 'back' : 'chest')).visual.texture
+  }
+}
+const repairRoster = { enemyArtPackVersion: 37, activeCharacterId: 'moss-colossus', characters: repairedCharacters }
+assert(installEnemyShadowProjects(repairRoster))
+for (const { project } of repairRoster.characters) {
+  if (project.enemyId === 'moss-colossus') {
+    assert.equal(project.joints.find(j => j.id === 'neck').x, 0)
+    assert.equal(project.joints.find(j => j.id === 'right-arm-shoulder').scaleX, -1)
+  }
+  if (['moss-colossus', 'revenant-guard'].includes(project.enemyId)) assert.equal(normalizeShadowProject(project).joints.find(j => j.id === 'right-secondary-shoulder').scaleX, -1)
+  if (['redneedle-salamander', 'rot-sac-toad'].includes(project.enemyId)) {
+    for (const part of project.parts.filter(p => p.id.endsWith('-flank'))) {
+      assert(part.visual.backingColor && part.visual.skinTexture, 'saved beast side panels need opaque skins')
+      assert.equal(part.visual.texture, part.visual.skinTexture, 'side walls should use solid skins instead of perforated anatomy crops')
+      assert.equal(part.visual.textureFit, 'stretch', 'skins must cover the complete side panel')
+    }
+  }
+}
+const repairedSnapshot = structuredClone(repairRoster)
+assert.equal(installEnemyShadowProjects(repairRoster), false)
+assert.deepEqual(repairRoster, repairedSnapshot)
 
 const savedSalamander = structuredClone(projects.find(p => p.enemyId === 'redneedle-salamander'))
 savedSalamander.parts = savedSalamander.parts.filter(p => !['back-mid', 'back-tail', 'chest-rear', 'torso-front-cap'].includes(p.id) && !p.id.endsWith('-flank'))

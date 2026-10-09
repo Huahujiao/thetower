@@ -1,4 +1,6 @@
 import assets from './enemy-component-assets.json' with { type: 'json' }
+import { coverBeastBarrelCutouts } from './shadow-beast-barrels.js'
+export { coverBeastBarrelCutouts } from './shadow-beast-barrels.js'
 import { applyEnemyComponentBatch2 } from './shadow-enemy-components-batch2.js'
 export { BATCH2_COMPONENT_ENEMY_IDS } from './shadow-enemy-components-batch2.js'
 import { applyEnemyComponentBatch3 } from './shadow-enemy-components-batch3.js'
@@ -194,6 +196,35 @@ export function widenRotWalkerLeftLeg(project) {
   if (leg) leg.x += 6
 }
 
+// V37: the character-left arm is the legacy right-arm chain at positive X.
+export function tightenRotWalkerArms(project) {
+  if (project.enemyId !== 'rot-walker') return
+  const leftShoulder = project.joints.find(j => j.id === 'right-arm-root')
+  if (leftShoulder) leftShoulder.x -= 10
+  for (const id of ['left-shoulder', 'left-elbow', 'left-wrist', 'right-arm-root', 'right-arm-hinge', 'right-arm-tip']) {
+    const joint = project.joints.find(j => j.id === id)
+    if (joint) joint.z *= .5
+  }
+}
+
+// V38 repairs mirrors already clamped to 0.01 by older save normalization.
+export function restoreFourArmMirrors(project) {
+  const ids = project.enemyId === 'moss-colossus' ? ['right-arm-shoulder', 'right-secondary-shoulder']
+    : project.enemyId === 'revenant-guard' ? ['right-secondary-shoulder'] : []
+  for (const id of ids) {
+    const shoulder = project.joints.find(j => j.id === id)
+    if (shoulder && shoulder.scaleX >= 0) shoulder.scaleX = -Math.max(1, shoulder.scaleX)
+  }
+  if (project.enemyId === 'moss-colossus') {
+    for (const id of ['neck', 'head']) {
+      const joint = project.joints.find(j => j.id === id)
+      if (joint) { joint.x = 0; joint.rotationZ = 0 }
+    }
+    const head = project.parts.find(p => p.id === 'head-art')
+    if (head) head.rotationZ = 0
+  }
+}
+
 // Add the two unused claw assets as lower arms; keep saved main-arm edits.
 export function addRevenantSecondaryArms(project) {
   if (project.enemyId !== 'revenant-guard') return
@@ -283,6 +314,40 @@ export function openBeetleElytra(project) {
     tip.x = m[0] * x + m[4] * y + m[12]
     tip.y = m[1] * x + m[5] * y + m[13]
     tip.z = m[2] * x + m[6] * y + m[14]
+  }
+}
+
+// V37: front is +Z. Tilt whole textured leg chains at their body sockets;
+// matching X rotations keep each left/right pair facing the same direction.
+export function splayCrawlerEndLegs(project) {
+  const last = project.enemyId === 'nest-spider' ? 3 : project.enemyId === 'beetle-guard' ? 2 : null
+  if (last === null) return
+  const tilt = project.enemyId === 'nest-spider' ? 25 : 18
+  for (const [index, direction] of [[0, 1], [last, -1]]) {
+    for (const side of ['left', 'right']) {
+      const coxa = project.joints.find(j => j.id === `${side}-leg-${index}-coxa`)
+      if (coxa) coxa.rotationX = -direction * tilt
+    }
+  }
+}
+
+export function alignBeetleHornTip(project) {
+  if (project.enemyId !== 'beetle-guard') return
+  const tip = project.joints.find(j => j.id === 'battering-horn-tip')
+  const horn = project.parts.find(p => p.id === 'battering-horn-sheet')
+  if (!tip || horn?.attachment.type !== 'joint') return
+  const bone = project.bones.find(b => b.toJointId === tip.id)
+  if (bone) bone.fromJointId = horn.attachment.targetId
+  // Opaque apex of part_005: center of pixels 106..108 on its top row.
+  const crop = horn.visual.textureFrame.crop
+  const x = ((107.5 / 216 - crop.left) / crop.width - horn.pivotX) * horn.width
+  const y = (horn.pivotY + crop.top / crop.height) * horn.height
+  const m = shadowTransformMatrix(horn).elements
+  Object.assign(tip, { x: m[0] * x + m[4] * y + m[12], y: m[1] * x + m[5] * y + m[13], z: m[2] * x + m[6] * y + m[14] })
+  // The old geometric tip had its own translation tracks although the PNG
+  // turns with the hinge. Keep their positions together throughout animation.
+  for (const animation of Object.values(project.animations)) {
+    for (const frame of animation.tracks[`joint:${tip.id}`] || []) Object.assign(frame, { dx: 0, dy: 0, dz: 0 })
   }
 }
 
@@ -714,6 +779,11 @@ export function applyEnemyComponentArt(project) {
   widenRotWalkerLeftLeg(project)
   addRevenantSecondaryArms(project)
   exposeFourArmLayouts(project)
+  splayCrawlerEndLegs(project)
+  alignBeetleHornTip(project)
+  tightenRotWalkerArms(project)
+  restoreFourArmMirrors(project)
+  coverBeastBarrelCutouts(project)
   return project
 }
 

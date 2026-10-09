@@ -13,6 +13,7 @@ export function applyTextureBacking(material, color, texture = null) {
           vec4 skinSample = texture2D(map, vMapUv);
           vec3 skinBacking = ${texture ? 'texture2D(skinBackingMap, fract(vMapUv * vec2(2.0, 1.0))).rgb' : 'skinBackingColor'};
           diffuseColor.rgb *= mix(skinBacking, skinSample.rgb, skinSample.a);
+          diffuseColor.a = opacity;
         #endif
       `)
   }

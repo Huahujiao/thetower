@@ -158,7 +158,7 @@ function normalizeJoint(source, index) {
     rotationX: finite(source?.rotationX, 0),
     rotationY: finite(source?.rotationY, 0),
     rotationZ: finite(source?.rotationZ ?? source?.rotation, 0),
-    scaleX: Math.max(.01, finite(source?.scaleX, 1)),
+    scaleX: Math.sign(finite(source?.scaleX, 1) || 1) * Math.max(.01, Math.abs(finite(source?.scaleX, 1))),
   })
 }
 

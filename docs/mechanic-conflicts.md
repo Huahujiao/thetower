@@ -40,3 +40,4 @@
 - 已复现的旧检查问题：`scripts/shadow-rig-check.mjs` 仍要求巡路犬等敌人的旧 `*-hinge` 名称，以及旧虫母的水平腹壳结构、旧模板角色数量。新模板已换骨架；本轮不改写历史迁移断言。`check:animation` 改用 `enemy-completion-check.mjs` 与现有接地检查，覆盖全部34种敌人、动画循环接缝、折面镜像和编辑器模板刷新。
 - 已复现的旧检查问题：`scripts/combat-motion-check.mjs:28` 的直接攻击断言返回false；该用例的 `setBalls(killRun, 6)` 未指定武器球色，不能保证手牌满足新的完整同色费用。本轮不扩展修改旧战斗断言。相机、朝向和逐帧动画检查通过。
 - 待验证风险：手机实际操作与极端自定义骨架仍需实机观察；本轮已检查默认骨架全部动作的地面约束，以及实际Three.js多角度和动作画面。
+- 已复现（2026-10-09）：`shadowContactVertices` 使用 `JSON.stringify(textureFrame)` 查找轮廓，模板与 `normalizeShadowProject` 的字段顺序不同，规范化后可能退回矩形碰撞轮廓。甲壳虫卫的脚同时绕 X、Y 倾斜时可造成接地后的左右轻微不对称。本轮仅采用用户要求的 X 轴前后倾斜，默认骨架的对称与接地检查通过；轮廓缓存键的通用修正留待后续处理。
