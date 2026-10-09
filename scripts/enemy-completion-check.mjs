@@ -8,6 +8,24 @@ import { BATCH5_COMPONENT_ENEMY_IDS } from '../src/animation/shadow-enemy-compon
 import componentAssets from '../src/animation/enemy-component-assets.json' with { type: 'json' }
 
 const projects = createEnemyShadowProjects({ includeBoss: true })
+function assertFrontalSkeleton(project) {
+  const incoming = new Map(project.bones.map(bone => [bone.toJointId, bone.fromJointId]))
+  const signs = [-1, 1, 1, 1]
+  for (const raw of [true, false]) {
+    const pose = evaluateShadowProject(project, null, 0, { raw })
+    for (const left of pose.joints.filter(entry => entry.joint.id.startsWith('left-'))) {
+      const rightId = left.joint.id.replace(/^left-/, 'right-')
+      const right = pose.jointsById.get(rightId)
+      assert(right, `${project.enemyId}/${left.joint.id}: missing paired joint`)
+      assert.equal(incoming.get(rightId), incoming.get(left.joint.id)?.replace(/^left-/, 'right-'), `${project.enemyId}: asymmetric parent chain`)
+      left.matrix.elements.forEach((value, i) => {
+        const reflected = value * signs[i % 4] * signs[Math.floor(i / 4)]
+        assert(Math.abs(reflected - right.matrix.elements[i]) < 1e-7,
+          `${project.enemyId}/${left.joint.id}: asymmetric ${raw ? 'authored' : 'grounded'} joint transform at ${i}`)
+      })
+    }
+  }
+}
 let frames = 0, parts = 0
 for (const source of projects) {
   const p = normalizeShadowProject(source)
@@ -26,27 +44,22 @@ for (const source of projects) {
     assert(p.parts.find(part => part.id === 'right-foot').visual.texture.endsWith('/part_009.png'))
     assert(p.parts.find(part => part.id === 'left-thigh').height > 6)
     assert(p.parts.find(part => part.id === 'right-thigh').height > 6)
-    for (const [id, multiplier] of [['knee', 1], ['hock', 2], ['ankle', 3]]) {
-      const depthDelta = position(`right-${id}`)[14] - position(`left-${id}`)[14]
-      assert(Math.abs(depthDelta - .75 * multiplier) < .1,
-        `gnawer legs: expected a slight ${id} depth offset, found ${depthDelta}`)
+    for (const side of ['left', 'right']) {
+      const outward = side === 'left' ? -1 : 1
+      assert((position(`${side}-ankle`)[12] - position(`${side}-hock`)[12]) * outward > 0, 'gnawer feet should spread outward')
     }
   }
   if (p.enemyId === 'rootrot-bud') {
     const rest = evaluateShadowProject(p)
     const position = id => rest.jointsById.get(id).matrix.elements
-    for (const suffix of ['root', 'root-tip', 'petal', 'petal-tip', 'thorn', 'leaf']) {
-      const left = position(`left-${suffix}`), right = position(`right-${suffix}`)
-      assert(Math.abs(left[12] + right[12]) < 1, `rootrot-bud/${suffix}: joints should mirror across X`)
-      assert(Math.abs(left[13] - right[13]) < 1, `rootrot-bud/${suffix}: joint heights should match`)
-      assert(Math.abs(left[14] - right[14]) < 1e-5, `rootrot-bud/${suffix}: joint depths should match`)
-    }
-    for (const suffix of ['petal-part', 'upper-petal-part']) {
-      const left = p.parts.find(part => part.id === `left-${suffix}`)
-      const right = p.parts.find(part => part.id === `right-${suffix}`)
-      if (left && right) assert.equal(left.rotationX, right.rotationX, `rootrot-bud/${suffix}: paired tilt should match`)
+    assert.equal(p.parts.length, 11, 'rootrot-bud should have one head, one stem, one bulb and two leaf/root pairs')
+    assert(!p.parts.some(part => /crown|thorn|spur|upper-stem-part|leaf-part/.test(part.id)), 'rootrot-bud: redundant overlapping organs')
+    for (const side of ['left', 'right']) {
+      const outward = side === 'left' ? -1 : 1
+      assert((position(`${side}-root-tip`)[12] - position(`${side}-root`)[12]) * outward > 0, 'rootrot-bud roots should spread outward')
     }
   }
+  if (['gnawer', 'rootrot-bud'].includes(p.enemyId)) assertFrontalSkeleton(p)
   assert(!p.name.endsWith('\u9aa8\u67b6\u9884\u89c8'), `${p.enemyId}: preview suffix in name`)
   const joints = new Set(p.joints.map(j => j.id))
   assert.equal(joints.size, p.joints.length, `${p.enemyId}: duplicate joints`)
@@ -137,17 +150,7 @@ for (const id of ['left-shin', 'left-foot', 'right-shin', 'right-foot']) {
   part.visual.texture = part.visual.texture.replace(/part_00[89]\.png$/, 'part_012.png')
 }
 saved.parts[0].fill = '#123456'
-const expectedParts = structuredClone(saved.parts)
-for (const id of ['left-thigh', 'right-thigh']) expectedParts.find(p => p.id === id).height += 6
-for (const [id, texture] of [['left-shin', '008'], ['left-foot', '008'], ['right-shin', '009'], ['right-foot', '009']]) {
-  const part = expectedParts.find(p => p.id === id)
-  const legacySize = componentAssets.gnawer.parts[12]
-  const legSize = componentAssets.gnawer.parts[Number(texture)]
-  part.width *= legSize.width / legacySize.width
-  part.height *= legSize.height / legacySize.height
-  part.visual.texture = part.visual.texture.replace('part_012.png', `part_${texture}.png`)
-}
-const expectedPartsJson = JSON.stringify(expectedParts), savedAnimations = JSON.stringify(saved.animations)
+const savedAnimations = JSON.stringify(saved.animations)
 const currentRoster = { enemyArtPackVersion: 19, activeCharacterId: 'saved', characters: [{ id: 'saved', project: saved }] }
 assert(installEnemyShadowProjects(currentRoster))
 assert.equal(currentRoster.enemyArtPackVersion, ENEMY_ART_PACK_VERSION)
@@ -159,10 +162,25 @@ assert.equal(saved.joints.find(j => j.id === 'root').y, 12)
 assert.equal(saved.joints.find(j => j.id === 'pelvis').y, -42)
 assert.equal(saved.joints.find(j => j.id === 'right-hip').y, -12)
 assert.equal(saved.joints.find(j => j.id === 'right-shoulder').z, 14)
-assert.equal(JSON.stringify(saved.parts), expectedPartsJson)
+assert.equal(saved.parts[0].fill, '#123456')
+assertFrontalSkeleton(saved)
 assert.equal(JSON.stringify(saved.animations), savedAnimations)
 saved.joints.find(j => j.id === 'root').rotationY = 18
 assert.equal(installEnemyShadowProjects(currentRoster), false)
+
+// V21 already has the raised torso. Correct every paired joint and rebuild
+// its old opaque-edge contacts without lifting the upper body a second time.
+const priorFrontal = structuredClone(projects.find(p => p.enemyId === 'gnawer'))
+priorFrontal.joints.find(j => j.id === 'right-knee').y += 1
+priorFrontal.joints.find(j => j.id === 'right-knee').z += .75
+priorFrontal.joints.find(j => j.id === 'right-wrist').y -= 2
+priorFrontal.joints.find(j => j.id === 'right-foot-ground-contact').x += 9
+const frontalRoster = { enemyArtPackVersion: 21, activeCharacterId: 'frontal', characters: [{ id: 'frontal', project: priorFrontal }] }
+assert(installEnemyShadowProjects(frontalRoster))
+assert.equal(priorFrontal.joints.find(j => j.id === 'root').y, 12)
+assert.equal(priorFrontal.grounding.supports.length, 2)
+assertFrontalSkeleton(priorFrontal)
+assert.equal(installEnemyShadowProjects(frontalRoster), false)
 
 const savedBud = structuredClone(projects.find(p => p.enemyId === 'rootrot-bud'))
 savedBud.joints.find(j => j.id === 'left-root').z = -32
@@ -171,7 +189,10 @@ savedBud.parts.find(p => p.id === 'left-petal-part').rotationX = -24
 savedBud.parts.find(p => p.id === 'right-petal-part').rotationX = 24
 const budRoster = { enemyArtPackVersion: 20, activeCharacterId: 'bud', characters: [{ id: 'bud', project: savedBud }] }
 assert(installEnemyShadowProjects(budRoster))
-assert.equal(savedBud.joints.find(j => j.id === 'left-root').z, savedBud.joints.find(j => j.id === 'right-root').z)
-assert.equal(savedBud.parts.find(p => p.id === 'left-petal-part').rotationX, savedBud.parts.find(p => p.id === 'right-petal-part').rotationX)
+assert.equal(budRoster.activeCharacterId, 'bud')
+assertFrontalSkeleton(budRoster.characters[0].project)
+assert.equal(budRoster.characters[0].project.parts.length, 11)
+assert(budRoster.characters.some(c => !c.project.enemyId), 'customized former bud should retain an archived copy')
+assert.equal(installEnemyShadowProjects(budRoster), false)
 assert.equal(saved.joints.find(j => j.id === 'root').rotationY, 18)
 console.log(`Enemy completion: ${projects.length} fully textured rigs, ${parts} parts, ${frames} animation frames; folded faces and editor refresh passed.`)

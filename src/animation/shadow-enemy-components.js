@@ -62,9 +62,9 @@ export function alignGnawerRestPose(project, previousArtPackVersion = null) {
     const thigh = project.parts.find(part => part.id === `${side}-thigh`)
     if (thigh) thigh.height += 6
   }
-  for (const id of ['right-knee', 'right-hock', 'right-ankle']) {
-    const joint = joints.get(id)
-    if (joint) joint.z += .75
+  for (const side of ['left', 'right']) for (const suffix of ['knee', 'hock', 'ankle']) {
+    const joint = joints.get(`${side}-${suffix}`)
+    if (joint) joint.z = .25
   }
   for (const side of ['left', 'right']) {
     const legTexture = side === 'left' ? '008' : '009'
@@ -81,31 +81,45 @@ export function alignGnawerRestPose(project, previousArtPackVersion = null) {
   }
 }
 
-export function alignRootrotBudSymmetry(project) {
-  if (project.enemyId !== 'rootrot-bud') return
+export function alignEnemyFrontalSkeleton(project) {
+  if (!['gnawer', 'rootrot-bud'].includes(project.enemyId)) return
   const joints = new Map(project.joints.map(joint => [joint.id, joint]))
-  const pairedDepths = [
-    ['left-root', 'right-root', 32],
-    ['left-root-tip', 'right-root-tip', 17],
-    ['left-petal', 'right-petal', 19],
-    ['left-petal-tip', 'right-petal-tip', 14],
-    ['left-thorn', 'right-thorn', 18],
-    ['left-leaf', 'right-leaf', 24],
-  ]
-  for (const [leftId, rightId, z] of pairedDepths) {
-    if (joints.has(leftId)) joints.get(leftId).z = z
-    if (joints.has(rightId)) joints.get(rightId).z = z
+  const mirror = (left, right, field) => {
+    const value = ((left[field] ?? 0) - (right[field] ?? 0)) / 2
+    left[field] = value
+    right[field] = -value
+  }
+  const match = (left, right, field) => {
+    const fallback = field === 'scaleX' ? 1 : 0
+    left[field] = right[field] = ((left[field] ?? fallback) + (right[field] ?? fallback)) / 2
+  }
+  // Mirror full local transforms, so every descendant and bone direction
+  // remains symmetric about the character's central sagittal plane.
+  for (const left of project.joints.filter(j => j.id.startsWith('left-'))) {
+    const right = joints.get(left.id.replace(/^left-/, 'right-'))
+    if (!right) continue
+    for (const field of ['x', 'rotationY', 'rotationZ']) mirror(left, right, field)
+    for (const field of ['y', 'z', 'rotationX', 'scaleX']) match(left, right, field)
   }
   const parts = new Map(project.parts.map(part => [part.id, part]))
-  for (const [leftId, rightId] of [
-    ['left-petal-part', 'right-petal-part'],
-    ['left-upper-petal-part', 'right-upper-petal-part'],
-  ]) {
-    const left = parts.get(leftId)
-    const right = parts.get(rightId)
-    if (!left || !right) continue
-    right.rotationX = left.rotationX
+  for (const left of project.parts.filter(part => part.id.startsWith('left-'))) {
+    const right = parts.get(left.id.replace(/^left-/, 'right-'))
+    if (!right) continue
+    for (const field of ['x', 'rotationY', 'rotationZ']) mirror(left, right, field)
+    for (const field of ['y', 'z', 'rotationX', 'width', 'height', 'pivotY']) match(left, right, field)
+    left.pivotX = ((left.pivotX ?? .5) + 1 - (right.pivotX ?? .5)) / 2
+    right.pivotX = 1 - left.pivotX
   }
+}
+
+function rigImageSize(project, number) {
+  const pairs = project.enemyId === 'gnawer' ? [[4, 5], [13, 14], [8, 9], [10, 11]]
+    : project.enemyId === 'rootrot-bud' ? [[2, 3], [13, 14]] : []
+  const pair = pairs.find(pair => pair.includes(number))
+  const source = assets[project.enemyId].parts
+  if (!pair) return source[number]
+  return { width: (source[pair[0]].width + source[pair[1]].width) / 2,
+    height: (source[pair[0]].height + source[pair[1]].height) / 2 }
 }
 
 function joint(p, id, name, parent, x, y, z = 0) {
@@ -129,7 +143,7 @@ function imagePart(p, id, name, number, target, scale, anchor = [.5, .5], option
     ? { 'left-shin': 8, 'left-foot': 8, 'right-shin': 9, 'right-foot': 9 }[id]
     : undefined
   const sourceNumber = gnawerLegArt ?? number
-  const { width, height } = assets[p.enemyId].parts[sourceNumber]
+  const { width, height } = rigImageSize(p, sourceNumber)
   const [left, top, cw, ch] = crop
   const entry = createShadowPart({ id, name, shape: 'rect', depth: 0,
     width: width * cw * scale, height: height * ch * scale,
@@ -144,7 +158,7 @@ function imagePart(p, id, name, number, target, scale, anchor = [.5, .5], option
 }
 
 function pixelLink(p, id, name, parent, number, scale, from, to, z = 0) {
-  const a = assets[p.enemyId].parts[number]
+  const a = rigImageSize(p, number)
   joint(p, id, name, parent, (to[0] - from[0]) * a.width * scale, -(to[1] - from[1]) * a.height * scale, z)
 }
 
@@ -185,7 +199,7 @@ function gnawer(p) {
     imagePart(p, `${side}-forearm`, `${label}前臂`, forearm, `${side}-elbow`, .23, [.5, .1], { crop: [0, 0, 1, .61], layer: 6 })
     pixelLink(p, `${side}-wrist`, `${label}腕`, `${side}-elbow`, forearm, .23, [.5, .1], wrist)
     imagePart(p, `${side}-palm`, `${label}手爪`, forearm, `${side}-wrist`, .23, wrist, { crop: [0, .53, 1, .47], layer: 7 })
-    const hip = sign < 0 ? [.66, .05] : [.33, .05]
+    const hip = sign < 0 ? [.66, .05] : [.34, .05]
     const knee = sign < 0 ? [.69, .39] : [.31, .39]
     const hock = sign < 0 ? [.7, .59] : [.3, .59]
     const ankle = sign < 0 ? [.55, .82] : [.45, .82]
@@ -251,39 +265,58 @@ function moth(p) {
 }
 
 function bud(p) {
-  p.parts = []
-  imagePart(p, 'bulb', '根球基座', 12, 'root', .3, [.5, .28], { layer: 5 })
-  joint(p, 'lower-stem', '下茎', 'root', 0, 12, -5)
-  imagePart(p, 'lower-stem-part', '下茎', 11, 'lower-stem', .25, [.5, .76], { layer: 6 })
-  joint(p, 'upper-stem', '上茎', 'lower-stem', 0, 35, 7)
-  imagePart(p, 'upper-stem-part', '上茎', 8, 'upper-stem', .18, [.5, .8], { layer: 7 })
-  joint(p, 'bud', '花芽', 'upper-stem', 0, 32, 9)
-  imagePart(p, 'bud-shell', '闭合眼芽', 6, 'bud', .28, [.5, .5], { layer: 10 })
-  // The open crown is a rear calyx; it is not another face over the eye-bud.
-  joint(p, 'crown-hinge', '后花冠根', 'bud', 0, 17, -4)
-  imagePart(p, 'crown', '后花冠', 1, 'crown-hinge', .29, [.5, .8], { layer: 8 })
-  organMotion(p, 'crown-hinge', 1, 10)
+  // One eye-bud, one stem and one root bulb. The open crown, alternate
+  // stump, small leaves and extra claws are alternatives, not overlays.
+  p.joints = []; p.bones = []; p.parts = []
+  p.animations = createDefaultShadowProject().animations
+  joint(p, 'root', '\u6839\u7403', null, 0, 0)
+  imagePart(p, 'bulb', '\u6839\u7403\u57fa\u5ea7', 12, 'root', .23, [.5, .14], { layer: 5 })
+  joint(p, 'lower-stem', '\u4e3b\u830e\u6839\u90e8', 'root', 0, 10, -1)
+  // Crop the hanging root fringe: it would cover the bulb and walking roots.
+  imagePart(p, 'lower-stem-part', '\u4e3b\u830e', 8, 'lower-stem', .27, [.5, .64],
+    { crop: [0, 0, 1, .68], layer: 6 })
+  pixelLink(p, 'upper-stem', '\u4e3b\u830e\u9876\u90e8', 'lower-stem', 8, .27, [.5, .64], [.5, .07])
+  joint(p, 'bud', '\u773c\u82bd', 'upper-stem', 0, 5, 1)
+  imagePart(p, 'bud-shell', '\u95ed\u5408\u773c\u82bd', 6, 'bud', .25, [.5, .68], { layer: 10 })
   for (const [side, sign] of [['left', -1], ['right', 1]]) {
     const label = sign < 0 ? '左' : '右'
     const leaf = sign < 0 ? 2 : 3
     const base = sign < 0 ? [.92, .88] : [.08, .88]
     const hinge = sign < 0 ? [.6, .56] : [.4, .56]
-    joint(p, `${side}-petal`, `${label}叶柄`, 'upper-stem', sign * 16, 17, sign * 12)
+    joint(p, `${side}-petal`, `${label}叶柄`, 'lower-stem', sign * 26, 30, 1)
     imagePart(p, `${side}-petal-part`, `${label}叶根`, leaf, `${side}-petal`, .24, base, { crop: [0, .5, 1, .5], layer: 7 })
     pixelLink(p, `${side}-petal-tip`, `${label}叶中脉`, `${side}-petal`, leaf, .24, base, hinge)
     imagePart(p, `${side}-petal-tip-part`, `${label}大叶尖`, leaf, `${side}-petal-tip`, .24, hinge, { crop: [0, 0, 1, .6], layer: 8 })
-    joint(p, `${side}-thorn`, `${label}刺枝`, `${side}-petal-tip`, sign * 12, 10, 0)
-    imagePart(p, `${side}-thorn-part`, `${label}刺枝`, sign < 0 ? 5 : 4, `${side}-thorn`, .18, [.5, .75], { layer: 7, z: -2 })
-    joint(p, `${side}-leaf`, `${label}枯叶`, 'lower-stem', sign * 21, 2, sign * 8)
-    imagePart(p, `${side}-leaf-part`, `${label}枯叶`, sign < 0 ? 9 : 10, `${side}-leaf`, .18, [sign < 0 ? .08 : .92, .2], { layer: 7 })
-    joint(p, `${side}-root`, `${label}行根`, 'root', sign * 36, -12, sign * 14)
-    const root = sign < 0 ? 13 : 14
-    imagePart(p, `${side}-root-part`, `${label}行根`, root, `${side}-root`, .2, [.5, .12], { crop: [0, 0, 1, .7], layer: 6 })
-    pixelLink(p, `${side}-root-tip`, `${label}根爪`, `${side}-root`, root, .2, [.5, .12], [.5, .61])
-    imagePart(p, `${side}-root-tip-part`, `${label}根爪`, root, `${side}-root-tip`, .2, [.5, .61], { crop: [0, .55, 1, .45], layer: 7 })
-    imagePart(p, `${side}-root-spur`, `${label}根刺`, sign < 0 ? 15 : 16, `${side}-root-tip`, .1, [.5, .12], { x: sign * 10, y: -12, z: .2, layer: 8 })
-    organMotion(p, `${side}-leaf`, sign, 9)
+    // Part 14 spreads left; part 13 spreads right. Follow their real sockets
+    // and branch points instead of making both root bones point straight down.
+    const root = sign < 0 ? 14 : 13
+    const socket = sign < 0 ? [.78, .12] : [.22, .12]
+    const claw = sign < 0 ? [.24, .64] : [.76, .64]
+    joint(p, `${side}-root`, `${label}行根`, 'root', sign * 34, -28, -1)
+    imagePart(p, `${side}-root-part`, `${label}行根`, root, `${side}-root`, .19, socket, { crop: [0, 0, 1, .7], layer: 4 })
+    pixelLink(p, `${side}-root-tip`, `${label}根爪`, `${side}-root`, root, .19, socket, claw, .25)
+    imagePart(p, `${side}-root-tip-part`, `${label}根爪`, root, `${side}-root-tip`, .19, claw,
+      { crop: [0, .55, 1, .45], layer: 6 })
+    organMotion(p, `${side}-petal`, sign, 8)
+    keys(p, 'move', `${side}-root`, [[0, {}], [.25, { rotationX: sign * 12 }], [.75, { rotationX: -sign * 12 }], [1, {}]])
+    keys(p, 'move', `${side}-root-tip`, [[0, {}], [.25, { rotationX: -sign * 8 }], [.75, { rotationX: sign * 8 }], [1, {}]])
+    keys(p, 'attack', `${side}-petal`, [[0, {}], [.27, { rotationZ: -sign * 10 }], [.64, { rotationZ: sign * 18 }], [1, {}]])
+    keys(p, 'death', `${side}-petal`, [[0, {}], [.4, { rotationZ: sign * 18 }], [1, { rotationZ: sign * 55 }]])
   }
+  keys(p, 'idle', 'root', [[0, {}], [.55, { dy: 1 }], [1, {}]])
+  keys(p, 'idle', 'lower-stem', [[0, {}], [.55, { rotationX: 2 }], [1, {}]])
+  keys(p, 'idle', 'bud', [[0, {}], [.55, { rotationX: -3 }], [1, {}]])
+  keys(p, 'move', 'root', [[0, {}], [.25, { dy: 3 }], [.5, {}], [.75, { dy: 3 }], [1, {}]])
+  keys(p, 'move', 'lower-stem', [[0, {}], [.25, { rotationX: -4 }], [.75, { rotationX: 4 }], [1, {}]])
+  keys(p, 'attack', 'root', [[0, {}], [.27, { dz: -2 }], [.64, { dz: 4 }], [1, {}]])
+  keys(p, 'attack', 'lower-stem', [[0, {}], [.27, { rotationX: -12 }], [.64, { rotationX: 17 }], [1, {}]])
+  keys(p, 'attack', 'bud', [[0, {}], [.27, { rotationX: -7 }], [.64, { rotationX: 12 }], [1, {}]])
+  keys(p, 'hit', 'root', [[0, {}], [.3, { dz: -8 }], [1, {}]])
+  keys(p, 'hit', 'lower-stem', [[0, {}], [.3, { rotationX: -14 }], [1, {}]])
+  keys(p, 'hit', 'bud', [[0, {}], [.3, { rotationX: -9 }], [1, {}]])
+  keys(p, 'death', 'root', [[0, {}], [.4, { dy: -4 }], [1, { dy: -15 }]])
+  keys(p, 'death', 'lower-stem', [[0, {}], [.4, { rotationX: 24 }], [1, { rotationX: 75 }]])
+  keys(p, 'death', 'bud', [[0, {}], [.4, { rotationX: -6 }], [1, { rotationX: 18 }]])
 }
 
 function cub(p) {
@@ -441,7 +474,7 @@ export function applyEnemyComponentArt(project) {
   }
   widenEnemyComponentRig(project)
   alignGnawerRestPose(project)
-  alignRootrotBudSymmetry(project)
+  alignEnemyFrontalSkeleton(project)
   return project
 }
 

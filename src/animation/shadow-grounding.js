@@ -5,6 +5,7 @@ import textureHulls from './enemy-contact-hulls.json' with { type: 'json' }
 const vertices = new WeakMap()
 const rests = new WeakMap()
 export const FLOATING_ENEMIES = new Set(['emberwing-moth', 'tide-shadow-cub', 'wisp', 'whirlpool-eye-sac', 'redwheel-fire-crow', 'cinder-curse-lamp-swarm', 'bomb-wisp', 'tide-shadow', 'tide-rite-matriarch'])
+export const FRONTAL_SYMMETRIC_ENEMIES = new Set(['gnawer', 'rootrot-bud'])
 
 export function shadowContactVertices(part) {
   const stamp = JSON.stringify([part.shape, part.width, part.height, part.depth, part.pivotX, part.pivotY, part.visual])
@@ -125,6 +126,12 @@ export function constrainShadowParts(project, parts, joints, bones, animationId)
     const contact = joints.find(j => j.joint.id === support.contactId)
     if (!foot || !contact) continue
     const point = shadowContactVertices(foot.part).map(p => p.clone().applyMatrix4(foot.matrix)).sort((a, b) => a.y - b.y)[0]
+    if (FRONTAL_SYMMETRIC_ENEMIES.has(project.enemyId)) {
+      // Keep the authored mirrored contact direction. Only its height follows
+      // the opaque edge; arbitrary hull vertex order must not skew the bones.
+      point.x = contact.matrix.elements[12]
+      point.z = contact.matrix.elements[14]
+    }
     contact.matrix.setPosition(point)
     const bone = bones.find(b => b.bone.toJointId === support.contactId)
     if (bone) { bone.x2 = point.x; bone.y2 = point.y; bone.z2 = point.z; bone.length = Math.hypot(bone.x2 - bone.x1, bone.y2 - bone.y1, bone.z2 - bone.z1) }

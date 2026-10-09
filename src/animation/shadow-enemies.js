@@ -1,8 +1,8 @@
 import { ENEMY_DEFS } from '../game/data/enemies.js'
 import catalog from '../game/data/catalog.json' with { type: 'json' }
-import { installEnemyGrounding } from './enemy-grounding.js'
+import { installEnemyGrounding, rebuildEnemyGrounding } from './enemy-grounding.js'
 import { createRosterEnemyProject, ROSTER_ENEMY_ART } from './shadow-enemy-roster.js'
-import { alignGnawerRestPose, alignRootrotBudSymmetry, applyEnemyComponentArt, COMPONENT_ENEMY_IDS, BATCH2_COMPONENT_ENEMY_IDS, BATCH3_COMPONENT_ENEMY_IDS, BATCH4_COMPONENT_ENEMY_IDS, BATCH5_COMPONENT_ENEMY_IDS, componentTexturePresets, offsetGnawerForearms, widenEnemyComponentRig } from './shadow-enemy-components.js'
+import { alignGnawerRestPose, alignEnemyFrontalSkeleton, applyEnemyComponentArt, COMPONENT_ENEMY_IDS, BATCH2_COMPONENT_ENEMY_IDS, BATCH3_COMPONENT_ENEMY_IDS, BATCH4_COMPONENT_ENEMY_IDS, BATCH5_COMPONENT_ENEMY_IDS, componentTexturePresets, offsetGnawerForearms, widenEnemyComponentRig } from './shadow-enemy-components.js'
 import {
   createDefaultShadowProject,
   createShadowBone,
@@ -15,7 +15,7 @@ import {
   upsertShadowKeyframe,
 } from './shadow-rig.js'
 
-export const ENEMY_ART_PACK_VERSION = 21
+export const ENEMY_ART_PACK_VERSION = 22
 export const ENEMY_ART = Object.freeze({
   gnawer: { family: 'humanoid' },
   'emberwing-moth': { family: 'winged' },
@@ -463,15 +463,15 @@ export function createEnemyShadowProjects({ includeBoss = false } = {}) {
   return (includeBoss ? [...ENEMY_DEFS, catalog.boss] : ENEMY_DEFS).map(createEnemyShadowProject).filter(Boolean)
 }
 
-function replaceComponentTemplate(roster, character, template) {
+function replaceComponentTemplate(roster, character, template, previousFingerprints = []) {
   const definition = ENEMY_DEFS.find(({ id }) => id === template.enemyId) || (template.enemyId === catalog.boss.id ? catalog.boss : null)
   const previous = normalizeShadowProject(createEnemyShadowProject(definition, { withComponentArt: false }))
   const generic = ROSTER_ENEMY_ART[template.enemyId]
     ? normalizeShadowProject(createRosterEnemyProject(definition, { withVariants: false })) : previous
   const fingerprint = rigFingerprint(character.project)
   const pristine = character.project.name === previous.name
-    && JSON.stringify(character.project.stage) === JSON.stringify(previous.stage)
-    && [rigFingerprint(previous), rigFingerprint(generic), rigFingerprint(normalizeShadowProject(template))].includes(fingerprint)
+    && [previous.stage, template.stage].some(stage => JSON.stringify(character.project.stage) === JSON.stringify(stage))
+    && [rigFingerprint(previous), rigFingerprint(generic), rigFingerprint(normalizeShadowProject(template)), ...previousFingerprints].includes(fingerprint)
   if (!pristine) roster.characters.push(createShadowCharacter({
     ...character.project, name: `${character.project.name} · 旧版备份`, enemyId: null,
   }))
@@ -488,9 +488,17 @@ export function installEnemyShadowProjects(roster) {
     namesUpdated = true
   }
   if (roster.enemyArtPackVersion < ENEMY_ART_PACK_VERSION) {
-    for (const { project } of roster.characters) {
+    for (const character of [...roster.characters]) {
+      const { project } = character
       if (roster.enemyArtPackVersion < 20) alignGnawerRestPose(project, roster.enemyArtPackVersion)
-      alignRootrotBudSymmetry(project)
+      if (project.enemyId === 'rootrot-bud' && roster.enemyArtPackVersion >= 10) {
+        const template = createEnemyShadowProject(ENEMY_DEFS.find(d => d.id === 'rootrot-bud'))
+        // Fingerprint of the pristine V21 bud; edited rigs retain a backup.
+        replaceComponentTemplate(roster, character, template, ['6a1ef459'])
+      } else if (project.enemyId === 'gnawer') {
+        alignEnemyFrontalSkeleton(project)
+        rebuildEnemyGrounding(project)
+      }
     }
   }
   if (roster.enemyArtPackVersion >= ENEMY_ART_PACK_VERSION) return namesUpdated

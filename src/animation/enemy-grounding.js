@@ -1,6 +1,6 @@
 import { Vector3 } from 'three'
 import { createShadowBone, createShadowJoint, createShadowPart, evaluateShadowProject } from './shadow-rig.js'
-import { FLOATING_ENEMIES, shadowContactVertices, shadowPartFloor } from './shadow-grounding.js'
+import { FLOATING_ENEMIES, FRONTAL_SYMMETRIC_ENEMIES, shadowContactVertices, shadowPartFloor } from './shadow-grounding.js'
 
 const SPECIAL_SUPPORTS = {
   shellguard: ['left-coffin-root-lower', 'right-coffin-root-lower'],
@@ -9,6 +9,16 @@ const SPECIAL_SUPPORTS = {
   'tidal-spore-sac': ['left-root-art', 'right-root-art'],
   'water-leech-swarm': ['leech-0-body-upper', 'leech-1-body-upper', 'leech-2-body-upper'],
   'leech-larva': ['front-body'],
+}
+
+export function rebuildEnemyGrounding(project) {
+  const contacts = new Set((project.grounding?.supports || []).map(support => support.contactId))
+  for (const joint of project.joints) if (joint.id.endsWith('-ground-contact')) contacts.add(joint.id)
+  project.joints = project.joints.filter(joint => !contacts.has(joint.id))
+  project.bones = project.bones.filter(bone => !contacts.has(bone.fromJointId) && !contacts.has(bone.toJointId))
+  for (const animation of Object.values(project.animations)) for (const id of contacts) delete animation.tracks[`joint:${id}`]
+  delete project.grounding
+  return installEnemyGrounding(project)
 }
 
 export function installEnemyGrounding(project) {
@@ -58,7 +68,23 @@ export function installEnemyGrounding(project) {
     if (!lowest) return project
     supportParts = [lowest.part]
   }
-  const raw = evaluateShadowProject(project, null, 0, { raw: true })
+  let raw = evaluateShadowProject(project, null, 0, { raw: true })
+  const symmetric = FRONTAL_SYMMETRIC_ENEMIES.has(project.enemyId)
+  if (symmetric) {
+    // Independently drawn foot PNGs can have slightly different opaque edges.
+    // Align the artwork to the floor without bending one side of the skeleton.
+    for (const left of supportParts.filter(part => part.id.startsWith('left-'))) {
+      const right = supportParts.find(part => part.id === left.id.replace(/^left-/, 'right-'))
+      if (!right) continue
+      const leftPose = raw.parts.find(entry => entry.part === left)
+      const rightPose = raw.parts.find(entry => entry.part === right)
+      const leftFloor = shadowPartFloor(leftPose), rightFloor = shadowPartFloor(rightPose)
+      const floor = (leftFloor + rightFloor) / 2
+      left.y += (floor - leftFloor) / leftPose.baseMatrix.elements[5]
+      right.y += (floor - rightFloor) / rightPose.baseMatrix.elements[5]
+    }
+    raw = evaluateShadowProject(project, null, 0, { raw: true })
+  }
   const floorY = Math.min(...supportParts.map(part => shadowPartFloor(raw.parts.find(entry => entry.part === part))))
   const supports = []
   for (const part of supportParts) {
@@ -73,6 +99,16 @@ export function installEnemyGrounding(project) {
     if (!project.joints.some(j => j.id === contactId)) project.joints.push(createShadowJoint({ id: contactId, name: `${part.name} · 着地点`, x: local.x, y: local.y, z: local.z }))
     if (!project.bones.some(b => b.id === `${contactId}-bone`)) project.bones.push(createShadowBone({ id: `${contactId}-bone`, fromJointId: jointId, toJointId: contactId }))
     supports.push({ jointId, contactId, partId: part.id })
+  }
+  if (symmetric) {
+    for (const left of project.joints.filter(joint => joint.id.startsWith('left-') && joint.id.endsWith('-ground-contact'))) {
+      const right = project.joints.find(joint => joint.id === left.id.replace(/^left-/, 'right-'))
+      if (!right) continue
+      const x = (left.x - right.x) / 2
+      left.x = x; right.x = -x
+      left.y = right.y = (left.y + right.y) / 2
+      left.z = right.z = (left.z + right.z) / 2
+    }
   }
   project.stage.floorOffset = 0
   project.grounding = { floating: false, floorY, supports }

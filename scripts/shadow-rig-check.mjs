@@ -276,7 +276,7 @@ for (const project of enemyProjects) {
   const art = ENEMY_ART[project.enemyId]
   assert.ok(art)
   assert.ok(project.joints.length >= (['gnawer', 'emberwing-moth', 'rootrot-bud'].includes(project.enemyId) ? 15 : 13), `${project.enemyId}: missing skeleton`)
-  assert.ok(project.parts.length >= (['gnawer', 'emberwing-moth', 'rootrot-bud'].includes(project.enemyId) ? 18 : 11), `${project.enemyId}: missing articulated geometry`)
+  assert.ok(project.parts.length >= (['gnawer', 'emberwing-moth'].includes(project.enemyId) ? 18 : 11), `${project.enemyId}: missing articulated geometry`)
   const normalized = normalizeShadowProject(project)
   assert.equal(normalized.enemyId, project.enemyId)
   assert.equal(normalized.parts.length, project.parts.length)
