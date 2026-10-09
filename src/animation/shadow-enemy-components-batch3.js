@@ -71,12 +71,15 @@ export function applyEnemyComponentBatch3(p, { joint, imagePart, pixelLink, keys
   }
 
   if (p.enemyId === 'thorn-shell-flower') {
+    const stemStretch = 1.35
     art('root-ball', '棘壳根球', 13, 'root', .26, [.5, .44], { layer: 5 })
     j('lower-stem', '下棘茎', 'root', [0, 7, -2])
-    art('lower-stem-art', '下棘茎', 6, 'lower-stem', .22, [.5, .94], { crop: [0, .51, 1, .49], layer: 6 })
+    art('lower-stem-art', '下棘茎', 6, 'lower-stem', .22, [.5, .94], { crop: [0, .51, 1, .49], layer: 6 }).height *= stemStretch
     link('upper-stem', '上棘茎', 'lower-stem', 6, .22, [.5, .94], [.5, .54])
-    art('upper-stem-art', '上棘茎', 6, 'upper-stem', .22, [.5, .46], { crop: [0, 0, 1, .48], layer: 7 })
+    p.joints.find(v => v.id === 'upper-stem').y *= stemStretch
+    art('upper-stem-art', '上棘茎', 6, 'upper-stem', .22, [.5, .46], { crop: [0, 0, 1, .48], layer: 7 }).height *= stemStretch
     link('crown', '花冠根', 'upper-stem', 6, .22, [.5, .46], [.5, .08])
+    p.joints.find(v => v.id === 'crown').y *= stemStretch
     art('crown-art', '棘壳花冠与口环', 3, 'crown', .29, [.5, .78], { layer: 8 })
     j('eye', '花眼', 'crown', [0, 18, 2.4])
     art('eye-art', '花眼', 5, 'eye', .27, [.5, .5], { layer: 11 })
@@ -85,7 +88,18 @@ export function applyEnemyComponentBatch3(p, { joint, imagePart, pixelLink, keys
       const label = sign < 0 ? '左' : '右'
       // Spread paired chains in XY; their shared Z keeps the frontal pose balanced.
       j(`${side}-shell`, `${label}棘壳瓣`, 'crown', [sign * 48, 32, -1], { rotationZ: -sign * 12 })
-      art(`${side}-shell-art`, `${label}棘壳瓣`, shell, `${side}-shell`, .18, [sign < 0 ? .70 : .3, .55], { layer: 10 })
+      const petal = art(`${side}-shell-art`, `${label}棘壳瓣`, shell, `${side}-shell`, .18, [sign < 0 ? .70 : .3, .55], { layer: 10 })
+      const hinge = p.joints.find(v => v.id === `${side}-shell`)
+      const pivot = [sign < 0 ? .60 : .38, .51]
+      const dx = (pivot[0] - petal.pivotX) * petal.width
+      const dy = (petal.pivotY - pivot[1]) * petal.height
+      const angle = hinge.rotationZ * Math.PI / 180
+      // Re-anchor at the painted hinge without moving it, then fold the
+      // outer/top edges outward and backward around that fixed root.
+      hinge.x += Math.cos(angle) * dx - Math.sin(angle) * dy
+      hinge.y += Math.sin(angle) * dx + Math.cos(angle) * dy
+      Object.assign(petal, { pivotX: pivot[0], pivotY: pivot[1] })
+      Object.assign(hinge, { rotationX: -10, rotationY: sign * 24, rotationZ: -sign * 18 })
       motion(`${side}-shell`, sign, 6)
       attack(`${side}-shell`, { rotationY: sign * 14 }, { rotationY: -sign * 42, rotationZ: -sign * 10 })
       split(`${side}-thorn`, `${label}刺枝`, branch, 'upper-stem', [sign * 22, 16, 2.7], .15,
