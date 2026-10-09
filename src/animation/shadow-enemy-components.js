@@ -130,8 +130,17 @@ export function adjustEnemyUpperBodyPose(project) {
   }
 }
 
+// V25: in a frontal +Z-facing pose, the character's right is negative X.
+export function adjustRotWalkerLimbs(project) {
+  if (project.enemyId !== 'rot-walker') return
+  const rightArm = project.joints.find(joint => joint.id === 'left-shoulder')
+  const leftLeg = project.joints.find(joint => joint.id === 'rot-stilt-root')
+  if (rightArm) rightArm.z = 11
+  if (leftLeg) leftLeg.x += 8
+}
+
 export function alignEnemyFrontalSkeleton(project) {
-  if (!['gnawer', 'rootrot-bud'].includes(project.enemyId)) return
+  if (!['gnawer', 'rootrot-bud', 'beetle-guard'].includes(project.enemyId)) return
   const joints = new Map(project.joints.map(joint => [joint.id, joint]))
   const mirror = (left, right, field) => {
     const value = ((left[field] ?? 0) - (right[field] ?? 0)) / 2
@@ -163,7 +172,8 @@ export function alignEnemyFrontalSkeleton(project) {
 
 function rigImageSize(project, number) {
   const pairs = project.enemyId === 'gnawer' ? [[4, 5], [13, 14], [8, 9], [10, 11]]
-    : project.enemyId === 'rootrot-bud' ? [[2, 3], [13, 14]] : []
+    : project.enemyId === 'rootrot-bud' ? [[2, 3], [13, 14]]
+      : project.enemyId === 'beetle-guard' ? [[1, 2], [15, 20], [16, 19], [17, 18]] : []
   const pair = pairs.find(pair => pair.includes(number))
   const source = assets[project.enemyId].parts
   if (!pair) return source[number]
@@ -526,6 +536,7 @@ export function applyEnemyComponentArt(project) {
   alignEnemyFrontalSkeleton(project)
   adjustEnemyComponentSpacing(project)
   adjustEnemyUpperBodyPose(project)
+  adjustRotWalkerLimbs(project)
   return project
 }
 

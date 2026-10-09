@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 /* global structuredClone */
 import { existsSync } from 'node:fs'
 import { createEnemyShadowProjects, installEnemyShadowProjects, ENEMY_ART_PACK_VERSION } from '../src/animation/shadow-enemies.js'
-import { evaluateShadowProject, normalizeShadowProject } from '../src/animation/shadow-rig.js'
+import { createDefaultShadowProject, evaluateShadowProject, normalizeShadowProject } from '../src/animation/shadow-rig.js'
 import { shadowPartFloor } from '../src/animation/shadow-grounding.js'
 import { BATCH5_COMPONENT_ENEMY_IDS } from '../src/animation/shadow-enemy-components-batch5.js'
 import componentAssets from '../src/animation/enemy-component-assets.json' with { type: 'json' }
@@ -87,7 +87,7 @@ for (const source of projects) {
       assert((position(`${side}-root-tip`)[12] - position(`${side}-root`)[12]) * outward > 0, 'rootrot-bud roots should spread outward')
     }
   }
-  if (['gnawer', 'rootrot-bud'].includes(p.enemyId)) assertFrontalSkeleton(p)
+  if (['gnawer', 'rootrot-bud', 'beetle-guard'].includes(p.enemyId)) assertFrontalSkeleton(p)
   assert(!p.name.endsWith('\u9aa8\u67b6\u9884\u89c8'), `${p.enemyId}: preview suffix in name`)
   const joints = new Set(p.joints.map(j => j.id))
   assert.equal(joints.size, p.joints.length, `${p.enemyId}: duplicate joints`)
@@ -223,7 +223,7 @@ assert(installEnemyShadowProjects(budRoster))
 assert.equal(budRoster.activeCharacterId, 'bud')
 assertFrontalSkeleton(budRoster.characters[0].project)
 assert.equal(budRoster.characters[0].project.parts.length, 11)
-assert(budRoster.characters.some(c => !c.project.enemyId), 'customized former bud should retain an archived copy')
+assert(!budRoster.characters.some(c => !c.project.enemyId), 'obsolete bud backups should be removed during this upgrade')
 assert.equal(installEnemyShadowProjects(budRoster), false)
 assert.equal(saved.joints.find(j => j.id === 'root').rotationY, 18)
 
@@ -251,4 +251,42 @@ assert.deepEqual(poseRoster.characters, expectedSpacing, 'V24 should preserve cu
 assert.equal(poseRoster.activeCharacterId, 'tide-shadow-cub')
 assert.equal(installEnemyShadowProjects(poseRoster), false)
 assert.deepEqual(poseRoster.characters, expectedSpacing, 'upper body pose must not accumulate on reload')
+
+// V24 -> V25 fixes the beetle's authored and grounded mirror symmetry,
+// moves the walker in character-relative directions and removes old entries.
+const beetle = structuredClone(projects.find(p => p.enemyId === 'beetle-guard'))
+beetle.joints.find(j => j.id === 'right-leg-1-knee').y += 2
+beetle.joints.find(j => j.id === 'right-leg-1-knee').z += 4
+beetle.parts.find(p => p.id === 'right-gate-sheet').width += 3
+beetle.joints.find(j => j.id === 'right-leg-0-claw-ground-contact').x += 5
+beetle.parts[0].fill = '#123456'
+const beetleMotion = JSON.stringify(beetle.animations)
+const walker = structuredClone(projects.find(p => p.enemyId === 'rot-walker'))
+const expectedWalker = structuredClone(walker)
+walker.joints.find(j => j.id === 'left-shoulder').z = -11
+walker.joints.find(j => j.id === 'rot-stilt-root').x -= 8
+const keptGnawer = structuredClone(projects.find(p => p.enemyId === 'gnawer'))
+const expectedGnawer = structuredClone(keptGnawer)
+const laterNewCharacter = createDefaultShadowProject()
+laterNewCharacter.name = '\u65b0\u89d2\u8272 2'
+const cleanupRoster = { enemyArtPackVersion: 24, activeCharacterId: 'backup', characters: [
+  { id: 'blank', project: createDefaultShadowProject() },
+  { id: 'beetle', project: beetle }, { id: 'walker', project: walker },
+  { id: 'gnawer', project: keptGnawer }, { id: 'later-new', project: laterNewCharacter },
+  { id: 'backup', project: { ...structuredClone(beetle), enemyId: null, name: 'Beetle \u00b7 \u65e7\u7248\u5907\u4efd' } },
+  { id: 'backup2', project: { ...structuredClone(walker), enemyId: null, name: 'Walker \u00b7 \u65e7\u7248\u5907\u4efd' } },
+] }
+assert(installEnemyShadowProjects(cleanupRoster))
+assert.equal(cleanupRoster.enemyArtPackVersion, ENEMY_ART_PACK_VERSION)
+assert.deepEqual(cleanupRoster.characters.map(c => c.id), ['beetle', 'walker', 'gnawer', 'later-new'])
+assert.equal(cleanupRoster.activeCharacterId, 'beetle')
+assertFrontalSkeleton(beetle)
+assert.equal(beetle.grounding.supports.length, 6)
+assert.equal(beetle.parts[0].fill, '#123456')
+assert.equal(JSON.stringify(beetle.animations), beetleMotion)
+assert.deepEqual(walker, expectedWalker)
+assert.deepEqual(keptGnawer, expectedGnawer, 'V25 must not replay previous arm or hip changes')
+const cleaned = structuredClone(cleanupRoster)
+assert.equal(installEnemyShadowProjects(cleanupRoster), false)
+assert.deepEqual(cleanupRoster, cleaned, 'V25 upgrade must be idempotent')
 console.log(`Enemy completion: ${projects.length} fully textured rigs, ${parts} parts, ${frames} animation frames; folded faces and editor refresh passed.`)

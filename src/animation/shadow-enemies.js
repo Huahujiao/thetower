@@ -2,7 +2,7 @@ import { ENEMY_DEFS } from '../game/data/enemies.js'
 import catalog from '../game/data/catalog.json' with { type: 'json' }
 import { installEnemyGrounding, rebuildEnemyGrounding } from './enemy-grounding.js'
 import { createRosterEnemyProject, ROSTER_ENEMY_ART } from './shadow-enemy-roster.js'
-import { adjustEnemyComponentSpacing, adjustEnemyUpperBodyPose, alignGnawerRestPose, alignEnemyFrontalSkeleton, applyEnemyComponentArt, COMPONENT_ENEMY_IDS, BATCH2_COMPONENT_ENEMY_IDS, BATCH3_COMPONENT_ENEMY_IDS, BATCH4_COMPONENT_ENEMY_IDS, BATCH5_COMPONENT_ENEMY_IDS, componentTexturePresets, offsetGnawerForearms, widenEnemyComponentRig } from './shadow-enemy-components.js'
+import { adjustEnemyComponentSpacing, adjustEnemyUpperBodyPose, adjustRotWalkerLimbs, alignGnawerRestPose, alignEnemyFrontalSkeleton, applyEnemyComponentArt, COMPONENT_ENEMY_IDS, BATCH2_COMPONENT_ENEMY_IDS, BATCH3_COMPONENT_ENEMY_IDS, BATCH4_COMPONENT_ENEMY_IDS, BATCH5_COMPONENT_ENEMY_IDS, componentTexturePresets, offsetGnawerForearms, widenEnemyComponentRig } from './shadow-enemy-components.js'
 import {
   createDefaultShadowProject,
   createShadowBone,
@@ -15,7 +15,7 @@ import {
   upsertShadowKeyframe,
 } from './shadow-rig.js'
 
-export const ENEMY_ART_PACK_VERSION = 24
+export const ENEMY_ART_PACK_VERSION = 25
 export const ENEMY_ART = Object.freeze({
   gnawer: { family: 'humanoid' },
   'emberwing-moth': { family: 'winged' },
@@ -478,6 +478,15 @@ function replaceComponentTemplate(roster, character, template, previousFingerpri
   character.project = template
 }
 
+function removeObsoleteEditorCharacters(roster) {
+  const firstId = roster.characters[0]?.id
+  roster.characters = roster.characters.filter(({ id, project }) => project.enemyId
+    || !(id === firstId && /^\u65b0\u89d2\u8272(?: 1)?$/u.test(project.name)
+      || /\u65e7\u7248\u5907\u4efd$/u.test(project.name)))
+  if (!roster.characters.length) roster.characters.push(createShadowCharacter(createEnemyShadowProject(ENEMY_DEFS.find(d => d.id === 'gnawer'))))
+  if (!roster.characters.some(({ id }) => id === roster.activeCharacterId)) roster.activeCharacterId = roster.characters[0].id
+}
+
 export function installEnemyShadowProjects(roster) {
   let namesUpdated = false
   for (const { project } of roster.characters) {
@@ -501,7 +510,12 @@ export function installEnemyShadowProjects(roster) {
           rebuildEnemyGrounding(project)
         }
         if (roster.enemyArtPackVersion < 23) adjustEnemyComponentSpacing(project)
-        adjustEnemyUpperBodyPose(project)
+        if (roster.enemyArtPackVersion < 24) adjustEnemyUpperBodyPose(project)
+        adjustRotWalkerLimbs(project)
+        if (project.enemyId === 'beetle-guard') {
+          alignEnemyFrontalSkeleton(project)
+          rebuildEnemyGrounding(project)
+        }
       }
     }
   }
@@ -524,6 +538,7 @@ export function installEnemyShadowProjects(roster) {
       faceEnemyForward(project)
       installEnemyGrounding(project)
     }
+    removeObsoleteEditorCharacters(roster)
     roster.enemyArtPackVersion = ENEMY_ART_PACK_VERSION
     return true
   }
@@ -560,6 +575,7 @@ export function installEnemyShadowProjects(roster) {
     faceEnemyForward(project)
     installEnemyGrounding(project)
   }
+  removeObsoleteEditorCharacters(roster)
   roster.enemyArtPackVersion = ENEMY_ART_PACK_VERSION
   return true
 }
