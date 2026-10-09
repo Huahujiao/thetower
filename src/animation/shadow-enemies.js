@@ -15,7 +15,7 @@ import {
   upsertShadowKeyframe,
 } from './shadow-rig.js'
 
-export const ENEMY_ART_PACK_VERSION = 17
+export const ENEMY_ART_PACK_VERSION = 18
 export const ENEMY_ART = Object.freeze({
   gnawer: { family: 'humanoid' },
   'emberwing-moth': { family: 'winged' },
@@ -437,18 +437,26 @@ function sculptDepth(project) {
 
 export function createEnemyShadowProject(definition, { withComponentArt = true } = {}) {
   const build = BUILD[definition?.id]
-  if (!build) {
-    const project = createRosterEnemyProject(definition)
-    return project && withComponentArt ? installEnemyGrounding(applyEnemyComponentArt(project)) : project
+  const project = build ? createDefaultShadowProject() : createRosterEnemyProject(definition)
+  if (!project) return null
+  if (build) {
+    project.name = definition.name
+    project.enemyId = definition.id
+    build(project)
+    // Import the original screen-space draft once into the V5 world convention.
+    reflectShadowProjectY(project)
+    sculptDepth(project)
   }
-  const project = createDefaultShadowProject()
-  project.name = `${definition.name} · 骨架预览`
-  project.enemyId = definition.id
-  build(project)
-  // Import the original screen-space draft once into the V5 world convention.
-  reflectShadowProjectY(project)
-  sculptDepth(project)
-  return withComponentArt ? installEnemyGrounding(applyEnemyComponentArt(project)) : project
+  if (!withComponentArt) return project
+  applyEnemyComponentArt(project)
+  faceEnemyForward(project)
+  return installEnemyGrounding(project)
+}
+
+function faceEnemyForward(project) {
+  if (!project.enemyId) return
+  const root = project.joints.find((joint) => joint.id === 'root')
+  if (root) root.rotationY = 0
 }
 
 export function createEnemyShadowProjects({ includeBoss = false } = {}) {
@@ -471,7 +479,15 @@ function replaceComponentTemplate(roster, character, template) {
 }
 
 export function installEnemyShadowProjects(roster) {
-  if (roster.enemyArtPackVersion >= ENEMY_ART_PACK_VERSION) return false
+  let namesUpdated = false
+  for (const { project } of roster.characters) {
+    if (!project.enemyId) continue
+    const name = project.name.replace(/ \u00b7 \u9aa8\u67b6\u9884\u89c8$/u, '')
+    if (name === project.name) continue
+    project.name = name
+    namesUpdated = true
+  }
+  if (roster.enemyArtPackVersion >= ENEMY_ART_PACK_VERSION) return namesUpdated
   // V10/V11 already have component art. Apply small rig adjustments in place
   // so saved custom poses, textures, selection and other enemies remain intact.
   if (roster.enemyArtPackVersion >= 10) {
@@ -486,7 +502,10 @@ export function installEnemyShadowProjects(roster) {
       if (character) replaceComponentTemplate(roster, character, template)
       else roster.characters.push(createShadowCharacter(template))
     }
-    for (const { project } of roster.characters) installEnemyGrounding(project)
+    for (const { project } of roster.characters) {
+      faceEnemyForward(project)
+      installEnemyGrounding(project)
+    }
     roster.enemyArtPackVersion = ENEMY_ART_PACK_VERSION
     return true
   }
@@ -519,7 +538,10 @@ export function installEnemyShadowProjects(roster) {
   if (!roster.activeCharacterId || !roster.characters.some(({ id }) => id === roster.activeCharacterId)) {
     roster.activeCharacterId = reviewCharacterId
   }
-  for (const { project } of roster.characters) installEnemyGrounding(project)
+  for (const { project } of roster.characters) {
+    faceEnemyForward(project)
+    installEnemyGrounding(project)
+  }
   roster.enemyArtPackVersion = ENEMY_ART_PACK_VERSION
   return true
 }

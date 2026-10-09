@@ -38,7 +38,9 @@
           <label><input v-model="showMesh" type="checkbox">{{ COPY.grid }}</label>
         </div>
         <ShadowPuppetStage
+          :key="activeCharacterId"
           :project="project"
+          default-orbit-mode
           :animation-id="editorMode === 'animation' ? animationId : null"
           :time="time"
           :selected-kind="selectedKind"

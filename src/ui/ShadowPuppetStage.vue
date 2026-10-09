@@ -33,6 +33,7 @@ import { DEFAULT_CAMERA_ELEVATION } from '../render/camera-view.js'
 
 const props = defineProps({
   project: { type: Object, required: true },
+  defaultOrbitMode: { type: Boolean, default: false },
   animationId: { type: String, default: null },
   time: { type: Number, default: 0 },
   selectedKind: { type: String, default: null },
@@ -486,8 +487,11 @@ onMounted(() => {
   host.value.addEventListener('pointercancel', onPointerCancel)
   observer = new window.ResizeObserver(() => { updateCamera(); render() })
   observer.observe(host.value)
-  updateCamera()
-  drawScene()
+  if (props.defaultOrbitMode) toggle3D()
+  else {
+    updateCamera()
+    drawScene()
+  }
 })
 
 function onPointerCancel(event) { pointerEnd(event, true) }

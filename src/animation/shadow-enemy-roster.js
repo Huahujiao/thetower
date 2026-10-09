@@ -446,7 +446,7 @@ export function createRosterEnemyProject(definition, { withVariants = true } = {
   if (!design) return null
   const [family, dark, body, edge, organ] = design
   const project = createDefaultShadowProject()
-  project.name = `${definition.name} · 骨架预览`
+  project.name = definition.name
   project.enemyId = definition.id
   project.stage.floorOffset = ['floater', 'bird', 'swarm'].includes(family) ? 46 : 10
   const colors = { dark, body, edge, glow: edge }

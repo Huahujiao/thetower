@@ -11,7 +11,7 @@ import {
 } from './shadow-rig.js'
 
 export const SHADOW_EXAMPLE_PACK_VERSION = 1
-export const SHADOW_EXAMPLE_REPAIR_VERSION = 9
+export const SHADOW_EXAMPLE_REPAIR_VERSION = 10
 
 export const SHADOW_TEXTURE_PRESETS = Object.freeze([
   { id: 'robe', label: '\u50e7\u888d', url: '/assets/enemies/bell-pilgrim-robe-v1-medium.png' },
@@ -272,7 +272,7 @@ function lanternMoth() {
 export function createShadowExampleProjects() {
   return [bellPilgrim(), tideSpider(), lanternMoth()].map((project) => {
     reflectShadowProjectY(reflectShadowProjectZ(project))
-    project.joints.find((joint) => joint.id === 'root').rotationY = -30
+    project.joints.find((joint) => joint.id === 'root').rotationY = 0
     return project
   })
 }
@@ -324,7 +324,7 @@ export function repairInitialShadowExamples(roster) {
       if (template.stage.floorOffset !== 8 && project.stage.floorOffset === 8) project.stage.floorOffset = template.stage.floorOffset
     }
     const root = project.joints.find((entry) => entry.id === 'root')
-    if (root && (root.rotationY === 30 || root.rotationY === 45 || (restoreMissingParts && root.rotationY === -45))) root.rotationY = -30
+    if (root && ([-30, 30, 45].includes(root.rotationY) || (restoreMissingParts && root.rotationY === -45))) root.rotationY = 0
     for (const entry of project.parts) {
       const source = template.parts.find((part) => part.id === entry.id)
       if (source?.visual.type === 'texture' && entry.visual.type === 'shape' && !entry.visual.texture && entry.shape === source.shape && entry.fill === source.fill && entry.stroke === source.stroke) {

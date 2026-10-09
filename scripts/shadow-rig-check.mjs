@@ -134,9 +134,9 @@ for (const [index, prefix] of ['bell-pilgrim-', 'tide-spider-', 'lantern-moth-']
 }
 assert.equal(texturePresetsForShadowProject(createDefaultShadowProject()).length, 26)
 for (const example of examples) {
-  assert.equal(example.joints[0].rotationY, -30)
+  assert.equal(example.joints[0].rotationY, 0)
   const rootForward = evaluateShadowProject(example).joints[0].matrix.elements
-  assert.ok(rootForward[8] < 0 && rootForward[10] > 0, `${example.name}: forward must face viewer-left and camera`)
+  assert.ok(Math.abs(rootForward[8]) < 1e-8 && rootForward[10] > 0, `${example.name}: forward must face the camera`)
   assert.ok(example.joints.some((entry) => entry.z !== 0))
   assert.ok(example.parts.some((entry) => entry.z !== 0))
   const jointIds = new Set(example.joints.map((entry) => entry.id))
@@ -187,7 +187,7 @@ damaged.characters[0].project.joints[0].rotationY = -45
 assert.equal(repairInitialShadowExamples(damaged), true)
 assert.equal(damaged.characters[0].project.parts.find((entry) => entry.id === 'robe').fill, '#123456')
 assert.ok(damaged.characters[0].project.parts.some((entry) => entry.id === 'bell'))
-assert.equal(damaged.characters[0].project.joints[0].rotationY, -30)
+assert.equal(damaged.characters[0].project.joints[0].rotationY, 0)
 assert.equal(examples[2].stage.floorOffset, 44)
 damaged.characters[0].project.parts = damaged.characters[0].project.parts.filter((entry) => entry.id !== 'bell')
 assert.equal(repairInitialShadowExamples(damaged), false)
@@ -207,8 +207,8 @@ alreadyRepaired.characters[0].project.parts.find((entry) => entry.id === 'robe')
 alreadyRepaired.characters[1].project.parts.find((entry) => entry.id === 'abdomen-shell').visual = { type: 'texture', texture: '/assets/enemies/custom.png', textureFit: 'cover' }
 alreadyRepaired.characters[1].project.joints[0].rotationY = 18
 assert.equal(repairInitialShadowExamples(alreadyRepaired), true)
-assert.equal(alreadyRepaired.examplePackVersion, 9)
-assert.equal(alreadyRepaired.characters[0].project.joints[0].rotationY, -30)
+assert.equal(alreadyRepaired.examplePackVersion, 10)
+assert.equal(alreadyRepaired.characters[0].project.joints[0].rotationY, 0)
 assert.ok(!alreadyRepaired.characters[0].project.parts.some((entry) => entry.id === 'bell'))
 assert.equal(alreadyRepaired.characters[0].project.parts.find((entry) => entry.id === 'robe').visual.type, 'texture')
 assert.equal(alreadyRepaired.characters[1].project.parts.find((entry) => entry.id === 'abdomen-shell').visual.texture, '/assets/enemies/custom.png')
@@ -270,7 +270,8 @@ const topologyKeys = enemyProjects.slice(3).map((project) => {
 assert.equal(new Set(topologyKeys).size, VARIANT_ENEMY_IDS.length, 'roster enemies should have distinct joint hierarchies')
 assert.equal(enemyProjects.find((project) => project.enemyId === 'nest-spider').joints.filter((joint) => joint.id.endsWith('-coxa')).length, 8)
 assert.equal(enemyProjects.find((project) => project.enemyId === 'gnawer').joints[0].name, '\u80f8\u690e')
-assert.ok(enemyProjects.every((project) => project.name.endsWith('\u9aa8\u67b6\u9884\u89c8')))
+assert.ok(enemyProjects.every((project) => !project.name.endsWith('\u9aa8\u67b6\u9884\u89c8')))
+assert.ok(enemyProjects.every((project) => project.joints.find((joint) => joint.id === 'root').rotationY === 0))
 for (const project of enemyProjects) {
   const art = ENEMY_ART[project.enemyId]
   assert.ok(art)
@@ -281,10 +282,14 @@ for (const project of enemyProjects) {
   assert.equal(normalized.parts.length, project.parts.length)
   const rest = evaluateShadowProject(project)
   const forward = rest.jointsById.get('root').matrix.elements
-  near(forward[8], -.5)
-  near(forward[10], Math.sqrt(3) / 2)
+  near(forward[8], 0)
+  near(forward[10], 1)
   const heights = rest.joints.map((entry) => shadowMatrixPosition(entry.matrix).y)
-  const depths = rest.joints.map((entry) => shadowMatrixPosition(entry.matrix).z)
+  // Measure the same oblique silhouette after removing the default root yaw.
+  const depths = rest.joints.map((entry) => {
+    const { x, z } = shadowMatrixPosition(entry.matrix)
+    return x / 2 + z * Math.sqrt(3) / 2
+  })
   if (art.family === 'arthropod') {
     assert.ok(Math.min(...heights) < -50, `${project.enemyId}: crawler lacks ground-reaching feet`)
   } else {
@@ -298,8 +303,8 @@ for (const project of enemyProjects) {
   if (['quadruped', 'toad', 'arthropod'].includes(art.family)) {
     const head = shadowMatrixPosition(rest.jointsById.get('head').matrix)
     const rear = shadowMatrixPosition(rest.jointsById.get(art.family === 'arthropod' ? 'abdomen' : 'haunch').matrix)
-    assert.ok(head.x < rear.x - 25 && head.z > rear.z,
-      `${project.enemyId}: head must point toward viewer-left after the -30 degree yaw`)
+    assert.ok(head.z > rear.z,
+      `${project.enemyId}: head must point forward along +Z`)
     if (art.family === 'arthropod') {
       assert.ok(Math.abs(head.y - rear.y) < 20, `${project.enemyId}: head and abdomen must lie horizontally`)
       const carapace = rest.parts.find(({ part }) => part.id === 'carapace').matrix.elements

@@ -10,6 +10,8 @@ const projects = createEnemyShadowProjects({ includeBoss: true })
 let frames = 0, parts = 0
 for (const source of projects) {
   const p = normalizeShadowProject(source)
+  assert.equal(p.joints.find(j => j.id === 'root').rotationY, 0, `${p.enemyId}: angled default facing`)
+  assert(!p.name.endsWith('\u9aa8\u67b6\u9884\u89c8'), `${p.enemyId}: preview suffix in name`)
   const joints = new Set(p.joints.map(j => j.id))
   assert.equal(joints.size, p.joints.length, `${p.enemyId}: duplicate joints`)
   assert.equal(new Set(p.parts.map(s => s.id)).size, p.parts.length, `${p.enemyId}: duplicate parts`)
@@ -76,4 +78,23 @@ assert.equal(roster.enemyArtPackVersion, ENEMY_ART_PACK_VERSION)
 assert.equal(roster.characters.length, 1 + BATCH5_COMPONENT_ENEMY_IDS.length)
 assert.equal(roster.activeCharacterId, 'custom'); assert.equal(roster.characters[0].project.parts[0].fill, '#abcdef')
 assert.equal(installEnemyShadowProjects(roster), false)
+
+// Upgrade the current editor cache in place, preserving custom art and motion.
+const saved = normalizeShadowProject(projects.find(p => p.enemyId === 'gnawer'))
+saved.name = 'Custom gnawer \u00b7 \u9aa8\u67b6\u9884\u89c8'
+saved.joints.find(j => j.id === 'root').rotationY = -30
+saved.parts[0].fill = '#123456'
+const savedParts = JSON.stringify(saved.parts), savedAnimations = JSON.stringify(saved.animations)
+const currentRoster = { enemyArtPackVersion: 17, activeCharacterId: 'saved', characters: [{ id: 'saved', project: saved }] }
+assert(installEnemyShadowProjects(currentRoster))
+assert.equal(currentRoster.enemyArtPackVersion, ENEMY_ART_PACK_VERSION)
+assert.equal(currentRoster.characters.length, 1)
+assert.equal(currentRoster.activeCharacterId, 'saved')
+assert.equal(saved.name, 'Custom gnawer')
+assert.equal(saved.joints.find(j => j.id === 'root').rotationY, 0)
+assert.equal(JSON.stringify(saved.parts), savedParts)
+assert.equal(JSON.stringify(saved.animations), savedAnimations)
+saved.joints.find(j => j.id === 'root').rotationY = 18
+assert.equal(installEnemyShadowProjects(currentRoster), false)
+assert.equal(saved.joints.find(j => j.id === 'root').rotationY, 18)
 console.log(`Enemy completion: ${projects.length} fully textured rigs, ${parts} parts, ${frames} animation frames; folded faces and editor refresh passed.`)
