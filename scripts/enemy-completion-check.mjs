@@ -8,7 +8,18 @@ import { BATCH5_COMPONENT_ENEMY_IDS } from '../src/animation/shadow-enemy-compon
 import componentAssets from '../src/animation/enemy-component-assets.json' with { type: 'json' }
 
 const projects = createEnemyShadowProjects({ includeBoss: true })
+function restoreV23Pose(project) {
+  if (project.enemyId === 'gnawer') for (const [side, sign] of [['left', -1], ['right', 1]]) {
+    project.joints.find(joint => joint.id === `${side}-shoulder`).rotationZ -= sign * 24
+    project.joints.find(joint => joint.id === `${side}-elbow`).rotationZ += sign * 58
+  }
+  if (project.enemyId === 'tide-shadow-cub') {
+    project.joints.find(joint => joint.id === 'head').y += 10
+    project.joints.find(joint => joint.id === 'eye-hinge').z -= 1.5
+  }
+}
 function restoreV22Spacing(project) {
+  restoreV23Pose(project)
   if (project.enemyId === 'gnawer') project.parts.find(part => part.id === 'pelvis-shell').y -= 4
   if (project.enemyId === 'rootrot-bud') {
     const bud = project.joints.find(joint => joint.id === 'bud')
@@ -61,6 +72,8 @@ for (const source of projects) {
     assert(p.parts.find(part => part.id === 'right-thigh').height > 6)
     for (const side of ['left', 'right']) {
       const outward = side === 'left' ? -1 : 1
+      assert((position(`${side}-elbow`)[12] - position(`${side}-shoulder`)[12]) * outward > 0, 'gnawer elbows should bend outward')
+      assert((position(`${side}-elbow`)[12] - position(`${side}-wrist`)[12]) * outward > 0, 'gnawer forearms should fold inward')
       assert((position(`${side}-ankle`)[12] - position(`${side}-hock`)[12]) * outward > 0, 'gnawer feet should spread outward')
     }
   }
@@ -214,7 +227,7 @@ assert(budRoster.characters.some(c => !c.project.enemyId), 'customized former bu
 assert.equal(installEnemyShadowProjects(budRoster), false)
 assert.equal(saved.joints.find(j => j.id === 'root').rotationY, 18)
 
-// V22 spacing updates keep custom textures, poses, grounding and unrelated
+// V22 cache upgrades keep custom textures, motion, grounding and unrelated
 // rigs intact, and must not replay the V22 bud replacement or torso lift.
 const spacingCharacters = projects.filter(p => ['gnawer', 'rootrot-bud', 'tide-shadow-cub', 'nest-spider'].includes(p.enemyId))
   .map(p => ({ id: p.enemyId, project: structuredClone(p) }))
@@ -223,8 +236,19 @@ const expectedSpacing = structuredClone(spacingCharacters)
 for (const { project } of spacingCharacters) restoreV22Spacing(project)
 const spacingRoster = { enemyArtPackVersion: 22, activeCharacterId: 'rootrot-bud', characters: spacingCharacters }
 assert(installEnemyShadowProjects(spacingRoster))
-assert.deepEqual(spacingRoster.characters, expectedSpacing, 'V23 should only adjust spacing without replacing customized rigs')
+assert.deepEqual(spacingRoster.characters, expectedSpacing, 'upgrades should adjust pose and spacing without replacing customized rigs')
 assert.equal(spacingRoster.activeCharacterId, 'rootrot-bud')
 assert.equal(installEnemyShadowProjects(spacingRoster), false)
 assert.deepEqual(spacingRoster.characters, expectedSpacing, 'spacing must not accumulate on reload')
+
+// V23 updates only the arm pose and head/eye placement, without repeating
+// earlier hip lifts, wing widening or spacing changes.
+const poseCharacters = structuredClone(expectedSpacing)
+for (const { project } of poseCharacters) restoreV23Pose(project)
+const poseRoster = { enemyArtPackVersion: 23, activeCharacterId: 'tide-shadow-cub', characters: poseCharacters }
+assert(installEnemyShadowProjects(poseRoster))
+assert.deepEqual(poseRoster.characters, expectedSpacing, 'V24 should preserve custom rigs and prior spacing')
+assert.equal(poseRoster.activeCharacterId, 'tide-shadow-cub')
+assert.equal(installEnemyShadowProjects(poseRoster), false)
+assert.deepEqual(poseRoster.characters, expectedSpacing, 'upper body pose must not accumulate on reload')
 console.log(`Enemy completion: ${projects.length} fully textured rigs, ${parts} parts, ${frames} animation frames; folded faces and editor refresh passed.`)

@@ -113,6 +113,23 @@ export function adjustEnemyComponentSpacing(project) {
   }
 }
 
+// V24: rotate connected arm chains so the artwork follows the bent bones.
+export function adjustEnemyUpperBodyPose(project) {
+  if (project.enemyId === 'gnawer') {
+    for (const [side, sign] of [['left', -1], ['right', 1]]) {
+      const shoulder = project.joints.find(joint => joint.id === `${side}-shoulder`)
+      const elbow = project.joints.find(joint => joint.id === `${side}-elbow`)
+      if (shoulder) shoulder.rotationZ += sign * 24
+      if (elbow) elbow.rotationZ -= sign * 58
+    }
+  } else if (project.enemyId === 'tide-shadow-cub') {
+    const head = project.joints.find(joint => joint.id === 'head')
+    const eye = project.joints.find(joint => joint.id === 'eye-hinge')
+    if (head) head.y -= 10
+    if (eye) eye.z += 1.5
+  }
+}
+
 export function alignEnemyFrontalSkeleton(project) {
   if (!['gnawer', 'rootrot-bud'].includes(project.enemyId)) return
   const joints = new Map(project.joints.map(joint => [joint.id, joint]))
@@ -508,6 +525,7 @@ export function applyEnemyComponentArt(project) {
   alignGnawerRestPose(project)
   alignEnemyFrontalSkeleton(project)
   adjustEnemyComponentSpacing(project)
+  adjustEnemyUpperBodyPose(project)
   return project
 }
 
