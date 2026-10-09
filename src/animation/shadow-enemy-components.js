@@ -9,7 +9,7 @@ import { applyEnemyComponentBatch5, adjustPatrolHoundRig, adjustSalamanderBody }
 export { BATCH5_COMPONENT_ENEMY_IDS, adjustPatrolHoundRig, adjustSalamanderBody } from './shadow-enemy-components-batch5.js'
 import {
   createDefaultShadowProject, createShadowBone, createShadowJoint, createShadowPart,
-  shadowTargetKey, upsertShadowKeyframe,
+  shadowTargetKey, upsertShadowKeyframe, shadowTransformMatrix,
 } from './shadow-rig.js'
 
 export const COMPONENT_ENEMY_IDS = Object.freeze(Object.keys(assets))
@@ -164,6 +164,26 @@ export function adjustTideCubHeadDepth(project) {
   if (project.enemyId !== 'tide-shadow-cub') return
   const head = project.joints.find(joint => joint.id === 'head')
   if (head) head.z -= 6
+}
+
+// V31: open the elytra outboard, with the raised outer tips toward the tail.
+export function openBeetleElytra(project) {
+  if (project.enemyId !== 'beetle-guard') return
+  for (const [side, sign] of [['left', -1], ['right', 1]]) {
+    const hinge = project.joints.find(joint => joint.id === `${side}-gate-hinge`)
+    const tip = project.joints.find(joint => joint.id === `${side}-gate-tip`)
+    const wing = project.parts.find(part => part.id === `${side}-gate-sheet`)
+    if (!hinge || !tip || !wing) continue
+    hinge.x = sign * 32
+    Object.assign(wing, { rotationX: 100, rotationY: 0, rotationZ: sign * 20 })
+    // Match the bone endpoint to the visible outer rear corner of the PNG.
+    const x = ((sign < 0 ? .1 : .9) - wing.pivotX) * wing.width
+    const y = (wing.pivotY - .92) * wing.height
+    const m = shadowTransformMatrix(wing).elements
+    tip.x = m[0] * x + m[4] * y + m[12]
+    tip.y = m[1] * x + m[5] * y + m[13]
+    tip.z = m[2] * x + m[6] * y + m[14]
+  }
 }
 
 export function alignEnemyFrontalSkeleton(project) {
@@ -584,6 +604,7 @@ export function applyEnemyComponentArt(project) {
   adjustSalamanderBody(project)
   adjustRootrotHands(project)
   adjustTideCubHeadDepth(project)
+  openBeetleElytra(project)
   return project
 }
 

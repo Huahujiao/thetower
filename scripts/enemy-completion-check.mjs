@@ -79,6 +79,16 @@ function assertSalamanderSpine(pose) {
     }
   }
 }
+function assertBeetleWings(pose) {
+  for (const [side, sign] of [['left', -1], ['right', 1]]) {
+    const { part, matrix } = pose.parts.find(p => p.part.id === `${side}-gate-sheet`)
+    const tip = pose.jointsById.get(`${side}-gate-tip`).matrix.elements
+    const x = ((sign < 0 ? .1 : .9) - part.pivotX) * part.width
+    const y = (part.pivotY - .92) * part.height
+    const corner = [0, 1, 2].map(i => matrix.elements[i] * x + matrix.elements[4 + i] * y + matrix.elements[12 + i])
+    assert(Math.hypot(...corner.map((v, i) => v - tip[12 + i])) < 1e-5, 'beetle wing joint should follow its visible outer rear corner')
+  }
+}
 let frames = 0, parts = 0
 for (const source of projects) {
   const p = normalizeShadowProject(source)
@@ -116,6 +126,17 @@ for (const source of projects) {
   }
   if (['gnawer', 'rootrot-bud', 'beetle-guard', 'shellguard'].includes(p.enemyId)) assertFrontalSkeleton(p)
   if (p.enemyId === 'patrol-hound') assertHoundPose(p)
+  if (p.enemyId === 'beetle-guard') {
+    const rest = evaluateShadowProject(p, null, 0, { raw: true })
+    assertBeetleWings(rest)
+    for (const [side, sign] of [['left', -1], ['right', 1]]) {
+      const hinge = rest.jointsById.get(`${side}-gate-hinge`).matrix.elements
+      const tip = rest.jointsById.get(`${side}-gate-tip`).matrix.elements
+      assert((tip[12] - hinge[12]) * sign > 50, 'beetle wings should spread visibly outboard')
+      assert(tip[13] > hinge[13], 'beetle outer tips should rise slightly')
+      assert(tip[14] < hinge[14], 'beetle outer tips should point toward the tail')
+    }
+  }
   if (p.enemyId === 'redneedle-salamander') {
     const chest = p.parts.find(part => part.id === 'chest')
     assert.equal(chest.rotationX, 90, 'salamander sternum should lie along the abdomen')
@@ -164,6 +185,7 @@ for (const source of projects) {
     for (let i = 0; i <= 32; i++) {
       const pose = evaluateShadowProject(p, action, animation.duration * i / 32)
       if (p.enemyId === 'redneedle-salamander') assertSalamanderSpine(pose)
+      if (p.enemyId === 'beetle-guard') assertBeetleWings(pose)
       frames++
       for (const part of pose.parts) {
         assert(part.matrix.elements.every(Number.isFinite))
@@ -454,4 +476,19 @@ assert.equal(salamanderRoster.activeCharacterId, 'salamander')
 const updatedSalamanderRoster = structuredClone(salamanderRoster)
 assert.equal(installEnemyShadowProjects(salamanderRoster), false)
 assert.deepEqual(salamanderRoster, updatedSalamanderRoster)
+
+const oldBeetleWings = structuredClone(projects.find(p => p.enemyId === 'beetle-guard'))
+oldBeetleWings.parts[0].fill = '#abcdef'
+const expectedBeetleWings = structuredClone(oldBeetleWings)
+for (const [side, sign] of [['left', -1], ['right', 1]]) {
+  oldBeetleWings.joints.find(j => j.id === `${side}-gate-hinge`).x = sign * 6
+  Object.assign(oldBeetleWings.joints.find(j => j.id === `${side}-gate-tip`), { x: sign * 39, y: 8, z: -38 })
+  Object.assign(oldBeetleWings.parts.find(p => p.id === `${side}-gate-sheet`), { rotationX: -55, rotationZ: 0 })
+}
+const elytraRoster = { enemyArtPackVersion: 30, activeCharacterId: 'beetle', characters: [{ id: 'beetle', project: oldBeetleWings }] }
+assert(installEnemyShadowProjects(elytraRoster))
+assert.equal(elytraRoster.activeCharacterId, 'beetle')
+assert.deepEqual(oldBeetleWings, expectedBeetleWings, 'elytra update should preserve custom art, animation and other bones')
+assert.equal(installEnemyShadowProjects(elytraRoster), false)
+assert.deepEqual(oldBeetleWings, expectedBeetleWings, 'elytra placement must not accumulate on reload')
 console.log(`Enemy completion: ${projects.length} fully textured rigs, ${parts} parts, ${frames} animation frames; folded faces and editor refresh passed.`)
