@@ -10,7 +10,7 @@ function fitPart(project, part, target, from, to, end = false) {
     pivotX: (pivot[0] - crop.left) / crop.width, pivotY: (pivot[1] - crop.top) / crop.height,
     rotationX: 0, rotationY: 0, rotationZ: Math.atan2(-dy, dx) * 180 / Math.PI,
     attachment: { type: 'bone', targetId: project.bones.find(b => b.toJointId === target).id,
-      t: end ? 1 : 0, followRotation: true, orientationJointId: 'root', bindLength: Math.hypot(dx, dy) } })
+      t: end ? 1 : 0, followRotation: true, orientationJointId: 'crossbow-arm-plane', bindLength: Math.hypot(dx, dy) } })
   part.visual.textureFit = 'stretch'
 }
 
@@ -19,10 +19,36 @@ function fitPart(project, part, target, from, to, end = false) {
 export function raiseSentryCrossbow(project) {
   if (project.enemyId !== 'sentry-crossbow' || project.joints.some(j => j.id === 'crossbow-hold')) return
   const joints = new Map(project.joints.map(j => [j.id, j]))
+  project.joints.push(createShadowJoint({ id: 'sentry-upper-body', name: '\u4e0a\u534a\u8eab', y: 44 }))
+  for (const bone of project.bones) if (bone.fromJointId === 'root' && bone.toJointId !== 'pelvis') bone.fromJointId = 'sentry-upper-body'
+  project.bones.push(createShadowBone({ id: 'sentry-upper-body-bone', fromJointId: 'root', toJointId: 'sentry-upper-body' }))
+  const torso = project.parts.find(p => p.id === 'torso')
+  torso.attachment.targetId = 'sentry-upper-body'
+  joints.get('neck').z = 2
+  joints.get('head').z = 1
+  joints.get('rear-tripod').z = -1
+
+  // Expose the painted vertebrae between the raised chest and the foot roots.
+  const spine = project.parts.find(p => p.id === 'spine')
+  const spineTop = (torso.pivotY - .90) * torso.height
+  const spineLength = 44 + spineTop - joints.get('pelvis').y
+  project.joints.push(createShadowJoint({ id: 'sentry-waist-spine', name: '\u8170\u810a\u4e0a\u7aef', y: spineTop, z: -1 }))
+  project.joints.push(createShadowJoint({ id: 'sentry-waist-spine-bottom', name: '\u8170\u810a\u4e0b\u7aef', y: -spineLength, z: -3 }))
+  project.bones.push(createShadowBone({ id: 'sentry-waist-spine-top-bone', fromJointId: 'sentry-upper-body', toJointId: 'sentry-waist-spine' }))
+  project.bones.push(createShadowBone({ id: 'sentry-waist-spine-bone', fromJointId: 'sentry-waist-spine', toJointId: 'sentry-waist-spine-bottom' }))
+  const spineScale = spineLength / (.86 * spine.height)
+  spine.width *= spineScale; spine.height *= spineScale
+  fitPart(project, spine, 'sentry-waist-spine-bottom', [.5, .08], [.5, .94])
+  delete spine.attachment.orientationJointId
+
   project.joints.push(createShadowJoint({ id: 'crossbow-hold', name: '\u53cc\u624b\u6301\u5f29' }))
-  project.bones.push(createShadowBone({ id: 'crossbow-hold-bone', fromJointId: 'root', toJointId: 'crossbow-hold' }))
+  project.bones.push(createShadowBone({ id: 'crossbow-hold-bone', fromJointId: 'sentry-upper-body', toJointId: 'crossbow-hold' }))
+  // Use world X as the strip's transverse direction so the carrying arms lie
+  // across the ground plane instead of presenting vertical cutout faces.
+  project.joints.push(createShadowJoint({ id: 'crossbow-arm-plane', name: '\u5e73\u4e3e\u624b\u81c2\u65b9\u5411', rotationZ: -90 }))
+  project.bones.push(createShadowBone({ id: 'crossbow-arm-plane-bone', fromJointId: 'crossbow-hold', toJointId: 'crossbow-arm-plane' }))
   const weapon = joints.get('weapon')
-  Object.assign(weapon, { x: 0, y: 14, z: 72, rotationX: 100, rotationY: 0, rotationZ: 0 })
+  Object.assign(weapon, { x: 0, y: 28, z: 72, rotationX: 100, rotationY: 0, rotationZ: 0 })
   project.bones.find(b => b.toJointId === 'weapon').fromJointId = 'crossbow-hold'
   const fullWidth = project.parts.find(p => p.id === 'bow-stock').width / .28
   const fullHeight = project.parts.find(p => p.id === 'bow-stock').height / .79
@@ -35,7 +61,7 @@ export function raiseSentryCrossbow(project) {
     const grip = new Vector3(sign * .42 * fullWidth, (.32 - .21) * fullHeight, 0).applyMatrix4(weaponMatrix)
     Object.assign(shoulder, { x: sign * 40, y: 30, z: 8, rotationX: 0, rotationY: 0, rotationZ: 0 })
     project.bones.find(b => b.toJointId === shoulder.id).fromJointId = 'crossbow-hold'
-    Object.assign(elbow, { x: sign * 7, y: -8, z: 27, rotationX: 0, rotationY: 0, rotationZ: 0 })
+    Object.assign(elbow, { x: sign * 7, y: -2, z: 27, rotationX: 0, rotationY: 0, rotationZ: 0 })
     Object.assign(hand, { x: grip.x - shoulder.x - elbow.x, y: grip.y - shoulder.y - elbow.y, z: grip.z - shoulder.z - elbow.z,
       rotationX: 0, rotationY: 0, rotationZ: 0 })
     fitPart(project, project.parts.find(p => p.id === `${side}-arm-upper`), elbow.id, anchors[0], anchors[1])

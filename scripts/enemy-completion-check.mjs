@@ -237,7 +237,7 @@ for (const source of projects) {
       assert((position(`${side}-root-tip`)[12] - position(`${side}-root`)[12]) * outward > 0, 'rootrot-bud roots should spread outward')
     }
   }
-  if (['gnawer', 'rootrot-bud', 'beetle-guard', 'shellguard'].includes(p.enemyId)) assertFrontalSkeleton(p)
+  if (['gnawer', 'rootrot-bud', 'beetle-guard', 'shellguard', 'ash-cannon-bug', 'furnace-beetle'].includes(p.enemyId)) assertFrontalSkeleton(p)
   if (['nest-spider', 'beetle-guard'].includes(p.enemyId)) {
     const last = p.enemyId === 'nest-spider' ? 3 : 2
     for (const raw of [true, false]) {
@@ -279,7 +279,10 @@ for (const source of projects) {
     const used = new Set(p.parts.map(part => Number(/part_(\d+)\.png$/.exec(part.visual.texture)?.[1])))
     assert.equal(used.size, 23, 'moss colossus should use all 23 anatomy assets')
     assert(p.parts.find(part => part.id === 'torso').visual.texture.endsWith('/part_001.png'), 'moss chest face must be the main torso')
-    assert.equal(p.joints.find(j => j.id === 'neck').x, -12, 'moss small head should shift toward character-right')
+    const mossRest = evaluateShadowProject(p, null, 0, { raw: true })
+    assert(Math.abs(mossRest.jointsById.get('head').matrix.elements[12] - textureSocket(mossRest.parts.find(p => p.part.id === 'torso'), .52, .07).x) < 1e-6,
+      'moss small head should line up with the painted neck socket')
+    assert(mossRest.jointsById.get('exposed-spine').matrix.elements[14] < mossRest.parts.find(p => p.part.id === 'torso').matrix.elements[14], 'moss spine should sit behind the chest')
     for (const id of ['right-arm-shoulder']) assert.equal(p.joints.find(j => j.id === id).scaleX, -1,
       'saved moss right arms should retain their full mirrored width')
     assert.equal(p.joints.find(j => j.id === 'right-secondary-shoulder').scaleX, 1, 'forearm inherits the upper-arm mirror')
@@ -287,12 +290,13 @@ for (const source of projects) {
       const rest = evaluateShadowProject(p, null, 0, { raw: true })
       const primary = rest.jointsById.get(`${side}-arm-wrist`).matrix.elements
       const secondary = rest.jointsById.get(`${side}-secondary-wrist`).matrix.elements
-      assert(secondary[13] - primary[13] > 35, 'moss larger hands should be above the smaller hands without overlap')
+      assert(primary[13] - secondary[13] > 35, 'moss forearms and hands should extend down from the upper-arm elbows')
       const small = p.parts.find(part => part.id === `${side}-arm-hand`)
       const large = p.parts.find(part => part.id === `${side}-secondary-hand`)
-      assert(large.width * large.height > small.width * small.height, 'upper hands should use the larger cutout assets')
+      assert(large.width * large.height > small.width * small.height, 'the full hand should remain larger than the upper-arm stump')
       const sign = side === 'left' ? 1 : -1
-      assert.equal(p.parts.find(part => part.id === `${side}-pauldron`).rotationZ, -sign * 90)
+      assert.equal(p.parts.find(part => part.id === `${side}-pauldron`).rotationZ, 0)
+      assert(p.parts.find(part => part.id === `${side}-pauldron`).visual.texture.endsWith(side === 'left' ? '/part_013.png' : '/part_012.png'), 'moss pauldrons should use the exchanged cutouts')
       assert.equal(p.bones.find(b => b.toJointId === `${side}-secondary-shoulder`).fromJointId, `${side}-arm-wrist`, 'moss forearm must join its upper arm, not form an independent limb')
       const plate = rest.jointsById.get(`${side}-stone-plate`).matrix.elements
       assert(plate[14] > secondary[14] && secondary[14] > rest.jointsById.get('root').matrix.elements[14], 'moss armor and arms need shallow distinct depth layers')
@@ -767,7 +771,7 @@ assert.deepEqual(solidBeastRoster, transparentSnapshot, 'saved transparent crops
 // rebuild the roster. A legacy installer must also leave the new rig intact.
 const rebuiltMossRoster = { enemyArtPackVersion: 35, activeCharacterId: 'moss', characters: [{ id: 'moss', project: normalizeShadowProject(projects.find(p => p.enemyId === 'moss-colossus')) }] }
 assert(installEnemyShadowProjects(rebuiltMossRoster))
-assert.equal(rebuiltMossRoster.characters[0].project.joints.find(j => j.id === 'neck').x, -12)
+assert.equal(rebuiltMossRoster.characters[0].project.joints.find(j => j.id === 'neck').x, projects.find(p => p.enemyId === 'moss-colossus').joints.find(j => j.id === 'neck').x)
 assert.equal(rebuiltMossRoster.characters[0].project.joints.find(j => j.id === 'right-secondary-shoulder').scaleX, 1)
 
 const savedSalamander = structuredClone(projects.find(p => p.enemyId === 'redneedle-salamander'))

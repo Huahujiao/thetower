@@ -10,7 +10,7 @@ export function refineAshCannonAnatomy(project) {
   const back = project.parts.find(p => p.id === 'carapace'), tail = project.parts.find(p => p.id === 'belly')
   const attachment = new Vector3((.5 - back.pivotX) * back.width, (back.pivotY - .20) * back.height, 0)
     .applyMatrix4(shadowTransformMatrix(back))
-  project.joints.push(createShadowJoint({ id: 'ash-tail-root', name: '\u5c3e\u6839', x: attachment.x, y: attachment.y, z: attachment.z }))
+  project.joints.push(createShadowJoint({ id: 'ash-tail-root', name: '\u5c3e\u6839', x: attachment.x, y: attachment.y - 6, z: attachment.z - 14 }))
   project.bones.push(createShadowBone({ id: 'ash-tail-root-bone', fromJointId: 'abdomen', toJointId: 'ash-tail-root' }))
   Object.assign(tail, { name: '\u5c3e\u90e8\u9aa8\u7532', x: 0, y: 0, z: 0, pivotX: .5, pivotY: .16,
     rotationX: 80, rotationY: 0, rotationZ: 0, layer: 6,

@@ -4,13 +4,13 @@ import { shadowPartFloor } from './shadow-grounding.js'
 
 const clone = value => JSON.parse(JSON.stringify(value))
 
-function fitBoneTexture(project, part, toId, from, to) {
+function fitBoneTexture(project, part, toId, from, to, mirrored = false) {
   const crop = part.visual.textureFrame.crop
   const dx = (to[0] - from[0]) * part.width / crop.width
   const dy = -(to[1] - from[1]) * part.height / crop.height
   Object.assign(part, { x: 0, y: 0, z: 0,
     pivotX: (from[0] - crop.left) / crop.width, pivotY: (from[1] - crop.top) / crop.height,
-    rotationX: 0, rotationY: 0, rotationZ: Math.atan2(-dy, dx) * 180 / Math.PI,
+    rotationX: 0, rotationY: mirrored ? 180 : 0, rotationZ: Math.atan2(-dy, mirrored ? -dx : dx) * 180 / Math.PI,
     attachment: { type: 'bone', targetId: project.bones.find(b => b.toJointId === toId).id,
       t: 0, followRotation: true, orientationJointId: 'root', bindLength: Math.hypot(dx, dy) } })
   part.visual.textureFit = 'stretch'
@@ -26,13 +26,17 @@ export function connectMossAnatomy(project) {
   for (const bone of project.bones) if (bone.fromJointId === 'root' && !['pelvis', 'exposed-spine'].includes(bone.toJointId)) bone.fromJointId = 'upper-body'
   project.bones.push(createShadowBone({ id: 'upper-body-bone', fromJointId: 'root', toJointId: 'upper-body' }))
   project.parts.find(p => p.id === 'torso').attachment.targetId = 'upper-body'
-  project.joints.find(j => j.id === 'neck').x = -12
+  const torso = project.parts.find(p => p.id === 'torso')
+  // Center the separate face on the neck socket painted into the chest.
+  project.joints.find(j => j.id === 'neck').x = (.52 - torso.pivotX) * torso.width
   for (const [side, sign] of [['left', 1], ['right', -1]]) {
-    project.parts.find(p => p.id === `${side}-pauldron`).rotationZ = -sign * 90
+    // The exchanged cutouts receive left clockwise / right counterclockwise
+    // quarter-turns from their previous +90 / -90 carrying orientations.
+    project.parts.find(p => p.id === `${side}-pauldron`).rotationZ = 0
     const upper = project.joints.find(j => j.id === `${side}-arm-shoulder`)
     Object.assign(upper, { x: sign * 57, y: 27, z: 6, rotationZ: sign * 27 })
     const forearm = project.joints.find(j => j.id === `${side}-secondary-shoulder`)
-    Object.assign(forearm, { x: 0, y: 0, z: .8, rotationZ: 125, scaleX: 1 })
+    Object.assign(forearm, { x: 0, y: 0, z: .8, rotationZ: -15, scaleX: 1 })
     project.bones.find(b => b.toJointId === forearm.id).fromJointId = `${side}-arm-wrist`
     upper.name = `${side === 'left' ? '\u5de6' : '\u53f3'}\u4e0a\u81c2\u80a9`
     project.joints.find(j => j.id === `${side}-arm-wrist`).name = '\u4e0a\u81c2\u8098'
@@ -50,7 +54,7 @@ export function connectMossAnatomy(project) {
   const localTop = top.clone().applyMatrix4(parent.clone().invert())
   const spinal = project.joints.find(j => j.id === 'exposed-spine')
   spinal.name = '\u80f8\u9acb\u810a\u9aa8'
-  Object.assign(spinal, { x: localTop.x, y: localTop.y, z: 2, rotationX: 0, rotationY: 0, rotationZ: 0 })
+  Object.assign(spinal, { x: localTop.x, y: localTop.y, z: -2, rotationX: 0, rotationY: 0, rotationZ: 0 })
   project.bones.find(b => b.toJointId === spinal.id).fromJointId = 'upper-body'
   const length = top.y - bottom.y
   project.joints.push(createShadowJoint({ id: 'waist-spine-bottom', name: '\u810a\u9aa8\u9acb\u90e8\u63a5\u70b9', y: -length }))
@@ -71,11 +75,11 @@ export function connectMossAnatomy(project) {
       const part = project.parts.find(p => p.id === `${side}-${suffix}`), source = saved[`${other}-${suffix}`]
       for (const field of ['width', 'height', 'visual', 'shape', 'fill']) part[field] = clone(source[field])
     }
-    Object.assign(project.joints.find(j => j.id === `${side}-leg-root`), { x: sign * 26, y: -58, z: 1 })
+    Object.assign(project.joints.find(j => j.id === `${side}-leg-root`), { x: sign * 34, y: -58, z: 1 })
     Object.assign(project.joints.find(j => j.id === `${side}-leg-hinge`), { x: sign * 6, y: -35, z: .25 })
     Object.assign(project.joints.find(j => j.id === `${side}-leg-tip`), { x: sign * 4, y: -39, z: .25 })
-    fitBoneTexture(project, project.parts.find(p => p.id === `${side}-leg-upper`), `${side}-leg-hinge`, anchors[0], anchors[1])
-    fitBoneTexture(project, project.parts.find(p => p.id === `${side}-leg-lower`), `${side}-leg-tip`, anchors[1], anchors[2])
+    fitBoneTexture(project, project.parts.find(p => p.id === `${side}-leg-upper`), `${side}-leg-hinge`, anchors[0], anchors[1], side === 'right')
+    fitBoneTexture(project, project.parts.find(p => p.id === `${side}-leg-lower`), `${side}-leg-tip`, anchors[1], anchors[2], side === 'right')
     Object.assign(project.parts.find(p => p.id === `${side}-foot`), { x: 0, y: 0, z: .3, pivotX: .5, pivotY: .1 })
   }
   pose = evaluateShadowProject(project, null, 0, { raw: true })
@@ -229,7 +233,7 @@ export function buildMossColossus(p, { joint, imagePart, pixelLink, organMotion 
   j('hand-root-fork', '手背分根', rootHand, [12, -12, -.3], { rotationZ: 32 })
   art('hand-root-fork-art', '外露手背分根', 23, 'hand-root-fork', .20, [.34, .12], { layer: 9 })
   motion('hand-root-fork', -1)
-  for (const [side, sign, n] of [['left', 1, 12], ['right', -1, 13]]) {
+  for (const [side, sign, n] of [['left', 1, 13], ['right', -1, 12]]) {
     // Plates share the torso sockets, rather than swinging over all four arms.
     j(`${side}-stone-plate`, '上肩苔石甲', 'root', [sign * 55, 38, 3], { rotationZ: sign * 14 })
     art(`${side}-pauldron`, '上肩苔石甲', n, `${side}-stone-plate`, .25, [.5, .30], { layer: 10 })

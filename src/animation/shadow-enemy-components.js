@@ -1,6 +1,7 @@
 import assets from './enemy-component-assets.json' with { type: 'json' }
 import { arrangeMossArmsAndJaw, refineMossDepthAndFeet, connectMossAnatomy } from './shadow-moss-colossus.js'
 import { raiseSentryCrossbow } from './shadow-sentry-crossbow.js'
+import { alignCrawlerSkeleton } from './shadow-crawler-skeleton.js'
 import { refineAshCannonAnatomy } from './shadow-ash-cannon.js'
 import { fitTransparentBeastPanels } from './shadow-beast-barrels.js'
 export { fitTransparentBeastPanels } from './shadow-beast-barrels.js'
@@ -791,6 +792,7 @@ export function applyEnemyComponentArt(project) {
   connectMossAnatomy(project)
   raiseSentryCrossbow(project)
   refineAshCannonAnatomy(project)
+  alignCrawlerSkeleton(project)
   fitTransparentBeastPanels(project)
   return project
 }
