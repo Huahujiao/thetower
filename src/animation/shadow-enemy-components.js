@@ -1,4 +1,5 @@
 import assets from './enemy-component-assets.json' with { type: 'json' }
+import { arrangeMossArmsAndJaw } from './shadow-moss-colossus.js'
 import { fitTransparentBeastPanels } from './shadow-beast-barrels.js'
 export { fitTransparentBeastPanels } from './shadow-beast-barrels.js'
 import { applyEnemyComponentBatch2 } from './shadow-enemy-components-batch2.js'
@@ -783,6 +784,7 @@ export function applyEnemyComponentArt(project) {
   alignBeetleHornTip(project)
   tightenRotWalkerArms(project)
   restoreFourArmMirrors(project)
+  arrangeMossArmsAndJaw(project)
   fitTransparentBeastPanels(project)
   return project
 }

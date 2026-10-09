@@ -14,6 +14,17 @@ function restoreV36WalkerArms(project) {
   project.joints.find(j => j.id === 'right-arm-root').x += 10
   for (const id of ['left-shoulder', 'left-elbow', 'left-wrist', 'right-arm-root', 'right-arm-hinge', 'right-arm-tip']) project.joints.find(j => j.id === id).z *= 2
 }
+function assertMossJaw(pose) {
+  const head = pose.parts.find(p => p.part.id === 'head-art')
+  const jaw = pose.parts.find(p => p.part.id === 'jaw-art')
+  const point = (entry, u, v) => {
+    const { part, matrix } = entry, crop = part.visual.textureFrame.crop
+    return new Vector3(((u - crop.left) / crop.width - part.pivotX) * part.width,
+      (part.pivotY - (v - crop.top) / crop.height) * part.height, 0).applyMatrix4(matrix)
+  }
+  assert(Math.abs(point(head, .5, .74).distanceTo(point(jaw, .5, .5)) - .3) < 1e-6,
+    'moss lower teeth should hinge at the small head mouth throughout animation')
+}
 function restoreV23Pose(project) {
   if (project.enemyId === 'rootrot-bud') for (const [side, sign] of [['left', -1], ['right', 1]]) project.joints.find(j => j.id === `${side}-petal`).rotationZ += sign * 12
   if (project.enemyId === 'gnawer') for (const [side, sign] of [['left', -1], ['right', 1]]) {
@@ -234,7 +245,13 @@ for (const source of projects) {
       const rest = evaluateShadowProject(p, null, 0, { raw: true })
       const primary = rest.jointsById.get(`${side}-arm-wrist`).matrix.elements
       const secondary = rest.jointsById.get(`${side}-secondary-wrist`).matrix.elements
-      assert(primary[13] - secondary[13] > 35, 'moss upper and lower hands should not overlap')
+      assert(secondary[13] - primary[13] > 35, 'moss larger hands should be above the smaller hands without overlap')
+      const small = p.parts.find(part => part.id === `${side}-arm-hand`)
+      const large = p.parts.find(part => part.id === `${side}-secondary-hand`)
+      assert(large.width * large.height > small.width * small.height, 'upper hands should use the larger cutout assets')
+    }
+    for (const [id, animation] of Object.entries(p.animations)) for (let i = 0; i <= 10; i++) {
+      assertMossJaw(evaluateShadowProject(normalizeShadowProject(p), id, animation.duration * i / 10))
     }
   }
   if (p.enemyId === 'revenant-guard') {
@@ -670,6 +687,33 @@ for (const { project } of solidBeastRoster.characters) {
 const transparentSnapshot = structuredClone(solidBeastRoster)
 assert.equal(installEnemyShadowProjects(solidBeastRoster), false)
 assert.deepEqual(solidBeastRoster, transparentSnapshot, 'saved transparent crops must not shrink again on reload')
+
+// V39 edits move complete arm chains, retain custom animation and also repair
+// the old jaw pivot on normalized saves; reloading must not exchange them again.
+const oldMoss = normalizeShadowProject(projects.find(p => p.enemyId === 'moss-colossus'))
+for (const side of ['left', 'right']) {
+  const small = oldMoss.joints.find(j => j.id === `${side}-arm-shoulder`)
+  const large = oldMoss.joints.find(j => j.id === `${side}-secondary-shoulder`)
+  for (const field of ['x', 'y', 'z', 'rotationZ']) [small[field], large[field]] = [large[field], small[field]]
+}
+Object.assign(oldMoss.joints.find(j => j.id === 'jaw'), { x: 0, y: -6, z: .5 })
+oldMoss.parts.find(p => p.id === 'jaw-art').pivotY = .14
+oldMoss.parts.find(p => p.id === 'torso').fill = '#778899'
+oldMoss.animations.idle.tracks['joint:left-secondary-shoulder'][1].rotationZ += 2
+const oldMossAnimations = structuredClone(oldMoss.animations)
+const mossLegs = structuredClone(oldMoss.joints.filter(j => /leg|ground-contact/.test(j.id)))
+const mossRoster = { enemyArtPackVersion: 39, activeCharacterId: 'custom-moss', characters: [{ id: 'custom-moss', project: oldMoss }] }
+assert(installEnemyShadowProjects(mossRoster))
+assert.equal(mossRoster.characters.length, 1)
+assert.equal(mossRoster.activeCharacterId, 'custom-moss')
+assert.equal(oldMoss.parts.find(p => p.id === 'torso').fill, '#778899')
+assert.deepEqual(oldMoss.animations, oldMossAnimations)
+assert.deepEqual(oldMoss.joints.filter(j => /leg|ground-contact/.test(j.id)), mossLegs)
+for (const side of ['left', 'right']) assert(oldMoss.joints.find(j => j.id === `${side}-secondary-shoulder`).y > oldMoss.joints.find(j => j.id === `${side}-arm-shoulder`).y)
+assertMossJaw(evaluateShadowProject(normalizeShadowProject(oldMoss), null, 0))
+const mossSnapshot = structuredClone(mossRoster)
+assert.equal(installEnemyShadowProjects(mossRoster), false)
+assert.deepEqual(mossRoster, mossSnapshot)
 
 const savedSalamander = structuredClone(projects.find(p => p.enemyId === 'redneedle-salamander'))
 savedSalamander.parts = savedSalamander.parts.filter(p => !['back-mid', 'back-tail', 'chest-rear', 'torso-front-cap'].includes(p.id) && !p.id.endsWith('-flank'))

@@ -1,3 +1,36 @@
+import { shadowTransformMatrix } from './shadow-rig.js'
+
+// Legacy "secondary" chains carry the larger hands. Move the complete chains
+// and their extra roots, preserving the painted elbow/wrist connections.
+export function arrangeMossArmsAndJaw(project) {
+  if (project.enemyId !== 'moss-colossus') return
+  for (const side of ['left', 'right']) {
+    const small = project.joints.find(j => j.id === `${side}-arm-shoulder`)
+    const large = project.joints.find(j => j.id === `${side}-secondary-shoulder`)
+    if (!small || !large || small.y <= large.y) continue
+    for (const field of ['x', 'y', 'z', 'rotationZ']) [small[field], large[field]] = [large[field], small[field]]
+    const rename = (id, name) => id.startsWith(`${side}-arm-`) || id === `${side}-root-hand`
+      ? name.replace('上', '下') : id.startsWith(`${side}-secondary-`) ? name.replace('下', '上') : name
+    for (const joint of project.joints) joint.name = rename(joint.id, joint.name)
+    for (const part of project.parts) part.name = rename(part.id, part.name)
+    for (const bone of project.bones) bone.name = rename(bone.toJointId, bone.name)
+  }
+  const head = project.parts.find(p => p.id === 'head-art')
+  const jaw = project.joints.find(j => j.id === 'jaw')
+  const art = project.parts.find(p => p.id === 'jaw-art')
+  if (!head || !jaw || !art) return
+  // Align the tooth row of part_006 with the mouth of part_004. The hinge now
+  // sits at the mouth instead of placing the whole jaw beneath the chin.
+  const crop = head.visual.textureFrame.crop
+  const x = ((.5 - crop.left) / crop.width - head.pivotX) * head.width
+  const y = (head.pivotY - (.74 - crop.top) / crop.height) * head.height
+  const m = shadowTransformMatrix(head).elements
+  Object.assign(jaw, { x: m[0] * x + m[4] * y + m[12], y: m[1] * x + m[5] * y + m[13], z: m[2] * x + m[6] * y + m[14] + .3 })
+  const jawCrop = art.visual.textureFrame.crop
+  art.pivotX = (.5 - jawCrop.left) / jawCrop.width
+  art.pivotY = (.5 - jawCrop.top) / jawCrop.height
+}
+
 // Build around the cut anatomy: a chest face, four unlike arms and a parasitic
 // tree. Rear anatomy is offset sideways so it remains visible from the front.
 export function buildMossColossus(p, { joint, imagePart, pixelLink, organMotion }) {
