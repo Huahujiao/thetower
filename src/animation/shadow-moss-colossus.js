@@ -1,4 +1,66 @@
-import { shadowTransformMatrix } from './shadow-rig.js'
+import { Vector3 } from 'three'
+import { createShadowBone, createShadowJoint, evaluateShadowProject, shadowTransformMatrix } from './shadow-rig.js'
+
+function texturePoint(entry, u, v) {
+  const { part, matrix } = entry, crop = part.visual.textureFrame.crop
+  return new Vector3(((u - crop.left) / crop.width - part.pivotX) * part.width,
+    (part.pivotY - (v - crop.top) / crop.height) * part.height, 0).applyMatrix4(matrix)
+}
+
+// V41: retain planted feet while raising the anatomy and use each cutout's
+// own hip, knee, ankle and toe positions rather than one shared pixel path.
+export function refineMossDepthAndFeet(project) {
+  if (project.enemyId !== 'moss-colossus' || project.joints.some(j => j.id === 'left-foot-toe')) return
+  const before = evaluateShadowProject(project, null, 0, { raw: true })
+  project.joints.find(j => j.id === 'root').y += 8
+  project.joints.find(j => j.id === 'neck').x += 12
+  for (const [side, sign] of [['left', 1], ['right', -1]]) {
+    project.joints.find(j => j.id === `${side}-stone-plate`).z += 6
+    project.parts.find(p => p.id === `${side}-pauldron`).rotationZ += sign * 80
+    for (const group of ['arm', 'secondary']) project.joints.find(j => j.id === `${side}-${group}-shoulder`).z += 4
+  }
+  const raised = evaluateShadowProject(project, null, 0, { raw: true })
+  for (const [side, anchors, toe] of [
+    ['left', [[.77, .10], [.48, .42], [.50, .78]], [.85, .82]],
+    ['right', [[.23, .10], [.56, .42], [.46, .78]], [.20, .87]],
+  ]) {
+    const upper = raised.parts.find(p => p.part.id === `${side}-leg-upper`)
+    const lower = raised.parts.find(p => p.part.id === `${side}-leg-lower`)
+    const oldFoot = before.parts.find(p => p.part.id === `${side}-foot`)
+    const points = anchors.map((anchor, i) => texturePoint(i === 2 ? lower : upper, ...anchor))
+    let parent = raised.jointsById.get('pelvis').matrix
+    for (const [i, suffix] of ['root', 'hinge', 'tip'].entries()) {
+      const joint = project.joints.find(j => j.id === `${side}-leg-${suffix}`)
+      const point = points[i]
+      const local = point.applyMatrix4(parent.clone().invert())
+      Object.assign(joint, { x: local.x, y: local.y, z: local.z })
+      parent = parent.clone().multiply(shadowTransformMatrix(joint))
+      if (i < 2) {
+        const part = i ? lower.part : upper.part, crop = part.visual.textureFrame.crop
+        part.pivotX = (anchors[i][0] - crop.left) / crop.width
+        part.pivotY = (anchors[i][1] - crop.top) / crop.height
+      }
+    }
+    // Counter the root lift and revised ankle anchor in the foot's local
+    // frame. Its texture and toe keep their original world-space placement.
+    const foot = oldFoot.part
+    const localFoot = parent.clone().invert().multiply(oldFoot.matrix)
+    Object.assign(foot, { x: localFoot.elements[12], y: localFoot.elements[13], z: localFoot.elements[14] })
+    const toePoint = texturePoint(oldFoot, ...toe).applyMatrix4(parent.clone().invert())
+    const toeId = `${side}-foot-toe`
+    project.joints.push(createShadowJoint({ id: toeId, name: '\u82d4\u77f3\u8db3\u5c16', x: toePoint.x, y: toePoint.y, z: toePoint.z }))
+    project.bones.push(createShadowBone({ id: `${toeId}-bone`, fromJointId: `${side}-leg-tip`, toJointId: toeId }))
+  }
+}
+
+export function alignMossFootContacts(project) {
+  if (project.enemyId !== 'moss-colossus') return
+  for (const side of ['left', 'right']) {
+    const contact = project.joints.find(j => j.id === `${side}-foot-ground-contact`)
+    const toe = project.joints.find(j => j.id === `${side}-foot-toe`)
+    if (contact && toe) { contact.x = toe.x; contact.z = toe.z }
+  }
+}
 
 // Legacy "secondary" chains carry the larger hands. Move the complete chains
 // and their extra roots, preserving the painted elbow/wrist connections.

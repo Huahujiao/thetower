@@ -3,7 +3,7 @@ import catalog from '../game/data/catalog.json' with { type: 'json' }
 import { installEnemyGrounding, rebuildEnemyGrounding } from './enemy-grounding.js'
 import { reconnectRotSacToadRig } from './shadow-enemy-components-batch5.js'
 import { restoreFourArmMirrors, fitTransparentBeastPanels } from './shadow-enemy-components.js'
-import { arrangeMossArmsAndJaw } from './shadow-moss-colossus.js'
+import { arrangeMossArmsAndJaw, refineMossDepthAndFeet, alignMossFootContacts } from './shadow-moss-colossus.js'
 import { widenRotWalkerLeftLeg, addRevenantSecondaryArms, exposeFourArmLayouts, splayCrawlerEndLegs, alignBeetleHornTip, tightenRotWalkerArms } from './shadow-enemy-components.js'
 import { createRosterEnemyProject, ROSTER_ENEMY_ART } from './shadow-enemy-roster.js'
 import { adjustEnemyComponentSpacing, adjustEnemyUpperBodyPose, adjustRotWalkerLimbs, adjustRotWalkerFeetAndNeck, alignRotWalkerFootContacts, bringRotWalkerLeftLegForward, adjustShellguardStance, adjustPatrolHoundRig, adjustSalamanderBody, alignSalamanderChest, adjustRotSacToadPose, reconnectSalamanderRig, adjustRootrotHands, adjustTideCubHeadDepth, openBeetleElytra, removeNestSpiderTail, alignGnawerRestPose, alignEnemyFrontalSkeleton, applyEnemyComponentArt, COMPONENT_ENEMY_IDS, BATCH2_COMPONENT_ENEMY_IDS, BATCH3_COMPONENT_ENEMY_IDS, BATCH4_COMPONENT_ENEMY_IDS, BATCH5_COMPONENT_ENEMY_IDS, componentTexturePresets, offsetGnawerForearms, widenEnemyComponentRig } from './shadow-enemy-components.js'
@@ -19,7 +19,7 @@ import {
   upsertShadowKeyframe,
 } from './shadow-rig.js'
 
-export const ENEMY_ART_PACK_VERSION = 40
+export const ENEMY_ART_PACK_VERSION = 41
 export const ENEMY_ART = Object.freeze({
   gnawer: { family: 'humanoid' },
   'emberwing-moth': { family: 'winged' },
@@ -456,6 +456,7 @@ export function createEnemyShadowProject(definition, { withComponentArt = true }
   faceEnemyForward(project)
   installEnemyGrounding(project)
   alignRotWalkerFootContacts(project)
+  alignMossFootContacts(project)
   return project
 }
 
@@ -587,6 +588,11 @@ export function installEnemyShadowProjects(roster) {
         }
         if (roster.enemyArtPackVersion < 39) fitTransparentBeastPanels(character.project)
         if (roster.enemyArtPackVersion < 40) arrangeMossArmsAndJaw(character.project)
+        if (roster.enemyArtPackVersion < 41 && character.project.enemyId === 'moss-colossus') {
+          refineMossDepthAndFeet(character.project)
+          rebuildEnemyGrounding(character.project)
+          alignMossFootContacts(character.project)
+        }
       }
     }
   }

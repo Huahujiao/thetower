@@ -1,5 +1,5 @@
 import assets from './enemy-component-assets.json' with { type: 'json' }
-import { arrangeMossArmsAndJaw } from './shadow-moss-colossus.js'
+import { arrangeMossArmsAndJaw, refineMossDepthAndFeet } from './shadow-moss-colossus.js'
 import { fitTransparentBeastPanels } from './shadow-beast-barrels.js'
 export { fitTransparentBeastPanels } from './shadow-beast-barrels.js'
 import { applyEnemyComponentBatch2 } from './shadow-enemy-components-batch2.js'
@@ -216,7 +216,7 @@ export function restoreFourArmMirrors(project) {
     const shoulder = project.joints.find(j => j.id === id)
     if (shoulder && shoulder.scaleX >= 0) shoulder.scaleX = -Math.max(1, shoulder.scaleX)
   }
-  if (project.enemyId === 'moss-colossus') {
+  if (project.enemyId === 'moss-colossus' && !project.joints.some(j => j.id === 'left-foot-toe')) {
     for (const id of ['neck', 'head']) {
       const joint = project.joints.find(j => j.id === id)
       if (joint) { joint.x = 0; joint.rotationZ = 0 }
@@ -785,6 +785,7 @@ export function applyEnemyComponentArt(project) {
   tightenRotWalkerArms(project)
   restoreFourArmMirrors(project)
   arrangeMossArmsAndJaw(project)
+  refineMossDepthAndFeet(project)
   fitTransparentBeastPanels(project)
   return project
 }

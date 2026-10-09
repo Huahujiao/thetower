@@ -126,7 +126,7 @@ export function constrainShadowParts(project, parts, joints, bones, animationId)
     const contact = joints.find(j => j.joint.id === support.contactId)
     if (!foot || !contact) continue
     const point = shadowContactVertices(foot.part).map(p => p.clone().applyMatrix4(foot.matrix)).sort((a, b) => a.y - b.y)[0]
-    if (FRONTAL_SYMMETRIC_ENEMIES.has(project.enemyId) || project.enemyId === 'rot-walker') {
+    if (FRONTAL_SYMMETRIC_ENEMIES.has(project.enemyId) || ['rot-walker', 'moss-colossus'].includes(project.enemyId)) {
       // Keep the authored contact direction. Only its height follows
       // the opaque edge; arbitrary hull vertex order must not skew the bones.
       point.x = contact.matrix.elements[12]

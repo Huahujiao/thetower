@@ -14,6 +14,27 @@ function restoreV36WalkerArms(project) {
   project.joints.find(j => j.id === 'right-arm-root').x += 10
   for (const id of ['left-shoulder', 'left-elbow', 'left-wrist', 'right-arm-root', 'right-arm-hinge', 'right-arm-tip']) project.joints.find(j => j.id === id).z *= 2
 }
+function restoreV40Moss(project) {
+  project.joints.find(j => j.id === 'root').y -= 8
+  project.joints.find(j => j.id === 'neck').x -= 12
+  project.joints = project.joints.filter(j => !j.id.endsWith('-foot-toe'))
+  project.bones = project.bones.filter(b => !b.toJointId.endsWith('-foot-toe'))
+  for (const [side, sign] of [['left', 1], ['right', -1]]) {
+    project.joints.find(j => j.id === `${side}-stone-plate`).z -= 6
+    project.parts.find(p => p.id === `${side}-pauldron`).rotationZ -= sign * 80
+    for (const group of ['arm', 'secondary']) project.joints.find(j => j.id === `${side}-${group}-shoulder`).z -= 4
+    const upper = project.parts.find(p => p.id === `${side}-leg-upper`)
+    const lower = project.parts.find(p => p.id === `${side}-leg-lower`)
+    const height = upper.height / upper.visual.textureFrame.crop.height
+    Object.assign(project.joints.find(j => j.id === `${side}-leg-root`), { x: sign * 26, y: -58, z: 1 })
+    Object.assign(project.joints.find(j => j.id === `${side}-leg-hinge`), { x: -.01 * upper.width, y: -.32 * height, z: .25 })
+    Object.assign(project.joints.find(j => j.id === `${side}-leg-tip`), { x: .03 * upper.width, y: -.36 * height, z: .25 })
+    Object.assign(upper, { pivotX: .5, pivotY: .1 / .49 })
+    Object.assign(lower, { pivotX: .49, pivotY: (.42 - .36) / .46 })
+    Object.assign(project.parts.find(p => p.id === `${side}-foot`), { x: 0, y: 0, z: .3 })
+  }
+  rebuildEnemyGrounding(project)
+}
 function assertMossJaw(pose) {
   const head = pose.parts.find(p => p.part.id === 'head-art')
   const jaw = pose.parts.find(p => p.part.id === 'jaw-art')
@@ -24,6 +45,16 @@ function assertMossJaw(pose) {
   }
   assert(Math.abs(point(head, .5, .74).distanceTo(point(jaw, .5, .5)) - .3) < 1e-6,
     'moss lower teeth should hinge at the small head mouth throughout animation')
+}
+function assertMossFeet(pose) {
+  for (const [side, uv] of [['left', [.85, .82]], ['right', [.20, .87]]]) {
+    const { part, matrix } = pose.parts.find(p => p.part.id === `${side}-foot`)
+    const crop = part.visual.textureFrame.crop
+    const paintedToe = new Vector3(((uv[0] - crop.left) / crop.width - part.pivotX) * part.width,
+      (part.pivotY - (uv[1] - crop.top) / crop.height) * part.height, 0).applyMatrix4(matrix)
+    assert(paintedToe.distanceTo(new Vector3().setFromMatrixPosition(pose.jointsById.get(`${side}-foot-toe`).matrix)) < 1e-6,
+      'moss foot bone must end at its own painted toe, including during animation')
+  }
 }
 function restoreV23Pose(project) {
   if (project.enemyId === 'rootrot-bud') for (const [side, sign] of [['left', -1], ['right', 1]]) project.joints.find(j => j.id === `${side}-petal`).rotationZ += sign * 12
@@ -238,7 +269,7 @@ for (const source of projects) {
     const used = new Set(p.parts.map(part => Number(/part_(\d+)\.png$/.exec(part.visual.texture)?.[1])))
     assert.equal(used.size, 23, 'moss colossus should use all 23 anatomy assets')
     assert(p.parts.find(part => part.id === 'torso').visual.texture.endsWith('/part_001.png'), 'moss chest face must be the main torso')
-    assert.equal(p.joints.find(j => j.id === 'neck').x, 0, 'moss head should be centered above its torso')
+    assert.equal(p.joints.find(j => j.id === 'neck').x, 12, 'moss small head should shift toward character-left')
     for (const id of ['right-arm-shoulder', 'right-secondary-shoulder']) assert.equal(p.joints.find(j => j.id === id).scaleX, -1,
       'saved moss right arms should retain their full mirrored width')
     for (const side of ['left', 'right']) {
@@ -249,9 +280,18 @@ for (const source of projects) {
       const small = p.parts.find(part => part.id === `${side}-arm-hand`)
       const large = p.parts.find(part => part.id === `${side}-secondary-hand`)
       assert(large.width * large.height > small.width * small.height, 'upper hands should use the larger cutout assets')
+      const sign = side === 'left' ? 1 : -1
+      assert.equal(p.parts.find(part => part.id === `${side}-pauldron`).rotationZ, sign * 80)
+      const plate = rest.jointsById.get(`${side}-stone-plate`).matrix.elements
+      assert(plate[14] > secondary[14] && secondary[14] > rest.jointsById.get('root').matrix.elements[14], 'moss armor and arms need shallow distinct depth layers')
+      const ankle = rest.jointsById.get(`${side}-leg-tip`).matrix.elements
+      const toe = rest.jointsById.get(`${side}-foot-toe`).matrix.elements
+      assert(sign * (toe[12] - ankle[12]) > 10, 'moss feet must point toward their own outer toe rather than the same side')
     }
     for (const [id, animation] of Object.entries(p.animations)) for (let i = 0; i <= 10; i++) {
-      assertMossJaw(evaluateShadowProject(normalizeShadowProject(p), id, animation.duration * i / 10))
+      const pose = evaluateShadowProject(normalizeShadowProject(p), id, animation.duration * i / 10)
+      assertMossJaw(pose)
+      assertMossFeet(pose)
     }
   }
   if (p.enemyId === 'revenant-guard') {
@@ -635,6 +675,7 @@ assert.deepEqual(crawlerRoster, upgradedCrawlers)
 const repairedCharacters = projects.filter(p => ['moss-colossus', 'revenant-guard', 'redneedle-salamander', 'rot-sac-toad'].includes(p.enemyId)).map(project => ({ id: project.enemyId, project: normalizeShadowProject(project) }))
 for (const { project } of repairedCharacters) {
   if (project.enemyId === 'moss-colossus') {
+    restoreV40Moss(project)
     project.joints.find(j => j.id === 'neck').x = 20
     for (const id of ['right-arm-shoulder', 'right-secondary-shoulder']) project.joints.find(j => j.id === id).scaleX = .01
   }
@@ -655,7 +696,7 @@ const repairRoster = { enemyArtPackVersion: 37, activeCharacterId: 'moss-colossu
 assert(installEnemyShadowProjects(repairRoster))
 for (const { project } of repairRoster.characters) {
   if (project.enemyId === 'moss-colossus') {
-    assert.equal(project.joints.find(j => j.id === 'neck').x, 0)
+    assert.equal(project.joints.find(j => j.id === 'neck').x, 12)
     assert.equal(project.joints.find(j => j.id === 'right-arm-shoulder').scaleX, -1)
   }
   if (['moss-colossus', 'revenant-guard'].includes(project.enemyId)) assert.equal(normalizeShadowProject(project).joints.find(j => j.id === 'right-secondary-shoulder').scaleX, -1)
@@ -691,6 +732,7 @@ assert.deepEqual(solidBeastRoster, transparentSnapshot, 'saved transparent crops
 // V39 edits move complete arm chains, retain custom animation and also repair
 // the old jaw pivot on normalized saves; reloading must not exchange them again.
 const oldMoss = normalizeShadowProject(projects.find(p => p.enemyId === 'moss-colossus'))
+restoreV40Moss(oldMoss)
 for (const side of ['left', 'right']) {
   const small = oldMoss.joints.find(j => j.id === `${side}-arm-shoulder`)
   const large = oldMoss.joints.find(j => j.id === `${side}-secondary-shoulder`)
@@ -701,19 +743,44 @@ oldMoss.parts.find(p => p.id === 'jaw-art').pivotY = .14
 oldMoss.parts.find(p => p.id === 'torso').fill = '#778899'
 oldMoss.animations.idle.tracks['joint:left-secondary-shoulder'][1].rotationZ += 2
 const oldMossAnimations = structuredClone(oldMoss.animations)
-const mossLegs = structuredClone(oldMoss.joints.filter(j => /leg|ground-contact/.test(j.id)))
+const mossFeet = evaluateShadowProject(oldMoss, null, 0, { raw: true }).parts.filter(p => p.part.id.endsWith('-foot'))
 const mossRoster = { enemyArtPackVersion: 39, activeCharacterId: 'custom-moss', characters: [{ id: 'custom-moss', project: oldMoss }] }
 assert(installEnemyShadowProjects(mossRoster))
 assert.equal(mossRoster.characters.length, 1)
 assert.equal(mossRoster.activeCharacterId, 'custom-moss')
 assert.equal(oldMoss.parts.find(p => p.id === 'torso').fill, '#778899')
 assert.deepEqual(oldMoss.animations, oldMossAnimations)
-assert.deepEqual(oldMoss.joints.filter(j => /leg|ground-contact/.test(j.id)), mossLegs)
+const raisedMoss = evaluateShadowProject(oldMoss, null, 0, { raw: true })
+for (const foot of mossFeet) {
+  const current = raisedMoss.parts.find(p => p.part.id === foot.part.id)
+  foot.matrix.elements.forEach((v, i) => assert(Math.abs(v - current.matrix.elements[i]) < 1e-6, 'moss feet stay fixed while body is raised'))
+}
 for (const side of ['left', 'right']) assert(oldMoss.joints.find(j => j.id === `${side}-secondary-shoulder`).y > oldMoss.joints.find(j => j.id === `${side}-arm-shoulder`).y)
 assertMossJaw(evaluateShadowProject(normalizeShadowProject(oldMoss), null, 0))
 const mossSnapshot = structuredClone(mossRoster)
 assert.equal(installEnemyShadowProjects(mossRoster), false)
 assert.deepEqual(mossRoster, mossSnapshot)
+
+const v40Moss = normalizeShadowProject(projects.find(p => p.enemyId === 'moss-colossus'))
+restoreV40Moss(v40Moss)
+const oldMossPose = evaluateShadowProject(v40Moss, null, 0, { raw: true })
+const v40Roster = { enemyArtPackVersion: 40, activeCharacterId: 'moss', characters: [{ id: 'moss', project: v40Moss }] }
+assert(installEnemyShadowProjects(v40Roster))
+const newMossPose = evaluateShadowProject(v40Moss, null, 0, { raw: true })
+for (const old of oldMossPose.parts.filter(p => ['torso', 'pelvis-art', 'left-foot', 'right-foot'].includes(p.part.id))) {
+  const current = newMossPose.parts.find(p => p.part.id === old.part.id)
+  assert(Math.abs(current.matrix.elements[13] - old.matrix.elements[13] - (old.part.id.endsWith('-foot') ? 0 : 8)) < 1e-6)
+}
+assertMossFeet(newMossPose)
+const v41Snapshot = structuredClone(v40Roster)
+assert.equal(installEnemyShadowProjects(v40Roster), false)
+assert.deepEqual(v40Roster, v41Snapshot)
+
+// A pre-V36 template replacement already has the new head offset and toe
+// nodes. Older mirror repair must not center that rebuilt head a second time.
+const rebuiltMossRoster = { enemyArtPackVersion: 35, activeCharacterId: 'moss', characters: [{ id: 'moss', project: normalizeShadowProject(projects.find(p => p.enemyId === 'moss-colossus')) }] }
+assert(installEnemyShadowProjects(rebuiltMossRoster))
+assert.equal(rebuiltMossRoster.characters[0].project.joints.find(j => j.id === 'neck').x, 12)
 
 const savedSalamander = structuredClone(projects.find(p => p.enemyId === 'redneedle-salamander'))
 savedSalamander.parts = savedSalamander.parts.filter(p => !['back-mid', 'back-tail', 'chest-rear', 'torso-front-cap'].includes(p.id) && !p.id.endsWith('-flank'))
