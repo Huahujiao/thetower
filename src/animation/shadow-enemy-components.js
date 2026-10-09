@@ -37,11 +37,12 @@ export function offsetGnawerForearms(project) {
   }
 }
 
-export function alignGnawerRestPose(project) {
+export function alignGnawerRestPose(project, previousArtPackVersion = null) {
   if (project.enemyId !== 'gnawer') return
   const joints = new Map(project.joints.map(joint => [joint.id, joint]))
   const root = joints.get('root')
-  if (root) root.y += 6
+  const migratingSavedRig = previousArtPackVersion !== null
+  if (root) root.y += migratingSavedRig ? 6 : 12
   for (const id of ['left-shoulder', 'right-shoulder']) {
     const shoulder = joints.get(id)
     if (shoulder) shoulder.z = 14
@@ -49,13 +50,61 @@ export function alignGnawerRestPose(project) {
   for (const id of ['left-hip', 'right-hip']) {
     const hip = joints.get(id)
     if (hip) {
-      hip.y -= 6
+      if (!migratingSavedRig) hip.y -= 6
       hip.z = 6
     }
+  }
+  for (const side of ['left', 'right']) {
+    const knee = joints.get(`${side}-knee`)
+    const hock = joints.get(`${side}-hock`)
+    if (knee) knee.y -= 6
+    if (hock) hock.y += 6
+    const thigh = project.parts.find(part => part.id === `${side}-thigh`)
+    if (thigh) thigh.height += 6
   }
   for (const id of ['right-knee', 'right-hock', 'right-ankle']) {
     const joint = joints.get(id)
     if (joint) joint.z += .75
+  }
+  for (const side of ['left', 'right']) {
+    const legTexture = side === 'left' ? '008' : '009'
+    for (const partId of [`${side}-shin`, `${side}-foot`]) {
+      const part = project.parts.find(entry => entry.id === partId)
+      if (part?.visual?.texture?.endsWith('/part_012.png')) {
+        const legacySize = assets.gnawer.parts[12]
+        const legSize = assets.gnawer.parts[Number(legTexture)]
+        part.width *= legSize.width / legacySize.width
+        part.height *= legSize.height / legacySize.height
+        part.visual = { ...part.visual, texture: part.visual.texture.replace('/part_012.png', `/part_${legTexture}.png`) }
+      }
+    }
+  }
+}
+
+export function alignRootrotBudSymmetry(project) {
+  if (project.enemyId !== 'rootrot-bud') return
+  const joints = new Map(project.joints.map(joint => [joint.id, joint]))
+  const pairedDepths = [
+    ['left-root', 'right-root', 32],
+    ['left-root-tip', 'right-root-tip', 17],
+    ['left-petal', 'right-petal', 19],
+    ['left-petal-tip', 'right-petal-tip', 14],
+    ['left-thorn', 'right-thorn', 18],
+    ['left-leaf', 'right-leaf', 24],
+  ]
+  for (const [leftId, rightId, z] of pairedDepths) {
+    if (joints.has(leftId)) joints.get(leftId).z = z
+    if (joints.has(rightId)) joints.get(rightId).z = z
+  }
+  const parts = new Map(project.parts.map(part => [part.id, part]))
+  for (const [leftId, rightId] of [
+    ['left-petal-part', 'right-petal-part'],
+    ['left-upper-petal-part', 'right-upper-petal-part'],
+  ]) {
+    const left = parts.get(leftId)
+    const right = parts.get(rightId)
+    if (!left || !right) continue
+    right.rotationX = left.rotationX
   }
 }
 
@@ -76,7 +125,11 @@ function joint(p, id, name, parent, x, y, z = 0) {
 // Keeping its pixel scale makes adjacent cropped segments meet at the hinge.
 function imagePart(p, id, name, number, target, scale, anchor = [.5, .5], options = {}) {
   const { crop = [0, 0, 1, 1], ...transform } = options
-  const { width, height } = assets[p.enemyId].parts[number]
+  const gnawerLegArt = p.enemyId === 'gnawer'
+    ? { 'left-shin': 8, 'left-foot': 8, 'right-shin': 9, 'right-foot': 9 }[id]
+    : undefined
+  const sourceNumber = gnawerLegArt ?? number
+  const { width, height } = assets[p.enemyId].parts[sourceNumber]
   const [left, top, cw, ch] = crop
   const entry = createShadowPart({ id, name, shape: 'rect', depth: 0,
     width: width * cw * scale, height: height * ch * scale,
@@ -84,7 +137,7 @@ function imagePart(p, id, name, number, target, scale, anchor = [.5, .5], option
     fill: '#ffffff', stroke: '#22272b', layer: 5, ...transform,
     attachment: { type: 'joint', targetId: target, followRotation: true, t: .5 },
   })
-  entry.visual = { type: 'texture', texture: `/assets/enemies/components-v1/${p.enemyId}/part_${String(number).padStart(3, '0')}.png`,
+  entry.visual = { type: 'texture', texture: `/assets/enemies/components-v1/${p.enemyId}/part_${String(sourceNumber).padStart(3, '0')}.png`,
     textureFit: 'contain', textureFrame: { columns: 1, rows: 1, column: 0, row: 0, crop: { left, top, width: cw, height: ch } } }
   p.parts.push(entry)
   return entry
@@ -388,6 +441,7 @@ export function applyEnemyComponentArt(project) {
   }
   widenEnemyComponentRig(project)
   alignGnawerRestPose(project)
+  alignRootrotBudSymmetry(project)
   return project
 }
 

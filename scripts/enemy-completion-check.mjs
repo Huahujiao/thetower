@@ -5,6 +5,7 @@ import { createEnemyShadowProjects, installEnemyShadowProjects, ENEMY_ART_PACK_V
 import { evaluateShadowProject, normalizeShadowProject } from '../src/animation/shadow-rig.js'
 import { shadowPartFloor } from '../src/animation/shadow-grounding.js'
 import { BATCH5_COMPONENT_ENEMY_IDS } from '../src/animation/shadow-enemy-components-batch5.js'
+import componentAssets from '../src/animation/enemy-component-assets.json' with { type: 'json' }
 
 const projects = createEnemyShadowProjects({ includeBoss: true })
 let frames = 0, parts = 0
@@ -14,17 +15,36 @@ for (const source of projects) {
   if (p.enemyId === 'gnawer') {
     const rest = evaluateShadowProject(p)
     const position = id => rest.jointsById.get(id).matrix.elements
-    assert.equal(position('root')[13], 6, 'gnawer upper body should be raised')
-    assert.equal(position('pelvis')[13], -36, 'gnawer pelvis should follow the raised body')
-    assert.equal(position('left-hip')[13], -48, 'gnawer legs should stay at their original height')
+    assert.equal(position('root')[13], 12, 'gnawer upper body should be raised')
+    assert.equal(position('pelvis')[13], -30, 'gnawer pelvis should follow the raised body')
+    assert.equal(position('left-hip')[13], -42, 'gnawer hips should rise with the pelvis')
     for (const id of ['shoulder', 'elbow', 'wrist']) {
       assert.equal(position(`left-${id}`)[14], position(`right-${id}`)[14], `gnawer hands: mismatched ${id} depth`)
     }
     assert.equal(position('left-hip')[14], position('right-hip')[14], 'gnawer hips: mismatched depth')
+    assert(p.parts.find(part => part.id === 'left-foot').visual.texture.endsWith('/part_008.png'))
+    assert(p.parts.find(part => part.id === 'right-foot').visual.texture.endsWith('/part_009.png'))
+    assert(p.parts.find(part => part.id === 'left-thigh').height > 6)
+    assert(p.parts.find(part => part.id === 'right-thigh').height > 6)
     for (const [id, multiplier] of [['knee', 1], ['hock', 2], ['ankle', 3]]) {
       const depthDelta = position(`right-${id}`)[14] - position(`left-${id}`)[14]
       assert(Math.abs(depthDelta - .75 * multiplier) < .1,
         `gnawer legs: expected a slight ${id} depth offset, found ${depthDelta}`)
+    }
+  }
+  if (p.enemyId === 'rootrot-bud') {
+    const rest = evaluateShadowProject(p)
+    const position = id => rest.jointsById.get(id).matrix.elements
+    for (const suffix of ['root', 'root-tip', 'petal', 'petal-tip', 'thorn', 'leaf']) {
+      const left = position(`left-${suffix}`), right = position(`right-${suffix}`)
+      assert(Math.abs(left[12] + right[12]) < 1, `rootrot-bud/${suffix}: joints should mirror across X`)
+      assert(Math.abs(left[13] - right[13]) < 1, `rootrot-bud/${suffix}: joint heights should match`)
+      assert(Math.abs(left[14] - right[14]) < 1e-5, `rootrot-bud/${suffix}: joint depths should match`)
+    }
+    for (const suffix of ['petal-part', 'upper-petal-part']) {
+      const left = p.parts.find(part => part.id === `left-${suffix}`)
+      const right = p.parts.find(part => part.id === `right-${suffix}`)
+      if (left && right) assert.equal(left.rotationX, right.rotationX, `rootrot-bud/${suffix}: paired tilt should match`)
     }
   }
   assert(!p.name.endsWith('\u9aa8\u67b6\u9884\u89c8'), `${p.enemyId}: preview suffix in name`)
@@ -100,29 +120,58 @@ const saved = normalizeShadowProject(projects.find(p => p.enemyId === 'gnawer'))
 saved.name = 'Custom gnawer \u00b7 \u9aa8\u67b6\u9884\u89c8'
 saved.joints.find(j => j.id === 'root').rotationY = -30
 saved.joints.find(j => j.id === 'root').y -= 6
+for (const id of ['left-knee', 'right-knee']) saved.joints.find(j => j.id === id).y += 6
+for (const id of ['left-hock', 'right-hock']) saved.joints.find(j => j.id === id).y -= 6
+for (const id of ['left-thigh', 'right-thigh']) saved.parts.find(p => p.id === id).height -= 6
 saved.joints.find(j => j.id === 'left-shoulder').z = -13
 saved.joints.find(j => j.id === 'right-shoulder').z = 13
 saved.joints.find(j => j.id === 'left-hip').z = -10
 saved.joints.find(j => j.id === 'right-hip').z = 10
-saved.joints.find(j => j.id === 'left-hip').y += 6
-saved.joints.find(j => j.id === 'right-hip').y += 6
 for (const id of ['right-knee', 'right-hock', 'right-ankle']) saved.joints.find(j => j.id === id).z -= .75
+for (const id of ['left-shin', 'left-foot', 'right-shin', 'right-foot']) {
+  const part = saved.parts.find(p => p.id === id)
+  const legSize = componentAssets.gnawer.parts[id.startsWith('left-') ? 8 : 9]
+  const legacySize = componentAssets.gnawer.parts[12]
+  part.width *= legacySize.width / legSize.width
+  part.height *= legacySize.height / legSize.height
+  part.visual.texture = part.visual.texture.replace(/part_00[89]\.png$/, 'part_012.png')
+}
 saved.parts[0].fill = '#123456'
-const savedParts = JSON.stringify(saved.parts), savedAnimations = JSON.stringify(saved.animations)
-const currentRoster = { enemyArtPackVersion: 18, activeCharacterId: 'saved', characters: [{ id: 'saved', project: saved }] }
+const expectedParts = structuredClone(saved.parts)
+for (const id of ['left-thigh', 'right-thigh']) expectedParts.find(p => p.id === id).height += 6
+for (const [id, texture] of [['left-shin', '008'], ['left-foot', '008'], ['right-shin', '009'], ['right-foot', '009']]) {
+  const part = expectedParts.find(p => p.id === id)
+  const legacySize = componentAssets.gnawer.parts[12]
+  const legSize = componentAssets.gnawer.parts[Number(texture)]
+  part.width *= legSize.width / legacySize.width
+  part.height *= legSize.height / legacySize.height
+  part.visual.texture = part.visual.texture.replace('part_012.png', `part_${texture}.png`)
+}
+const expectedPartsJson = JSON.stringify(expectedParts), savedAnimations = JSON.stringify(saved.animations)
+const currentRoster = { enemyArtPackVersion: 19, activeCharacterId: 'saved', characters: [{ id: 'saved', project: saved }] }
 assert(installEnemyShadowProjects(currentRoster))
 assert.equal(currentRoster.enemyArtPackVersion, ENEMY_ART_PACK_VERSION)
 assert.equal(currentRoster.characters.length, 1)
 assert.equal(currentRoster.activeCharacterId, 'saved')
 assert.equal(saved.name, 'Custom gnawer')
 assert.equal(saved.joints.find(j => j.id === 'root').rotationY, 0)
-assert.equal(saved.joints.find(j => j.id === 'root').y, 6)
+assert.equal(saved.joints.find(j => j.id === 'root').y, 12)
 assert.equal(saved.joints.find(j => j.id === 'pelvis').y, -42)
 assert.equal(saved.joints.find(j => j.id === 'right-hip').y, -12)
 assert.equal(saved.joints.find(j => j.id === 'right-shoulder').z, 14)
-assert.equal(JSON.stringify(saved.parts), savedParts)
+assert.equal(JSON.stringify(saved.parts), expectedPartsJson)
 assert.equal(JSON.stringify(saved.animations), savedAnimations)
 saved.joints.find(j => j.id === 'root').rotationY = 18
 assert.equal(installEnemyShadowProjects(currentRoster), false)
+
+const savedBud = structuredClone(projects.find(p => p.enemyId === 'rootrot-bud'))
+savedBud.joints.find(j => j.id === 'left-root').z = -32
+savedBud.joints.find(j => j.id === 'right-root').z = 32
+savedBud.parts.find(p => p.id === 'left-petal-part').rotationX = -24
+savedBud.parts.find(p => p.id === 'right-petal-part').rotationX = 24
+const budRoster = { enemyArtPackVersion: 20, activeCharacterId: 'bud', characters: [{ id: 'bud', project: savedBud }] }
+assert(installEnemyShadowProjects(budRoster))
+assert.equal(savedBud.joints.find(j => j.id === 'left-root').z, savedBud.joints.find(j => j.id === 'right-root').z)
+assert.equal(savedBud.parts.find(p => p.id === 'left-petal-part').rotationX, savedBud.parts.find(p => p.id === 'right-petal-part').rotationX)
 assert.equal(saved.joints.find(j => j.id === 'root').rotationY, 18)
 console.log(`Enemy completion: ${projects.length} fully textured rigs, ${parts} parts, ${frames} animation frames; folded faces and editor refresh passed.`)
