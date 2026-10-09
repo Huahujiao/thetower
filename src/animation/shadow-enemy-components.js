@@ -1,6 +1,6 @@
 import assets from './enemy-component-assets.json' with { type: 'json' }
-import { coverBeastBarrelCutouts } from './shadow-beast-barrels.js'
-export { coverBeastBarrelCutouts } from './shadow-beast-barrels.js'
+import { fitTransparentBeastPanels } from './shadow-beast-barrels.js'
+export { fitTransparentBeastPanels } from './shadow-beast-barrels.js'
 import { applyEnemyComponentBatch2 } from './shadow-enemy-components-batch2.js'
 export { BATCH2_COMPONENT_ENEMY_IDS } from './shadow-enemy-components-batch2.js'
 import { applyEnemyComponentBatch3 } from './shadow-enemy-components-batch3.js'
@@ -783,7 +783,7 @@ export function applyEnemyComponentArt(project) {
   alignBeetleHornTip(project)
   tightenRotWalkerArms(project)
   restoreFourArmMirrors(project)
-  coverBeastBarrelCutouts(project)
+  fitTransparentBeastPanels(project)
   return project
 }
 

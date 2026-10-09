@@ -614,8 +614,7 @@ const upgradedCrawlers = structuredClone(crawlerRoster)
 assert.equal(installEnemyShadowProjects(crawlerRoster), false)
 assert.deepEqual(crawlerRoster, upgradedCrawlers)
 
-// V37 saved mirrors could be flattened by normalization, and pre-skin barrel
-// projects need their opaque covers even though the torso geometry is current.
+// Repair flattened V37 mirrors and restore anatomy/alpha on V38 solid barrels.
 const repairedCharacters = projects.filter(p => ['moss-colossus', 'revenant-guard', 'redneedle-salamander', 'rot-sac-toad'].includes(p.enemyId)).map(project => ({ id: project.enemyId, project: normalizeShadowProject(project) }))
 for (const { project } of repairedCharacters) {
   if (project.enemyId === 'moss-colossus') {
@@ -623,12 +622,18 @@ for (const { project } of repairedCharacters) {
     for (const id of ['right-arm-shoulder', 'right-secondary-shoulder']) project.joints.find(j => j.id === id).scaleX = .01
   }
   if (project.enemyId === 'revenant-guard') project.joints.find(j => j.id === 'right-secondary-shoulder').scaleX = .01
-  for (const part of project.parts.filter(p => p.visual.backingColor)) {
-    delete part.visual.backingColor; delete part.visual.skinTexture
+  for (const part of project.parts.filter(p => ['back', 'back-mid', 'chest', 'chest-rear', 'rump', 'torso-front-cap'].includes(p.id) || p.id.endsWith('-flank'))) {
+    if (!['redneedle-salamander', 'rot-sac-toad'].includes(project.enemyId)) continue
+    part.visual.backingColor = '#50603a'
+    part.visual.skinTexture = `/assets/enemies/skins-v1/${project.enemyId}.png`
     part.visual.textureFit = 'contain'
-    if (part.id.endsWith('-flank')) part.visual.texture = project.parts.find(p => p.id === (part.id.startsWith('back') ? 'back' : 'chest')).visual.texture
+    if (part.id.endsWith('-flank')) {
+      part.visual.texture = part.visual.skinTexture
+      part.visual.textureFrame.crop = { left: 0, top: 0, width: 1, height: 1 }
+    }
   }
 }
+const solidBeastRoster = { enemyArtPackVersion: 38, activeCharacterId: 'rot-sac-toad', characters: structuredClone(repairedCharacters.filter(c => ['redneedle-salamander', 'rot-sac-toad'].includes(c.project.enemyId))) }
 const repairRoster = { enemyArtPackVersion: 37, activeCharacterId: 'moss-colossus', characters: repairedCharacters }
 assert(installEnemyShadowProjects(repairRoster))
 for (const { project } of repairRoster.characters) {
@@ -639,15 +644,32 @@ for (const { project } of repairRoster.characters) {
   if (['moss-colossus', 'revenant-guard'].includes(project.enemyId)) assert.equal(normalizeShadowProject(project).joints.find(j => j.id === 'right-secondary-shoulder').scaleX, -1)
   if (['redneedle-salamander', 'rot-sac-toad'].includes(project.enemyId)) {
     for (const part of project.parts.filter(p => p.id.endsWith('-flank'))) {
-      assert(part.visual.backingColor && part.visual.skinTexture, 'saved beast side panels need opaque skins')
-      assert.equal(part.visual.texture, part.visual.skinTexture, 'side walls should use solid skins instead of perforated anatomy crops')
-      assert.equal(part.visual.textureFit, 'stretch', 'skins must cover the complete side panel')
+      const center = project.parts.find(p => p.id === part.id.replace(/-(left|right)-flank$/, ''))
+      assert(!part.visual.backingColor && !part.visual.skinTexture, 'beast side panels must preserve transparent anatomy edges')
+      assert.equal(part.visual.texture, center.visual.texture, 'restore anatomy texture lost in V38 saves')
+      assert.equal(part.visual.textureFit, 'stretch')
+      assert.equal(part.visual.textureFrame.crop.top, center.visual.textureFrame.crop.top)
+      assert.equal(part.visual.textureFrame.crop.height, center.visual.textureFrame.crop.height)
+      assert.equal(part.visual.textureFrame.crop.width, center.visual.textureFrame.crop.width * .72, 'use wider inner bands instead of mostly empty outer quarters')
     }
+    assert(project.parts.every(p => !p.visual.backingColor && !p.visual.skinTexture), 'no solid underlay on the back, belly or end panels')
   }
 }
 const repairedSnapshot = structuredClone(repairRoster)
 assert.equal(installEnemyShadowProjects(repairRoster), false)
 assert.deepEqual(repairRoster, repairedSnapshot)
+assert(installEnemyShadowProjects(solidBeastRoster))
+assert.equal(solidBeastRoster.activeCharacterId, 'rot-sac-toad')
+for (const { project } of solidBeastRoster.characters) {
+  const template = normalizeShadowProject(projects.find(p => p.enemyId === project.enemyId))
+  for (const part of normalizeShadowProject(project).parts) {
+    if (part.id.endsWith('-flank')) assert.deepEqual(part.visual, template.parts.find(p => p.id === part.id).visual)
+    assert(!part.visual.backingColor && !part.visual.skinTexture)
+  }
+}
+const transparentSnapshot = structuredClone(solidBeastRoster)
+assert.equal(installEnemyShadowProjects(solidBeastRoster), false)
+assert.deepEqual(solidBeastRoster, transparentSnapshot, 'saved transparent crops must not shrink again on reload')
 
 const savedSalamander = structuredClone(projects.find(p => p.enemyId === 'redneedle-salamander'))
 savedSalamander.parts = savedSalamander.parts.filter(p => !['back-mid', 'back-tail', 'chest-rear', 'torso-front-cap'].includes(p.id) && !p.id.endsWith('-flank'))

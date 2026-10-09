@@ -3,26 +3,33 @@ import { evaluateShadowProject } from './shadow-rig.js'
 
 const clone = value => JSON.parse(JSON.stringify(value))
 
-// Also upgrade saved V35/V36 barrels authored before opaque skins were added.
-export function coverBeastBarrelCutouts(project) {
+// Use wider bands inside the anatomical cutouts for folded side panels. The
+// original outer quarters were mostly transparent, but solid backing hid the
+// intended hollow construction. Keep the source alpha and its irregular edges.
+export function fitTransparentBeastPanels(project) {
   if (!['redneedle-salamander', 'rot-sac-toad'].includes(project.enemyId)) return
   for (const part of project.parts) {
     if (!['back', 'back-mid', 'chest', 'chest-rear', 'rump', 'torso-front-cap'].includes(part.id) && !part.id.endsWith('-flank')) continue
     if (part.visual.type !== 'texture') continue
     part.visual.textureFit = 'stretch'
-    part.visual.backingColor = project.enemyId === 'rot-sac-toad' ? '#50603a' : '#4d3c2d'
-    part.visual.skinTexture = `/assets/enemies/skins-v1/${project.enemyId}.png`
+    delete part.visual.backingColor
+    delete part.visual.skinTexture
     if (part.id.endsWith('-flank')) {
-      // Side walls use an actual opaque image, rather than narrow, perforated
-      // edge crops of the separate chest/back anatomy sheets.
-      part.visual.texture = part.visual.skinTexture
-      part.visual.textureFrame = { columns: 1, rows: 1, column: 0, row: 0,
-        crop: { left: 0, top: 0, width: 1, height: 1 } }
+      const center = project.parts.find(p => p.id === part.id.replace(/-(left|right)-flank$/, ''))
+      if (!center) continue
+      // The center retains the middle half of the original horizontal crop,
+      // including in V38 saves whose side texture was replaced by solid skin.
+      const crop = center.visual.textureFrame.crop
+      const width = crop.width * 2, left = crop.left - crop.width / 2
+      part.visual.texture = center.visual.texture
+      part.visual.textureFrame = clone(center.visual.textureFrame)
+      part.visual.textureFrame.crop = { ...crop,
+        left: left + (part.id.endsWith('-left-flank') ? .14 : .5) * width, width: width * .36 }
     }
   }
 }
 
-// Six longitudinal panels enclose the torso; the same root frame keeps their
+// Six longitudinal panels wrap the torso; the same root frame keeps their
 // cross-section level instead of inheriting the bone solver's shortest roll.
 export function buildBeastBarrel(project) {
   const toad = project.enemyId === 'rot-sac-toad'
@@ -61,8 +68,6 @@ export function buildBeastBarrel(project) {
         x: 0, y: level, z: 0, rotationX: 90, rotationY: 0, rotationZ: turn * 90, attachment: { ...attachment } })
       center.visual.textureFrame.crop = { ...crop, left: crop.left + crop.width * .25, width: crop.width * .5 }
       center.visual.textureFit = 'stretch'
-      center.visual.backingColor = toad ? '#50603a' : '#4d3c2d'
-      center.visual.skinTexture = `/assets/enemies/skins-v1/${project.enemyId}.png`
       for (const [side, sign] of [['left', -1], ['right', 1]]) {
         const flank = clone(original)
         Object.assign(flank, { id: `${id}-${side}-flank`, name: `${original.name} ${side}`, width: slopeWidth,
@@ -70,10 +75,7 @@ export function buildBeastBarrel(project) {
           x: 0, y: level, z: turn * sign * radius / 2,
           rotationX: 90 + (level === top ? 1 : -1) * turn * sign * fold, rotationY: 0, rotationZ: turn * 90,
           attachment: { ...attachment } })
-        flank.visual.textureFrame.crop = { ...crop, left: crop.left + (sign < 0 ? 0 : .75) * crop.width, width: crop.width * .25 }
         flank.visual.textureFit = 'stretch'
-        flank.visual.backingColor = center.visual.backingColor
-        flank.visual.skinTexture = center.visual.skinTexture
         project.parts.push(flank)
         for (const animation of Object.values(project.animations)) {
           if (animation.tracks[`part:${id}`]) animation.tracks[`part:${flank.id}`] = clone(animation.tracks[`part:${id}`])
@@ -94,10 +96,9 @@ export function buildBeastBarrel(project) {
       x: joint.x, y: joint.y + center * Math.cos(pitch), z: joint.z - center * Math.sin(pitch), rotationX: -pitch * 180 / Math.PI, rotationY: 0, rotationZ: 0,
       attachment: { type: 'joint', targetId: 'root', t: .5, followRotation: true } })
     cap.visual.textureFit = 'stretch'
-    cap.visual.backingColor = toad ? '#50603a' : '#4d3c2d'
-    cap.visual.skinTexture = `/assets/enemies/skins-v1/${project.enemyId}.png`
     if (id !== 'rump') project.parts.push(cap)
   }
+  fitTransparentBeastPanels(project)
 }
 
 function fitLimbPart(project, part, toId, from, to, mirrored) {
