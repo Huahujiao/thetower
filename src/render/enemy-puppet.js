@@ -1,5 +1,6 @@
-import { createEnemyShadowProjects, ENEMY_ART, installEnemyShadowProjects } from '../animation/shadow-enemies.js'
-import { evaluateShadowProject, loadShadowRoster } from '../animation/shadow-rig.js'
+import { createEnemyShadowProjects, ENEMY_ART } from '../animation/shadow-enemies.js'
+import { evaluateShadowProject } from '../animation/shadow-rig.js'
+import { resetStaleShadowCache } from '../animation/shadow-editor-cache.js'
 import { projectShadowFaces } from '../animation/shadow-projection.js'
 import * as THREE from 'three'
 import { shadowPartGeometry } from '../animation/shadow-geometry.js'
@@ -29,12 +30,8 @@ function imageFor(url) {
 
 export function prepareEnemyPuppets(onReady) {
   assetReady = onReady
+  resetStaleShadowCache()
   projects = new Map(createEnemyShadowProjects({ includeBoss: true }).map((project) => [project.enemyId, project]))
-  const roster = loadShadowRoster()
-  installEnemyShadowProjects(roster)
-  for (const { project } of roster.characters) {
-    if (project.enemyId && projects.has(project.enemyId)) projects.set(project.enemyId, project)
-  }
   silhouettes = new WeakMap()
   for (const project of projects.values()) for (const part of project.parts) {
     if (part.visual.type === 'texture') imageFor(part.visual.texture)

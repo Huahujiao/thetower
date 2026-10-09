@@ -25,7 +25,7 @@
     "check:playtest-balance": "node scripts/playtest-balance-check.mjs",
     "check:attributes": "node scripts/attribute-items-check.mjs",
     "check:enemies": "node scripts/enemies-check.mjs && node scripts/enemy-speed-check.mjs",
-    "check:animation": "node scripts/enemy-completion-check.mjs && node scripts/enemy-grounding-check.mjs",
+    "check:animation": "node scripts/shadow-editor-cache-check.mjs && node scripts/enemy-completion-check.mjs && node scripts/enemy-grounding-check.mjs",
     "preview": "vite preview",
     "sprites:variants": "python scripts/generate-sprite-resolutions.py",
     "check:rules": "node scripts/v2-check.mjs",

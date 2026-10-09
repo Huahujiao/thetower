@@ -43,7 +43,8 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { SHADOW_ANIMATION_TYPES, SHADOW_PUPPET_STORAGE_KEY, loadShadowProject } from '../animation/shadow-rig.js'
+import { SHADOW_ANIMATION_TYPES, SHADOW_PUPPET_STORAGE_KEY, SHADOW_PUPPET_ROSTER_STORAGE_KEY } from '../animation/shadow-rig.js'
+import { loadCurrentShadowProject } from '../animation/shadow-editor-cache.js'
 import ShadowPuppetStage from './ShadowPuppetStage.vue'
 import '../anime.css'
 
@@ -52,7 +53,7 @@ const COPY = Object.freeze({
   previewHint: '\u9884\u89c8\u9875\u53ea\u8d1f\u8d23\u64ad\u653e\u3002\u90e8\u4ef6\u3001\u8d34\u56fe\u3001\u9aa8\u9abc\u548c\u5173\u952e\u5e27\u5747\u6765\u81ea\u7f16\u8f91\u5668\u4fdd\u5b58\u7684\u540c\u4e00\u4efd\u5de5\u7a0b\u3002',
 })
 
-const project = ref(loadShadowProject())
+const project = ref(loadCurrentShadowProject())
 const animationId = ref('idle')
 const time = ref(0)
 const speed = ref(1)
@@ -100,8 +101,8 @@ function tick(timestamp) {
 }
 
 function onStorage(event) {
-  if (event.key !== SHADOW_PUPPET_STORAGE_KEY) return
-  project.value = loadShadowProject()
+  if (![SHADOW_PUPPET_STORAGE_KEY, SHADOW_PUPPET_ROSTER_STORAGE_KEY, null].includes(event.key)) return
+  project.value = loadCurrentShadowProject()
   time.value = Math.min(time.value, animation.value.duration)
 }
 

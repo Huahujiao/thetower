@@ -19,7 +19,7 @@ import {
   upsertShadowKeyframe,
 } from './shadow-rig.js'
 
-export const ENEMY_ART_PACK_VERSION = 41
+export const ENEMY_ART_PACK_VERSION = 42
 export const ENEMY_ART = Object.freeze({
   gnawer: { family: 'humanoid' },
   'emberwing-moth': { family: 'winged' },
