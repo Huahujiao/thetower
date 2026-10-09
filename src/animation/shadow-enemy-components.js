@@ -150,6 +150,22 @@ export function adjustShellguardStance(project) {
   }
 }
 
+// V29: swing both leaf arms away from the face, keeping their sockets fixed.
+export function adjustRootrotHands(project) {
+  if (project.enemyId !== 'rootrot-bud') return
+  for (const [side, sign] of [['left', -1], ['right', 1]]) {
+    const hand = project.joints.find(joint => joint.id === `${side}-petal`)
+    if (hand) hand.rotationZ -= sign * 12
+  }
+}
+
+// V30: retain a small neck/head depth gap and move the face/eye chain together.
+export function adjustTideCubHeadDepth(project) {
+  if (project.enemyId !== 'tide-shadow-cub') return
+  const head = project.joints.find(joint => joint.id === 'head')
+  if (head) head.z -= 6
+}
+
 export function alignEnemyFrontalSkeleton(project) {
   if (!['gnawer', 'rootrot-bud', 'beetle-guard', 'shellguard'].includes(project.enemyId)) return
   const joints = new Map(project.joints.map(joint => [joint.id, joint]))
@@ -566,6 +582,8 @@ export function applyEnemyComponentArt(project) {
   removeNestSpiderTail(project)
   adjustPatrolHoundRig(project)
   adjustSalamanderBody(project)
+  adjustRootrotHands(project)
+  adjustTideCubHeadDepth(project)
   return project
 }
 

@@ -10,12 +10,14 @@ import { rebuildEnemyGrounding } from '../src/animation/enemy-grounding.js'
 
 const projects = createEnemyShadowProjects({ includeBoss: true })
 function restoreV23Pose(project) {
+  if (project.enemyId === 'rootrot-bud') for (const [side, sign] of [['left', -1], ['right', 1]]) project.joints.find(j => j.id === `${side}-petal`).rotationZ += sign * 12
   if (project.enemyId === 'gnawer') for (const [side, sign] of [['left', -1], ['right', 1]]) {
     project.joints.find(joint => joint.id === `${side}-shoulder`).rotationZ -= sign * 24
     project.joints.find(joint => joint.id === `${side}-elbow`).rotationZ += sign * 58
   }
   if (project.enemyId === 'tide-shadow-cub') {
     project.joints.find(joint => joint.id === 'head').y += 10
+    project.joints.find(joint => joint.id === 'head').z += 6
     project.joints.find(joint => joint.id === 'eye-hinge').z -= 1.5
   }
 }
