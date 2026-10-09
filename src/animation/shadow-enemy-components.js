@@ -139,8 +139,19 @@ export function adjustRotWalkerLimbs(project) {
   if (leftLeg) leftLeg.x += 8
 }
 
+// V26: splay the armor at its own pivot, leaving room for the hanging arms.
+export function adjustShellguardStance(project) {
+  if (project.enemyId !== 'shellguard') return
+  for (const [side, sign] of [['left', -1], ['right', 1]]) {
+    const pauldron = project.parts.find(part => part.id === `${side}-pauldron`)
+    const foot = project.joints.find(joint => joint.id === `${side}-coffin-root-root`)
+    if (pauldron) pauldron.rotationZ += sign * 18
+    if (foot) foot.x += sign * 12
+  }
+}
+
 export function alignEnemyFrontalSkeleton(project) {
-  if (!['gnawer', 'rootrot-bud', 'beetle-guard'].includes(project.enemyId)) return
+  if (!['gnawer', 'rootrot-bud', 'beetle-guard', 'shellguard'].includes(project.enemyId)) return
   const joints = new Map(project.joints.map(joint => [joint.id, joint]))
   const mirror = (left, right, field) => {
     const value = ((left[field] ?? 0) - (right[field] ?? 0)) / 2
@@ -173,7 +184,8 @@ export function alignEnemyFrontalSkeleton(project) {
 function rigImageSize(project, number) {
   const pairs = project.enemyId === 'gnawer' ? [[4, 5], [13, 14], [8, 9], [10, 11]]
     : project.enemyId === 'rootrot-bud' ? [[2, 3], [13, 14]]
-      : project.enemyId === 'beetle-guard' ? [[1, 2], [15, 20], [16, 19], [17, 18]] : []
+      : project.enemyId === 'beetle-guard' ? [[1, 2], [15, 20], [16, 19], [17, 18]]
+        : project.enemyId === 'shellguard' ? [[1, 2], [7, 9], [15, 16], [17, 18], [11, 13]] : []
   const pair = pairs.find(pair => pair.includes(number))
   const source = assets[project.enemyId].parts
   if (!pair) return source[number]
@@ -537,6 +549,7 @@ export function applyEnemyComponentArt(project) {
   adjustEnemyComponentSpacing(project)
   adjustEnemyUpperBodyPose(project)
   adjustRotWalkerLimbs(project)
+  adjustShellguardStance(project)
   return project
 }
 

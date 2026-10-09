@@ -87,7 +87,7 @@ for (const source of projects) {
       assert((position(`${side}-root-tip`)[12] - position(`${side}-root`)[12]) * outward > 0, 'rootrot-bud roots should spread outward')
     }
   }
-  if (['gnawer', 'rootrot-bud', 'beetle-guard'].includes(p.enemyId)) assertFrontalSkeleton(p)
+  if (['gnawer', 'rootrot-bud', 'beetle-guard', 'shellguard'].includes(p.enemyId)) assertFrontalSkeleton(p)
   assert(!p.name.endsWith('\u9aa8\u67b6\u9884\u89c8'), `${p.enemyId}: preview suffix in name`)
   const joints = new Set(p.joints.map(j => j.id))
   assert.equal(joints.size, p.joints.length, `${p.enemyId}: duplicate joints`)
@@ -289,4 +289,42 @@ assert.deepEqual(keptGnawer, expectedGnawer, 'V25 must not replay previous arm o
 const cleaned = structuredClone(cleanupRoster)
 assert.equal(installEnemyShadowProjects(cleanupRoster), false)
 assert.deepEqual(cleanupRoster, cleaned, 'V25 upgrade must be idempotent')
+
+// V25 -> V26 mirrors the shellguard's complete rig, splays only the armor
+// and widens the grounded stance without replaying previous upgrades.
+const shellguard = structuredClone(projects.find(p => p.enemyId === 'shellguard'))
+for (const [side, sign] of [['left', -1], ['right', 1]]) {
+  shellguard.parts.find(p => p.id === `${side}-pauldron`).rotationZ -= sign * 18
+  shellguard.joints.find(j => j.id === `${side}-coffin-root-root`).x -= sign * 12
+}
+shellguard.joints.find(j => j.id === 'left-shoulder').z = -14
+shellguard.joints.find(j => j.id === 'right-shoulder').z = 6
+shellguard.joints.find(j => j.id === 'right-wrist').y += 2
+shellguard.parts.find(p => p.id === 'right-gate-art').width += 3
+shellguard.parts[0].fill = '#456789'
+const shellguardMotion = JSON.stringify(shellguard.animations)
+const retainedWalker = structuredClone(expectedWalker)
+const retainedBackup = { ...structuredClone(expectedWalker), enemyId: null, name: 'Later backup \u00b7 \u65e7\u7248\u5907\u4efd' }
+const shellguardRoster = { enemyArtPackVersion: 25, activeCharacterId: 'shellguard', characters: [
+  { id: 'later-blank', project: createDefaultShadowProject() },
+  { id: 'shellguard', project: shellguard }, { id: 'walker', project: retainedWalker },
+  { id: 'later-backup', project: retainedBackup },
+] }
+assert(installEnemyShadowProjects(shellguardRoster))
+assert.equal(shellguardRoster.enemyArtPackVersion, ENEMY_ART_PACK_VERSION)
+assert.equal(shellguardRoster.activeCharacterId, 'shellguard')
+assertFrontalSkeleton(shellguard)
+assert.equal(shellguard.grounding.supports.length, 2)
+assert.equal(shellguard.parts[0].fill, '#456789')
+assert.equal(JSON.stringify(shellguard.animations), shellguardMotion)
+for (const [side, sign] of [['left', -1], ['right', 1]]) {
+  assert.equal(shellguard.joints.find(j => j.id === `${side}-coffin-root-root`).x, sign * 33)
+  assert.equal(shellguard.parts.find(p => p.id === `${side}-pauldron`).rotationZ, sign * 18)
+  assert(shellguard.joints.find(j => j.id === `${side}-shoulder`).rotationZ === 0, 'splaying armor must not turn the arm chain')
+}
+assert.deepEqual(retainedWalker, expectedWalker, 'V26 must not widen the walker again')
+assert.equal(shellguardRoster.characters.length, 4, 'V26 must not repeat the one-time list cleanup')
+const upgradedShellguard = structuredClone(shellguardRoster)
+assert.equal(installEnemyShadowProjects(shellguardRoster), false)
+assert.deepEqual(shellguardRoster, upgradedShellguard, 'shellguard stance must not accumulate on reload')
 console.log(`Enemy completion: ${projects.length} fully textured rigs, ${parts} parts, ${frames} animation frames; folded faces and editor refresh passed.`)
