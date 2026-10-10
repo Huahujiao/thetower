@@ -24,10 +24,11 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { BufferGeometry, Color, DirectionalLight, DoubleSide, EdgesGeometry, Group, HemisphereLight, Line, LineBasicMaterial, LineSegments, Mesh, MeshBasicMaterial, MeshLambertMaterial, OrthographicCamera, PerspectiveCamera, PlaneGeometry, Raycaster, Scene, Shape, ShapeGeometry, SphereGeometry, SRGBColorSpace, TextureLoader, TOUCH, Vector2, Vector3, WebGLRenderer } from 'three'
+import { BufferGeometry, Color, DirectionalLight, DoubleSide, EdgesGeometry, Group, HemisphereLight, Line, LineBasicMaterial, LineSegments, Mesh, MeshBasicMaterial, MeshLambertMaterial, OrthographicCamera, PerspectiveCamera, PlaneGeometry, Raycaster, Scene, SphereGeometry, SRGBColorSpace, TextureLoader, TOUCH, Vector2, Vector3, WebGLRenderer } from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { evaluateShadowProject, shadowMatrixPosition } from '../animation/shadow-rig.js'
-import { shadowPartGeometry, shadowPartShape } from '../animation/shadow-geometry.js'
+import { shadowPartGeometry } from '../animation/shadow-geometry.js'
+import { shadowTextureGeometry } from '../animation/shadow-texture-geometry.js'
 import { applyTextureBacking } from '../render/texture-backing.js'
 import { FLOOR_URLS, floorTextureIndex } from '../render/board-textures.js'
 import { DEFAULT_CAMERA_ELEVATION } from '../render/camera-view.js'
@@ -262,44 +263,6 @@ function onOrbitChange() {
   render()
 }
 
-function textureGeometry(part, texture) {
-  const image = texture?.image
-  const frame = part.visual.textureFrame
-  const crop = frame?.crop || { left: 0, top: 0, width: 1, height: 1 }
-  const imageWidth = (image?.naturalWidth || image?.width || part.width) / (frame?.columns || 1) * crop.width
-  const imageHeight = (image?.naturalHeight || image?.height || part.height) / (frame?.rows || 1) * crop.height
-  const imageRatio = imageWidth / imageHeight
-  const boxRatio = part.width / part.height
-  const cover = part.visual.textureFit === 'cover'
-  const contain = !cover && part.visual.textureFit !== 'stretch'
-  const width = contain && imageRatio < boxRatio ? part.height * imageRatio : part.width
-  const height = contain && imageRatio > boxRatio ? part.width / imageRatio : part.height
-  const left = -part.width * part.pivotX + (part.width - width) / 2
-  const top = part.height * part.pivotY - (part.height - height) / 2
-  const shape = part.shape === 'hexagon' ? shadowPartShape(part) : new Shape()
-  if (part.shape !== 'hexagon') {
-    shape.moveTo(left, top)
-    shape.lineTo(left + width, top)
-    shape.lineTo(left + width, top - height)
-    shape.lineTo(left, top - height)
-    shape.closePath()
-  }
-  const geometry = new ShapeGeometry(shape)
-  const uv = geometry.attributes.uv
-  const positions = geometry.attributes.position
-  const cropX = cover && imageRatio > boxRatio ? (1 - boxRatio / imageRatio) / 2 : 0
-  const cropY = cover && imageRatio < boxRatio ? (1 - imageRatio / boxRatio) / 2 : 0
-  for (let index = 0; index < uv.count; index += 1) {
-    const u = (positions.getX(index) - left) / width
-    const v = 1 + (positions.getY(index) - top) / height
-    const frameU = cropX + u * (1 - 2 * cropX)
-    const frameV = cropY + v * (1 - 2 * cropY)
-    uv.setXY(index, frame ? (frame.column + crop.left + frameU * crop.width) / frame.columns : frameU,
-      frame ? 1 - (frame.row + crop.top + (1 - frameV) * crop.height) / frame.rows : frameV)
-  }
-  return geometry
-}
-
 function addObject(object, kind = null, id = null) {
   object.userData = { kind, id }
   figureGroup.add(object)
@@ -342,7 +305,7 @@ function drawScene() {
       texture.colorSpace = SRGBColorSpace
       textureCache.set(part.visual.texture, texture)
     }
-    const geometry = textured ? textureGeometry(part, textureCache.get(part.visual.texture)) : cachedPartGeometry(part)
+    const geometry = textured ? shadowTextureGeometry(part, textureCache.get(part.visual.texture)) : cachedPartGeometry(part)
     const Material = textured ? MeshBasicMaterial : MeshLambertMaterial
     const material = new Material({ color: part.fill, side: DoubleSide, transparent: true, opacity: entry.opacity, depthWrite: true })
     if (textured) {

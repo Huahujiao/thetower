@@ -1,121 +1,77 @@
 <template>
-  <main class="anime-page anime-preview-page">
-    <header class="anime-topbar anime-preview-topbar">
-      <div>
-        <a class="anime-back" href="/animeedit" :aria-label="COPY.back">←</a>
-        <div><span class="anime-kicker">SHADOW PUPPET PLAYER</span><h1>{{ project.name }}</h1></div>
-      </div>
-      <div class="anime-top-actions">
-        <label><input v-model="showBones" type="checkbox"> {{ COPY.showBones }}</label>
-        <label>{{ COPY.speed }} <select v-model.number="speed"><option :value="0.5">0.5×</option><option :value="1">1×</option><option :value="1.5">1.5×</option><option :value="2">2×</option></select></label>
-        <a class="anime-button primary" href="/animeedit">{{ COPY.edit }}</a>
-      </div>
+  <main class="anime-page anime-gallery-page">
+    <header class="anime-topbar anime-gallery-topbar">
+      <a class="anime-back" href="/" :aria-label="COPY.back">←</a>
+      <div><h1>{{ COPY.title }}</h1><p>{{ COPY.hint }}</p></div>
+      <span class="anime-enemy-count">{{ projects.length }} {{ COPY.enemies }}</span>
     </header>
-
-    <section class="anime-preview-content">
-      <div class="anime-preview-stage">
-        <ShadowPuppetStage
-          :project="project" :animation-id="animationId" :time="time"
-          :show-bones="showBones" :show-grid="false"
-          :joint-interactive="false" :bone-interactive="false" :part-interactive="false" interactive
-        />
+    <section class="anime-gallery-scroll" :aria-label="COPY.title">
+      <div class="anime-enemy-grid">
+        <a v-for="(project, index) in projects" :key="project.enemyId" class="anime-enemy-card" :href="enemyDetailHref(project.enemyId)">
+          <div class="anime-enemy-portrait">
+            <img v-if="thumbnails[project.enemyId]" :src="thumbnails[project.enemyId]" :alt="`${project.name}${COPY.front}`" decoding="async">
+            <span v-else class="anime-thumbnail-placeholder">{{ failed[project.enemyId] ? COPY.failed : COPY.loading }}</span>
+            <span class="anime-enemy-number">{{ String(index + 1).padStart(2, '0') }}</span>
+          </div>
+          <h2>{{ project.name }}</h2>
+        </a>
       </div>
-      <div class="anime-preview-controls">
-        <div class="anime-animation-tabs">
-          <button
-            v-for="type in SHADOW_ANIMATION_TYPES" :key="type.id" type="button"
-            :class="{ active: animationId === type.id }" @click="playAnimation(type.id)"
-          >
-            {{ type.label }}
-          </button>
-        </div>
-        <div class="anime-preview-progress"><span :style="{ width: `${progress}%` }"></span></div>
-        <div class="anime-playback-row">
-          <button type="button" class="anime-play-button" @click="togglePlayback">{{ playing ? COPY.pause : COPY.play }}</button>
-          <button type="button" @click="restart">{{ COPY.restart }}</button>
-          <span>{{ Math.round(time) }} / {{ animation.duration }} ms</span>
-        </div>
-        <p>{{ COPY.previewHint }}</p>
-      </div>
+      <button v-if="Object.keys(failed).length" class="anime-gallery-retry" type="button" @click="generateThumbnails">{{ COPY.retry }}</button>
     </section>
   </main>
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { SHADOW_ANIMATION_TYPES, SHADOW_PUPPET_STORAGE_KEY, SHADOW_PUPPET_ROSTER_STORAGE_KEY } from '../animation/shadow-rig.js'
-import { loadCurrentShadowProject } from '../animation/shadow-editor-cache.js'
-import ShadowPuppetStage from './ShadowPuppetStage.vue'
+import { markRaw, onBeforeUnmount, onMounted, ref } from 'vue'
+import { createEnemyPreviewModels, enemyDetailHref } from '../animation/shadow-preview-models.js'
+import { createEnemyThumbnailRenderer } from '../render/enemy-thumbnails.js'
 import '../anime.css'
 
 const COPY = Object.freeze({
-  back: '\u8fd4\u56de\u7f16\u8f91\u5668', showBones: '\u663e\u793a\u9aa8\u9abc', speed: '\u901f\u5ea6', edit: '\u7f16\u8f91', play: '\u64ad\u653e', pause: '\u6682\u505c', restart: '\u91cd\u64ad',
-  previewHint: '\u9884\u89c8\u9875\u53ea\u8d1f\u8d23\u64ad\u653e\u3002\u90e8\u4ef6\u3001\u8d34\u56fe\u3001\u9aa8\u9abc\u548c\u5173\u952e\u5e27\u5747\u6765\u81ea\u7f16\u8f91\u5668\u4fdd\u5b58\u7684\u540c\u4e00\u4efd\u5de5\u7a0b\u3002',
+  title: '\u654c\u4eba\u9884\u89c8', back: '\u8fd4\u56de\u9996\u9875', enemies: '\u4e2a\u654c\u4eba',
+  hint: '\u6b63\u9762\u7ad9\u59ff\u00b7\u70b9\u51fb\u67e5\u770b\u4e09\u7ef4\u3001\u52a8\u4f5c\u4e0e\u90e8\u4ef6',
+  front: '\u6b63\u9762\u56fe', loading: '\u52a0\u8f7d\u4e2d', failed: '\u7f29\u7565\u56fe\u52a0\u8f7d\u5931\u8d25', retry: '\u91cd\u8bd5\u7f29\u7565\u56fe',
 })
+const projects = markRaw(createEnemyPreviewModels())
+const thumbnails = ref({}), failed = ref({})
+let thumbnailRenderer = null, cancelled = false, generating = false
 
-const project = ref(loadCurrentShadowProject())
-const animationId = ref('idle')
-const time = ref(0)
-const speed = ref(1)
-const playing = ref(true)
-const showBones = ref(false)
-let frameId = 0
-let previousTimestamp = 0
-
-const animation = computed(() => project.value.animations[animationId.value])
-const progress = computed(() => animation.value.duration ? time.value / animation.value.duration * 100 : 0)
-
-function playAnimation(id) {
-  animationId.value = id
-  time.value = 0
-  playing.value = true
-  previousTimestamp = window.performance.now()
-}
-
-function restart() {
-  time.value = 0
-  playing.value = true
-  previousTimestamp = window.performance.now()
-}
-
-function togglePlayback() {
-  if (!playing.value && time.value >= animation.value.duration) time.value = 0
-  playing.value = !playing.value
-  previousTimestamp = window.performance.now()
-}
-
-function tick(timestamp) {
-  if (playing.value) {
-    const delta = Math.min(64, timestamp - previousTimestamp) * speed.value
-    const next = time.value + delta
-    if (next >= animation.value.duration) {
-      if (animation.value.loop) time.value = next % animation.value.duration
-      else {
-        time.value = animation.value.duration
-        playing.value = false
+async function generateThumbnails() {
+  if (generating) return
+  generating = true
+  failed.value = {}
+  try {
+    thumbnailRenderer = createEnemyThumbnailRenderer()
+    for (const project of projects) {
+      if (cancelled) break
+      if (thumbnails.value[project.enemyId]) continue
+      try {
+        const image = await thumbnailRenderer.render(project)
+        if (!cancelled && image) thumbnails.value[project.enemyId] = image
+      } catch {
+        if (!cancelled) failed.value[project.enemyId] = true
       }
-    } else time.value = next
+      await new Promise(resolve => window.requestAnimationFrame(resolve))
+    }
+  } catch {
+    if (!cancelled) for (const project of projects) if (!thumbnails.value[project.enemyId]) failed.value[project.enemyId] = true
+  } finally {
+    thumbnailRenderer?.dispose()
+    thumbnailRenderer = null
+    generating = false
   }
-  previousTimestamp = timestamp
-  frameId = window.requestAnimationFrame(tick)
-}
-
-function onStorage(event) {
-  if (![SHADOW_PUPPET_STORAGE_KEY, SHADOW_PUPPET_ROSTER_STORAGE_KEY, null].includes(event.key)) return
-  project.value = loadCurrentShadowProject()
-  time.value = Math.min(time.value, animation.value.duration)
 }
 
 onMounted(() => {
-  document.body.classList.add('anime-body')
-  window.addEventListener('storage', onStorage)
-  previousTimestamp = window.performance.now()
-  frameId = window.requestAnimationFrame(tick)
+  document.documentElement.classList.add('anime-html')
+  document.body.classList.add('anime-body', 'anime-review-body')
+  document.title = COPY.title
+  generateThumbnails()
 })
-
 onBeforeUnmount(() => {
-  document.body.classList.remove('anime-body')
-  window.removeEventListener('storage', onStorage)
-  window.cancelAnimationFrame(frameId)
+  cancelled = true
+  thumbnailRenderer?.dispose()
+  document.documentElement.classList.remove('anime-html')
+  document.body.classList.remove('anime-body', 'anime-review-body')
 })
 </script>

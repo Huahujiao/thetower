@@ -74,10 +74,14 @@ export function applyEnemyComponentBatch3(p, { joint, imagePart, pixelLink, keys
     const stemStretch = 1.35
     art('root-ball', '棘壳根球', 13, 'root', .26, [.5, .44], { layer: 5 })
     j('lower-stem', '下棘茎', 'root', [0, 7, -2])
-    art('lower-stem-art', '下棘茎', 6, 'lower-stem', .22, [.5, .94], { crop: [0, .51, 1, .49], layer: 6 }).height *= stemStretch
+    const lowerStem = art('lower-stem-art', '下棘茎', 6, 'lower-stem', .22, [.5, .94], { crop: [0, .51, 1, .49], layer: 6 })
+    lowerStem.height *= stemStretch
+    lowerStem.visual.textureFit = 'stretch'
     link('upper-stem', '上棘茎', 'lower-stem', 6, .22, [.5, .94], [.5, .54])
     p.joints.find(v => v.id === 'upper-stem').y *= stemStretch
-    art('upper-stem-art', '上棘茎', 6, 'upper-stem', .22, [.5, .46], { crop: [0, 0, 1, .48], layer: 7 }).height *= stemStretch
+    const upperStem = art('upper-stem-art', '上棘茎', 6, 'upper-stem', .22, [.5, .46], { crop: [0, 0, 1, .48], layer: 7 })
+    upperStem.height *= stemStretch
+    upperStem.visual.textureFit = 'stretch'
     link('crown', '花冠根', 'upper-stem', 6, .22, [.5, .46], [.5, .08])
     p.joints.find(v => v.id === 'crown').y *= stemStretch
     art('crown-art', '棘壳花冠与口环', 3, 'crown', .29, [.5, .78], { layer: 8 })
