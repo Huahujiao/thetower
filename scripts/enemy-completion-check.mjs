@@ -293,8 +293,8 @@ for (const source of projects) {
     assert.equal(used.size, 23, 'moss colossus should use all 23 anatomy assets')
     assert(p.parts.find(part => part.id === 'torso').visual.texture.endsWith('/part_001.png'), 'moss chest face must be the main torso')
     const mossRest = evaluateShadowProject(p, null, 0, { raw: true })
-    assert(Math.abs(mossRest.jointsById.get('head').matrix.elements[12] - textureSocket(mossRest.parts.find(p => p.part.id === 'torso'), .52, .07).x) < 1e-6,
-      'moss small head should line up with the painted neck socket')
+    assert(Math.abs(mossRest.jointsById.get('neck').matrix.elements[12] - textureSocket(mossRest.parts.find(p => p.part.id === 'torso'), .52, .07).x) < 1e-6,
+      'moss neck should line up with the painted neck socket')
     assert(mossRest.jointsById.get('exposed-spine').matrix.elements[14] < mossRest.parts.find(p => p.part.id === 'torso').matrix.elements[14], 'moss spine should sit behind the chest')
     for (const id of ['right-arm-shoulder']) assert.equal(p.joints.find(j => j.id === id).scaleX, -1,
       'saved moss right arms should retain their full mirrored width')

@@ -31,6 +31,8 @@ export function connectMossAnatomy(project) {
   const torso = project.parts.find(p => p.id === 'torso')
   // Center the separate face on the neck socket painted into the chest.
   project.joints.find(j => j.id === 'neck').x = (.52 - torso.pivotX) * torso.width
+  // A small character-left offset carries the face and attached jaw together.
+  project.joints.find(j => j.id === 'head').x = 3
   for (const [side, sign] of [['left', 1], ['right', -1]]) {
     // The exchanged cutouts receive left clockwise / right counterclockwise
     // quarter-turns from their previous +90 / -90 carrying orientations.
