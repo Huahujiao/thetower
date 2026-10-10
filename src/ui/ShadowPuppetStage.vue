@@ -1,6 +1,6 @@
 <template>
   <div ref="host" class="shadow-stage" :class="{ interactive }" :aria-label="project.name">
-    <div class="shadow-view-controls" @pointerdown.stop>
+    <div v-if="showViewControls" class="shadow-view-controls" @pointerdown.stop>
       <button type="button" :class="{ active: orbitMode }" @click="toggle3D">3D</button>
       <button type="button" @click="resetView">{{ '\u6b63\u9762' }}</button>
     </div>
@@ -36,6 +36,7 @@ import { DEFAULT_CAMERA_ELEVATION } from '../render/camera-view.js'
 const props = defineProps({
   project: { type: Object, required: true },
   defaultOrbitMode: { type: Boolean, default: false },
+  showViewControls: { type: Boolean, default: true },
   animationId: { type: String, default: null },
   time: { type: Number, default: 0 },
   selectedKind: { type: String, default: null },

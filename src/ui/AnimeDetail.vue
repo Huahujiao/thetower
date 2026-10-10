@@ -16,7 +16,7 @@
           <label><input v-model="showParts" type="checkbox">{{ COPY.textures }}</label>
         </div>
         <ShadowPuppetStage
-          :project="project" default-orbit-mode :animation-id="animationId" :time="time"
+          :project="project" default-orbit-mode :show-view-controls="false" :animation-id="animationId" :time="time"
           :show-bones="showBones" :show-parts="showParts" :show-grid="false"
           :joint-interactive="false" :bone-interactive="false" :part-interactive="false" interactive
         />
@@ -38,7 +38,6 @@
             <label>{{ COPY.speed }}<select v-model.number="speed"><option :value="0.25">0.25×</option><option :value="0.5">0.5×</option><option :value="1">1×</option><option :value="1.5">1.5×</option><option :value="2">2×</option></select></label>
             <label><input v-model="loop" type="checkbox">{{ COPY.loop }}</label>
           </div>
-          <p>{{ COPY.viewHint }}</p>
         </div>
         <div v-else id="parts-panel" class="anime-detail-parts-scroll" role="tabpanel" aria-labelledby="parts-tab">
           <div class="anime-detail-parts-grid">
@@ -75,7 +74,6 @@ const COPY = Object.freeze({
   view: '\u4e09\u7ef4\u89c6\u56fe', bones: '\u9aa8\u67b6', textures: '\u8d34\u56fe', tools: '\u67e5\u770b\u529f\u80fd',
   actions: '\u52a8\u4f5c\u64ad\u653e', parts: '\u90e8\u4ef6\u5217\u8868', stand: '\u7ad9\u59ff', progress: '\u8fdb\u5ea6',
   play: '\u64ad\u653e', pause: '\u6682\u505c', restart: '\u91cd\u64ad', speed: '\u901f\u5ea6', loop: '\u5faa\u73af',
-  viewHint: '\u62d6\u52a8\u65cb\u8f6c\uff0c\u6eda\u8f6e\u6216\u53cc\u6307\u7f29\u653e\uff1b\u70b9\u51fb\u300c\u6b63\u9762\u300d\u8fd4\u56de\u6b63\u9762\u89c6\u56fe\u3002',
   close: '\u5173\u95ed', source: '\u67e5\u770b\u539f\u59cb\u8d34\u56fe',
 })
 const projects = markRaw(createEnemyPreviewModels())
