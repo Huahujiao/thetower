@@ -339,10 +339,16 @@ for (const source of projects) {
     const lower = rest.parts.find(e => e.part.id === 'lower-stem-art')
     const upper = rest.parts.find(e => e.part.id === 'upper-stem-art')
     const eye = rest.parts.find(e => e.part.id === 'eye-art')
-    const lowerTop = textureSocket(lower, .5, .51).y
-    const upperBottom = textureSocket(upper, .5, .48).y
-    assert(eye.matrix.elements[13] - eye.part.height / 2 > lowerTop && eye.matrix.elements[13] + eye.part.height / 2 < upperBottom,
-      'flower eye must fit between the two stem rims without covering either segment')
+    const lowerSocket = textureSocket(lower, .59, .51)
+    const upperSocket = textureSocket(upper, .5, .48)
+    const lowerTop = lowerSocket.y
+    const upperBottom = upperSocket.y
+    const lowerOverlap = lowerTop - (eye.matrix.elements[13] - eye.part.height / 2)
+    const upperOverlap = eye.matrix.elements[13] + eye.part.height / 2 - upperBottom
+    assert(lowerOverlap > 0 && lowerOverlap < 4 && upperOverlap > 0 && upperOverlap < 4,
+      'flower stem rims must lightly grip the eye without gaps or burying it')
+    assert(Math.abs(lowerSocket.x - eye.matrix.elements[12]) < 1e-6 && Math.abs(upperSocket.x - eye.matrix.elements[12]) < 1e-6,
+      'flower painted stem sockets must align with the eye from both front and back')
     assert.equal(p.bones.find(b => b.toJointId === 'eye').fromJointId, 'stem-eye-core', 'flower eye must leave the mouth in the crown exposed')
     assert.equal(p.bones.find(b => b.toJointId === 'upper-stem').fromJointId, 'stem-eye-core', 'raised flower crown should follow the inserted stem socket')
   }

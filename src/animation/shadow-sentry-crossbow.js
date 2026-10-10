@@ -53,11 +53,11 @@ export function raiseSentryCrossbow(project) {
   project.joints.push(createShadowJoint({ id: 'crossbow-arm-plane', name: '\u5e73\u4e3e\u624b\u81c2\u65b9\u5411', rotationZ: -90 }))
   project.bones.push(createShadowBone({ id: 'crossbow-arm-plane-bone', fromJointId: 'crossbow-hold', toJointId: 'crossbow-arm-plane' }))
   const weapon = joints.get('weapon')
-  Object.assign(weapon, { x: 0, z: 92, rotationX: 100, rotationY: 0, rotationZ: 0 })
+  Object.assign(weapon, { x: 0, z: 104, rotationX: 100, rotationY: 0, rotationZ: 0 })
   project.bones.find(b => b.toJointId === 'weapon').fromJointId = 'crossbow-hold'
   const fullWidth = project.parts.find(p => p.id === 'bow-stock').width / .28
   const fullHeight = project.parts.find(p => p.id === 'bow-stock').height / .79
-  const shoulderHeight = 30, upperArmDrop = 24, palmClearance = 4
+  const shoulderHeight = 30, upperArmDrop = 40, palmClearance = 4
   const clawRotation = { rotationX: -75, rotationY: 0, rotationZ: 0 }
   const referenceClaw = project.parts.find(p => p.id === 'left-arm-end')
   const palmDrop = new Vector3(0, -.10 * referenceClaw.height / referenceClaw.visual.textureFrame.crop.height, 0)
@@ -75,7 +75,8 @@ export function raiseSentryCrossbow(project) {
     const grip = new Vector3(sign * .42 * fullWidth, (.32 - .21) * fullHeight, 0).applyMatrix4(weaponMatrix)
     Object.assign(shoulder, { x: sign * 40, y: shoulderHeight, z: 8, rotationX: 0, rotationY: 0, rotationZ: 0 })
     project.bones.find(b => b.toJointId === shoulder.id).fromJointId = 'crossbow-hold'
-    Object.assign(elbow, { x: sign * 20, y: -upperArmDrop, z: 32, rotationX: 0, rotationY: 0, rotationZ: 0 })
+    // About thirty degrees from character-down, with a slight outward bend.
+    Object.assign(elbow, { x: sign * 12, y: -upperArmDrop, z: 20, rotationX: 0, rotationY: 0, rotationZ: 0 })
     // The wrist sits above and behind the palm. Pitch the claw downward onto
     // the bow independently of the level forearm, retaining a seam.
     const claw = project.parts.find(p => p.id === `${side}-arm-end`)

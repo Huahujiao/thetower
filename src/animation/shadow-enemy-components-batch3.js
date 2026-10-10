@@ -73,8 +73,10 @@ export function applyEnemyComponentBatch3(p, { joint, imagePart, pixelLink, keys
   if (p.enemyId === 'thorn-shell-flower') {
     const stemStretch = 1.35
     art('root-ball', '棘壳根球', 13, 'root', .26, [.5, .44], { layer: 5 })
-    j('lower-stem', '下棘茎', 'root', [0, 7, -2])
-    const lowerStem = art('lower-stem-art', '下棘茎', 6, 'lower-stem', .22, [.5, .94], { crop: [0, .51, 1, .49], layer: 6 })
+    j('lower-stem', '下棘茎', 'root', [0, 19, -2])
+    // The lower segment's painted socket is right of the PNG midpoint.
+    // Center that socket on the eye and upper stem instead of the image box.
+    const lowerStem = art('lower-stem-art', '下棘茎', 6, 'lower-stem', .22, [.59, .94], { crop: [0, .51, 1, .49], layer: 6 })
     lowerStem.height *= stemStretch
     lowerStem.visual.textureFit = 'stretch'
     // Insert the eye between the painted stem rims. The upper stem follows
@@ -82,7 +84,8 @@ export function applyEnemyComponentBatch3(p, { joint, imagePart, pixelLink, keys
     j('stem-eye-core', '\u830e\u95f4\u773c\u5ea7', 'lower-stem', [0, 0, 0])
     j('eye', '花眼', 'stem-eye-core', [0, 0, 2.4])
     const eye = art('eye-art', '花眼', 5, 'eye', .27, [.5, .5], { layer: 11 })
-    const eyeClearance = 2
+    // Let both rims grip the eye with a shallow overlap, leaving no air gap.
+    const eyeClearance = -3
     p.joints.find(v => v.id === 'stem-eye-core').y = lowerStem.pivotY * lowerStem.height + eye.height / 2 + eyeClearance
     j('upper-stem', '上棘茎', 'stem-eye-core', [0, eye.height / 2 + eyeClearance, .3])
     const upperStem = art('upper-stem-art', '上棘茎', 6, 'upper-stem', .22, [.5, .46], { crop: [0, 0, 1, .48], layer: 7 })
