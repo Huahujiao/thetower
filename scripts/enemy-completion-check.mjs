@@ -334,6 +334,60 @@ for (const source of projects) {
       assertMossConnections(pose)
     }
   }
+  if (p.enemyId === 'water-leech-swarm') {
+    assert(p.grounding.floating, 'swimming leech members must retain their individual heights instead of being independently pushed onto the floor')
+    const members = p.joints.filter(j => /^leech-\d+$/.test(j.id))
+    assert(members.length >= 6, 'water leech swarm should contain multiple complete worms rather than three superimposed cutouts')
+    const rest = evaluateShadowProject(p, null, 0, { raw: true })
+    const positions = []
+    for (const member of members) {
+      const axis = rest.jointsById.get(member.id).matrix
+      assert(new Vector3(-1, 0, 0).transformDirection(axis).x < -.9, 'water leech members must face negative X with only small individual angles')
+      positions.push(new Vector3().setFromMatrixPosition(axis))
+      for (const suffix of ['head-art', 'body-upper', 'body-segment-1', 'tail-art', 'fin-art', 'belly-art']) {
+        assert(p.parts.some(part => part.id === `${member.id}-${suffix}`), 'each water leech must have its own complete anatomy')
+      }
+    }
+    for (let i = 0; i < positions.length; i++) for (let k = i + 1; k < positions.length; k++) {
+      assert(Math.hypot(positions[i].x - positions[k].x, positions[i].y - positions[k].y) > 50, 'water leech members must remain spread out in the frontal view')
+    }
+    assert.equal(new Set(p.parts.map(part => part.visual.texture)).size, 16, 'water leech swarm should use the fin, belly and wake cutouts as well as the heads and bodies')
+  }
+  if (p.enemyId === 'whirlpool-eye-sac') {
+    assert(p.grounding.floating, 'vortex sac should float without floor constraints collapsing its radial layout')
+    const rest = evaluateShadowProject(p, null, 0)
+    for (const id of ['vortex-sac', 'eye-ring-art', 'eye-art', 'veil-art', 'pendant-art']) {
+      assert(Math.abs(rest.parts.find(e => e.part.id === id).matrix.elements[12]) < 1e-6,
+        'vortex sac main body and central ornaments must stay centered independently of its side tethers')
+    }
+    assert.equal(new Set(p.parts.map(part => part.visual.texture)).size, 13,
+      'vortex sac should expose the original crest, crescent, pendant and all four fins, excluding the tiny slicer scrap')
+    const body = rest.parts.find(e => e.part.id === 'vortex-sac')
+    const eye = rest.parts.find(e => e.part.id === 'eye-art')
+    assert(eye.matrix.elements[13] > body.matrix.elements[13] + body.part.height / 2,
+      'eye crown should rise above the sac instead of hiding the vortex behind stacked circles')
+    for (const id of ['right-fin-upper', 'left-fin-upper', 'right-lower-fin-upper', 'left-lower-fin-upper']) {
+      const fin = rest.parts.find(e => e.part.id === id)
+      assert(Math.abs(fin.matrix.elements[12]) > body.part.width * .38,
+        'four fins should spread to the sides rather than disappear behind the central sac')
+    }
+    for (const [action, animation] of Object.entries(p.animations)) for (let i = 0; i <= 4; i++) {
+      const pose = evaluateShadowProject(p, action, animation.duration * i / 4)
+      const rootInverse = pose.jointsById.get('root').matrix.clone().invert()
+      for (const suffix of ['', '-hinge-1', '-hinge-2']) {
+        const left = new Vector3().setFromMatrixPosition(pose.jointsById.get(`left-tether${suffix}`).matrix).applyMatrix4(rootInverse)
+        const right = new Vector3().setFromMatrixPosition(pose.jointsById.get(`right-tether${suffix}`).matrix).applyMatrix4(rootInverse)
+        assert(Math.abs(left.x + right.x) < 1e-6 && Math.abs(left.y - right.y) < 1e-6 && Math.abs(left.z - right.z) < 1e-6,
+          'paired vortex tethers and their bone hinges must mirror in XY and share depth throughout animation')
+      }
+      for (const suffix of ['upper', 'segment-1', 'segment-2']) {
+        const left = textureSocket(pose.parts.find(e => e.part.id === `left-tether-${suffix}`), .5, .5).applyMatrix4(rootInverse)
+        const right = textureSocket(pose.parts.find(e => e.part.id === `right-tether-${suffix}`), .5, .5).applyMatrix4(rootInverse)
+        assert(Math.abs(left.x + right.x) < 1e-6 && Math.abs(left.y - right.y) < 1e-6 && Math.abs(left.z - right.z) < 1e-6,
+          'tether textures must follow their mirrored skeletons rather than share the same facing')
+      }
+    }
+  }
   if (p.enemyId === 'thorn-shell-flower') {
     const rest = evaluateShadowProject(p, null, 0, { raw: true })
     const lower = rest.parts.find(e => e.part.id === 'lower-stem-art')

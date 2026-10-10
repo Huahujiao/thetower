@@ -129,18 +129,25 @@ export function applyEnemyComponentBatch3(p, { joint, imagePart, pixelLink, keys
   }
 
   if (p.enemyId === 'water-leech-swarm') {
-    // Each worm's local +X points toward world -Z, with its head at +Z.
-    for (const [i, head, body, tail, fin, scale, xyz] of [
-      [0, 4, 3, 2, 1, .22, [-35, 28, 30]],
-      [1, 9, 8, 7, 6, .20, [30, 6, -30]],
-      [2, 13, 14, 12, 11, .18, [0, -35, -50]],
+    // The three anatomical sets can each supply multiple complete worms.
+    // Their headward local -X stays near world -X; stagger XYZ and angles so
+    // the frontal review shows a swarm rather than superimposed members.
+    const anatomy = [[4, 3, 2, 1, 5, .60], [9, 8, 7, 6, 10, .66], [13, 14, 12, 11, 15, .66]]
+    for (const [i, variant, scale, xyz, yaw, roll] of [
+      [0, 0, .20, [-72, 58, 8], -8, -9],
+      [1, 1, .18, [38, 86, -10], 10, 5],
+      [2, 2, .21, [-38, 0, 26], 4, 10],
+      [3, 0, .16, [74, 35, 38], -12, -7],
+      [4, 1, .185, [-58, -68, 18], 14, 4],
+      [5, 2, .16, [57, -53, -12], -5, -12],
     ]) {
+      const [head, body, tail, fin, belly, tailSocketY] = anatomy[variant]
       const id = `leech-${i}`, label = `尸蛭${i + 1}`, sign = i % 2 ? -1 : 1
-      j(id, `${label}游动轴`, 'root', xyz, { rotationY: 65, rotationZ: (i - 1) * 7 })
+      j(id, `${label}游动轴`, 'root', xyz, { rotationY: yaw, rotationZ: roll })
       split(`${id}-body`, `${label}环节腹`, body, id, [0, 0, 0], scale,
         [[.07, .45], [.53, .48]], [[0, 0, .60, 1], [.48, 0, .52, 1]], sign)
       link(`${id}-tail`, `${label}尾根`, `${id}-body-hinge-1`, body, scale, [.53, .48], [.87, .5])
-      art(`${id}-tail-art`, `${label}尾鳍`, tail, `${id}-tail`, scale * .85, [.11, .43], { layer: 6 })
+      art(`${id}-tail-art`, `${label}尾鳍`, tail, `${id}-tail`, scale * .85, [.11, tailSocketY], { layer: 6 })
       motion(`${id}-tail`, -sign, 12)
       j(`${id}-head`, `${label}头环`, id, [0, 0, .8])
       art(`${id}-head-art`, `${label}眼颅与上颚`, head, `${id}-head`, scale, [.86, .48], { crop: [0, 0, 1, .73], layer: 9 })
@@ -148,6 +155,14 @@ export function applyEnemyComponentBatch3(p, { joint, imagePart, pixelLink, keys
       art(`${id}-jaw-art`, `${label}吸附下颚`, head, `${id}-jaw`, scale, [.50, .64], { crop: [0, .60, 1, .40], layer: 10 })
       j(`${id}-fin`, `${label}背鳍根`, `${id}-body-hinge-1`, [3, 11, -.7])
       art(`${id}-fin-art`, `${label}背鳍`, fin, `${id}-fin`, scale * .75, [.20, .85], { layer: 3 })
+      const bodyArt = p.parts.find(part => part.id === `${id}-body-upper`)
+      j(`${id}-belly`, `${label}\u8179\u7532`, `${id}-body-hinge-1`, [-2, -bodyArt.height * .35, 1])
+      art(`${id}-belly-art`, `${label}\u8179\u4e0b\u9aa8\u7532`, belly, `${id}-belly`, scale * .75, [.5, .5], { layer: 7 })
+      if (i % 2 === 0) {
+        j(`${id}-wake`, `${label}\u6e38\u52a8\u98d8\u5e26`, `${id}-tail`, [12, -8, -.5])
+        art(`${id}-wake-art`, `${label}\u5c3e\u540e\u98d8\u5e26`, 16, `${id}-wake`, .055, [.06, .5], { layer: 2 })
+        motion(`${id}-wake`, -sign, 11)
+      }
       motion(`${id}-head`, sign, 5); motion(`${id}-jaw`, -sign, 4); motion(`${id}-fin`, sign, 8)
       motion(id, sign, 7)
       keys(p, 'move', id, [[0, {}], [.25, { rotationY: sign * 12 }], [.75, { rotationY: -sign * 12 }], [1, {}]])
@@ -159,31 +174,55 @@ export function applyEnemyComponentBatch3(p, { joint, imagePart, pixelLink, keys
   }
 
   if (p.enemyId === 'whirlpool-eye-sac') {
-    art('vortex-sac', '涡流浮囊', 3, 'root', .26, [.5, .48], { z: -6, layer: 4 })
-    j('crown', '潮焰骨冠', 'root', [0, 14, 0])
-    art('crown-art', '潮焰骨冠下环', 1, 'crown', .26, [.5, .58], { crop: [0, .36, 1, .64], layer: 7 })
-    link('crown-tip', '潮焰冠尖', 'crown', 1, .26, [.5, .58], [.5, .28])
-    art('crown-tip-art', '潮焰冠尖', 1, 'crown-tip', .26, [.5, .28], { crop: [0, 0, 1, .44], layer: 8 })
+    // Radial floating silhouette: expose the sac below the eye crown rather
+    // than stacking every circular cutout over the same point.
+    art('vortex-sac', '涡流浮囊', 3, 'root', .26, [.5, .5], { z: -1.5, layer: 4 })
+    j('crown', '潮焰骨冠', 'root', [0, 86, 1])
+    art('crown-art', '潮焰骨冠下环', 1, 'crown', .23, [.51, .55], { crop: [0, .36, 1, .64], layer: 7 })
+    link('crown-tip', '潮焰冠尖', 'crown', 1, .23, [.51, .55], [.51, .28], 0)
+    art('crown-tip-art', '潮焰冠尖', 1, 'crown-tip', .23, [.51, .28], { crop: [0, 0, 1, .44], layer: 8 })
     motion('crown-tip', -1, 7)
-    j('eye-ring', '眼眶骨环', 'crown', [0, 0, .6])
-    art('eye-ring-art', '眼眶骨环', 4, 'eye-ring', .21, [.5, .5], { layer: 8 })
-    j('eye', '涡眼', 'eye-ring', [0, 0, .3])
-    art('eye-art', '涡眼', 5, 'eye', .25, [.5, .5], { layer: 9 })
-    j('veil', '浮囊垂膜', 'root', [0, -56, -2])
+    j('crest', '\u6f6e\u7130\u9876\u9970', 'crown-tip', [0, 25, -3])
+    art('crest-art', '\u6f6e\u7130\u9876\u9970', 2, 'crest', .16, [.5, .88], { layer: 3 })
+    motion('crest', 1, 5)
+    j('eye-ring', '眼眶骨环', 'crown', [0, 0, 1])
+    art('eye-ring-art', '眼眶骨环', 4, 'eye-ring', .18, [.5, .5], { layer: 8 })
+    j('eye', '涡眼', 'eye-ring', [0, 0, .6])
+    art('eye-art', '涡眼', 5, 'eye', .16, [.5, .5], { layer: 9 })
+    j('veil', '浮囊垂膜', 'root', [0, -64, .5])
     art('veil-art', '浮囊垂膜', 8, 'veil', .23, [.5, .08], { layer: 5 })
+    j('pendant', '\u6d6e\u56ca\u5782\u9525', 'veil', [0, -45, .7])
+    art('pendant-art', '\u6d6e\u56ca\u5782\u9525', 9, 'pendant', .17, [.5, .08], { layer: 6 })
+    motion('pendant', 1, 6)
     motion('crown', 1, 5); motion('eye-ring', -1, 3); motion('eye', 1, 4); motion('veil', -1, 9)
-    for (const [side, sign, fin] of [['left', -1, 10], ['right', 1, 11]]) {
-      const label = sign < 0 ? '左' : '右'
-      split(`${side}-fin`, `${label}潮流鳍`, fin, 'root', [sign * 45, -11, -3], .17,
-        [[.5, .2], [.5, .62]], [[0, 0, 1, .7], [0, .54, 1, .46]], sign,
-        { rotationY: sign * 18 })
-      attack(`${side}-fin`, { rotationZ: sign * 8, rotationY: sign * 11 }, { rotationZ: -sign * 17, rotationY: -sign * 20 })
+    // Character-left is +X. Mirror the complete tether hierarchy so its
+    // joints, cropped segments and animation hinges follow the same curve.
+    for (const [side, sign] of [['left', 1], ['right', -1]]) {
+      const label = sign > 0 ? '左' : '右'
+      j(`${side}-crescent`, `${label}\u6f6e\u6708\u9970`, 'crown', [sign * 58, 11, -2], { rotationZ: sign * 18, scaleX: sign })
+      art(`${side}-crescent-art`, `${label}\u6f6e\u6708\u9970`, 7, `${side}-crescent`, .18, [.5, .5], { layer: 5 })
+      motion(`${side}-crescent`, sign, 5)
+      split(`${side}-tether`, `${label}潮丝触须`, 6, 'root', [sign * 64, 4, 2], .22,
+        [[.93, .54], [.48, .40], [.10, .46]],
+        [[.43, 0, .57, 1], [.06, 0, .48, 1], [0, 0, .16, 1]], -1,
+        { rotationZ: -sign * 12, scaleX: -sign })
+      // Root rotations mirror before scale; descendant tracks mirror with
+      // their parent's negative X scale and therefore share local keyframes.
+      motion(`${side}-tether`, sign, 7)
+      attack(`${side}-tether`, { rotationZ: sign * 20, rotationY: -sign * 8 }, { rotationZ: -sign * 22, rotationY: sign * 12 })
     }
-    split('tether', '潮丝触须', 6, 'root', [-51, -15, 2], .18,
-      [[.93, .54], [.48, .40], [.10, .46]],
-      [[.43, 0, .57, 1], [.06, 0, .48, 1], [0, 0, .16, 1]], -1,
-      { rotationZ: 16 })
-    attack('tether', { rotationZ: -27, rotationY: 12 }, { rotationZ: 24, rotationY: -20 })
+    for (const [id, sign, fin, xyz, anchor, angle] of [
+      ['right-fin', -1, 10, [-63, 26, -.5], [.8, .28], -22],
+      ['left-fin', 1, 11, [63, 26, -.5], [.2, .25], 22],
+      ['right-lower-fin', -1, 12, [-55, -40, 1], [.88, .12], -20],
+      ['left-lower-fin', 1, 13, [55, -40, 1], [.12, .12], 20],
+    ]) {
+      const label = sign > 0 ? '左' : '右'
+      split(id, `${label}${id.includes('lower') ? '下' : '上'}潮流鳍`, fin, 'root', xyz, .18,
+        [anchor, [.5, .62]], [[0, 0, 1, .7], [0, .54, 1, .46]], sign,
+        { rotationZ: angle, rotationY: sign * 8 })
+      attack(id, { rotationZ: sign * 8, rotationY: sign * 7 }, { rotationZ: -sign * 13, rotationY: -sign * 12 })
+    }
     attack('eye', { rotationY: -10 }, { rotationY: 17 })
   }
 
