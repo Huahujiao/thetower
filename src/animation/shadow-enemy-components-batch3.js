@@ -77,21 +77,26 @@ export function applyEnemyComponentBatch3(p, { joint, imagePart, pixelLink, keys
     const lowerStem = art('lower-stem-art', '下棘茎', 6, 'lower-stem', .22, [.5, .94], { crop: [0, .51, 1, .49], layer: 6 })
     lowerStem.height *= stemStretch
     lowerStem.visual.textureFit = 'stretch'
-    link('upper-stem', '上棘茎', 'lower-stem', 6, .22, [.5, .94], [.5, .54])
-    p.joints.find(v => v.id === 'upper-stem').y *= stemStretch
+    // Insert the eye between the painted stem rims. The upper stem follows
+    // its socket, while the eye can move independently inside that space.
+    j('stem-eye-core', '\u830e\u95f4\u773c\u5ea7', 'lower-stem', [0, 0, 0])
+    j('eye', '花眼', 'stem-eye-core', [0, 0, 2.4])
+    const eye = art('eye-art', '花眼', 5, 'eye', .27, [.5, .5], { layer: 11 })
+    const eyeClearance = 2
+    p.joints.find(v => v.id === 'stem-eye-core').y = lowerStem.pivotY * lowerStem.height + eye.height / 2 + eyeClearance
+    j('upper-stem', '上棘茎', 'stem-eye-core', [0, eye.height / 2 + eyeClearance, .3])
     const upperStem = art('upper-stem-art', '上棘茎', 6, 'upper-stem', .22, [.5, .46], { crop: [0, 0, 1, .48], layer: 7 })
     upperStem.height *= stemStretch
     upperStem.visual.textureFit = 'stretch'
+    p.joints.find(v => v.id === 'upper-stem').y -= (upperStem.pivotY - 1) * upperStem.height
     link('crown', '花冠根', 'upper-stem', 6, .22, [.5, .46], [.5, .08])
     p.joints.find(v => v.id === 'crown').y *= stemStretch
     art('crown-art', '棘壳花冠与口环', 3, 'crown', .29, [.5, .78], { layer: 8 })
-    j('eye', '花眼', 'crown', [0, 18, 2.4])
-    art('eye-art', '花眼', 5, 'eye', .27, [.5, .5], { layer: 11 })
     for (const [id, sign, amp] of [['lower-stem', 1, 3], ['upper-stem', -1, 5], ['crown', 1, 7], ['eye', -1, 3]]) motion(id, sign, amp)
     for (const [side, sign, shell, branch, leaf, root] of [['left', -1, 1, 8, 9, 11], ['right', 1, 2, 7, 10, 12]]) {
       const label = sign < 0 ? '左' : '右'
       // Spread paired chains in XY; their shared Z keeps the frontal pose balanced.
-      j(`${side}-shell`, `${label}棘壳瓣`, 'crown', [sign * 48, 32, -1], { rotationZ: -sign * 12 })
+      j(`${side}-shell`, `${label}棘壳瓣`, 'crown', [sign * 58, 32, -1], { rotationZ: -sign * 12 })
       const petal = art(`${side}-shell-art`, `${label}棘壳瓣`, shell, `${side}-shell`, .18, [sign < 0 ? .70 : .3, .55], { layer: 10 })
       const hinge = p.joints.find(v => v.id === `${side}-shell`)
       const pivot = [sign < 0 ? .60 : .38, .51]

@@ -334,6 +334,18 @@ for (const source of projects) {
       assertMossConnections(pose)
     }
   }
+  if (p.enemyId === 'thorn-shell-flower') {
+    const rest = evaluateShadowProject(p, null, 0, { raw: true })
+    const lower = rest.parts.find(e => e.part.id === 'lower-stem-art')
+    const upper = rest.parts.find(e => e.part.id === 'upper-stem-art')
+    const eye = rest.parts.find(e => e.part.id === 'eye-art')
+    const lowerTop = textureSocket(lower, .5, .51).y
+    const upperBottom = textureSocket(upper, .5, .48).y
+    assert(eye.matrix.elements[13] - eye.part.height / 2 > lowerTop && eye.matrix.elements[13] + eye.part.height / 2 < upperBottom,
+      'flower eye must fit between the two stem rims without covering either segment')
+    assert.equal(p.bones.find(b => b.toJointId === 'eye').fromJointId, 'stem-eye-core', 'flower eye must leave the mouth in the crown exposed')
+    assert.equal(p.bones.find(b => b.toJointId === 'upper-stem').fromJointId, 'stem-eye-core', 'raised flower crown should follow the inserted stem socket')
+  }
   if (p.enemyId === 'sentry-crossbow') {
     const rest = evaluateShadowProject(p, null, 0, { raw: true })
     assert.equal(p.joints.find(j => j.id === 'weapon').rotationX, 100, 'bow should be horizontal with a ten-degree downward pitch')
