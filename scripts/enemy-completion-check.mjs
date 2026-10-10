@@ -65,11 +65,17 @@ function assertMossConnections(pose) {
   }
 }
 function assertSentryHold(pose) {
+  const carryingFrame = pose.jointsById.get('crossbow-hold').matrix.clone().invert()
   for (const [side, u, palm] of [['left', .08, .25], ['right', .92, .61]]) {
     const bow = pose.parts.find(p => p.part.id === `${side}-bow-art`)
     const hand = pose.parts.find(p => p.part.id === `${side}-arm-end`)
-    assert(textureSocket(bow, u, .21).distanceTo(textureSocket(hand, palm, .80)) < 1e-6,
-      'sentry hands must remain on the two painted bow grips during animation')
+    const grip = textureSocket(bow, u, .21).applyMatrix4(carryingFrame)
+    const palmPoint = textureSocket(hand, palm, .80).applyMatrix4(carryingFrame)
+    assert(palmPoint.distanceTo(grip.add(new Vector3(0, 4, 0))) < 1e-6,
+      'sentry claws must remain above the two painted bow grips during animation')
+    const forearm = pose.parts.find(p => p.part.id === `${side}-arm-lower`)
+    assert(textureSocket(forearm, palm, .70).distanceTo(textureSocket(hand, palm, .70)) < 1e-6,
+      'sentry bent forearms must stay connected to their claws')
   }
 }
 function assertAshConnections(pose) {
@@ -333,7 +339,16 @@ for (const source of projects) {
     assert.equal(p.joints.find(j => j.id === 'weapon').rotationX, 100, 'bow should be horizontal with a ten-degree downward pitch')
     for (const side of ['left', 'right']) {
       assert(rest.jointsById.get(`${side}-arm-tip`).matrix.elements[14] > rest.jointsById.get(`${side}-arm-root`).matrix.elements[14] + 50, 'sentry arms must extend forward')
+      const shoulder = new Vector3().setFromMatrixPosition(rest.jointsById.get(`${side}-arm-root`).matrix)
+      const elbow = new Vector3().setFromMatrixPosition(rest.jointsById.get(`${side}-arm-hinge`).matrix)
+      const wrist = new Vector3().setFromMatrixPosition(rest.jointsById.get(`${side}-arm-tip`).matrix)
+      assert(elbow.y < shoulder.y - 8 && elbow.y < wrist.y - 8, 'sentry elbows should bend below the shoulders and wrists')
+      assert(elbow.clone().sub(shoulder).normalize().dot(wrist.clone().sub(elbow).normalize()) < .85, 'sentry arms should have a visible elbow bend')
     }
+    const tailRoot = rest.jointsById.get('rear-tripod').matrix.elements
+    const tailTip = rest.jointsById.get('sentry-tail-tip').matrix.elements
+    assert(tailTip[14] < tailRoot[14] - 40 && tailTip[13] < tailRoot[13], 'sentry tail should extend diagonally backward and downward')
+    assert(!p.grounding.supports.some(s => s.partId === 'rear-tripod-art'), 'sentry tail must not be planted like a third foot')
     for (const suffix of ['root', 'hinge']) for (const [index, sign] of [[12, -1], [13, 1], [14, 1]]) {
       assert(Math.abs(rest.jointsById.get(`left-tripod-${suffix}`).matrix.elements[index] - sign * rest.jointsById.get(`right-tripod-${suffix}`).matrix.elements[index]) < 1e-6, 'sentry foot joints should be symmetric')
     }

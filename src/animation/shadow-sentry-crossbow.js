@@ -1,16 +1,15 @@
 import { Vector3 } from 'three'
 import { createShadowBone, createShadowJoint, evaluateShadowProject, shadowTransformMatrix } from './shadow-rig.js'
 
-function fitPart(project, part, target, from, to, end = false) {
+function fitPart(project, part, target, from, to) {
   const crop = part.visual.textureFrame.crop
   const dx = (to[0] - from[0]) * part.width / crop.width
   const dy = -(to[1] - from[1]) * part.height / crop.height
-  const pivot = end ? to : from
   Object.assign(part, { x: 0, y: 0, z: 0,
-    pivotX: (pivot[0] - crop.left) / crop.width, pivotY: (pivot[1] - crop.top) / crop.height,
+    pivotX: (from[0] - crop.left) / crop.width, pivotY: (from[1] - crop.top) / crop.height,
     rotationX: 0, rotationY: 0, rotationZ: Math.atan2(-dy, dx) * 180 / Math.PI,
     attachment: { type: 'bone', targetId: project.bones.find(b => b.toJointId === target).id,
-      t: end ? 1 : 0, followRotation: true, orientationJointId: 'crossbow-arm-plane', bindLength: Math.hypot(dx, dy) } })
+      t: 0, followRotation: true, orientationJointId: 'crossbow-arm-plane', bindLength: Math.hypot(dx, dy) } })
   part.visual.textureFit = 'stretch'
 }
 
@@ -26,7 +25,13 @@ export function raiseSentryCrossbow(project) {
   torso.attachment.targetId = 'sentry-upper-body'
   joints.get('neck').z = 2
   joints.get('head').z = 1
-  joints.get('rear-tripod').z = -1
+  // This cutout is a tail, not a third planted foot. Keep its root at the
+  // pelvis and swing its downward image axis toward character-back (-Z).
+  Object.assign(joints.get('rear-tripod'), { name: '\u5c3e\u6839', z: -1, rotationX: 60 })
+  const tail = project.parts.find(p => p.id === 'rear-tripod-art')
+  tail.name = '\u540e\u659c\u9aa8\u5c3e'
+  project.joints.push(createShadowJoint({ id: 'sentry-tail-tip', name: '\u9aa8\u5c3e\u5c16', y: (tail.pivotY - .98) * tail.height }))
+  project.bones.push(createShadowBone({ id: 'sentry-tail-bone', fromJointId: 'rear-tripod', toJointId: 'sentry-tail-tip' }))
 
   // Expose the painted vertebrae between the raised chest and the foot roots.
   const spine = project.parts.find(p => p.id === 'spine')
@@ -54,19 +59,31 @@ export function raiseSentryCrossbow(project) {
   const fullHeight = project.parts.find(p => p.id === 'bow-stock').height / .79
   const weaponMatrix = shadowTransformMatrix(weapon)
   for (const [side, sign, anchors] of [
-    ['left', -1, [[.70, .18], [.23, .36], [.25, .80]]],
-    ['right', 1, [[.30, .18], [.66, .36], [.61, .80]]],
+    ['left', -1, [[.70, .18], [.23, .36], [.25, .70]]],
+    ['right', 1, [[.30, .18], [.66, .36], [.61, .70]]],
   ]) {
     const shoulder = joints.get(`${side}-arm-root`), elbow = joints.get(`${side}-arm-hinge`), hand = joints.get(`${side}-arm-tip`)
     const grip = new Vector3(sign * .42 * fullWidth, (.32 - .21) * fullHeight, 0).applyMatrix4(weaponMatrix)
     Object.assign(shoulder, { x: sign * 40, y: 30, z: 8, rotationX: 0, rotationY: 0, rotationZ: 0 })
     project.bones.find(b => b.toJointId === shoulder.id).fromJointId = 'crossbow-hold'
-    Object.assign(elbow, { x: sign * 7, y: -2, z: 27, rotationX: 0, rotationY: 0, rotationZ: 0 })
-    Object.assign(hand, { x: grip.x - shoulder.x - elbow.x, y: grip.y - shoulder.y - elbow.y, z: grip.z - shoulder.z - elbow.z,
+    Object.assign(elbow, { x: sign * 20, y: -12, z: 32, rotationX: 0, rotationY: 0, rotationZ: 0 })
+    // The wrist sits above and behind the palm. Pitch the claw downward onto
+    // the bow independently of the upward-sloping forearm, retaining a seam.
+    const claw = project.parts.find(p => p.id === `${side}-arm-end`)
+    const clawCrop = claw.visual.textureFrame.crop
+    const clawRotation = { rotationX: -75, rotationY: 0, rotationZ: 0 }
+    const wristToPalm = new Vector3(0, -.10 * claw.height / clawCrop.height, 0)
+      .applyMatrix4(shadowTransformMatrix(clawRotation))
+    const wrist = grip.clone().add(new Vector3(0, 4, 0)).sub(wristToPalm)
+    Object.assign(hand, { x: wrist.x - shoulder.x - elbow.x, y: wrist.y - shoulder.y - elbow.y, z: wrist.z - shoulder.z - elbow.z,
       rotationX: 0, rotationY: 0, rotationZ: 0 })
     fitPart(project, project.parts.find(p => p.id === `${side}-arm-upper`), elbow.id, anchors[0], anchors[1])
     fitPart(project, project.parts.find(p => p.id === `${side}-arm-lower`), hand.id, anchors[1], anchors[2])
-    fitPart(project, project.parts.find(p => p.id === `${side}-arm-end`), hand.id, anchors[1], anchors[2], true)
+    Object.assign(claw, { x: 0, y: 0, z: 0, ...clawRotation,
+      pivotX: (anchors[2][0] - clawCrop.left) / clawCrop.width,
+      pivotY: (anchors[2][1] - clawCrop.top) / clawCrop.height,
+      attachment: { type: 'joint', targetId: hand.id, followRotation: true } })
+    claw.visual.textureFit = 'stretch'
     joints.get(`${side}-bow`).z = 0
   }
   for (const animation of Object.values(project.animations)) {
