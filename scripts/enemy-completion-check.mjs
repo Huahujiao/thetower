@@ -354,7 +354,8 @@ for (const source of projects) {
       const shoulder = new Vector3().setFromMatrixPosition(rest.jointsById.get(`${side}-arm-root`).matrix)
       const elbow = new Vector3().setFromMatrixPosition(rest.jointsById.get(`${side}-arm-hinge`).matrix)
       const wrist = new Vector3().setFromMatrixPosition(rest.jointsById.get(`${side}-arm-tip`).matrix)
-      assert(elbow.y < shoulder.y - 8 && elbow.y < wrist.y - 8, 'sentry elbows should bend below the shoulders and wrists')
+      assert(elbow.y < shoulder.y - 12, 'sentry upper arms should slope downward from the shoulders')
+      assert(Math.abs(elbow.y - wrist.y) < 1e-6, 'sentry forearms should lie level instead of rising toward the bow')
       assert(elbow.clone().sub(shoulder).normalize().dot(wrist.clone().sub(elbow).normalize()) < .85, 'sentry arms should have a visible elbow bend')
     }
     const tailRoot = rest.jointsById.get('rear-tripod').matrix.elements

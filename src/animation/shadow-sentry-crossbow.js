@@ -53,10 +53,20 @@ export function raiseSentryCrossbow(project) {
   project.joints.push(createShadowJoint({ id: 'crossbow-arm-plane', name: '\u5e73\u4e3e\u624b\u81c2\u65b9\u5411', rotationZ: -90 }))
   project.bones.push(createShadowBone({ id: 'crossbow-arm-plane-bone', fromJointId: 'crossbow-hold', toJointId: 'crossbow-arm-plane' }))
   const weapon = joints.get('weapon')
-  Object.assign(weapon, { x: 0, y: 28, z: 72, rotationX: 100, rotationY: 0, rotationZ: 0 })
+  Object.assign(weapon, { x: 0, z: 80, rotationX: 100, rotationY: 0, rotationZ: 0 })
   project.bones.find(b => b.toJointId === 'weapon').fromJointId = 'crossbow-hold'
   const fullWidth = project.parts.find(p => p.id === 'bow-stock').width / .28
   const fullHeight = project.parts.find(p => p.id === 'bow-stock').height / .79
+  const shoulderHeight = 30, upperArmDrop = 16, palmClearance = 4
+  const clawRotation = { rotationX: -75, rotationY: 0, rotationZ: 0 }
+  const referenceClaw = project.parts.find(p => p.id === 'left-arm-end')
+  const palmDrop = new Vector3(0, -.10 * referenceClaw.height / referenceClaw.visual.textureFrame.crop.height, 0)
+    .applyMatrix4(shadowTransformMatrix(clawRotation)).y
+  const gripDrop = new Vector3(0, (.32 - .21) * fullHeight, 0)
+    .applyMatrix4(shadowTransformMatrix({ rotationX: weapon.rotationX })).y
+  // Lower the bow with the wrists: level forearms must meet the lower elbows.
+  // Advance it eight units (+Z), approximately half of the painted palm.
+  weapon.y = shoulderHeight - upperArmDrop - palmClearance + palmDrop - gripDrop
   const weaponMatrix = shadowTransformMatrix(weapon)
   for (const [side, sign, anchors] of [
     ['left', -1, [[.70, .18], [.23, .36], [.25, .70]]],
@@ -64,17 +74,16 @@ export function raiseSentryCrossbow(project) {
   ]) {
     const shoulder = joints.get(`${side}-arm-root`), elbow = joints.get(`${side}-arm-hinge`), hand = joints.get(`${side}-arm-tip`)
     const grip = new Vector3(sign * .42 * fullWidth, (.32 - .21) * fullHeight, 0).applyMatrix4(weaponMatrix)
-    Object.assign(shoulder, { x: sign * 40, y: 30, z: 8, rotationX: 0, rotationY: 0, rotationZ: 0 })
+    Object.assign(shoulder, { x: sign * 40, y: shoulderHeight, z: 8, rotationX: 0, rotationY: 0, rotationZ: 0 })
     project.bones.find(b => b.toJointId === shoulder.id).fromJointId = 'crossbow-hold'
-    Object.assign(elbow, { x: sign * 20, y: -12, z: 32, rotationX: 0, rotationY: 0, rotationZ: 0 })
+    Object.assign(elbow, { x: sign * 20, y: -upperArmDrop, z: 32, rotationX: 0, rotationY: 0, rotationZ: 0 })
     // The wrist sits above and behind the palm. Pitch the claw downward onto
-    // the bow independently of the upward-sloping forearm, retaining a seam.
+    // the bow independently of the level forearm, retaining a seam.
     const claw = project.parts.find(p => p.id === `${side}-arm-end`)
     const clawCrop = claw.visual.textureFrame.crop
-    const clawRotation = { rotationX: -75, rotationY: 0, rotationZ: 0 }
     const wristToPalm = new Vector3(0, -.10 * claw.height / clawCrop.height, 0)
       .applyMatrix4(shadowTransformMatrix(clawRotation))
-    const wrist = grip.clone().add(new Vector3(0, 4, 0)).sub(wristToPalm)
+    const wrist = grip.clone().add(new Vector3(0, palmClearance, 0)).sub(wristToPalm)
     Object.assign(hand, { x: wrist.x - shoulder.x - elbow.x, y: wrist.y - shoulder.y - elbow.y, z: wrist.z - shoulder.z - elbow.z,
       rotationX: 0, rotationY: 0, rotationZ: 0 })
     fitPart(project, project.parts.find(p => p.id === `${side}-arm-upper`), elbow.id, anchors[0], anchors[1])
