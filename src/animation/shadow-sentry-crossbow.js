@@ -53,11 +53,11 @@ export function raiseSentryCrossbow(project) {
   project.joints.push(createShadowJoint({ id: 'crossbow-arm-plane', name: '\u5e73\u4e3e\u624b\u81c2\u65b9\u5411', rotationZ: -90 }))
   project.bones.push(createShadowBone({ id: 'crossbow-arm-plane-bone', fromJointId: 'crossbow-hold', toJointId: 'crossbow-arm-plane' }))
   const weapon = joints.get('weapon')
-  Object.assign(weapon, { x: 0, z: 80, rotationX: 100, rotationY: 0, rotationZ: 0 })
+  Object.assign(weapon, { x: 0, z: 92, rotationX: 100, rotationY: 0, rotationZ: 0 })
   project.bones.find(b => b.toJointId === 'weapon').fromJointId = 'crossbow-hold'
   const fullWidth = project.parts.find(p => p.id === 'bow-stock').width / .28
   const fullHeight = project.parts.find(p => p.id === 'bow-stock').height / .79
-  const shoulderHeight = 30, upperArmDrop = 16, palmClearance = 4
+  const shoulderHeight = 30, upperArmDrop = 24, palmClearance = 4
   const clawRotation = { rotationX: -75, rotationY: 0, rotationZ: 0 }
   const referenceClaw = project.parts.find(p => p.id === 'left-arm-end')
   const palmDrop = new Vector3(0, -.10 * referenceClaw.height / referenceClaw.visual.textureFrame.crop.height, 0)
@@ -65,7 +65,6 @@ export function raiseSentryCrossbow(project) {
   const gripDrop = new Vector3(0, (.32 - .21) * fullHeight, 0)
     .applyMatrix4(shadowTransformMatrix({ rotationX: weapon.rotationX })).y
   // Lower the bow with the wrists: level forearms must meet the lower elbows.
-  // Advance it eight units (+Z), approximately half of the painted palm.
   weapon.y = shoulderHeight - upperArmDrop - palmClearance + palmDrop - gripDrop
   const weaponMatrix = shadowTransformMatrix(weapon)
   for (const [side, sign, anchors] of [
