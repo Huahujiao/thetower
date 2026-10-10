@@ -10,7 +10,9 @@ function fitBoneTexture(project, part, toId, from, to, mirrored = false) {
   const dy = -(to[1] - from[1]) * part.height / crop.height
   Object.assign(part, { x: 0, y: 0, z: 0,
     pivotX: (from[0] - crop.left) / crop.width, pivotY: (from[1] - crop.top) / crop.height,
-    rotationX: 0, rotationY: mirrored ? 180 : 0, rotationZ: Math.atan2(-dy, mirrored ? -dx : dx) * 180 / Math.PI,
+    // XYZ Euler rotation applies the Z turn before the Y mirror. Reflect the
+    // whole fitted angle so the painted segment still points along the bone.
+    rotationX: 0, rotationY: mirrored ? 180 : 0, rotationZ: Math.atan2(mirrored ? dy : -dy, mirrored ? -dx : dx) * 180 / Math.PI,
     attachment: { type: 'bone', targetId: project.bones.find(b => b.toJointId === toId).id,
       t: 0, followRotation: true, orientationJointId: 'root', bindLength: Math.hypot(dx, dy) } })
   part.visual.textureFit = 'stretch'

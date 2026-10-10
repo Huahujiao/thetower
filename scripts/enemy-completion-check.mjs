@@ -50,6 +50,19 @@ function assertMossConnections(pose) {
     const forearm = new Vector3().setFromMatrixPosition(pose.jointsById.get(`${side}-secondary-shoulder`).matrix)
     assert(Math.abs(elbow.distanceTo(forearm) - .8) < 1e-6, 'moss forearms stay joined to upper arms')
   }
+  for (const [side, anchors] of [
+    ['left', [[.23, .10], [.56, .42], [.46, .78]]],
+    ['right', [[.77, .10], [.48, .42], [.50, .78]]],
+  ]) {
+    for (const [i, segment] of ['upper', 'lower'].entries()) {
+      const leg = pose.parts.find(p => p.part.id === `${side}-leg-${segment}`)
+      for (const [offset, suffix] of (i ? ['hinge', 'tip'] : ['root', 'hinge']).entries()) {
+        const node = new Vector3().setFromMatrixPosition(pose.jointsById.get(`${side}-leg-${suffix}`).matrix)
+        assert(textureSocket(leg, ...anchors[i + offset]).distanceTo(node) < 1e-6,
+          `moss ${side} ${segment} artwork must connect to its ${suffix} node after mirroring`)
+      }
+    }
+  }
 }
 function assertSentryHold(pose) {
   for (const [side, u, palm] of [['left', .08, .25], ['right', .92, .61]]) {
