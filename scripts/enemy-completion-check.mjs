@@ -69,10 +69,10 @@ function assertSentryHold(pose) {
   for (const [side, u, palm] of [['left', .08, .25], ['right', .92, .61]]) {
     const bow = pose.parts.find(p => p.part.id === `${side}-bow-art`)
     const hand = pose.parts.find(p => p.part.id === `${side}-arm-end`)
-    const grip = textureSocket(bow, u, .21).applyMatrix4(carryingFrame)
-    const palmPoint = textureSocket(hand, palm, .80).applyMatrix4(carryingFrame)
+    const grip = textureSocket(bow, u, .32).applyMatrix4(carryingFrame)
+    const palmPoint = textureSocket(hand, palm, .85).applyMatrix4(carryingFrame)
     assert(palmPoint.distanceTo(grip.add(new Vector3(0, 4, 0))) < 1e-6,
-      'sentry claws must remain above the two painted bow grips during animation')
+      'sentry finger roots must rest above the actual bow crossbar instead of gripping with the wrists')
     const forearm = pose.parts.find(p => p.part.id === `${side}-arm-lower`)
     assert(textureSocket(forearm, palm, .70).distanceTo(textureSocket(hand, palm, .70)) < 1e-6,
       'sentry bent forearms must stay connected to their claws')
