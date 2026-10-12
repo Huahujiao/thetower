@@ -6,7 +6,7 @@ import { isAdjacent8 } from '../game/core/geometry.js'
 import { AttackRangeOverlay } from './attack-range-overlay.js'
 import { BoardTextures } from './board-textures.js'
 import { combatMotionAt, deathMotion, explosionMotion, EXPLOSION_DURATION, hitMotion, idleMotion } from './character-motion.js'
-import { DEFAULT_CAMERA_ELEVATION, panAzimuth } from './camera-view.js'
+import { DEFAULT_CAMERA_ELEVATION, panAzimuth, roomOverviewDistance } from './camera-view.js'
 import { cardBodyGeometry, styleCardBody, cardFaceY, CARD_FACE_CLEARANCE, HIDDEN_CARD_THICKNESS, HIDDEN_CARD_SCALE } from './card-body.js'
 import { boundaryPillarPoint, createDoorFrame, createLowPolyPillar, createLowPolyWall, evenPillarOffsets } from './wall-kit.js'
 import { goldSpriteSources, itemSpriteSources } from '../ui/item-sprites.js'
@@ -322,9 +322,9 @@ export class GameScene {
     this.lastFootprintTurn = 0
     this.visibleDoorKey = ''
     this.structureKey = ''
-    this.zoom = DEFAULT_ZOOM
+    this.zoom = Number.isFinite(run.sceneView?.zoom) ? run.sceneView.zoom : DEFAULT_ZOOM
     this.cameraAzimuth = DEFAULT_CAMERA_AZIMUTH
-    this.cameraElevation = DEFAULT_CAMERA_ELEVATION
+    this.cameraElevation = Number.isFinite(run.sceneView?.cameraElevation) ? run.sceneView.cameraElevation : DEFAULT_CAMERA_ELEVATION
     this.framedRoomId = null
     this.viewportWidth = 0
     this.viewportHeight = 0
@@ -2394,10 +2394,19 @@ export class GameScene {
     const widthDistance = halfWidth / Math.tan(horizontalFov / 2)
     const depthDistance = halfDepth / Math.tan(verticalFov / 2)
     this.baseCameraDistance = Math.max(widthDistance, depthDistance) * 0.68
+    if (this.run.sceneView?.fitRoom) {
+      this.baseCameraDistance = roomOverviewDistance({
+        halfWidth, halfDepth, height: CARD_SIZE * 1.8,
+        elevation: this.cameraElevation, verticalFov, aspect,
+      }) / CAMERA_ORBIT_DISTANCE_RATIO
+    }
     if (resetView) {
-      this.zoom = DEFAULT_ZOOM
-      const playerPoint = this._gridPosition(room, this.run.player.pos)
-      this.roomGroup.position.set(-playerPoint.x, 0, -playerPoint.z)
+      this.zoom = Number.isFinite(this.run.sceneView?.zoom) ? this.run.sceneView.zoom : DEFAULT_ZOOM
+      if (this.run.sceneView?.centerRoom) this.roomGroup.position.set(0, 0, 0)
+      else {
+        const playerPoint = this._gridPosition(room, this.run.player.pos)
+        this.roomGroup.position.set(-playerPoint.x, 0, -playerPoint.z)
+      }
     }
     this.camera.aspect = aspect
     this._updateCamera()
@@ -2430,6 +2439,11 @@ export class GameScene {
       MAX_CAMERA_ELEVATION,
     )
     this._updateCamera()
+  }
+
+  resetView() {
+    this.cameraElevation = this.run.sceneView?.cameraElevation ?? DEFAULT_CAMERA_ELEVATION
+    if (this.run.currentRoom) this._frameRoom(this.run.currentRoom, { resetView: true })
   }
 
   cameraAngles() {

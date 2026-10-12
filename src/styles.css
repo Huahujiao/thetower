@@ -27,6 +27,18 @@ button { font: inherit; }
 }
 .vue-hud-root { display: contents; }
 
+/* Keep the full phone HUD visible while reviewing artwork on a desktop. */
+body.art-tweak-page #hud {
+  --art-tweak-width: min(100vw, 520px, 64dvh);
+  --hud-unit: calc(var(--art-tweak-width) / 9 - 4px);
+  --hud-grid-cell: calc((var(--art-tweak-width) - 32px) / 8);
+  --hud-backpack-height: calc((var(--art-tweak-width) - 16px) / 2);
+  width: var(--art-tweak-width);
+  right: auto;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
 .hud-top {
   flex: 0 0 var(--hud-top-height); display: flex; align-items: center; justify-content: space-between;
   height: var(--hud-top-height); padding: 0 8px;

@@ -553,7 +553,7 @@ const craftOpen = ref(false)
 const helpOpen = ref(false)
 const merchantTab = ref('stock')
 const copyLabel = ref(LABELS.copyLog)
-const reveal = ref(typeof localStorage !== 'undefined' && localStorage.getItem('v2_opt_reveal') === '1')
+const reveal = ref(run.persistenceEnabled && typeof localStorage !== 'undefined' && localStorage.getItem('v2_opt_reveal') === '1')
 // Keep the gesture token as a raw object. A deep ref would proxy nextHold,
 // making the timer identity check incorrectly report every hold as stale.
 const hold = shallowRef(null)
@@ -859,6 +859,11 @@ function restartGame() {
   closeDetailPanel()
   run.clearSave()
   run.reset()
+  if (run.sceneView) {
+    reveal.value = false
+    run.setDebugReveal(false)
+    scene.value?.resetView()
+  }
   topPanel.value = null
   helpOpen.value = false
   craftOpen.value = false
@@ -1347,7 +1352,7 @@ async function copyLog() {
 }
 function updateReveal() {
   run.setDebugReveal(reveal.value)
-  if (typeof localStorage !== 'undefined') localStorage.setItem('v2_opt_reveal', reveal.value ? '1' : '0')
+  if (run.persistenceEnabled && typeof localStorage !== 'undefined') localStorage.setItem('v2_opt_reveal', reveal.value ? '1' : '0')
 }
 
 onMounted(() => {

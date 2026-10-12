@@ -153,7 +153,7 @@ const MERCHANT_SERVICE_LABELS = Object.freeze({
 })
 
 export class GameRun {
-  constructor({ autoLoad = true, random = Math.random } = {}) {
+  constructor({ autoLoad = true, random = Math.random, persistence = true } = {}) {
     this.bus = createEmitter()
     this.on = this.bus.on
     this.off = this.bus.off
@@ -209,6 +209,7 @@ export class GameRun {
       }
     })
     this.random = random
+    this.persistenceEnabled = persistence !== false
     this._loaded = autoLoad && this.load()
     if (!this._loaded) this.reset({ emit: false })
   }
@@ -2305,10 +2306,12 @@ export class GameRun {
   }
 
   _persist() {
+    if (!this.persistenceEnabled) return
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(this.serialize())) } catch { /* Storage can be unavailable in private contexts. */ }
   }
 
   load() {
+    if (!this.persistenceEnabled) return false
     const discard = () => {
       try { localStorage.removeItem(SAVE_KEY) } catch { /* Storage can be unavailable in private contexts. */ }
       return false
@@ -2441,6 +2444,7 @@ export class GameRun {
   }
 
   clearSave() {
+    if (!this.persistenceEnabled) return
     try { localStorage.removeItem(SAVE_KEY) } catch { /* Storage can be unavailable in private contexts. */ }
   }
 }

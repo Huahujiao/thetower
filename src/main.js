@@ -14,8 +14,14 @@ if (pathname === '/wiki' || pathname.startsWith('/wiki/')) {
     window.addEventListener('beforeunload', () => app.unmount(), { once: true })
   })
 } else {
-  Promise.all([import('./game/run.js'), import('./ui/VueHud.vue')]).then(([{ GameRun }, { default: VueHud }]) => {
-    const run = new GameRun()
+  const artTweak = pathname === '/arttweak'
+  if (artTweak) {
+    document.title = '\u7f8e\u672f\u8c03\u6574\u6b8b\u5c40'
+    document.body.classList.add('art-tweak-page')
+  }
+  const model = artTweak ? import('./game/art-tweak.js') : import('./game/run.js')
+  Promise.all([model, import('./ui/VueHud.vue')]).then(([model, { default: VueHud }]) => {
+    const run = artTweak ? model.createArtTweakRun() : new model.GameRun()
     const app = createApp(VueHud, { run })
     app.mount('#hud')
     window.addEventListener('beforeunload', () => app.unmount(), { once: true })
