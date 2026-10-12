@@ -2213,7 +2213,7 @@ export class GameScene {
   }
 
   _makeBackTexture(attribute, { unflippable = false } = {}) {
-    return this.boardTextures.back(attribute, unflippable)
+    return this.boardTextures.back(attribute, unflippable && !this.run.sceneView?.showUnreachableCardAttributes)
   }
 
   _makeFrontTexture(card, position = null, revealed = false) {
@@ -2396,13 +2396,18 @@ export class GameScene {
     this.baseCameraDistance = Math.max(widthDistance, depthDistance) * 0.68
     if (this.run.sceneView?.fitRoom) {
       this.baseCameraDistance = roomOverviewDistance({
-        halfWidth, halfDepth, height: CARD_SIZE * 1.8,
+        halfWidth: this.run.sceneView.framing ? this.run.sceneView.framing.halfWidth * TILE_SIZE : halfWidth,
+        halfDepth: this.run.sceneView.framing ? this.run.sceneView.framing.halfDepth * TILE_SIZE : halfDepth,
+        height: this.run.sceneView.framing?.height ?? CARD_SIZE * 1.8,
         elevation: this.cameraElevation, verticalFov, aspect,
       }) / CAMERA_ORBIT_DISTANCE_RATIO
     }
     if (resetView) {
       this.zoom = Number.isFinite(this.run.sceneView?.zoom) ? this.run.sceneView.zoom : DEFAULT_ZOOM
-      if (this.run.sceneView?.centerRoom) this.roomGroup.position.set(0, 0, 0)
+      if (this.run.sceneView?.focus) {
+        const focus = this._gridPosition(room, this.run.sceneView.focus)
+        this.roomGroup.position.set(-focus.x, 0, -focus.z)
+      } else if (this.run.sceneView?.centerRoom) this.roomGroup.position.set(0, 0, 0)
       else {
         const playerPoint = this._gridPosition(room, this.run.player.pos)
         this.roomGroup.position.set(-playerPoint.x, 0, -playerPoint.z)
@@ -2415,7 +2420,7 @@ export class GameScene {
 
   _updateCamera() {
     const room = this.run.currentRoom
-    this.cameraAzimuth = panAzimuth(-this.roomGroup.position.x, room ? room.width * TILE_SIZE / 2 + BOUNDARY_GAP : 0)
+    this.cameraAzimuth = this.run.sceneView?.cameraAzimuth ?? panAzimuth(-this.roomGroup.position.x, room ? room.width * TILE_SIZE / 2 + BOUNDARY_GAP : 0)
     const distance = this.baseCameraDistance / this.zoom
     const orbitDistance = distance * CAMERA_ORBIT_DISTANCE_RATIO
     const horizontal = orbitDistance * Math.cos(this.cameraElevation)

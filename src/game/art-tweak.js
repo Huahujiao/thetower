@@ -3,7 +3,13 @@ import { GameRun } from './run.js'
 import { createEnemyById, createGoldEntity, createLootEntity, makeItemById } from './data/content.js'
 import { experienceToNextLevel } from './data/progression.js'
 
-export const ART_TWEAK_VIEW = Object.freeze({ centerRoom: true, fitRoom: true, zoom: 1, cameraElevation: 52 * Math.PI / 180 })
+export const ART_TWEAK_VIEW = Object.freeze({
+  fitRoom: true, zoom: 1, cameraElevation: 52 * Math.PI / 180, cameraAzimuth: 0,
+  focus: Object.freeze({ c: 3.1, r: 2 }),
+  // Frame the left enemy through the right wall, plus the first hidden row.
+  framing: Object.freeze({ halfWidth: 2.7, halfDepth: 1.6, height: 1.6 }),
+  showUnreachableCardAttributes: true,
+})
 
 const SCENE_SEED = 0x415254
 const BACKPACK_ITEM_IDS = Object.freeze([
@@ -41,7 +47,7 @@ function resetRoom(room) {
   room.entities.clear()
   room.revealCounter = 0
   room.visited = true
-  room.entry = { c: 2, r: 4 }
+  room.entry = { c: 2, r: 2 }
   for (const row of room.tiles) {
     for (const tile of row) Object.assign(tile, { revealed: false, peeked: false, entityId: null, terrain: 'plain' })
   }
@@ -71,15 +77,19 @@ function addSceneEntities(room) {
     room.addEntity(createLootEntity(item, pos))
   }
 
-  room.addEntity(createGoldEntity(7, { c: 0, r: 4 }))
-  room.reveal({ c: 0, r: 4 })
-  room.addEntity(createLootEntity(makeItemById('health-potion'), { c: 4, r: 4 }))
-  room.reveal({ c: 4, r: 4 })
+  room.addEntity(createGoldEntity(7, { c: 0, r: 1 }))
+  room.reveal({ c: 0, r: 1 })
+  room.addEntity(createLootEntity(makeItemById('health-potion'), { c: 5, r: 1 }))
+  room.reveal({ c: 5, r: 1 })
   // White backs contain ordinary loot, just as they do in a live room.
   for (let r = 0; r < room.height; r++) {
     for (let c = 0; c < room.width; c++) {
       const pos = { c, r }
       if (room.isRevealed(pos) || !room.isEmpty(pos)) continue
+      if (r > room.entry.r && (c + r) % 6 !== 0) {
+        room.addEntity(createLootEntity(makeItemById(['ember-axe', 'bone-knife', 'tide-blade'][c % 3]), pos))
+        continue
+      }
       room.addEntity((c + r) % 3 === 0
         ? createGoldEntity(3 + (c + r) % 5, pos)
         : createLootEntity(makeItemById(['health-potion', 'iron-powder', 'poison', 'rage-wine'][(c + r) % 4]), pos))
@@ -93,7 +103,7 @@ function configureArtTweakState(run) {
   if (!room) throw new Error('Art tweak room was not created')
   resetRoom(room)
 
-  run.player.pos = { c: 2, r: 4 }
+  run.player.pos = { c: 2, r: 2 }
   run.player.hp = 17
   run.player.maxHp = 24
   run.player.armor = 6
@@ -105,9 +115,9 @@ function configureArtTweakState(run) {
   // Connected explored ground makes the authored card backs reachable under
   // normal reveal rules, and gives the player routes to all three enemies.
   for (const pos of [
-    { c: 2, r: 3 }, { c: 1, r: 3 }, { c: 1, r: 2 },
+    { c: 1, r: 2 },
     { c: 2, r: 2 }, { c: 2, r: 1 }, { c: 3, r: 2 },
-    { c: 3, r: 3 }, { c: 4, r: 3 }, { c: 3, r: 4 },
+    { c: 4, r: 1 },
   ]) room.reveal(pos)
 
   const enemies = addSceneEntities(room)

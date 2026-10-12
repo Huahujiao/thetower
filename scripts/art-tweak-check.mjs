@@ -24,13 +24,23 @@ assert.equal(run.battle.stage, 'player')
 assert.ok(StaminaDeck.valid(run.staminaDeck.serialize()))
 const enemies = [...room.entities.values()].filter(entity => entity.kind === 'enemy' && room.isRevealed(entity.pos))
 assert.equal(enemies.length, 3)
+assert.deepEqual(run.player.pos, { c: 2, r: 2 })
+let hiddenBelow = 0, coloredBelow = 0
+for (let r = run.player.pos.r + 1; r < room.height; r++) {
+  for (let c = 0; c < room.width; c++) {
+    assert.equal(room.isRevealed({ c, r }), false)
+    hiddenBelow++
+    if (ATTRIBUTE_ORDER.includes(room.entityAt({ c, r })?.item?.attribute)) coloredBelow++
+  }
+}
+assert.ok(coloredBelow / hiddenBelow >= 0.75)
 run.selectInventory(run.backpack.originIndex(run.backpack.placements[0]))
 assert.ok(enemies.every(enemy => run.previewTileAction(enemy.pos.c, enemy.pos.r)))
 const backs = new Set([...room.entities.values()]
   .filter(entity => !room.isRevealed(entity.pos) && run.tileCanBeFlipped(entity.pos))
   .map(entity => entity.kind === 'enemy' ? entity.attribute : entity.item?.type === 'weapon' ? entity.item.attribute : null))
 assert.deepEqual(backs, new Set([...ATTRIBUTE_ORDER, null]))
-assert.ok(run.clickTile(1, 4))
+assert.ok(run.clickTile(1, 3))
 run.clearSave()
 run.reset()
 assert.deepEqual(run.serialize(), snapshot)
@@ -39,10 +49,13 @@ assert.match(run.log.at(-1), /\u7f8e\u672f\u8c03\u6574\u6b8b\u5c40/)
 
 // Validate actual perspective projection for tall, wide and square viewports.
 for (const aspect of [0.45, 0.75, 1, 2, 4]) {
-  const halfWidth = 4.17, halfDepth = 4.17, height = 2.052
+  const { framing } = run.sceneView
+  const halfWidth = framing.halfWidth * 1.14, halfDepth = framing.halfDepth * 1.14, height = framing.height
   const elevation = run.sceneView.cameraElevation
   const camera = new PerspectiveCamera(45, aspect, 0.1, 80)
   const distance = roomOverviewDistance({ halfWidth, halfDepth, height, elevation, verticalFov: Math.PI / 4, aspect })
+  const overviewDistance = roomOverviewDistance({ halfWidth: 4.17, halfDepth: 4.17, height: 2.052, elevation, verticalFov: Math.PI / 4, aspect })
+  assert.ok(distance < overviewDistance * 0.8, 'Initial view should be substantially closer than the whole room')
   camera.position.set(0, -0.35 + distance * Math.sin(elevation), distance * Math.cos(elevation))
   camera.lookAt(0, -0.35, 0)
   camera.updateMatrixWorld(true)
