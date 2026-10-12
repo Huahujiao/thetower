@@ -5,8 +5,9 @@ import { experienceToNextLevel } from './data/progression.js'
 
 export const ART_TWEAK_VIEW = Object.freeze({
   fitRoom: true, zoom: 1, cameraElevation: 52 * Math.PI / 180, cameraAzimuth: 0,
-  focus: Object.freeze({ c: 2.8, r: 1.65 }),
-  // Closer framing keeps the upper right wall in view and crops its near end.
+  focus: Object.freeze({ c: 3.1, r: 1.65 }),
+  // Size the shot directly from the left enemy's silhouette, not a room box.
+  leftEdge: Object.freeze({ c: 0.55, r: 1, height: 1.35 }),
   framing: Object.freeze({ halfWidth: 2.35, halfDepth: 1.35, height: 1.6 }),
   showUnreachableCardAttributes: true,
 })

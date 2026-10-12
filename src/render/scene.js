@@ -2402,6 +2402,15 @@ export class GameScene {
         elevation: this.cameraElevation, verticalFov, aspect,
       }) / CAMERA_ORBIT_DISTANCE_RATIO
     }
+    if (this.run.sceneView?.leftEdge && this.run.sceneView?.focus) {
+      const { leftEdge, focus } = this.run.sceneView
+      const horizontalSpan = (focus.c - leftEdge.c) * TILE_SIZE
+      const towardCamera = (leftEdge.height + 0.35) * Math.sin(this.cameraElevation)
+        + (leftEdge.r - focus.r) * TILE_SIZE * Math.cos(this.cameraElevation)
+      // Keep just 2% of viewport width outside the leftmost enemy silhouette.
+      this.baseCameraDistance = (horizontalSpan / (Math.tan(horizontalFov / 2) * 0.96)
+        + towardCamera) / CAMERA_ORBIT_DISTANCE_RATIO
+    }
     if (resetView) {
       this.zoom = Number.isFinite(this.run.sceneView?.zoom) ? this.run.sceneView.zoom : DEFAULT_ZOOM
       if (this.run.sceneView?.focus) {
