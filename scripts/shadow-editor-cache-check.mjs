@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { ENEMY_ART_PACK_VERSION } from '../src/animation/shadow-enemies.js'
-import { loadCurrentShadowRoster, loadCurrentShadowProject, SHADOW_TEMPLATE_REVISION_KEY, SHADOW_TEMPLATE_REVISION } from '../src/animation/shadow-editor-cache.js'
+import { loadCurrentShadowRoster, loadCurrentShadowProject, resetStaleShadowCache, SHADOW_TEMPLATE_REVISION_KEY, SHADOW_TEMPLATE_REVISION } from '../src/animation/shadow-editor-cache.js'
 import { saveShadowRoster, SHADOW_PUPPET_ROSTER_STORAGE_KEY, SHADOW_PUPPET_STORAGE_KEY } from '../src/animation/shadow-rig.js'
 
 const previousWindow = globalThis.window
@@ -44,6 +44,11 @@ try {
   entries.set('thetower-shadow-puppet-roster-v2', 'obsolete')
   assert.equal(loadCurrentShadowRoster().enemyArtPackVersion, ENEMY_ART_PACK_VERSION)
   assert(!entries.has('thetower-shadow-puppet-roster-v2'), 'malformed caches are removed rather than migrated')
+  entries.delete(SHADOW_PUPPET_ROSTER_STORAGE_KEY)
+  assert.equal(resetStaleShadowCache(), false, 'game-only visits retain the current revision without an editor roster')
+  entries.set(SHADOW_TEMPLATE_REVISION_KEY, 'previous-code-revision')
+  assert.equal(resetStaleShadowCache(), true, 'a code update still resets animation drafts')
+  assert.equal(resetStaleShadowCache(), false, 'repeated game visits do not keep deleting empty draft keys')
   globalThis.window.localStorage.removeItem = () => { throw new Error('blocked') }
   globalThis.window.localStorage.getItem = () => { throw new Error('blocked') }
   globalThis.window.localStorage.setItem = () => { throw new Error('full') }

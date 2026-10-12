@@ -6,6 +6,7 @@ import * as THREE from 'three'
 import { shadowPartGeometry } from '../animation/shadow-geometry.js'
 import { applyTextureBacking } from './texture-backing.js'
 import { shadowPartFloor } from '../animation/shadow-grounding.js'
+import { enemyTextureUrl } from '../animation/enemy-texture-styles.js'
 
 const images = new Map()
 let projects = null
@@ -22,7 +23,7 @@ function imageFor(url) {
     const image = new Image()
     images.set(url, image)
     image.onload = () => assetReady?.()
-    image.src = url
+    image.src = enemyTextureUrl(url)
   }
   const image = images.get(url)
   return image.complete && image.naturalWidth ? image : null
@@ -171,7 +172,7 @@ const skinTextures = new Map()
 function skinTexture(url) {
   if (!url) return null
   if (!skinTextures.has(url)) {
-    const texture = new THREE.TextureLoader().load(url, () => assetReady?.())
+    const texture = new THREE.TextureLoader().load(enemyTextureUrl(url), () => assetReady?.())
     texture.colorSpace = THREE.SRGBColorSpace
     texture.userData.boardShared = true
     skinTextures.set(url, texture)

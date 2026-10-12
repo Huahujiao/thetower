@@ -3186,82 +3186,205 @@
     }
   },
   "tide-rite-matriarch": {
-    "source": "art/generated/enemy-completion-2026-10-08/sheets/tide-rite-matriarch.png",
+    "sourceFolder": "25潮祀母体",
     "parts": {
       "1": {
-        "width": 99,
-        "height": 149,
-        "sha256": "bd5ea0191844789580063d156684e405bf1d7c5c0daa32825d2c5a46ec6bf9c6"
+        "width": 314,
+        "height": 293,
+        "sha256": "f8aba158641e188c6535de4c7dcf22342af440ef8c4381ff480880e833b60226",
+        "exportBounds": {
+          "x": 438,
+          "y": 0,
+          "width": 314,
+          "height": 293
+        }
       },
       "2": {
-        "width": 51,
-        "height": 46,
-        "sha256": "ca5ea044b8c4e1667dd3b5f1be01d6e6821e79d9ed2f4ec45845e26e877f6e36"
+        "width": 361,
+        "height": 381,
+        "sha256": "6a59aa2e9fbf47b17befab57e83cb0a32d40388f980f71cd5a6d78bf89ab4ba6",
+        "exportBounds": {
+          "x": 1086,
+          "y": 0,
+          "width": 361,
+          "height": 381
+        }
       },
       "3": {
-        "width": 252,
-        "height": 284,
-        "sha256": "22582b28770cce3150dca8fddff97d98f000a96edfdc8d2343cd75e48d60d87d"
+        "width": 230,
+        "height": 386,
+        "sha256": "c0d0d630b4d4bc23c8c0388491cd9c40ee4569ac4a4728b71a93abaeb6dbf9ee",
+        "exportBounds": {
+          "x": 885,
+          "y": 75,
+          "width": 230,
+          "height": 386
+        }
       },
       "4": {
-        "width": 236,
-        "height": 460,
-        "sha256": "576412f3d159ff8e41b4a4e6fc6c9d8fb879fa5446d9e0c73a20866b93bf785c"
+        "width": 279,
+        "height": 410,
+        "sha256": "e7bef815959fec8e6fd09199cd17e549d3442d536b518c495ce59677dae16e25",
+        "exportBounds": {
+          "x": 1,
+          "y": 79,
+          "width": 279,
+          "height": 410
+        }
       },
       "5": {
-        "width": 367,
-        "height": 368,
-        "sha256": "daec5719d9f79a72787f6570f82f2f62d926f100c7a42a5316101ea750f8fbbb"
+        "width": 243,
+        "height": 256,
+        "sha256": "05763a45272d0e9f4af5d6dc3066322d0f979f524c37a0fb10a9aab610ed0550",
+        "exportBounds": {
+          "x": 719,
+          "y": 129,
+          "width": 243,
+          "height": 256
+        }
       },
       "6": {
-        "width": 179,
-        "height": 351,
-        "sha256": "47281c94c7e2d36c7f193a00e43822b1c32ce08ccad466f8f91c20de7e877377"
+        "width": 270,
+        "height": 256,
+        "sha256": "514ff359e1ed8f9dc989505b94089704268321f2ca31f53e8350bf7409e73ac6",
+        "exportBounds": {
+          "x": 184,
+          "y": 131,
+          "width": 270,
+          "height": 256
+        }
       },
       "7": {
-        "width": 356,
-        "height": 450,
-        "sha256": "68ae41c23bca41bc88bb4170b49b9f6eca49c8f1441b1b4ceb08bcf206f6dd57"
+        "width": 239,
+        "height": 260,
+        "sha256": "930987f06f5dd39682d5a0c01fe309268167d57719f3988b21f2370c152e256c",
+        "exportBounds": {
+          "x": 474,
+          "y": 249,
+          "width": 239,
+          "height": 260
+        }
       },
       "8": {
-        "width": 302,
-        "height": 450,
-        "sha256": "565c327212fe5c64446436a65cc17198c5b5f55f5350f3ec4611a4b0c50c9c4f"
+        "width": 235,
+        "height": 254,
+        "sha256": "70f55b3e4990ee5fe9aeba6f8366c22fa44cdd653ca2a70685d37b4ce761409c",
+        "exportBounds": {
+          "x": 1149,
+          "y": 288,
+          "width": 235,
+          "height": 254
+        }
       },
       "9": {
-        "width": 250,
-        "height": 279,
-        "sha256": "44721f45a6ab94505582e45fdb50e9f186818fa045d0fb602f16b62ca99f7d2c"
+        "width": 277,
+        "height": 261,
+        "sha256": "3c2026948cf11ddcc5413dbcbeb36036e39cc630d771c59732288613b7377793",
+        "exportBounds": {
+          "x": 206,
+          "y": 316,
+          "width": 277,
+          "height": 261
+        }
       },
       "10": {
-        "width": 241,
-        "height": 281,
-        "sha256": "5af80fbc84aa416fcda2548ca839bced7b9500e81767945473c6bce6a4286a8e"
+        "width": 251,
+        "height": 258,
+        "sha256": "e506d3d5bd48339cd9a3737bf76c16a3d4c755ec540004912d29087f2fdc0a63",
+        "exportBounds": {
+          "x": 702,
+          "y": 316,
+          "width": 251,
+          "height": 258
+        }
       },
       "11": {
-        "width": 494,
-        "height": 643,
-        "sha256": "a6b04c4fb027c6b6888a575821f427099a9eee07233e49a8665f469c43f78cda"
+        "width": 245,
+        "height": 290,
+        "sha256": "edbece2b3a7ca22ef077aa695b69943d3d062e4e96a649274945ddf15c92aed1",
+        "exportBounds": {
+          "x": 843,
+          "y": 360,
+          "width": 245,
+          "height": 290
+        }
       },
       "12": {
-        "width": 516,
-        "height": 637,
-        "sha256": "f805cd0ee417e9d4757ae0eb890802254ea1c07ee48b4efb89aa9566add9bf2a"
+        "width": 295,
+        "height": 288,
+        "sha256": "ec255fcce0822b2087df496e24aa9ea0a69f701f9099d76b84c52826762a56cc",
+        "exportBounds": {
+          "x": 36,
+          "y": 361,
+          "width": 295,
+          "height": 288
+        }
       },
       "13": {
-        "width": 231,
-        "height": 1016,
-        "sha256": "6477eb28e9b0fa70b8d4d117bee249690b8c734c77d081d0165181c7c929f3ea"
+        "width": 123,
+        "height": 293,
+        "sha256": "652c62848d1b074f8919bff9637b141ee80922153b5db1d138f3e4c866b07aac",
+        "exportBounds": {
+          "x": 1076,
+          "y": 397,
+          "width": 123,
+          "height": 293
+        }
       },
       "14": {
-        "width": 49,
-        "height": 309,
-        "sha256": "a946581f7f2042fdddb488e06df6fc02757a5d461e6d2b63dc8c192d4dd4fb1c"
+        "width": 120,
+        "height": 292,
+        "sha256": "fd4d94aa64fb3f37bd09e1be74585d7c6b3ea083d7976a8a1b908e174fb035af",
+        "exportBounds": {
+          "x": 1328,
+          "y": 398,
+          "width": 120,
+          "height": 292
+        }
       },
       "15": {
-        "width": 50,
-        "height": 308,
-        "sha256": "4c5c8629f81f98a35c3fb214ea69963d7fdf8ed743262f7b3d88549866e6c671"
+        "width": 320,
+        "height": 590,
+        "sha256": "eb21d2af682e7eeabd43d9913a5395de76d45e9866c9718a661c3d1f9d56b457",
+        "exportBounds": {
+          "x": 431,
+          "y": 478,
+          "width": 320,
+          "height": 590
+        }
+      },
+      "16": {
+        "width": 127,
+        "height": 126,
+        "sha256": "61bb0f03791402eea99a64a766884119344b7cbe08dd4e8283619a347afbc954",
+        "exportBounds": {
+          "x": 1201,
+          "y": 522,
+          "width": 127,
+          "height": 126
+        }
+      },
+      "17": {
+        "width": 457,
+        "height": 525,
+        "sha256": "3dcde2bc7b516a8606fecb0a106d6c31a9ac8aa34c06f7d3855ba2babb615fb6",
+        "exportBounds": {
+          "x": 0,
+          "y": 545,
+          "width": 457,
+          "height": 525
+        }
+      },
+      "18": {
+        "width": 524,
+        "height": 525,
+        "sha256": "368b4262ca18fad350cbaa8355c0112d80777fcf21ec16da79c6d91351f16efd",
+        "exportBounds": {
+          "x": 727,
+          "y": 545,
+          "width": 524,
+          "height": 525
+        }
       }
     }
   }

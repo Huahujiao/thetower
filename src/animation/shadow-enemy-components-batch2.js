@@ -70,7 +70,7 @@ export function applyEnemyComponentBatch2(p, { joint, imagePart, pixelLink, keys
     dividedLimb('right-arm', '右腐生臂', 3, 'root', [38, 30, 11], .23,
       [[.17, .22], [.78, .44], [.78, .70]], [[0, 0, 1, .52], [.58, .37, .42, .40], [.57, .63, .43, .37]], 1)
     j('left-hip', '左髋', 'pelvis', [-18, -4, 7])
-    art('left-thigh', '残腿大腿', 8, 'left-hip', .19, [.5, .07], { crop: [0, 0, 1, .94], layer: 5 })
+    art('left-thigh', '残腿大腿', 8, 'left-hip', .19, [.5, .07], { layer: 5 })
     link('left-knee', '左膝', 'left-hip', 8, .19, [.5, .07], [.5, .89], 2)
     art('left-shin', '残腿胫骨', 12, 'left-knee', .18, [.5, .07], { crop: [0, 0, 1, .85], layer: 6 })
     link('left-ankle', '左踝', 'left-knee', 12, .18, [.5, .07], [.48, .77], .3)

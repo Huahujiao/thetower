@@ -12,11 +12,12 @@ export function resetStaleShadowCache() {
   try {
     const storage = window.localStorage
     let roster = null
-    try { roster = JSON.parse(storage.getItem(SHADOW_PUPPET_ROSTER_STORAGE_KEY) || 'null') } catch { /* Remove corrupt drafts too. */ }
+    const storedRoster = storage.getItem(SHADOW_PUPPET_ROSTER_STORAGE_KEY)
+    try { roster = JSON.parse(storedRoster || 'null') } catch { /* Remove corrupt drafts too. */ }
     if (storage.getItem(SHADOW_TEMPLATE_REVISION_KEY) === SHADOW_TEMPLATE_REVISION
-      && roster?.enemyArtPackVersion === ENEMY_ART_PACK_VERSION) return false
+      && (!storedRoster || roster?.enemyArtPackVersion === ENEMY_ART_PACK_VERSION)) return false
     for (const key of CACHE_KEYS) storage.removeItem(key)
-    storage.removeItem(SHADOW_TEMPLATE_REVISION_KEY)
+    storage.setItem(SHADOW_TEMPLATE_REVISION_KEY, SHADOW_TEMPLATE_REVISION)
   } catch { /* An inaccessible or malformed cache must not override code models. */ }
   return true
 }

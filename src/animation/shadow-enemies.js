@@ -7,6 +7,7 @@ import { arrangeMossArmsAndJaw, refineMossDepthAndFeet, alignMossFootContacts, c
 import { raiseSentryCrossbow, alignSentryFootContacts } from './shadow-sentry-crossbow.js'
 import { refineAshCannonAnatomy } from './shadow-ash-cannon.js'
 import { alignCrawlerFootContacts } from './shadow-crawler-skeleton.js'
+import { alignHunterFootContacts } from './shadow-enemy-components-batch3.js'
 import { widenRotWalkerLeftLeg, addRevenantSecondaryArms, exposeFourArmLayouts, splayCrawlerEndLegs, alignBeetleHornTip, tightenRotWalkerArms } from './shadow-enemy-components.js'
 import { createRosterEnemyProject, ROSTER_ENEMY_ART } from './shadow-enemy-roster.js'
 import { adjustEnemyComponentSpacing, adjustEnemyUpperBodyPose, adjustRotWalkerLimbs, adjustRotWalkerFeetAndNeck, alignRotWalkerFootContacts, bringRotWalkerLeftLegForward, adjustShellguardStance, adjustPatrolHoundRig, adjustSalamanderBody, alignSalamanderChest, adjustRotSacToadPose, reconnectSalamanderRig, adjustRootrotHands, adjustTideCubHeadDepth, openBeetleElytra, removeNestSpiderTail, alignGnawerRestPose, alignEnemyFrontalSkeleton, applyEnemyComponentArt, COMPONENT_ENEMY_IDS, BATCH2_COMPONENT_ENEMY_IDS, BATCH3_COMPONENT_ENEMY_IDS, BATCH4_COMPONENT_ENEMY_IDS, BATCH5_COMPONENT_ENEMY_IDS, componentTexturePresets, offsetGnawerForearms, widenEnemyComponentRig } from './shadow-enemy-components.js'
@@ -22,7 +23,7 @@ import {
   upsertShadowKeyframe,
 } from './shadow-rig.js'
 
-export const ENEMY_ART_PACK_VERSION = 57
+export const ENEMY_ART_PACK_VERSION = 85
 export const ENEMY_ART = Object.freeze({
   gnawer: { family: 'humanoid' },
   'emberwing-moth': { family: 'winged' },
@@ -458,6 +459,7 @@ export function createEnemyShadowProject(definition, { withComponentArt = true }
   applyEnemyComponentArt(project)
   faceEnemyForward(project)
   installEnemyGrounding(project)
+  alignHunterFootContacts(project)
   alignRotWalkerFootContacts(project)
   alignMossFootContacts(project)
   alignSentryFootContacts(project)

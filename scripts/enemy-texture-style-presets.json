@@ -1,0 +1,12 @@
+{
+  "styles": [
+    {
+      "id": "pale",
+      "label": "\u4f4e\u9971\u548c\u5ea6",
+      "saturation": 0.62,
+      "gamma": 1,
+      "white_mix": 0,
+      "white_color": [244, 243, 237]
+    }
+  ]
+}

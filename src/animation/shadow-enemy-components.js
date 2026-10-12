@@ -262,7 +262,7 @@ export function exposeFourArmLayouts(project) {
       if (leg) leg.x += sign * 14
     }
   }
-  if (project.enemyId === 'tide-rite-matriarch') {
+  if (project.enemyId === 'tide-rite-matriarch' && !project.joints.some(joint => ['waist-spine', 'ritual-focus'].includes(joint.id))) {
     for (const [side, sign] of [['left', -1], ['right', 1]]) {
       const main = project.joints.find(j => j.id === `${side}-arm`)
       const secondary = project.joints.find(j => j.id === `${side}-prayer`)

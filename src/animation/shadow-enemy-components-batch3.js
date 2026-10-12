@@ -1,9 +1,21 @@
-import { createDefaultShadowProject } from './shadow-rig.js'
+import { createDefaultShadowProject, shadowMatrixEuler, shadowTransformMatrix } from './shadow-rig.js'
 
 export const BATCH3_COMPONENT_ENEMY_IDS = Object.freeze([
   'furnace-beetle', 'thorn-shell-flower', 'water-leech-swarm',
   'whirlpool-eye-sac', 'cinder-curse-lamp-swarm', 'drown-shadow-hunter',
 ])
+
+// Ground contacts are support helpers; the separate toe nodes mark the
+// actual painted claw tips. Do not let the lowest inner toe turn both feet
+// toward the same side when displaying the skeleton.
+export function alignHunterFootContacts(project) {
+  if (project.enemyId !== 'drown-shadow-hunter') return
+  for (const side of ['left', 'right']) {
+    const toe = project.joints.find(joint => joint.id === `${side}-foot-toe`)
+    const contact = project.joints.find(joint => joint.id === `${side}-foot-art-ground-contact`)
+    if (toe && contact) { contact.x = toe.x; contact.z = toe.z }
+  }
+}
 
 // Pixel anchors follow the anatomical sockets in each indexed preview.
 // Cropped segments overlap at real hinges; all artwork remains flat.
@@ -227,59 +239,135 @@ export function applyEnemyComponentBatch3(p, { joint, imagePart, pixelLink, keys
   }
 
   if (p.enemyId === 'cinder-curse-lamp-swarm') {
-    for (const [i, factor, xyz] of [[0, 1, [0, 25, 14]], [1, .7, [-105, -9, -15]], [2, .65, [100, 39, -24]]]) {
+    // The source sheet includes assembled lanterns. Partition those original
+    // transparent silhouettes instead of replacing their ornate cages with
+    // a bare eye and two bars. Every source pixel belongs to exactly one crop.
+    for (const [i, source, scale, xyz] of [
+      [0, 1, .28, [0, 20, 18]],
+      [1, 3, .36, [-136, 43, -12]],
+      [2, 4, .34, [134, 67, -20]],
+    ]) {
       const id = `lamp-${i}`, label = `咒灯${i + 1}`, sign = i % 2 ? -1 : 1
-      j(id, `${label}悬挂轴`, 'root', xyz, { rotationZ: (i - 1) * 5 })
-      art(`${id}-roof`, `${label}灯檐`, 7, id, .40 * factor, [.5, .75], { layer: 7 })
-      j(`${id}-cage`, `${label}灯笼`, id, [0, -25 * factor, 2])
-      j(`${id}-core`, `${label}灯芯`, `${id}-cage`, [0, 0, .5])
-      art(`${id}-core-art`, `${label}焰眼灯芯`, 13, `${id}-core`, .48 * factor, [.5, .5], { layer: 9 })
-      for (const [side, s, cloth] of [['left', -1, 17], ['right', 1, 18]]) {
-        const sideLabel = s < 0 ? '左' : '右'
-        j(`${id}-${side}-bar`, `${label}${sideLabel}笼栏`, `${id}-cage`, [s * 17 * factor, 23 * factor, 1])
-        art(`${id}-${side}-bar-art`, `${label}${sideLabel}笼栏`, 14, `${id}-${side}-bar`, .43 * factor, [.5, .04], { rotationY: s < 0 ? 180 : 0, layer: 10 })
-        motion(`${id}-${side}-bar`, s, 3)
-        attack(`${id}-${side}-bar`, { rotationY: s * 6 }, { rotationY: -s * 24 })
-        const anchor = [s < 0 ? .91 : .10, .03], hinge = [s < 0 ? .4 : .6, s < 0 ? .50 : .30]
-        split(`${id}-${side}-cloth`, `${label}${sideLabel}咒幡`, cloth, id, [s * 23 * factor, -3 * factor, -1], .34 * factor,
-          [anchor, hinge], [[0, 0, 1, s < 0 ? .57 : .37], [0, s < 0 ? .47 : .29, 1, s < 0 ? .53 : .71]], s)
+      const origin = [.5, .35]
+      j(id, `${label}悬挂轴`, 'root', xyz)
+      const anchors = new Map([[id, { uv: origin, z: 0 }]])
+      const piece = (suffix, name, parentSuffix, uv, crop, z, amplitude = 0) => {
+        const target = `${id}-${suffix}`, parent = parentSuffix ? `${id}-${parentSuffix}` : id
+        const from = anchors.get(parent)
+        link(target, `${label}${name}`, parent, source, scale, from.uv, uv, z - from.z)
+        anchors.set(target, { uv, z })
+        art(`${target}-art`, `${label}${name}`, source, target, scale, uv, { crop, layer: 6 })
+        if (amplitude) {
+          // Shallow sway keeps the adjoining painted rims together; the long
+          // streamers can bend more freely below their real hanging points.
+          keys(p, 'idle', target, [[0, {}], [.55, { rotationZ: sign * amplitude * .25 }], [1, {}]])
+          keys(p, 'move', target, [[0, {}], [.3, { rotationZ: sign * amplitude }], [.8, { rotationZ: -sign * amplitude * .7 }], [1, {}]])
+          attack(target, { rotationZ: -sign * amplitude }, { rotationZ: sign * amplitude * 1.3 })
+          keys(p, 'hit', target, [[0, {}], [.3, { rotationZ: -sign * amplitude }], [1, {}]])
+          keys(p, 'death', target, [[0, {}], [.4, { rotationZ: sign * amplitude }], [1, { rotationZ: sign * amplitude * 2 }]])
+        }
       }
-      j(`${id}-tassel`, `${label}垂铃`, `${id}-cage`, [0, -23 * factor, .6])
-      art(`${id}-tassel-art`, `${label}垂铃咒穗`, 23, `${id}-tassel`, .4 * factor, [.5, .03], { layer: 8 })
-      j(`${id}-flame`, `${label}逸焰`, `${id}-core`, [6 * factor, 10 * factor, -1])
-      art(`${id}-flame-art`, `${label}逸焰`, 26, `${id}-flame`, .25 * factor, [.5, .8], { layer: 6 })
-      motion(id, sign, 6); motion(`${id}-cage`, -sign, 7); motion(`${id}-core`, sign, 5)
-      motion(`${id}-tassel`, -sign, 14); motion(`${id}-flame`, sign, 12)
-      attack(id, { rotationZ: -sign * 12, rotationX: -9 }, { rotationZ: sign * 16, rotationX: 10 })
-      attack(`${id}-flame`, { rotationZ: -sign * 19 }, { rotationZ: sign * 25, rotationY: sign * 14 })
+      const [l, r, top, coreTop, coreBottom, waist, tail, sideHinge, sideTail] = i === 0
+        ? [.31, .69, .205, .27, .445, .53, .67, .46, .70]
+        : [.32, .68, .21, .26, .50, .60, .78, .50, .74]
+      piece('roof', '\u591a\u5c42\u706f\u6a90\u4e0e\u5854\u9876', '', [.5, top], [0, 0, 1, top], 0)
+      piece('cage-top', '\u7b3c\u9876\u6881\u67b6', '', [.5, coreTop], [l, top, r - l, coreTop - top], .7)
+      piece('core', '\u7130\u773c\u4e0e\u73af\u5f62\u7b3c\u67b6', '', origin, [l, coreTop, r - l, coreBottom - coreTop], 1.2)
+      piece('cage-base', '\u7b3c\u5e95\u4e0e\u5185\u4fa7\u77ed\u5e61', '', [.5, coreBottom], [l, coreBottom, r - l, waist - coreBottom], .8)
+      piece('tassel', '\u4e2d\u592e\u540a\u9525\u4e0e\u957f\u5e61\u6839', 'cage-base', [.5, waist], [l, waist, r - l, tail - waist], .3, .15)
+      piece('flame-tail', '\u4e2d\u592e\u957f\u5e61\u4e0e\u7114\u5c3e', 'tassel', [.5, tail], [l, tail, r - l, 1 - tail], .1, .3)
+      for (const [side, s, x, w] of [['right', -1, 0, l], ['left', 1, r, 1 - r]]) {
+        const sideLabel = s > 0 ? '左' : '右', hingeX = s < 0 ? l : r
+        const streamX = s < 0 ? l * .7 : r + (1 - r) * .3
+        piece(`${side}-mantle`, `${sideLabel}\u5916\u4fa7\u5492\u5e61\u4e0e\u80a9\u67b6`, 'roof', [hingeX, top], [x, top, w, sideHinge - top], -.7)
+        piece(`${side}-chains`, `${sideLabel}\u5782\u94c3\u94fe\u4e0e\u98d8\u5e26`, `${side}-mantle`, [streamX, sideHinge], [x, sideHinge, w, sideTail - sideHinge], .2, .25)
+        piece(`${side}-streamer`, `${sideLabel}\u957f\u5c3e\u5e61\u4e0e\u672b\u7aef\u94c3`, `${side}-chains`, [streamX, sideTail], [x, sideTail, w, 1 - sideTail], .5, .35)
+      }
+      motion(id, sign, 4)
+      attack(id, { rotationZ: -sign * 7, rotationX: -6 }, { rotationZ: sign * 10, rotationX: 7 })
       keys(p, 'death', id, [[0, {}], [.4, { rotationZ: sign * 12 }], [1, { rotationZ: sign * 34, rotationX: 18 }]])
     }
   }
 
   if (p.enemyId === 'drown-shadow-hunter') {
+    const fitLimb = (partId, endId, from, to, orientationJointId = null) => {
+      const part = p.parts.find(part => part.id === partId), crop = part.visual.textureFrame.crop
+      const dx = (to[0] - from[0]) * part.width / crop.width
+      const dy = -(to[1] - from[1]) * part.height / crop.height
+      Object.assign(part, { rotationZ: Math.atan2(-dy, dx) * 180 / Math.PI,
+        attachment: { type: 'bone', targetId: p.bones.find(bone => bone.toJointId === endId).id,
+          t: 0, followRotation: true, bindLength: Math.hypot(dx, dy),
+          ...(orientationJointId ? { orientationJointId } : {}) } })
+      part.visual.textureFit = 'stretch'
+    }
     art('rib-cage', '猎手胸肋与腰脊', 11, 'root', .30, [.5, .18], { layer: 7 })
-    j('neck', '猎手颈椎', 'root', [0, 12, 4])
-    art('neck-art', '猎手颈椎', 1, 'neck', .25, [.5, .93], { crop: [.23, .48, .54, .52], layer: 7 })
-    link('head', '猎手头', 'neck', 1, .25, [.5, .93], [.5, .44], 3)
-    art('head-art', '猎手颅骨与湿发', 1, 'head', .25, [.5, .44], { crop: [0, 0, 1, .58], layer: 10 })
-    j('jaw', '猎手下颌', 'head', [0, -5, 1])
+    j('neck', '猎手颈椎', 'root', [0, 8, .5])
+    // Centre the painted neck socket, keeping the skull's authored offset.
+    art('neck-art', '猎手颈椎', 1, 'neck', .25, [.70, .93], { crop: [.23, .50, .54, .50], layer: 7 })
+    link('head', '猎手头', 'neck', 1, .25, [.70, .93], [.5, .44], 0)
+    art('head-art', '猎手颅骨与湿发', 1, 'head', .25, [.5, .44], { crop: [0, 0, 1, .50], layer: 10 })
+    j('jaw', '猎手下颌', 'head', [0, -5, .4])
     art('jaw-art', '猎手下颌', 7, 'jaw', .23, [.5, .13], { layer: 11 })
     j('pelvis', '猎手骨盆', 'root', [0, -72, -4])
     art('pelvis-art', '猎手骨盆', 20, 'pelvis', .26, [.5, .16], { layer: 6 })
     motion('neck', 1, 3); motion('head', -1, 5); motion('jaw', 1, 4); motion('pelvis', -1, 4)
-    j('left-shoulder', '左肩', 'root', [-31, 9, -10])
-    art('left-upper-arm', '左上臂', 10, 'left-shoulder', .27, [.5, .08], { layer: 5 })
-    link('left-elbow', '左肘', 'left-shoulder', 10, .27, [.5, .08], [.5, .92])
-    art('left-forearm', '左前臂', 12, 'left-elbow', .23, [.26, .07], { crop: [0, 0, 1, .48], layer: 6 })
-    link('left-wrist', '左腕', 'left-elbow', 12, .23, [.26, .07], [.57, .45])
-    art('left-claw', '左手爪', 12, 'left-wrist', .23, [.57, .45], { crop: [0, .37, 1, .63], layer: 7 })
-    const hand = split('right-arm', '右持镰臂', 8, 'root', [31, 9, 12], .20,
-      [[.38, .05], [.41, .30], [.51, .75]], [[0, 0, 1, .35], [0, .28, 1, .52], [0, .70, 1, .30]], 1)
-    for (const [id, sign, amp] of [['left-shoulder', -1, 13], ['left-elbow', 1, 16], ['left-wrist', -1, 10]]) {
-      motion(id, sign, amp); gait(id, sign, amp)
+    // Attach each upper arm at its painted shoulder cap. The two sockets at
+    // the right elbow are separate in the source PNG and must be joined,
+    // rather than treating the transparent space between them as a hinge.
+    j('left-shoulder', '左肩', 'root', [-28, 10, .8])
+    art('left-upper-arm', '左上臂', 10, 'left-shoulder', .27, [.34, .08], { layer: 8 })
+    link('left-elbow', '左肘', 'left-shoulder', 10, .27, [.34, .08], [.20, .67])
+    art('left-forearm', '左前臂', 12, 'left-elbow', .23, [.23, .055], { crop: [0, 0, 1, .435], layer: 9 })
+    link('left-wrist', '左腕', 'left-elbow', 12, .23, [.23, .055], [.635, .415], 0)
+    // These chain IDs use frontal screen sides: the character's right hand
+    // is the left chain. Mirror that hand around its painted wrist socket.
+    j('left-hand-mirror', '\u624b\u638c\u955c\u50cf', 'left-wrist', [0, 0, 0], { scaleX: -1 })
+    // The painted forearm cuff and palm root use different pixel sockets.
+    // Joining them after the reflection brings the arm left to the hand.
+    art('left-claw', '左手爪', 12, 'left-hand-mirror', .23, [.68, .46], { crop: [0, .445, 1, .555], layer: 12 })
+    j('right-arm', '右持镰臂根', 'root', [28, 10, .8])
+    art('right-arm-upper', '右上臂', 8, 'right-arm', .20, [.29, .055], { crop: [0, 0, 1, .315], layer: 8 })
+    link('right-arm-hinge-1', '右肘', 'right-arm', 8, .20, [.29, .055], [.37, .29])
+    art('right-arm-segment-1', '右前臂', 8, 'right-arm-hinge-1', .20, [.40, .345], { crop: [0, .31, 1, .385], layer: 9 })
+    link('right-arm-hinge-2', '右腕', 'right-arm-hinge-1', 8, .20, [.40, .345], [.74, .675], 0)
+    art('right-arm-segment-2', '右手爪', 8, 'right-arm-hinge-2', .20, [.74, .675], { crop: [0, .655, 1, .345], layer: 12 })
+    link('left-palm-grip', '左掌握点', 'left-wrist', 12, .23, [.68, .46], [.66, .625], 0)
+    link('right-palm-grip', '右掌握点', 'right-arm-hinge-2', 8, .20, [.74, .675], [.66, .795], 0)
+    p.joints.find(v => v.id === 'left-palm-grip').x *= -1
+    for (const [side, sign, shoulderId, elbowId, wristId, forearmId, from, to] of [
+      ['left', -1, 'left-shoulder', 'left-elbow', 'left-wrist', 'left-forearm', [.23, .055], [.635, .415]],
+      ['right', 1, 'right-arm', 'right-arm-hinge-1', 'right-arm-hinge-2', 'right-arm-segment-1', [.40, .345], [.74, .675]],
+    ]) {
+      const shoulder = p.joints.find(v => v.id === shoulderId)
+      const elbow = p.joints.find(v => v.id === elbowId)
+      const wrist = p.joints.find(v => v.id === wristId)
+      const grip = p.joints.find(v => v.id === `${side}-palm-grip`)
+      const degrees = 180 / Math.PI, upperLength = Math.hypot(elbow.x, elbow.y)
+      const upperTurn = Math.atan2(-Math.sqrt(upperLength ** 2 - 9), sign * 3)
+        - Math.atan2(elbow.y, elbow.x)
+      shoulder.rotationZ = upperTurn * degrees
+      const shoulderFrame = shadowTransformMatrix({ rotationZ: shoulder.rotationZ })
+      const e = shoulderFrame.elements
+      const elbowX = shoulder.x + e[0] * elbow.x + e[4] * elbow.y
+      const elbowY = shoulder.y + e[1] * elbow.x + e[5] * elbow.y
+      // Keep painted palm centres level, accounting for different hand sizes.
+      const dx = sign * 18 - grip.x - elbowX, dy = -66 - grip.y - elbowY
+      const dz = 22 - shoulder.z - elbow.z, projected = Math.hypot(dy, dz)
+      const lowerFrame = shadowTransformMatrix({ rotationX: -Math.atan2(dz, -dy) * degrees,
+        rotationZ: (Math.atan2(-projected, dx) - Math.atan2(wrist.y, wrist.x)) * degrees })
+      Object.assign(elbow, shadowMatrixEuler(shoulderFrame.clone().invert().multiply(lowerFrame)))
+      const ratio = Math.hypot(dx, dy, dz) / Math.hypot(wrist.x, wrist.y)
+      wrist.x *= ratio; wrist.y *= ratio
+      Object.assign(wrist, shadowMatrixEuler(lowerFrame.clone().invert()))
+      fitLimb(forearmId, wristId, from, to, elbowId)
+      for (const [id, amp] of [[shoulderId, 13], [elbowId, 16], [wristId, 10]]) {
+        motion(id, sign, amp); gait(id, sign, amp)
+      }
     }
-    j('scythe', '钩镰枢轴', hand, [0, -12, 5], { rotationZ: -8 })
-    art('scythe-art', '溺影钩镰', 2, 'scythe', .18, [.55, .48], { layer: 11 })
+    // The grip belongs to the painted palm, not the wrist pivot. Keep the
+    // shaft just behind the palms so the fingers visibly overlap it.
+    j('scythe', '钩镰枢轴', 'right-palm-grip', [-18, 0, -.6], { rotationZ: -90 })
+    art('scythe-art', '溺影钩镰', 2, 'scythe', .18, [.41, .48], { layer: 11 })
     motion('scythe', -1, 7)
     attack('right-arm', { rotationZ: -24, rotationY: -18 }, { rotationZ: 32, rotationY: 27 })
     attack('right-arm-hinge-1', { rotationZ: -19 }, { rotationZ: 25 })
@@ -287,17 +375,37 @@ export function applyEnemyComponentBatch3(p, { joint, imagePart, pixelLink, keys
     for (const [side, sign, thigh, shin, foot, cape] of [['left', -1, 14, 19, 23, 3], ['right', 1, 13, 18, 22, 4]]) {
       const label = sign < 0 ? '左' : '右'
       const thighTop = [sign < 0 ? .63 : .35, .10], thighBottom = [sign < 0 ? .22 : .80, .91]
-      const shinTop = [sign < 0 ? .47 : .50, .07], shinBottom = [sign < 0 ? .72 : .43, .90]
-      j(`${side}-hip`, `${label}髋`, 'pelvis', [sign * 18, -15, sign * 6])
+      const shinTop = [sign < 0 ? .47 : .50, .07], shinBottom = sign < 0 ? [.50, .88] : [.43, .90]
+      j(`${side}-hip`, `${label}髋`, 'pelvis', [sign * 18, -15, 6])
       art(`${side}-thigh-art`, `${label}大腿`, thigh, `${side}-hip`, .25, thighTop, { layer: 5 })
       link(`${side}-knee`, `${label}膝`, `${side}-hip`, thigh, .25, thighTop, thighBottom)
       art(`${side}-shin-art`, `${label}胫骨`, shin, `${side}-knee`, .26, shinTop, { layer: 6 })
       link(`${side}-ankle`, `${label}踝`, `${side}-knee`, shin, .26, shinTop, shinBottom)
+      // Grounding may adjust the knee-to-ankle segment. Bind both ends of the
+      // artwork to that bone so the painted ankle never drifts off its node.
+      fitLimb(`${side}-shin-art`, `${side}-ankle`, shinTop, shinBottom)
       art(`${side}-foot-art`, `${label}足爪`, foot, `${side}-ankle`, .24, [sign < 0 ? .66 : .23, .10], { layer: 7 })
+      // Each cutout has its own painted outer claw tip, not a shared pixel
+      // path or the automatically chosen lowest (possibly inner) toe.
+      const toe = sign < 0 ? [20 / 131, 133 / 138] : [112 / 142, 123 / 136]
+      link(`${side}-foot-toe`, `${label}\u8db3\u5c16`, `${side}-ankle`, foot, .24,
+        [sign < 0 ? .66 : .23, .10], toe, 0)
       motion(`${side}-hip`, sign, 6); motion(`${side}-knee`, -sign, 9); motion(`${side}-ankle`, sign, 5)
       gait(`${side}-hip`, sign, 14); gait(`${side}-knee`, -sign, 18)
-      split(`${side}-cape`, `${label}湿影披缕`, cape, 'root', [sign * 28, 18, -12], .25,
-        [[sign < 0 ? .1 : .8, .05], [.5, .5]], [[0, 0, 1, .58], [0, .45, 1, .55]], -sign)
+      split(`${side}-cape`, `${label}湿影披缕`, cape, 'root', [sign * 30, 14, -.7], .25,
+        [[sign < 0 ? .1 : .8, .05], [.5, .5]], [[0, 0, 1, .58], [0, .45, 1, .55]], -sign,
+        { rotationZ: sign < 0 ? -40 : 30 })
+      // Tilt around the shoulder attachment, preserving the old tail-tip Z.
+      // Both crops share a plane at the hinge instead of making a depth step.
+      const capeRoot = p.joints.find(v => v.id === `${side}-cape`)
+      const upper = p.parts.find(v => v.id === `${side}-cape-upper`)
+      const u = sign < 0 ? .86 : .36, v = .96, crop = upper.visual.textureFrame.crop
+      const tipX = (u - (sign < 0 ? .1 : .8)) * upper.width / crop.width
+      const tipY = -(v - .05) * upper.height / crop.height
+      const roll = capeRoot.rotationZ * Math.PI / 180
+      const rolledY = Math.sin(roll) * tipX + Math.cos(roll) * tipY
+      capeRoot.rotationX = Math.asin((-15.7 - capeRoot.z) / rolledY) * 180 / Math.PI
+      p.joints.find(v => v.id === `${side}-cape-hinge-1`).z = 0
     }
     keys(p, 'death', 'neck', [[0, {}], [.4, { rotationZ: 4 }], [1, { rotationZ: 10 }]])
     keys(p, 'death', 'head', [[0, {}], [.4, { rotationZ: -3 }], [1, { rotationZ: -8 }]])

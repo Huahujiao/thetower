@@ -1,0 +1,252 @@
+[
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "idle",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 18,
+    "visible": 18,
+    "textured": true,
+    "diagonal": 164.77745632215593
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "idle",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 18,
+    "visible": 18,
+    "textured": true,
+    "diagonal": 164.77745632215593
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "idle",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 18,
+    "visible": 18,
+    "textured": true,
+    "diagonal": 164.77745632215593
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "idle",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 18,
+    "visible": 18,
+    "textured": true,
+    "diagonal": 164.77745632215593
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "idle",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 18,
+    "visible": 18,
+    "textured": true,
+    "diagonal": 164.77745632215593
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "move",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 18,
+    "visible": 18,
+    "textured": true,
+    "diagonal": 164.77745632215593
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "move",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 18,
+    "visible": 18,
+    "textured": true,
+    "diagonal": 164.77745632215593
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "move",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 18,
+    "visible": 18,
+    "textured": true,
+    "diagonal": 164.77745632215593
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "move",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 18,
+    "visible": 18,
+    "textured": true,
+    "diagonal": 164.77745632215593
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "move",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 18,
+    "visible": 18,
+    "textured": true,
+    "diagonal": 164.77745632215593
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "attack",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 18,
+    "visible": 18,
+    "textured": true,
+    "diagonal": 164.77745632215593
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "attack",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 18,
+    "visible": 18,
+    "textured": true,
+    "diagonal": 164.77745632215593
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "attack",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 18,
+    "visible": 18,
+    "textured": true,
+    "diagonal": 164.77745632215593
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "attack",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 18,
+    "visible": 18,
+    "textured": true,
+    "diagonal": 164.77745632215593
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "attack",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 18,
+    "visible": 18,
+    "textured": true,
+    "diagonal": 164.77745632215593
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "hit",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 18,
+    "visible": 18,
+    "textured": true,
+    "diagonal": 164.77745632215593
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "hit",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 18,
+    "visible": 18,
+    "textured": true,
+    "diagonal": 164.77745632215593
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "hit",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 18,
+    "visible": 18,
+    "textured": true,
+    "diagonal": 164.77745632215593
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "hit",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 18,
+    "visible": 18,
+    "textured": true,
+    "diagonal": 164.77745632215593
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "hit",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 18,
+    "visible": 18,
+    "textured": true,
+    "diagonal": 164.77745632215593
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "death",
+    "fraction": 0,
+    "yaw": 0,
+    "parts": 18,
+    "visible": 18,
+    "textured": true,
+    "diagonal": 164.77745632215593
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "death",
+    "fraction": 0.27,
+    "yaw": 0,
+    "parts": 18,
+    "visible": 18,
+    "textured": true,
+    "diagonal": 164.77745632215593
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "death",
+    "fraction": 0.64,
+    "yaw": 0,
+    "parts": 18,
+    "visible": 18,
+    "textured": true,
+    "diagonal": 164.77745632215593
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "death",
+    "fraction": 0.85,
+    "yaw": 0,
+    "parts": 18,
+    "visible": 18,
+    "textured": true,
+    "diagonal": 164.77745632215593
+  },
+  {
+    "enemyId": "tide-rite-matriarch",
+    "action": "death",
+    "fraction": 1,
+    "yaw": 0,
+    "parts": 18,
+    "visible": 18,
+    "textured": true,
+    "diagonal": 164.77745632215593
+  }
+]

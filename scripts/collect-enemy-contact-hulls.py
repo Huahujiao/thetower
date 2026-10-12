@@ -1,12 +1,23 @@
 """Bake opaque-pixel hulls, including atlas crops, for floor constraints."""
+import argparse
 import json
 import subprocess
 from pathlib import Path
 from PIL import Image
 
 root = Path(__file__).resolve().parents[1]
-parts = json.loads(subprocess.check_output(['node', '--input-type=module', '-e', "import {createEnemyShadowProjects} from './src/animation/shadow-enemies.js'; console.log(JSON.stringify(createEnemyShadowProjects({includeBoss:true}).flatMap(p=>p.parts)))"], cwd=root).decode('utf-8'))
-result = {}
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--enemy', help='Update one enemy while preserving other baked hulls')
+args = parser.parse_args()
+projects = json.loads(subprocess.check_output(['node', '--input-type=module', '-e', "import {createEnemyShadowProjects} from './src/animation/shadow-enemies.js'; console.log(JSON.stringify(createEnemyShadowProjects({includeBoss:true})))"], cwd=root).decode('utf-8'))
+if args.enemy and not any(p['enemyId'] == args.enemy for p in projects):
+    raise ValueError(f'Unknown enemy: {args.enemy}')
+parts = [part for project in projects if not args.enemy or project['enemyId'] == args.enemy for part in project['parts']]
+destination = root / 'src/animation/enemy-contact-hulls.json'
+result = json.loads(destination.read_text(encoding='utf-8')) if args.enemy else {}
+if args.enemy:
+    prefix = f'/assets/enemies/components-v1/{args.enemy}/'
+    result = {key: value for key, value in result.items() if not key.startswith(prefix)}
 def hull(points):
     def cross(o, a, b): return (a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0])
     lower, upper = [], []
@@ -36,5 +47,5 @@ for part in parts:
             for col in (pixels[0], pixels[-1]+1):
                 points.extend([(col,row), (col,row+1)])
     result[key] = [[round((px-x)/w, 6), round((py-y)/h, 6)] for px,py in hull(points)]
-(root / 'src/animation/enemy-contact-hulls.json').write_text(json.dumps(result, ensure_ascii=False, separators=(',', ':'))+'\n', encoding='utf-8')
+destination.write_text(json.dumps(result, ensure_ascii=False, separators=(',', ':'))+'\n', encoding='utf-8')
 print(f'Baked {len(result)} opaque texture hulls.')

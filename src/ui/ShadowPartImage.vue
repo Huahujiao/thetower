@@ -7,15 +7,16 @@
 
 <script setup>
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { enemyTextureUrl } from '../animation/enemy-texture-styles.js'
 
-const props = defineProps({ part: { type: Object, required: true } })
+const props = defineProps({ part: { type: Object, required: true }, textureStyle: { type: String, default: 'original' } })
 const canvas = ref(null), loaded = ref(false), error = ref(false)
 let image = null
 function draw() {
   if (!canvas.value) return
   if (image) { image.onload = null; image.onerror = null }
   loaded.value = false; error.value = false
-  const texture = props.part.visual.texture
+  const texture = enemyTextureUrl(props.part.visual.texture, props.textureStyle)
   if (!texture) { error.value = true; return }
   const frame = props.part.visual.textureFrame
   const crop = frame?.crop || { left: 0, top: 0, width: 1, height: 1 }
@@ -33,7 +34,7 @@ function draw() {
   image.onerror = () => { error.value = true }
   image.src = texture
 }
-watch(() => props.part, draw)
+watch(() => [props.part, props.textureStyle], draw)
 onMounted(draw)
 onBeforeUnmount(() => { if (image) { image.onload = null; image.onerror = null } })
 </script>

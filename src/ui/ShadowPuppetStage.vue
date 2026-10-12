@@ -27,6 +27,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { BufferGeometry, Color, DirectionalLight, DoubleSide, EdgesGeometry, Group, HemisphereLight, Line, LineBasicMaterial, LineSegments, Mesh, MeshBasicMaterial, MeshLambertMaterial, OrthographicCamera, PerspectiveCamera, PlaneGeometry, Raycaster, Scene, SphereGeometry, SRGBColorSpace, TextureLoader, TOUCH, Vector2, Vector3, WebGLRenderer } from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { evaluateShadowProject, shadowMatrixPosition } from '../animation/shadow-rig.js'
+import { enemyTextureUrl } from '../animation/enemy-texture-styles.js'
 import { shadowPartGeometry } from '../animation/shadow-geometry.js'
 import { shadowTextureGeometry } from '../animation/shadow-texture-geometry.js'
 import { applyTextureBacking } from '../render/texture-backing.js'
@@ -35,6 +36,7 @@ import { DEFAULT_CAMERA_ELEVATION } from '../render/camera-view.js'
 
 const props = defineProps({
   project: { type: Object, required: true },
+  textureStyle: { type: String, default: 'original' },
   defaultOrbitMode: { type: Boolean, default: false },
   showViewControls: { type: Boolean, default: true },
   animationId: { type: String, default: null },
@@ -301,24 +303,26 @@ function drawScene() {
     const part = entry.part
     if (props.hiddenPartIds.includes(part.id)) continue
     const textured = part.visual.type === 'texture' && Boolean(part.visual.texture)
-    if (textured && !textureCache.has(part.visual.texture)) {
-      const texture = textureLoader.load(part.visual.texture, drawScene)
+    const textureUrl = enemyTextureUrl(part.visual.texture, props.textureStyle)
+    const skinUrl = enemyTextureUrl(part.visual.skinTexture, props.textureStyle)
+    if (textured && !textureCache.has(textureUrl)) {
+      const texture = textureLoader.load(textureUrl, drawScene)
       texture.colorSpace = SRGBColorSpace
-      textureCache.set(part.visual.texture, texture)
+      textureCache.set(textureUrl, texture)
     }
-    const geometry = textured ? shadowTextureGeometry(part, textureCache.get(part.visual.texture)) : cachedPartGeometry(part)
+    const geometry = textured ? shadowTextureGeometry(part, textureCache.get(textureUrl)) : cachedPartGeometry(part)
     const Material = textured ? MeshBasicMaterial : MeshLambertMaterial
     const material = new Material({ color: part.fill, side: DoubleSide, transparent: true, opacity: entry.opacity, depthWrite: true })
     if (textured) {
-      material.map = textureCache.get(part.visual.texture)
+      material.map = textureCache.get(textureUrl)
       material.color.set('#ffffff')
       material.alphaTest = 0.02
-      if (part.visual.skinTexture && !textureCache.has(part.visual.skinTexture)) {
-        const skin = textureLoader.load(part.visual.skinTexture, drawScene)
+      if (skinUrl && !textureCache.has(skinUrl)) {
+        const skin = textureLoader.load(skinUrl, drawScene)
         skin.colorSpace = SRGBColorSpace
-        textureCache.set(part.visual.skinTexture, skin)
+        textureCache.set(skinUrl, skin)
       }
-      applyTextureBacking(material, part.visual.backingColor, textureCache.get(part.visual.skinTexture))
+      applyTextureBacking(material, part.visual.backingColor, textureCache.get(skinUrl))
     }
     const mesh = new Mesh(geometry, material)
     mesh.matrixAutoUpdate = false
@@ -336,10 +340,16 @@ function drawScene() {
     }
   }
   if (props.showBones) {
+    // The hunter's review skeleton ends at the painted toe nodes. Floor
+    // support helpers remain available in the interactive authoring tool.
+    const supportHelpers = !props.jointInteractive && props.project.enemyId === 'drown-shadow-hunter'
+      ? new Set((props.project.grounding?.supports || []).map(support => support.contactId)) : new Set()
     for (const entry of evaluation.value.bones) {
+      if (supportHelpers.has(entry.bone.toJointId)) continue
       line(new Vector3(entry.x1, entry.y1, entry.z1), new Vector3(entry.x2, entry.y2, entry.z2), props.selectedKind === 'bone' && props.selectedId === entry.bone.id ? '#8fd1ff' : '#bd5b50', 'bone', entry.bone.id, 80)
     }
     for (const entry of evaluation.value.joints) {
+      if (supportHelpers.has(entry.joint.id)) continue
       const sphere = new Mesh(new SphereGeometry(props.selectedKind === 'joint' && props.selectedId === entry.joint.id ? 10 : 7, 12, 8), new MeshBasicMaterial({ color: props.selectedKind === 'joint' && props.selectedId === entry.joint.id ? '#8fd1ff' : '#e2b967', depthTest: false, depthWrite: false }))
       sphere.position.copy(new Vector3().setFromMatrixPosition(entry.matrix))
       sphere.renderOrder = 100
@@ -435,7 +445,7 @@ function pointerEnd(event, cancelled = false) {
   for (const remaining of activePointers.values()) remaining.suppressTap = true
 }
 
-watch(() => [props.project, props.animationId, props.time, props.selectedKind, props.selectedId, props.showBones, props.showGrid, props.showParts, props.hiddenPartIds], () => {
+watch(() => [props.project, props.textureStyle, props.animationId, props.time, props.selectedKind, props.selectedId, props.showBones, props.showGrid, props.showParts, props.hiddenPartIds], () => {
   if (orbitMode.value && framedProject !== props.project) framePreview()
   updateCamera()
   drawScene()

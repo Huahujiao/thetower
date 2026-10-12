@@ -1,6 +1,7 @@
 import assets from './enemy-component-assets.json' with { type: 'json' }
-import { createDefaultShadowProject } from './shadow-rig.js'
+import { createDefaultShadowProject, shadowMatrixEuler, shadowTransformMatrix } from './shadow-rig.js'
 import { buildBeastBarrel, reconnectBeastFrontLimbs } from './shadow-beast-barrels.js'
+import { buildTideMatriarch } from './shadow-tide-matriarch.js'
 
 export const BATCH5_COMPONENT_ENEMY_IDS = Object.freeze([
   'patrol-hound', 'redneedle-salamander', 'rot-sac-toad', 'claw-beast',
@@ -351,26 +352,70 @@ export function applyEnemyComponentBatch5(p, { joint, imagePart, pixelLink, keys
   }
 
   if (p.enemyId === 'redwheel-fire-crow') {
-    art('breast', '胸羽', 3, 'root', 106, [.5, .35], { layer: 6 })
-    art('back', '背羽', 4, 'root', 88, [.5, .3], { z: -2, layer: 4 })
+    // A level neck-to-rump axis, with the feather panels lying along it.
+    // The head, wings and hanging feet retain their own anatomical frames.
+    for (const sign of [-1, 1]) {
+      // Fold the two halves around the longitudinal axis. A slight surface
+      // slope exposes the feathers from the front while the body stays level.
+      const crop = [sign < 0 ? 0 : .5, 0, .5, 1]
+      art(sign < 0 ? 'breast' : 'breast-right', '\u80f8\u7fbd', 3, 'root', 106, [.5, .08],
+        { crop, y: -9, z: 36, rotationX: 82, rotationY: sign * 35, layer: 6 })
+      art(sign < 0 ? 'back' : 'back-right', '\u80cc\u7fbd', 4, 'root', 88, [.5, .08],
+        { crop, y: 10, z: 32, rotationX: 82, rotationY: -sign * 35, layer: 4 })
+    }
     foldedFace(77, 59)
+    Object.assign(p.joints.find(j => j.id === 'neck'), { y: 7, z: 30 })
+    Object.assign(p.joints.find(j => j.id === 'head'), { y: 17, z: 45 })
+    // Fold both profiles along the painted diagonal nose bridge, rather than
+    // around a vertical line at the mouth.
+    const face = p.parts.find(part => part.id === 'left-face')
+    const ridgeRoot = [.66, .22], ridgeTip = [.97, .52]
+    const ridgeLengthX = (ridgeTip[0] - ridgeRoot[0]) * face.width
+    const ridgeLengthY = (ridgeTip[1] - ridgeRoot[1]) * face.height
+    const incline = Math.atan2(ridgeLengthY, ridgeLengthX) * 180 / Math.PI
+    j('nose-bridge-tip', '\u9f3b\u6881\u524d\u7aef', 'head', [0, (.64 - ridgeTip[1]) * face.height, -1.5])
+    j('nose-bridge-root', '\u9f3b\u6881\u6839\u90e8', 'nose-bridge-tip', [0, ridgeLengthY, -ridgeLengthX])
+    for (const [side, sign] of [['left', -1], ['right', 1]]) {
+      const folded = shadowTransformMatrix({ rotationX: incline })
+        .multiply(shadowTransformMatrix({ rotationY: -90 }))
+        .multiply(shadowTransformMatrix({ rotationX: sign * 36 }))
+        .multiply(shadowTransformMatrix({ rotationZ: incline }))
+      const part = p.parts.find(part => part.id === `${side}-face`)
+      Object.assign(part, shadowMatrixEuler(folded), { pivotX: ridgeTip[0], pivotY: ridgeTip[1], y: 0, z: 0 })
+      part.attachment.targetId = 'nose-bridge-tip'
+    }
+    // A narrower lower beak sits higher and slightly behind the face folds.
+    const jaw = p.joints.find(joint => joint.id === 'jaw')
+    jaw.y = -3.5
+    jaw.z -= 3
+    for (const [side, turn] of [['left', -74], ['right', -106]]) {
+      p.parts.find(part => part.id === `${side}-jaw`).rotationY = turn
+    }
+    j('haunch', '\u9e1f\u9acb', 'root', [0, 0, -45])
+    art('pelvis-art', '\u9e1f\u9acb\u9aa8', 15, 'haunch', 43, [.5, .55], { rotationX: 90, layer: 5 })
+    j('tail', '\u5c3e\u7fbd\u6839', 'haunch', [0, 1, -8], { rotationX: 90 })
+    art('tail-art', '\u5c3e\u7fbd', 14, 'tail', 60, [.5, .08], { layer: 3 })
+    motion('tail', 1, 4)
     for (const [side, sign, label] of [['left', -1, '左'], ['right', 1, '右']]) {
-      j(`${side}-wing`, `${label}翼根`, 'root', [sign * 28, 28, sign * 9], { rotationZ: sign * 67 })
+      j(`${side}-wing`, `${label}翼根`, 'root', [sign * 23, 3, 17], { rotationX: 90, rotationZ: sign * 67 })
       art(`${side}-inner-wing`, `${label}内翼`, 5, `${side}-wing`, 68, [.5, .07], { layer: 4, rotationY: sign > 0 ? 180 : 0 })
       pixelLink(p, `${side}-wing-tip`, `${label}翼肘`, `${side}-wing`, 5, scale(5, 68), [.5, .07], [.5, .91])
       art(`${side}-outer-wing`, `${label}外翼`, 6, `${side}-wing-tip`, 83, [.5, .07], { layer: 5, rotationY: sign > 0 ? 180 : 0 })
       for (const [id, amp] of [[`${side}-wing`, 11], [`${side}-wing-tip`, 16]]) {
         motion(id, sign, amp)
-        keys(p, 'idle', id, [[0, { rotationX: -amp }], [.5, { rotationX: amp }], [1, { rotationX: -amp }]])
+        keys(p, 'idle', id, [[0, {}], [.5, { rotationX: amp * .6 }], [1, {}]])
         keys(p, 'move', id, [[0, { rotationX: -amp * 1.5 }], [.25, { rotationX: amp * 1.5 }], [.5, { rotationX: -amp * 1.5 }], [.75, { rotationX: amp * 1.5 }], [1, { rotationX: -amp * 1.5 }]])
       }
-      j(`${side}-leg`, `${label}悬足`, 'root', [sign * 15, -41, 3])
+      j(`${side}-leg`, `${label}悬足`, 'haunch', [sign * 15, -10, 24], { rotationX: -18 })
       art(`${side}-leg-art`, `${label}鸟胫`, 7, `${side}-leg`, 42, [.5, .08], { layer: 6 })
       pixelLink(p, `${side}-paw`, `${label}鸟踝`, `${side}-leg`, 7, scale(7, 42), [.5, .08], [.5, .91])
+      p.joints.find(j => j.id === `${side}-paw`).rotationX = 18
       art(`${side}-foot`, `${label}鸟爪`, 8, `${side}-paw`, 26, [.5, .1], { layer: 7 })
       motion(`${side}-leg`, sign, 5)
     }
-    j('wheel', '赤轮轴', 'root', [0, -29, -13])
+    // Carry the upright wheel above the dorsal surface so its hub and rim
+    // remain visible from the front, rather than hiding behind the breast.
+    j('wheel', '赤轮轴', 'root', [0, 59, -25])
     art('wheel-hub', '赤轮核', 9, 'wheel', 30, [.5, .5], { layer: 4 })
     for (let i = 0; i < 4; i++) {
       j(`wheel-spoke-${i}`, `轮羽${i + 1}根`, 'wheel', [0, 0, -.4], { rotationZ: 45 + i * 90 })
@@ -384,78 +429,57 @@ export function applyEnemyComponentBatch5(p, { joint, imagePart, pixelLink, keys
   }
 
   if (p.enemyId === 'tide-rite-matriarch') {
-    p.joints.find(j => j.id === 'root').scaleX = 1.25
-    art('chest', '潮祀胸甲', 3, 'root', 103, [.5, .3], { layer: 7 })
-    j('neck', '潮祀颈', 'root', [0, 34, 4])
-    j('head', '潮祀面', 'neck', [0, 19, 3])
-    art('face', '潮祀面', 1, 'head', 55, [.5, .78], { layer: 10 })
-    j('jaw', '潮祀下颌', 'head', [0, -12, .4])
-    art('jaw-art', '潮祀下颌', 2, 'jaw', 19, [.5, .15], { layer: 11 })
-    art('crown', '召潮冠', 5, 'head', 92, [.5, .6], { y: 20, z: -2, layer: 8 })
-    j('skirt', '悬裾根', 'root', [0, -56, -3])
-    art('skirt-art', '潮祀悬裾', 4, 'skirt', 126, [.5, .03], { layer: 5 })
-    motion('neck', 1, 3); motion('head', -1, 3); motion('skirt', 1, 5)
-    const splitArm = (id, label, n, xyz, size, anchors, crops) => {
-      j(id, `${label}肩`, 'root', xyz)
-      let target = id
-      for (let i = 0; i < anchors.length; i++) {
-        if (i) {
-          const next = `${id}-hinge-${i}`
-          pixelLink(p, next, `${label}${i === 1 ? '肘' : '腕'}`, target, n, scale(n, size), anchors[i - 1], anchors[i])
-          target = next
-        }
-        art(`${id}-part-${i}`, `${label}${['上臂', '前臂', '手'][i]}`, n, target, size, anchors[i], { crop: crops[i], layer: 6 + i })
-        motion(target, id.startsWith('left') ? -1 : 1, i ? 6 : 4)
-      }
-      return target
-    }
-    for (const [side, sign, label, main, prayer, veil] of [['left', -1, '左', 7, 9, 11], ['right', 1, '右', 8, 10, 12]]) {
-      const left = sign < 0
-      const wrist = splitArm(`${side}-arm`, `${label}主`, main, [sign * 37, 22, sign * 11], 115,
-        [[left ? .3 : .6, .10], [left ? .66 : .33, .38], [left ? .89 : .12, .60]],
-        [[0, 0, 1, .47], [left ? .40 : 0, .31, .60, .36], [left ? .73 : 0, .53, .27, .27]])
-      splitArm(`${side}-prayer`, `${label}副祈`, prayer, [sign * 25, -5, -13], 84,
-        [[left ? .39 : .51, .07], [left ? .63 : .34, .42], [left ? .88 : .13, .66]],
-        [[0, 0, 1, .5], [left ? .45 : 0, .34, .55, .40], [left ? .73 : 0, .59, .27, .27]])
-      j(`${side}-veil`, `${label}潮翼`, 'root', [sign * 35, 9, -10], { rotationY: sign * 20, rotationZ: -sign * 8 })
-      art(`${side}-veil-art`, `${label}祭服潮翼`, veil, `${side}-veil`, 145, [left ? .33 : .70, .13], { layer: 3 })
-      motion(`${side}-veil`, sign, 7)
-      attack(`${side}-arm`, { rotationZ: -sign * 15 }, { rotationZ: sign * 22, rotationX: 12 })
-      if (side === 'right') {
-        j('staff', '召潮杖', wrist, [0, -4, 3])
-        art('staff-art', '召潮杖', 13, 'staff', 165, [.5, .53], { layer: 10, rotationZ: -6 })
-        motion('staff', 1, 5)
-        attack('staff', { rotationZ: -18 }, { rotationZ: 16, rotationY: 12 })
-      }
-    }
+    buildTideMatriarch(p, { j, art, pixelLink, motion, attack, keys })
   }
 
   if (p.enemyId === 'overseer') {
-    art('chest', '监视者胸甲', 3, 'root', 137, [.5, .45], { layer: 7 })
-    art('spine', '监视者背脊', 4, 'root', 122, [.5, .35], { z: -4, layer: 3 })
-    j('neck', '监视者颈', 'root', [0, 62, 5])
+    j('upper-body', '\u76d1\u89c6\u8005\u4e0a\u8eab', 'root', [0, -28, 0])
+    art('chest', '监视者胸甲', 3, 'upper-body', 137, [.5, .45], { layer: 7 })
+    j('neck', '监视者颈', 'upper-body', [0, 64, .35])
     art('collar', '监视者颈甲', 13, 'neck', 78, [.5, .35], { layer: 8 })
-    j('head', '监视者首', 'neck', [0, 23, 4])
+    j('head', '监视者首', 'neck', [0, 35, .4])
     art('head-art', '监视者面甲', 1, 'head', 100, [.5, .78], { layer: 10 })
-    j('jaw', '监视者下颌', 'head', [0, -12, 2])
+    j('jaw', '监视者下颌', 'head', [0, -4, .3])
     art('jaw-art', '监视者下颌', 2, 'jaw', 58, [.5, .14], { layer: 11 })
-    j('pelvis', '监视者骨盆', 'root', [0, -61, -4])
+    // Give the vertebrae their own waist segment instead of overlaying ribs.
+    pixelLink(p, 'spine-root', '\u76d1\u89c6\u8005\u810a\u67f1\u4e0a\u7aef', 'upper-body', 3, scale(3, 137), [.5, .45], [.5, .70], -.5)
+    art('spine', '监视者背脊', 4, 'spine-root', 122, [.5, .07], { layer: 6 })
+    pixelLink(p, 'pelvis', '监视者骨盆', 'spine-root', 4, scale(4, 122), [.5, .07], [.5, .90], 1.1)
     art('pelvis-art', '监视者腰甲', 5, 'pelvis', 104, [.5, .13], { layer: 7 })
     for (const [side, sign, label] of [['left', -1, '左'], ['right', 1, '右']]) {
-      j(`${side}-shoulder`, `${label}肩`, 'root', [sign * 54, 40, sign * 12])
-      art(`${side}-pauldron`, `${label}肩甲`, 12, `${side}-shoulder`, 56, [.5, .15], { layer: 8, rotationY: sign > 0 ? 180 : 0 })
-      art(`${side}-upper-arm`, `${label}上臂`, 6, `${side}-shoulder`, 67, [.5, .08], { layer: 5 })
-      pixelLink(p, `${side}-elbow`, `${label}肘`, `${side}-shoulder`, 6, scale(6, 67), [.5, .08], [.5, .91])
-      art(`${side}-forearm`, `${label}前臂`, 7, `${side}-elbow`, 65, [.5, .08], { layer: 6, z: .4 })
-      pixelLink(p, `${side}-wrist`, `${label}腕`, `${side}-elbow`, 7, scale(7, 65), [.5, .08], [.5, .9])
-      art(`${side}-fist`, `${label}拳`, 8, `${side}-wrist`, 48, [.5, .08], { layer: 8, z: .5 })
-      limb(`${side}-leg`, `${label}腿`, 'pelvis', [sign * 26, -7, sign * 8], [9, 10, 11], [65, 62, 51], sign)
+      j(`${side}-shoulder`, `${label}肩`, 'upper-body', [sign * 54, sign < 0 ? 40 : 38, 3.5], { rotationZ: sign * (sign < 0 ? 18 : 10) })
+      art(`${side}-pauldron`, `${label}肩甲`, 12, `${side}-shoulder`, 56, [.5, .15], { z: 1.4, layer: 8, rotationY: sign < 0 ? 180 : 0 })
+      // Lower the arm under its shoulder cap so the upper-arm artwork remains
+      // visibly long, while the elbow, forearm and hand follow the same socket.
+      j(`${side}-arm-root`, `${label}\u5927\u81c2\u63a5\u70b9`, `${side}-shoulder`, [0, -14, 0])
+      art(`${side}-upper-arm`, `${label}上臂`, 6, `${side}-arm-root`, 67, [.5, .08], { layer: 5 })
+      pixelLink(p, `${side}-elbow`, `${label}肘`, `${side}-arm-root`, 6, scale(6, 67), [.5, .08], [.5, .91], .9)
+      p.joints.find(v => v.id === `${side}-elbow`).rotationZ = -sign * (sign < 0 ? 42 : 20)
+      art(`${side}-forearm`, `${label}前臂`, 7, `${side}-elbow`, 65, [.5, .08], { layer: 6 })
+      pixelLink(p, `${side}-wrist`, `${label}腕`, `${side}-elbow`, 7, scale(7, 65), [.5, .08], [.5, .9], .9)
+      p.joints.find(v => v.id === `${side}-wrist`).rotationZ = sign * 8
+      art(`${side}-fist`, `${label}拳`, 8, `${side}-wrist`, 48, [.5, .08], { layer: 8 })
+      limb(`${side}-leg`, `${label}腿`, 'pelvis', [sign * 29, -40, -3], [9, 10, 11], [65, 62, 51], sign)
+      // Put the artwork depth steps on the actual leg joints, so the editor
+      // nodes and the paired limb textures remain in the same depth planes.
+      p.joints.find(v => v.id === `${side}-leg-hip`).rotationZ = sign * 12
+      Object.assign(p.joints.find(v => v.id === `${side}-leg-knee`), { z: .9, rotationZ: -sign * 16 })
+      Object.assign(p.joints.find(v => v.id === `${side}-leg-paw`), { z: .9, rotationZ: sign * 4 })
+      // Follow the planted knee-to-ankle bone so a bent standing pose cannot
+      // pull the shin away from its cuff during the floor constraint.
+      const shin = p.parts.find(v => v.id === `${side}-leg-lower`)
+      shin.z = 0; shin.rotationZ = 90
+      shin.attachment = { type: 'bone', targetId: p.bones.find(b => b.toJointId === `${side}-leg-paw`).id,
+        t: 0, followRotation: true, bindLength: .83 * 62 }
+      shin.visual.textureFit = 'stretch'
+      p.parts.find(v => v.id === `${side}-leg-foot`).z = 0
       motion(`${side}-shoulder`, sign, 4); motion(`${side}-elbow`, -sign, 5); motion(`${side}-wrist`, sign, 4)
       attack(`${side}-shoulder`, { rotationX: -32, rotationZ: -sign * 13 }, { rotationX: 38, rotationZ: sign * 19 })
       attack(`${side}-elbow`, { rotationX: -25 }, { rotationX: 19 })
     }
-    j('banner', '背幡', 'root', [0, 50, -15])
-    art('banner-art', '监视背幡', 14, 'banner', 120, [.5, .05], { layer: 2 })
+    // The former back banner hangs from the front of the waist as a loincloth.
+    pixelLink(p, 'banner', '\u6321\u88c6\u5e03\u6302\u70b9', 'pelvis', 5, scale(5, 104), [.5, .13], [.5, .53], 3)
+    art('banner-art', '\u76d1\u89c6\u8005\u6321\u88c6\u5e03', 14, 'banner', 120, [.5, .05], { layer: 8 })
     motion('banner', -1, 7); motion('head', 1, 3); motion('jaw', -1, 3)
   }
 

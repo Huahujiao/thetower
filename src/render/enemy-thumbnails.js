@@ -1,15 +1,17 @@
 import { Box3, DirectionalLight, DoubleSide, HemisphereLight, Mesh, MeshBasicMaterial, OrthographicCamera, Scene, SRGBColorSpace, TextureLoader, Vector3, WebGLRenderer } from 'three'
 import { evaluateShadowProject } from '../animation/shadow-rig.js'
+import { enemyTextureUrl } from '../animation/enemy-texture-styles.js'
 import { shadowPartGeometry } from '../animation/shadow-geometry.js'
 import { shadowTextureGeometry } from '../animation/shadow-texture-geometry.js'
 import { applyTextureBacking } from './texture-backing.js'
+import { ENEMY_THUMBNAIL_WIDTH as WIDTH, ENEMY_THUMBNAIL_HEIGHT as HEIGHT, ENEMY_THUMBNAIL_QUALITY } from './enemy-thumbnail-settings.js'
 
 // One temporary WebGL context renders the whole list, then releases its GPU
 // resources. The gallery keeps ordinary images rather than 34 live stages.
 export function createEnemyThumbnailRenderer() {
   const renderer = new WebGLRenderer({ antialias: true, alpha: true })
   renderer.setPixelRatio(1)
-  renderer.setSize(300, 360)
+  renderer.setSize(WIDTH, HEIGHT)
   const scene = new Scene()
   scene.add(new HemisphereLight('#e8f2ff', '#46515d', 1.2))
   const light = new DirectionalLight('#ffe5c4', 1.2)
@@ -27,20 +29,20 @@ export function createEnemyThumbnailRenderer() {
     return textures.get(url)
   }
   return {
-    async render(project) {
+    async render(project, textureStyle = 'original') {
       const pose = evaluateShadowProject(project)
-      const urls = new Set(pose.parts.flatMap(({ part }) => [part.visual.texture, part.visual.skinTexture].filter(Boolean)))
+      const urls = new Set(pose.parts.flatMap(({ part }) => [part.visual.texture, part.visual.skinTexture].filter(Boolean).map(url => enemyTextureUrl(url, textureStyle))))
       const loaded = new Map(await Promise.all([...urls].map(async url => [url, await loadTexture(url)])))
       if (disposed) return null
       const meshes = [], bounds = new Box3()
       try {
         for (const entry of pose.parts) {
           if (entry.opacity <= .01) continue
-          const part = entry.part, texture = loaded.get(part.visual.texture)
+          const part = entry.part, texture = loaded.get(enemyTextureUrl(part.visual.texture, textureStyle))
           const geometry = texture ? shadowTextureGeometry(part, texture) : shadowPartGeometry(part)
           const material = new MeshBasicMaterial({ color: texture ? '#ffffff' : part.fill, map: texture || null,
             side: DoubleSide, transparent: true, opacity: entry.opacity, alphaTest: .02 })
-          applyTextureBacking(material, part.visual.backingColor, loaded.get(part.visual.skinTexture))
+          applyTextureBacking(material, part.visual.backingColor, loaded.get(enemyTextureUrl(part.visual.skinTexture, textureStyle)))
           const mesh = new Mesh(geometry, material)
           mesh.matrixAutoUpdate = false
           mesh.matrix.copy(entry.matrix)
@@ -50,13 +52,13 @@ export function createEnemyThumbnailRenderer() {
           bounds.union(geometry.boundingBox.clone().applyMatrix4(entry.matrix))
         }
         const center = bounds.getCenter(new Vector3()), size = bounds.getSize(new Vector3())
-        const halfHeight = Math.max(size.y, size.x * 360 / 300, 1) * .57
-        camera.left = -halfHeight * 300 / 360; camera.right = -camera.left
+        const halfHeight = Math.max(size.y, size.x * HEIGHT / WIDTH, 1) * .57
+        camera.left = -halfHeight * WIDTH / HEIGHT; camera.right = -camera.left
         camera.top = halfHeight; camera.bottom = -halfHeight
         camera.position.set(center.x, center.y, bounds.max.z + 1000)
         camera.lookAt(center); camera.updateProjectionMatrix()
         renderer.render(scene, camera)
-        return renderer.domElement.toDataURL('image/webp', .9)
+        return renderer.domElement.toDataURL('image/webp', ENEMY_THUMBNAIL_QUALITY)
       } finally {
         for (const mesh of meshes) { scene.remove(mesh); mesh.geometry.dispose(); mesh.material.dispose() }
         for (const [url, texture] of loaded) { texture.dispose(); textures.delete(url) }

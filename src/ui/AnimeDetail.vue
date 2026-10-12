@@ -1,12 +1,12 @@
 <template>
   <main class="anime-page anime-detail-page">
     <header class="anime-topbar anime-detail-topbar">
-      <a class="anime-back" href="/animepreview" :aria-label="COPY.back">←</a>
+      <a class="anime-back" :href="enemyGalleryHref(textureStyle)" :aria-label="COPY.back">←</a>
       <h1>{{ project?.name || COPY.missing }}</h1>
       <nav v-if="project" class="anime-detail-neighbors" :aria-label="COPY.switchEnemy">
-        <a v-if="previous" :href="enemyDetailHref(previous.enemyId)" :aria-label="`${COPY.previous}${previous.name}`" :title="previous.name">‹</a>
+        <a v-if="previous" :href="enemyDetailHref(previous.enemyId, textureStyle)" :aria-label="`${COPY.previous}${previous.name}`" :title="previous.name">‹</a>
         <span>{{ index + 1 }} / {{ projects.length }}</span>
-        <a v-if="next" :href="enemyDetailHref(next.enemyId)" :aria-label="`${COPY.next}${next.name}`" :title="next.name">›</a>
+        <a v-if="next" :href="enemyDetailHref(next.enemyId, textureStyle)" :aria-label="`${COPY.next}${next.name}`" :title="next.name">›</a>
       </nav>
     </header>
     <template v-if="project">
@@ -14,9 +14,10 @@
         <div class="rig-stage-options" @pointerdown.stop>
           <label><input v-model="showBones" type="checkbox">{{ COPY.bones }}</label>
           <label><input v-model="showParts" type="checkbox">{{ COPY.textures }}</label>
+          <label class="anime-texture-style">{{ COPY.style }}<select v-model="textureStyle" :aria-label="COPY.textureStyle" @change="updateStyleUrl"><option v-for="style in ENEMY_TEXTURE_STYLES" :key="style.id" :value="style.id">{{ style.label }}</option></select></label>
         </div>
         <ShadowPuppetStage
-          :project="project" default-orbit-mode :show-view-controls="false" :animation-id="animationId" :time="time"
+          :project="project" :texture-style="textureStyle" default-orbit-mode :show-view-controls="false" :animation-id="animationId" :time="time"
           :show-bones="showBones" :show-parts="showParts" :show-grid="false"
           :joint-interactive="false" :bone-interactive="false" :part-interactive="false" interactive
         />
@@ -42,7 +43,7 @@
         <div v-else id="parts-panel" class="anime-detail-parts-scroll" role="tabpanel" aria-labelledby="parts-tab">
           <div class="anime-detail-parts-grid">
             <button v-for="(part, partIndex) in project.parts" :key="part.id" class="anime-detail-part-card" type="button" @click="openPart(part)">
-              <ShadowPartImage :part="part" />
+              <ShadowPartImage :part="part" :texture-style="textureStyle" />
               <span class="anime-part-name"><small>{{ String(partIndex + 1).padStart(2, '0') }}</small>{{ part.name }}</span>
             </button>
           </div>
@@ -51,8 +52,9 @@
       <dialog ref="partDialog" class="anime-part-dialog" :aria-label="selectedPart?.name" @click="closePartOnBackdrop" @close="selectedPart = null">
         <template v-if="selectedPart">
           <header><h2>{{ selectedPart.name }}</h2><button type="button" :aria-label="COPY.close" @click="partDialog.close()">×</button></header>
-          <ShadowPartImage :part="selectedPart" />
-          <a :href="selectedPart.visual.texture" target="_blank" rel="noopener">{{ COPY.source }}</a>
+          <ShadowPartImage :part="selectedPart" :texture-style="textureStyle" />
+          <a :href="selectedTextureUrl" target="_blank" rel="noopener">{{ COPY.source }}</a>
+          <a v-if="textureStyle !== 'original'" :href="selectedPart.visual.texture" target="_blank" rel="noopener">{{ COPY.original }}</a>
         </template>
       </dialog>
     </template>
@@ -63,7 +65,8 @@
 <script setup>
 import { computed, markRaw, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { SHADOW_ANIMATION_TYPES } from '../animation/shadow-rig.js'
-import { createEnemyPreviewModels, enemyDetailHref } from '../animation/shadow-preview-models.js'
+import { createEnemyPreviewModels, enemyDetailHref, enemyGalleryHref } from '../animation/shadow-preview-models.js'
+import { ENEMY_TEXTURE_STYLES, enemyTextureUrl, normalizeEnemyTextureStyle } from '../animation/enemy-texture-styles.js'
 import ShadowPuppetStage from './ShadowPuppetStage.vue'
 import ShadowPartImage from './ShadowPartImage.vue'
 import '../anime.css'
@@ -74,7 +77,8 @@ const COPY = Object.freeze({
   view: '\u4e09\u7ef4\u89c6\u56fe', bones: '\u9aa8\u67b6', textures: '\u8d34\u56fe', tools: '\u67e5\u770b\u529f\u80fd',
   actions: '\u52a8\u4f5c\u64ad\u653e', parts: '\u90e8\u4ef6\u5217\u8868', stand: '\u7ad9\u59ff', progress: '\u8fdb\u5ea6',
   play: '\u64ad\u653e', pause: '\u6682\u505c', restart: '\u91cd\u64ad', speed: '\u901f\u5ea6', loop: '\u5faa\u73af',
-  close: '\u5173\u95ed', source: '\u67e5\u770b\u539f\u59cb\u8d34\u56fe',
+  close: '\u5173\u95ed', source: '\u67e5\u770b\u5f53\u524d\u8d34\u56fe', original: '\u67e5\u770b\u539f\u56fe',
+  style: '\u98ce\u683c', textureStyle: '\u8d34\u56fe\u98ce\u683c',
 })
 const projects = markRaw(createEnemyPreviewModels())
 const pathId = window.location.pathname.replace(/\/$/, '').split('/')[2]
@@ -86,9 +90,18 @@ const actions = SHADOW_ANIMATION_TYPES.filter(type => project?.animations[type.i
 const tab = ref('animation'), animationId = ref(null), time = ref(0)
 const speed = ref(1), playing = ref(false), loop = ref(true)
 const showBones = ref(false), showParts = ref(true)
+const textureStyle = ref(normalizeEnemyTextureStyle(new window.URLSearchParams(window.location.search).get('style')))
 const selectedPart = ref(null), partDialog = ref(null)
+const selectedTextureUrl = computed(() => enemyTextureUrl(selectedPart.value?.visual.texture, textureStyle.value))
 const animation = computed(() => project?.animations[animationId.value || 'idle'] || { duration: 1 })
 let frameId = 0, previousTimestamp = 0
+
+function updateStyleUrl() {
+  const url = new window.URL(window.location.href)
+  if (textureStyle.value === 'original') url.searchParams.delete('style')
+  else url.searchParams.set('style', textureStyle.value)
+  window.history.replaceState(null, '', url)
+}
 
 function playAnimation(id) {
   animationId.value = id; time.value = 0; playing.value = true

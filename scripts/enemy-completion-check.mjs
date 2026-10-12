@@ -8,6 +8,8 @@ import { shadowPartFloor } from '../src/animation/shadow-grounding.js'
 import { BATCH5_COMPONENT_ENEMY_IDS } from '../src/animation/shadow-enemy-components-batch5.js'
 import componentAssets from '../src/animation/enemy-component-assets.json' with { type: 'json' }
 import { rebuildEnemyGrounding } from '../src/animation/enemy-grounding.js'
+import { shadowTextureGeometry } from '../src/animation/shadow-texture-geometry.js'
+import { TIDE_ARM_SOCKETS, tideSheetAnchor } from '../src/animation/shadow-tide-matriarch.js'
 
 const projects = createEnemyShadowProjects({ includeBoss: true })
 function restoreV36WalkerArms(project) {
@@ -39,6 +41,123 @@ function textureSocket(entry, u, v) {
   const { part, matrix } = entry, crop = part.visual.textureFrame.crop
   return new Vector3(((u - crop.left) / crop.width - part.pivotX) * part.width,
     (part.pivotY - (v - crop.top) / crop.height) * part.height, 0).applyMatrix4(matrix)
+}
+function assertTidalSporeConnections(pose) {
+  for (const [i, baseUv, bottom, top, grip] of [
+    [0, [.25, .10], [.63, .966], [.15, .04], [.935, .357]],
+    [1, [.438, .065], [.50, .975], [.18, .045], [.85, .37]],
+    [2, [.66, .13], [.52, .955], [.24, .05], [.818, .25]],
+  ]) {
+    const base = pose.parts.find(e => e.part.id === `base-${i}-art`)
+    const stem = pose.parts.find(e => e.part.id === `stem-${i}-art`)
+    const fruit = pose.parts.find(e => e.part.id === `pod-${i}-art`)
+    const start = new Vector3().setFromMatrixPosition(pose.jointsById.get(`stem-${i}`).matrix)
+    const end = new Vector3().setFromMatrixPosition(pose.jointsById.get(`pod-${i}`).matrix)
+    assert(Math.abs(textureSocket(base, ...baseUv).distanceTo(start) - .9) < 1e-6
+      && textureSocket(stem, ...bottom).distanceTo(start) < 1e-6,
+    `tidal-spore-sac ${i}: stem must join its own painted base neck`)
+    assert(Math.abs(textureSocket(stem, ...top).distanceTo(end) - .65) < 1e-6
+      && textureSocket(fruit, ...grip).distanceTo(end) < 1e-6,
+    `tidal-spore-sac ${i}: hanging fruit must remain connected to its own stalk`)
+  }
+}
+function assertHunterSockets(pose) {
+  assert(pose.parts.find(entry => entry.part.id === 'left-claw').matrix.determinant() < 0
+    && pose.parts.find(entry => entry.part.id === 'right-arm-segment-2').matrix.determinant() > 0
+    && pose.parts.find(entry => entry.part.id === 'left-forearm').matrix.determinant() > 0
+    && pose.parts.find(entry => entry.part.id === 'right-arm-segment-1').matrix.determinant() > 0
+    && pose.parts.find(entry => entry.part.id === 'scythe-art').matrix.determinant() > 0,
+  'hunter character-right hand (screen-left) should be mirrored; the other hand, forearms and weapon keep their authored facing')
+  for (const [partId, uv, jointId, overlap] of [
+    ['left-upper-arm', [.20, .67], 'left-elbow', .3],
+    ['left-upper-arm', [.34, .08], 'left-shoulder', 0],
+    ['left-forearm', [.23, .055], 'left-elbow', 0],
+    ['left-forearm', [.635, .415], 'left-wrist', 0],
+    ['left-claw', [.68, .46], 'left-wrist', 0],
+    ['left-claw', [.66, .625], 'left-palm-grip', 0],
+    ['right-arm-upper', [.29, .055], 'right-arm', 0],
+    ['right-arm-upper', [.37, .29], 'right-arm-hinge-1', .3],
+    ['right-arm-segment-1', [.40, .345], 'right-arm-hinge-1', 0],
+    ['right-arm-segment-1', [.74, .675], 'right-arm-hinge-2', 0],
+    ['right-arm-segment-2', [.74, .675], 'right-arm-hinge-2', 0],
+    ['right-arm-segment-2', [.66, .795], 'right-palm-grip', 0],
+    ['left-cape-upper', [.5, .5], 'left-cape-hinge-1', 0],
+    ['left-cape-segment-1', [.5, .5], 'left-cape-hinge-1', 0],
+    ['right-cape-upper', [.5, .5], 'right-cape-hinge-1', 0],
+    ['right-cape-segment-1', [.5, .5], 'right-cape-hinge-1', 0],
+    ['left-shin-art', [.50, .88], 'left-ankle', 0],
+    ['right-shin-art', [.43, .90], 'right-ankle', 0],
+    ['left-foot-art', [20 / 131, 133 / 138], 'left-foot-toe', 0],
+    ['right-foot-art', [112 / 142, 123 / 136], 'right-foot-toe', 0],
+  ]) {
+    const part = pose.parts.find(part => part.part.id === partId)
+    const joint = new Vector3().setFromMatrixPosition(pose.jointsById.get(jointId).matrix)
+    assert(Math.abs(textureSocket(part, ...uv).distanceTo(joint) - overlap) < 1e-6,
+      `hunter ${partId}: skeleton node must follow its own painted socket`)
+  }
+}
+function assertCrackedHunterSockets(pose) {
+  const sockets = [
+    ['chest', [.5, .035], 'head', 1.25], ['head-chin-art', [.34, .60], 'head', 0],
+    ['head-art', [.53, .50], 'jaw', .25], ['jaw-art', [.90, .68], 'jaw', 0],
+    ['chest', [.5, .86], 'spine', .8], ['spine-art', [.5, .08], 'spine', 0],
+    ['spine-art', [.5, .88], 'pelvis', 2.5], ['pelvis-art', [.5, .10], 'pelvis', 0],
+    ['right-arm-part-0', [.60, .10], 'right-arm', 0],
+    ['right-arm-part-0', [.50, .38], 'right-arm-hinge-1', .3],
+    ['right-arm-part-1', [.50, .38], 'right-arm-hinge-1', 0],
+    ['right-arm-part-1', [.50, .73], 'right-arm-hinge-2', .3],
+    ['right-arm-part-2', [.50, .73], 'right-arm-hinge-2', 0],
+    ['right-arm-part-2', [.56, .78], 'hook', .35], ['hook-art', [.445, .47], 'hook', 0],
+    ['right-pauldron', [.18, .16], 'spectral-pauldron', 3],
+    ['missing-arm-part-0', [.37, .06], 'missing-arm', 0],
+    ['missing-arm-part-0', [.67, .44], 'missing-arm-hinge-1', .3],
+    ['missing-arm-part-1', [.67, .44], 'missing-arm-hinge-1', 0],
+    ['missing-arm-part-1', [.48, .91], 'missing-arm-tip', .3],
+  ]
+  for (const [side, sign] of [['left', -1], ['right', 1]]) {
+    sockets.push(
+      ['pelvis-art', [sign < 0 ? .23 : .77, .25], `${side}-hip`, 1.3],
+      [`${side}-thigh-art`, [sign < 0 ? .48 : .50, .09], `${side}-hip`, 0],
+      [`${side}-thigh-art`, [sign < 0 ? .48 : .50, sign < 0 ? .61 : .72], `${side}-knee`, .3],
+      [`${side}-shin-art`, [.52, .20], `${side}-knee`, 0],
+      [`${side}-shin-art`, [sign < 0 ? .48 : .52, sign < 0 ? .87 : .88], `${side}-ankle`, 0],
+      [`${side}-foot-art`, [sign < 0 ? .66 : .27, .15], `${side}-ankle`, 0],
+      [`${side}-foot-art`, sign < 0 ? [1 / 171, 118 / 145] : [206 / 208, 114 / 140], `${side}-foot-toe`, 0],
+    )
+  }
+  for (const [id, uv, jointId, depth] of sockets) {
+    const entry = pose.parts.find(e => e.part.id === id)
+    const joint = new Vector3().setFromMatrixPosition(pose.jointsById.get(jointId).matrix)
+    assert(Math.abs(textureSocket(entry, ...uv).distanceTo(joint) - depth) < 1e-6,
+      `cracked-hunter ${id}: joint must stay at the painted socket with only the intentional depth gap`)
+  }
+}
+function assertCrowFaceFold(pose) {
+  for (const side of ['left', 'right']) {
+    const face = pose.parts.find(part => part.part.id === `${side}-face`)
+    for (const [u, v, id] of [[.66, .22, 'nose-bridge-root'], [.97, .52, 'nose-bridge-tip']]) {
+      const hinge = new Vector3().setFromMatrixPosition(pose.jointsById.get(id).matrix)
+      assert(textureSocket(face, u, v).distanceTo(hinge) < 1e-6,
+        'crow faces must meet along both ends of the diagonal nose bridge throughout animation')
+    }
+  }
+}
+function assertTideMatriarchConnections(pose) {
+  for (const { id, upper, lower, shoulder, elbow, lowerSocket } of TIDE_ARM_SOCKETS) {
+    const top = pose.parts.find(entry => entry.part.id === `${id}-upper`)
+    const forearm = pose.parts.find(entry => entry.part.id === `${id}-forearm`)
+    const start = new Vector3().setFromMatrixPosition(pose.jointsById.get(id).matrix)
+    const hinge = new Vector3().setFromMatrixPosition(pose.jointsById.get(`${id}-elbow`).matrix)
+    assert(textureSocket(top, ...tideSheetAnchor(upper, shoulder)).distanceTo(start) < 1e-6,
+      `${id}: upper arm must stay connected to its shoulder`)
+    assert(textureSocket(top, ...tideSheetAnchor(upper, elbow)).distanceTo(hinge) < 1e-6
+      && textureSocket(forearm, ...tideSheetAnchor(lower, lowerSocket)).distanceTo(hinge) < 1e-6,
+    `${id}: both painted elbow balls must share one hinge after normalization and animation`)
+  }
+  const orb = pose.parts.find(entry => entry.part.id === 'focus-orb')
+  const core = new Vector3().setFromMatrixPosition(pose.jointsById.get('focus-core').matrix)
+  assert(Math.abs(textureSocket(orb, ...tideSheetAnchor(16, [1265, 585])).distanceTo(core) - .5) < 1e-6,
+    'matriarch glowing orb must remain centered in the floating instrument')
 }
 function assertMossConnections(pose) {
   const spine = pose.parts.find(p => p.part.id === 'spine')
@@ -225,6 +344,125 @@ let frames = 0, parts = 0
 for (const source of projects) {
   const p = normalizeShadowProject(source)
   assert.equal(p.joints.find(j => j.id === 'root').rotationY, 0, `${p.enemyId}: angled default facing`)
+  const standaloneSheets = {
+    'rot-walker': [['left-thigh', 8, .19, [.5, .07]]],
+    'cracked-hunter': [['spine-art', 3, .18, [.5, .08]], ['right-pauldron', 7, .20, [.18, .16]]],
+    'bomb-wisp': [['shell-art', 5, .34, [.5, .26]], ['roof-art', 2, .35, [.5, .58]]],
+  }[p.enemyId] || []
+  for (const model of [source, p]) for (const [id, number, scale, anchor] of standaloneSheets) {
+    const part = model.parts.find(part => part.id === id), image = componentAssets[p.enemyId].parts[number]
+    assert.deepEqual(part.visual.textureFrame.crop, { left: 0, top: 0, width: 1, height: 1 },
+      `${p.enemyId}/${id}: a standalone sheet must retain its bottom edge in both the part list and model`)
+    assert(Math.abs(part.width - image.width * scale) < 1e-6 && Math.abs(part.height - image.height * scale) < 1e-6,
+      `${p.enemyId}/${id}: uncropping must expand the bounds, not compress the complete image`)
+    assert.equal(part.pivotX, anchor[0]); assert.equal(part.pivotY, anchor[1])
+    const geometry = shadowTextureGeometry(part, { image })
+    const uv = geometry.attributes.uv
+    for (const axis of ['getX', 'getY']) {
+      const values = Array.from({ length: uv.count }, (_, i) => uv[axis](i))
+      assert(Math.abs(Math.min(...values)) < 1e-6 && Math.abs(Math.max(...values) - 1) < 1e-6,
+        `${p.enemyId}/${id}: three-dimensional texture geometry must sample the complete image`)
+    }
+    geometry.dispose()
+  }
+  if (p.enemyId === 'cracked-hunter') for (const model of [source, p]) {
+    const rest = evaluateShadowProject(model)
+    assertCrackedHunterSockets(rest)
+    assert(rest.jointsById.get('right-arm').matrix.elements[12] < 0
+      && rest.jointsById.get('missing-arm').matrix.elements[12] > 0,
+    'cracked-hunter character-right gripping arm must be on screen-left, spectral arm on screen-right')
+    assert.equal(model.bones.find(b => b.toJointId === 'spectral-pauldron').fromJointId, 'missing-arm')
+    assert(rest.parts.find(e => e.part.id === 'hook-art').matrix.elements[14]
+      < rest.parts.find(e => e.part.id === 'right-arm-part-2').matrix.elements[14],
+    'cracked-hunter gripping fingers must be in front of the handle')
+    for (const [a, b] of ['plate', 'hip', 'knee', 'ankle', 'foot-toe'].map(id => [`left-${id}`, `right-${id}`])) {
+      assert(Math.abs(rest.jointsById.get(a).matrix.elements[14] - rest.jointsById.get(b).matrix.elements[14]) < 1e-6,
+        `cracked-hunter ${a}/${b}: paired rest joints must share the same depth`)
+    }
+    for (const id of ['plate-art', 'thigh-art', 'shin-art', 'foot-art']) {
+      assert.equal(rest.parts.find(e => e.part.id === `left-${id}`).matrix.elements[14], rest.parts.find(e => e.part.id === `right-${id}`).matrix.elements[14])
+    }
+    const depth = id => rest.parts.find(e => e.part.id === id).matrix.elements[14]
+    assert(depth('spine-art') < depth('chest') && depth('spine-art') < depth('pelvis-art'),
+      'spine ends should tuck behind the connected chest and pelvis armor')
+    assert(depth('chest') < depth('head-art'))
+    assert(depth('chest') < depth('pelvis-art'))
+    assert(depth('missing-arm-part-0') < depth('right-plate-art'), 'character-left upper arm must sit behind its active armor plate')
+    for (const side of ['left', 'right']) {
+      assert(depth(`${side}-thigh-art`) < depth('pelvis-art') && depth(`${side}-shin-art`) < depth('pelvis-art'),
+        'both connected legs must sit behind the pelvis armor')
+    }
+    const grip = textureSocket(rest.parts.find(e => e.part.id === 'hook-art'), .445, .47)
+    const blade = textureSocket(rest.parts.find(e => e.part.id === 'hook-art'), .98, .215)
+    assert(blade.x > grip.x && blade.y < grip.y, 'held weapon blade should point down and right from the palm')
+    const headParts = model.parts.filter(part => part.visual.texture.endsWith('/part_002.png'))
+    assert.equal(headParts.length, 3)
+    const crops = headParts.map(part => part.visual.textureFrame.crop)
+    assert(Math.abs(crops.reduce((area, c) => area + c.width * c.height, 0) - 1) < 1e-6,
+      'articulating the detached mandible must retain every region of the complete head sheet')
+    for (let i = 0; i < crops.length; i++) for (let j = i + 1; j < crops.length; j++) {
+      const a = crops[i], b = crops[j]
+      assert(Math.min(a.left + a.width, b.left + b.width) <= Math.max(a.left, b.left)
+        || Math.min(a.top + a.height, b.top + b.height) <= Math.max(a.top, b.top), 'head regions must not duplicate the jaw artwork')
+    }
+  }
+  if (p.enemyId === 'overseer') for (const model of [source, p]) {
+    const rest = evaluateShadowProject(model)
+    const part = id => rest.parts.find(e => e.part.id === id)
+    const depth = id => part(id).matrix.elements[14]
+    assert.equal(model.bones.find(b => b.toJointId === 'spine-root').fromJointId, 'upper-body')
+    assert.equal(model.bones.find(b => b.toJointId === 'pelvis').fromJointId, 'spine-root')
+    const spineTop = textureSocket(part('spine'), .5, .07)
+    const spineBottom = textureSocket(part('spine'), .5, .90)
+    assert(spineTop.y > spineBottom.y && spineTop.y - spineBottom.y > 90,
+      'overseer vertebrae must provide their own connected height above the waist')
+    assert(Math.abs(textureSocket(part('chest'), .5, .70).distanceTo(spineTop) - .5) < 1e-6)
+    assert(Math.abs(spineBottom.distanceTo(textureSocket(part('pelvis-art'), .5, .13)) - 1.1) < 1e-6)
+    const bodyDepths = ['chest', 'collar', 'head-art', 'jaw-art'].map(depth)
+    assert(Math.max(...bodyDepths) - Math.min(...bodyDepths) < 1.5 && depth('jaw-art') > depth('collar'),
+      'overseer face and collar must stay close to the torso depth, with the jaw in front')
+    assert.equal(model.bones.find(b => b.toJointId === 'banner').fromJointId, 'pelvis')
+    assert(depth('banner-art') > depth('pelvis-art') && part('banner-art').matrix.elements[13] < part('pelvis-art').matrix.elements[13],
+      'overseer former back banner must hang from the front of the waist')
+    const waistSocket = textureSocket(part('pelvis-art'), .5, .53)
+    const clothSocket = textureSocket(part('banner-art'), .5, .05)
+    assert(Math.abs(waistSocket.distanceTo(clothSocket) - 3) < 1e-6,
+      'overseer loincloth must meet its waist socket with only the intended depth gap')
+    for (const id of ['pauldron', 'upper-arm', 'forearm', 'fist', 'leg-upper', 'leg-lower', 'leg-foot']) {
+      assert(Math.abs(depth(`left-${id}`) - depth(`right-${id}`)) < 1e-6,
+        `overseer ${id}: paired artwork must share its rest depth`)
+    }
+    for (const side of ['left', 'right']) {
+      assert(depth(`${side}-leg-upper`) < depth('pelvis-art'), 'overseer thighs must sit behind the waist armor')
+      for (const [id, jointId] of [['forearm', 'elbow'], ['fist', 'wrist'], ['leg-lower', 'leg-knee'], ['leg-foot', 'leg-paw']]) {
+        assert(Math.abs(textureSocket(part(`${side}-${id}`), .5, id === 'leg-foot' ? .12 : .08)
+          .distanceTo(new Vector3().setFromMatrixPosition(rest.jointsById.get(`${side}-${jointId}`).matrix))) < 1e-6,
+        `overseer ${side}-${id}: artwork must follow the depth of its skeleton node`)
+      }
+    }
+  }
+  if (p.enemyId === 'tidal-spore-sac') for (const model of [source, p]) {
+    assert.equal(model.parts.length, 9, 'tidal-spore-sac should have exactly three bases, three stalks and three fruits')
+    for (const kind of ['base', 'stem', 'pod']) assert.equal(model.parts.filter(part => new RegExp(`^${kind}-[0-2]-art$`).test(part.id)).length, 3)
+    assert.equal(model.grounding.supports.length, 3, 'all three spore bases should have planted contacts')
+    const rest = evaluateShadowProject(model)
+    assertTidalSporeConnections(rest)
+    const depths = rest.parts.map(e => e.matrix.elements[14])
+    for (let i = 0; i < depths.length; i++) for (let k = i + 1; k < depths.length; k++) {
+      assert(Math.abs(depths[i] - depths[k]) >= .6, 'spore texture planes should have distinct rest depths with enough clearance')
+    }
+    assert(Math.max(...depths) - Math.min(...depths) < 6.5, 'spore depth staggering must preserve connected front and oblique silhouettes')
+    for (let i = 0; i < 3; i++) {
+      assert.equal(model.bones.find(b => b.toJointId === `stem-${i}`).fromJointId, `base-${i}`)
+      assert.equal(model.bones.find(b => b.toJointId === `pod-${i}`).fromJointId, `stem-${i}`)
+      assert(model.grounding.supports.some(s => s.partId === `base-${i}-art`))
+      if (i) {
+        const current = textureSocket(rest.parts.find(e => e.part.id === `pod-${i}-art`), .5, .45)
+        const previous = textureSocket(rest.parts.find(e => e.part.id === `pod-${i - 1}-art`), .5, .45)
+        assert(current.x - previous.x > 50, 'spore fruits should remain visibly separated in the front pose')
+      }
+    }
+  }
   if (p.enemyId === 'gnawer') {
     const rest = evaluateShadowProject(p)
     const position = id => rest.jointsById.get(id).matrix.elements
@@ -254,6 +492,79 @@ for (const source of projects) {
     for (const side of ['left', 'right']) {
       const outward = side === 'left' ? -1 : 1
       assert((position(`${side}-root-tip`)[12] - position(`${side}-root`)[12]) * outward > 0, 'rootrot-bud roots should spread outward')
+    }
+  }
+  if (p.enemyId === 'drown-shadow-hunter') for (const model of [p, normalizeShadowProject(p)]) {
+    const rest = evaluateShadowProject(model)
+    assertHunterSockets(rest)
+    const position = id => rest.jointsById.get(id).matrix.elements
+    const leftHand = position('left-wrist'), rightHand = position('right-arm-hinge-2')
+    assert(Math.abs(leftHand[14] - rightHand[14]) < 1e-6 && leftHand[14] > position('root')[14],
+      'hunter hands must share the depth in front of the chest')
+    assert(leftHand[12] < 0 && rightHand[12] > 0,
+      'hunter wrists should sit on opposite sides')
+    const leftGrip = position('left-palm-grip'), rightGrip = position('right-palm-grip')
+    assert(Math.abs(leftGrip[13] - rightGrip[13]) < 1e-6 && Math.abs(leftGrip[14] - rightGrip[14]) < 1e-6,
+      'hunter painted palms, rather than unequal hand wrist pivots, should share a horizontal grip')
+    for (const [shoulderId, elbowId, wristId] of [
+      ['left-shoulder', 'left-elbow', 'left-wrist'], ['right-arm', 'right-arm-hinge-1', 'right-arm-hinge-2'],
+    ]) {
+      const shoulder = position(shoulderId), elbow = position(elbowId), wrist = position(wristId)
+      assert(Math.abs(shoulder[14] - position('root')[14]) < 1 && Math.abs(elbow[14] - shoulder[14]) < .5,
+        'hunter upper arms should stay close to the shoulder and torso plane')
+      assert(Math.abs(elbow[12] - shoulder[12]) < 4 && wrist[14] - elbow[14] > 15,
+        'hunter forearms should bend forward instead of spreading both upper arms sideways')
+    }
+    assert(Math.abs(position('neck')[14] - position('root')[14]) < 1
+      && Math.abs(position('head')[14] - position('neck')[14]) < 1e-6,
+    'hunter head and neck should stay in the torso depth plane')
+    const head = rest.parts.find(entry => entry.part.id === 'head-art')
+    const neck = rest.parts.find(entry => entry.part.id === 'neck-art')
+    const chest = rest.parts.find(entry => entry.part.id === 'rib-cage')
+    assert(textureSocket(neck, .70, .965).distanceTo(textureSocket(chest, .5, .12)) < 1,
+      'hunter painted neck base should meet the collar without a large gap or overlap')
+    assert(Math.abs(textureSocket(neck, .70, .965).x - position('root')[12]) < 1e-6
+      && Math.abs(position('neck')[12] - position('root')[12]) < 1e-6
+      && position('head')[12] < position('neck')[12] - 8,
+    'hunter should centre the painted neck socket while retaining the skull offset')
+    for (const [id, u] of [['left-shoulder', .072], ['right-arm', .928]]) {
+      assert(textureSocket(chest, u, .072).distanceTo(new Vector3().setFromMatrixPosition(rest.jointsById.get(id).matrix)) < 1,
+        'hunter upper-arm cap should meet its painted chest shoulder socket')
+    }
+    assert(textureSocket(head, .5, .5).distanceTo(textureSocket(neck, .5, .5)) < 1e-6,
+      'hunter head and neck crops should meet at one seam without duplicate artwork or a gap')
+    assert(head.part.visual.textureFrame.crop.top + head.part.visual.textureFrame.crop.height
+      === neck.part.visual.textureFrame.crop.top, 'hunter head and neck must not repeat the same cropped strip')
+    assert(Math.abs(position('left-ankle')[14] - position('right-ankle')[14]) < 1e-6
+      && position('left-ankle')[14] > position('pelvis')[14], 'hunter feet must share the front depth')
+    for (const [side, sign] of [['left', -1], ['right', 1]]) {
+      const ankle = position(`${side}-ankle`)
+      for (const id of [`${side}-foot-toe`, `${side}-foot-art-ground-contact`]) {
+        assert((position(id)[12] - ankle[12]) * sign > 10,
+          'hunter toe and ground helper must point outward on their own side')
+      }
+    }
+    const weapon = rest.parts.find(entry => entry.part.id === 'scythe-art')
+    const top = textureSocket(weapon, .41, 0), bottom = textureSocket(weapon, .41, 1)
+    assert(Math.abs(top.y - bottom.y) < 1e-6 && Math.abs(top.x - bottom.x) > 150,
+      'hunter hook weapon should lie horizontally across the waist')
+    for (const [id, uv] of [['left-claw', [.66, .625]], ['right-arm-segment-2', [.66, .795]]]) {
+      const palm = textureSocket(rest.parts.find(entry => entry.part.id === id), ...uv)
+      assert(palm.x > Math.min(top.x, bottom.x) && palm.x < Math.max(top.x, bottom.x)
+        && Math.abs(palm.y - top.y) < 1e-6 && palm.z > top.z && palm.z - top.z < 1,
+      'hunter weapon shaft must pass beneath both painted palms')
+    }
+    assert(model.bones.find(bone => bone.toJointId === 'scythe').fromJointId === 'right-palm-grip',
+      'hunter weapon must attach to its painted palm grip instead of the wrist')
+    assert(Math.abs(position('scythe')[13] + 66) < 1e-6,
+      'hunter weapon should sit lower in the palms')
+    assert(position('left-cape-hinge-1')[12] < -30 && position('right-cape-hinge-1')[12] > 30,
+      'hunter cape tails must spread toward separate sides instead of overlapping at the center')
+    for (const [side, u] of [['left', .86], ['right', .36]]) {
+      const cape = rest.parts.find(entry => entry.part.id === `${side}-cape-segment-1`)
+      const tip = textureSocket(cape, u, .96), shoulder = position(`${side}-cape`)
+      assert(Math.abs(tip.z + 15.7) < 1e-6 && Math.abs(shoulder[14]) < 1 && tip.z < shoulder[14] - 10,
+        'hunter cape roots should meet the shoulders while preserving the existing rear tail depth')
     }
   }
   if (['gnawer', 'rootrot-bud', 'beetle-guard', 'shellguard', 'ash-cannon-bug', 'furnace-beetle'].includes(p.enemyId)) assertFrontalSkeleton(p)
@@ -388,6 +699,35 @@ for (const source of projects) {
       }
     }
   }
+  if (p.enemyId === 'cinder-curse-lamp-swarm') {
+    assert(p.grounding.floating, 'curse lanterns must float without floor constraints stretching their hanging streamers')
+    const rest = evaluateShadowProject(p, null, 0)
+    for (const [i, n, scale] of [[0, 1, .28], [1, 3, .36], [2, 4, .34]]) {
+      const pieces = rest.parts.filter(e => e.part.id.startsWith(`lamp-${i}-`))
+      const lampInverse = rest.jointsById.get(`lamp-${i}`).matrix.clone().invert()
+      const source = componentAssets[p.enemyId].parts[n]
+      const crops = pieces.map(e => e.part.visual.textureFrame.crop)
+      assert.equal(pieces.length, 12, 'each complete lantern should retain its roof, cage, banners, bell chains and trailing flames as articulated regions')
+      assert(Math.abs(crops.reduce((area, crop) => area + crop.width * crop.height, 0) - 1) < 1e-8,
+        'lantern crops must retain the entire assembled reference rather than omit its bells or long banners')
+      for (let a = 0; a < crops.length; a++) for (let b = a + 1; b < crops.length; b++) {
+        const xOverlap = Math.min(crops[a].left + crops[a].width, crops[b].left + crops[b].width) - Math.max(crops[a].left, crops[b].left)
+        const yOverlap = Math.min(crops[a].top + crops[a].height, crops[b].top + crops[b].height) - Math.max(crops[a].top, crops[b].top)
+        assert(xOverlap <= 1e-8 || yOverlap <= 1e-8, 'lantern artwork must not duplicate opaque regions that hide each other')
+      }
+      for (const entry of pieces) {
+        assert(entry.part.visual.texture.endsWith(`/part_${String(n).padStart(3, '0')}.png`),
+          'the swarm should use the original main lantern and two distinct complete variants')
+        const crop = entry.part.visual.textureFrame.crop
+        for (const [u, v] of [[crop.left, crop.top], [crop.left + crop.width, crop.top + crop.height]]) {
+          const point = textureSocket(entry, u, v).applyMatrix4(lampInverse)
+          assert(Math.abs(point.x - (u - .5) * source.width * scale) < 1e-6 && Math.abs(point.y - (.35 - v) * source.height * scale) < 1e-6,
+            'lantern skeleton anchors must reconstruct the original assembled silhouette without moving cut regions apart')
+          assert(Math.abs(point.z) <= 1.3, 'lantern regions should use shallow depth separation')
+        }
+      }
+    }
+  }
   if (p.enemyId === 'thorn-shell-flower') {
     const rest = evaluateShadowProject(p, null, 0, { raw: true })
     const lower = rest.parts.find(e => e.part.id === 'lower-stem-art')
@@ -447,13 +787,32 @@ for (const source of projects) {
       'revenant should retain all four claw-arm assets')
   }
   if (p.enemyId === 'tide-rite-matriarch') {
+    const rest = evaluateShadowProject(p, null, 0)
+    assert(p.grounding.floating && !p.joints.some(joint => /sole|leg|foot/.test(joint.id)),
+      'matriarch should remain a floating robed creature without invented legs')
+    assert.equal(p.parts.length, 18)
+    for (let n = 1; n <= 18; n++) assert(p.parts.some(part => part.visual.texture.endsWith(`/part_${String(n).padStart(3, '0')}.png`)),
+      'matriarch should use every new user-sliced cutout, including both instrument pendants and the orb')
+    assert(!p.joints.some(joint => /staff|jaw|spine/.test(joint.id)), 'new matriarch must not retain old staff or invented anatomy')
     for (const side of ['left', 'right']) {
       const main = p.joints.find(j => j.id === `${side}-arm`)
       const secondary = p.joints.find(j => j.id === `${side}-prayer`)
       const veil = p.joints.find(j => j.id === `${side}-veil`)
-      assert(main.y - secondary.y > 50 && Math.abs(veil.x) > Math.abs(main.x) + 30,
-        'matriarch arms and veils should spread in XY as well as depth')
+      assert(main.y - secondary.y > 50, 'matriarch upper and lower arm pairs should remain visibly separated')
+      for (const id of [`${side}-arm`, `${side}-prayer`]) {
+        const rootFrame = rest.jointsById.get('root').matrix.clone().invert()
+        const shoulder = new Vector3().setFromMatrixPosition(rest.jointsById.get(id).matrix).applyMatrix4(rootFrame)
+        const elbow = new Vector3().setFromMatrixPosition(rest.jointsById.get(`${id}-elbow`).matrix).applyMatrix4(rootFrame)
+        assert(elbow.z > shoulder.z + 3, 'all four matriarch arms should lean forward')
+        assert(Math.abs(elbow.x) > Math.abs(shoulder.x) + 20, 'all four matriarch arms should spread outside the torso')
+      }
+      assert.equal(p.bones.find(bone => bone.toJointId === veil.id).fromJointId, 'skirt',
+        'matriarch side robes must hang from the waist instead of the shoulders')
     }
+    const prepare = evaluateShadowProject(p, 'attack', p.animations.attack.duration * .27)
+    const release = evaluateShadowProject(p, 'attack', p.animations.attack.duration * .64)
+    assert(release.parts.find(entry => entry.part.id === 'focus-orb').opacity > prepare.parts.find(entry => entry.part.id === 'focus-orb').opacity,
+      'matriarch casting should brighten the instrument core')
   }
   if (p.enemyId === 'rot-sac-toad') {
     assert.equal(p.name, '\u8150\u56ca\u86e4\u87c6')
@@ -506,6 +865,11 @@ for (const source of projects) {
         assertSalamanderConnections(pose)
       }
       if (p.enemyId === 'beetle-guard') { assertBeetleWings(pose); assertBeetleHorn(pose) }
+      if (p.enemyId === 'redwheel-fire-crow') assertCrowFaceFold(pose)
+      if (p.enemyId === 'tide-rite-matriarch') assertTideMatriarchConnections(pose)
+      if (p.enemyId === 'drown-shadow-hunter') assertHunterSockets(pose)
+      if (p.enemyId === 'tidal-spore-sac') assertTidalSporeConnections(pose)
+      if (p.enemyId === 'cracked-hunter') assertCrackedHunterSockets(pose)
       frames++
       for (const part of pose.parts) {
         assert(part.matrix.elements.every(Number.isFinite))
@@ -530,14 +894,20 @@ for (const source of projects.filter(p => ['moss-colossus', 'revenant-guard'].in
 }
 for (const id of ['patrol-hound', 'redwheel-fire-crow']) {
   const p = projects.find(p => p.enemyId === id)
+  const pose = evaluateShadowProject(p, null, 0)
   for (const suffix of ['face', 'jaw']) {
     const a = p.parts.find(p => p.id === `left-${suffix}`), b = p.parts.find(p => p.id === `right-${suffix}`)
     assert.equal(a.visual.texture, b.visual.texture, `${id}: mismatched mirrored profiles`)
     assert.equal(a.attachment.targetId, b.attachment.targetId, `${id}: split fold hinge`)
     assert.equal(a.width, b.width); assert.equal(a.height, b.height)
     assert.equal(a.x, b.x); assert.equal(a.y, b.y); assert.equal(a.z, b.z)
-    assert(Math.abs(Math.cos(a.rotationY * Math.PI / 180) + Math.cos(b.rotationY * Math.PI / 180)) < 1e-8)
-    assert(Math.abs(Math.sin(a.rotationY * Math.PI / 180) - Math.sin(b.rotationY * Math.PI / 180)) < 1e-8)
+    const hingeX = pose.jointsById.get(a.attachment.targetId).matrix.elements[12]
+    for (const [u, v] of [[.25, .2], [.5, .5], [.85, .8]]) {
+      const left = textureSocket(pose.parts.find(part => part.part.id === a.id), u, v)
+      const right = textureSocket(pose.parts.find(part => part.part.id === b.id), u, v)
+      assert(Math.abs(left.x + right.x - 2 * hingeX) < 1e-8)
+      assert(Math.abs(left.y - right.y) < 1e-8); assert(Math.abs(left.z - right.z) < 1e-8)
+    }
   }
 }
 // The live editor cache must receive all nine templates, including the boss,

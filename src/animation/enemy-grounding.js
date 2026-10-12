@@ -6,7 +6,7 @@ const SPECIAL_SUPPORTS = {
   shellguard: ['left-coffin-root-lower', 'right-coffin-root-lower'],
   'sentry-crossbow': ['left-tripod-lower', 'right-tripod-lower'],
   'thorn-shell-flower': ['left-root-segment-1', 'right-root-segment-1'],
-  'tidal-spore-sac': ['left-root-art', 'right-root-art'],
+  'tidal-spore-sac': ['base-0-art', 'base-1-art', 'base-2-art'],
   'water-leech-swarm': ['leech-0-body-upper', 'leech-1-body-upper', 'leech-2-body-upper'],
   'leech-larva': ['front-body'],
 }

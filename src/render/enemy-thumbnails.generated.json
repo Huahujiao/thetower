@@ -1,0 +1,486 @@
+{
+  "width": 300,
+  "height": 360,
+  "styles": [
+    "original",
+    "pale"
+  ],
+  "enemies": [
+    {
+      "enemyId": "gnawer",
+      "name": "猩鬼",
+      "images": {
+        "original": {
+          "url": "/assets/enemies/thumbnails/original/gnawer-f42341c03f51ae82e794.webp",
+          "revision": "f42341c03f51ae82e794"
+        },
+        "pale": {
+          "url": "/assets/enemies/thumbnails/pale/gnawer-9e20573b184f632083e1.webp",
+          "revision": "9e20573b184f632083e1"
+        }
+      }
+    },
+    {
+      "enemyId": "emberwing-moth",
+      "name": "烬翅蛾",
+      "images": {
+        "original": {
+          "url": "/assets/enemies/thumbnails/original/emberwing-moth-e38fff769e62bce0d78f.webp",
+          "revision": "e38fff769e62bce0d78f"
+        },
+        "pale": {
+          "url": "/assets/enemies/thumbnails/pale/emberwing-moth-f8e4ac080a48d3348fc9.webp",
+          "revision": "f8e4ac080a48d3348fc9"
+        }
+      }
+    },
+    {
+      "enemyId": "rootrot-bud",
+      "name": "腐根芽",
+      "images": {
+        "original": {
+          "url": "/assets/enemies/thumbnails/original/rootrot-bud-0b2d621e07124955bb99.webp",
+          "revision": "0b2d621e07124955bb99"
+        },
+        "pale": {
+          "url": "/assets/enemies/thumbnails/pale/rootrot-bud-ed479ec5f33c67da732e.webp",
+          "revision": "ed479ec5f33c67da732e"
+        }
+      }
+    },
+    {
+      "enemyId": "tide-shadow-cub",
+      "name": "潮影幼兽",
+      "images": {
+        "original": {
+          "url": "/assets/enemies/thumbnails/original/tide-shadow-cub-fb72ea28fe6935cc25de.webp",
+          "revision": "fb72ea28fe6935cc25de"
+        },
+        "pale": {
+          "url": "/assets/enemies/thumbnails/pale/tide-shadow-cub-402038a6967ccccba4ec.webp",
+          "revision": "402038a6967ccccba4ec"
+        }
+      }
+    },
+    {
+      "enemyId": "nest-spider",
+      "name": "伏巢蜘蛛",
+      "images": {
+        "original": {
+          "url": "/assets/enemies/thumbnails/original/nest-spider-a251b55c73e3aefa3328.webp",
+          "revision": "a251b55c73e3aefa3328"
+        },
+        "pale": {
+          "url": "/assets/enemies/thumbnails/pale/nest-spider-ba8a77956a73e8b5abf7.webp",
+          "revision": "ba8a77956a73e8b5abf7"
+        }
+      }
+    },
+    {
+      "enemyId": "beetle-guard",
+      "name": "甲壳虫卫",
+      "images": {
+        "original": {
+          "url": "/assets/enemies/thumbnails/original/beetle-guard-9db2cc04a2a5b9eeaef9.webp",
+          "revision": "9db2cc04a2a5b9eeaef9"
+        },
+        "pale": {
+          "url": "/assets/enemies/thumbnails/pale/beetle-guard-1b7042634c1a228b9d3c.webp",
+          "revision": "1b7042634c1a228b9d3c"
+        }
+      }
+    },
+    {
+      "enemyId": "rot-walker",
+      "name": "腐肉行者",
+      "images": {
+        "original": {
+          "url": "/assets/enemies/thumbnails/original/rot-walker-321bcb1cc628d5a63cde.webp",
+          "revision": "321bcb1cc628d5a63cde"
+        },
+        "pale": {
+          "url": "/assets/enemies/thumbnails/pale/rot-walker-96ad6b09f46c7caead02.webp",
+          "revision": "96ad6b09f46c7caead02"
+        }
+      }
+    },
+    {
+      "enemyId": "shellguard",
+      "name": "重甲卫士",
+      "images": {
+        "original": {
+          "url": "/assets/enemies/thumbnails/original/shellguard-ea8e851a9fe29c3519fc.webp",
+          "revision": "ea8e851a9fe29c3519fc"
+        },
+        "pale": {
+          "url": "/assets/enemies/thumbnails/pale/shellguard-b7cd0b8082385d1ab82b.webp",
+          "revision": "b7cd0b8082385d1ab82b"
+        }
+      }
+    },
+    {
+      "enemyId": "wisp",
+      "name": "幽光投矛者",
+      "images": {
+        "original": {
+          "url": "/assets/enemies/thumbnails/original/wisp-b83f4488ae16448bedc1.webp",
+          "revision": "b83f4488ae16448bedc1"
+        },
+        "pale": {
+          "url": "/assets/enemies/thumbnails/pale/wisp-1bba50cd8b671bd38c30.webp",
+          "revision": "1bba50cd8b671bd38c30"
+        }
+      }
+    },
+    {
+      "enemyId": "patrol-hound",
+      "name": "巡路犬",
+      "images": {
+        "original": {
+          "url": "/assets/enemies/thumbnails/original/patrol-hound-6c26f22bc5192f09e641.webp",
+          "revision": "6c26f22bc5192f09e641"
+        },
+        "pale": {
+          "url": "/assets/enemies/thumbnails/pale/patrol-hound-6558195955a21905b7af.webp",
+          "revision": "6558195955a21905b7af"
+        }
+      }
+    },
+    {
+      "enemyId": "redneedle-salamander",
+      "name": "赤针火蜥",
+      "images": {
+        "original": {
+          "url": "/assets/enemies/thumbnails/original/redneedle-salamander-d11921d446d93a1edcb2.webp",
+          "revision": "d11921d446d93a1edcb2"
+        },
+        "pale": {
+          "url": "/assets/enemies/thumbnails/pale/redneedle-salamander-ab94858c152e44586dd0.webp",
+          "revision": "ab94858c152e44586dd0"
+        }
+      }
+    },
+    {
+      "enemyId": "rot-sac-toad",
+      "name": "腐囊蛤蟆",
+      "images": {
+        "original": {
+          "url": "/assets/enemies/thumbnails/original/rot-sac-toad-759ea6392c64d85c61af.webp",
+          "revision": "759ea6392c64d85c61af"
+        },
+        "pale": {
+          "url": "/assets/enemies/thumbnails/pale/rot-sac-toad-5dd1ccb938c760f644ee.webp",
+          "revision": "5dd1ccb938c760f644ee"
+        }
+      }
+    },
+    {
+      "enemyId": "claw-beast",
+      "name": "溺爪兽",
+      "images": {
+        "original": {
+          "url": "/assets/enemies/thumbnails/original/claw-beast-9190f1615275c7443e2c.webp",
+          "revision": "9190f1615275c7443e2c"
+        },
+        "pale": {
+          "url": "/assets/enemies/thumbnails/pale/claw-beast-79d646d0755257c7d1ea.webp",
+          "revision": "79d646d0755257c7d1ea"
+        }
+      }
+    },
+    {
+      "enemyId": "broodmother",
+      "name": "裂腹虫母",
+      "images": {
+        "original": {
+          "url": "/assets/enemies/thumbnails/original/broodmother-0f5f36f4c87bfec045d2.webp",
+          "revision": "0f5f36f4c87bfec045d2"
+        },
+        "pale": {
+          "url": "/assets/enemies/thumbnails/pale/broodmother-90a1cc67a24ba7ae1edd.webp",
+          "revision": "90a1cc67a24ba7ae1edd"
+        }
+      }
+    },
+    {
+      "enemyId": "moss-colossus",
+      "name": "苔藓巨像",
+      "images": {
+        "original": {
+          "url": "/assets/enemies/thumbnails/original/moss-colossus-aba7dda6271905244d42.webp",
+          "revision": "aba7dda6271905244d42"
+        },
+        "pale": {
+          "url": "/assets/enemies/thumbnails/pale/moss-colossus-ea1f9693801519a0ee8a.webp",
+          "revision": "ea1f9693801519a0ee8a"
+        }
+      }
+    },
+    {
+      "enemyId": "sentry-crossbow",
+      "name": "哨戒弩手",
+      "images": {
+        "original": {
+          "url": "/assets/enemies/thumbnails/original/sentry-crossbow-67111336a6e406469130.webp",
+          "revision": "67111336a6e406469130"
+        },
+        "pale": {
+          "url": "/assets/enemies/thumbnails/pale/sentry-crossbow-257f1827970129f50966.webp",
+          "revision": "257f1827970129f50966"
+        }
+      }
+    },
+    {
+      "enemyId": "ash-cannon-bug",
+      "name": "灰烬炮虫",
+      "images": {
+        "original": {
+          "url": "/assets/enemies/thumbnails/original/ash-cannon-bug-64e7d52e04fbcfc65809.webp",
+          "revision": "64e7d52e04fbcfc65809"
+        },
+        "pale": {
+          "url": "/assets/enemies/thumbnails/pale/ash-cannon-bug-6ceca0d3a95ba4f36074.webp",
+          "revision": "6ceca0d3a95ba4f36074"
+        }
+      }
+    },
+    {
+      "enemyId": "furnace-beetle",
+      "name": "炉爆甲虫",
+      "images": {
+        "original": {
+          "url": "/assets/enemies/thumbnails/original/furnace-beetle-21ddac3f1e65131b1fdf.webp",
+          "revision": "21ddac3f1e65131b1fdf"
+        },
+        "pale": {
+          "url": "/assets/enemies/thumbnails/pale/furnace-beetle-cb29c603d5f4d30ff436.webp",
+          "revision": "cb29c603d5f4d30ff436"
+        }
+      }
+    },
+    {
+      "enemyId": "thorn-shell-flower",
+      "name": "棘壳花",
+      "images": {
+        "original": {
+          "url": "/assets/enemies/thumbnails/original/thorn-shell-flower-f3e10a287f6ff052dae6.webp",
+          "revision": "f3e10a287f6ff052dae6"
+        },
+        "pale": {
+          "url": "/assets/enemies/thumbnails/pale/thorn-shell-flower-c595fee1605e47dd78f1.webp",
+          "revision": "c595fee1605e47dd78f1"
+        }
+      }
+    },
+    {
+      "enemyId": "water-leech-swarm",
+      "name": "水尸蛭群",
+      "images": {
+        "original": {
+          "url": "/assets/enemies/thumbnails/original/water-leech-swarm-416b82b085a432fc4f49.webp",
+          "revision": "416b82b085a432fc4f49"
+        },
+        "pale": {
+          "url": "/assets/enemies/thumbnails/pale/water-leech-swarm-f5ef580a81a6988144d2.webp",
+          "revision": "f5ef580a81a6988144d2"
+        }
+      }
+    },
+    {
+      "enemyId": "whirlpool-eye-sac",
+      "name": "涡眼浮囊",
+      "images": {
+        "original": {
+          "url": "/assets/enemies/thumbnails/original/whirlpool-eye-sac-568ba149566e60020197.webp",
+          "revision": "568ba149566e60020197"
+        },
+        "pale": {
+          "url": "/assets/enemies/thumbnails/pale/whirlpool-eye-sac-3f6c49e2edab399ff05f.webp",
+          "revision": "3f6c49e2edab399ff05f"
+        }
+      }
+    },
+    {
+      "enemyId": "molten-core-beast",
+      "name": "熔核囊兽",
+      "images": {
+        "original": {
+          "url": "/assets/enemies/thumbnails/original/molten-core-beast-779feef3fb0cfb7744f9.webp",
+          "revision": "779feef3fb0cfb7744f9"
+        },
+        "pale": {
+          "url": "/assets/enemies/thumbnails/pale/molten-core-beast-0fdfc5f53b8e0fd824cf.webp",
+          "revision": "0fdfc5f53b8e0fd824cf"
+        }
+      }
+    },
+    {
+      "enemyId": "redwheel-fire-crow",
+      "name": "赤轮火鸦",
+      "images": {
+        "original": {
+          "url": "/assets/enemies/thumbnails/original/redwheel-fire-crow-798dd411c138ba3a9b13.webp",
+          "revision": "798dd411c138ba3a9b13"
+        },
+        "pale": {
+          "url": "/assets/enemies/thumbnails/pale/redwheel-fire-crow-3d96beaa7376566d192f.webp",
+          "revision": "3d96beaa7376566d192f"
+        }
+      }
+    },
+    {
+      "enemyId": "cinder-curse-lamp-swarm",
+      "name": "烬咒灯群",
+      "images": {
+        "original": {
+          "url": "/assets/enemies/thumbnails/original/cinder-curse-lamp-swarm-3be26e46b91acafd2f0f.webp",
+          "revision": "3be26e46b91acafd2f0f"
+        },
+        "pale": {
+          "url": "/assets/enemies/thumbnails/pale/cinder-curse-lamp-swarm-13ae730f07fb27165fa5.webp",
+          "revision": "13ae730f07fb27165fa5"
+        }
+      }
+    },
+    {
+      "enemyId": "tide-rite-matriarch",
+      "name": "潮祀母体",
+      "images": {
+        "original": {
+          "url": "/assets/enemies/thumbnails/original/tide-rite-matriarch-46be2908c11daba4cc7f.webp",
+          "revision": "46be2908c11daba4cc7f"
+        },
+        "pale": {
+          "url": "/assets/enemies/thumbnails/pale/tide-rite-matriarch-d6414eb90c888b89018b.webp",
+          "revision": "d6414eb90c888b89018b"
+        }
+      }
+    },
+    {
+      "enemyId": "drown-shadow-hunter",
+      "name": "溺影猎手",
+      "images": {
+        "original": {
+          "url": "/assets/enemies/thumbnails/original/drown-shadow-hunter-b891511ff25232a5ce82.webp",
+          "revision": "b891511ff25232a5ce82"
+        },
+        "pale": {
+          "url": "/assets/enemies/thumbnails/pale/drown-shadow-hunter-02b8715d3ff9a5b12e6f.webp",
+          "revision": "02b8715d3ff9a5b12e6f"
+        }
+      }
+    },
+    {
+      "enemyId": "tidal-spore-sac",
+      "name": "群潮孢囊",
+      "images": {
+        "original": {
+          "url": "/assets/enemies/thumbnails/original/tidal-spore-sac-5b25d3674cf011f2968e.webp",
+          "revision": "5b25d3674cf011f2968e"
+        },
+        "pale": {
+          "url": "/assets/enemies/thumbnails/pale/tidal-spore-sac-e9f24b66f414b8496e6b.webp",
+          "revision": "e9f24b66f414b8496e6b"
+        }
+      }
+    },
+    {
+      "enemyId": "revenant-guard",
+      "name": "还魂侍卫",
+      "images": {
+        "original": {
+          "url": "/assets/enemies/thumbnails/original/revenant-guard-a74b776fbd21643e275f.webp",
+          "revision": "a74b776fbd21643e275f"
+        },
+        "pale": {
+          "url": "/assets/enemies/thumbnails/pale/revenant-guard-68a6e0317caa94f8cbc9.webp",
+          "revision": "68a6e0317caa94f8cbc9"
+        }
+      }
+    },
+    {
+      "enemyId": "bomb-wisp",
+      "name": "自爆灯灵",
+      "images": {
+        "original": {
+          "url": "/assets/enemies/thumbnails/original/bomb-wisp-ff296ab7809529e768f6.webp",
+          "revision": "ff296ab7809529e768f6"
+        },
+        "pale": {
+          "url": "/assets/enemies/thumbnails/pale/bomb-wisp-bdf6f4843b31c35466ee.webp",
+          "revision": "bdf6f4843b31c35466ee"
+        }
+      }
+    },
+    {
+      "enemyId": "cracked-hunter",
+      "name": "裂甲追猎者",
+      "images": {
+        "original": {
+          "url": "/assets/enemies/thumbnails/original/cracked-hunter-176f49905d37bd716cde.webp",
+          "revision": "176f49905d37bd716cde"
+        },
+        "pale": {
+          "url": "/assets/enemies/thumbnails/pale/cracked-hunter-8ee046cb145b37bf4291.webp",
+          "revision": "8ee046cb145b37bf4291"
+        }
+      }
+    },
+    {
+      "enemyId": "broodling",
+      "name": "裂腹幼体",
+      "images": {
+        "original": {
+          "url": "/assets/enemies/thumbnails/original/broodling-0870b79d9cb00e6f9ac7.webp",
+          "revision": "0870b79d9cb00e6f9ac7"
+        },
+        "pale": {
+          "url": "/assets/enemies/thumbnails/pale/broodling-d165fd7fdae0ef68ece9.webp",
+          "revision": "d165fd7fdae0ef68ece9"
+        }
+      }
+    },
+    {
+      "enemyId": "leech-larva",
+      "name": "尸蛭幼体",
+      "images": {
+        "original": {
+          "url": "/assets/enemies/thumbnails/original/leech-larva-753125fca011ae7c0a80.webp",
+          "revision": "753125fca011ae7c0a80"
+        },
+        "pale": {
+          "url": "/assets/enemies/thumbnails/pale/leech-larva-ee0e248789a51e284773.webp",
+          "revision": "ee0e248789a51e284773"
+        }
+      }
+    },
+    {
+      "enemyId": "tide-shadow",
+      "name": "潮影",
+      "images": {
+        "original": {
+          "url": "/assets/enemies/thumbnails/original/tide-shadow-88db81b910610ff1f944.webp",
+          "revision": "88db81b910610ff1f944"
+        },
+        "pale": {
+          "url": "/assets/enemies/thumbnails/pale/tide-shadow-fc2e80aed1062b8d7700.webp",
+          "revision": "fc2e80aed1062b8d7700"
+        }
+      }
+    },
+    {
+      "enemyId": "overseer",
+      "name": "监视者",
+      "images": {
+        "original": {
+          "url": "/assets/enemies/thumbnails/original/overseer-bfa9c41810369f144194.webp",
+          "revision": "bfa9c41810369f144194"
+        },
+        "pale": {
+          "url": "/assets/enemies/thumbnails/pale/overseer-ad7160d066a9f45be40a.webp",
+          "revision": "ad7160d066a9f45be40a"
+        }
+      }
+    }
+  ]
+}

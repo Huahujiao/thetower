@@ -1,0 +1,3 @@
+export const ENEMY_THUMBNAIL_WIDTH = 300
+export const ENEMY_THUMBNAIL_HEIGHT = 360
+export const ENEMY_THUMBNAIL_QUALITY = .65
