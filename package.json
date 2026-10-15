@@ -39,6 +39,7 @@
     "check:synergies": "node scripts/synergies-check.mjs",
     "check:progression": "node scripts/progression-check.mjs && node scripts/progression-ui-check.mjs",
     "check:wiki": "node scripts/wiki-check.mjs && node scripts/wiki-items-ui-check.mjs",
+    "check:card-relief": "python scripts/generate-card-back-normals.py --check && node scripts/board-textures-check.mjs && node scripts/card-body-check.mjs && node scripts/card-relief-check.mjs",
     "check:stamina": "node scripts/stamina-deck-check.mjs && node scripts/stamina-ui-check.mjs && node scripts/stamina-flame-check.mjs"
   },
   "dependencies": {

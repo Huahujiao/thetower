@@ -9,7 +9,7 @@ import { AttackRangeOverlay } from './attack-range-overlay.js'
 import { BoardTextures } from './board-textures.js'
 import { combatMotionAt, deathMotion, explosionMotion, EXPLOSION_DURATION, hitMotion, idleMotion } from './character-motion.js'
 import { DEFAULT_CAMERA_ELEVATION, panAzimuth, roomOverviewDistance } from './camera-view.js'
-import { cardBodyGeometry, styleCardBody, cardFaceY, CARD_FACE_CLEARANCE, HIDDEN_CARD_THICKNESS, HIDDEN_CARD_SCALE } from './card-body.js'
+import { createCardFaceMaterial, cardBodyGeometry, styleCardBody, cardFaceY, CARD_FACE_CLEARANCE, HIDDEN_CARD_THICKNESS, HIDDEN_CARD_SCALE } from './card-body.js'
 import { boundaryPillarPoint, createDoorFrame, createStoneDoorFrame, stoneDoorVariant, createLowPolyPillar, createLowPolyWall, evenPillarOffsets } from './wall-kit.js'
 import { goldSpriteSources, itemSpriteSources } from '../ui/item-sprites.js'
 import { createEnemyFigure, drawEnemyPuppet, enemyPuppetProject, ENEMY_PUPPET_PADDING, prepareEnemyPuppets, updateEnemyFigure } from './enemy-puppet.js'
@@ -38,6 +38,8 @@ const MIN_CAMERA_ELEVATION = 38 * Math.PI / 180
 const MAX_CAMERA_ELEVATION = 78 * Math.PI / 180
 const STANDING_BACK_LEAN = 30 * Math.PI / 180
 const ENEMY_FACING_ANGLE = Math.PI / 6
+const ENEMY_BACK_LEAN = 20 * Math.PI / 180
+const ENEMY_DISPLAY_SCALE = 1.1
 const GHOST_ROOM_GAP = TILE_SIZE * 0.54
 const ENEMY_STATUS_LAYER_OFFSET = 0.012
 const ENEMY_STATUS_HEALTH_Y = CARD_SIZE * 0.46
@@ -312,7 +314,6 @@ export class GameScene {
     this.animationQueue = []
     this.attackAnimation = null
     this.characterIdleTime = 0
-    this.enemyFacings = new WeakMap()
     this.movementAnimation = null
     this.moveCompletionPending = false
     this.playerMarker = null
@@ -519,8 +520,7 @@ export class GameScene {
       : this._makeBackTexture(this._backAttributeFor(room, position), { unflippable: !flippable })
     const face = new THREE.Mesh(
       new THREE.PlaneGeometry(CARD_SIZE, CARD_SIZE),
-      new THREE.MeshBasicMaterial({
-        map: texture,
+      this._makeCardFaceMaterial(texture, {
         color: revealed || peeked || flippable ? 0xffffff : UNREACHABLE_HIDDEN_CARD_TINT,
         // Standing tokens keep opacity 1, but their cleared canvas pixels must
         // still be composited as transparent. Raycast is disabled below so
@@ -535,6 +535,7 @@ export class GameScene {
         polygonOffsetUnits: -4,
       }),
     )
+    face.receiveShadow = true
     this._setFacePose(face, point, standing, !revealed)
     this._styleTileBody(mesh, room, position, visual)
     face.renderOrder = tileRenderOrder(position, standing ? 4 : 1)
@@ -672,18 +673,12 @@ export class GameScene {
   _enemyFacingOffset(figure, position) {
     const room = this.run.currentRoom
     if (!room) return 0
-    this.enemyFacings ??= new WeakMap()
-    let facings = this.enemyFacings.get(room)
-    if (!facings) { facings = new Map(); this.enemyFacings.set(room, facings) }
     const instanceId = figure.userData.enemyInstanceId
     const enemyPosition = room.entity?.(instanceId)?.pos || position
-    const key = instanceId || figure
     const side = Math.sign(this.run.player.pos.c - enemyPosition.c)
-    const facing = side || facings.get(key) || -1
-    facings.set(key, facing)
     const project = enemyPuppetProject(figure.userData.enemyId)
     const authoredYaw = (project?.joints.find(joint => joint.id === 'root')?.rotationY || 0) * Math.PI / 180
-    return facing * ENEMY_FACING_ANGLE - authoredYaw
+    return side * ENEMY_FACING_ANGLE - authoredYaw
   }
 
   _poseEnemyFigure(face, action = 'idle', time = 0, effects = {}) {
@@ -698,7 +693,10 @@ export class GameScene {
     // lean, scaling and vertical motion for the actual actor's floor pivot.
     face.updateMatrix()
     const world = new THREE.Matrix4().makeTranslation(face.position.x, CARD_THICKNESS / 2 + CARD_FACE_CLEARANCE, face.position.z)
-      .multiply(new THREE.Matrix4().makeRotationY(this.cameraAzimuth + this._enemyFacingOffset(figure, face.userData.position)))
+      .multiply(new THREE.Matrix4().makeRotationY(this.cameraAzimuth))
+      .multiply(new THREE.Matrix4().makeRotationX(-ENEMY_BACK_LEAN))
+      .multiply(new THREE.Matrix4().makeRotationY(this._enemyFacingOffset(figure, face.userData.position)))
+      .multiply(new THREE.Matrix4().makeScale(ENEMY_DISPLAY_SCALE, ENEMY_DISPLAY_SCALE, ENEMY_DISPLAY_SCALE))
     figure.matrix.copy(face.matrix).invert().multiply(world)
     figure.matrixWorldNeedsUpdate = true
     return figure
@@ -1469,10 +1467,12 @@ export class GameScene {
     const card = revealed || peeked ? this._cardFaceData(room, position) : null
     const standing = revealed && (card?.type === 'monster' || card?.type === 'merchant' || card?.type === 'entry' || card?.type === 'totem')
     const emptyGround = standing && (card?.type === 'monster' || card?.type === 'merchant' || card?.type === 'entry' || card?.type === 'totem')
-    face.material.map = card
+    const texture = card
       ? this._makeFrontTexture(card, position, revealed)
       : this._makeBackTexture(this._backAttributeFor(room, position), { unflippable: !flippable })
-    face.material.needsUpdate = true
+    const oldMaterial = face.material
+    face.material = this._makeCardFaceMaterial(texture)
+    oldMaterial.dispose()
     // Click-through is handled by the custom raycast below. Standing tokens
     // remain visually opaque while their cleared canvas pixels stay transparent.
     face.material.transparent = standing || peeked
@@ -1609,9 +1609,9 @@ export class GameScene {
       figure.rotation.y = this._enemyFacingOffset(figure, position)
       const ground = this._makeEmptyGroundFace(point, position)
       this.roomGroup.add(ground)
-      group.scale.setScalar(1)
+      group.scale.setScalar(ENEMY_DISPLAY_SCALE)
       group.position.y = CARD_THICKNESS / 2 + CARD_FACE_CLEARANCE
-      group.rotation.set(0, this.cameraAzimuth, 0)
+      group.rotation.set(-ENEMY_BACK_LEAN, this.cameraAzimuth, 0, 'YXZ')
       const hinge = new THREE.Group()
       hinge.rotation.x = -Math.PI
       hinge.add(figure)
@@ -1632,9 +1632,10 @@ export class GameScene {
     front.position.y = HIDDEN_CARD_THICKNESS / 2 + CARD_FACE_CLEARANCE
     const back = new THREE.Mesh(
       new THREE.PlaneGeometry(CARD_SIZE, CARD_SIZE),
-      new THREE.MeshBasicMaterial({ map: backTexture, side: THREE.DoubleSide, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -4 }),
+      this._makeCardFaceMaterial(backTexture, { depthWrite: false }),
     )
     if (back) {
+      back.receiveShadow = true
       back.rotation.x = Math.PI / 2
       back.position.y = -HIDDEN_CARD_THICKNESS / 2 - CARD_FACE_CLEARANCE
     }
@@ -2366,6 +2367,10 @@ export class GameScene {
     if (entity?.kind === 'enemy') return entity.attribute
     if (entity?.kind === 'item' && entity.item?.type === 'weapon') return entity.item.attribute
     return null
+  }
+
+  _makeCardFaceMaterial(texture, options = {}) {
+    return createCardFaceMaterial(texture, this.boardTextures.backNormal(texture), options)
   }
 
   _makeBackTexture(attribute, { unflippable = false } = {}) {

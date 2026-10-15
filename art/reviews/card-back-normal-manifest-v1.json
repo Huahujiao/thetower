@@ -1,0 +1,32 @@
+{
+  "neutral": {
+    "source": "board-card-back-temple-v2.jpg",
+    "normal": "board-card-back-neutral-normal-v1.png",
+    "source_sha256": "bb58263a4072f929a605e43a52e31e1fbfd8d3d32e436826ae8f9af6285be297",
+    "size": 512
+  },
+  "scorch": {
+    "source": "board-card-back-scorch-temple-v2.jpg",
+    "normal": "board-card-back-scorch-normal-v1.png",
+    "source_sha256": "0bc1125f2846f0a2528f8ca2e2c91f5cb4e3ce3cbe3246ffaabd85fc43ae457c",
+    "size": 512
+  },
+  "wither": {
+    "source": "board-card-back-wither-temple-v2.jpg",
+    "normal": "board-card-back-wither-normal-v1.png",
+    "source_sha256": "f8df18a2a36797eb1d1b4d840952f9a1c6940ec27cda620fc794f7f79d39e08b",
+    "size": 512
+  },
+  "drown": {
+    "source": "board-card-back-drown-temple-v2.jpg",
+    "normal": "board-card-back-drown-normal-v1.png",
+    "source_sha256": "476faf273c67626ebc6e19ca009a77318a66ce6accff6b9874d2400d81c52f18",
+    "size": 512
+  },
+  "blocked": {
+    "source": "board-card-back-blocked-v1.jpg",
+    "normal": "board-card-back-blocked-normal-v1.png",
+    "source_sha256": "8bf47ef8d5ed1bc37c5f1f9b8eaa4454edb3bb322c07db83de3aa1ef97445200",
+    "size": 512
+  }
+}

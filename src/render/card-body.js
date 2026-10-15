@@ -28,3 +28,20 @@ export function styleCardBody(body, { hidden, attribute, texture, baseThickness,
   body.material.color.setHex(hidden ? (blocked ? EDGE_COLORS.blocked : EDGE_COLORS[attribute] ?? EDGE_COLORS.neutral) : 0x262a36)
   body.material.needsUpdate = true
 }
+
+// Only hidden card artwork receives relief lighting. Front canvases and standing
+// token overlays retain their original unlit, transparent presentation.
+export function createCardFaceMaterial(texture, normalMap = null, options = {}) {
+  const common = {
+    map: texture, side: THREE.DoubleSide,
+    polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -4,
+    ...options,
+  }
+  if (!normalMap) return new THREE.MeshBasicMaterial(common)
+  return new THREE.MeshStandardMaterial({
+    ...common, normalMap, normalScale: new THREE.Vector2(8.5, 8.5),
+    roughness: .82, metalness: .08,
+    // A little diffuse-colour fill keeps the original dark lacquer readable.
+    emissive: 0xffffff, emissiveMap: texture, emissiveIntensity: .12,
+  })
+}

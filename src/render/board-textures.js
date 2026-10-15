@@ -9,6 +9,12 @@ import scorchBackUrl from '../assets/board-card-back-scorch-temple-v2.jpg'
 import witherBackUrl from '../assets/board-card-back-wither-temple-v2.jpg'
 import drownBackUrl from '../assets/board-card-back-drown-temple-v2.jpg'
 
+import neutralNormalUrl from '../assets/board-card-back-neutral-normal-v1.png'
+import scorchNormalUrl from '../assets/board-card-back-scorch-normal-v1.png'
+import witherNormalUrl from '../assets/board-card-back-wither-normal-v1.png'
+import drownNormalUrl from '../assets/board-card-back-drown-normal-v1.png'
+import blockedNormalUrl from '../assets/board-card-back-blocked-normal-v1.png'
+
 const SIZE = 512
 // Display-only exposure: keep bare stone behind the illustrated card backs.
 // Source artwork stays intact; the shared inset ornament is composited at runtime.
@@ -16,6 +22,7 @@ export const FLOOR_URLS = [floorAUrl, floorBUrl, floorCUrl, floorDUrl]
 const NEUTRAL_BACK_BRIGHTNESS = 1
 const BLOCKED_BACK_COLOR = '#363a40'
 const BACK_URLS = { neutral: cardBackUrl, scorch: scorchBackUrl, wither: witherBackUrl, drown: drownBackUrl }
+const BACK_NORMAL_URLS = { neutral: neutralNormalUrl, scorch: scorchNormalUrl, wither: witherNormalUrl, drown: drownNormalUrl, blocked: blockedNormalUrl }
 
 function drawFloorRim(ctx) {
   ctx.save()
@@ -41,11 +48,11 @@ function drawFloorRim(ctx) {
   ctx.restore()
 }
 
-function surface(draw) {
+function surface(draw, colorSpace = THREE.SRGBColorSpace) {
   const canvas = document.createElement('canvas')
   canvas.width = canvas.height = SIZE
   const texture = new THREE.CanvasTexture(canvas)
-  texture.colorSpace = THREE.SRGBColorSpace
+  texture.colorSpace = colorSpace
   texture.anisotropy = 4
   texture.userData.boardShared = true
   const repaint = image => {
@@ -83,17 +90,26 @@ export class BoardTextures {
         }
       }))
     }
+    for (const [attribute, entry] of this.backs) entry.texture.userData.cardBackKind = attribute
     this.blockedBack = surface((ctx, image) => {
       ctx.fillStyle = BLOCKED_BACK_COLOR
       ctx.fillRect(0, 0, SIZE, SIZE)
       if (image) ctx.drawImage(image, 0, 0, SIZE, SIZE)
     })
+    this.blockedBack.texture.userData.cardBackKind = 'blocked'
+    this.backNormals = new Map(Object.keys(BACK_NORMAL_URLS).map(kind => [kind, surface((ctx, image) => {
+      // Tangent-space vectors are linear data; the unloaded fallback is flat +Z.
+      ctx.fillStyle = '#8080ff'
+      ctx.fillRect(0, 0, SIZE, SIZE)
+      if (image) ctx.drawImage(image, 0, 0, SIZE, SIZE)
+    }, THREE.NoColorSpace)]))
     this.ready = Promise.all([
       ...FLOOR_URLS.map((url, index) => this.load(url, [this.floors[index]])),
       ...Object.entries(BACK_URLS).map(([attribute, url]) => this.load(url, [
         this.backs.get(attribute),
       ])),
       this.load(blockedBackUrl, [this.blockedBack]),
+      ...Object.entries(BACK_NORMAL_URLS).map(([kind, url]) => this.load(url, [this.backNormals.get(kind)])),
     ])
   }
 
@@ -119,9 +135,14 @@ export class BoardTextures {
     return this.backs.get(BACK_URLS[attribute] ? attribute : 'neutral').texture
   }
 
+  backNormal(texture) {
+    // The primitive kind tag survives Texture.clone() for queued flip snapshots.
+    return this.backNormals.get(texture?.userData.cardBackKind)?.texture || null
+  }
+
   dispose() {
     this.disposed = true
-    for (const entry of [...this.floors, ...this.backs.values(), this.blockedBack]) entry.texture.dispose()
+    for (const entry of [...this.floors, ...this.backs.values(), this.blockedBack, ...this.backNormals.values()]) entry.texture.dispose()
   }
 }
 

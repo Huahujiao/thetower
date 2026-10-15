@@ -194,9 +194,9 @@ body.art-tweak-page #hud {
 .vital-energy { grid-column: 1; grid-row: 2; border: 1px solid rgba(255,213,107,.58); background: rgba(58,45,20,.88); }
 .vital-energy-fill { position: absolute; top: 0; right: auto; bottom: 0; left: 0; display: block; width: 0; height: 100%; background: linear-gradient(90deg, #c18d27, #ffd56b); transition: width .16s ease; }
 .vital-bars:has(.stamina-hand) { height: 42px; row-gap: 3px; }
-.stamina-hand { --fire-size: 19px; position: relative; display: grid; grid-template-columns: repeat(var(--ball-slots, 10), minmax(0, 1fr)); align-items: center; gap: 2px; min-height: 22px; pointer-events: auto; isolation: isolate; }
-.stamina-slot { position: relative; grid-column: 1; grid-row: 1; display: grid; place-items: center; width: 100%; height: var(--fire-size); min-width: 0; pointer-events: none; transform: translateX(calc(var(--slot-index, 0) * (100% + 2px))); transition: transform .2s ease-out var(--slot-shift-delay, 0ms); }
-.stamina-ball { pointer-events: auto; touch-action: manipulation; position: relative; display: grid; place-items: center; width: min(100%, var(--fire-size)); height: auto; aspect-ratio: 1; min-width: 0; min-height: 0; border-radius: 0; border: 0; padding: 0; background: transparent; box-shadow: none; cursor: pointer; transition: transform .14s ease; }
+.stamina-hand { --fire-size: 25px; --fire-gap: 1px; position: relative; display: grid; grid-template-columns: repeat(var(--ball-slots, 10), minmax(0, 1fr)); align-items: center; gap: var(--fire-gap); min-height: 28px; pointer-events: auto; isolation: isolate; }
+.stamina-slot { position: relative; grid-column: 1; grid-row: 1; display: grid; place-items: center; width: 100%; height: var(--fire-size); min-width: 0; pointer-events: none; transform: translateX(calc(var(--slot-index, 0) * (100% + var(--fire-gap)))); transition: transform .2s ease-out var(--slot-shift-delay, 0ms); }
+.stamina-ball { pointer-events: auto; touch-action: manipulation; position: relative; display: grid; place-items: center; width: min(calc(100% + 6px), var(--fire-size)); height: auto; aspect-ratio: 1; min-width: 0; min-height: 0; border-radius: 0; border: 0; padding: 0; background: transparent; box-shadow: none; cursor: pointer; transition: transform .14s ease; }
 .spirit-fire { --fire-color: #b6aa88; --fire-light: #ded3b2; --fire-core: #f6e7be; --fire-mark: #544d43; --fire-shadow: #625743; --fire-glow: #dbc68c66; display: block; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 0 1.4px var(--fire-glow)); }
 .spirit-fire.scorch { --fire-color: #ce886b; --fire-light: #eeb895; --fire-core: #ffe1b3; --fire-mark: #643c32; --fire-shadow: #774936; --fire-glow: #db986a66; }
 .spirit-fire.wither { --fire-color: #c6ad63; --fire-light: #ead49a; --fire-core: #fff0c9; --fire-mark: #61512e; --fire-shadow: #76633b; --fire-glow: #dcc17b66; }
@@ -215,7 +215,7 @@ body.art-tweak-page #hud {
 .stamina-ball > .spirit-fire { animation: spirit-fire-arrive .2s ease-out both; }
 .stamina-cost { display: inline-flex; align-items: center; gap: 4px; padding: 3px 2px; color: rgba(237,244,255,.92); font-size: 11px; font-weight: 700; line-height: 1.1; white-space: nowrap; }
 .stamina-ball-icon { display: inline-block; flex: 0 0 14px; width: 14px; height: 14px; }
-.stamina-spend-effect { position: absolute; inset: 0; margin: auto; width: min(100%, var(--fire-size)); height: auto; aspect-ratio: 1; z-index: 3; pointer-events: none; animation: spirit-fire-spent .45s linear both; }
+.stamina-spend-effect { position: absolute; inset: 0; margin: auto; width: min(calc(100% + 6px), var(--fire-size)); height: auto; aspect-ratio: 1; z-index: 3; pointer-events: none; animation: spirit-fire-spent .45s linear both; }
 .stamina-spend-effect .spirit-fire-plume { animation: spirit-fire-extinguish .28s ease-out both; }
 .stamina-spend-effect .spirit-fire-glow { animation: spirit-fire-glow-out .28s ease-out both; }
 .stamina-spend-effect .spirit-fire-smoke { animation: spirit-fire-smoke .36s .06s ease-out both; }
@@ -527,7 +527,7 @@ body.art-tweak-page #hud {
 }
 .hud-icon svg { display: block; width: 20px; height: 20px; }
 .backpack-toolbar { grid-template-columns: var(--hud-armor-size) minmax(0, 1fr) var(--hud-action-width); gap: var(--hud-toolbar-gap); }
-.vital-bars, .vital-bars:has(.stamina-hand) { display: grid; grid-template-rows: 22px 22px; height: 48px; row-gap: 4px; }
+.vital-bars, .vital-bars:has(.stamina-hand) { display: grid; grid-template-rows: 22px 28px; height: 54px; row-gap: 4px; }
 .vital-health { margin-top: 0; min-height: 22px; }
 .vital-armor strong, .vital-health strong, .experience-value { font-family: Georgia, 'Times New Roman', serif; font-variant-numeric: tabular-nums; line-height: 1.2; }
 .stamina-hand { min-width: 0; min-height: 0; }
@@ -624,11 +624,11 @@ body.art-tweak-page .vital-armor {
 }
 body.art-tweak-page .vital-armor::before { display: none; }
 body.art-tweak-page .vital-armor strong { font-size: min(clamp(13px, calc(var(--art-tweak-width) * .0319), 16px), calc(var(--hud-armor-size) * .92 / var(--armor-digits, 1))); font-weight: 600; transform: translateY(-1px); }
-body.art-tweak-page .vital-bars, body.art-tweak-page .vital-bars:has(.stamina-hand) { grid-template-rows: 11px 18px; height: 35px; row-gap: 6px; }
+body.art-tweak-page .vital-bars, body.art-tweak-page .vital-bars:has(.stamina-hand) { grid-template-rows: 11px 24px; height: 41px; row-gap: 6px; }
 body.art-tweak-page .vital-health { min-height: 11px; overflow: visible; border: 1px solid #aa7560; border-radius: 12px; background: #2d1b1bf0; box-shadow: inset 0 0 3px #090d0d; }
 body.art-tweak-page .vital-health-fill { border-radius: inherit; background: linear-gradient(110deg,#862e2d,#b63d38 65%,#e66a61); box-shadow: inset 0 1px 2px #e49a7966; }
 body.art-tweak-page .vital-health strong { font-size: 10px; line-height: 1; font-weight: 500; }
-body.art-tweak-page .stamina-hand { --fire-size: 18px; }
+body.art-tweak-page .stamina-hand { --fire-size: 24px; }
 body.art-tweak-page .backpack-action-slot.act-use-slot { width: var(--hud-action-width); }
 body.art-tweak-page .backpack-action { height: var(--hud-action-height); border: 1px solid #b19868; border-radius: 1px; color: #271f15; font-size: clamp(12px, calc(var(--art-tweak-width) * .034), 17px); font-weight: 600; background: radial-gradient(ellipse at 35% 25%,#eddaa6,#c4a265); box-shadow: inset 0 0 0 2px #dac391,0 3px 4px #0009; clip-path: polygon(7% 0,96% 0,100% 8%,100% 91%,95% 100%,4% 100%,0 91%,0 9%); }
 body.art-tweak-page .backpack-grid { background: transparent; }

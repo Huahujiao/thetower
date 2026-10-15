@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { NoColorSpace, SRGBColorSpace } from 'three'
 import { readFile } from 'node:fs/promises'
 
 // Exercise async loading and GPU-resource ownership without launching a browser.
@@ -36,9 +37,22 @@ for (const attr of ['neutral', 'scorch', 'wither', 'drown', 'unknown']) assert.e
 all.add(blockedBack)
 assert.equal(all.size, 9)
 assert.equal(textures.back('unknown', false), textures.back('neutral', false))
+assert.equal(textures.backNormal(textures.floor()), null)
+const normals = new Set()
+for (const texture of [...all].filter(texture => texture.userData.cardBackKind)) {
+  assert.equal(texture.colorSpace, SRGBColorSpace)
+  const normal = textures.backNormal(texture)
+  assert(normal)
+  assert.equal(normal, textures.backNormal(texture))
+  assert.equal(normal.colorSpace, NoColorSpace, 'Normal vectors must not undergo sRGB decoding')
+  normals.add(normal)
+  all.add(normal)
+}
+assert.equal(normals.size, 5, 'Each card-back pattern needs its own normal map')
+assert.equal(all.size, 14)
 const before = textures.back('scorch', false).version
 pendingImages.splice(0).forEach(image => image.onload())
-assert.deepEqual(await textures.ready, Array(9).fill(true))
+assert.deepEqual(await textures.ready, Array(14).fill(true))
 assert(textures.back('scorch', false).version > before)
 let disposed = 0
 for (const texture of all) {
@@ -47,17 +61,21 @@ for (const texture of all) {
 }
 const snapshot = textures.back('scorch', false).clone()
 snapshot.userData.boardShared = false
+assert.equal(textures.backNormal(snapshot), textures.backNormal(textures.back('scorch', false)), 'Queued flip snapshots must retain their matching shared normal')
 assert.equal(textures.back('scorch', false).userData.boardShared, true)
 snapshot.dispose()
 assert.equal(disposed, 0)
 textures.dispose()
-assert.equal(disposed, 9)
+assert.equal(disposed, 14)
 
 const closed = new BoardTextures()
 const lastVersion = closed.floor().version
+const lastNormal = closed.backNormal(closed.back('neutral', true))
+const lastNormalVersion = lastNormal.version
 closed.dispose()
 pendingImages.splice(0).forEach(image => image.onload())
 await closed.ready
 assert.equal(closed.floor().version, lastVersion)
+assert.equal(lastNormal.version, lastNormalVersion)
 delete globalThis.document
 console.log('board-textures-check passed: bounded cache, async refresh, isolated flip snapshots, disposal')
