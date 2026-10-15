@@ -1,0 +1,22 @@
+[
+  {
+    "name": "board-card-back-v1.jpg",
+    "unchanged": true,
+    "sha256": "c387e2bfe003dbf00845c70cb07b31aa35b25b54b8af4821af63326c768b1819"
+  },
+  {
+    "name": "board-card-back-scorch-v1.jpg",
+    "unchanged": true,
+    "sha256": "59d8605a6da7685f0873833e2b132f8f81d21f91b43309cc33a3ca6bdf046b69"
+  },
+  {
+    "name": "board-card-back-wither-v1.jpg",
+    "unchanged": true,
+    "sha256": "3dde19c3d6281d4554a500f530fcc62b00ee1ff6951d49c93ed021a1681a02fa"
+  },
+  {
+    "name": "board-card-back-drown-v1.jpg",
+    "unchanged": true,
+    "sha256": "054bb2f640ebc82a6ab840d3813ef0cb86916ab868c26e4a26c7fdd19940060c"
+  }
+]

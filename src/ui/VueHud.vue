@@ -22,32 +22,55 @@
             viewBox="0 0 24 24" width="18" height="18" fill="none"
             stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
           >
-            <path d="m14 3 7 7-4 4-7-7zM12 12 3 21M4 3v6M1 6h6" />
+            <path d="m14 3 7 7-4 4-7-7zM12 12 3 21M3 3l6 6M3 8l5-5M14 14l7 7" />
           </svg>
         </button><button
           class="hud-icon" data-action="character"
           :title="LABELS.character" :aria-label="LABELS.character" @click="handleAction('character')"
         >
-          ♙
+          <svg
+            viewBox="0 0 24 24" width="18" height="18" fill="none"
+            stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
+          >
+            <circle cx="12" cy="7" r="3" /><path d="M5 21v-2a7 7 0 0 1 14 0v2z" />
+          </svg>
         </button><button
           class="hud-icon" data-action="help"
           :title="LABELS.help" :aria-label="LABELS.help" @click="handleAction('help')"
         >
-          ?
+          <svg
+            viewBox="0 0 24 24" width="18" height="18" fill="none"
+            stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
+          >
+            <path d="M8 8a4 4 0 1 1 8 0c0 3-4 3-4 6" /><circle cx="12" cy="19" r=".7" fill="currentColor" stroke="none" />
+          </svg>
         </button><button
           class="hud-icon" data-action="settings"
           :title="LABELS.settings" :aria-label="LABELS.settings" @click="handleAction('settings')"
         >
-          ⚙
+          <svg
+            viewBox="0 0 24 24" width="18" height="18" fill="none"
+            stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
+          >
+            <circle cx="12" cy="12" r="7" /><circle cx="12" cy="12" r="3" /><path d="M12 2v3m0 14v3M2 12h3m14 0h3M5 5l2 2m10 10 2 2M5 19l2-2M17 7l2-2" />
+          </svg>
         </button><button
           class="hud-icon" data-action="log"
           :title="LABELS.log" :aria-label="LABELS.log" @click="handleAction('log')"
         >
-          ▤
+          <svg
+            viewBox="0 0 24 24" width="18" height="18" fill="none"
+            stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
+          >
+            <path d="M4 5h16M4 12h16M4 19h16" />
+          </svg>
         </button>
       </div>
     </div>
-    <div class="experience-bar-row" :aria-label="LABELS.experience">
+    <div
+      class="experience-bar-row" role="progressbar" :aria-label="LABELS.experience"
+      :aria-valuemin="0" :aria-valuemax="state.player.experienceToNext" :aria-valuenow="state.player.experience"
+    >
       <div class="experience-bar">
         <span
           class="experience-fill"
@@ -394,7 +417,7 @@
 
     <div class="hud-bottom">
       <div class="backpack-toolbar" :aria-label="`${LABELS.health} ${LABELS.armor} ${LABELS.energy}`">
-        <div class="vital-armor" :title="LABELS.armor"><strong>{{ state.player.armor }}</strong></div>
+        <div class="vital-armor" :title="LABELS.armor" :style="{ '--armor-digits': String(state.player.armor).length }"><strong>{{ state.player.armor }}</strong></div>
         <div class="vital-bars">
           <div class="vital-health" :title="LABELS.health">
             <span
@@ -843,7 +866,11 @@ function rewardDetail(definition) {
   return itemDetail(definition)
 }
 
-function toggleTopPanel(panel) { topPanel.value = topPanel.value === panel ? null : panel }
+function toggleTopPanel(panel) {
+  closeDetailPanel()
+  helpOpen.value = false
+  topPanel.value = topPanel.value === panel ? null : panel
+}
 function selectInitialRelic(id) { run.chooseInitialRelic(id) }
 function chooseRoomReward(index) { run.chooseRoomReward(index) }
 function chooseLevelUp(id) { run.chooseLevelUpOption(id) }
@@ -1331,7 +1358,7 @@ function handleAction(action, value = null) {
   if (action === 'log') toggleTopPanel('log')
   if (action === 'settings') toggleTopPanel('settings')
   if (action === 'character') toggleTopPanel('characterpanel')
-  if (action === 'help') { topPanel.value = null; helpOpen.value = true }
+  if (action === 'help') { closeDetailPanel(); topPanel.value = null; helpOpen.value = true }
   if (action === 'close-help') helpOpen.value = false
 }
 
@@ -1363,6 +1390,7 @@ onMounted(() => {
   subscriptions.push(run.on('change', () => { revision.value++ }))
   subscriptions.push(run.on('detail', () => {
     detailRevision.value++
+    if (run.detailPanel) topPanel.value = null
     detailPanelVisible.value = Boolean(run.detailPanel)
   }))
   scene.value = new GameScene(run, sceneContainer.value)

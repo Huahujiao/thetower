@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { dressedStoneBox, metricStoneUV, templeStoneMaterial } from './temple-stone-materials.js'
 
 const STONE = 0x3b4545
 const STONE_DARK = 0x273333
@@ -107,5 +108,75 @@ export function createDoorFrame({ horizontal, width, depth, height }) {
   group.add(block(lintelSize, height + 0.14, CINNABAR_DARK, { roughness: 0.7 }))
   const bandSize = horizontal ? [width * 0.82, 0.035, depth * 1.34] : [depth * 1.34, 0.035, width * 0.82]
   group.add(block(bandSize, height * 0.56, BRONZE, { roughness: 0.48, metalness: 0.35 }))
+  return group
+}
+
+export function stoneDoorVariant(doorId) {
+  // Art variation is stable across refreshes and never consumes gameplay RNG.
+  let hash = 2166136261
+  for (const char of String(doorId)) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619)
+  return ['arch', 'broken', 'pillars'][(hash >>> 0) % 3]
+}
+
+export function createStoneDoorFrame({ horizontal, width, depth, height, variant = 'arch', texture = null }) {
+  const group = new THREE.Group()
+  group.name = 'stone-door-' + variant
+  group.userData.variant = variant
+  const postWidth = .16
+  const stoneDepth = depth * 1.3
+  const springY = height + .10
+  const colors = [0x59635e, 0x4b5752, 0x65716a]
+  const materials = colors.map(color => texture ? templeStoneMaterial(texture, color) : new THREE.MeshStandardMaterial({
+    color, map: texture, bumpMap: texture, bumpScale: .014, roughness: .94, metalness: .015,
+  }))
+  const add = (geometry, position, index = 0) => {
+    if (texture) metricStoneUV(geometry)
+    const mesh = new THREE.Mesh(geometry, materials[index % materials.length])
+    mesh.position.set(...position)
+    mesh.castShadow = mesh.receiveShadow = true
+    group.add(mesh)
+    return mesh
+  }
+  const box = (...size) => texture ? dressedStoneBox(size) : new THREE.BoxGeometry(...size)
+  for (const sign of [-1, 1]) {
+    const x = sign * (width / 2 + postWidth / 2)
+    add(box(postWidth + .065, .10, stoneDepth * 1.25), [x, .05, 0], 1)
+    const courses = 4
+    const courseHeight = (springY - .10) / courses
+    for (let i = 0; i < courses; i++) {
+      add(box(postWidth, courseHeight - .008, stoneDepth), [x, .10 + (i + .5) * courseHeight, 0], i + (sign > 0 ? 1 : 0))
+    }
+    if (variant === 'pillars') add(box(postWidth + .035, .065, stoneDepth * 1.14), [x, springY + .025, 0], 2)
+  }
+  if (variant !== 'pillars') {
+    const innerRadius = width / 2
+    const outerRadius = innerRadius + postWidth
+    const count = 9
+    for (let i = 0; i < count; i++) {
+      // The broken doorway keeps unequal arch stubs and an open, missing crown.
+      if (variant === 'broken' && i >= 2 && i <= 5) continue
+      const from = i * Math.PI / count + .008
+      const to = (i + 1) * Math.PI / count - .008
+      const shape = new THREE.Shape()
+      const steps = 4
+      for (let j = 0; j <= steps; j++) {
+        const angle = from + (to - from) * j / steps
+        const x = Math.cos(angle) * outerRadius, y = springY + Math.sin(angle) * outerRadius
+        if (j === 0) shape.moveTo(x, y)
+        else shape.lineTo(x, y)
+      }
+      for (let j = steps; j >= 0; j--) {
+        const angle = from + (to - from) * j / steps
+        shape.lineTo(Math.cos(angle) * innerRadius, springY + Math.sin(angle) * innerRadius)
+      }
+      shape.closePath()
+      const stone = add(new THREE.ExtrudeGeometry(shape, {
+        depth: stoneDepth, bevelEnabled: true, bevelSegments: 1, steps: 1, bevelSize: .005, bevelThickness: .006,
+      }), [0, 0, -stoneDepth / 2], i)
+      stone.name = 'door-arch-stone-' + i
+      if (variant === 'broken' && (i === 1 || i === 6)) stone.rotation.z = i === 1 ? -.025 : .018
+    }
+  }
+  if (!horizontal) group.rotation.y = Math.PI / 2
   return group
 }

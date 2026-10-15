@@ -1,4 +1,6 @@
 import * as THREE from 'three'
+import { templeBoundaryLayout, templeDoorPlacement } from './temple-boundary-layout.js'
+import { TempleEnvironment, TEMPLE_BOUNDARY_INSET, createContactShadowTexture } from './temple-environment.js'
 import { DETAIL_HOLD_MS } from '../interaction-timing.js'
 import { getAttributeDefinition } from '../game/data/attributes.js'
 import { enemyCardSubtitle, enemyOverheadHints } from '../game/data/enemy-features.js'
@@ -8,7 +10,7 @@ import { BoardTextures } from './board-textures.js'
 import { combatMotionAt, deathMotion, explosionMotion, EXPLOSION_DURATION, hitMotion, idleMotion } from './character-motion.js'
 import { DEFAULT_CAMERA_ELEVATION, panAzimuth, roomOverviewDistance } from './camera-view.js'
 import { cardBodyGeometry, styleCardBody, cardFaceY, CARD_FACE_CLEARANCE, HIDDEN_CARD_THICKNESS, HIDDEN_CARD_SCALE } from './card-body.js'
-import { boundaryPillarPoint, createDoorFrame, createLowPolyPillar, createLowPolyWall, evenPillarOffsets } from './wall-kit.js'
+import { boundaryPillarPoint, createDoorFrame, createStoneDoorFrame, stoneDoorVariant, createLowPolyPillar, createLowPolyWall, evenPillarOffsets } from './wall-kit.js'
 import { goldSpriteSources, itemSpriteSources } from '../ui/item-sprites.js'
 import { createEnemyFigure, drawEnemyPuppet, enemyPuppetProject, ENEMY_PUPPET_PADDING, prepareEnemyPuppets, updateEnemyFigure } from './enemy-puppet.js'
 import { drawTotemToken, totemFaceData } from './totem-token.js'
@@ -338,7 +340,7 @@ export class GameScene {
     this.baseCameraDistance = 12
     this.sceneBounds = null
     this.camera = new THREE.PerspectiveCamera(CAMERA_FOV, 1, CAMERA_NEAR, CAMERA_FAR)
-    this.renderer = new THREE.WebGLRenderer({ antialias: true })
+    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
     this.renderer.shadowMap.enabled = true
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap
@@ -348,6 +350,11 @@ export class GameScene {
     this.scene.add(this.roomGroup)
     this.attackRangeOverlay = new AttackRangeOverlay(this.scene, this.roomGroup, run, (room, position) => this._gridPosition(room, position), CARD_SIZE, CARD_THICKNESS)
     this._addLights()
+    this.contactShadowTexture = createContactShadowTexture()
+    if (run.sceneView?.environment === 'mountain-temple') {
+      this.environment = new TempleEnvironment(container)
+      this.scene.background = null
+    }
     this._onResize = () => this._resize()
     this.resizeObserver = typeof window.ResizeObserver === 'undefined' ? null : new window.ResizeObserver(this._onResize)
     this.resizeObserver?.observe(this.container)
@@ -480,7 +487,7 @@ export class GameScene {
     this.sceneBounds = null
     if (!room) return
     const floorTint = [0x111722, 0x111722, 0x151522, 0x1b1625, 0x221628, 0x29172a][room.floor] || 0x111722
-    this.scene.background.setHex(floorTint)
+    if (!this.environment) this.scene.background.setHex(floorTint)
 
     for (let r = 0; r < room.height; r++) {
       for (let c = 0; c < room.width; c++) this._addTile(room, { c, r })
@@ -499,6 +506,8 @@ export class GameScene {
     const material = new THREE.MeshStandardMaterial({ color: 0x262a36, roughness: 0.9 })
     const mesh = new THREE.Mesh(geometry, material)
     const point = this._gridPosition(room, position)
+    const floorBacking = this._makeFloorBacking(point, position)
+    this.roomGroup.add(floorBacking)
     mesh.position.set(point.x, 0, point.z)
     mesh.receiveShadow = true
     this.roomGroup.add(mesh)
@@ -537,6 +546,7 @@ export class GameScene {
     face.userData.lift = 0
     face.userData.press = 0
     face.userData.body = mesh
+    face.userData.floorBacking = floorBacking
     face.userData.groundFace = emptyGround ? this._makeEmptyGroundFace(point, position) : null
     face.userData.visualKey = visual.key
     if (face.userData.groundFace) this.roomGroup.add(face.userData.groundFace)
@@ -544,8 +554,59 @@ export class GameScene {
     this._attachEnemyFigure(face, revealed && card?.type === 'monster' ? card.enemyId : null)
     this._attachGroundSprite(face, card, point, position, revealed)
     this._setEnemyStatusOverlay(face, face.userData.groundFace, revealed && card?.type === 'monster' ? room.entityAt(position) : null)
+    this._setContactShadow(face, card, revealed)
     this.tileMeshes.push(face)
     this.tileMeshByKey.set(tileKey(position), face)
+  }
+
+  _makeContactShadow() {
+    const shadow = new THREE.Mesh(new THREE.PlaneGeometry(CARD_SIZE * .82, CARD_SIZE * .56),
+      new THREE.MeshBasicMaterial({ map: this.contactShadowTexture, transparent: true, depthTest: false, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 }))
+    shadow.rotation.x = -Math.PI / 2
+    shadow.raycast = NO_RAYCAST
+    this.roomGroup.add(shadow)
+    return shadow
+  }
+
+  _clearActorShadow(actor) {
+    const shadow = actor?.userData.contactShadow
+    if (!shadow) return
+    this.roomGroup.remove(shadow)
+    disposeObject(shadow)
+    actor.userData.contactShadow = null
+  }
+
+  _setContactShadow(face, card, revealed) {
+    const actor = revealed && (card?.type === 'monster' || card?.type === 'entry')
+    let shadow = face.userData.contactShadow
+    if (!actor) {
+      if (shadow) { this.roomGroup.remove(shadow); disposeObject(shadow) }
+      face.userData.contactShadow = null
+      return
+    }
+    if (!shadow) {
+      shadow = this._makeContactShadow()
+      face.userData.contactShadow = shadow
+    }
+    shadow.position.set(face.position.x + .09, CARD_THICKNESS / 2 + .009, face.position.z + .05)
+    shadow.renderOrder = tileRenderOrder(face.userData.position, 2)
+  }
+
+  _updateContactShadows() {
+    const actor = this.movementAnimation?.actor !== 'enemy' ? this.movementAnimation?.group || this.playerMarker : this.playerMarker
+    const movingShadow = actor?.userData.contactShadow
+    if (movingShadow) {
+      movingShadow.position.set(actor.position.x + .09, CARD_THICKNESS / 2 + .009, actor.position.z + .05)
+      movingShadow.renderOrder = (actor.children[0]?.renderOrder || 8) - 6
+    }
+    for (const face of this.tileMeshes) {
+      const shadow = face.userData.contactShadow
+      if (!shadow) continue
+      shadow.visible = face.visible && face.userData.standing
+      shadow.position.x = face.position.x + .09
+      shadow.position.z = face.position.z + .05
+      shadow.renderOrder = face.renderOrder - 2
+    }
   }
 
   _styleTileBody(body, room, position, { revealed, flippable }) {
@@ -777,6 +838,19 @@ export class GameScene {
     if (texture) applyTexture(texture)
   }
 
+  _makeFloorBacking(point, position) {
+    // Fixed, full-cell ground beneath the smaller hidden card. The tiny overlap
+    // seals raster seams and remains visible while a card is lifted or flipped.
+    const floor = new THREE.Mesh(
+      new THREE.PlaneGeometry(TILE_SIZE + 0.004, TILE_SIZE + 0.004),
+      new THREE.MeshBasicMaterial({ map: this.boardTextures.floor(position), side: THREE.DoubleSide }),
+    )
+    floor.rotation.x = -Math.PI / 2
+    floor.position.set(point.x, -CARD_THICKNESS / 2 - FOOTPRINT_PRESS_DEPTH - 0.006, point.z)
+    floor.raycast = NO_RAYCAST
+    return floor
+  }
+
   _makeEmptyGroundFace(point, position = null) {
     const groundFace = new THREE.Mesh(
       new THREE.PlaneGeometry(CARD_SIZE, CARD_SIZE),
@@ -990,20 +1064,26 @@ export class GameScene {
   }
 
   _boundaryPosition(room, side, offset) {
-    const inset = WALL_THICKNESS / 2 + BOUNDARY_GAP
+    const inset = this.environment ? TEMPLE_BOUNDARY_INSET : WALL_THICKNESS / 2 + BOUNDARY_GAP
     if (side === 'top' || side === 'bottom') {
+      const span = TILE_SIZE + (this.environment ? inset * 2 / room.width : 0)
       return {
-        x: (offset - (room.width - 1) / 2) * TILE_SIZE,
+        x: (offset - (room.width - 1) / 2) * span,
         z: side === 'top' ? -room.height * TILE_SIZE / 2 - inset : room.height * TILE_SIZE / 2 + inset,
       }
     }
+    const span = TILE_SIZE + (this.environment ? inset * 2 / room.height : 0)
     return {
       x: side === 'left' ? -room.width * TILE_SIZE / 2 - inset : room.width * TILE_SIZE / 2 + inset,
-      z: (offset - (room.height - 1) / 2) * TILE_SIZE,
+      z: (offset - (room.height - 1) / 2) * span,
     }
   }
 
   _doorPosition(room, side, offset) {
+    if (this.environment) {
+      const point = templeDoorPlacement(room, { side, offset }, TILE_SIZE, TEMPLE_BOUNDARY_INSET)
+      return { x: point.x, z: point.z }
+    }
     const point = this._boundaryPosition(room, side, offset)
     const outward = this._doorOutward(side)
     const extra = (DOOR_DEPTH - WALL_THICKNESS) / 2
@@ -1013,20 +1093,27 @@ export class GameScene {
   _addWallSegment(room, side, offset) {
     const horizontal = side === 'top' || side === 'bottom'
     const point = this._boundaryPosition(room, side, offset)
-    const wall = createLowPolyWall({ horizontal, length: horizontal ? TILE_SIZE : TILE_SIZE, thickness: WALL_THICKNESS, height: WALL_HEIGHT })
+    const wall = this.environment
+      ? this.environment.wall({ horizontal, length: TILE_SIZE + TEMPLE_BOUNDARY_INSET * 2 / (horizontal ? room.width : room.height), thickness: WALL_THICKNESS, height: WALL_HEIGHT })
+      : createLowPolyWall({ horizontal, length: TILE_SIZE, thickness: WALL_THICKNESS, height: WALL_HEIGHT })
     wall.position.set(point.x, 0, point.z)
+    if (this.environment) { wall.name = 'temple-inner-rail'; wall.userData.side = side }
     if (side === 'bottom') this._setSouthBoundaryRenderLayer(room, wall)
     this.structureGroup.add(wall)
   }
 
   _addBoundaryPillar(room, side, offset, seen) {
-    const inset = WALL_THICKNESS / 2 + BOUNDARY_GAP
-    const point = boundaryPillarPoint(room, side, offset, TILE_SIZE, inset)
+    const inset = this.environment ? TEMPLE_BOUNDARY_INSET : WALL_THICKNESS / 2 + BOUNDARY_GAP
+    const pillarOffset = this.environment && side === 'top' && offset > 0 && offset < room.width - 1 ? offset + .22 : offset
+    const point = boundaryPillarPoint(room, side, pillarOffset, TILE_SIZE, inset)
     const key = `${point.x.toFixed(3)}:${point.z.toFixed(3)}`
     if (seen.has(key)) return
     seen.add(key)
-    const pillar = createLowPolyPillar({ height: WALL_HEIGHT + 0.28 })
+    const pillar = this.environment
+      ? this.environment.pillar({ height: WALL_HEIGHT + 0.56 })
+      : createLowPolyPillar({ height: WALL_HEIGHT + 0.28 })
     pillar.position.set(point.x, 0, point.z)
+    if (this.environment) pillar.name = 'temple-inner-pillar'
     if (side === 'bottom') this._setSouthBoundaryRenderLayer(room, pillar)
     this.structureGroup.add(pillar)
   }
@@ -1077,38 +1164,96 @@ export class GameScene {
     mesh.material.color.setHex(locked ? 0x5a341d : routeColor)
     mesh.material.emissive?.setHex(locked ? 0x1c0e05 : route === 'elite' ? 0x321216 : route === 'supply' ? 0x0d2923 : 0x2b1608)
     mesh.userData.lockIndicator.visible = locked
+    // Keep the same invisible hit volume for open doorways, with no door panel.
+    const transparent = !locked || Boolean(mesh.userData.southBoundaryFront)
+    if (mesh.material.transparent !== transparent) {
+      mesh.material.transparent = transparent
+      mesh.material.needsUpdate = true
+    }
+    mesh.material.opacity = locked ? 1 : 0
+    mesh.castShadow = locked
+    mesh.material.depthWrite = locked && !mesh.userData.southBoundaryFront
+    mesh.userData.lockedFrame.visible = locked
+    mesh.userData.stoneFrame.visible = !locked
   }
 
   _addDoorMesh(room, door) {
     const horizontal = door.side === 'top' || door.side === 'bottom'
     const point = this._doorPosition(room, door.side, door.offset)
+    const openingWidth = this.environment ? templeDoorPlacement(room, door, TILE_SIZE, TEMPLE_BOUNDARY_INSET).openingWidth : TILE_SIZE * .68
+    const lockedFrameWidth = this.environment ? TILE_SIZE - .09 : openingWidth
     const mesh = new THREE.Mesh(
-      new THREE.BoxGeometry(horizontal ? TILE_SIZE * 0.68 : DOOR_DEPTH, WALL_HEIGHT + 0.18, horizontal ? DOOR_DEPTH : TILE_SIZE * 0.68),
+      new THREE.BoxGeometry(horizontal ? openingWidth : DOOR_DEPTH, WALL_HEIGHT + 0.18, horizontal ? DOOR_DEPTH : openingWidth),
       new THREE.MeshStandardMaterial({ roughness: 0.42, metalness: 0.46 }),
     )
     mesh.position.set(point.x, (WALL_HEIGHT + 0.18) / 2, point.z)
     mesh.castShadow = true
     mesh.receiveShadow = true
     mesh.userData.doorId = door.id
+    mesh.userData.openingWidth = openingWidth
     const lockIndicator = new THREE.Sprite(new THREE.SpriteMaterial({ map: makeLockIndicatorTexture(), transparent: true, depthTest: false }))
     lockIndicator.position.set(0, WALL_HEIGHT * 0.48, 0)
     lockIndicator.scale.set(0.44, 0.44, 1)
     mesh.userData.lockIndicator = lockIndicator
     mesh.add(lockIndicator)
-    const frame = createDoorFrame({ horizontal, width: TILE_SIZE * 0.68, depth: DOOR_DEPTH, height: WALL_HEIGHT + 0.18 })
+    const frame = createDoorFrame({ horizontal, width: lockedFrameWidth, depth: DOOR_DEPTH, height: WALL_HEIGHT + 0.18 })
     frame.position.set(point.x, 0, point.z)
+    const stoneFrame = createStoneDoorFrame({
+      horizontal, width: openingWidth, depth: DOOR_DEPTH, height: WALL_HEIGHT + .18,
+      variant: stoneDoorVariant(door.id), texture: this.environment?.stone || null,
+    })
+    stoneFrame.position.set(point.x, 0, point.z)
+    mesh.userData.lockedFrame = frame
+    mesh.userData.stoneFrame = stoneFrame
     if (door.side === 'bottom') {
       this._setSouthBoundaryRenderLayer(room, frame)
+      this._setSouthBoundaryRenderLayer(room, stoneFrame)
       this._setSouthBoundaryRenderLayer(room, mesh)
     }
-    this.structureGroup.add(frame)
+    this.structureGroup.add(frame, stoneFrame)
     this._setDoorAppearance(mesh)
     this.doorMeshes.push(mesh)
     this.structureGroup.add(mesh)
   }
 
+  _addTempleRoomBoundary(room, doors) {
+    const layout = templeBoundaryLayout(room, doors, TILE_SIZE, TEMPLE_BOUNDARY_INSET)
+    for (const point of layout.corners) {
+      const pillar = this.environment.pillar({ height: WALL_HEIGHT + .56 })
+      pillar.name = 'temple-inner-pillar'
+      pillar.userData.kind = 'large'
+      pillar.position.set(point.x, 0, point.z)
+      if (point.z > 0) this._setSouthBoundaryRenderLayer(room, pillar)
+      this.structureGroup.add(pillar)
+    }
+    for (const side of layout.sides) {
+      for (const span of side.rails) {
+        const rail = this.environment.wall({ horizontal: side.horizontal, length: span.length, thickness: WALL_THICKNESS, height: WALL_HEIGHT })
+        rail.name = 'temple-inner-rail'
+        rail.userData.side = side.side
+        rail.position.set(span.x, 0, span.z)
+        if (side.side === 'bottom') this._setSouthBoundaryRenderLayer(room, rail)
+        this.structureGroup.add(rail)
+      }
+      for (const slot of side.posts) {
+        const post = this.environment.railingPost(slot.kind, WALL_HEIGHT)
+        post.userData.side = side.side
+        post.userData.index = slot.index
+        post.position.set(slot.x, 0, slot.z)
+        if (!side.horizontal) post.rotation.y = Math.PI / 2
+        if (side.side === 'bottom') this._setSouthBoundaryRenderLayer(room, post)
+        this.structureGroup.add(post)
+      }
+    }
+    for (const door of doors) this._addDoorMesh(room, door)
+  }
+
   _addRoomBoundary(room) {
     const doors = this.run.dungeon.doorsForRoom(room.id).filter((door) => this.run.isDoorRevealed(door))
+    if (this.environment) {
+      this._addTempleRoomBoundary(room, doors)
+      return
+    }
     const hasDoor = (side, offset) => doors.some((door) => door.side === side && door.offset === offset)
     for (const side of ['top', 'bottom']) {
       for (let c = 0; c < room.width; c++) if (!hasDoor(side, c)) this._addWallSegment(room, side, c)
@@ -1130,6 +1275,13 @@ export class GameScene {
     this.doorMeshes = []
     this._addRoomBoundary(room)
     this._addExploredRoomGhosts(room)
+    if (this.environment) {
+      const doors = this.doorMeshes.map(mesh => {
+        const door = this.run.dungeon.door(mesh.userData.doorId)
+        return { id: door.id, side: door.side, x: mesh.position.x, z: mesh.position.z, width: mesh.userData.openingWidth }
+      })
+      this.environment.decorate(this.structureGroup, room, TILE_SIZE, this.tileMeshes, doors)
+    }
   }
 
   _resetSceneBounds(room) {
@@ -1344,6 +1496,7 @@ export class GameScene {
     if (face.userData.groundFace) face.userData.groundFace.visible = emptyGround
     this._attachGroundSprite(face, card, this._gridPosition(room, position), position, revealed)
     this._setEnemyStatusOverlay(face, face.userData.groundFace, revealed && card?.type === 'monster' ? room.entityAt(position) : null)
+    this._setContactShadow(face, card, revealed)
     face.userData.visualKey = visual.key
     face.userData.enemyId = card?.type === 'monster' ? card.enemyId : null
     this._attachEnemyFigure(face, revealed && card?.type === 'monster' ? card.enemyId : null)
@@ -1559,6 +1712,7 @@ export class GameScene {
     marker.position.y = CARD_SIZE / 2
     marker.renderOrder = tileRenderOrder(from, 8)
     group.add(marker)
+    group.userData.contactShadow = this._makeContactShadow()
     this.roomGroup.add(group)
     const route = [{ ...from }, ...path.map((step) => ({ ...step }))]
     const distances = route.slice(1).map((step, index) => Math.hypot(step.c - route[index].c, step.r - route[index].r))
@@ -1886,6 +2040,7 @@ export class GameScene {
       this.movementAnimation = null
       return
     }
+    this._clearActorShadow(animation.group)
     this.roomGroup.remove(animation.group)
     disposeObject(animation.group)
     this.movementAnimation = null
@@ -1893,6 +2048,7 @@ export class GameScene {
 
   _clearPlayerMarker() {
     if (!this.playerMarker) return
+    this._clearActorShadow(this.playerMarker)
     this.roomGroup.remove(this.playerMarker)
     disposeObject(this.playerMarker)
     this.playerMarker = null
@@ -2703,6 +2859,8 @@ export class GameScene {
     this._emitMoveCompleteIfIdle()
     this.attackRangeOverlay.syncPosition()
     this.attackRangeOverlay.update(delta)
+    this._updateContactShadows()
+    this.environment?.update(now, this.roomGroup, delta)
     this.renderer.render(this.scene, this.camera)
     this._frame = requestAnimationFrame(this._animate)
   }
@@ -2734,6 +2892,8 @@ export class GameScene {
     this._clearPlayerMarker()
     disposeObject(this.roomGroup)
     this.boardTextures?.dispose()
+    this.contactShadowTexture.dispose()
+    this.environment?.dispose()
     this.renderer.dispose()
     this.renderer.domElement.remove()
   }
