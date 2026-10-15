@@ -1,4 +1,6 @@
 <script setup>
+import StaminaFlame from './StaminaFlame.vue'
+
 defineProps({
   cost: { type: [Number, String], required: true },
   attribute: { type: String, default: 'wild' },
@@ -6,5 +8,5 @@ defineProps({
 </script>
 
 <template>
-  <span class="stamina-cost"><i class="stamina-ball-icon" :class="attribute" aria-hidden="true"></i><span>{{ cost }}</span></span>
+  <span class="stamina-cost"><StaminaFlame class="stamina-ball-icon" :attribute="attribute" /><span>{{ cost }}</span></span>
 </template>

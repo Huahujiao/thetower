@@ -235,3 +235,74 @@ Use case: stylized-concept. Asset type: NEW seamless square foundation-wall albe
 - 墙顶维持 -0.43，墙身由 2.32 延长至 10.44，墙底调整为 -10.87；四角支撑同步延长，厚台沿仍保留原高度和尺寸。
 - 渐暗、底部淡出及三层薄雾按相同深度比例下移，中段腰线随墙身下移。纹理继续按米铺设，石块不随墙身拉长。
 - 本轮为低影响参数调整，不额外截图。
+
+## 侧壁修正为不透明实心墙
+
+- 移除基座墙身及支撑材质的透明淡出，恢复不透明渲染和深度写入；封闭墙体连续遮挡背后场景，避免底部透空及透明排序造成的镂空观感。
+- 保留 4.5 倍墙高、按深度逐渐压暗及独立低处薄雾，纹理尺寸不变。
+- 实际浏览器确认墙身及所有石构件不透明且写入深度；无脚本和着色器错误，美术页独立构建、ESLint 通过。集中截图：screenshots/arttweak-solid-platform-overview.png、screenshots/arttweak-solid-platform-final.png。
+
+## 侧墙与远山共用向下渐暗的动态云雾
+
+- 原来的三张水平雾片在墙体延长后移到了视口下方，正面也被实心侧墙遮挡，无法稳定隐藏墙脚。本轮移除雾片，改为最终渲染阶段的一层程序化云雾：同一色调、渐暗范围和流动噪声覆盖实心墙体及透明画布后面的远山图片，无需改动或重生成背景素材。
+- 下方渐暗并加深雾密度，雾丝缓慢横移，底部收至青黑色；保持侧墙不透明、正常写入深度，避免再次产生透空感。
+- 按镜头实时投影平台上表面轮廓，保护棋盘、卡牌及其内部角色；雾的过渡随缩放、平移和视角更新，并限制在可见画面的下部。雾层不参与射线点选，减少动态效果时冻结噪声时间，环境销毁时释放网格和材质。实现：src/render/temple-atmosphere.js。
+- 两轮截图调整，第二轮压暗原先偏亮的雾底。最新截图：screenshots/arttweak-shared-fog-default.png、arttweak-shared-fog-overview.png、arttweak-shared-fog-distant.png、arttweak-shared-fog-orbit.png、arttweak-shared-fog-mobile.png（均位于 screenshots/）。
+- 实际浏览器验证：墙面像素确实被雾影响；远山区域画布由无覆盖变为雾覆盖，低处 alpha 248/255；棋盘内部抽样 807 点与关闭雾层时逐像素一致。动画时间递增、减少动态效果时归零，页面无脚本及着色器错误；改动 JS 的 ESLint、美术页独立生产构建通过。手机尺寸为桌面浏览器模拟，手机实机动态性能仍沿用原待验证记录。
+
+
+## 平台近雾锚定与三层远景视差
+
+- 近处遮挡云雾的噪声从屏幕坐标改为平台局部坐标：通过逆投影重建视线，与平台下方 y=-2.3 的雾平面相交后取纹理坐标。拖动、镜头旋转、俯仰和缩放均携带同一团近雾；雾带高度也随平台前缘和投影尺寸变化，保留缓慢自主漂移。
+- 远景独立三层：原有 temple-mountains-v1.jpg 为最远底景；新增透明中景山峰和透明谷雾层。拖动位移系数依次 .055、.20、.34，缩放系数依次 .025、.09、.14；云层另有缓慢漂移。各层留出移动余量并限制极端位移，底部继续统一压暗、与平台近雾衔接。减少动态效果时只冻结自主漂移，视角变化仍保持空间关系。
+- 使用内置 imagegen 生成两张新图，未改动或重生成任何已有图片。原图：art/generated/temple-parallax-peaks-v1.png、art/generated/temple-parallax-clouds-v1.png。运行素材：src/assets/environment/temple-parallax-peaks-v1.webp（1024×1536）、src/assets/environment/temple-parallax-clouds-v1.webp（1536×1024），均保留真实 alpha。导出脚本：scripts/prepare-temple-parallax-art.py。
+- 实现：src/render/temple-parallax-backdrop.js 和 temple-atmosphere.js；环境对象管理各层及资源释放，不改变玩法状态、点选和布局。
+- 截图：screenshots/arttweak-parallax-default.png、arttweak-parallax-overview.png、arttweak-parallax-panned.png、arttweak-parallax-distant.png、arttweak-parallax-orbit.png、arttweak-parallax-mobile.png（均位于 screenshots/）。拖动前后远/中/云层位移约 1.91/6.94/11.80px；同一近雾采样点在平台坐标下保持 (2,-2.3,3)，而屏幕位置随平台变化。棋盘内部抽样 807 点在开关近雾时像素一致；墙面和背景仍被雾遮挡。
+- 近雾锚定数值检查覆盖平移、旋转、38–78°俯仰与缩放；自主动画和减少动态效果检查通过，无页面脚本/着色器错误。ESLint 和美术页独立构建通过。手机截图为浏览器模拟尺寸。
+
+### 中景透明山峰完整提示词（内置 imagegen，transparent_background=true）
+
+```text
+Use case: stylized-concept. Asset type: NEW transparent middle-distance mountain parallax layer for a portrait ancient Chinese dark-fantasy mountain-temple board game. Portrait 1024x1536 canvas. ONLY isolated atmospheric karst peaks on genuine transparent background; no sky backdrop. Arrange a tall thin rugged mountain with dark sparse pines in the left lower half and a separate slightly shorter crag on the right lower half; a few smaller offset silhouettes across the lower third. Keep the central 40% width mostly open transparent negative space because a floating temple board will occupy the centre. Mountains extend up from bottom edge, tallest tip at roughly 30% from top; upper quarter empty transparent. Quiet moody cyan charcoal / slate green-grey rocks, muted low saturation, weathered vertical rock strata, fine pines, hand-painted realistic fantasy game environment matte painting, soft overcast ambient light, soft mist fading at bases and some gaps between peaks, restrained distant details. No bright white areas, no sun rays, no temples, no floating platform, no foreground railing, no people, no text, no watermark, no ground plane, no sky, no solid colored background. This is an additional independently moving midground layer, NOT a complete scene. Real alpha transparency and soft transparent edges around rock silhouettes and mist.
+```
+
+### 透明谷雾完整提示词（内置 imagegen，transparent_background=true）
+
+```text
+Use case: stylized-concept. Asset type: NEW transparent distant drifting cloud / valley mist parallax layer for a moody ancient Chinese mountain temple game, wide 1536x1024 canvas. Only several long soft irregular horizontal streamers of mist and a few diffuse rolling cloud puffs across the middle and lower half, with open transparent gaps between bands. Genuine transparent background, clouds isolated with very soft feathered alpha edges. Muted desaturated cyan grey / grey-green, medium-dark low-contrast atmosphere, no bright white or glowing highlights, quiet overcast lighting, realistic hand-painted atmospheric matte painting. Clouds should look like distant valley fog seen slightly from above, subtly layered, not dramatic storm clouds, not smoke columns or explosions. Upper quarter mostly empty transparent space. No mountain silhouettes, no sky rectangle, no landscape, no objects, no text, no watermark, no black background, no baked horizon. Designed as an independent parallax compositing layer over existing distant mountains; diffuse fog occupies about 40-55% of the image, with actual variable opacity.
+```
+
+## 遮挡云改为固定在三维空间中的云团
+
+- 移除此前全屏四边形、屏幕雾带范围和投影多边形遮罩。近雾不再使用屏幕上下位置决定覆盖范围；改为平台下方四周的 12 片相机朝向云片，形成三层浅体积云。
+- 云片中心固定在平台局部三维坐标：第一层距墙顶向下 3.7，后两层每层再下降 2.35；每层在平台四侧设置固定位置，随房间尺寸布置。相机变化只改变投影和云片朝向，局部中心与尺寸保持不变；拖动沿用平台所在三维场景的整体变换。
+- 云片参与普通深度测试，不写入深度，平台及墙体按实际前后关系遮挡云片；浓度和颜色按三维高度变化。缓慢流动只改变纹理偏移，不改变云团中心；减少动态效果时纹理偏移归零。原有分层远景、远处谷雾和背景渐暗保留。
+- 复用已有透明谷雾素材，无新生成或覆盖图片。云边缘增加着色器柔化，第二轮压低蓝色、统一青灰色，避免云海出现过硬的重复横纹。
+- 浏览器验证 12 个中心在缩放、平移和 38°俯仰变化前后完全一致，云组与平台共享场景变换，深度测试开启，减少动态效果静止，无脚本或着色器错误。ESLint、美术页独立构建通过。
+- 两轮截图：screenshots/arttweak-world-mist-default.png、arttweak-world-mist-overview.png、arttweak-world-mist-distant.png、arttweak-world-mist-panned.png（均位于 screenshots/）。此前“屏幕雾带”相关章节仅为历史记录，以本节实现为准。
+
+
+## 实心山峰与稳定拖动视差修订
+
+- 取消中景山峰层的整体 opacity=.42，改为 1。用内置 imagegen 编辑旧山峰素材为 v2：只保留岩壁和松树，移除素材中的云雾与底部雾化；云和谷雾仍作为独立透明层。
+- 保留旧原图与运行素材。新原图：art/generated/temple-parallax-peaks-v2.png；新运行素材：src/assets/environment/temple-parallax-peaks-v2.webp；导出脚本：scripts/prepare-temple-solid-peaks.py。渲染阶段仅对山体使用独立 alpha 收紧滤镜，岩石内部完全实心，轮廓保留窄的抗锯齿过渡，云层 alpha 不受影响。
+- 山体以 cover 铺设，顶部偏移 90px，配合原有外扩范围避免侧边进入画面；远山、中景山体、远云、三维近雾仍分层显示。
+- 视差输入改为棋盘实际投影中心相对参考值的位移，删除额外 yaw/pitch 补偿和反向鼠标偏移，避免与场景的自动环绕叠加、互相抵消。云的自主飘移改为独立 background-position，不再混入镜头位移 transform；同一视角始终得到相同背景层变换。
+- 真实鼠标检查：左右往返 9 个采样、上下往返 7 个采样，各层均不相对棋盘位移反向；回到原视角后变换完全复原。单纯悬停和鼠标移出场景不会推动背景。山体黑白底色渲染对比：48,021 个实心区域像素的底色泄漏差值均为 0，透明空隙正常露底。
+- 最新最终构图截图：screenshots/arttweak-solid-mountain-overview.png、screenshots/arttweak-solid-mountain-mobile.png。其他 solid-mountain 截图为调整过程，可能保留较早构图。页面无脚本或着色器错误，三维近雾仍保持固定位置和正常深度关系。
+
+### 实心山峰 v2 的编辑提示词（内置 imagegen，transparent_background=true）
+
+输入图片：art/generated/temple-parallax-peaks-v1.png（编辑目标）。
+
+```text
+Use case: background-extraction / precise-object-edit. Edit target: the provided transparent portrait mountain parallax asset. Preserve the exact canvas, the two main karst mountain placements, peak heights, rock shapes, pine silhouettes, realistic hand-painted dark cyan-grey style and quiet central gap. Make all solid mountain rock faces and tree silhouettes fully opaque, including both the tall left mountain and lower right mountains. Remove ALL wisps, cloud banks, smoky veil and haze from this asset; clouds are a separate game layer. Keep only clean mountain-and-pine silhouettes on a genuinely transparent background, antialiased edges around the silhouettes. A mountain is opaque, not semi-transparent or translucent. Do not fade the mountain bases into fog; the mountain silhouettes continue down to the bottom edge as solid rocks. No black background, no grey background, no sky fill; everything outside the mountain silhouettes must be actually transparent. Keep desaturated cyan-charcoal stone with subtle existing highlights, no bright white edges, no new objects, no temples, no text, no watermark. Do not fill the central gap with haze. Preserve the original image composition and dimensions. Output alpha is 100% in all mountain interiors and 0% outside mountains except narrow antialiasing edges.
+```
+
+## 去除侧墙横腰线，灰白雾与缓慢流动
+
+- 移除平台中段 platform-stone-course 石腰线，该构件此前使用与墙身不同的修整石材，产生明显横带；主墙保持连续的原条石砌纹，顶部厚台沿和四角支撑保留。
+- 近雾从暗青灰提亮为浅灰白，深处仍适当压暗；远处谷雾同步调亮。原图片未修改，颜色通过材质与 CSS 调整。
+- 云片位置仍固定于三维平台下方；横向纹理流动幅度由 .035 增为 .09，角速度 .018 增为 .032，纵向保留更轻的慢波，各片相位错开。减少动态效果时静止。
+- 按云片与墙体在平台局部坐标中的距离，在 0–0.7 场景单位范围渐隐接触处 alpha，消除云片穿过墙面造成的横向硬分界；普通深度测试保持开启。
+- 两轮截图确认墙面连续、雾更白且不盖住棋盘：screenshots/arttweak-white-mist-overview.png、arttweak-white-mist-distant.png。时间 0 秒与 12 秒渲染对比：arttweak-white-mist-flow-0s.png、arttweak-white-mist-flow-12s.png（均在 screenshots/）；下方雾区域平均 RGB 帧差约 3.75/255，云团中心保持不变，减少动态效果正常。无页面脚本或着色器错误，ESLint、美术页独立构建通过。

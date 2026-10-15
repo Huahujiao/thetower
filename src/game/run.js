@@ -226,6 +226,14 @@ export class GameRun {
       : null
   }
 
+  _createStaminaDeck(saved = null) {
+    return new StaminaDeck(this.random, saved, (event, balls) => {
+      const cleared = this._synchronizeStaminaSelection()
+      this.bus.emit(event, { balls })
+      if (cleared) this._changed()
+    })
+  }
+
   reset({ emit = true } = {}) {
     this._turnInProgress = false
     this.battle = { active: false, stage: 'explore', round: 0 }
@@ -233,7 +241,7 @@ export class GameRun {
     this.pendingRoundEnd = false
     const generated = createChapterDungeon({ random: this.random })
     this.dungeon = generated.dungeon
-    this.staminaDeck = new StaminaDeck(this.random)
+    this.staminaDeck = this._createStaminaDeck()
     this.player = {
       hp: 20,
       maxHp: 20,
@@ -349,13 +357,36 @@ export class GameRun {
   }
 
   toggleStaminaBall(id) {
-    if (!this._canAct() || !this.battle.active || this.battle.stage !== 'player') return false
+    if (!this._canAct() || !this.battle.active || this.battle.stage !== 'player' || this.selectedItem?.type === 'weapon') return false
     const changed = this.staminaDeck.toggle(id)
     if (changed) this._changed()
     return changed
   }
 
-  weaponPayment(weapon) { return this.staminaDeck.plan(this.weaponEnergyCost(weapon), weapon.attribute) }
+  weaponPayment(weapon) { return this.staminaDeck.plan(this.weaponEnergyCost(weapon), weapon.attribute, { selection: false }) }
+
+  staminaPaymentPreview() {
+    if (!this.battle.active || this.battle.stage !== 'player' || this.roundResolving) return null
+    const weapon = this.selectedItem
+    if (weapon?.type === 'weapon') return this.weaponPayment(weapon)
+    return this.staminaDeck.plan(1)
+  }
+
+  _synchronizeStaminaSelection() {
+    const clearHand = !this.battle.active && (this.staminaDeck.hand.length > 0 || this.staminaDeck.selected.length > 0)
+    if (clearHand) this.staminaDeck.discardHand()
+    const weapon = this.selectedItem
+    if (weapon?.type !== 'weapon' || (this.battle.active && this.weaponPayment(weapon))) return clearHand
+    this.selectedInventoryIndex = null
+    this.itemTargeting = false
+    return true
+  }
+
+  _actionPaymentOptions() {
+    const weapon = this.selectedItem
+    if (weapon?.type !== 'weapon') return { selection: true }
+    return { selection: false, exclude: this.weaponPayment(weapon)?.balls.map(ball => ball.id) || [] }
+  }
 
   _synchronizeBattle() {
     const active = this._activatedEnemies().length > 0 && !this.gameOver
@@ -383,6 +414,7 @@ export class GameRun {
       if (!this.gameOver) this._log('已清除当前激活敌人，返回探索。')
       this.bus.emit('battle:ended', { round: this.battle.round })
     }
+    this._synchronizeStaminaSelection()
     return active
   }
 
@@ -406,11 +438,12 @@ export class GameRun {
   actionEnergyCost(amount = 1) { return this.battle.active ? Math.max(0, amount) : 0 }
 
   canPayAction(amount = 1) {
-    return !this.battle.active || (this.battle.stage === 'player' && !this.roundResolving && this.player.energy >= amount)
+    return !this.battle.active || (this.battle.stage === 'player' && !this.roundResolving
+      && !!this.staminaDeck.plan(amount, null, this._actionPaymentOptions()))
   }
 
   _payAction(amount = 1) {
-    return this.canPayAction(amount) && this._spendEnergy(this.actionEnergyCost(amount))
+    return this.canPayAction(amount) && !!this.staminaDeck.pay(this.actionEnergyCost(amount), null, this._actionPaymentOptions())
   }
 
   endPlayerTurn() {
@@ -900,6 +933,8 @@ export class GameRun {
     if (!placement) return this.clearSelection()
     const origin = this.backpack.originIndex(placement)
     if (this.selectedInventoryIndex === origin && !this.itemTargeting) return this.clearSelection()
+    if (placement.item.type === 'weapon' && (!this.battle.active || !this.weaponPayment(placement.item))) return false
+    if (placement.item.type === 'weapon') this.staminaDeck.selected = []
     this.selectedInventoryIndex = origin
     this.itemTargeting = false
     this._changed()
@@ -1592,7 +1627,7 @@ export class GameRun {
     const range = this.weaponRange(weapon)
     if (combatDistance(this.player.pos, enemy.pos, range) > range) return this._reject('敌人已经离开射程。')
     const context = this.itemRules.attackContext(weapon, enemy)
-    if (!this.staminaDeck.pay(this.weaponEnergyCost(weapon), weapon.attribute)) return this._reject('体力球不足。')
+    if (!this.staminaDeck.pay(this.weaponEnergyCost(weapon), weapon.attribute, { selection: false })) return this._reject('体力球不足。')
     this.itemRules.recordWeaponUse(weapon)
     this.itemRules.expansion.beforeAttack(weapon, context)
     this.pets.playerAttack(enemy)
@@ -2271,6 +2306,7 @@ export class GameRun {
   }
 
   _changed() {
+    this._synchronizeStaminaSelection()
     this._persist()
     this.bus.emit('change')
   }
@@ -2323,7 +2359,7 @@ export class GameRun {
       if (!compatibleSave(data)) return discard()
       this.dungeon = Dungeon.hydrate(data.dungeon)
       this.player = data.player
-      this.staminaDeck = new StaminaDeck(this.random, data.staminaDeck)
+      this.staminaDeck = this._createStaminaDeck(data.staminaDeck)
       this._bindBallAccessors()
       this.battle = data.battle && typeof data.battle.active === 'boolean' ? { ...data.battle } : { active: false, stage: 'explore', round: 0 }
       this.roundResolving = false

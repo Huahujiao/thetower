@@ -1,11 +1,12 @@
 import * as THREE from 'three'
 import { createTempleWindRig, updateTempleWindRig, TempleFallingLeaves } from './temple-wind.js'
-import mountainsUrl from '../assets/environment/temple-mountains-v1.jpg'
+import { TempleParallaxBackdrop } from './temple-parallax-backdrop.js'
 import stoneUrl from '../assets/environment/temple-dressed-stone-v1.jpg'
 import masonryUrl from '../assets/environment/temple-foundation-masonry-v1.jpg'
 import soilStoneUrl from '../assets/board-floor-plain-v1.jpg'
 import { dressedStoneBox, metricStoneUV, templeStoneMaterial } from './temple-stone-materials.js'
 import { TemplePlatformDepth } from './temple-platform-depth.js'
+import { TempleAtmosphere } from './temple-atmosphere.js'
 import mapleUrl from '../assets/environment/temple-maple-v1.png'
 import bannerUrl from '../assets/environment/temple-banner-v1.png'
 
@@ -18,24 +19,12 @@ const fraction = value => { const seed = Math.sin(value) * 43758.5453; return se
 
 // Scenery owns only presentation resources; it never changes the room or save.
 export class TempleEnvironment {
-  constructor(container) {
+  constructor(container, scene) {
     this.container = container
-    this.backdrop = document.createElement('div')
-    this.backdrop.className = 'temple-backdrop'
-    this.backdrop.setAttribute('aria-hidden', 'true')
-    this.backdrop.style.backgroundImage = `linear-gradient(180deg, rgba(13,22,25,.20), rgba(16,25,28,.04) 45%, rgba(13,20,22,.36)), url("${mountainsUrl}")`
-    container.prepend(this.backdrop)
-    this.pointer = { x: 0, y: 0 }
-    this.offset = { x: 0, y: 0 }
+    this.atmosphere = new TempleAtmosphere(scene)
+    this.parallax = new TempleParallaxBackdrop(container)
+    this.backdrop = this.parallax.element
     this.reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
-    this.onPointer = event => {
-      const rect = container.getBoundingClientRect()
-      this.pointer.x = (event.clientX - rect.left) / rect.width - .5
-      this.pointer.y = (event.clientY - rect.top) / rect.height - .5
-    }
-    this.onLeave = () => { this.pointer.x = this.pointer.y = 0 }
-    container.addEventListener('pointermove', this.onPointer)
-    container.addEventListener('pointerleave', this.onLeave)
     const loadStone = url => {
       const texture = new THREE.TextureLoader().load(url)
       texture.colorSpace = THREE.SRGBColorSpace
@@ -388,24 +377,18 @@ export class TempleEnvironment {
     this.boardLeaves.instanceMatrix.needsUpdate = true
   }
 
-  update(time, board, delta) {
+  update(time, board, delta, camera) {
     const still = this.reducedMotion.matches
     this._updateBoardLeaves()
-    const x = still ? 0 : this.pointer.x * -9 + board.position.x * -3 + Math.sin(time * .00013) * 2
-    const y = still ? 0 : this.pointer.y * -5 + board.position.z * -1.5
-    const smoothing = 1 - Math.exp(-delta * 4)
-    this.offset.x += (x - this.offset.x) * smoothing
-    this.offset.y += (y - this.offset.y) * smoothing
     for (const rig of this.windRigs || []) updateTempleWindRig(rig, time * .001, still)
     this.fallingLeaves?.update(time * .001, still)
-    this.platformDepth?.update(time * .001, still)
-    this.backdrop.style.transform = `translate3d(${this.offset.x.toFixed(2)}px, ${this.offset.y.toFixed(2)}px, 0) scale(1.06)`
+    this.atmosphere.update(time * .001, still, camera, this.platformDepth)
+    this.parallax.update(time * .001, still, camera, this.platformDepth)
   }
 
   dispose() {
-    this.container.removeEventListener('pointermove', this.onPointer)
-    this.container.removeEventListener('pointerleave', this.onLeave)
-    this.backdrop.remove()
+    this.parallax.dispose()
+    this.atmosphere.dispose()
     this.windRigs = []
     this.fallingLeaves = null
     this.boardLeaves = null

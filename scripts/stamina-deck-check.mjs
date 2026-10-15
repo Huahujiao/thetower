@@ -65,9 +65,31 @@ function restore(data, accepted = true) {
   assert(StaminaDeck.valid(deck.serialize()))
   assert.deepEqual(new StaminaDeck(() => 0, deck.serialize()).serialize(), deck.serialize())
 }
+// Automatic payments consume eligible flames strictly from right to left.
+{
+  const run = fixture()
+  enemy(run); run._synchronizeBattle()
+  hand(run, ['scorch', 'scorch', 'scorch', 'drown', 'wild'])
+  const deck = run.staminaDeck, ids = deck.hand.map(ball => ball.id)
+  const before = deck.serialize()
+  assert.deepEqual(deck.plan(2).balls.map(ball => ball.id), [ids[4], ids[3]], 'Neither color counts nor wildcard preservation may override position')
+  assert.deepEqual(deck.serialize(), before, 'A payment preview must not reorder the hand')
+  deck.toggle(ids[0])
+  assert.deepEqual(deck.plan(2).balls.map(ball => ball.id), [ids[0], ids[4]], 'Manual selection keeps priority')
+  assert.deepEqual(deck.plan(2, null, { selection: false }).balls.map(ball => ball.id), [ids[4], ids[3]])
+  deck.toggle(ids[0])
+  assert.deepEqual(deck.plan(3, 'scorch').balls.map(ball => ball.id), [ids[4], ids[2], ids[1]], 'Attribute payments skip ineligible flames while scanning from the right')
+  const events = []
+  const off = run.on('stamina:spent', ({ balls }) => events.push(balls.map(ball => ball.id)))
+  assert.deepEqual(deck.pay(2).balls.map(ball => ball.id), [ids[4], ids[3]])
+  assert.deepEqual(events, [[ids[4], ids[3]]])
+  assert.deepEqual(deck.hand.map(ball => ball.id), ids.slice(0, 3))
+  off()
+}
 // Insufficient matching payments are atomic; selected off-color balls cannot fill a gap.
 {
   const run = fixture()
+  enemy(run); run._synchronizeBattle()
   hand(run, ['scorch', 'scorch', 'drown', 'drown'])
   assert.equal(run.staminaDeck.plan(3, 'scorch'), null)
   run.staminaDeck.toggle(run.staminaDeck.hand[2].id)
@@ -101,6 +123,40 @@ function restore(data, accepted = true) {
   run.currentRoom.removeEntity(extra.id); run._synchronizeBattle()
   assert.equal(run.battle.active, false); assert.equal(run.player.energy, 0)
   assert(run._payAction(1)); assert.equal(run.player.energy, 0)
+}
+// Outside combat, no held balls or weapon selection may survive state synchronization.
+{
+  const run = fixture(), weapon = add(run, 'rust-sword')
+  weapon.energyCost = 2
+  const index = run.backpack.originIndex(run.backpack.placementOf(weapon.uid))
+  hand(run, [weapon.attribute, weapon.attribute])
+  run.staminaDeck.toggle(run.staminaDeck.hand[0].id)
+  assert.equal(run.selectInventory(index), false, 'Even a stale affordable hand cannot allow weapon selection outside combat')
+  select(run, weapon)
+  run._synchronizeBattle()
+  assert.equal(run.player.energy, 0)
+  assert.deepEqual(run.staminaDeck.selected, [])
+  assert.equal(run.selectedItem, null)
+  run.staminaDeck.draw(2)
+  run._changed()
+  assert.equal(run.player.energy, 0, 'Noncombat state updates must clear residual draws')
+  run.staminaDeck.refund([run.staminaDeck.discardPile.at(-1)])
+  assert.equal(run.player.energy, 0, 'A delayed refund must not leave balls outside combat')
+  const target = enemy(run)
+  run._synchronizeBattle()
+  assert.equal(run.player.energy, 6)
+  hand(run, Array(4).fill(weapon.attribute))
+  assert(run.selectInventory(index))
+  run.currentRoom.removeEntity(target.id)
+  run._synchronizeBattle()
+  assert.equal(run.battle.active, false)
+  assert.equal(run.player.energy, 0)
+  assert.equal(run.selectedItem, null, 'Ending combat must immediately clear the weapon highlight')
+  assert.equal(run.selectInventory(index), false)
+  assert(StaminaDeck.valid(run.staminaDeck.serialize()), 'Clearing the hand must preserve the physical deck')
+  enemy(run)
+  run._synchronizeBattle()
+  assert.equal(run.player.energy, 6, 'The next combat must still draw normally')
 }
 // Repeated attacks never increase the weapon cost.
 {
@@ -159,6 +215,153 @@ function restore(data, accepted = true) {
   assert.deepEqual(run.player.pos, position)
   hand(run, Array(4).fill(weapon.attribute)); assert.equal(strike(run, weapon, target), 9)
   assert.equal(run.player.energy, 0)
+  assert.notDeepEqual(run.player.pos, position)
+}
+// Weapon highlights reserve the exact affordable payment while moving from right to left.
+{
+  const run = fixture(), weapon = add(run, 'rust-sword'), target = enemy(run, { pos: { c: 5, r: 3 } })
+  run._synchronizeBattle()
+  weapon.energyCost = 2; weapon.range = 1
+  const other = ATTRIBUTE_ORDER.find(attribute => attribute !== weapon.attribute)
+  run.player.pos = { c: 2, r: 3 }
+  hand(run, [other, other, weapon.attribute, 'wild'])
+  const ids = run.staminaDeck.hand.map(ball => ball.id)
+  assert.deepEqual(run.staminaPaymentPreview().balls.map(ball => ball.id), [ids[3]])
+  select(run, weapon)
+  assert.deepEqual(run.staminaPaymentPreview().balls.map(ball => ball.id), [ids[3], ids[2]])
+  const payments = []
+  run.on('stamina:spent', ({ balls }) => payments.push(balls.map(ball => ball.id)))
+  assert.equal(strike(run, weapon, target), weapon.attack)
+  assert.deepEqual(payments, [[ids[1]], [ids[0]], [ids[3], ids[2]]], 'Approach must spend other flames before the exact highlighted attack payment')
+  hand(run, [other, other, weapon.attribute])
+  assert.equal(run.selectedItem, null, 'An exhausted weapon must be deselected')
+  assert.equal(run.staminaPaymentPreview().balls[0].id, run.staminaDeck.hand.at(-1).id)
+  rejectStrike(run, weapon, target)
+}
+// Independent movement protects the automatic weapon payment.
+{
+  const run = fixture(), weapon = add(run, 'rust-sword')
+  enemy(run); run._synchronizeBattle(); weapon.energyCost = 2
+  const other = ATTRIBUTE_ORDER.find(attribute => attribute !== weapon.attribute)
+  hand(run, [other, other, weapon.attribute, weapon.attribute])
+  select(run, weapon)
+  const highlighted = run.staminaPaymentPreview().balls.map(ball => ball.id)
+  assert.equal(run.toggleStaminaBall(highlighted[0]), false)
+  assert(run.clickTile(3, 2)); settleAnimations(run)
+  assert.deepEqual(run.staminaPaymentPreview().balls.map(ball => ball.id), highlighted)
+  assert(run.staminaDeck.hand.some(ball => ball.attribute === other))
+  const before = run.staminaDeck.serialize()
+  assert.equal(run.staminaDeck.plan(2, null, { exclude: highlighted }), null)
+  assert.deepEqual(run.staminaDeck.serialize(), before)
+}
+// The public selection API enforces affordability, one manual ball and weapon locks.
+{
+  const run = fixture(), weapon = add(run, 'rust-sword'), target = enemy(run)
+  run._synchronizeBattle(); weapon.energyCost = 2
+  const other = ATTRIBUTE_ORDER.find(attribute => attribute !== weapon.attribute)
+  const index = () => run.backpack.originIndex(run.backpack.placementOf(weapon.uid))
+  hand(run, [other, weapon.attribute])
+  const manualId = run.staminaDeck.hand[0].id
+  assert(run.toggleStaminaBall(manualId))
+  const before = run.staminaDeck.serialize()
+  let changes = 0
+  const off = run.on('change', () => changes++)
+  assert.equal(run.selectInventory(index()), false)
+  assert.equal(run.selectedItem, null)
+  assert.deepEqual(run.staminaDeck.serialize(), before)
+  assert.equal(changes, 0, 'An unaffordable weapon click must have no effect')
+  off()
+  hand(run, [weapon.attribute, weapon.attribute, weapon.attribute, other, 'wild'])
+  const ids = run.staminaDeck.hand.map(ball => ball.id)
+  assert(run.toggleStaminaBall(ids[0]))
+  assert(run.toggleStaminaBall(ids[1]))
+  assert.deepEqual(run.staminaDeck.selected, [ids[1]], 'Manual selection must switch rather than accumulate')
+  assert(run.toggleStaminaBall(ids[1]))
+  assert.deepEqual(run.staminaDeck.selected, [])
+  assert(run.toggleStaminaBall(ids[0]))
+  assert(run.selectInventory(index()))
+  assert.deepEqual(run.staminaDeck.selected, [], 'Selecting a weapon clears the manual ball')
+  const expensive = add(run, 'rust-sword')
+  expensive.energyCost = 6
+  assert.equal(run.selectInventory(run.backpack.originIndex(run.backpack.placementOf(expensive.uid))), false)
+  assert.equal(run.selectedItem, weapon, 'An unaffordable switch must preserve the current weapon')
+  assert.deepEqual(run.weaponPayment(weapon).balls.map(ball => ball.id), [ids[4], ids[2]])
+  assert.equal(run.toggleStaminaBall(ids[0]), false)
+  assert.equal(run.toggleStaminaBall(ids[3]), false)
+  const payments = []
+  run.on('stamina:spent', ({ balls }) => payments.push(balls.map(ball => ball.id)))
+  strike(run, weapon, target)
+  assert.deepEqual(payments[0], [ids[4], ids[2]], 'Attack order is fixed right-to-left even with surplus matching balls')
+  assert.equal(run.selectedItem, weapon, 'An affordable weapon remains selected')
+  strike(run, weapon, target)
+  assert.equal(run.selectedItem, null, 'An unaffordable weapon is deselected immediately after payment')
+  assert.deepEqual(run.staminaDeck.selected, [])
+}
+// Forced losses and cost changes invalidate selection; refunds do not reselect weapons.
+{
+  const run = fixture(), weapon = add(run, 'rust-sword')
+  enemy(run); run._synchronizeBattle(); weapon.energyCost = 2
+  const index = run.backpack.originIndex(run.backpack.placementOf(weapon.uid))
+  hand(run, [weapon.attribute, 'wild'])
+  assert(run.selectInventory(index))
+  const payment = run.staminaDeck.pay(1, weapon.attribute, { selection: false })
+  assert.equal(run.selectedItem, null)
+  run.staminaDeck.refund(payment.balls)
+  assert.equal(run.selectedItem, null)
+  assert(run.selectInventory(index))
+  run.applyStatus(run.player, 'fatigue', { layers: 1 })
+  assert.equal(run.selectedItem, null)
+  hand(run, [weapon.attribute, weapon.attribute])
+  assert(run.selectInventory(index))
+  weapon.energyCost = 3
+  run._changed()
+  assert.equal(run.selectedItem, null)
+}
+// Movement, flipping and on-the-spot pickup share the exact untyped payment rule.
+for (const action of ['move', 'flip', 'pickup']) for (const armed of [false, true]) {
+  const run = fixture(), weapon = add(run, 'rust-sword')
+  enemy(run); run._synchronizeBattle(); weapon.energyCost = 2
+  const other = ATTRIBUTE_ORDER.find(attribute => attribute !== weapon.attribute)
+  hand(run, [other, weapon.attribute, other, weapon.attribute, 'wild'])
+  const ids = run.staminaDeck.hand.map(ball => ball.id)
+  if (armed) assert(run.selectInventory(run.backpack.originIndex(run.backpack.placementOf(weapon.uid))))
+  else assert(run.toggleStaminaBall(ids[0]))
+  const payments = []
+  run.on('stamina:spent', ({ balls }) => payments.push(...balls.map(ball => ball.id)))
+  if (action === 'move') assert(run.clickTile(3, 2))
+  else if (action === 'flip') {
+    run.currentRoom.tile({ c: 2, r: 3 }).revealed = false
+    assert(run.clickTile(2, 3))
+  } else {
+    run.currentRoom.addEntity({ id: 'selection-gold', kind: 'gold', pos: { ...run.player.pos }, amount: 1 })
+    assert(run.clickTile(3, 3))
+    assert.equal(run.currentRoom.entity('selection-gold'), null)
+  }
+  assert.deepEqual(payments, [armed ? ids[2] : ids[0]], action + ' must skip weapon balls or use the single manual ball')
+  assert.deepEqual(run.staminaDeck.selected, [])
+  if (armed) assert.deepEqual(run.weaponPayment(weapon).balls.map(ball => ball.id), [ids[4], ids[3]])
+  else {
+    assert(run._payAction(1))
+    assert.equal(payments.at(-1), ids[4], 'Once the manual ball is spent, payment returns to the right edge')
+  }
+}
+// Reserved balls are never a fallback for an untyped action.
+{
+  const run = fixture(), weapon = add(run, 'rust-sword')
+  enemy(run); run._synchronizeBattle(); weapon.energyCost = 2
+  hand(run, [weapon.attribute, 'wild'])
+  const index = run.backpack.originIndex(run.backpack.placementOf(weapon.uid))
+  assert(run.selectInventory(index))
+  const before = run.staminaDeck.serialize(), position = { ...run.player.pos }
+  assert.equal(run.canPayAction(1), false)
+  assert.equal(run._payAction(1), false)
+  run.clickTile(3, 2)
+  assert.deepEqual(run.player.pos, position)
+  assert.deepEqual(run.staminaDeck.serialize(), before)
+  assert.equal(run.selectedItem, weapon)
+  assert(run.selectInventory(index))
+  assert.equal(run.selectedItem, null)
+  assert(run.clickTile(3, 2))
   assert.notDeepEqual(run.player.pos, position)
 }
 // Pets share leftover balls, regardless of color and backpack adjacency; potion stays intact.

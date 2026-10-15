@@ -41,17 +41,17 @@ export function templeStoneMaterial(texture, tint = 0x89978e) {
 
 export function foundationStoneMaterial(texture, tint = 0x7e9388, depthScale = 1) {
   const material = templeStoneMaterial(texture, tint)
-  material.transparent = true
-  material.depthWrite = false
-  material.alphaTest = .003
+  // Keep the closed foundation solid; only the separate mist is transparent.
+  material.transparent = false
+  material.depthWrite = true
   material.onBeforeCompile = shader => {
     shader.uniforms.uTempleDepthScale = { value: depthScale }
     shader.vertexShader = 'varying float vTempleHeight;\n' + shader.vertexShader
     shader.vertexShader = shader.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vTempleHeight = (modelMatrix * vec4(transformed, 1.0)).y;')
     shader.fragmentShader = 'uniform float uTempleDepthScale;\n varying float vTempleHeight;\n' + shader.fragmentShader
     shader.fragmentShader = shader.fragmentShader.replace('#include <color_fragment>',
-      '#include <color_fragment>\n float stoneHeight = -0.43 + (vTempleHeight + 0.43) / uTempleDepthScale;\n diffuseColor.rgb *= mix(0.34, 1.0, smoothstep(-2.65, -0.85, stoneHeight));\n diffuseColor.a *= smoothstep(-2.75, -1.65, stoneHeight);')
+      '#include <color_fragment>\n float stoneHeight = -0.43 + (vTempleHeight + 0.43) / uTempleDepthScale;\n diffuseColor.rgb *= mix(0.34, 1.0, smoothstep(-2.65, -0.85, stoneHeight));')
   }
-  material.customProgramCacheKey = () => 'temple-foundation-depth-v2'
+  material.customProgramCacheKey = () => 'temple-foundation-solid-depth-v3'
   return material
 }

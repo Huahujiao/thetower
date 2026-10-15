@@ -4,8 +4,9 @@ export const BALL_ATTRIBUTES = Object.freeze([...ATTRIBUTE_ORDER, 'wild'])
 export const BALL_LABELS = Object.freeze({ scorch: '红', wither: '黄', drown: '蓝', wild: '万' })
 
 export class StaminaDeck {
-  constructor(random = Math.random, saved = null) {
+  constructor(random = Math.random, saved = null, onPayment = null) {
     this.random = random
+    this.onPayment = onPayment
     if (saved) Object.assign(this, JSON.parse(JSON.stringify(saved)))
     else {
       this.drawPile = []; this.hand = []; this.discardPile = []; this.selected = []; this.nextId = 0
@@ -61,19 +62,16 @@ export class StaminaDeck {
   discardHand() { this.discardPile.push(...this.hand.splice(0)); this.selected = [] }
   toggle(id) {
     if (!this.hand.some(ball => ball.id === id)) return false
-    if (this.selected.includes(id)) this.selected = this.selected.filter(value => value !== id)
-    else this.selected.push(id)
+    this.selected = this.selected.includes(id) ? [] : [id]
     return true
   }
-  plan(amount, attribute = null, { selection = true } = {}) {
+  plan(amount, attribute = null, { selection = true, exclude = [] } = {}) {
     const cost = Math.max(0, Math.floor(Number(amount) || 0))
-    const available = attribute ? this.hand.filter(ball => ball.attribute === attribute || ball.attribute === 'wild') : this.hand
+    const excluded = new Set(exclude)
+    const available = this.hand.filter(ball => !excluded.has(ball.id) && (!attribute || ball.attribute === attribute || ball.attribute === 'wild'))
     if (cost > available.length) return null
-    const counts = Object.fromEntries(BALL_ATTRIBUTES.map(key => [key, this.hand.filter(ball => ball.attribute === key).length]))
-    const priority = ball => attribute ? (ball.attribute === attribute ? 0 : ball.attribute === 'wild' ? 1 : 2) :
-      (ball.attribute === 'wild' ? 100 : -counts[ball.attribute])
     const chosen = selection ? this.selected.map(id => available.find(ball => ball.id === id)).filter(Boolean).slice(0, cost) : []
-    const remaining = available.filter(ball => !chosen.includes(ball)).sort((a, b) => priority(a) - priority(b))
+    const remaining = available.filter(ball => !chosen.includes(ball)).reverse()
     const balls = [...chosen, ...remaining.slice(0, cost - chosen.length)]
     return { balls, cost, paid: balls.length }
   }
@@ -84,6 +82,7 @@ export class StaminaDeck {
     this.hand = this.hand.filter(ball => !ids.has(ball.id))
     this.discardPile.push(...plan.balls)
     this.selected = this.selected.filter(id => !ids.has(id))
+    if (plan.balls.length) this.onPayment?.('stamina:spent', plan.balls)
     return plan
   }
   refund(balls) {
@@ -91,6 +90,7 @@ export class StaminaDeck {
     const refunded = this.discardPile.filter(ball => ids.has(ball.id))
     this.discardPile = this.discardPile.filter(ball => !ids.has(ball.id))
     this.hand.push(...refunded)
+    if (refunded.length) this.onPayment?.('stamina:refunded', refunded)
   }
   serialize() {
     const { drawPile, hand, discardPile, selected, nextId, supply } = this

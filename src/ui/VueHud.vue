@@ -426,16 +426,10 @@
             ></span><strong>{{
               state.player.hp }}/{{ state.player.maxHp }}</strong>
           </div>
-          <div class="stamina-hand" :style="{ '--ball-slots': Math.max(10, state.staminaDeck.hand.length) }">
-            <button
-              v-for="ball in state.staminaDeck.hand" :key="ball.id" class="stamina-ball"
-              :class="[ball.attribute, { selected: state.staminaDeck.selected.includes(ball.id) }]"
-              :aria-label="`${BALL_LABELS[ball.attribute]}球${state.staminaDeck.selected.includes(ball.id) ? '，已选中优先支付' : '，点击优先支付'}`"
-              :aria-pressed="state.staminaDeck.selected.includes(ball.id)" :disabled="!actionsAvailable"
-              @click.stop="state.toggleStaminaBall(ball.id)"
-            ></button>
-            <span v-if="state.battle.active && !state.staminaDeck.hand.length" class="stamina-empty">球已用完</span>
-          </div>
+          <StaminaHand
+            :run="run" :deck="state.staminaDeck" :balls="state.staminaDeck.hand.slice()" :selected="state.staminaDeck.selected.slice()" :highlighted="staminaHighlights"
+            :enabled="actionsAvailable && selectedItem?.type !== 'weapon'" :active="state.battle.active" :round="state.battle.round" @select="state.toggleStaminaBall($event)"
+          />
         </div>
         <div class="backpack-action-slot act-use-slot">
           <button
@@ -519,6 +513,7 @@
 import { computed, onBeforeUnmount, onMounted, reactive, ref, shallowRef, watch } from 'vue'
 import { BALL_LABELS } from '../game/model/stamina-deck.js'
 import StaminaCost from './StaminaCost.vue'
+import StaminaHand from './StaminaHand.vue'
 import { merchantSellPrice } from '../game/data/merchants.js'
 import { getItemDefinition, upgradeRecipesForItem } from '../game/data/content.js'
 import { getRelicDefinition } from '../game/data/relics.js'
@@ -620,6 +615,7 @@ const cameraAngles = computed(() => {
 const selectedItem = computed(() => state.value.selectedItem)
 const ballComposition = computed(() => Object.entries(state.value.staminaDeck.composition()).map(([attribute, count]) => `${BALL_LABELS[attribute]}${count}`).join(' · '))
 const weaponBallPreview = computed(() => selectedItem.value?.type === 'weapon' ? state.value.weaponPayment(selectedItem.value) : null)
+const staminaHighlights = computed(() => state.value.staminaPaymentPreview()?.balls.map(ball => ball.id) || [])
 const actionsAvailable = computed(() => {
   state.value
   return run._canAct()

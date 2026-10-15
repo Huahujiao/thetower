@@ -1,4 +1,4 @@
-export const DEFAULT_CAMERA_ELEVATION = 50 * Math.PI / 180
+export const DEFAULT_CAMERA_ELEVATION = 40 * Math.PI / 180
 const MAX_PAN_AZIMUTH = 15 * Math.PI / 180
 
 // Fit a room and its standing figures in perspective, including the near

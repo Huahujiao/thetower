@@ -5,7 +5,7 @@ import { DEFAULT_CAMERA_ELEVATION, panAzimuth } from '../src/render/camera-view.
 
 const close = (actual, expected) => assert(Math.abs(actual - expected) < 1e-10, `${actual} != ${expected}`)
 const max = Math.PI / 12
-close(DEFAULT_CAMERA_ELEVATION, 50 * Math.PI / 180)
+close(DEFAULT_CAMERA_ELEVATION, 40 * Math.PI / 180)
 for (const halfWidth of [2, 5, 10]) {
   close(panAzimuth(0, halfWidth), 0)
   for (const sign of [-1, 1]) {
@@ -53,4 +53,4 @@ close(scene.cameraAzimuth, max)
 scene.run.currentRoom = { width: 20, height: 5 }
 scene._updateCamera()
 assert(scene.cameraAzimuth < max, 'Room changes must update the rotation boundary')
-console.log('camera-view-check passed: 50-degree pitch, smooth bounded yaw, room/zoom/pan updates, facing tokens')
+console.log('camera-view-check passed: 40-degree pitch, smooth bounded yaw, room/zoom/pan updates, facing tokens')

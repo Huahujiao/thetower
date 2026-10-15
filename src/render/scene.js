@@ -352,7 +352,7 @@ export class GameScene {
     this._addLights()
     this.contactShadowTexture = createContactShadowTexture()
     if (run.sceneView?.environment === 'mountain-temple') {
-      this.environment = new TempleEnvironment(container)
+      this.environment = new TempleEnvironment(container, this.scene)
       this.scene.background = null
     }
     this._onResize = () => this._resize()
@@ -2667,7 +2667,9 @@ export class GameScene {
     const limitX = Math.max(Math.abs(bounds.minX), Math.abs(bounds.maxX)) + 1.2
     const limitZ = Math.max(Math.abs(bounds.minZ), Math.abs(bounds.maxZ)) + 1.2
     this.roomGroup.position.x = THREE.MathUtils.clamp(this.roomGroup.position.x, -limitX, limitX)
-    this.roomGroup.position.z = THREE.MathUtils.clamp(this.roomGroup.position.z, -limitZ, limitZ)
+    // Negative Z drags the scene upward; allow one extra row only in that direction.
+    const upwardLimitZ = limitZ + TILE_SIZE
+    this.roomGroup.position.z = THREE.MathUtils.clamp(this.roomGroup.position.z, -upwardLimitZ, limitZ)
     this._updateCamera()
   }
 
@@ -2860,7 +2862,7 @@ export class GameScene {
     this.attackRangeOverlay.syncPosition()
     this.attackRangeOverlay.update(delta)
     this._updateContactShadows()
-    this.environment?.update(now, this.roomGroup, delta)
+    this.environment?.update(now, this.roomGroup, delta, this.camera)
     this.renderer.render(this.scene, this.camera)
     this._frame = requestAnimationFrame(this._animate)
   }
