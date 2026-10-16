@@ -15,6 +15,24 @@ import witherNormalUrl from '../assets/board-card-back-wither-normal-v1.png'
 import drownNormalUrl from '../assets/board-card-back-drown-normal-v1.png'
 import blockedNormalUrl from '../assets/board-card-back-blocked-normal-v1.png'
 
+import neutralSurfaceUrl from '../assets/board-card-back-neutral-surface-v1.png'
+import scorchSurfaceUrl from '../assets/board-card-back-scorch-surface-v1.png'
+import witherSurfaceUrl from '../assets/board-card-back-wither-surface-v1.png'
+import drownSurfaceUrl from '../assets/board-card-back-drown-surface-v1.png'
+import blockedSurfaceUrl from '../assets/board-card-back-blocked-surface-v1.png'
+import flooraNormalUrl from '../assets/board-floor-a-normal-v1.png'
+import flooraSurfaceUrl from '../assets/board-floor-a-surface-v1.png'
+import floorbNormalUrl from '../assets/board-floor-b-normal-v1.png'
+import floorbSurfaceUrl from '../assets/board-floor-b-surface-v1.png'
+import floorcNormalUrl from '../assets/board-floor-c-normal-v1.png'
+import floorcSurfaceUrl from '../assets/board-floor-c-surface-v1.png'
+import floordNormalUrl from '../assets/board-floor-d-normal-v1.png'
+import floordSurfaceUrl from '../assets/board-floor-d-surface-v1.png'
+
+const BACK_SURFACE_URLS = {neutral:neutralSurfaceUrl,scorch:scorchSurfaceUrl,wither:witherSurfaceUrl,drown:drownSurfaceUrl,blocked:blockedSurfaceUrl}
+const FLOOR_NORMAL_URLS = [flooraNormalUrl,floorbNormalUrl,floorcNormalUrl,floordNormalUrl]
+const FLOOR_SURFACE_URLS = [flooraSurfaceUrl,floorbSurfaceUrl,floorcSurfaceUrl,floordSurfaceUrl]
+
 const SIZE = 512
 // Display-only exposure: keep bare stone behind the illustrated card backs.
 // Source artwork stays intact; the shared inset ornament is composited at runtime.
@@ -78,6 +96,7 @@ export class BoardTextures {
       if (image) ctx.drawImage(image, 0, 0, SIZE, SIZE)
       drawFloorRim(ctx)
     }))
+    this.floors.forEach((entry, index) => { entry.texture.userData.boardFloor = true; entry.texture.userData.floorVariant = index })
     this.backs = new Map()
     for (const attribute of Object.keys(BACK_URLS)) {
       this.backs.set(attribute, surface((ctx, image) => {
@@ -103,7 +122,18 @@ export class BoardTextures {
       ctx.fillRect(0, 0, SIZE, SIZE)
       if (image) ctx.drawImage(image, 0, 0, SIZE, SIZE)
     }, THREE.NoColorSpace)]))
+    const dataSurface = color => surface((ctx, image) => {
+      ctx.fillStyle = color
+      ctx.fillRect(0, 0, SIZE, SIZE)
+      if (image) ctx.drawImage(image, 0, 0, SIZE, SIZE)
+    }, THREE.NoColorSpace)
+    this.backSurfaces = new Map(Object.keys(BACK_SURFACE_URLS).map(kind => [kind, dataSurface('#ffc200')]))
+    this.floorNormals = FLOOR_NORMAL_URLS.map(() => dataSurface('#8080ff'))
+    this.floorSurfaces = FLOOR_SURFACE_URLS.map(() => dataSurface('#ffb300'))
     this.ready = Promise.all([
+      ...Object.entries(BACK_SURFACE_URLS).map(([kind, url]) => this.load(url, [this.backSurfaces.get(kind)])),
+      ...FLOOR_NORMAL_URLS.map((url, index) => this.load(url, [this.floorNormals[index]])),
+      ...FLOOR_SURFACE_URLS.map((url, index) => this.load(url, [this.floorSurfaces[index]])),
       ...FLOOR_URLS.map((url, index) => this.load(url, [this.floors[index]])),
       ...Object.entries(BACK_URLS).map(([attribute, url]) => this.load(url, [
         this.backs.get(attribute),
@@ -140,9 +170,17 @@ export class BoardTextures {
     return this.backNormals.get(texture?.userData.cardBackKind)?.texture || null
   }
 
+  surfaceData(texture) {
+    if (texture?.userData.boardFloor) {
+      const index = texture.userData.floorVariant ?? 0
+      return { normal: this.floorNormals[index].texture, surface: this.floorSurfaces[index].texture }
+    }
+    return { normal: this.backNormal(texture), surface: this.backSurfaces.get(texture?.userData.cardBackKind)?.texture || null }
+  }
+
   dispose() {
     this.disposed = true
-    for (const entry of [...this.floors, ...this.backs.values(), this.blockedBack, ...this.backNormals.values()]) entry.texture.dispose()
+    for (const entry of [...this.floors, ...this.backs.values(), this.blockedBack, ...this.backNormals.values(), ...this.backSurfaces.values(), ...this.floorNormals, ...this.floorSurfaces]) entry.texture.dispose()
   }
 }
 

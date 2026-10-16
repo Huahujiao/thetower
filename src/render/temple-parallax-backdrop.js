@@ -9,13 +9,13 @@ export class TempleParallaxBackdrop {
     this.element = document.createElement('div')
     this.element.className = 'temple-backdrop temple-parallax-backdrop'
     this.element.setAttribute('aria-hidden', 'true')
-    // Tighten only the mountain silhouette alpha. Rock interiors stay opaque;
-    // clouds retain their own unmodified soft alpha on a separate layer.
+    // Keep rock silhouettes solid, then blend their colour toward the distant haze.
+    // Atmospheric fading changes RGB, so background peaks cannot show through.
     const definitions = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
     definitions.setAttribute('width', '0')
     definitions.setAttribute('height', '0')
     definitions.style.position = 'absolute'
-    definitions.innerHTML = '<defs><filter id="temple-solid-rock-alpha" color-interpolation-filters="sRGB"><feComponentTransfer><feFuncA type="table" tableValues="0 0 0 0 1 1 1 1 1"/></feComponentTransfer></filter></defs>'
+    definitions.innerHTML = '<defs><filter id="temple-solid-rock-alpha" color-interpolation-filters="sRGB"><feComponentTransfer><feFuncA type="table" tableValues="0 0 0 0 1 1 1 1 1"/></feComponentTransfer></filter><filter id="temple-middle-aerial-perspective" color-interpolation-filters="sRGB"><feComponentTransfer><feFuncR type="linear" slope="0.62" intercept="0.198"/><feFuncG type="linear" slope="0.62" intercept="0.225"/><feFuncB type="linear" slope="0.62" intercept="0.229"/></feComponentTransfer></filter></defs>'
     this.element.appendChild(definitions)
     this.layers = [
       { name: 'far', url: farUrl, strength: .055, zoomStrength: .025 },

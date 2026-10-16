@@ -50,9 +50,20 @@ for (const texture of [...all].filter(texture => texture.userData.cardBackKind))
 }
 assert.equal(normals.size, 5, 'Each card-back pattern needs its own normal map')
 assert.equal(all.size, 14)
+for (const texture of [...all].filter(texture => texture.userData.boardFloor || texture.userData.cardBackKind)) {
+  const maps = textures.surfaceData(texture)
+  assert(maps.normal && maps.surface)
+  assert.equal(maps.surface.colorSpace, NoColorSpace)
+  assert.equal(maps.normal.colorSpace, NoColorSpace)
+  all.add(maps.normal); all.add(maps.surface)
+  const clone = texture.clone()
+  assert.equal(textures.surfaceData(clone).surface, maps.surface, 'Flip snapshots preserve shared PBR data')
+  clone.dispose()
+}
+assert.equal(all.size, 27)
 const before = textures.back('scorch', false).version
 pendingImages.splice(0).forEach(image => image.onload())
-assert.deepEqual(await textures.ready, Array(14).fill(true))
+assert.deepEqual(await textures.ready, Array(27).fill(true))
 assert(textures.back('scorch', false).version > before)
 let disposed = 0
 for (const texture of all) {
@@ -66,7 +77,7 @@ assert.equal(textures.back('scorch', false).userData.boardShared, true)
 snapshot.dispose()
 assert.equal(disposed, 0)
 textures.dispose()
-assert.equal(disposed, 14)
+assert.equal(disposed, 27)
 
 const closed = new BoardTextures()
 const lastVersion = closed.floor().version

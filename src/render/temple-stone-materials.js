@@ -1,41 +1,54 @@
 import * as THREE from 'three'
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
+
+const surfaces = new WeakMap()
+export function registerTempleStoneSurface(albedo, normal, surface) {
+  surfaces.set(albedo, { normal, surface })
+}
 
 export function metricStoneUV(geometry, metresPerRepeat = 1) {
   const position = geometry.attributes.position
   const normal = geometry.attributes.normal
   const uv = new Float32Array(position.count * 2)
   for (let i = 0; i < position.count; i++) {
+    // Rounded boxes retain their six face groups. Choose one projection per
+    // whole face, so smooth bevel normals cannot switch UV axes mid-triangle.
+    const face = geometry.type === 'RoundedBoxGeometry' ? Math.floor(i / (position.count / 6)) : -1
     const nx = Math.abs(normal.getX(i)), ny = Math.abs(normal.getY(i)), nz = Math.abs(normal.getZ(i))
     const x = position.getX(i), y = position.getY(i), z = position.getZ(i)
-    uv[i * 2] = (nx > ny && nx > nz ? z : x) / metresPerRepeat
-    uv[i * 2 + 1] = (ny > nx && ny > nz ? z : y) / metresPerRepeat
+    const axis = face >= 0 ? Math.floor(face / 2) : nx > ny && nx > nz ? 0 : ny > nz ? 1 : 2
+    uv[i * 2] = (axis === 0 ? z : x) / metresPerRepeat
+    uv[i * 2 + 1] = (axis === 1 ? z : y) / metresPerRepeat
   }
   geometry.setAttribute('uv', new THREE.BufferAttribute(uv, 2))
   return geometry
 }
 
-export function dressedStoneBox(size, bevel = .008, metresPerRepeat = 1) {
-  const radius = Math.min(bevel, Math.min(...size) * .18)
-  const [width, height, depth] = size.map(value => value - radius * 2)
-  const shape = new THREE.Shape()
-  shape.moveTo(-width / 2, -height / 2)
-  shape.lineTo(width / 2, -height / 2)
-  shape.lineTo(width / 2, height / 2)
-  shape.lineTo(-width / 2, height / 2)
-  shape.closePath()
-  const geometry = new THREE.ExtrudeGeometry(shape, {
-    depth, bevelEnabled: true, bevelSegments: 1, steps: 1, bevelSize: radius, bevelThickness: radius,
-  })
-  geometry.translate(0, 0, -depth / 2)
-  return metricStoneUV(geometry, metresPerRepeat)
+export function dressedStoneBox(size, bevel = .016, metresPerRepeat = 1) {
+  const radius = Math.min(bevel, Math.min(...size) * .22)
+  const geometry = new RoundedBoxGeometry(...size, 2, radius)
+  metricStoneUV(geometry, metresPerRepeat)
+  const normal = geometry.attributes.normal
+  const position = geometry.attributes.position
+  const colors = new Float32Array(position.count * 3)
+  for (let i = 0; i < position.count; i++) {
+    const edge = Math.min(1, (1 - Math.max(Math.abs(normal.getX(i)), Math.abs(normal.getY(i)), Math.abs(normal.getZ(i)))) / .29)
+    // A restrained mineral rub on exposed bevels, rather than painted outlines.
+    const wear = .88 + edge * .12
+    colors.set([wear, wear * .995, wear * .98], i * 3)
+  }
+  geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3))
+  geometry.userData.stoneBevel = radius
+  return geometry
 }
 
 export function templeStoneMaterial(texture, tint = 0x89978e) {
-  // The albedo carries the stone colour; geometry tint only varies worn courses.
-  const color = new THREE.Color(0xdde2da).lerp(new THREE.Color(tint), .2)
+  const { normal = null, surface = null } = surfaces.get(texture) || {}
+  const color = new THREE.Color(0xb7c2b1).lerp(new THREE.Color(tint), .18)
   return new THREE.MeshStandardMaterial({
-    color, map: texture, bumpMap: texture, bumpScale: .018,
-    roughness: .93, metalness: .012, emissive: 0x24342f, emissiveIntensity: .04,
+    color, map: texture, normalMap: normal, normalScale: new THREE.Vector2(.8, .8),
+    roughnessMap: surface, aoMap: surface, aoMapIntensity: .75,
+    roughness: 1, metalness: 0, vertexColors: true,
   })
 }
 

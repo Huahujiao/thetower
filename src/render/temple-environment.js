@@ -3,8 +3,13 @@ import { createTempleWindRig, updateTempleWindRig, TempleFallingLeaves } from '.
 import { TempleParallaxBackdrop } from './temple-parallax-backdrop.js'
 import stoneUrl from '../assets/environment/temple-dressed-stone-v1.jpg'
 import masonryUrl from '../assets/environment/temple-foundation-masonry-v1.jpg'
+import gateWoodUrl from '../assets/environment/temple-gate-lacquer-v1.jpg'
+import stoneNormalUrl from '../assets/environment/temple-dressed-stone-v1-normal.png'
+import stoneSurfaceUrl from '../assets/environment/temple-dressed-stone-v1-surface.png'
+import masonryNormalUrl from '../assets/environment/temple-foundation-masonry-v1-normal.png'
+import masonrySurfaceUrl from '../assets/environment/temple-foundation-masonry-v1-surface.png'
 import soilStoneUrl from '../assets/board-floor-plain-v1.jpg'
-import { dressedStoneBox, metricStoneUV, templeStoneMaterial } from './temple-stone-materials.js'
+import { dressedStoneBox, templeStoneMaterial, registerTempleStoneSurface } from './temple-stone-materials.js'
 import { TemplePlatformDepth } from './temple-platform-depth.js'
 import { TempleAtmosphere } from './temple-atmosphere.js'
 import mapleUrl from '../assets/environment/temple-maple-v1.png'
@@ -25,9 +30,9 @@ export class TempleEnvironment {
     this.parallax = new TempleParallaxBackdrop(container)
     this.backdrop = this.parallax.element
     this.reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
-    const loadStone = url => {
+    const loadStone = (url, colorSpace = THREE.SRGBColorSpace) => {
       const texture = new THREE.TextureLoader().load(url)
-      texture.colorSpace = THREE.SRGBColorSpace
+      texture.colorSpace = colorSpace
       texture.userData.boardShared = true
       texture.anisotropy = 4
       texture.wrapS = texture.wrapT = THREE.RepeatWrapping
@@ -35,7 +40,11 @@ export class TempleEnvironment {
     }
     this.stone = loadStone(stoneUrl)
     this.masonry = loadStone(masonryUrl)
+    this.surfaceMaps = [stoneNormalUrl, stoneSurfaceUrl, masonryNormalUrl, masonrySurfaceUrl].map(url => loadStone(url, THREE.NoColorSpace))
+    registerTempleStoneSurface(this.stone, ...this.surfaceMaps.slice(0, 2))
+    registerTempleStoneSurface(this.masonry, ...this.surfaceMaps.slice(2))
     this.soilStone = loadStone(soilStoneUrl)
+    this.gateWood = loadStone(gateWoodUrl)
     this.props = new Map([mapleUrl, bannerUrl].map(url => {
       const texture = new THREE.TextureLoader().load(url)
       texture.colorSpace = THREE.SRGBColorSpace
@@ -44,10 +53,10 @@ export class TempleEnvironment {
     }))
   }
 
-  block(group, size, position, color = 0x777b72) {
-    const mesh = new THREE.Mesh(dressedStoneBox(size), templeStoneMaterial(this.stone, color))
+  block(group, size, position, color = 0x777b72, bevel = .016) {
+    const mesh = new THREE.Mesh(dressedStoneBox(size, bevel), templeStoneMaterial(this.stone, color))
     mesh.position.set(...position)
-    mesh.castShadow = mesh.receiveShadow = false
+    mesh.castShadow = mesh.receiveShadow = true
     mesh.raycast = NO_RAYCAST
     group.add(mesh)
     return mesh
@@ -56,8 +65,11 @@ export class TempleEnvironment {
   wall({ horizontal, length, thickness, height }) {
     const group = new THREE.Group()
     const dims = (span, h, depth) => horizontal ? [span, h, depth] : [depth, h, span]
-    this.block(group, dims(length, .16, thickness * 1.8), [0, .08, 0], 0x62695f)
-    this.block(group, dims(length, .12, thickness * 1.45), [0, height * .76, 0], 0x93968a)
+    this.block(group, dims(length + .008, .14, thickness * 1.8), [0, .07, 0], 0x62695f, .018)
+    // A narrow lower fillet and broad softened coping make a carved rail,
+    // with a readable underside instead of two unrelated rectangular bars.
+    this.block(group, dims(length + .008, .045, thickness * 1.16), [0, height * .76 - .06, 0], 0x69756a, .009)
+    this.block(group, dims(length + .008, .10, thickness * 1.55), [0, height * .76 + .008, 0], 0xa1a696, .021)
     return group
   }
 
@@ -66,29 +78,32 @@ export class TempleEnvironment {
     group.name = 'temple-rail-post'
     group.userData.kind = kind
     if (kind === 'small') {
-      this.block(group, [.095, height, .25], [0, height / 2, 0], 0x858b7f)
-      this.block(group, [.14, .055, .29], [0, height, 0], 0xaba99a)
+      this.block(group, [.12, .075, .27], [0, .0375, 0], 0x747e73)
+      this.block(group, [.095, height - .095, .23], [0, (height - .095) / 2 + .065, 0], 0x858b7f, .013)
+      this.block(group, [.15, .065, .29], [0, height, 0], 0xaba99a, .017)
     } else {
-      this.block(group, [.25, .075, .29], [0, .0375, 0], 0x747e73)
-      const shaft = new THREE.Mesh(metricStoneUV(new THREE.CylinderGeometry(.085, .115, height, 4)), templeStoneMaterial(this.stone, 0x899387))
-      shaft.position.y = height / 2 + .065
-      shaft.rotation.y = Math.PI / 4
-      shaft.raycast = NO_RAYCAST
-      group.add(shaft)
-      this.block(group, [.25, .075, .29], [0, height + .065, 0], 0x9ca594)
-      this.block(group, [.14, .055, .18], [0, height + .13, 0], 0x798779)
+      this.block(group, [.25, .075, .29], [0, .0375, 0], 0x747e73, .019)
+      this.block(group, [.18, height - .025, .23], [0, height / 2 + .055, 0], 0x899387, .023)
+      this.block(group, [.22, .045, .26], [0, height + .04, 0], 0x727e72, .011)
+      this.block(group, [.26, .075, .30], [0, height + .095, 0], 0xa3aa99, .022)
+      this.block(group, [.15, .055, .18], [0, height + .15, 0], 0x798779, .018)
     }
     return group
   }
 
   pillar({ height }) {
     const group = new THREE.Group()
-    this.block(group, [.53, .12, .53], [0, .06, 0], 0x727a70)
-    this.block(group, [.38, height * .70, .38], [0, .12 + height * .35, 0], 0x8b8b7e)
-    this.block(group, [.44, .13, .44], [0, height * .77, 0], 0x777b70)
-    this.block(group, [.51, .10, .51], [0, height * .86, 0], 0x545f5d)
-    this.block(group, [.40, .095, .40], [0, height * .95, 0], 0x5c6662)
-    this.block(group, [.27, .055, .27], [0, height * 1.02, 0], 0x8a8e80)
+    this.block(group, [.53, .12, .53], [0, .06, 0], 0x727a70, .025)
+    this.block(group, [.43, .08, .43], [0, .16, 0], 0x8d9587, .018)
+    const top = height * .76
+    const shaftHeight = top - .20
+    for (let course = 0; course < 3; course++) {
+      this.block(group, [.35, shaftHeight / 3 - .003, .35], [0, .20 + (course + .5) * shaftHeight / 3, 0], course === 1 ? 0x858e80 : 0x939886, .018)
+    }
+    this.block(group, [.41, .10, .41], [0, top + .05, 0], 0x778373, .019)
+    this.block(group, [.51, .09, .51], [0, top + .145, 0], 0xabb19e, .024)
+    this.block(group, [.43, .08, .43], [0, top + .23, 0], 0x78897b, .021)
+    this.block(group, [.27, .055, .27], [0, top + .2975, 0], 0x969f8a, .018)
     return group
   }
 
@@ -137,6 +152,7 @@ export class TempleEnvironment {
     const halfZ = room.height * tileSize / 2
     const width = .9
     const soilY = -.38
+    const outerWallHeight = .48, outerWallY = -.45
     // A uniform narrow inner gap leaves enough support under the whole pillar foot.
     const innerX = halfX + TEMPLE_APRON_WIDTH
     const backZ = -halfZ - TEMPLE_APRON_WIDTH
@@ -146,7 +162,7 @@ export class TempleEnvironment {
     const outerFrontZ = frontZ + width
     const belt = new THREE.Group()
     belt.name = 'temple-planting-belt'
-    belt.userData.planting = { innerX, backZ, frontZ, outerX, outerBackZ, outerFrontZ, soilY, width }
+    belt.userData.planting = { innerX, backZ, frontZ, outerX, outerBackZ, outerFrontZ, soilY, width, outerWallBottom: outerWallY - outerWallHeight / 2 }
     group.add(belt)
     const paths = doors.map(door => {
       const horizontal = door.side === 'top' || door.side === 'bottom'
@@ -204,7 +220,7 @@ export class TempleEnvironment {
     })
     const outerBounds = { minX: -outerX, maxX: outerX, minZ: outerBackZ, maxZ: outerFrontZ }
     this.stoneRing(belt, outerBounds, {
-      thickness: .16, height: .48, y: -.45, color: 0x545d50, name: 'planting-outer-wall', openings,
+      thickness: .16, height: outerWallHeight, y: outerWallY, color: 0x545d50, name: 'planting-outer-wall', openings,
     })
     // Equal 2.5cm overhang around every edge, including all four corners.
     const overhang = .025
@@ -397,6 +413,8 @@ export class TempleEnvironment {
     this.stone.dispose()
     this.masonry.dispose()
     this.soilStone.dispose()
+    this.gateWood.dispose()
+    for (const texture of this.surfaceMaps) texture.dispose()
     for (const texture of this.props.values()) texture.dispose()
   }
 }

@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { setSurfaceColor } from './surface-color.js'
 import { templeBoundaryLayout, templeDoorPlacement } from './temple-boundary-layout.js'
 import { TempleEnvironment, TEMPLE_BOUNDARY_INSET, createContactShadowTexture } from './temple-environment.js'
 import { DETAIL_HOLD_MS } from '../interaction-timing.js'
@@ -7,10 +8,12 @@ import { enemyCardSubtitle, enemyOverheadHints } from '../game/data/enemy-featur
 import { isAdjacent8 } from '../game/core/geometry.js'
 import { AttackRangeOverlay } from './attack-range-overlay.js'
 import { BoardTextures } from './board-textures.js'
+import { addTempleLighting, createTempleGroundMaterial, applyTempleGroundEnvironment } from './temple-lighting.js'
+import { loadTempleIBL } from './temple-ibl.js'
 import { combatMotionAt, deathMotion, explosionMotion, EXPLOSION_DURATION, hitMotion, idleMotion } from './character-motion.js'
 import { DEFAULT_CAMERA_ELEVATION, panAzimuth, roomOverviewDistance } from './camera-view.js'
-import { createCardFaceMaterial, cardBodyGeometry, styleCardBody, cardFaceY, CARD_FACE_CLEARANCE, HIDDEN_CARD_THICKNESS, HIDDEN_CARD_SCALE } from './card-body.js'
-import { boundaryPillarPoint, createDoorFrame, createStoneDoorFrame, stoneDoorVariant, createLowPolyPillar, createLowPolyWall, evenPillarOffsets } from './wall-kit.js'
+import { createCardFaceMaterial, cardBodyGeometry, styleCardBody, cardFaceY, groundSurfaceY, hiddenCardBodyY, CARD_FACE_CLEARANCE, HIDDEN_CARD_THICKNESS, HIDDEN_CARD_SCALE } from './card-body.js'
+import { boundaryPillarPoint, createDoorFrame, createStoneDoorFrame, createTempleLockedGate, stoneDoorVariant, createLowPolyPillar, createLowPolyWall, evenPillarOffsets } from './wall-kit.js'
 import { goldSpriteSources, itemSpriteSources } from '../ui/item-sprites.js'
 import { createEnemyFigure, drawEnemyPuppet, enemyPuppetProject, ENEMY_PUPPET_PADDING, prepareEnemyPuppets, updateEnemyFigure } from './enemy-puppet.js'
 import { drawTotemToken, totemFaceData } from './totem-token.js'
@@ -342,9 +345,13 @@ export class GameScene {
     this.sceneBounds = null
     this.camera = new THREE.PerspectiveCamera(CAMERA_FOV, 1, CAMERA_NEAR, CAMERA_FAR)
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
+    if (run.sceneView?.environment === 'mountain-temple') {
+      this.renderer.toneMapping = THREE.NeutralToneMapping
+      this.renderer.toneMappingExposure = 1
+    }
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
     this.renderer.shadowMap.enabled = true
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap
+    this.renderer.shadowMap.type = THREE.PCFShadowMap
     Object.assign(this.renderer.domElement.style, { position: 'absolute', inset: '0', zIndex: '0' })
     this.container.appendChild(this.renderer.domElement)
     this.roomGroup = new THREE.Group()
@@ -354,6 +361,7 @@ export class GameScene {
     this.contactShadowTexture = createContactShadowTexture()
     if (run.sceneView?.environment === 'mountain-temple') {
       this.environment = new TempleEnvironment(container, this.scene)
+      this.templeIBL = loadTempleIBL(this.renderer, this.scene, this.templeLighting)
       this.scene.background = null
     }
     this._onResize = () => this._resize()
@@ -412,11 +420,16 @@ export class GameScene {
   }
 
   _addLights() {
+    if (this.run.sceneView?.environment === 'mountain-temple') {
+      this.templeLighting = addTempleLighting(this.scene)
+      return
+    }
     this.scene.add(new THREE.HemisphereLight(0xd5e8ff, 0x162133, 1.3))
     const key = new THREE.DirectionalLight(0xfff0dc, 1.5)
     key.position.set(5, 10, 6)
     key.castShadow = true
     key.shadow.mapSize.set(1024, 1024)
+
     this.scene.add(key)
     const fill = new THREE.PointLight(0x7b72d8, 2.0, 20)
     fill.position.set(-4, 5, -3)
@@ -837,26 +850,28 @@ export class GameScene {
   }
 
   _makeFloorBacking(point, position) {
-    // Fixed, full-cell ground beneath the smaller hidden card. The tiny overlap
-    // seals raster seams and remains visible while a card is lifted or flipped.
+    // Full-cell ground stays at the revealed floor level in every card state.
+    // A 2mm separation keeps the decorative face clear without a visible step.
     const floor = new THREE.Mesh(
       new THREE.PlaneGeometry(TILE_SIZE + 0.004, TILE_SIZE + 0.004),
-      new THREE.MeshBasicMaterial({ map: this.boardTextures.floor(position), side: THREE.DoubleSide }),
+      this._makeGroundMaterial(this.boardTextures.floor(position)),
     )
     floor.rotation.x = -Math.PI / 2
-    floor.position.set(point.x, -CARD_THICKNESS / 2 - FOOTPRINT_PRESS_DEPTH - 0.006, point.z)
+    floor.position.set(point.x, groundSurfaceY(CARD_THICKNESS) - .002, point.z)
     floor.raycast = NO_RAYCAST
+    floor.receiveShadow = Boolean(this.environment)
     return floor
   }
 
   _makeEmptyGroundFace(point, position = null) {
     const groundFace = new THREE.Mesh(
       new THREE.PlaneGeometry(CARD_SIZE, CARD_SIZE),
-      new THREE.MeshBasicMaterial({ map: this.boardTextures.floor(position), side: THREE.DoubleSide }),
+      this._makeGroundMaterial(this.boardTextures.floor(position)),
     )
     groundFace.rotation.x = -Math.PI / 2
-    groundFace.position.set(point.x, CARD_THICKNESS / 2 + 0.003, point.z)
+    groundFace.position.set(point.x, groundSurfaceY(CARD_THICKNESS), point.z)
     groundFace.userData.position = position ? { ...position } : null
+    groundFace.receiveShadow = Boolean(this.environment)
     groundFace.raycast = THREE.Mesh.prototype.raycast
     return groundFace
   }
@@ -1163,16 +1178,16 @@ export class GameScene {
     mesh.material.emissive?.setHex(locked ? 0x1c0e05 : route === 'elite' ? 0x321216 : route === 'supply' ? 0x0d2923 : 0x2b1608)
     mesh.userData.lockIndicator.visible = locked
     // Keep the same invisible hit volume for open doorways, with no door panel.
-    const transparent = !locked || Boolean(mesh.userData.southBoundaryFront)
+    const transparent = mesh.userData.templeGate || !locked || Boolean(mesh.userData.southBoundaryFront)
     if (mesh.material.transparent !== transparent) {
       mesh.material.transparent = transparent
       mesh.material.needsUpdate = true
     }
-    mesh.material.opacity = locked ? 1 : 0
-    mesh.castShadow = locked
-    mesh.material.depthWrite = locked && !mesh.userData.southBoundaryFront
+    mesh.material.opacity = locked && !mesh.userData.templeGate ? 1 : 0
+    mesh.castShadow = locked && !mesh.userData.templeGate
+    mesh.material.depthWrite = locked && !mesh.userData.templeGate && !mesh.userData.southBoundaryFront
     mesh.userData.lockedFrame.visible = locked
-    mesh.userData.stoneFrame.visible = !locked
+    mesh.userData.stoneFrame.visible = mesh.userData.templeGate || !locked
   }
 
   _addDoorMesh(room, door) {
@@ -1188,13 +1203,16 @@ export class GameScene {
     mesh.castShadow = true
     mesh.receiveShadow = true
     mesh.userData.doorId = door.id
+    mesh.userData.templeGate = Boolean(this.environment)
     mesh.userData.openingWidth = openingWidth
     const lockIndicator = new THREE.Sprite(new THREE.SpriteMaterial({ map: makeLockIndicatorTexture(), transparent: true, depthTest: false }))
     lockIndicator.position.set(0, WALL_HEIGHT * 0.48, 0)
     lockIndicator.scale.set(0.44, 0.44, 1)
     mesh.userData.lockIndicator = lockIndicator
     mesh.add(lockIndicator)
-    const frame = createDoorFrame({ horizontal, width: lockedFrameWidth, depth: DOOR_DEPTH, height: WALL_HEIGHT + 0.18 })
+    const frame = this.environment
+      ? createTempleLockedGate({ horizontal, width: openingWidth, depth: DOOR_DEPTH, height: WALL_HEIGHT + .18, variant: stoneDoorVariant(door.id), texture: this.environment.gateWood })
+      : createDoorFrame({ horizontal, width: lockedFrameWidth, depth: DOOR_DEPTH, height: WALL_HEIGHT + .18 })
     frame.position.set(point.x, 0, point.z)
     const stoneFrame = createStoneDoorFrame({
       horizontal, width: openingWidth, depth: DOOR_DEPTH, height: WALL_HEIGHT + .18,
@@ -1479,7 +1497,7 @@ export class GameScene {
     face.material.opacity = peeked ? 0.46 : 1
     face.material.depthWrite = !standing
     face.material.depthTest = !standing
-    face.material.color.setHex(revealed || peeked || flippable ? 0xffffff : UNREACHABLE_HIDDEN_CARD_TINT)
+    setSurfaceColor(face.material, revealed || peeked || flippable ? 0xffffff : UNREACHABLE_HIDDEN_CARD_TINT)
     if (!oldTexture?.userData.boardShared) oldTexture?.dispose()
     face.visible = true
     face.userData.lift = 0
@@ -1595,7 +1613,7 @@ export class GameScene {
     if (!face || !face.visible || this.flipAnimations.some((animation) => animation.key === key)) return false
     const point = this._gridPosition(room, position)
     const group = new THREE.Group()
-    const startY = (HIDDEN_CARD_THICKNESS - CARD_THICKNESS) / 2 + (face.userData.lift || 0)
+    const startY = hiddenCardBodyY(CARD_THICKNESS) + (face.userData.lift || 0)
     group.position.set(point.x, startY, point.z)
     group.scale.set(HIDDEN_CARD_SCALE, 1, HIDDEN_CARD_SCALE)
     group.rotation.x = Math.PI
@@ -1626,8 +1644,9 @@ export class GameScene {
     const backTexture = sourceBackTexture || this._makeBackTexture(this._backAttributeFor(room, position), { unflippable: backUnflippable })
     const front = new THREE.Mesh(
       new THREE.PlaneGeometry(CARD_SIZE * (frontTexture.userData.canvasExtent || 1), CARD_SIZE * (frontTexture.userData.canvasExtent || 1)),
-      new THREE.MeshBasicMaterial({ map: frontTexture, side: THREE.DoubleSide, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -4 }),
+      this._makeCardFaceMaterial(frontTexture, { transparent: true, depthWrite: false }),
     )
+    front.receiveShadow = Boolean(this.environment)
     front.rotation.x = -Math.PI / 2
     front.position.y = HIDDEN_CARD_THICKNESS / 2 + CARD_FACE_CLEARANCE
     const back = new THREE.Mesh(
@@ -1685,7 +1704,9 @@ export class GameScene {
     const startFace = this.tileMeshByKey.get(tileKey(from))
     if (startFace?.visible) {
       const oldTexture = startFace.material.map
-      startFace.material.map = this._makeFrontTexture({ type: 'empty' }, from)
+      const oldMaterial = startFace.material
+      startFace.material = this._makeCardFaceMaterial(this._makeFrontTexture({ type: 'empty' }, from))
+      oldMaterial.dispose()
       startFace.material.needsUpdate = true
       startFace.material.transparent = false
       startFace.material.depthWrite = true
@@ -2325,7 +2346,7 @@ export class GameScene {
         animation.group.rotation.y = this.cameraAzimuth
       } else {
         animation.group.rotation.x = Math.PI * (1 - eased)
-        animation.group.position.y = THREE.MathUtils.lerp(animation.startY, CARD_THICKNESS / 2, eased) + Math.sin(eased * Math.PI) * 0.28
+        animation.group.position.y = THREE.MathUtils.lerp(animation.startY, groundSurfaceY(CARD_THICKNESS) - .002, eased) + Math.sin(eased * Math.PI) * 0.28
         const thickness = HIDDEN_CARD_THICKNESS * (1 - eased)
         animation.front.position.y = thickness / 2 + 0.002
         if (animation.back) animation.back.position.y = -thickness / 2 - 0.002
@@ -2369,8 +2390,15 @@ export class GameScene {
     return null
   }
 
+  _makeGroundMaterial(texture, options = {}) {
+    return this.environment
+      ? applyTempleGroundEnvironment(createTempleGroundMaterial(texture, options, this.boardTextures.surfaceData(texture)), this.scene)
+      : new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide, ...options })
+  }
+
   _makeCardFaceMaterial(texture, options = {}) {
-    return createCardFaceMaterial(texture, this.boardTextures.backNormal(texture), options)
+    if (this.environment && texture?.userData.boardFloor) return this._makeGroundMaterial(texture, options)
+    return createCardFaceMaterial(texture, this.boardTextures.backNormal(texture), options, this.boardTextures.surfaceData(texture).surface)
   }
 
   _makeBackTexture(attribute, { unflippable = false } = {}) {
@@ -2589,6 +2617,8 @@ export class GameScene {
   }
 
   _updateCamera() {
+    // Panning moves the board; keep the sun/shadow camera anchored to it.
+    this.templeLighting?.position.copy(this.roomGroup.position)
     const room = this.run.currentRoom
     this.cameraAzimuth = this.run.sceneView?.cameraAzimuth ?? panAzimuth(-this.roomGroup.position.x, room ? room.width * TILE_SIZE / 2 + BOUNDARY_GAP : 0)
     const distance = this.baseCameraDistance / this.zoom
@@ -2900,7 +2930,9 @@ export class GameScene {
     disposeObject(this.roomGroup)
     this.boardTextures?.dispose()
     this.contactShadowTexture.dispose()
+    this.templeLighting?.traverse(object => object.shadow?.dispose())
     this.environment?.dispose()
+    this.templeIBL?.dispose()
     this.renderer.dispose()
     this.renderer.domElement.remove()
   }

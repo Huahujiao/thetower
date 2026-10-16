@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>山寺建筑材质审视</title>
+<style>*{box-sizing:border-box}body{margin:0;background:#18262b;color:#d7d8c5;font:14px/1.5 system-ui,sans-serif}header{position:absolute;z-index:1;top:12px;left:12px;right:12px;padding:12px 16px;background:#142126e8;border:1px solid #58675c;border-radius:8px}h1{font-size:18px;margin:0 0 6px}p{margin:4px 0;color:#a6b5aa}.controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}button{background:#34453e;color:#e1dbc2;border:1px solid #627260;border-radius:4px;padding:6px 12px;cursor:pointer}label{margin-left:8px}canvas{display:block;width:100vw;height:100dvh}#status{font-size:12px}</style>
+<header><h1>山寺建筑 · 正式几何与材质</h1><p>拖动旋转，滚轮缩放。无云雾遮挡，便于检查门洞、栏杆接缝及完整侧墙。</p><div class="controls"><button data-view="overview">40°全景</button><button data-view="corner">柱与转角</button><button data-view="gate">锁门正反面</button><button data-view="doors">残拱门洞</button><button data-view="materials">卡背与地板</button><button id="reverse">反向主光</button><button id="save">保存当前 PNG</button><label><input id="normal" type="checkbox" checked>法线细节</label><label><input id="wire" type="checkbox">线框</label></div><p id="ibl-status">IBL 正在加载…</p><p>IBL 强度 <input id="ibl-strength" type="range" min="0" max="3" value="0.32" step="0.01"> 天空方向 <input id="ibl-yaw" type="range" min="-180" max="180" value="149" step="1"></p><p id="status">正在加载石材与木纹…</p></header>
+<script type="module">
+import * as THREE from 'three'
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
+import { registerTempleStoneSurface } from '/src/render/temple-stone-materials.js'
+import { createTempleArchitectureReview } from '/src/render/temple-architecture-review.js'
+import { GameScene } from '/src/render/scene.js'
+import { applyTempleGroundEnvironment } from '/src/render/temple-lighting.js'
+import { loadTempleIBL } from '/src/render/temple-ibl.js'
+import { BoardTextures } from '/src/render/board-textures.js'
+import stoneUrl from '/src/assets/environment/temple-dressed-stone-v1.jpg'
+import stoneNormalUrl from '/src/assets/environment/temple-dressed-stone-v1-normal.png'
+import stoneSurfaceUrl from '/src/assets/environment/temple-dressed-stone-v1-surface.png'
+import masonryUrl from '/src/assets/environment/temple-foundation-masonry-v1.jpg'
+import masonryNormalUrl from '/src/assets/environment/temple-foundation-masonry-v1-normal.png'
+import masonrySurfaceUrl from '/src/assets/environment/temple-foundation-masonry-v1-surface.png'
+import floorUrl from '/src/assets/board-floor-plain-v1.jpg'
+import woodUrl from '/src/assets/environment/temple-gate-lacquer-v1.jpg'
+const loader=new THREE.TextureLoader()
+function texture(url,linear=false){const map=loader.load(url,()=>{},undefined,error=>{document.querySelector('#status').textContent='贴图加载失败：'+error});map.colorSpace=linear?THREE.NoColorSpace:THREE.SRGBColorSpace;map.wrapS=map.wrapT=THREE.RepeatWrapping;map.anisotropy=4;return map}
+// LoadingManager provides a single completion for all shared surface maps.
+loader.manager.onLoad=()=>{document.querySelector('#status').textContent='材质已加载 · 独立审视页，不写入存档'}
+const stone=texture(stoneUrl),masonry=texture(masonryUrl)
+registerTempleStoneSurface(stone,texture(stoneNormalUrl,true),texture(stoneSurfaceUrl,true))
+registerTempleStoneSurface(masonry,texture(masonryNormalUrl,true),texture(masonrySurfaceUrl,true))
+const boardTextures=new BoardTextures()
+const group=createTempleArchitectureReview(stone,masonry,texture(floorUrl),texture(woodUrl),boardTextures)
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x28383b);scene.add(group)
+GameScene.prototype._addLights.call({scene,run:{sceneView:{environment:'mountain-temple'}}})
+const key=scene.getObjectByName('temple-key-light'),keyPosition=key.position.clone()
+const renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});renderer.toneMapping=THREE.NeutralToneMapping;renderer.toneMappingExposure=1;renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;document.body.appendChild(renderer.domElement)
+const ibl=loadTempleIBL(renderer,scene,scene.getObjectByName('temple-lighting'))
+ibl.ready.then(loaded=>{document.querySelector('#ibl-status').textContent=loaded?'IBL 已加载 · 左三列为五种卡背，右三列为地板；拖动视角检查高光':'HDR 加载失败，当前保留原全局补光；npm run prepare:temple-ibl 可下载离线资源'})
+function syncFloorEnvironment(){group.traverse(mesh=>{if(mesh.material?.userData.templeGround)applyTempleGroundEnvironment(mesh.material,scene)})}
+document.querySelector('#ibl-strength').oninput=event=>{scene.environmentIntensity=Number(event.target.value);syncFloorEnvironment()}
+document.querySelector('#ibl-yaw').oninput=event=>{scene.environmentRotation.y=Number(event.target.value)*Math.PI/180;syncFloorEnvironment()}
+const camera=new THREE.PerspectiveCamera(45,1,.1,80),controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.minDistance=1.5;controls.maxDistance=35
+const views={materials:{eye:[4,6,5],target:[0,0,0]},overview:{eye:[0,10,11.9175],target:[0,-.4,0]},corner:{eye:[7,3.8,7],target:[3.3,.25,2.5]},gate:{eye:[-7,2.8,4],target:[-3.76,.6,0]},doors:{eye:[7,2.7,1],target:[3.76,.6,0]}}
+function view(name){const shot=views[name];camera.position.set(...shot.eye);controls.target.set(...shot.target);controls.update()}
+view('overview')
+const materials=new Map();group.traverse(mesh=>{if(mesh.material)materials.set(mesh.material,mesh.material.normalMap)})
+document.querySelectorAll('[data-view]').forEach(button=>button.onclick=()=>view(button.dataset.view))
+let reversed=false;document.querySelector('#reverse').onclick=()=>{reversed=!reversed;key.position.set(keyPosition.x*(reversed?-1:1),keyPosition.y,keyPosition.z*(reversed?-1:1))}
+document.querySelector('#normal').onchange=event=>materials.forEach((normal,material)=>{material.normalMap=event.target.checked?normal:null;material.needsUpdate=true})
+document.querySelector('#wire').onchange=event=>materials.forEach((_,material)=>{material.wireframe=event.target.checked})
+document.querySelector('#save').onclick=()=>{renderer.render(scene,camera);const link=document.createElement('a');link.href=renderer.domElement.toDataURL('image/png');link.download='temple-architecture.png';link.click()}
+function resize(){renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix()}addEventListener('resize',resize);resize()
+renderer.setAnimationLoop(()=>{controls.update();renderer.render(scene,camera)})
+window.templeArchitectureReview={renderer,scene,group,camera,controls,view,ibl,boardTextures}
+addEventListener('pagehide',()=>{ibl.dispose();boardTextures.dispose()},{once:true})
+</script></html>

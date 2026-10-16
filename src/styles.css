@@ -520,7 +520,7 @@ body.art-tweak-page #hud {
 /* HUD rows reserve space for their visible controls and text. */
 #hud {
   --hud-experience-height: 12px;
-  --hud-toolbar-height: max(50px, var(--hud-grid-cell));
+  --hud-toolbar-height: max(60px, var(--hud-grid-cell));
   --hud-armor-size: 30px;
   --hud-action-width: 58px;
   --hud-toolbar-gap: 6px;
@@ -568,7 +568,7 @@ body.art-tweak-page { background: #11191b; }
 body.art-tweak-page #hud {
   --hud-top-height: max(38px, calc(var(--art-tweak-width) * .09));
   --hud-experience-height: 6px;
-  --hud-toolbar-height: 40px;
+  --hud-toolbar-height: 46px;
   --hud-action-height: clamp(28px, calc(var(--art-tweak-width) * .066), 34px);
   --hud-armor-size: clamp(26px, calc(var(--art-tweak-width) * .066), 34px);
   --hud-action-width: clamp(64px, calc(var(--art-tweak-width) * .17), 88px);
@@ -646,6 +646,6 @@ body.art-tweak-page .experience-bar-row::after { right: 4px; }
 body.art-tweak-page .temple-backdrop.temple-parallax-backdrop { inset: 0; overflow: hidden; background: none; filter: none; will-change: auto; }
 .temple-parallax-layer { position: absolute; inset: -12%; pointer-events: none; background-repeat: no-repeat; will-change: transform; }
 .temple-parallax-far { background-size: auto 170%; background-position: 55% 62%; filter: saturate(.65) brightness(.78); }
-.temple-parallax-middle { background-size: cover; background-position: center -24px; opacity: 1; filter: url(#temple-solid-rock-alpha) saturate(.60) brightness(.72); }
+.temple-parallax-middle { background-size: cover; background-position: center -24px; opacity: 1; filter: url(#temple-solid-rock-alpha) saturate(.50) brightness(.80) url(#temple-middle-aerial-perspective); }
 .temple-parallax-clouds { background-size: auto 115%; background-position: center 74%; opacity: .32; filter: saturate(.45) brightness(.92); }
 .temple-parallax-shade { position: absolute; inset: 0; background: linear-gradient(180deg,#0d16192e,transparent 35%,#0c1b2226 65%,#0b1922b8 100%); pointer-events: none; }

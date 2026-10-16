@@ -1,8 +1,8 @@
-"""Export the generated stone originals; existing artwork remains unchanged."""
+"""Export the generated architectural material originals; existing artwork remains unchanged."""
 from pathlib import Path
 from PIL import Image
 ROOT = Path(__file__).resolve().parents[1]
-for name in ('temple-dressed-stone-v1', 'temple-foundation-masonry-v1'):
+for name in ('temple-dressed-stone-v1', 'temple-foundation-masonry-v1', 'temple-gate-lacquer-v1'):
     source = ROOT / 'art/generated' / f'{name}.png'
     target = ROOT / 'src/assets/environment' / f'{name}.jpg'
     image = Image.open(source).convert('RGB')

@@ -40,7 +40,11 @@
     "check:progression": "node scripts/progression-check.mjs && node scripts/progression-ui-check.mjs",
     "check:wiki": "node scripts/wiki-check.mjs && node scripts/wiki-items-ui-check.mjs",
     "check:card-relief": "python scripts/generate-card-back-normals.py --check && node scripts/board-textures-check.mjs && node scripts/card-body-check.mjs && node scripts/card-relief-check.mjs",
-    "check:stamina": "node scripts/stamina-deck-check.mjs && node scripts/stamina-ui-check.mjs && node scripts/stamina-flame-check.mjs"
+    "check:stamina": "node scripts/stamina-deck-check.mjs && node scripts/stamina-ui-check.mjs && node scripts/stamina-flame-check.mjs",
+    "check:temple-architecture": "python scripts/generate-temple-stone-surfaces.py --check && node scripts/temple-architecture-check.mjs",
+    "check:temple-lighting": "node scripts/temple-lighting-check.mjs && node scripts/card-relief-check.mjs",
+    "prepare:temple-ibl": "node scripts/download-temple-ibl.mjs && node scripts/prepare-temple-ibl.mjs",
+    "check:temple-pbr": "node scripts/prepare-temple-ibl.mjs --check && python scripts/generate-board-pbr-surfaces.py --check && node scripts/temple-pbr-check.mjs"
   },
   "dependencies": {
     "@vitejs/plugin-vue": "^6.0.9",

@@ -1,0 +1,26 @@
+{
+  "source": "https://polyhaven.com/a/kloofendal_overcast_puresky",
+  "author": "Greg Zaal",
+  "license": "CC0-1.0",
+  "sourceBytes": 1174053,
+  "sourceSha256": "5f98aa01d43a49cd899299751a978b3e5559a76300198b5dd2d9c68ecc4ad130",
+  "runtime": "src/assets/environment/kloofendal-overcast-puresky-128.hdr",
+  "runtimeSha256": "da876cdc6eec8d68caf3b933f2c7863f8431499ed2bed86a561953f8e0ac5192",
+  "filter": "scene-linear RGB, spherical area average, Radiance RGBE RLE; no tone mapping",
+  "candidates": [
+    {
+      "width": 128,
+      "height": 64,
+      "bytes": 24629,
+      "maxDiffuseError": 0.0015987735520326108,
+      "peakLuminance": 5.356291922283172
+    },
+    {
+      "width": 256,
+      "height": 128,
+      "bytes": 91689,
+      "maxDiffuseError": 0.0012632368366348014,
+      "peakLuminance": 5.645189159965515
+    }
+  ]
+}

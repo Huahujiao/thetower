@@ -47,11 +47,11 @@ export function boundaryPillarPoint(room, side, offset, tileSize, inset) {
 }
 
 function material(color, { roughness = 0.86, metalness = 0.04 } = {}) {
-  return new THREE.MeshStandardMaterial({ color, roughness, metalness, flatShading: true })
+  return new THREE.MeshStandardMaterial({ color, roughness, metalness, flatShading: false })
 }
 
 function block(size, y, color, { roughness, metalness } = {}) {
-  const mesh = new THREE.Mesh(new THREE.BoxGeometry(...size), material(color, { roughness, metalness }))
+  const mesh = new THREE.Mesh(dressedStoneBox(size, .012), material(color, { roughness, metalness }))
   mesh.position.y = y
   mesh.castShadow = true
   mesh.receiveShadow = true
@@ -130,14 +130,14 @@ export function createStoneDoorFrame({ horizontal, width, depth, height, variant
     color, map: texture, bumpMap: texture, bumpScale: .014, roughness: .94, metalness: .015,
   }))
   const add = (geometry, position, index = 0) => {
-    if (texture) metricStoneUV(geometry)
+    if (texture && geometry.type !== 'RoundedBoxGeometry') metricStoneUV(geometry)
     const mesh = new THREE.Mesh(geometry, materials[index % materials.length])
     mesh.position.set(...position)
     mesh.castShadow = mesh.receiveShadow = true
     group.add(mesh)
     return mesh
   }
-  const box = (...size) => texture ? dressedStoneBox(size) : new THREE.BoxGeometry(...size)
+  const box = (...size) => dressedStoneBox(size, .014)
   for (const sign of [-1, 1]) {
     const x = sign * (width / 2 + postWidth / 2)
     add(box(postWidth + .065, .10, stoneDepth * 1.25), [x, .05, 0], 1)
@@ -171,12 +171,51 @@ export function createStoneDoorFrame({ horizontal, width, depth, height, variant
       }
       shape.closePath()
       const stone = add(new THREE.ExtrudeGeometry(shape, {
-        depth: stoneDepth, bevelEnabled: true, bevelSegments: 1, steps: 1, bevelSize: .005, bevelThickness: .006,
+        depth: stoneDepth, bevelEnabled: true, bevelSegments: 3, steps: 1, bevelSize: .009, bevelThickness: .009,
       }), [0, 0, -stoneDepth / 2], i)
       stone.name = 'door-arch-stone-' + i
       if (variant === 'broken' && (i === 1 || i === 6)) stone.rotation.z = i === 1 ? -.025 : .018
     }
   }
   if (!horizontal) group.rotation.y = Math.PI / 2
+  return group
+}
+
+export function createTempleLockedGate({ horizontal, width, depth, height, variant = 'arch', texture }) {
+  const group = new THREE.Group()
+  group.name = 'temple-locked-gate'
+  const wood = new THREE.MeshStandardMaterial({ map: texture, color: 0xc8bbb0, roughness: .86, metalness: .015, bumpMap: texture, bumpScale: .003 })
+  const bronze = new THREE.MeshStandardMaterial({ color: 0x77715a, roughness: .64, metalness: .63 })
+  const leafDepth = depth * .43, springY = height + .10
+  const topAt = x => variant === 'arch' ? springY + Math.sqrt(Math.max(0, (width / 2) ** 2 - x * x)) - .012 : springY - .025
+  const add = (geometry, material, x, y, z) => {
+    const mesh = new THREE.Mesh(geometry, material)
+    mesh.position.set(x, y, z); mesh.castShadow = mesh.receiveShadow = true
+    group.add(mesh);return mesh
+  }
+  for (let index = 0; index < 6; index++) {
+    const left = -width / 2 + index * width / 6 + .004
+    const right = -width / 2 + (index + 1) * width / 6 - .004
+    const shape = new THREE.Shape()
+    shape.moveTo(left, .008);shape.lineTo(right, .008);shape.lineTo(right, topAt(right))
+    for (let step = 1; step <= 4; step++) {
+      const x = right + (left - right) * step / 4
+      shape.lineTo(x, topAt(x))
+    }
+    shape.closePath()
+    const geometry = new THREE.ExtrudeGeometry(shape,{ depth: leafDepth, bevelEnabled:true, bevelSegments:2, steps:1, bevelSize:.002, bevelThickness:.002 })
+    metricStoneUV(geometry)
+    add(geometry,wood,0,0,-leafDepth/2)
+  }
+  for (const face of [-1, 1]) for (const sign of [-1, 1]) {
+    for (const y of [.20, .68]) {
+      add(dressedStoneBox([width * .45, .037, .018], .004), bronze, sign * width * .255, y, face * (leafDepth / 2 + .009))
+      for (const offset of [-.16, 0, .16]) add(new THREE.SphereGeometry(.009, 8, 6), bronze, sign * width * .255 + offset, y, face * (leafDepth / 2 + .023))
+    }
+    const boss = add(new THREE.CylinderGeometry(.044, .044, .009, 24), bronze, sign * .073, .48, face * (leafDepth / 2 + .012))
+    boss.rotation.x = Math.PI / 2
+    add(new THREE.TorusGeometry(.032, .006, 8, 24), bronze, sign * .073, .461, face * (leafDepth / 2 + .032))
+  }
+  if (!horizontal) group.rotation.y=Math.PI/2
   return group
 }
