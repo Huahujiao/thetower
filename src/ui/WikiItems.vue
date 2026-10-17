@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import BackpackGrid from './BackpackGrid.vue'
+import InventorySprite from './InventorySprite.vue'
 import StaminaCost from './StaminaCost.vue'
 import { buildWikiInventory, WIKI_ITEM_COLUMNS } from './wiki-items.js'
 import { detailForItem } from '../game/data/item-details.js'
@@ -32,7 +33,7 @@ const sourceLine = computed(() => {
 const recipes = computed(() => upgradeRecipesForItem(selected.value?.id).map(recipe => ({
   ...recipe, parts: [recipe.a, recipe.b, recipe.result].map(id => {
     const item = getItemDefinition(id)
-    return { id, name: item.name, src: itemSpriteSources(item)?.small }
+    return { id, name: item.name, sources: itemSpriteSources(item) }
   }),
 })))
 function selectCell(index) {
@@ -53,7 +54,7 @@ onBeforeUnmount(() => observer?.disconnect())
     <section v-if="detail" class="wiki-item-detail detail-panel" aria-label="物品详情" aria-live="polite">
       <div class="detail-card">
         <button class="wiki-detail-close" aria-label="关闭详情" @click="selected = null">×</button>
-        <div class="detail-icon"><img v-if="sources" class="detail-sprite" :src="sources.medium" :alt="detail.title" draggable="false"></div>
+        <div class="detail-icon"><InventorySprite v-if="sources" :sources="sources" sprite-class="detail-sprite" :alt="detail.title" /></div>
         <div class="detail-content">
           <div class="detail-head">
             <h2 class="detail-title">{{ detail.title }}</h2>
@@ -72,7 +73,7 @@ onBeforeUnmount(() => observer?.disconnect())
             <template v-for="(part, i) in recipe.parts" :key="i">
               <span v-if="i" aria-hidden="true">{{ i === 1 ? '+' : '→' }}</span>
               <button :aria-label="part.name" :title="part.name" @click="selected = inventory.entries.find(entry => entry.item.id === part.id)?.item || selected">
-                <img :src="part.src" :alt="part.name" draggable="false">
+                <InventorySprite v-if="part.sources" :sources="part.sources" sprite-class="wiki-recipe-sprite" :alt="part.name" />
               </button>
             </template>
           </div>

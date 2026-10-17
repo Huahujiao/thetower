@@ -171,8 +171,8 @@ body.wiki-items-page #hud { height: 100dvh; min-height: 0; overflow: hidden; }
   display: block; pointer-events: auto; --detail-grid-cell: 36px;
 }
 .wiki-item-detail .detail-card { grid-template-columns: 70px minmax(0, 1fr); padding: 10px; cursor: default; }
-.wiki-item-detail .detail-icon { width: 70px; height: 95px; overflow: hidden; align-self: start; }
-.wiki-item-detail .detail-sprite { width: 100%; height: 100%; object-fit: contain; }
+.wiki-item-detail .detail-icon { box-sizing: border-box; width: 70px; height: 95px; padding: 2px; overflow: hidden; align-self: start; }
+.wiki-item-detail .detail-sprite { width: 100%; height: 100%; }
 .wiki-item-detail .detail-head { padding-right: 20px; flex-wrap: nowrap; }
 .wiki-item-detail .detail-title { white-space: normal; font-size: 17px; }
 .wiki-item-detail .detail-badges { flex-wrap: wrap; margin-left: 0; }
@@ -183,7 +183,7 @@ body.wiki-items-page #hud { height: 100dvh; min-height: 0; overflow: hidden; }
 .wiki-item-recipes { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px 16px; }
 .wiki-item-recipe { display: flex; align-items: center; gap: 5px; color: #c8d7ec; }
 .wiki-item-recipe button { width: 38px; height: 38px; padding: 2px; border: 1px solid #6b7b9566; border-radius: 5px; background: #101c2b; cursor: pointer; }
-.wiki-item-recipe img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.wiki-recipe-sprite { display: block; width: 100%; height: 100%; }
 
 @media (max-width: 850px) {
   .wiki-content { grid-template-columns: repeat(2, minmax(0, 1fr)); }

@@ -1,0 +1,3074 @@
+{
+  "stats": {
+    "ibl": true,
+    "camera": {
+      "zoom": 1,
+      "elevation": 0.6981317007977318,
+      "azimuth": 0,
+      "offset": [
+        -0.57,
+        0,
+        0.969
+      ]
+    },
+    "textures": [
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      }
+    ],
+    "toneMapping": 7,
+    "toneMappingExposure": 1.2,
+    "environmentIntensity": 0.32,
+    "lights": [
+      {
+        "type": "AmbientLight",
+        "intensity": 0
+      },
+      {
+        "type": "HemisphereLight",
+        "intensity": 0
+      },
+      {
+        "type": "DirectionalLight",
+        "intensity": 2.8
+      },
+      {
+        "type": "DirectionalLight",
+        "intensity": 0
+      }
+    ],
+    "floors": [
+      {
+        "type": "MeshPhysicalMaterial",
+        "color": "c0d4db",
+        "roughness": 1,
+        "clearcoat": 0,
+        "normalScale": 0.35,
+        "envMapIntensity": 0.0704,
+        "explicitEnvironment": true
+      },
+      {
+        "type": "MeshPhysicalMaterial",
+        "color": "c0d4db",
+        "roughness": 1,
+        "clearcoat": 0,
+        "normalScale": 0.35,
+        "envMapIntensity": 0.0704,
+        "explicitEnvironment": true
+      },
+      {
+        "type": "MeshPhysicalMaterial",
+        "color": "c0d4db",
+        "roughness": 1,
+        "clearcoat": 0,
+        "normalScale": 0.35,
+        "envMapIntensity": 0.0704,
+        "explicitEnvironment": true
+      },
+      {
+        "type": "MeshPhysicalMaterial",
+        "color": "c0d4db",
+        "roughness": 1,
+        "clearcoat": 0,
+        "normalScale": 0.35,
+        "envMapIntensity": 0.0704,
+        "explicitEnvironment": true
+      },
+      {
+        "type": "MeshPhysicalMaterial",
+        "color": "c0d4db",
+        "roughness": 1,
+        "clearcoat": 0,
+        "normalScale": 0.35,
+        "envMapIntensity": 0.0704,
+        "explicitEnvironment": true
+      },
+      {
+        "type": "MeshPhysicalMaterial",
+        "color": "c0d4db",
+        "roughness": 1,
+        "clearcoat": 0,
+        "normalScale": 0.35,
+        "envMapIntensity": 0.0704,
+        "explicitEnvironment": true
+      }
+    ]
+  },
+  "resources": [
+    {
+      "url": "/src/assets/environment/kloofendal-overcast-puresky-128.hdr",
+      "bytes": 24629,
+      "duration": 687.4000000953674,
+      "type": "fetch"
+    },
+    {
+      "url": "/src/assets/environment/temple-mountains-v1.jpg",
+      "bytes": 351627,
+      "duration": 296.2999999523163,
+      "type": "css"
+    },
+    {
+      "url": "/src/assets/environment/temple-parallax-peaks-v2.webp",
+      "bytes": 465678,
+      "duration": 319.89999997615814,
+      "type": "css"
+    },
+    {
+      "url": "/src/assets/environment/temple-parallax-clouds-v1.webp",
+      "bytes": 286370,
+      "duration": 284.2999999523163,
+      "type": "css"
+    },
+    {
+      "url": "/src/assets/board-floor-brick-v1.jpg",
+      "bytes": 249599,
+      "duration": 275.2999999523163,
+      "type": "css"
+    },
+    {
+      "url": "/src/assets/ui/armor-shield-temple-v1.png",
+      "bytes": 90549,
+      "duration": 255.89999997615814,
+      "type": "css"
+    },
+    {
+      "url": "/src/assets/inventory/weapon-rust-sword-v2-small.png",
+      "bytes": 24254,
+      "duration": 192.39999997615814,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/inventory/weapon-root-axe-v1-small.png",
+      "bytes": 53737,
+      "duration": 206.59999990463257,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/inventory/defense-wood-shield-v1-small.png",
+      "bytes": 49371,
+      "duration": 228.5,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/inventory/defense-light-armor-v1-small.png",
+      "bytes": 123015,
+      "duration": 252.89999997615814,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/inventory/item-health-potion-v1-small.png",
+      "bytes": 75299,
+      "duration": 253.39999997615814,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/inventory/item-poison-v1-small.png",
+      "bytes": 85356,
+      "duration": 264.39999997615814,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/inventory/item-rage-wine-v1-small.png",
+      "bytes": 79936,
+      "duration": 264.89999997615814,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/inventory/item-money-pouch-v1-small.png",
+      "bytes": 92524,
+      "duration": 277.60000002384186,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/card-neutral-surface.png",
+      "bytes": 51982,
+      "duration": 275.59999990463257,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/card-scorch-surface.png",
+      "bytes": 50259,
+      "duration": 300.8000000715256,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/card-wither-surface.png",
+      "bytes": 53027,
+      "duration": 301.8000000715256,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/card-drown-surface.png",
+      "bytes": 53150,
+      "duration": 315.5,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/card-blocked-surface.png",
+      "bytes": 46656,
+      "duration": 317.3000000715256,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/floor-a-normal.png",
+      "bytes": 60555,
+      "duration": 317.7000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/floor-b-normal.png",
+      "bytes": 64094,
+      "duration": 329.89999997615814,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/floor-c-normal.png",
+      "bytes": 66226,
+      "duration": 361.60000002384186,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/floor-d-normal.png",
+      "bytes": 63155,
+      "duration": 355.39999997615814,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/floor-a-surface.png",
+      "bytes": 18615,
+      "duration": 357.5,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/floor-b-surface.png",
+      "bytes": 21511,
+      "duration": 366.39999997615814,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/floor-c-surface.png",
+      "bytes": 20307,
+      "duration": 367.1999999284744,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/floor-d-surface.png",
+      "bytes": 20644,
+      "duration": 368.8000000715256,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/floor-a-color.webp",
+      "bytes": 5850,
+      "duration": 402.2000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/floor-b-color.webp",
+      "bytes": 7428,
+      "duration": 403.10000002384186,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/floor-c-color.webp",
+      "bytes": 8522,
+      "duration": 403.60000002384186,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/floor-d-color.webp",
+      "bytes": 6810,
+      "duration": 414.10000002384186,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/card-neutral-color.webp",
+      "bytes": 9868,
+      "duration": 415.39999997615814,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/card-scorch-color.webp",
+      "bytes": 11616,
+      "duration": 414.89999997615814,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/card-wither-color.webp",
+      "bytes": 12040,
+      "duration": 449.6999999284744,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/card-drown-color.webp",
+      "bytes": 14516,
+      "duration": 450.59999990463257,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/card-blocked-color.webp",
+      "bytes": 6184,
+      "duration": 451.09999990463257,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/card-neutral-normal.png",
+      "bytes": 120216,
+      "duration": 476.2000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/card-scorch-normal.png",
+      "bytes": 111191,
+      "duration": 476.90000009536743,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/card-wither-normal.png",
+      "bytes": 116364,
+      "duration": 477.40000009536743,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/card-drown-normal.png",
+      "bytes": 118064,
+      "duration": 509.8000000715256,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/card-blocked-normal.png",
+      "bytes": 102042,
+      "duration": 513.8000000715256,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/environment/temple-parallax-clouds-v1.webp",
+      "bytes": 286370,
+      "duration": 540.1000000238419,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/environment/palette-v1/stone.webp",
+      "bytes": 8970,
+      "duration": 515.5,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/environment/temple-dressed-stone-v1-normal.png",
+      "bytes": 342876,
+      "duration": 576.5999999046326,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/environment/palette-v1/masonry.webp",
+      "bytes": 8220,
+      "duration": 525.7999999523163,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/environment/temple-dressed-stone-v1-surface.png",
+      "bytes": 99244,
+      "duration": 557.8999999761581,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/environment/temple-foundation-masonry-v1-normal.png",
+      "bytes": 581089,
+      "duration": 649.2000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/environment/temple-foundation-masonry-v1-surface.png",
+      "bytes": 190534,
+      "duration": 581.5,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/environment/palette-v1/soil.webp",
+      "bytes": 2264,
+      "duration": 574.5,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/environment/palette-v1/wood.webp",
+      "bytes": 2592,
+      "duration": 587,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/environment/palette-v1/maple.png",
+      "bytes": 1644923,
+      "duration": 898.7999999523163,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/environment/palette-v1/banner.png",
+      "bytes": 654413,
+      "duration": 724,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/gnawer/part_001.png",
+      "bytes": 197852,
+      "duration": 649.7999999523163,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/gnawer/part_003.png",
+      "bytes": 66841,
+      "duration": 634.7999999523163,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/gnawer/part_011.png",
+      "bytes": 100395,
+      "duration": 635.7999999523163,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/gnawer/part_010.png",
+      "bytes": 100657,
+      "duration": 695.3999999761581,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/gnawer/part_012.png",
+      "bytes": 91249,
+      "duration": 695.9000000953674,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/gnawer/part_018.png",
+      "bytes": 350404,
+      "duration": 748,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/gnawer/part_015.png",
+      "bytes": 135819,
+      "duration": 720.3999999761581,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/gnawer/part_004.png",
+      "bytes": 101008,
+      "duration": 753.1000000238419,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/gnawer/part_014.png",
+      "bytes": 128482,
+      "duration": 753.6000000238419,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/gnawer/part_008.png",
+      "bytes": 386334,
+      "duration": 811.5999999046326,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/gnawer/part_005.png",
+      "bytes": 97893,
+      "duration": 777.7999999523163,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/gnawer/part_009.png",
+      "bytes": 366373,
+      "duration": 849.3000000715256,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/gnawer/part_013.png",
+      "bytes": 131258,
+      "duration": 820.5,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/emberwing-moth/part_009.png",
+      "bytes": 239852,
+      "duration": 828.8000000715256,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/emberwing-moth/part_003.png",
+      "bytes": 302713,
+      "duration": 860.8000000715256,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/emberwing-moth/part_004.png",
+      "bytes": 28641,
+      "duration": 858.7999999523163,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/emberwing-moth/part_005.png",
+      "bytes": 28521,
+      "duration": 859.5,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/emberwing-moth/part_008.png",
+      "bytes": 196445,
+      "duration": 885.5,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/emberwing-moth/part_011.png",
+      "bytes": 68864,
+      "duration": 902.6000000238419,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/emberwing-moth/part_001.png",
+      "bytes": 463074,
+      "duration": 985.5,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/emberwing-moth/part_007.png",
+      "bytes": 31698,
+      "duration": 907.5999999046326,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/emberwing-moth/part_013.png",
+      "bytes": 92566,
+      "duration": 919.7000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/emberwing-moth/part_015.png",
+      "bytes": 73684,
+      "duration": 945.5,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/emberwing-moth/part_016.png",
+      "bytes": 82047,
+      "duration": 952.8999999761581,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/emberwing-moth/part_002.png",
+      "bytes": 461317,
+      "duration": 1022.7000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/emberwing-moth/part_006.png",
+      "bytes": 31399,
+      "duration": 958.8999999761581,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/emberwing-moth/part_012.png",
+      "bytes": 94200,
+      "duration": 969.6000000238419,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/emberwing-moth/part_014.png",
+      "bytes": 74383,
+      "duration": 1002.0999999046326,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/emberwing-moth/part_017.png",
+      "bytes": 80948,
+      "duration": 1006.1999999284744,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/rootrot-bud/part_012.png",
+      "bytes": 305873,
+      "duration": 1046,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/rootrot-bud/part_008.png",
+      "bytes": 171744,
+      "duration": 1027.4000000953674,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/rootrot-bud/part_006.png",
+      "bytes": 191258,
+      "duration": 1050.8000000715256,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/rootrot-bud/part_002.png",
+      "bytes": 247847,
+      "duration": 1070.3000000715256,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/rootrot-bud/part_014.png",
+      "bytes": 158487,
+      "duration": 1069.6000000238419,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/rootrot-bud/part_003.png",
+      "bytes": 244568,
+      "duration": 1093.7000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/rootrot-bud/part_013.png",
+      "bytes": 158375,
+      "duration": 1081.7000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/tide-shadow-cub/part_005.png",
+      "bytes": 104722,
+      "duration": 1098.2999999523163,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/tide-shadow-cub/part_006.png",
+      "bytes": 287218,
+      "duration": 1130.5,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/tide-shadow-cub/part_012.png",
+      "bytes": 25042,
+      "duration": 1116.8999999761581,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/tide-shadow-cub/part_014.png",
+      "bytes": 316081,
+      "duration": 1156.3000000715256,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/tide-shadow-cub/part_015.png",
+      "bytes": 67382,
+      "duration": 1139.8000000715256,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/tide-shadow-cub/part_002.png",
+      "bytes": 211947,
+      "duration": 1167.5,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/tide-shadow-cub/part_009.png",
+      "bytes": 192433,
+      "duration": 1165.6000000238419,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/tide-shadow-cub/part_003.png",
+      "bytes": 208543,
+      "duration": 1192,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/tide-shadow-cub/part_010.png",
+      "bytes": 173374,
+      "duration": 1196.6999999284744,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/nest-spider/part_005.png",
+      "bytes": 225925,
+      "duration": 1203.3999999761581,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/nest-spider/part_004.png",
+      "bytes": 236520,
+      "duration": 1227.1000000238419,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/nest-spider/part_002.png",
+      "bytes": 215399,
+      "duration": 1239.7000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/nest-spider/part_007.png",
+      "bytes": 38436,
+      "duration": 1213,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/nest-spider/part_008.png",
+      "bytes": 38891,
+      "duration": 1237.6999999284744,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/nest-spider/part_011.png",
+      "bytes": 168336,
+      "duration": 1251.0999999046326,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/nest-spider/part_013.png",
+      "bytes": 183086,
+      "duration": 1268.0999999046326,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/nest-spider/part_014.png",
+      "bytes": 194091,
+      "duration": 1276.2000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/nest-spider/part_010.png",
+      "bytes": 163885,
+      "duration": 1292.8999999761581,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/nest-spider/part_012.png",
+      "bytes": 172381,
+      "duration": 1303.7000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/nest-spider/part_015.png",
+      "bytes": 199427,
+      "duration": 1324.2999999523163,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/beetle-guard/part_003.png",
+      "bytes": 235011,
+      "duration": 1331.3999999761581,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/beetle-guard/part_004.png",
+      "bytes": 284656,
+      "duration": 1365.3999999761581,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/beetle-guard/part_006.png",
+      "bytes": 141758,
+      "duration": 1349,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/beetle-guard/part_007.png",
+      "bytes": 119383,
+      "duration": 1353.6999999284744,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/beetle-guard/part_001.png",
+      "bytes": 402494,
+      "duration": 1417.8999999761581,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/beetle-guard/part_002.png",
+      "bytes": 399755,
+      "duration": 1430.2999999523163,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/beetle-guard/part_005.png",
+      "bytes": 93923,
+      "duration": 1391.2000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/beetle-guard/part_015.png",
+      "bytes": 68572,
+      "duration": 1403,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/beetle-guard/part_016.png",
+      "bytes": 58393,
+      "duration": 1394.1000000238419,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/beetle-guard/part_017.png",
+      "bytes": 60628,
+      "duration": 1404.2000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/beetle-guard/part_020.png",
+      "bytes": 56365,
+      "duration": 1440.2000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/beetle-guard/part_019.png",
+      "bytes": 62321,
+      "duration": 1440.7999999523163,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/beetle-guard/part_018.png",
+      "bytes": 65916,
+      "duration": 1464.7999999523163,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/rot-walker/part_007.png",
+      "bytes": 525671,
+      "duration": 1541.0999999046326,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/rot-walker/part_001.png",
+      "bytes": 148078,
+      "duration": 1488.5,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/rot-walker/part_005.png",
+      "bytes": 30683,
+      "duration": 1477.6999999284744,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/rot-walker/part_009.png",
+      "bytes": 124080,
+      "duration": 1498.6000000238419,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/rot-walker/part_002.png",
+      "bytes": 201020,
+      "duration": 1522.4000000953674,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/rot-walker/part_003.png",
+      "bytes": 137195,
+      "duration": 1522.8000000715256,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/rot-walker/part_008.png",
+      "bytes": 167786,
+      "duration": 1540,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/rot-walker/part_012.png",
+      "bytes": 155246,
+      "duration": 1552.2000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/rot-walker/part_010.png",
+      "bytes": 241360,
+      "duration": 1565.3999999761581,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/shellguard/part_010.png",
+      "bytes": 154615,
+      "duration": 1577.7999999523163,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/shellguard/part_004.png",
+      "bytes": 168519,
+      "duration": 1577.1999999284744,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/shellguard/part_005.png",
+      "bytes": 86681,
+      "duration": 1594.8999999761581,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/shellguard/part_001.png",
+      "bytes": 362116,
+      "duration": 1643.7000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/shellguard/part_007.png",
+      "bytes": 138879,
+      "duration": 1619.3000000715256,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/shellguard/part_015.png",
+      "bytes": 138913,
+      "duration": 1640.5,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/shellguard/part_017.png",
+      "bytes": 153093,
+      "duration": 1653.1000000238419,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/shellguard/part_011.png",
+      "bytes": 23964,
+      "duration": 1627.2999999523163,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/shellguard/part_002.png",
+      "bytes": 331516,
+      "duration": 1695.2999999523163,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/shellguard/part_009.png",
+      "bytes": 138808,
+      "duration": 1692.5,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/shellguard/part_016.png",
+      "bytes": 139780,
+      "duration": 1699.6999999284744,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/shellguard/part_018.png",
+      "bytes": 143796,
+      "duration": 1700,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/shellguard/part_013.png",
+      "bytes": 19947,
+      "duration": 1694.6999999284744,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/wisp/part_013.png",
+      "bytes": 148901,
+      "duration": 1715.6000000238419,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/wisp/part_002.png",
+      "bytes": 150957,
+      "duration": 1754.8000000715256,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/wisp/part_015.png",
+      "bytes": 141918,
+      "duration": 1755.7000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/wisp/part_014.png",
+      "bytes": 60387,
+      "duration": 1741.5,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/wisp/part_012.png",
+      "bytes": 26169,
+      "duration": 1743.2000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/wisp/part_016.png",
+      "bytes": 95310,
+      "duration": 1753.3999999761581,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/wisp/part_018.png",
+      "bytes": 39990,
+      "duration": 1755.2000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/wisp/part_003.png",
+      "bytes": 135444,
+      "duration": 1804,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/wisp/part_008.png",
+      "bytes": 53828,
+      "duration": 1790.6999999284744,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/wisp/part_020.png",
+      "bytes": 42100,
+      "duration": 1801.8999999761581,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/patrol-hound/part_005.png",
+      "bytes": 132841,
+      "duration": 1821,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/patrol-hound/part_003.png",
+      "bytes": 155462,
+      "duration": 1825.2000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/patrol-hound/part_004.png",
+      "bytes": 113375,
+      "duration": 1814.3000000715256,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/patrol-hound/part_001.png",
+      "bytes": 105097,
+      "duration": 1844.6000000238419,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/patrol-hound/part_002.png",
+      "bytes": 48574,
+      "duration": 1850.7000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/patrol-hound/part_006.png",
+      "bytes": 60031,
+      "duration": 1851.3999999761581,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/patrol-hound/part_007.png",
+      "bytes": 43914,
+      "duration": 1852.7999999523163,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/patrol-hound/part_008.png",
+      "bytes": 73593,
+      "duration": 1868.7000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/patrol-hound/part_009.png",
+      "bytes": 81953,
+      "duration": 1872.8999999761581,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/patrol-hound/part_010.png",
+      "bytes": 50303,
+      "duration": 1885.5999999046326,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/patrol-hound/part_011.png",
+      "bytes": 96707,
+      "duration": 1917.7000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/patrol-hound/part_014.png",
+      "bytes": 107889,
+      "duration": 1918.4000000953674,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/patrol-hound/part_015.png",
+      "bytes": 45644,
+      "duration": 1905.2000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/patrol-hound/part_012.png",
+      "bytes": 58380,
+      "duration": 1921.8999999761581,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/patrol-hound/part_016.png",
+      "bytes": 62788,
+      "duration": 1921.5,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/patrol-hound/part_013.png",
+      "bytes": 58085,
+      "duration": 1934.7000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/redneedle-salamander/part_003.png",
+      "bytes": 125501,
+      "duration": 1972.6999999284744,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/redneedle-salamander/part_004.png",
+      "bytes": 56210,
+      "duration": 1974.3999999761581,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/redneedle-salamander/part_002.png",
+      "bytes": 59445,
+      "duration": 1975.8999999761581,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/redneedle-salamander/part_005.png",
+      "bytes": 140408,
+      "duration": 1997.2999999523163,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/redneedle-salamander/part_001.png",
+      "bytes": 169472,
+      "duration": 1997.8999999761581,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/redneedle-salamander/part_006.png",
+      "bytes": 51960,
+      "duration": 1985.4000000953674,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/redneedle-salamander/part_007.png",
+      "bytes": 50711,
+      "duration": 2022.6000000238419,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/redneedle-salamander/part_008.png",
+      "bytes": 85911,
+      "duration": 2035,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/redneedle-salamander/part_009.png",
+      "bytes": 89322,
+      "duration": 2035.3999999761581,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/redneedle-salamander/part_010.png",
+      "bytes": 57115,
+      "duration": 2025.1000000238419,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/redneedle-salamander/part_011.png",
+      "bytes": 44563,
+      "duration": 2037.1000000238419,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/redneedle-salamander/part_013.png",
+      "bytes": 40941,
+      "duration": 2038.2999999523163,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/redneedle-salamander/part_014.png",
+      "bytes": 49353,
+      "duration": 2070.899999976158,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/redneedle-salamander/part_015.png",
+      "bytes": 30746,
+      "duration": 2071.5999999046326,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/rot-sac-toad/part_003.png",
+      "bytes": 201804,
+      "duration": 2108.6999999284744,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/rot-sac-toad/part_004.png",
+      "bytes": 131266,
+      "duration": 2102.0999999046326,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/rot-sac-toad/part_005.png",
+      "bytes": 99865,
+      "duration": 2094.399999976158,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/rot-sac-toad/part_001.png",
+      "bytes": 147584,
+      "duration": 2106.2000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/rot-sac-toad/part_002.png",
+      "bytes": 78289,
+      "duration": 2126.3000000715256,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/rot-sac-toad/part_006.png",
+      "bytes": 58530,
+      "duration": 2119.8000000715256,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/rot-sac-toad/part_007.png",
+      "bytes": 47132,
+      "duration": 2131.2000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/rot-sac-toad/part_008.png",
+      "bytes": 70935,
+      "duration": 2149.6999999284744,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/rot-sac-toad/part_009.png",
+      "bytes": 119042,
+      "duration": 2154.1999999284744,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/rot-sac-toad/part_010.png",
+      "bytes": 68552,
+      "duration": 2166.6999999284744,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/rot-sac-toad/part_016.png",
+      "bytes": 84711,
+      "duration": 2174.7999999523163,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/rot-sac-toad/part_014.png",
+      "bytes": 121227,
+      "duration": 2178.9000000953674,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/rot-sac-toad/part_013.png",
+      "bytes": 201732,
+      "duration": 2205.600000023842,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/rot-sac-toad/part_011.png",
+      "bytes": 55631,
+      "duration": 2191.3000000715256,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/rot-sac-toad/part_015.png",
+      "bytes": 27069,
+      "duration": 2204.5,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/claw-beast/part_003.png",
+      "bytes": 184033,
+      "duration": 2229.7000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/claw-beast/part_004.png",
+      "bytes": 92358,
+      "duration": 2222.899999976158,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/claw-beast/part_005.png",
+      "bytes": 131932,
+      "duration": 2239.2999999523163,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/claw-beast/part_001.png",
+      "bytes": 193097,
+      "duration": 2254.6999999284744,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/claw-beast/part_002.png",
+      "bytes": 85737,
+      "duration": 2264.399999976158,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/claw-beast/part_006.png",
+      "bytes": 127583,
+      "duration": 2264.7999999523163,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/claw-beast/part_007.png",
+      "bytes": 68275,
+      "duration": 2271.1999999284744,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/claw-beast/part_008.png",
+      "bytes": 160957,
+      "duration": 2296.600000023842,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/claw-beast/part_012.png",
+      "bytes": 93909,
+      "duration": 2288.3000000715256,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/claw-beast/part_011.png",
+      "bytes": 107408,
+      "duration": 2317.8000000715256,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/claw-beast/part_009.png",
+      "bytes": 55367,
+      "duration": 2320.100000023842,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/claw-beast/part_010.png",
+      "bytes": 85398,
+      "duration": 2334,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/broodmother/part_004.png",
+      "bytes": 179401,
+      "duration": 2347.399999976158,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/broodmother/part_003.png",
+      "bytes": 101927,
+      "duration": 2347.7000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/broodmother/part_001.png",
+      "bytes": 94022,
+      "duration": 2359.899999976158,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/broodmother/part_007.png",
+      "bytes": 109879,
+      "duration": 2379.7000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/broodmother/part_008.png",
+      "bytes": 116799,
+      "duration": 2385.2999999523163,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/broodmother/part_005.png",
+      "bytes": 95358,
+      "duration": 2386.399999976158,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/broodmother/part_002.png",
+      "bytes": 61480,
+      "duration": 2387.5,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/broodmother/part_009.png",
+      "bytes": 60875,
+      "duration": 2389.100000023842,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/broodmother/part_010.png",
+      "bytes": 29362,
+      "duration": 2397.2000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/broodmother/part_011.png",
+      "bytes": 65503,
+      "duration": 2421.8000000715256,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/broodmother/part_012.png",
+      "bytes": 74358,
+      "duration": 2445.3000000715256,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/broodmother/part_006.png",
+      "bytes": 86198,
+      "duration": 2445.5,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/broodmother/part_013.png",
+      "bytes": 123336,
+      "duration": 2446.100000023842,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/broodmother/part_014.png",
+      "bytes": 47680,
+      "duration": 2435.7000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/moss-colossus/part_001.png",
+      "bytes": 352024,
+      "duration": 2485.100000023842,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/moss-colossus/part_003.png",
+      "bytes": 178532,
+      "duration": 2494.1999999284744,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/moss-colossus/part_004.png",
+      "bytes": 84246,
+      "duration": 2494.5,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/moss-colossus/part_006.png",
+      "bytes": 30476,
+      "duration": 2496,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/moss-colossus/part_007.png",
+      "bytes": 86034,
+      "duration": 2506.2000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/moss-colossus/part_005.png",
+      "bytes": 178977,
+      "duration": 2519.2000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/moss-colossus/part_022.png",
+      "bytes": 33052,
+      "duration": 2532,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/moss-colossus/part_009.png",
+      "bytes": 74590,
+      "duration": 2550.600000023842,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/moss-colossus/part_008.png",
+      "bytes": 97924,
+      "duration": 2555.899999976158,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/moss-colossus/part_010.png",
+      "bytes": 189048,
+      "duration": 2568.100000023842,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/moss-colossus/part_023.png",
+      "bytes": 34383,
+      "duration": 2545,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/moss-colossus/part_013.png",
+      "bytes": 81379,
+      "duration": 2568.399999976158,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/moss-colossus/part_012.png",
+      "bytes": 93187,
+      "duration": 2581.8000000715256,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/moss-colossus/part_021.png",
+      "bytes": 80242,
+      "duration": 2600.3000000715256,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/moss-colossus/part_015.png",
+      "bytes": 174093,
+      "duration": 2617.4000000953674,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/moss-colossus/part_014.png",
+      "bytes": 180255,
+      "duration": 2625.3000000715256,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/moss-colossus/part_020.png",
+      "bytes": 133200,
+      "duration": 2629.399999976158,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/moss-colossus/part_002.png",
+      "bytes": 191268,
+      "duration": 2631.2999999523163,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/moss-colossus/part_011.png",
+      "bytes": 100246,
+      "duration": 2643,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/moss-colossus/part_016.png",
+      "bytes": 26050,
+      "duration": 2644.5,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/moss-colossus/part_017.png",
+      "bytes": 31374,
+      "duration": 2655.399999976158,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/moss-colossus/part_018.png",
+      "bytes": 22108,
+      "duration": 2667,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/moss-colossus/part_019.png",
+      "bytes": 43273,
+      "duration": 2667.6999999284744,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/sentry-crossbow/part_001.png",
+      "bytes": 172414,
+      "duration": 2699.2000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/sentry-crossbow/part_005.png",
+      "bytes": 135283,
+      "duration": 2715.100000023842,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/sentry-crossbow/part_002.png",
+      "bytes": 114321,
+      "duration": 2703.7000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/sentry-crossbow/part_003.png",
+      "bytes": 225857,
+      "duration": 2731.100000023842,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/sentry-crossbow/part_004.png",
+      "bytes": 215583,
+      "duration": 2743.2999999523163,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/sentry-crossbow/part_008.png",
+      "bytes": 210462,
+      "duration": 2748.600000023842,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/sentry-crossbow/part_015.png",
+      "bytes": 120539,
+      "duration": 2753.1999999284744,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/sentry-crossbow/part_016.png",
+      "bytes": 123687,
+      "duration": 2755.2999999523163,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/sentry-crossbow/part_017.png",
+      "bytes": 42023,
+      "duration": 2755.899999976158,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/ash-cannon-bug/part_002.png",
+      "bytes": 331983,
+      "duration": 2836.9000000953674,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/ash-cannon-bug/part_001.png",
+      "bytes": 278786,
+      "duration": 2845.4000000953674,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/ash-cannon-bug/part_003.png",
+      "bytes": 178871,
+      "duration": 2819.7000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/ash-cannon-bug/part_007.png",
+      "bytes": 185376,
+      "duration": 2820.3000000715256,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/ash-cannon-bug/part_020.png",
+      "bytes": 78821,
+      "duration": 2820.899999976158,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/ash-cannon-bug/part_022.png",
+      "bytes": 82633,
+      "duration": 2821.1999999284744,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/ash-cannon-bug/part_024.png",
+      "bytes": 78847,
+      "duration": 2882.7999999523163,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/ash-cannon-bug/part_021.png",
+      "bytes": 74848,
+      "duration": 2888.1999999284744,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/ash-cannon-bug/part_023.png",
+      "bytes": 81255,
+      "duration": 2888.399999976158,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/ash-cannon-bug/part_025.png",
+      "bytes": 78129,
+      "duration": 2888.600000023842,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/ash-cannon-bug/part_008.png",
+      "bytes": 145488,
+      "duration": 2917.100000023842,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/ash-cannon-bug/part_009.png",
+      "bytes": 65628,
+      "duration": 2903.2000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/furnace-beetle/part_011.png",
+      "bytes": 41510,
+      "duration": 2944.899999976158,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/furnace-beetle/part_014.png",
+      "bytes": 134922,
+      "duration": 2960.7000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/furnace-beetle/part_001.png",
+      "bytes": 321329,
+      "duration": 2975.600000023842,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/furnace-beetle/part_005.png",
+      "bytes": 111246,
+      "duration": 2958.7999999523163,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/furnace-beetle/part_002.png",
+      "bytes": 181575,
+      "duration": 2967.899999976158,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/furnace-beetle/part_012.png",
+      "bytes": 170211,
+      "duration": 2984.7999999523163,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/furnace-beetle/part_007.png",
+      "bytes": 15250,
+      "duration": 2997.899999976158,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/furnace-beetle/part_006.png",
+      "bytes": 80692,
+      "duration": 3022.5,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/furnace-beetle/part_003.png",
+      "bytes": 176409,
+      "duration": 3024.9000000953674,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/furnace-beetle/part_013.png",
+      "bytes": 167275,
+      "duration": 3038.7000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/thorn-shell-flower/part_013.png",
+      "bytes": 315991,
+      "duration": 3078.899999976158,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/thorn-shell-flower/part_005.png",
+      "bytes": 30706,
+      "duration": 3041.7999999523163,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/thorn-shell-flower/part_006.png",
+      "bytes": 212086,
+      "duration": 3070.899999976158,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/thorn-shell-flower/part_003.png",
+      "bytes": 347776,
+      "duration": 3138.2999999523163,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/thorn-shell-flower/part_008.png",
+      "bytes": 93235,
+      "duration": 3096.5999999046326,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/thorn-shell-flower/part_001.png",
+      "bytes": 308477,
+      "duration": 3126,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/thorn-shell-flower/part_009.png",
+      "bytes": 199691,
+      "duration": 3135.5999999046326,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/thorn-shell-flower/part_011.png",
+      "bytes": 252995,
+      "duration": 3148.4000000953674,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/thorn-shell-flower/part_002.png",
+      "bytes": 227829,
+      "duration": 3163.600000023842,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/thorn-shell-flower/part_007.png",
+      "bytes": 92165,
+      "duration": 3149.100000023842,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/thorn-shell-flower/part_010.png",
+      "bytes": 203259,
+      "duration": 3204.7000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/water-leech-swarm/part_003.png",
+      "bytes": 187955,
+      "duration": 3212,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/thorn-shell-flower/part_012.png",
+      "bytes": 236949,
+      "duration": 3218.7999999523163,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/water-leech-swarm/part_002.png",
+      "bytes": 107132,
+      "duration": 3202.7999999523163,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/water-leech-swarm/part_004.png",
+      "bytes": 112892,
+      "duration": 3203.1999999284744,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/water-leech-swarm/part_001.png",
+      "bytes": 87510,
+      "duration": 3216.899999976158,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/water-leech-swarm/part_005.png",
+      "bytes": 54085,
+      "duration": 3244.5999999046326,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/water-leech-swarm/part_007.png",
+      "bytes": 116727,
+      "duration": 3268.600000023842,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/water-leech-swarm/part_008.png",
+      "bytes": 212187,
+      "duration": 3287.8000000715256,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/water-leech-swarm/part_016.png",
+      "bytes": 469416,
+      "duration": 3343.3000000715256,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/water-leech-swarm/part_009.png",
+      "bytes": 128630,
+      "duration": 3270.899999976158,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/water-leech-swarm/part_006.png",
+      "bytes": 100366,
+      "duration": 3284.399999976158,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/water-leech-swarm/part_010.png",
+      "bytes": 58776,
+      "duration": 3300.2999999523163,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/water-leech-swarm/part_014.png",
+      "bytes": 272365,
+      "duration": 3356.7999999523163,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/water-leech-swarm/part_012.png",
+      "bytes": 106045,
+      "duration": 3340.600000023842,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/water-leech-swarm/part_013.png",
+      "bytes": 174586,
+      "duration": 3353.7999999523163,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/water-leech-swarm/part_011.png",
+      "bytes": 140826,
+      "duration": 3365.899999976158,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/water-leech-swarm/part_015.png",
+      "bytes": 74840,
+      "duration": 3354.399999976158,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/whirlpool-eye-sac/part_002.png",
+      "bytes": 226478,
+      "duration": 3431.4000000953674,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/whirlpool-eye-sac/part_001.png",
+      "bytes": 369329,
+      "duration": 3449,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/whirlpool-eye-sac/part_003.png",
+      "bytes": 551459,
+      "duration": 3474.9000000953674,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/whirlpool-eye-sac/part_004.png",
+      "bytes": 90168,
+      "duration": 3406.399999976158,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/whirlpool-eye-sac/part_005.png",
+      "bytes": 62430,
+      "duration": 3405.600000023842,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/whirlpool-eye-sac/part_008.png",
+      "bytes": 144875,
+      "duration": 3431.5,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/whirlpool-eye-sac/part_009.png",
+      "bytes": 44942,
+      "duration": 3459.100000023842,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/whirlpool-eye-sac/part_007.png",
+      "bytes": 52508,
+      "duration": 3459.6999999284744,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/whirlpool-eye-sac/part_006.png",
+      "bytes": 62259,
+      "duration": 3471.1999999284744,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/whirlpool-eye-sac/part_010.png",
+      "bytes": 214940,
+      "duration": 3506,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/whirlpool-eye-sac/part_011.png",
+      "bytes": 164543,
+      "duration": 3526.4000000953674,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/whirlpool-eye-sac/part_012.png",
+      "bytes": 211959,
+      "duration": 3543,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/molten-core-beast/part_004.png",
+      "bytes": 122599,
+      "duration": 3540.7000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/whirlpool-eye-sac/part_013.png",
+      "bytes": 215807,
+      "duration": 3543.7000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/molten-core-beast/part_003.png",
+      "bytes": 208252,
+      "duration": 3555.7000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/molten-core-beast/part_005.png",
+      "bytes": 111369,
+      "duration": 3561.7000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/molten-core-beast/part_001.png",
+      "bytes": 171808,
+      "duration": 3591.600000023842,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/molten-core-beast/part_002.png",
+      "bytes": 75314,
+      "duration": 3596.399999976158,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/molten-core-beast/part_006.png",
+      "bytes": 92971,
+      "duration": 3609.899999976158,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/molten-core-beast/part_007.png",
+      "bytes": 67833,
+      "duration": 3610.1999999284744,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/molten-core-beast/part_008.png",
+      "bytes": 83158,
+      "duration": 3623.5,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/molten-core-beast/part_009.png",
+      "bytes": 118628,
+      "duration": 3623.8000000715256,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/molten-core-beast/part_010.png",
+      "bytes": 69491,
+      "duration": 3644.9000000953674,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/molten-core-beast/part_011.png",
+      "bytes": 50149,
+      "duration": 3638.600000023842,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/molten-core-beast/part_014.png",
+      "bytes": 75344,
+      "duration": 3675.600000023842,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/molten-core-beast/part_015.png",
+      "bytes": 53804,
+      "duration": 3677.7999999523163,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/molten-core-beast/part_013.png",
+      "bytes": 146741,
+      "duration": 3678.2000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/redwheel-fire-crow/part_003.png",
+      "bytes": 125487,
+      "duration": 3689.6999999284744,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/redwheel-fire-crow/part_004.png",
+      "bytes": 93026,
+      "duration": 3702.399999976158,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/redwheel-fire-crow/part_001.png",
+      "bytes": 167485,
+      "duration": 3718.600000023842,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/redwheel-fire-crow/part_002.png",
+      "bytes": 45876,
+      "duration": 3722,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/redwheel-fire-crow/part_015.png",
+      "bytes": 60486,
+      "duration": 3739.600000023842,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/redwheel-fire-crow/part_014.png",
+      "bytes": 120489,
+      "duration": 3752.7000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/redwheel-fire-crow/part_005.png",
+      "bytes": 92216,
+      "duration": 3754.7999999523163,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/redwheel-fire-crow/part_006.png",
+      "bytes": 85673,
+      "duration": 3765.600000023842,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/redwheel-fire-crow/part_007.png",
+      "bytes": 40238,
+      "duration": 3766.6999999284744,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/redwheel-fire-crow/part_008.png",
+      "bytes": 50229,
+      "duration": 3785,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/redwheel-fire-crow/part_009.png",
+      "bytes": 108472,
+      "duration": 3812.899999976158,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/redwheel-fire-crow/part_010.png",
+      "bytes": 56249,
+      "duration": 3801.1999999284744,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/redwheel-fire-crow/part_011.png",
+      "bytes": 43703,
+      "duration": 3814.1999999284744,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/redwheel-fire-crow/part_012.png",
+      "bytes": 65827,
+      "duration": 3825.0999999046326,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/redwheel-fire-crow/part_013.png",
+      "bytes": 55973,
+      "duration": 3826.5,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/cinder-curse-lamp-swarm/part_001.png",
+      "bytes": 945775,
+      "duration": 4004.4000000953674,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/cinder-curse-lamp-swarm/part_003.png",
+      "bytes": 179629,
+      "duration": 3864.600000023842,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/cinder-curse-lamp-swarm/part_004.png",
+      "bytes": 165757,
+      "duration": 3882.100000023842,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/tide-rite-matriarch/part_001.png",
+      "bytes": 140902,
+      "duration": 3882.2000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/tide-rite-matriarch/part_007.png",
+      "bytes": 101523,
+      "duration": 3894.600000023842,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/tide-rite-matriarch/part_015.png",
+      "bytes": 314858,
+      "duration": 3925.600000023842,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/tide-rite-matriarch/part_006.png",
+      "bytes": 88407,
+      "duration": 3930.1999999284744,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/tide-rite-matriarch/part_004.png",
+      "bytes": 72539,
+      "duration": 3948.399999976158,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/tide-rite-matriarch/part_005.png",
+      "bytes": 81080,
+      "duration": 3948.7999999523163,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/tide-rite-matriarch/part_003.png",
+      "bytes": 59916,
+      "duration": 3937.4000000953674,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/tide-rite-matriarch/part_009.png",
+      "bytes": 85043,
+      "duration": 3985,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/tide-rite-matriarch/part_012.png",
+      "bytes": 62032,
+      "duration": 3976.7000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/tide-rite-matriarch/part_010.png",
+      "bytes": 80648,
+      "duration": 4001.5,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/tide-rite-matriarch/part_011.png",
+      "bytes": 56198,
+      "duration": 3991.2999999523163,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/tide-rite-matriarch/part_017.png",
+      "bytes": 354959,
+      "duration": 4051.399999976158,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/tide-rite-matriarch/part_002.png",
+      "bytes": 137030,
+      "duration": 4056.6999999284744,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/tide-rite-matriarch/part_008.png",
+      "bytes": 81162,
+      "duration": 4057.0999999046326,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/tide-rite-matriarch/part_018.png",
+      "bytes": 381401,
+      "duration": 4093.6999999284744,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/tide-rite-matriarch/part_016.png",
+      "bytes": 24535,
+      "duration": 4043.8000000715256,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/tide-rite-matriarch/part_013.png",
+      "bytes": 43664,
+      "duration": 4058.600000023842,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/tide-rite-matriarch/part_014.png",
+      "bytes": 43673,
+      "duration": 4088.399999976158,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/drown-shadow-hunter/part_007.png",
+      "bytes": 17999,
+      "duration": 4100.899999976158,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/drown-shadow-hunter/part_011.png",
+      "bytes": 126320,
+      "duration": 4113.799999952316,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/drown-shadow-hunter/part_001.png",
+      "bytes": 89220,
+      "duration": 4114.299999952316,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/drown-shadow-hunter/part_020.png",
+      "bytes": 81166,
+      "duration": 4130.699999928474,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/drown-shadow-hunter/part_010.png",
+      "bytes": 27625,
+      "duration": 4144.600000023842,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/drown-shadow-hunter/part_012.png",
+      "bytes": 48701,
+      "duration": 4145.099999904633,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/drown-shadow-hunter/part_008.png",
+      "bytes": 140089,
+      "duration": 4178.300000071526,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/drown-shadow-hunter/part_002.png",
+      "bytes": 223192,
+      "duration": 4185.5,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/drown-shadow-hunter/part_014.png",
+      "bytes": 44080,
+      "duration": 4157.800000071526,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/drown-shadow-hunter/part_019.png",
+      "bytes": 20257,
+      "duration": 4169.100000023842,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/drown-shadow-hunter/part_023.png",
+      "bytes": 27911,
+      "duration": 4193.200000047684,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/drown-shadow-hunter/part_003.png",
+      "bytes": 125103,
+      "duration": 4205.5,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/drown-shadow-hunter/part_018.png",
+      "bytes": 22191,
+      "duration": 4211.699999928474,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/drown-shadow-hunter/part_013.png",
+      "bytes": 42322,
+      "duration": 4210.799999952316,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/drown-shadow-hunter/part_022.png",
+      "bytes": 26531,
+      "duration": 4226.099999904633,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/tidal-spore-sac/part_016.png",
+      "bytes": 320918,
+      "duration": 4279.899999976158,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/drown-shadow-hunter/part_004.png",
+      "bytes": 65390,
+      "duration": 4240.099999904633,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/tidal-spore-sac/part_001.png",
+      "bytes": 88445,
+      "duration": 4263.200000047684,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/tidal-spore-sac/part_002.png",
+      "bytes": 186987,
+      "duration": 4277.100000023842,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/tidal-spore-sac/part_004.png",
+      "bytes": 67344,
+      "duration": 4265,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/tidal-spore-sac/part_003.png",
+      "bytes": 119120,
+      "duration": 4277.399999976158,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/tidal-spore-sac/part_006.png",
+      "bytes": 36071,
+      "duration": 4289.899999976158,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/tidal-spore-sac/part_005.png",
+      "bytes": 66736,
+      "duration": 4309.699999928474,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/revenant-guard/part_011.png",
+      "bytes": 119860,
+      "duration": 4326.5,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/revenant-guard/part_013.png",
+      "bytes": 5559,
+      "duration": 4328.699999928474,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/revenant-guard/part_001.png",
+      "bytes": 116736,
+      "duration": 4337.900000095367,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/revenant-guard/part_024.png",
+      "bytes": 288258,
+      "duration": 4365.800000071526,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/revenant-guard/part_014.png",
+      "bytes": 43119,
+      "duration": 4328.700000047684,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/revenant-guard/part_021.png",
+      "bytes": 67800,
+      "duration": 4363.5,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/revenant-guard/part_015.png",
+      "bytes": 56144,
+      "duration": 4375.700000047684,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/revenant-guard/part_026.png",
+      "bytes": 178354,
+      "duration": 4400.700000047684,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/revenant-guard/part_022.png",
+      "bytes": 64320,
+      "duration": 4377.799999952316,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/revenant-guard/part_025.png",
+      "bytes": 96293,
+      "duration": 4389.100000023842,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/revenant-guard/part_028.png",
+      "bytes": 47727,
+      "duration": 4403.299999952316,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/revenant-guard/part_018.png",
+      "bytes": 115474,
+      "duration": 4425.399999976158,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/revenant-guard/part_023.png",
+      "bytes": 85311,
+      "duration": 4439.300000071526,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/bomb-wisp/part_005.png",
+      "bytes": 103008,
+      "duration": 4439.600000023842,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/bomb-wisp/part_002.png",
+      "bytes": 87982,
+      "duration": 4454,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/bomb-wisp/part_015.png",
+      "bytes": 36240,
+      "duration": 4443.399999976158,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/bomb-wisp/part_044.png",
+      "bytes": 8915,
+      "duration": 4455.199999928474,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/bomb-wisp/part_020.png",
+      "bytes": 131141,
+      "duration": 4484.5,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/bomb-wisp/part_010.png",
+      "bytes": 26803,
+      "duration": 4479.799999952316,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/bomb-wisp/part_018.png",
+      "bytes": 105087,
+      "duration": 4501.899999976158,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/cracked-hunter/part_001.png",
+      "bytes": 157110,
+      "duration": 4510.700000047684,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/cracked-hunter/part_002.png",
+      "bytes": 90949,
+      "duration": 4515.200000047684,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/cracked-hunter/part_003.png",
+      "bytes": 72411,
+      "duration": 4515.5,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/cracked-hunter/part_013.png",
+      "bytes": 127037,
+      "duration": 4537.699999928474,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/cracked-hunter/part_012.png",
+      "bytes": 159447,
+      "duration": 4555.599999904633,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/cracked-hunter/part_011.png",
+      "bytes": 161729,
+      "duration": 4563.900000095367,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/cracked-hunter/part_007.png",
+      "bytes": 79671,
+      "duration": 4568.700000047684,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/cracked-hunter/part_009.png",
+      "bytes": 107026,
+      "duration": 4568.899999976158,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/cracked-hunter/part_004.png",
+      "bytes": 66651,
+      "duration": 4570.199999928474,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/cracked-hunter/part_016.png",
+      "bytes": 60096,
+      "duration": 4582.600000023842,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/cracked-hunter/part_017.png",
+      "bytes": 46619,
+      "duration": 4595.099999904633,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/cracked-hunter/part_019.png",
+      "bytes": 36002,
+      "duration": 4607.5,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/cracked-hunter/part_005.png",
+      "bytes": 67057,
+      "duration": 4618.900000095367,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/cracked-hunter/part_015.png",
+      "bytes": 50341,
+      "duration": 4609.700000047684,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/cracked-hunter/part_018.png",
+      "bytes": 48494,
+      "duration": 4620,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/cracked-hunter/part_020.png",
+      "bytes": 39378,
+      "duration": 4620.799999952316,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/broodling/part_004.png",
+      "bytes": 139227,
+      "duration": 4655.600000023842,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/broodling/part_001.png",
+      "bytes": 447692,
+      "duration": 4724.5,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/broodling/part_002.png",
+      "bytes": 244237,
+      "duration": 4685,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/broodling/part_008.png",
+      "bytes": 82854,
+      "duration": 4681.699999928474,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/broodling/part_013.png",
+      "bytes": 105546,
+      "duration": 4681.900000095367,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/broodling/part_006.png",
+      "bytes": 68005,
+      "duration": 4682.100000023842,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/broodling/part_016.png",
+      "bytes": 57786,
+      "duration": 4708.900000095367,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/broodling/part_005.png",
+      "bytes": 67861,
+      "duration": 4734.400000095367,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/broodling/part_014.png",
+      "bytes": 106020,
+      "duration": 4736.399999976158,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/broodling/part_015.png",
+      "bytes": 58188,
+      "duration": 4736.5,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/leech-larva/part_002.png",
+      "bytes": 273489,
+      "duration": 4775.399999976158,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/leech-larva/part_003.png",
+      "bytes": 162730,
+      "duration": 4773.100000023842,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/leech-larva/part_004.png",
+      "bytes": 79308,
+      "duration": 4784.899999976158,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/leech-larva/part_005.png",
+      "bytes": 104810,
+      "duration": 4798.600000023842,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/leech-larva/part_001.png",
+      "bytes": 625959,
+      "duration": 4888.599999904633,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/leech-larva/part_009.png",
+      "bytes": 48355,
+      "duration": 4786.400000095367,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/leech-larva/part_006.png",
+      "bytes": 174879,
+      "duration": 4838.300000071526,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/leech-larva/part_007.png",
+      "bytes": 176630,
+      "duration": 4844,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/tide-shadow/part_004.png",
+      "bytes": 76277,
+      "duration": 4849.600000023842,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/tide-shadow/part_001.png",
+      "bytes": 57899,
+      "duration": 4837.600000023842,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/tide-shadow/part_005.png",
+      "bytes": 21342,
+      "duration": 4837.699999928474,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/tide-shadow/part_009.png",
+      "bytes": 14064,
+      "duration": 4885.899999976158,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/tide-shadow/part_002.png",
+      "bytes": 439122,
+      "duration": 4952.699999928474,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/tide-shadow/part_003.png",
+      "bytes": 421468,
+      "duration": 4952.800000071526,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/tide-shadow/part_016.png",
+      "bytes": 340231,
+      "duration": 4940.300000071526,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/tide-shadow/part_025.png",
+      "bytes": 63980,
+      "duration": 4887.5,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/overseer/part_003.png",
+      "bytes": 225214,
+      "duration": 4965.399999976158,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/overseer/part_013.png",
+      "bytes": 127095,
+      "duration": 4950.100000023842,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/overseer/part_001.png",
+      "bytes": 188243,
+      "duration": 4962.5,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/overseer/part_002.png",
+      "bytes": 89081,
+      "duration": 4996.399999976158,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/overseer/part_004.png",
+      "bytes": 111877,
+      "duration": 5003.100000023842,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/overseer/part_005.png",
+      "bytes": 186863,
+      "duration": 5021.200000047684,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/overseer/part_012.png",
+      "bytes": 127801,
+      "duration": 5013.299999952316,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/overseer/part_006.png",
+      "bytes": 83480,
+      "duration": 5013.5,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/overseer/part_007.png",
+      "bytes": 70844,
+      "duration": 5027.099999904633,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/overseer/part_008.png",
+      "bytes": 124721,
+      "duration": 5048.199999928474,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/overseer/part_009.png",
+      "bytes": 93672,
+      "duration": 5065.599999904633,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/overseer/part_010.png",
+      "bytes": 75003,
+      "duration": 5075,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/overseer/part_014.png",
+      "bytes": 88136,
+      "duration": 5080.100000023842,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/components-v1/overseer/part_011.png",
+      "bytes": 105426,
+      "duration": 5080.300000071526,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/inventory/gold-pile-7-v1-medium.png",
+      "bytes": 485497,
+      "duration": 5146.299999952316,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/inventory/item-health-potion-v1-medium.png",
+      "bytes": 284623,
+      "duration": 5135.299999952316,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/inventory/weapon-rust-sword-v2-medium.png",
+      "bytes": 91984,
+      "duration": 2271.5,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/inventory/weapon-root-axe-v1-medium.png",
+      "bytes": 196453,
+      "duration": 2296.5,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/inventory/defense-wood-shield-v1-medium.png",
+      "bytes": 184969,
+      "duration": 2296.8000000715256,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/inventory/defense-light-armor-v1-medium.png",
+      "bytes": 449776,
+      "duration": 2335.7000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/inventory/item-health-potion-v1-medium.png",
+      "bytes": 284623,
+      "duration": 2347.100000023842,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/inventory/item-poison-v1-medium.png",
+      "bytes": 318445,
+      "duration": 2370.600000023842,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/inventory/item-rage-wine-v1-medium.png",
+      "bytes": 297770,
+      "duration": 2382,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/inventory/item-money-pouch-v1-medium.png",
+      "bytes": 347663,
+      "duration": 2392.600000023842,
+      "type": "img"
+    }
+  ],
+  "totalBytes": 64467453,
+  "errors": []
+}

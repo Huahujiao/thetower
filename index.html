@@ -6,9 +6,36 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="theme-color" content="#14141f" />
+  <style>
+    html,body{margin:0;width:100%;height:100%;background:#243738}
+    .startup-screen{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;padding:24px;background:linear-gradient(155deg,#66786c,#344e50 55%,#243738);color:#e9e1c9;font:15px/1.6 system-ui,sans-serif}
+    .startup-shell{width:min(100%,420px)}
+    .startup-head{height:32px;margin-bottom:22px;border-block:1px solid #c9c3a244;background:linear-gradient(90deg,#bfc6aa22,transparent)}
+    .startup-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;opacity:.55;transform:perspective(650px) rotateX(18deg);margin:0 0 30px}
+    .startup-grid i{aspect-ratio:1;border:1px solid #bdc3a94d;border-radius:3px;background:linear-gradient(145deg,#a7b09a33,#758d871a)}
+    .startup-grid i:nth-child(4n){background:#c4a99522}.startup-grid i:nth-child(4n+1){background:#9ebfc122}
+    .startup-status{text-align:center}.startup-mark{display:inline-block;width:19px;height:19px;margin-bottom:10px;border:2px solid #d8d2b344;border-top-color:#e6dbbb;border-radius:50%;animation:startup-spin 1.4s linear infinite}
+    .startup-status p{margin:0;font-size:16px;letter-spacing:.08em}.startup-status small{display:block;margin-top:8px;color:#d3d8cb;font-size:12px}
+    .startup-status button{margin-top:16px;padding:8px 20px;border:1px solid #d9ccaa99;border-radius:4px;background:#c6b78c;color:#263a39;font:inherit;cursor:pointer}
+    .startup-status button[hidden]{display:none}.startup-screen[data-state=error] .startup-mark{animation:none;border-color:#b98e7b}
+    @keyframes startup-spin{to{transform:rotate(360deg)}}
+    @media(prefers-reduced-motion:reduce){.startup-mark{animation:none}}
+  </style>
 </head>
 <body>
+  <div id="startup-screen" class="startup-screen" role="status" aria-live="polite">
+    <div class="startup-shell">
+      <div class="startup-head" aria-hidden="true"></div>
+      <div class="startup-grid" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="startup-status"><span class="startup-mark" aria-hidden="true"></span>
+        <p id="startup-message">正在准备页面</p>
+        <small id="startup-detail">界面、场景与贴图会陆续显示</small>
+        <button id="startup-retry" type="button" hidden onclick="window.location.reload()">重新加载</button>
+      </div>
+    </div>
+  </div>
+  <noscript>请启用 JavaScript 以进入游戏。</noscript>
   <div id="hud"></div>
-  <script type="module" src="/src/main.js"></script>
+  <script type="module" src="/src/boot.js" onerror="document.getElementById('startup-message').textContent='页面加载未完成，请重新加载';document.getElementById('startup-retry').hidden=false"></script>
 </body>
 </html>

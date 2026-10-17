@@ -1,0 +1,23 @@
+{
+  "htmlBeforeMain": true,
+  "hudBeforeScene": true,
+  "boardBeforeTextures": true,
+  "texturesComplete": true,
+  "sceneRetry": true,
+  "entryRetry": true,
+  "ready": {
+    "tiles": 36,
+    "enemies": [
+      {
+        "visible": 22
+      },
+      {
+        "visible": 11
+      },
+      {
+        "visible": 14
+      }
+    ]
+  },
+  "errors": []
+}

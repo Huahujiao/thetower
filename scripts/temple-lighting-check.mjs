@@ -11,6 +11,7 @@ try{
     const {BoardTextures}=await server.ssrLoadModule('/src/render/board-textures.js')
   const {fixture}=await server.ssrLoadModule('/scripts/item-test-helpers.mjs')
   const {prepareEnemyPuppets,createEnemyFigure}=await server.ssrLoadModule('/src/render/enemy-puppet.js')
+    const {HIDDEN_CARD_THICKNESS,CARD_FLOOR_GAP}=await server.ssrLoadModule('/src/render/card-body.js')
     const run=fixture(),room=run.currentRoom
   run.sceneView={environment:'mountain-temple',cameraAzimuth:0}
   const scene=Object.create(GameScene.prototype)
@@ -43,12 +44,12 @@ try{
   const cardColor=face.material.color.clone()
   const normal=face.material.normalMap
   const floorY=face.userData.floorBacking.position.y
-  const restingBottom=face.userData.body.position.y-.18/2
-  assert(Math.abs(restingBottom-(floorY+.002))<1e-8,'A hidden card rests on the common floor instead of lowering it')
+  const restingBottom=face.userData.body.position.y-HIDDEN_CARD_THICKNESS/2
+  assert(Math.abs(restingBottom-(floorY+CARD_FLOOR_GAP+.002))<1e-8,'A hidden card hovers clear of the common floor instead of lying on it')
   room.tile(position).revealed=true;scene._refreshTile(room,position)
   assert(face.material.isMeshStandardMaterial&&face.material.normalMap===scene.boardTextures.surfaceData(face.material.map).normal,'Revealed ground must use its own stone normal')
   assert(face.receiveShadow&&face.userData.floorBacking.receiveShadow)
-  assert(Math.abs(face.position.y-floorY-.002)<1e-8,'Revealed floor and hidden-card backing have only raster clearance')
+  assert(Math.abs(face.position.y-floorY-.002-CARD_FLOOR_GAP)<1e-8,'A card keeps its air gap above the stone whether hidden or revealed')
   assert.equal(face.userData.floorBacking.position.y,floorY,'Reveal must not raise the floor')
   room.tile(position).revealed=false;scene._refreshTile(room,position)
   assert.equal(face.material.normalMap,normal)
@@ -57,7 +58,7 @@ try{
   room.tile(position).revealed=true
   assert(scene._startFlip({roomId:room.id,position},snapshot))
   const flip=scene.flipAnimations[0]
-  assert(Math.abs(flip.startY-(floorY+.002+.18/2))<1e-8,'Flip starts where the resting card was')
+  assert(Math.abs(flip.startY-(floorY+.002+CARD_FLOOR_GAP+HIDDEN_CARD_THICKNESS/2))<1e-8,'Flip starts where the hovering card was')
   scene._updateFlipAnimations(.1)
   assert.equal(face.userData.floorBacking.position.y,floorY,'Ground remains fixed during a flip')
   assert(flip.front.material.isMeshStandardMaterial&&flip.front.receiveShadow,'Flip ground must receive the same sun')
@@ -69,7 +70,7 @@ try{
   const playerFace=scene.tileMeshByKey.get('0:0')
   assert(playerFace.material.isMeshBasicMaterial,'Standing characters stay unlit')
   assert(playerFace.userData.groundFace.material.isMeshStandardMaterial&&playerFace.userData.groundFace.receiveShadow)
-  assert(Math.abs(playerFace.userData.groundFace.position.y-floorY-.002)<1e-8,'Actor ground shares the same floor level')
+  assert(Math.abs(playerFace.userData.groundFace.position.y-floorY-.002-CARD_FLOOR_GAP)<1e-8,'Actor ground shares the same hovering card level')
   assert(scene._startMove({roomId:room.id,from,path:[{c:1,r:0}]}))
   assert(playerFace.material.isMeshStandardMaterial&&playerFace.material.depthTest,'Moving away must restore a lit floor')
   const marker=scene.movementAnimation.group.children.find(child=>child.isMesh)

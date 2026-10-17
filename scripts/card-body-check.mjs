@@ -1,12 +1,26 @@
 import assert from 'node:assert/strict'
 import * as THREE from 'three'
-import { createCardFaceMaterial, cardBodyGeometry, styleCardBody, cardFaceY, CARD_FACE_CLEARANCE, HIDDEN_CARD_THICKNESS, HIDDEN_CARD_SCALE } from '../src/render/card-body.js'
+import { createCardFaceMaterial, cardBodyGeometry, styleCardBody, cardFaceY, groundSurfaceY, cardRestY, hiddenCardBodyY, CARD_FACE_CLEARANCE, CARD_FLOOR_GAP, HIDDEN_CARD_THICKNESS, HIDDEN_CARD_SCALE } from '../src/render/card-body.js'
+
+const FLOOR_THICKNESS = 0.08
 
 const geometry = cardBodyGeometry(1.14, 0.08)
 const body = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial())
 const texture = new THREE.Texture()
 texture.userData.boardShared = true
 const close = (a, b) => assert(Math.abs(a - b) < 1e-8)
+
+// A card must read as a thin object hovering over the paving, not as another
+// slab: thinner than the floor it sits on, with real air beneath it. The air
+// has to be measured against the visible stone, not folded into its height.
+assert(HIDDEN_CARD_THICKNESS < FLOOR_THICKNESS, 'Card body must be thinner than the floor slab')
+assert(CARD_FLOOR_GAP > CARD_FACE_CLEARANCE, 'Cards must float clear of the floor, not lie on it')
+close(groundSurfaceY(FLOOR_THICKNESS) - FLOOR_THICKNESS / 2, CARD_FACE_CLEARANCE)
+close(cardRestY(FLOOR_THICKNESS) - groundSurfaceY(FLOOR_THICKNESS), CARD_FLOOR_GAP)
+close(cardFaceY(false, FLOOR_THICKNESS), cardRestY(FLOOR_THICKNESS))
+close(hiddenCardBodyY(FLOOR_THICKNESS) - HIDDEN_CARD_THICKNESS / 2, cardRestY(FLOOR_THICKNESS))
+close(cardFaceY(true, FLOOR_THICKNESS) - cardRestY(FLOOR_THICKNESS), HIDDEN_CARD_THICKNESS + CARD_FACE_CLEARANCE)
+
 const colors = new Set()
 for (const attribute of ['neutral', 'scorch', 'wither', 'drown']) {
   styleCardBody(body, { hidden: true, attribute, texture, baseThickness: 0.08 })
@@ -28,7 +42,7 @@ for (let i = 0; i < geometry.attributes.uv.count; i++) {
 styleCardBody(body, { hidden: false, baseThickness: 0.08 })
 assert.deepEqual(body.scale.toArray(), [1, 1, 1])
 assert.equal(body.position.y, 0)
-close(cardFaceY(false, 0.08) - 0.04, CARD_FACE_CLEARANCE)
+close(cardFaceY(false, 0.08) - 0.04, CARD_FACE_CLEARANCE + CARD_FLOOR_GAP)
 assert.equal(body.material.map, null)
 assert.equal(texture.userData.boardShared, true)
 const normal = new THREE.Texture()

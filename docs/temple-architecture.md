@@ -119,3 +119,83 @@ Use case: photorealistic-natural. Asset type: seamless square albedo texture for
   - [默认视角地面](../art/reviews/temple-lighting-final-floor.png)
   - [转动视角高光](../art/reviews/temple-lighting-final-turned.png)
   - [捕获状态](../art/reviews/temple-lighting-final-capture.json)
+
+## 整体亮度微调（2026-10-16）
+
+- 用户确认高光后要求场景再亮一点。山寺游戏场景与独立审视页的Neutral曝光从1提高到1.2，主光、IBL、材质粗糙度及反射参数保持不变。
+- 使用Playwright重新捕获默认和转动视角并检查：卡背与栏杆亮度提高，地面仍保留随视角移动的高光。PBR检查、定向静态检查通过；页面错误为0，仍只有已知X4122精度警告。
+- [默认视角](../art/reviews/temple-lighting-brighter-floor.png)、[转动视角](../art/reviews/temple-lighting-brighter-turned.png)、[完整布局](../art/reviews/temple-lighting-brighter-mobile.png)、[捕获状态](../art/reviews/temple-lighting-brighter-capture.json)。
+
+## 卡背金属镶纹（2026-10-16）
+
+- 按用户要求提高五种卡背的花纹金属度。利用现有浮雕高度生成平滑镶纹遮罩：raised在0.06–0.65间过渡，金属度最高0.96，纹路粗糙度约0.30（带原图细微磨损）；凹陷底板保持非金属和约0.78粗糙度。重新生成五张共享ORM数据图，地板数据不变。
+- 卡背颜色乘数由0xafb2a9改为0xd6be8e，使原花纹反射呈现暖金色，保留各属性的底板颜色；原始色图、法线和场景光照参数不变，没有新增纹理或渲染通道。
+- Playwright检查默认及水平转动约14度的实际游戏截图，金属亮边随视角变化。13张数据图校验、PBR接入和定向静态检查通过；页面错误为0，仍有已知X4122精度警告。
+- [默认视角](../art/reviews/temple-card-gold-floor.png)、[转动视角](../art/reviews/temple-card-gold-turned.png)、[完整布局](../art/reviews/temple-card-gold-mobile.png)。
+
+## 面向初始化视角的低分辨率材质（2026-10-16）
+
+- 按用户要求以arttweak初始化镜头验收，记录为zoom=1、俯角40度、水平角0、房间偏移(-0.57,0,0.969)。Playwright使用460×1000 CSS像素、DPR=2，另外输出scale=css的1倍截图检查实际显示大小；默认画面未缩放或转动，转动截图仅补充检查反射。
+- 新增scripts/prepare-board-runtime.py，保留原始色图和历史生成数据，派生src/assets/board-runtime下27张256×256资源。9张色图为WebP，9张法线与9张ORM为无损PNG，数据贴图按线性通道重采样，法线重新归一化。运行时Canvas也从512降到256，地面边框继续在512逻辑坐标绘制后等比缩放。材质、翻牌快照及每格地板继续共享资源。
+- 色图保留55%的原始色度，过滤细碎颗粒，卡背纹路使用较低饱和的旧金色，材质色乘数0xdad1ba。纹路金属度仍最高0.96，主要纹路粗糙度约0.38，削弱针点式反光而保留金属明暗。
+- 石板增加四组固定的主要裂缝及少量分支；裂缝同时进入颜色、法线、粗糙度和局部遮蔽数据。磨损改以大范围纹理控制，减少缩小后挤成噪点的细节。仍是平整网格，没有几何位移或全场实时AO。
+- 此27张运行时资源从9,745,163字节降为1,457,552字节，减少85.04%；同为RGBA加完整mipmap时，这组Canvas纹理理论显存从约36MiB降至9MiB，不代表整场景显存或原生手机帧率测试。原始资源保留在仓库，但实际页面图片请求及独立预览生产包均只使用这组新棋盘资源。
+- 生成：npm run prepare:board-textures；校验已接入npm run check:temple-pbr。通过生成数据/清单校验、共享纹理与异步释放检查、PBR与房间重建、翻牌生命周期、定向静态检查和预览页生产构建。实际页面错误为0，仍有已知X4122精度警告。
+- 截图：[初始化视角](../art/reviews/temple-board-readable-default.png)、[1倍完整手机布局](../art/reviews/temple-board-readable-mobile.png)、[转动视角](../art/reviews/temple-board-readable-turned.png)。实际镜头、尺寸及27个图片请求记录在[捕获状态](../art/reviews/temple-board-readable-capture.json)，派生文件散列与体积记录在[资源清单](../art/reviews/board-runtime-manifest.json)。
+
+## 取消卡背金属与黄金质感（2026-10-17）
+
+- 按用户反馈取消上一轮高金属镶纹方案。卡背材质metalness固定为0，运行时和历史ORM生成器的金属通道均清零；去掉旧金色重染，保留原图55%色度和256×256资源。色乘数由暖色0xdad1ba改为中性0xb8bfba。
+- 卡背粗糙度提高至约0.74–0.86，保留浮雕法线及轻微柔和高光。地板反射和场景灯光沿用此前配置。27张运行时贴图当前合计1,281,526字节。
+- Playwright在arttweak默认40度俯角、zoom=1下检查，并补充转动视角：已无闪亮金边，花纹保留哑光浮雕明暗。页面错误为0，仍只有已知X4122精度警告。生成图校验、PBR接入与资源生命周期、定向静态检查通过。
+- [默认视角](../art/reviews/temple-card-matte-default.png)、[完整手机布局](../art/reviews/temple-card-matte-mobile.png)、[转动视角](../art/reviews/temple-card-matte-turned.png)、[捕获状态](../art/reviews/temple-card-matte-capture.json)。
+
+## 卡背偏暗原因与局部提亮（2026-10-17）
+
+- 用户反馈多种卡背偏暗。用Playwright在同一初始化镜头分别比较原参数、只移除卡背颜色乘数、只提高全局IBL（0.32至0.6）的画面；原始底色较深，再叠加0xb8bfba压暗色，是卡背偏暗的主要可调整因素。该色在线性空间将RGB乘到约0.48–0.52。
+- 卡背材质色乘数改为0xf0f0ed，减少重复压暗；保留低饱和原图、256像素资源、metalness=0及约0.74–0.86的粗糙度。没有重新添加自发光，场景光照和地板材质沿用现有参数。
+- 使用正式源代码重新捕获初始化视角，卡背各属性底色和纹样更清晰。PBR颜色刷新/生命周期检查与定向静态检查通过，页面错误为0，仍只有已知X4122精度警告。
+- [默认视角](../art/reviews/temple-card-readable-default.png)、[完整手机布局](../art/reviews/temple-card-readable-mobile.png)、[捕获参数](../art/reviews/temple-card-readable-capture.json)。
+
+## 低饱和与亮度分开控制（2026-10-17）
+
+- 用户明确低饱和指避免鲜艳正色，并非压低亮度。上一轮仅移除材质乘色，原图暗部仍过暗。本轮直接调整五种卡背派生色图的明度曲线：在保持55%原图色度的基础上，L映射为1.08×L^0.70，再按亮度比例缩放RGB。零值仍为零，不叠加统一灰色底；提高暗部和中间调，保留柔和属性色与凹凸对比。
+- 粗糙度、法线、非金属设定、256像素尺寸及原图均保留；地面和场景光照沿用现有配置。新资源清单合计1,289,816字节。
+- 使用Playwright检查arttweak初始化40度、zoom=1和手机1倍显示尺寸，并补充转动视角。灰蓝、暗红与土黄色底板更明亮可辨，花纹保留柔和明暗，没有恢复金属反射。生成数据校验、PBR接入检查通过，页面错误为0，仍只有已知X4122警告。
+- [默认视角](../art/reviews/temple-card-light-palette-default.png)、[完整手机布局](../art/reviews/temple-card-light-palette-mobile.png)、[转动视角](../art/reviews/temple-card-light-palette-turned.png)、[捕获记录](../art/reviews/temple-card-light-palette-capture.json)。
+
+## color-ref 参考驱动的纹理配色（2026-10-17）
+
+- 已查看color-ref五张图片：Spirited Away Bath House.jpg、下载.jpg、下载 (1).jpg、下载 (2).jpg、下载 (3).jpg。取共同的色彩关系：明亮中间调、温润米灰/旧砖红、克制的青灰/灰蓝、有色暗部及较柔和的纹理内部反差。按“温暖冷淡”理解为温润、安静而非高饱和或压暗。没有复制其建筑构图，也没有使用参考图像素作为游戏贴图。
+- 新增scripts/scene_color_palette.py集中定义各材质的暗部/中间调/亮部色阶。棋盘色图经prepare-board-runtime.py在离线生成阶段应用配色；保留各属性颜色识别，普通石色与栏杆第二轮向暖米灰收敛，蓝色和砖红保留冷暖对照。地板从黑青底色调整为较明亮的青灰石色，粗糙度和法线继续使用原几何纹理数据。
+- 新增scripts/prepare-temple-palette.py，输出environment/palette-v1下石材、砖砌、木门、土壤四张256像素WebP和枫树/旗幡两张PNG。只改色，保留原始素材；两张透明道具保留原尺寸、逐像素alpha。游戏TempleEnvironment和独立建筑预览同步使用这些色图，逐格墙结构、UV、阴影及动画保持原配置。
+- 本轮主光、IBL、曝光、材质乘色和显示色调映射参数均沿用之前设置。柔和感来自纹理固有色与对比度调整，没有加入后处理或新雾层。卡背仍为非金属哑光浮雕。
+- 生成：npm run prepare:scene-colors；直接配色参数位于scene_color_palette.py。生成文件记录在board-runtime-manifest.json与temple-palette-manifest.json，后者检查接入check:temple-pbr。色图重建/散列、透明轮廓、逐格建筑和所有方向门、PBR颜色刷新/资源生命周期、定向静态检查与独立预览生产构建均通过。
+- Playwright使用arttweak初始化镜头（40度、zoom=1）进行两轮截图审视；最终确认27个棋盘图片请求及6个改色环境图片请求。页面错误为0，仍有原先已知X4122精度警告。此为Edge手机视口模拟，未做原生手机GPU性能测量。
+- [默认视角](../art/reviews/temple-reference-palette-default.png)、[完整手机布局](../art/reviews/temple-reference-palette-mobile.png)、[转动视角](../art/reviews/temple-reference-palette-turned.png)、[实际捕获参数与请求](../art/reviews/temple-reference-palette-capture.json)。
+
+待后续：用户希望最终画面有氤氲朦胧感，本轮明确暂缓实现。后续单独讨论最终后处理的柔化、亮部扩散与远近空气感，避免重新变成全屏灰白蒙层，并保留文字和交互信息的清晰度。
+
+## 纹理体积与首屏加载优化（2026-10-17）
+
+- 用Playwright在全新Edge移动视口（460×1000、DPR=2）测量arttweak初始化页面的实际图片/HDR资源请求；提前将ResourceTiming缓冲区提高到10000，避免默认缓冲区截断导致漏计后加载的敌人部件。场景检查用route会关闭缓存，前后采用相同条件。统计为图片响应体，不包含脚本、字体和页面总耗时，也不是原生手机性能测试。
+- 发现prepareEnemyPuppets原先遍历所有敌人，首屏加载416张原部件图，共54,411,319字节。现仅预备gnawer尺寸参照，其他部件由实际显示的敌人按需请求；代码模型、骨架与动画均不变，编辑器继续使用原图。
+- 新增prepare-runtime-textures.py和gameplayEnemyTextureUrl：621张分割部件派生为最长边256的WebP，完整部件集从70,076,236降到10,042,418字节。原图保留，源UV/裁切比例保持，透明通道与同尺寸重采样结果一致，注册表带版本查询用于刷新缓存；未注册的图片仍走原有URL处理。
+- 石材法线/ORM从512降到256，重采样后重新归一化法线。枫树1100×1024降到512×477、旗幡436×1024降到218×512，改用带透明度的WebP。山、峰、云最长边降到768，背包背景砖图降到256。树/旗幡使用本轮生成的配色图缩小，配色和光照参数保留。
+- 物品两个显示档由最长边256/512改为128/256，重建146个物品共292张小图；备份原始素材保留。卡背、棋盘地板及其法线/ORM仍为256×256；HDR仍128×64、24,629字节。
+- 同一首屏图片请求478次降至91次，接收数据64,467,453降至3,749,919字节（减少94.18%）。按唯一资源去重为63,896,460降至3,583,160字节。敌人初始部件从416降至29张、551,904字节；物品图从3,240,672降至877,346字节。这些是arttweak首屏数据，后续房间按需加载其资源。
+- Playwright验证未显示的emberwing-moth起初没有请求，调用生产创建逻辑后新增16张小图，其30个可见部件全部有纹理、缺失数0；[按需加载记录](../art/reviews/enemy-demand-loading.json)。默认手机视角检查角色轮廓、卡背纹样、树和旗幡边缘；页面错误为0，仍只有已知X4122精度警告。
+- 检查通过：621张部件和4张背景的散列/尺寸/alpha校验；树/旗幡重采样alpha一致；石材法线单位向量与数据图校验；所有敌人朝向/后仰/缩放/动画、场景光照与翻牌/移动、PBR与资源生命周期、定向静态检查、独立预览生产构建。
+- 重建命令：npm run prepare:runtime-textures；资源检查：npm run check:runtime-textures。棋盘256资源仍由prepare:board-textures管理。
+- [加载前后汇总](../art/reviews/texture-loading-audit.json)、[加载前记录](../art/reviews/texture-loading-before.json)、[加载后记录](../art/reviews/texture-loading-after.json)、[缩图后默认画面](../art/reviews/temple-texture-lite-default.png)、[完整手机布局](../art/reviews/temple-texture-lite-mobile.png)。
+
+## Tailscale 渐进式启动（2026-10-17）
+
+- 用户报告通过Tailscale访问arttweak时长时间只有黑底。检查发现index.html只有空HUD，main静态依赖Vue/styles，而VueHud又静态导入GameScene，使整个场景模块树下载完成之前没有任何可见界面。图片按需加载不能解决这一段模块等待。
+- index.html加入内联关键样式、无外部图片的棋盘占位和状态文字；最小boot.js动态导入main，并在入口加载失败时保留可见错误与重载按钮。主入口异步路由初始化的错误也由boot统一接住。
+- VueHud移除静态GameScene导入：先挂载HUD，在nextTick及两个animation frame后移除HTML占位并动态载入场景。场景未就绪时HUD使用inert阻止提前操作，加载/失败状态位于inert区域之外；卸载标记防止异步模块迟到后创建失效场景。
+- 场景构建不等待图片或HDR：先显示基础棋盘，卡背和地板使用对应柔和底色，角色和贴图按原异步逻辑补齐。卡背/IBL等待只控制角落提示，不阻塞首次渲染或后续操作。失败时提供“重新加载”，没有伪造百分比进度。
+- Vite开发/预览缓存策略扩展到带版本号的WebP，实测Cache-Control为public, max-age=31536000, immutable；生成注册表的版本变化会切换URL。避免每次通过远程连接重复下载未改变的敌人小图。
+- Playwright明确阻塞main、scene和棋盘/敌人图片，验证顺序：HTML占位先于main、HUD先于scene、基础棋盘先于贴图、图片到达后补齐36格与3个敌人。另分别中断入口和scene请求，两个重载按钮均可见且可操作。普通游戏入口也通过，成功流程页面错误为0。此为本机人为延迟验证，未宣称测得用户实际Tailscale链路时延。
+- 通过arttweak确定性/存档隔离/视角检查、共享贴图与释放检查、入口JS定向静态检查、VueHud SFC/script/template编译及渐进入口限定生产图构建。既有开发环境缺少eslint-plugin-vue与marked：常规lint仍受缺失插件影响；定向检查使用SFC编译器和JS ESLint，限定构建将marked外置，不算全量生产构建验收。
+- 截图：[HTML即时占位](../art/reviews/progressive-01-html.png)、[HUD先显示](../art/reviews/progressive-02-hud.png)、[基础棋盘与占位色](../art/reviews/progressive-03-board.png)、[贴图补全](../art/reviews/progressive-04-ready.png)、[场景失败重试](../art/reviews/progressive-scene-retry.png)、[入口失败重试](../art/reviews/progressive-entry-retry.png)。[阶段验证记录](../art/reviews/progressive-startup-check.json)。

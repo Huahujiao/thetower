@@ -1,19 +1,19 @@
 import * as THREE from 'three'
 import { createTempleWindRig, updateTempleWindRig, TempleFallingLeaves } from './temple-wind.js'
 import { TempleParallaxBackdrop } from './temple-parallax-backdrop.js'
-import stoneUrl from '../assets/environment/temple-dressed-stone-v1.jpg'
-import masonryUrl from '../assets/environment/temple-foundation-masonry-v1.jpg'
-import gateWoodUrl from '../assets/environment/temple-gate-lacquer-v1.jpg'
+import stoneUrl from '../assets/environment/palette-v1/stone.webp'
+import masonryUrl from '../assets/environment/palette-v1/masonry.webp'
+import gateWoodUrl from '../assets/environment/palette-v1/wood.webp'
 import stoneNormalUrl from '../assets/environment/temple-dressed-stone-v1-normal.png'
 import stoneSurfaceUrl from '../assets/environment/temple-dressed-stone-v1-surface.png'
 import masonryNormalUrl from '../assets/environment/temple-foundation-masonry-v1-normal.png'
 import masonrySurfaceUrl from '../assets/environment/temple-foundation-masonry-v1-surface.png'
-import soilStoneUrl from '../assets/board-floor-plain-v1.jpg'
+import soilStoneUrl from '../assets/environment/palette-v1/soil.webp'
 import { dressedStoneBox, templeStoneMaterial, registerTempleStoneSurface } from './temple-stone-materials.js'
 import { TemplePlatformDepth } from './temple-platform-depth.js'
 import { TempleAtmosphere } from './temple-atmosphere.js'
-import mapleUrl from '../assets/environment/temple-maple-v1.png'
-import bannerUrl from '../assets/environment/temple-banner-v1.png'
+import mapleUrl from '../assets/environment/palette-v1/maple.webp'
+import bannerUrl from '../assets/environment/palette-v1/banner.webp'
 
 // Clear the widest pillar foot by 7.5cm on every side of the board.
 export const TEMPLE_BOUNDARY_INSET = .34
@@ -150,7 +150,9 @@ export class TempleEnvironment {
   plantingBelt(group, room, tileSize, doors = []) {
     const halfX = room.width * tileSize / 2
     const halfZ = room.height * tileSize / 2
-    const width = .9
+    // The soil belt only has to hold the maple trunk. At 0.9 it read as a moat
+    // around the board; the trunk needs roughly half that.
+    const width = .62
     const soilY = -.38
     const outerWallHeight = .48, outerWallY = -.45
     // A uniform narrow inner gap leaves enough support under the whole pillar foot.
@@ -316,7 +318,7 @@ export class TempleEnvironment {
       group.add(mesh)
       return mesh
     }
-    const tree = prop(mapleUrl, 4.0, 3.1, -halfX + 1.65, planting.backZ - .46, planting.soilY - .1)
+    const tree = prop(mapleUrl, 4.0, 3.1, -halfX + 1.65, planting.backZ - .33, planting.soilY - .1)
     tree.name = 'temple-maple-in-planting'
     tree.userData.rootLevel = planting.soilY
     this.windRigs.push(createTempleWindRig(tree, 'tree'))
@@ -339,7 +341,7 @@ export class TempleEnvironment {
       for (let attempt = 0; attempt < 16; attempt++) {
         const seed = i + attempt * 71
         x = rootX + (fraction(seed * 127.1 + 9) + fraction(seed * 73.7 + 19) - 1) * 1.65
-        z = planting.backZ - .12 - fraction(seed * 311.7 + 23) * .64
+        z = planting.backZ - .10 - fraction(seed * 311.7 + 23) * .42
         if (!planting.isOnPath({ x, z })) break
       }
       leafTransform.position.set(x, planting.soilY + .008, z)
@@ -423,11 +425,14 @@ export function createContactShadowTexture() {
   const canvas = document.createElement('canvas')
   canvas.width = canvas.height = 128
   const ctx = canvas.getContext('2d')
-  const gradient = ctx.createRadialGradient(64,64,0,64,64,62)
-  gradient.addColorStop(0,'rgba(9,12,13,.65)')
-  gradient.addColorStop(.35,'rgba(9,12,13,.38)')
-  gradient.addColorStop(.75,'rgba(9,12,13,.12)')
-  gradient.addColorStop(1,'rgba(9,12,13,0)')
+  // Puppets and the player draw no cast shadow, so this patch is all the grounding
+  // the eye gets. It was previously buried under the paving and barely opaque.
+  const gradient = ctx.createRadialGradient(64, 64, 0, 64, 64, 62)
+  gradient.addColorStop(0, 'rgba(6,9,10,.86)')
+  gradient.addColorStop(.28, 'rgba(6,9,10,.66)')
+  gradient.addColorStop(.58, 'rgba(6,9,10,.34)')
+  gradient.addColorStop(.82, 'rgba(6,9,10,.11)')
+  gradient.addColorStop(1, 'rgba(6,9,10,0)')
   ctx.fillStyle = gradient
   ctx.fillRect(0,0,128,128)
   const texture = new THREE.CanvasTexture(canvas)

@@ -1,0 +1,70 @@
+{
+  "files": {
+    "stone.webp": {
+      "source": "environment/temple-dressed-stone-v1.jpg",
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 4236,
+      "sourceSha256": "8619e523356aef7b9e62b7ad0ec8f1d3e5392e4a3f6d73ac74f0489c916c2416",
+      "derivedSha256": "ea936fec40e2da74c19d68684a33ad828a3f7bc7a27f11ed9afdc61f4e5d1346",
+      "sha256": "7b152eedb51003ce06966055b220adf4e3060e6b1dc54c66171bf14612e4079e"
+    },
+    "masonry.webp": {
+      "source": "environment/temple-foundation-masonry-v1.jpg",
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 3358,
+      "sourceSha256": "d5793b2425cebe25fed5bb99d2f31702dac32011dd03058c98b81fe63bd6559c",
+      "derivedSha256": "ef6acb7ffdbdd66f238d8c8c6e4307e466e1079b2612b76c6ef99acd92eb7739",
+      "sha256": "4ccba37b3627bbbb4c9e8c4742f63dcb4644ded743d795a55be0679424bdb00d"
+    },
+    "wood.webp": {
+      "source": "environment/temple-gate-lacquer-v1.jpg",
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 2002,
+      "sourceSha256": "6b9810b0514f35282981bea18f4d57916e0a2c3c5383fd5b802a33df81c6c704",
+      "derivedSha256": "3bd15a020343dd90ae0400c35c8a557bf832418e01b32026f16654ee54d862f7",
+      "sha256": "2162fc73c90c006edbc77f5c70f4d90b8ad401f4561cd729d3481dfaa8d5bea7"
+    },
+    "soil.webp": {
+      "source": "board-floor-plain-v1.jpg",
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 1720,
+      "sourceSha256": "f551658447ee54ff56f06797fe68ed5ca1d389ff8a5a1af423a21ede28566315",
+      "derivedSha256": "7d0715c7561e0a7fa484adf31e51c6a291e56b085c3d397becf59ee42d76f253",
+      "sha256": "e418cb0c51de5374b46bde6f3e89721fa5a088e99b764bf0a3682443ab6fcb16"
+    },
+    "maple.webp": {
+      "source": "environment/temple-maple-v1.png",
+      "size": [
+        512,
+        477
+      ],
+      "bytes": 99608,
+      "sourceSha256": "774b656fddc5ba2e7b6dd8b9ad0584fdb9e066f06361615d7b94f8bc431366be",
+      "derivedSha256": "df60eb0737c60cf6d4038a262a8f008e6e09a1026cbe4c67360f7bd8ed559cda",
+      "sha256": "7ff6dc9b7907f1c629f27f1305eeb1f86899b4113fa50f3c2cdfc30d06d70d56"
+    },
+    "banner.webp": {
+      "source": "environment/temple-banner-v1.png",
+      "size": [
+        218,
+        512
+      ],
+      "bytes": 39902,
+      "sourceSha256": "e92628faee149c143eb8952ac13e2b73fb7fb514b38024fc5aa6bb28886ef1db",
+      "derivedSha256": "ab45a8917a98ba59e9150cd84f98f4e25d5de36926266a86711ba88fbfe60458",
+      "sha256": "1af6d2a5b4d429f5e77fa1e400eb04d26a1bb66a227eb38a6c1dcb67d8be8489"
+    }
+  }
+}

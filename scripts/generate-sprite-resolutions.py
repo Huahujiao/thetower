@@ -8,12 +8,13 @@ first, then ``-medium``. Requires Pillow: ``python -m pip install pillow``.
 from pathlib import Path
 import argparse
 import shutil
+import runpy
 
 from PIL import Image
 
 
 DEFAULT_ROOT = Path(__file__).resolve().parents[1] / "src" / "assets" / "inventory"
-VARIANTS = (("small", 256), ("medium", 512))
+VARIANTS = (("small", 128), ("medium", 256))
 
 
 def resize_to_max(image: Image.Image, max_edge: int) -> Image.Image:
@@ -69,7 +70,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=DEFAULT_ROOT, help="inventory sprite directory")
     parser.add_argument("--source-root", type=Path, help="optional source directory outside the runtime output tree")
-    parser.add_argument("--small-edge", type=int, default=256, help="maximum edge of the small variant")
+    parser.add_argument("--small-edge", type=int, default=128, help="maximum edge of the small variant")
     parser.add_argument("--small-only", action="store_true", help="generate only the small variant")
     parser.add_argument("--only", action="append", default=[], help="source sprite stem to process; repeatable")
     parser.add_argument("--trim-transparent", action="store_true", help="crop fully transparent outer edges before making variants")
@@ -80,6 +81,8 @@ def main() -> None:
     variants = (("small", max(16, args.small_edge)),) if args.small_only else (("small", max(16, args.small_edge)), VARIANTS[1])
     count = generate(args.root, set(args.only), args.trim_transparent, args.backup_original, max(1, min(255, args.alpha_threshold)), args.from_uncropped, args.source_root, variants)
     print(f"Generated {count} sprite variants in {args.root}")
+    if args.root.resolve() == DEFAULT_ROOT.resolve():
+        runpy.run_path(str(Path(__file__).with_name("prepare-inventory-sprite-bounds.py")))["prepare"]()
 
 
 if __name__ == "__main__":

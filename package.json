@@ -44,7 +44,11 @@
     "check:temple-architecture": "python scripts/generate-temple-stone-surfaces.py --check && node scripts/temple-architecture-check.mjs",
     "check:temple-lighting": "node scripts/temple-lighting-check.mjs && node scripts/card-relief-check.mjs",
     "prepare:temple-ibl": "node scripts/download-temple-ibl.mjs && node scripts/prepare-temple-ibl.mjs",
-    "check:temple-pbr": "node scripts/prepare-temple-ibl.mjs --check && python scripts/generate-board-pbr-surfaces.py --check && node scripts/temple-pbr-check.mjs"
+    "check:temple-pbr": "node scripts/prepare-temple-ibl.mjs --check && python scripts/generate-board-pbr-surfaces.py --check && python scripts/prepare-board-runtime.py --check && python scripts/prepare-temple-palette.py --check && node scripts/temple-pbr-check.mjs",
+    "prepare:board-textures": "python scripts/prepare-board-runtime.py",
+    "prepare:scene-colors": "python scripts/prepare-board-runtime.py && python scripts/prepare-temple-palette.py",
+    "prepare:runtime-textures": "python scripts/prepare-runtime-textures.py && python scripts/prepare-temple-palette.py && python scripts/generate-temple-stone-surfaces.py && python scripts/generate-sprite-resolutions.py",
+    "check:runtime-textures": "python scripts/prepare-runtime-textures.py --check && python scripts/prepare-temple-palette.py --check && python scripts/generate-temple-stone-surfaces.py --check"
   },
   "dependencies": {
     "@vitejs/plugin-vue": "^6.0.9",

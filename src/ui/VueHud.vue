@@ -1,6 +1,6 @@
 <template>
   <div
-    class="vue-hud-root"
+    class="vue-hud-root" :inert="!scene" :aria-busy="!scene"
   >
     <div class="hud-top">
       <div class="hud-stats">
@@ -79,7 +79,8 @@
         }}/{{ state.player.experienceToNext }}</span>
       </div>
     </div>
-    <div id="app" ref="sceneContainer" :class="{ 'scene-battle-active': state.battle.active }" aria-label="game board">
+    <div id="app" ref="sceneContainer" :class="{ 'scene-battle-active': state.battle.active }" :data-scene-state="scene ? 'ready' : sceneError ? 'error' : 'loading'" aria-label="game board">
+      <span v-if="scene && sceneAssetsLoading" class="scene-asset-status" role="status">正在补全卡牌与光照…</span>
       <section v-if="statusEntries.length" class="scene-status-tray" :aria-label="LABELS.status">
         <button
           v-for="entry in statusEntries" :key="entry.id" type="button"
@@ -151,10 +152,10 @@
     <section v-show="detailPanelVisible" class="detail-panel">
       <div class="detail-card" :class="{ 'has-detail-sprite': detailSpriteSources }" data-action="close-detail" @click="handleAction('close-detail')">
         <div class="detail-icon" aria-hidden="true">
-          <img
-            v-if="detailSpriteSources" class="detail-sprite" :src="detailSpriteSources.medium"
-            :alt="detailPanel?.title || ''" draggable="false" decoding="async"
-          ><span v-else>{{ detailPanel ? detailIcon : 'DETAIL' }}</span>
+          <InventorySprite
+            v-if="detailSpriteSources" :sources="detailSpriteSources"
+            sprite-class="detail-sprite" :alt="detailPanel?.title || ''"
+          /><span v-else>{{ detailPanel ? detailIcon : 'DETAIL' }}</span>
         </div>
         <div class="detail-content">
           <div class="detail-head">
@@ -177,11 +178,11 @@
         </div>
         <div v-if="detailUpgradeRoutes.length" class="detail-upgrade-routes" aria-hidden="true">
           <div v-for="route in detailUpgradeRoutes" :key="route.key" class="detail-upgrade-route">
-            <span class="detail-upgrade-icon"><img v-if="route.a.src" :src="route.a.src" alt="" draggable="false"></span>
+            <span class="detail-upgrade-icon"><InventorySprite v-if="route.a.sources" :sources="route.a.sources" sprite-class="detail-upgrade-sprite" /></span>
             <span class="detail-upgrade-plus" aria-hidden="true"></span>
-            <span class="detail-upgrade-icon"><img v-if="route.b.src" :src="route.b.src" alt="" draggable="false"></span>
+            <span class="detail-upgrade-icon"><InventorySprite v-if="route.b.sources" :sources="route.b.sources" sprite-class="detail-upgrade-sprite" /></span>
             <span class="detail-upgrade-arrow" aria-hidden="true"></span>
-            <span class="detail-upgrade-icon result"><img v-if="route.result.src" :src="route.result.src" alt="" draggable="false"></span>
+            <span class="detail-upgrade-icon result"><InventorySprite v-if="route.result.sources" :sources="route.result.sources" sprite-class="detail-upgrade-sprite" /></span>
           </div>
         </div>
       </div>
@@ -507,10 +508,16 @@
       </button>
     </div>
   </div>
+  <section v-if="!scene" class="scene-loading-state" role="status" aria-live="polite">
+    <span v-if="!sceneError" class="scene-loading-mark" aria-hidden="true"></span>
+    <strong>{{ sceneError ? '场景暂时没有加载完成' : '正在铺设场景' }}</strong>
+    <span>{{ sceneError ? '请检查网络连接后重新加载。' : '界面已就绪，场景和角色将陆续显示' }}</span>
+    <button v-if="sceneError" type="button" @click="reloadPage">重新加载</button>
+  </section>
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, reactive, ref, shallowRef, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, shallowRef, watch } from 'vue'
 import { BALL_LABELS } from '../game/model/stamina-deck.js'
 import StaminaCost from './StaminaCost.vue'
 import StaminaHand from './StaminaHand.vue'
@@ -520,9 +527,10 @@ import { getRelicDefinition } from '../game/data/relics.js'
 import { isTotemBadge } from '../game/data/totems.js'
 import { consumableEnergyCost } from '../game/rules/consumables.js'
 import { INVENTORY_COLUMNS, INVENTORY_ROWS } from '../game/run.js'
-import { GameScene } from '../render/scene.js'
+import { finishStartup } from './startup-status.js'
 import { DETAIL_HOLD_MS } from '../interaction-timing.js'
 import { bagShapeLayout } from './bag-shape.js'
+import { inventorySpriteStyle } from './inventory-sprite-layout.js'
 import { automaticStashPosition, inventoryDropAnchorAtCenter, inventoryItemLayout, stashPositionAtPoint as stashPositionForPoint } from './inventory-layout.js'
 import { itemSpriteSources } from './item-sprites.js'
 import { playerStatusEntries } from './status-presentation.js'
@@ -566,6 +574,9 @@ const detailRevision = ref(0)
 const uiRevision = ref(0)
 const sceneContainer = ref(null)
 const scene = shallowRef(null)
+const sceneError = ref(false)
+const sceneAssetsLoading = ref(false)
+let sceneDisposed = false
 const topPanel = ref(null)
 const craftOpen = ref(false)
 const helpOpen = ref(false)
@@ -690,7 +701,6 @@ const backpackItems = computed(() => {
       edgeNames: edges.map((visible, index) => visible ? EDGE_NAMES[index] : null).filter(Boolean),
       style: { gridColumn: x + 1, gridRow: y + 1, borderWidth: edges.map((edge) => edge ? '1px' : '0').join(' ') },
     }))
-    const oddRotation = placement.rotation % 2 === 1
     const isDragging = bagGesture.value?.dragging && bagGesture.value.item?.uid === item.uid
     const isConflict = dragPreview.value?.conflicts?.some((conflict) => conflict.item?.uid === item.uid)
     const relicStateClass = item.type === 'relic'
@@ -709,7 +719,7 @@ const backpackItems = computed(() => {
       shapeStyle: { gridTemplateColumns: `repeat(${shape[0].length}, 1fr)`, gridTemplateRows: `repeat(${shape.length}, 1fr)` },
       nameStyle: layout.name ? { gridColumn: `${layout.name.x + 1} / span ${layout.name.width}`, gridRow: layout.name.y + 1 } : undefined,
       detailStyle: layout.detail ? { gridColumn: `${layout.detail.x + 1} / span ${layout.detail.width}`, gridRow: layout.detail.y + 1 } : undefined,
-      spriteStyle: { width: oddRotation ? `${shape.length / shape[0].length * 100}%` : '100%', height: oddRotation ? `${shape[0].length / shape.length * 100}%` : '100%', transform: `translate(-50%, -50%) rotate(${placement.rotation * 90}deg)` },
+      spriteStyle: inventorySpriteStyle(placement.rotation),
     }
   })
 })
@@ -761,7 +771,7 @@ const stashItems = computed(() => state.value.inventoryStash.map((item, index) =
     cells: layout.cells.map(({ x, y, edges }) => ({ x, y, index: `${item.uid}-${x}-${y}`, style: { gridColumn: x + 1, gridRow: y + 1, borderWidth: edges.map((edge) => edge ? '1px' : '0').join(' ') } })),
     shapeStyle: { gridTemplateColumns: `repeat(${shape[0].length}, 1fr)`, gridTemplateRows: `repeat(${shape.length}, 1fr)` },
     spriteSources: itemSpriteSources(item),
-    spriteStyle: { width: rotation % 2 ? `${shape.length / shape[0].length * 100}%` : '100%', height: rotation % 2 ? `${shape[0].length / shape.length * 100}%` : '100%', transform: `translate(-50%, -50%) rotate(${rotation * 90}deg)` },
+    spriteStyle: inventorySpriteStyle(rotation),
     itemClasses: ['bag-item', 'stash-item-visual', item.type, ...(itemSpriteSources(item) ? ['has-sprite'] : []), ...(item.attribute ? [`attribute-${item.attribute}`] : [])],
     itemStyle: { left: `${position.x}%`, top: `${position.y}%`, width: `${dimensions.pixelWidth}px`, height: `${dimensions.pixelHeight}px` },
   }
@@ -781,7 +791,7 @@ const draggedItemView = computed(() => {
     cells: layout.cells.map(({ x, y, edges }) => ({ x, y, index: `${item.uid}-${x}-${y}`, style: { gridColumn: x + 1, gridRow: y + 1, borderWidth: edges.map((edge) => edge ? '1px' : '0').join(' ') } })),
     shapeStyle: { gridTemplateColumns: `repeat(${shape[0].length}, 1fr)`, gridTemplateRows: `repeat(${shape.length}, 1fr)` },
     spriteSources: itemSpriteSources(item),
-    spriteStyle: { width: gesture.rotation % 2 ? `${shape.length / shape[0].length * 100}%` : '100%', height: gesture.rotation % 2 ? `${shape[0].length / shape.length * 100}%` : '100%', transform: `translate(-50%, -50%) rotate(${gesture.rotation * 90}deg)` },
+    spriteStyle: inventorySpriteStyle(gesture.rotation),
     itemClasses: ['bag-item', 'drag-floating', item.type, ...(itemSpriteSources(item) ? ['has-sprite'] : []), ...(item.attribute ? [`attribute-${item.attribute}`] : [])],
     previewStyle: {
       left: `${gesture.pointerX}px`, top: `${gesture.pointerY}px`, width: `${cellWidth * shape[0].length}px`, height: `${cellHeight * shape.length}px`,
@@ -835,9 +845,9 @@ const detailSpriteSources = computed(() => {
 })
 const detailUpgradeRoutes = computed(() => upgradeRecipesForItem(detailPanel.value?.itemId).map((recipe) => ({
   key: `${recipe.a}:${recipe.b}:${recipe.result}`,
-  a: { id: recipe.a, src: itemSpriteSources({ id: recipe.a })?.small || null },
-  b: { id: recipe.b, src: itemSpriteSources({ id: recipe.b })?.small || null },
-  result: { id: recipe.result, src: itemSpriteSources({ id: recipe.result })?.small || null },
+  a: { id: recipe.a, sources: itemSpriteSources({ id: recipe.a }) },
+  b: { id: recipe.b, sources: itemSpriteSources({ id: recipe.b }) },
+  result: { id: recipe.result, sources: itemSpriteSources({ id: recipe.result }) },
 })))
 
 watch(merchantTabs, (tabs) => {
@@ -1378,6 +1388,30 @@ function updateReveal() {
   if (run.persistenceEnabled && typeof localStorage !== 'undefined') localStorage.setItem('v2_opt_reveal', reveal.value ? '1' : '0')
 }
 
+function reloadPage() { window.location.reload() }
+
+async function mountGameScene() {
+  // Let the HUD reach the screen before fetching/constructing the renderer.
+  await nextTick()
+  await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+  if (sceneDisposed) return
+  finishStartup()
+  try {
+    const { GameScene } = await import('../render/scene.js')
+    if (sceneDisposed) return
+    scene.value = new GameScene(run, sceneContainer.value)
+    run.setDebugReveal(reveal.value)
+    sceneAssetsLoading.value = true
+    // Basic geometry is already visible; these promises never gate first paint.
+    await Promise.allSettled([scene.value.boardTextures.ready, scene.value.templeIBL?.ready])
+    if (!sceneDisposed) sceneAssetsLoading.value = false
+  } catch (error) {
+    if (sceneDisposed) return
+    sceneError.value = true
+    console.error('Scene startup failed:', error)
+  }
+}
+
 onMounted(() => {
   // Subscribe Vue before constructing Three.js.  GameScene performs an
   // initial rebuild in its constructor and also subscribes to the same model;
@@ -1389,8 +1423,7 @@ onMounted(() => {
     if (run.detailPanel) topPanel.value = null
     detailPanelVisible.value = Boolean(run.detailPanel)
   }))
-  scene.value = new GameScene(run, sceneContainer.value)
-  run.setDebugReveal(reveal.value)
+  void mountGameScene()
   window.addEventListener('touchstart', onWindowTouchStart, { passive: false, capture: true })
   window.addEventListener('touchmove', onWindowTouchMove, { passive: false })
   window.addEventListener('touchend', onWindowTouchEnd, { passive: false, capture: true })
@@ -1399,6 +1432,7 @@ onMounted(() => {
   document.addEventListener('visibilitychange', onInteractionInterrupt)
 })
 onBeforeUnmount(() => {
+  sceneDisposed = true
   window.removeEventListener('touchstart', onWindowTouchStart, true)
   window.removeEventListener('touchmove', onWindowTouchMove)
   window.removeEventListener('touchend', onWindowTouchEnd, true)

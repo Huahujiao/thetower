@@ -25,9 +25,10 @@ def maps():
         rgb = np.asarray(image,dtype=np.float32)/255
         luma = rgb @ np.array([.2126,.7152,.0722])
         grain = np.clip((blur(luma,.7)-blur(luma,3))*2,-.08,.08)
-        # Restrained worn ornament: avoid a pale metallic sheen across the whole pattern.
-        rough = np.clip(.76-raised*.22+grain,.50,.85)
-        metal = raised * dict(neutral=.28,scorch=.20,wither=.18,drown=.24,blocked=.12)[kind]
+        # Matte relief follows the raised ornament without a metallic finish.
+        inlay = smooth(raised,.06,.65)
+        rough = np.clip(.86-inlay*.12+grain*.4,.70,.90)
+        metal = np.zeros_like(inlay)
         ao = 1-np.clip((blur(height,2)-height)*.5,0,.16)
         yield 'board-card-back-'+kind+'-surface-v1.png', np.uint8(np.stack([ao,rough,metal],axis=-1)*255+.5)
     for kind in ['a','b','c','d']:

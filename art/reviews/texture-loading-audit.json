@@ -1,0 +1,60 @@
+{
+  "method": "Fresh Edge mobile context through Playwright; /arttweak default camera, image and HDR response bodies only; cache disabled equally by scene inspection route; not a whole-page or phone-speed benchmark.",
+  "before": {
+    "requests": 478,
+    "receivedBytes": 64467453,
+    "uniqueFiles": 476,
+    "uniqueBytes": 63896460,
+    "groups": {
+      "scenery": {
+        "files": 14,
+        "bytes": 4663429
+      },
+      "other": {
+        "files": 2,
+        "bytes": 340148
+      },
+      "inventory": {
+        "files": 17,
+        "bytes": 3240672
+      },
+      "board": {
+        "files": 27,
+        "bytes": 1240892
+      },
+      "enemies": {
+        "files": 416,
+        "bytes": 54411319
+      }
+    }
+  },
+  "after": {
+    "requests": 91,
+    "receivedBytes": 3749919,
+    "uniqueFiles": 89,
+    "uniqueBytes": 3583160,
+    "groups": {
+      "scenery": {
+        "files": 15,
+        "bytes": 822469
+      },
+      "other": {
+        "files": 1,
+        "bytes": 90549
+      },
+      "inventory": {
+        "files": 17,
+        "bytes": 877346
+      },
+      "board": {
+        "files": 27,
+        "bytes": 1240892
+      },
+      "enemies": {
+        "files": 29,
+        "bytes": 551904
+      }
+    }
+  },
+  "reduction": 0.9418323692732207
+}

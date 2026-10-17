@@ -5,7 +5,7 @@ function enemyAssetCache() {
   const configure = server => {
     server.middlewares.use((req, res, next) => {
       const url = new globalThis.URL(req.url, 'http://localhost')
-      if (url.pathname.startsWith('/assets/enemies/') && ((url.pathname.endsWith('.png') && url.searchParams.has('v'))
+      if (url.pathname.startsWith('/assets/enemies/') && ((/\.(?:png|webp)$/.test(url.pathname) && url.searchParams.has('v'))
         || /^\/assets\/enemies\/thumbnails\/[a-z-]+\/[a-z0-9-]+-[a-f0-9]{20}\.webp$/.test(url.pathname))) {
         const writeHead = res.writeHead
         res.writeHead = function (statusCode, ...args) {

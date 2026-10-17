@@ -2,12 +2,17 @@ import * as THREE from 'three'
 import { setSurfaceColor } from './surface-color.js'
 
 // Room-local: the sun and its target follow board panning together.
+// The rig used to flood the room with ambient plus hemisphere fill, which
+// washed the painted albedo out to the same grey everywhere and left the whole
+// frame in one narrow value band. Most of that fill is now carried by the IBL,
+// so the key can stay the only thing modelling form and the painted surfaces
+// keep their own colour.
 export const TEMPLE_LIGHTING = Object.freeze({
   keyPosition: Object.freeze([-4, 8, -7]),
-  keyColor: 0xf4f5ef, keyIntensity: 2.8,
-  ambientColor: 0xd8ded5, ambientIntensity: .90,
-  skyColor: 0xb6d0d6, groundColor: 0x667568, skyIntensity: .85,
-  fillPosition: Object.freeze([4, 5, 6]), fillColor: 0xc1d9e0, fillIntensity: .25,
+  keyColor: 0xf6ecdb, keyIntensity: 2.35,
+  ambientColor: 0xd8ded5, ambientIntensity: .34,
+  skyColor: 0xa8c4cf, groundColor: 0x4d5850, skyIntensity: .46,
+  fillPosition: Object.freeze([4, 5, 6]), fillColor: 0xa8c2cc, fillIntensity: .16,
 })
 
 export function addTempleLighting(parent) {
@@ -37,10 +42,10 @@ export function addTempleLighting(parent) {
 
 export function createTempleGroundMaterial(texture, options = {}, maps = {}) {
   const material = new THREE.MeshPhysicalMaterial({
-    map: texture, normalMap: maps.normal || null, normalScale: new THREE.Vector2(.35, .35),
+    map: texture, normalMap: maps.normal || null, normalScale: new THREE.Vector2(.8, .8),
     roughnessMap: maps.surface || null, aoMap: maps.surface || null, aoMapIntensity: .6,
     roughness: maps.surface ? 1 : .34, metalness: 0,
-    clearcoat: 0, specularIntensity: .6,
+    clearcoat: 0, specularIntensity: .32,
     side: THREE.DoubleSide,
     ...options,
   })

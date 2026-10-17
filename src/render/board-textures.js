@@ -1,53 +1,81 @@
 import * as THREE from 'three'
-import floorAUrl from '../assets/board-floor-temple-a-v4.jpg'
-import floorBUrl from '../assets/board-floor-temple-b-v4.jpg'
-import floorCUrl from '../assets/board-floor-temple-c-v4.jpg'
-import floorDUrl from '../assets/board-floor-temple-d-v4.jpg'
-import cardBackUrl from '../assets/board-card-back-temple-v2.jpg'
-import blockedBackUrl from '../assets/board-card-back-blocked-v1.jpg'
-import scorchBackUrl from '../assets/board-card-back-scorch-temple-v2.jpg'
-import witherBackUrl from '../assets/board-card-back-wither-temple-v2.jpg'
-import drownBackUrl from '../assets/board-card-back-drown-temple-v2.jpg'
+import floorAUrl from '../assets/board-runtime/floor-a-color.webp'
+import floorBUrl from '../assets/board-runtime/floor-b-color.webp'
+import floorCUrl from '../assets/board-runtime/floor-c-color.webp'
+import floorDUrl from '../assets/board-runtime/floor-d-color.webp'
+import cardBackUrl from '../assets/board-runtime/card-neutral-color.webp'
+import blockedBackUrl from '../assets/board-runtime/card-blocked-color.webp'
+import scorchBackUrl from '../assets/board-runtime/card-scorch-color.webp'
+import witherBackUrl from '../assets/board-runtime/card-wither-color.webp'
+import drownBackUrl from '../assets/board-runtime/card-drown-color.webp'
 
-import neutralNormalUrl from '../assets/board-card-back-neutral-normal-v1.png'
-import scorchNormalUrl from '../assets/board-card-back-scorch-normal-v1.png'
-import witherNormalUrl from '../assets/board-card-back-wither-normal-v1.png'
-import drownNormalUrl from '../assets/board-card-back-drown-normal-v1.png'
-import blockedNormalUrl from '../assets/board-card-back-blocked-normal-v1.png'
+import neutralNormalUrl from '../assets/board-runtime/card-neutral-normal.png'
+import scorchNormalUrl from '../assets/board-runtime/card-scorch-normal.png'
+import witherNormalUrl from '../assets/board-runtime/card-wither-normal.png'
+import drownNormalUrl from '../assets/board-runtime/card-drown-normal.png'
+import blockedNormalUrl from '../assets/board-runtime/card-blocked-normal.png'
 
-import neutralSurfaceUrl from '../assets/board-card-back-neutral-surface-v1.png'
-import scorchSurfaceUrl from '../assets/board-card-back-scorch-surface-v1.png'
-import witherSurfaceUrl from '../assets/board-card-back-wither-surface-v1.png'
-import drownSurfaceUrl from '../assets/board-card-back-drown-surface-v1.png'
-import blockedSurfaceUrl from '../assets/board-card-back-blocked-surface-v1.png'
-import flooraNormalUrl from '../assets/board-floor-a-normal-v1.png'
-import flooraSurfaceUrl from '../assets/board-floor-a-surface-v1.png'
-import floorbNormalUrl from '../assets/board-floor-b-normal-v1.png'
-import floorbSurfaceUrl from '../assets/board-floor-b-surface-v1.png'
-import floorcNormalUrl from '../assets/board-floor-c-normal-v1.png'
-import floorcSurfaceUrl from '../assets/board-floor-c-surface-v1.png'
-import floordNormalUrl from '../assets/board-floor-d-normal-v1.png'
-import floordSurfaceUrl from '../assets/board-floor-d-surface-v1.png'
+import neutralSurfaceUrl from '../assets/board-runtime/card-neutral-surface.png'
+import scorchSurfaceUrl from '../assets/board-runtime/card-scorch-surface.png'
+import witherSurfaceUrl from '../assets/board-runtime/card-wither-surface.png'
+import drownSurfaceUrl from '../assets/board-runtime/card-drown-surface.png'
+import blockedSurfaceUrl from '../assets/board-runtime/card-blocked-surface.png'
+import flooraNormalUrl from '../assets/board-runtime/floor-a-normal.png'
+import flooraSurfaceUrl from '../assets/board-runtime/floor-a-surface.png'
+import floorbNormalUrl from '../assets/board-runtime/floor-b-normal.png'
+import floorbSurfaceUrl from '../assets/board-runtime/floor-b-surface.png'
+import floorcNormalUrl from '../assets/board-runtime/floor-c-normal.png'
+import floorcSurfaceUrl from '../assets/board-runtime/floor-c-surface.png'
+import floordNormalUrl from '../assets/board-runtime/floor-d-normal.png'
+import floordSurfaceUrl from '../assets/board-runtime/floor-d-surface.png'
+
+// Card tone lives in its own low-resolution layer, kept apart from the painted
+// pattern so the scene can pick a different stain layout per tile.
+import neutralWear0 from '../assets/board-runtime/card-neutral-wear0.png'
+import neutralWear1 from '../assets/board-runtime/card-neutral-wear1.png'
+import neutralWear2 from '../assets/board-runtime/card-neutral-wear2.png'
+import scorchWear0 from '../assets/board-runtime/card-scorch-wear0.png'
+import scorchWear1 from '../assets/board-runtime/card-scorch-wear1.png'
+import scorchWear2 from '../assets/board-runtime/card-scorch-wear2.png'
+import witherWear0 from '../assets/board-runtime/card-wither-wear0.png'
+import witherWear1 from '../assets/board-runtime/card-wither-wear1.png'
+import witherWear2 from '../assets/board-runtime/card-wither-wear2.png'
+import drownWear0 from '../assets/board-runtime/card-drown-wear0.png'
+import drownWear1 from '../assets/board-runtime/card-drown-wear1.png'
+import drownWear2 from '../assets/board-runtime/card-drown-wear2.png'
+import blockedWear0 from '../assets/board-runtime/card-blocked-wear0.png'
+import blockedWear1 from '../assets/board-runtime/card-blocked-wear1.png'
+import blockedWear2 from '../assets/board-runtime/card-blocked-wear2.png'
 
 const BACK_SURFACE_URLS = {neutral:neutralSurfaceUrl,scorch:scorchSurfaceUrl,wither:witherSurfaceUrl,drown:drownSurfaceUrl,blocked:blockedSurfaceUrl}
 const FLOOR_NORMAL_URLS = [flooraNormalUrl,floorbNormalUrl,floorcNormalUrl,floordNormalUrl]
 const FLOOR_SURFACE_URLS = [flooraSurfaceUrl,floorbSurfaceUrl,floorcSurfaceUrl,floordSurfaceUrl]
 
-const SIZE = 512
+const SIZE = 256
 // Display-only exposure: keep bare stone behind the illustrated card backs.
 // Source artwork stays intact; the shared inset ornament is composited at runtime.
 export const FLOOR_URLS = [floorAUrl, floorBUrl, floorCUrl, floorDUrl]
 const NEUTRAL_BACK_BRIGHTNESS = 1
-const BLOCKED_BACK_COLOR = '#363a40'
+const BLOCKED_BACK_COLOR = '#687574'
+const BACK_PLACEHOLDER_COLORS = { neutral: '#8d9b91', scorch: '#b18d7a', wither: '#aaa789', drown: '#7d9ca0' }
 const BACK_URLS = { neutral: cardBackUrl, scorch: scorchBackUrl, wither: witherBackUrl, drown: drownBackUrl }
+const CARD_WEAR_URLS = {
+  neutral: [neutralWear0, neutralWear1, neutralWear2],
+  scorch: [scorchWear0, scorchWear1, scorchWear2],
+  wither: [witherWear0, witherWear1, witherWear2],
+  drown: [drownWear0, drownWear1, drownWear2],
+  blocked: [blockedWear0, blockedWear1, blockedWear2],
+}
+export const CARD_WEAR_VARIANTS = CARD_WEAR_URLS.neutral.length
 const BACK_NORMAL_URLS = { neutral: neutralNormalUrl, scorch: scorchNormalUrl, wither: witherNormalUrl, drown: drownNormalUrl, blocked: blockedNormalUrl }
 
 function drawFloorRim(ctx) {
   ctx.save()
+  ctx.scale(SIZE / 512, SIZE / 512)
   // Match the original inset ornament's 94%-sized plane on a full floor tile.
-  ctx.translate(SIZE / 2, SIZE / 2)
+  ctx.translate(256, 256)
   ctx.scale(.94, .94)
-  ctx.translate(-SIZE / 2, -SIZE / 2)
+  ctx.translate(-256, -256)
   ctx.strokeStyle = '#b6a37a'
   ctx.globalAlpha = .7
   ctx.lineWidth = 3
@@ -90,7 +118,7 @@ export class BoardTextures {
   constructor() {
     this.disposed = false
     this.floors = FLOOR_URLS.map(() => surface((ctx, image) => {
-      ctx.fillStyle = '#253332'
+      ctx.fillStyle = '#82988f'
       ctx.fillRect(0, 0, SIZE, SIZE)
       // Each generated image is one complete metre-scale slab.
       if (image) ctx.drawImage(image, 0, 0, SIZE, SIZE)
@@ -100,7 +128,7 @@ export class BoardTextures {
     this.backs = new Map()
     for (const attribute of Object.keys(BACK_URLS)) {
       this.backs.set(attribute, surface((ctx, image) => {
-        ctx.fillStyle = attribute === 'neutral' ? '#5f5b52' : '#49463f'
+        ctx.fillStyle = BACK_PLACEHOLDER_COLORS[attribute]
         ctx.fillRect(0, 0, SIZE, SIZE)
         if (image) {
           if (attribute === 'neutral') ctx.filter = `brightness(${NEUTRAL_BACK_BRIGHTNESS})`
@@ -110,6 +138,22 @@ export class BoardTextures {
       }))
     }
     for (const [attribute, entry] of this.backs) entry.texture.userData.cardBackKind = attribute
+    // Tone variants are data, not colour: sampled as a multiplier.
+    this.cardWear = new Map()
+    const wearPending = []
+    for (const [kind, urls] of Object.entries(CARD_WEAR_URLS)) {
+      const list = urls.map((url) => {
+        const entry = surface((ctx, image) => {
+          ctx.fillStyle = '#808080'
+          ctx.fillRect(0, 0, SIZE, SIZE)
+          if (image) ctx.drawImage(image, 0, 0, SIZE, SIZE)
+        }, THREE.NoColorSpace)
+        entry.texture.userData.cardWearKind = kind
+        wearPending.push(this.load(url, [entry]))
+        return entry.texture
+      })
+      this.cardWear.set(kind, list)
+    }
     this.blockedBack = surface((ctx, image) => {
       ctx.fillStyle = BLOCKED_BACK_COLOR
       ctx.fillRect(0, 0, SIZE, SIZE)
@@ -131,6 +175,7 @@ export class BoardTextures {
     this.floorNormals = FLOOR_NORMAL_URLS.map(() => dataSurface('#8080ff'))
     this.floorSurfaces = FLOOR_SURFACE_URLS.map(() => dataSurface('#ffb300'))
     this.ready = Promise.all([
+      ...wearPending,
       ...Object.entries(BACK_SURFACE_URLS).map(([kind, url]) => this.load(url, [this.backSurfaces.get(kind)])),
       ...FLOOR_NORMAL_URLS.map((url, index) => this.load(url, [this.floorNormals[index]])),
       ...FLOOR_SURFACE_URLS.map((url, index) => this.load(url, [this.floorSurfaces[index]])),
@@ -170,6 +215,14 @@ export class BoardTextures {
     return this.backNormals.get(texture?.userData.cardBackKind)?.texture || null
   }
 
+  // Wear is a greyscale multiplier encoded so byte 128 means "no change".
+  wear(texture, variant = 0) {
+    const kind = texture?.userData?.cardBackKind
+    const list = this.cardWear.get(kind ? kind : 'neutral')
+    if (!list) return null
+    return list[Math.abs(Math.trunc(variant)) % list.length]
+  }
+
   surfaceData(texture) {
     if (texture?.userData.boardFloor) {
       const index = texture.userData.floorVariant ?? 0
@@ -181,6 +234,7 @@ export class BoardTextures {
   dispose() {
     this.disposed = true
     for (const entry of [...this.floors, ...this.backs.values(), this.blockedBack, ...this.backNormals.values(), ...this.backSurfaces.values(), ...this.floorNormals, ...this.floorSurfaces]) entry.texture.dispose()
+    for (const texture of [...this.cardWear.values()].flat()) texture.dispose()
   }
 }
 

@@ -1,0 +1,342 @@
+{
+  "size": 256,
+  "files": {
+    "card-neutral-color.webp": {
+      "size": 256,
+      "bytes": 14278,
+      "sha256": "1d392913cea258e145b52695d94104a6836a1bcd9880ff420d7ed2a44eeb2df1",
+      "source": "board-card-back-temple-v2.jpg",
+      "source_sha256": "bb58263a4072f929a605e43a52e31e1fbfd8d3d32e436826ae8f9af6285be297",
+      "derived_sha256": "142716bf97bf856f76573028efb136c8c0b2d44decddf706132554941b1ea96b"
+    },
+    "card-neutral-normal.png": {
+      "size": 256,
+      "bytes": 102660,
+      "sha256": "bd5f9ea8e76fecfee44466649d356df949b39a0d3e9f60e9c7d0fba87dea8844",
+      "source": "board-card-back-temple-v2.jpg",
+      "source_sha256": "bb58263a4072f929a605e43a52e31e1fbfd8d3d32e436826ae8f9af6285be297",
+      "derived_sha256": "9d84e3b708b96195a18e1eb45436e056d9e3bcf7da3008ba5c4a7b3f085591fa"
+    },
+    "card-neutral-surface.png": {
+      "size": 256,
+      "bytes": 38786,
+      "sha256": "aaf320e8af0e8ea52365e07df63f016b5943ad223b59de60056192d48bfcb35e",
+      "source": "board-card-back-temple-v2.jpg",
+      "source_sha256": "bb58263a4072f929a605e43a52e31e1fbfd8d3d32e436826ae8f9af6285be297",
+      "derived_sha256": "4a17403c5347d79f08cdd771a4c14a9878e48b3686ec7f3c0ec6eb1c67861de2"
+    },
+    "card-neutral-wear0.png": {
+      "size": 96,
+      "bytes": 7328,
+      "sha256": "26fd5a01cb82e8f3ff0d409e08a54db8c863cedc56189ac97e51c08b3c7c1c4e",
+      "source": "board-card-back-temple-v2.jpg",
+      "source_sha256": "bb58263a4072f929a605e43a52e31e1fbfd8d3d32e436826ae8f9af6285be297",
+      "derived_sha256": "87b231ee04ef003fcc3fcce3346e63ce50dc20faeb557a4585a2d15e67429390"
+    },
+    "card-neutral-wear1.png": {
+      "size": 96,
+      "bytes": 7866,
+      "sha256": "2ff5eacaf640e1eb088a2fb56e928909e16f73a5a49d42824f9417d1e9ef2543",
+      "source": "board-card-back-temple-v2.jpg",
+      "source_sha256": "bb58263a4072f929a605e43a52e31e1fbfd8d3d32e436826ae8f9af6285be297",
+      "derived_sha256": "786cd1d04aef7effac44346fef2c494bf2e9dcbe94324eaaf60c9e8198b1d529"
+    },
+    "card-neutral-wear2.png": {
+      "size": 96,
+      "bytes": 7278,
+      "sha256": "b51e9e1d1d813e9f1c474b627628f4328d362b5205730576581cc9bb232e3421",
+      "source": "board-card-back-temple-v2.jpg",
+      "source_sha256": "bb58263a4072f929a605e43a52e31e1fbfd8d3d32e436826ae8f9af6285be297",
+      "derived_sha256": "54a3599e8ad3817879b0091c0271422488023cccab36b77038637c0d24b11351"
+    },
+    "card-scorch-color.webp": {
+      "size": 256,
+      "bytes": 14110,
+      "sha256": "0b61c0880ec1cb0540c8746bd315e52ac8f75cf4ff18d1fb4e1a6d42a33c9e2d",
+      "source": "board-card-back-scorch-temple-v2.jpg",
+      "source_sha256": "0bc1125f2846f0a2528f8ca2e2c91f5cb4e3ce3cbe3246ffaabd85fc43ae457c",
+      "derived_sha256": "6a47e2978b2f54d882fbe366f4ac43ec73a8e7b10a8d84fa90e437c8b5ccb511"
+    },
+    "card-scorch-normal.png": {
+      "size": 256,
+      "bytes": 94412,
+      "sha256": "3ade31d83c5b81ab0d4ef34f6971df54d087ff5e658e7d9586c0a0c84de9fec2",
+      "source": "board-card-back-scorch-temple-v2.jpg",
+      "source_sha256": "0bc1125f2846f0a2528f8ca2e2c91f5cb4e3ce3cbe3246ffaabd85fc43ae457c",
+      "derived_sha256": "bd7d457908ceadee64b397456329985d25c4c9dda06567b1ef65687b86dbc58f"
+    },
+    "card-scorch-surface.png": {
+      "size": 256,
+      "bytes": 37867,
+      "sha256": "1fab161bacc952580c9b8df5224e96f661a68588cdd17e840d3223c327a318cb",
+      "source": "board-card-back-scorch-temple-v2.jpg",
+      "source_sha256": "0bc1125f2846f0a2528f8ca2e2c91f5cb4e3ce3cbe3246ffaabd85fc43ae457c",
+      "derived_sha256": "8488d51689512a90b2fc4a8e1f28f17b3af605941d9ff8d9e1a610c11d30f710"
+    },
+    "card-scorch-wear0.png": {
+      "size": 96,
+      "bytes": 7130,
+      "sha256": "9c1661eb4fd398d20619d6462080c35664731ec212d21aae9b47d1e49ac6c15f",
+      "source": "board-card-back-scorch-temple-v2.jpg",
+      "source_sha256": "0bc1125f2846f0a2528f8ca2e2c91f5cb4e3ce3cbe3246ffaabd85fc43ae457c",
+      "derived_sha256": "747fc9164921cc60b95db3854e6ab6565b0e458754e5f8bd449186d6496d088c"
+    },
+    "card-scorch-wear1.png": {
+      "size": 96,
+      "bytes": 7861,
+      "sha256": "762092746cbb636f78fc910ea8fbe230bc6dd2164ffa472145dd513b416c5134",
+      "source": "board-card-back-scorch-temple-v2.jpg",
+      "source_sha256": "0bc1125f2846f0a2528f8ca2e2c91f5cb4e3ce3cbe3246ffaabd85fc43ae457c",
+      "derived_sha256": "2610d78d6621edb78e00c0a88aade5d621f323ca2a0ced5c026d73a0773fede0"
+    },
+    "card-scorch-wear2.png": {
+      "size": 96,
+      "bytes": 6174,
+      "sha256": "c3239add9a58802b3f194d7d021af4c1909a171ef2d0df49583cc9d5e9040c36",
+      "source": "board-card-back-scorch-temple-v2.jpg",
+      "source_sha256": "0bc1125f2846f0a2528f8ca2e2c91f5cb4e3ce3cbe3246ffaabd85fc43ae457c",
+      "derived_sha256": "5488f17a16609a2e88fc182602f8b5f6ab987f738a809c4e41e562471725036f"
+    },
+    "card-wither-color.webp": {
+      "size": 256,
+      "bytes": 15100,
+      "sha256": "439a4e2b40bd25d506982930deb4e5702578782e2a5aa48d134e622818140cbc",
+      "source": "board-card-back-wither-temple-v2.jpg",
+      "source_sha256": "f8df18a2a36797eb1d1b4d840952f9a1c6940ec27cda620fc794f7f79d39e08b",
+      "derived_sha256": "86282ae8fbdb2af19f40f0d2b0156c144db1d1cb71c7fd87d41b19b9ceae1997"
+    },
+    "card-wither-normal.png": {
+      "size": 256,
+      "bytes": 104296,
+      "sha256": "5af1a3100a6a8286e4c138babc0e4badee86d5d2b32dcc592b331eb8fe0bcc29",
+      "source": "board-card-back-wither-temple-v2.jpg",
+      "source_sha256": "f8df18a2a36797eb1d1b4d840952f9a1c6940ec27cda620fc794f7f79d39e08b",
+      "derived_sha256": "2a1c0d20d25ae630384dce4a805064bdf26518708446d300b412b72cc950661a"
+    },
+    "card-wither-surface.png": {
+      "size": 256,
+      "bytes": 39594,
+      "sha256": "e6cbea21bb448166de7cd56aedfd4730820460f8fb6f598cfa779aaaeafb42b6",
+      "source": "board-card-back-wither-temple-v2.jpg",
+      "source_sha256": "f8df18a2a36797eb1d1b4d840952f9a1c6940ec27cda620fc794f7f79d39e08b",
+      "derived_sha256": "9d3b80ceb4321afd1670a77471061da37930ebc52fcfad9b91ed8995d5bf599d"
+    },
+    "card-wither-wear0.png": {
+      "size": 96,
+      "bytes": 7454,
+      "sha256": "5143d5e78c7252a97d2cdf7501d12a1c73226c2ea6a4aec0a47f4339ec457345",
+      "source": "board-card-back-wither-temple-v2.jpg",
+      "source_sha256": "f8df18a2a36797eb1d1b4d840952f9a1c6940ec27cda620fc794f7f79d39e08b",
+      "derived_sha256": "e96cb749e6b08a55cdd1eedc286dd06d39b7306643923f95fc4a2706a45f3e69"
+    },
+    "card-wither-wear1.png": {
+      "size": 96,
+      "bytes": 7915,
+      "sha256": "a3369f67f2ad9f0613408cc286db769874c2a9565f6548b33fdec702b1709827",
+      "source": "board-card-back-wither-temple-v2.jpg",
+      "source_sha256": "f8df18a2a36797eb1d1b4d840952f9a1c6940ec27cda620fc794f7f79d39e08b",
+      "derived_sha256": "cacd0512552906876f0b3e4839c7f6cf7835f4145c743f560821591a253710ab"
+    },
+    "card-wither-wear2.png": {
+      "size": 96,
+      "bytes": 7640,
+      "sha256": "66340077ab6bc48f9f24d26b1165f1bae7f1f533c76f448a3cc08a3967f0cccf",
+      "source": "board-card-back-wither-temple-v2.jpg",
+      "source_sha256": "f8df18a2a36797eb1d1b4d840952f9a1c6940ec27cda620fc794f7f79d39e08b",
+      "derived_sha256": "654f16da5802190dcfbf44d97a53d574c2a451f164f8f380138bad8f5979fb8a"
+    },
+    "card-drown-color.webp": {
+      "size": 256,
+      "bytes": 15726,
+      "sha256": "a9035f571219bf911556bc5db97a4014a36683fa4bd962748609bb0a7f06ed7d",
+      "source": "board-card-back-drown-temple-v2.jpg",
+      "source_sha256": "476faf273c67626ebc6e19ca009a77318a66ce6accff6b9874d2400d81c52f18",
+      "derived_sha256": "545eeea6dd2cee0310b37b9a34409c98a0c39e67c38f08bd820b00013a06ab6d"
+    },
+    "card-drown-normal.png": {
+      "size": 256,
+      "bytes": 98567,
+      "sha256": "6a7c5929abb8d2254bbd77eb4d9552eb5629edb6b4b9cfb105fe3cf1ed915748",
+      "source": "board-card-back-drown-temple-v2.jpg",
+      "source_sha256": "476faf273c67626ebc6e19ca009a77318a66ce6accff6b9874d2400d81c52f18",
+      "derived_sha256": "c10738c68e28cb473dabbc0dc9f4aa2c5563e36e19790f87b8821691308af5f0"
+    },
+    "card-drown-surface.png": {
+      "size": 256,
+      "bytes": 40180,
+      "sha256": "b263ee14aef5ab582d63787f18c174de3350a0a8fc89d540f1131eb161ef1836",
+      "source": "board-card-back-drown-temple-v2.jpg",
+      "source_sha256": "476faf273c67626ebc6e19ca009a77318a66ce6accff6b9874d2400d81c52f18",
+      "derived_sha256": "7781553914255aa82b46be7afcf264a63dadc166b709143619891fe8170a7c79"
+    },
+    "card-drown-wear0.png": {
+      "size": 96,
+      "bytes": 7207,
+      "sha256": "460d9a7e56c21d373dc613464e1f3cb948927ffc1f3a3c88eeff8fa9d6860e0a",
+      "source": "board-card-back-drown-temple-v2.jpg",
+      "source_sha256": "476faf273c67626ebc6e19ca009a77318a66ce6accff6b9874d2400d81c52f18",
+      "derived_sha256": "46748a9f872208a1a342395b63c5339e37e1266c8a78ecfea91c101118090197"
+    },
+    "card-drown-wear1.png": {
+      "size": 96,
+      "bytes": 7095,
+      "sha256": "99f85e5a64dca09ac01036b1728c87071a91fd5458ed7a8d9518737bac3a906b",
+      "source": "board-card-back-drown-temple-v2.jpg",
+      "source_sha256": "476faf273c67626ebc6e19ca009a77318a66ce6accff6b9874d2400d81c52f18",
+      "derived_sha256": "bb3ed89fbd7ba29a770d0b6a76815a036fd210364788018185c40ce0e6341481"
+    },
+    "card-drown-wear2.png": {
+      "size": 96,
+      "bytes": 7560,
+      "sha256": "96fb85ce5352f14508914057e2a881359bcf2c731880be20f290c24b03117949",
+      "source": "board-card-back-drown-temple-v2.jpg",
+      "source_sha256": "476faf273c67626ebc6e19ca009a77318a66ce6accff6b9874d2400d81c52f18",
+      "derived_sha256": "66619d32a3fe11bf31b2b5149cc523193cf1747328fd254232d953c117e8afff"
+    },
+    "card-blocked-color.webp": {
+      "size": 256,
+      "bytes": 10378,
+      "sha256": "820776fd35d5329202913a4eaf669b2f867e36e18ab5d626e6aa50cfd8cd6ba2",
+      "source": "board-card-back-blocked-v1.jpg",
+      "source_sha256": "8bf47ef8d5ed1bc37c5f1f9b8eaa4454edb3bb322c07db83de3aa1ef97445200",
+      "derived_sha256": "a27df284a0bb806bc2de3477f7f6d80788ef7d2da109222b4312765a05325c4e"
+    },
+    "card-blocked-normal.png": {
+      "size": 256,
+      "bytes": 95203,
+      "sha256": "52100f733ecc54b3ac0c5af45ff7ed8a5150465ed02b5521df288e9d144a6964",
+      "source": "board-card-back-blocked-v1.jpg",
+      "source_sha256": "8bf47ef8d5ed1bc37c5f1f9b8eaa4454edb3bb322c07db83de3aa1ef97445200",
+      "derived_sha256": "21834237e56b678913e6de4eaf7e344f48686af2fb42f4db089a30041be178e5"
+    },
+    "card-blocked-surface.png": {
+      "size": 256,
+      "bytes": 34280,
+      "sha256": "67ec54b3d0a6a5c5d8640fb1ebb19decbee102f42f2ec35fe686a502ac32c73d",
+      "source": "board-card-back-blocked-v1.jpg",
+      "source_sha256": "8bf47ef8d5ed1bc37c5f1f9b8eaa4454edb3bb322c07db83de3aa1ef97445200",
+      "derived_sha256": "9037056f05ea6558d4bf4c14fb39f42e790d8fef6fdeeeebcd7d3c46cad381a5"
+    },
+    "card-blocked-wear0.png": {
+      "size": 96,
+      "bytes": 8077,
+      "sha256": "2074a27d091929c2fb5fe4713704a55f99106986cc964ea659043713df312f22",
+      "source": "board-card-back-blocked-v1.jpg",
+      "source_sha256": "8bf47ef8d5ed1bc37c5f1f9b8eaa4454edb3bb322c07db83de3aa1ef97445200",
+      "derived_sha256": "2edb85ab4a85176bddc312d0cd216046711e68aa9cadfb9ebfbc8f9060716361"
+    },
+    "card-blocked-wear1.png": {
+      "size": 96,
+      "bytes": 8016,
+      "sha256": "bf8e187643cf163765e84ac85fc5e895aa970098c39cb77bedaba883bf4af749",
+      "source": "board-card-back-blocked-v1.jpg",
+      "source_sha256": "8bf47ef8d5ed1bc37c5f1f9b8eaa4454edb3bb322c07db83de3aa1ef97445200",
+      "derived_sha256": "cf19890a4341aaf28b29490ddb34b98d758f3db25454556b3c907dbf9107946b"
+    },
+    "card-blocked-wear2.png": {
+      "size": 96,
+      "bytes": 7556,
+      "sha256": "e82b8a88322f6d1cfe532cd89f2d27fe94c15ed0fd7535a8a0effd604835f50b",
+      "source": "board-card-back-blocked-v1.jpg",
+      "source_sha256": "8bf47ef8d5ed1bc37c5f1f9b8eaa4454edb3bb322c07db83de3aa1ef97445200",
+      "derived_sha256": "f862785ae3471eff759044b0d5e7871f13055955f3ec7c846f566eb0b05c2823"
+    },
+    "floor-a-color.webp": {
+      "size": 256,
+      "bytes": 3004,
+      "sha256": "17a729baf26b22e59f6ade5087178263721bc87442efe953a95b5c0558f8b36b",
+      "source": "board-floor-temple-a-v4.jpg",
+      "source_sha256": "1cb85fdb33e72fbfc7deae730704c3e6e5dcc0130992b7466b4eb71b422cccfb",
+      "derived_sha256": "4c2cfc1dbb0f92d67ae3add93772cef9afe2c1b3e62642795c13ff75c8e05f04"
+    },
+    "floor-a-normal.png": {
+      "size": 256,
+      "bytes": 107048,
+      "sha256": "236279097b1a60bca00dbc9309f2104498e80cb1a8cd5272d43406396c7a5ec0",
+      "source": "board-floor-temple-a-v4.jpg",
+      "source_sha256": "1cb85fdb33e72fbfc7deae730704c3e6e5dcc0130992b7466b4eb71b422cccfb",
+      "derived_sha256": "a31f48ff7aa9205d1016081ed72a7492f960d12073525659f86b821d0185a4b5"
+    },
+    "floor-a-surface.png": {
+      "size": 256,
+      "bytes": 24656,
+      "sha256": "202189f11ec934a5e15d92b8303c0599910c92210c2178a8fbc406b57cfc37d9",
+      "source": "board-floor-temple-a-v4.jpg",
+      "source_sha256": "1cb85fdb33e72fbfc7deae730704c3e6e5dcc0130992b7466b4eb71b422cccfb",
+      "derived_sha256": "cb341b5d5e851e93b569dd19b57bd3f6ad0c39fd2c7e2103fcc9f366773781cf"
+    },
+    "floor-b-color.webp": {
+      "size": 256,
+      "bytes": 4080,
+      "sha256": "5be8fd57a62f62902d97044e2cc5959daafd72d4e47cae1f0fc2a3d774955df7",
+      "source": "board-floor-temple-b-v4.jpg",
+      "source_sha256": "9e58ce31df3bd58ec54483cfff598546766e5479caea30a15ae45337f2548e4b",
+      "derived_sha256": "6ccae9d478693d695bf766e90123a33088acdbc015be9c2c1e403feb0815d972"
+    },
+    "floor-b-normal.png": {
+      "size": 256,
+      "bytes": 111171,
+      "sha256": "88886ad0db8e24c6a51dd5208123264167aeca17e026291fb7f3e211a36c8121",
+      "source": "board-floor-temple-b-v4.jpg",
+      "source_sha256": "9e58ce31df3bd58ec54483cfff598546766e5479caea30a15ae45337f2548e4b",
+      "derived_sha256": "35a25c2fa427ab2b24720f5acd4dfd72ab596864262b6eb9d8c1d1911ddca3f8"
+    },
+    "floor-b-surface.png": {
+      "size": 256,
+      "bytes": 28429,
+      "sha256": "25b2ddf10d970038f0a45a921ef351f2d0429737e24b0246526ad638806ca47a",
+      "source": "board-floor-temple-b-v4.jpg",
+      "source_sha256": "9e58ce31df3bd58ec54483cfff598546766e5479caea30a15ae45337f2548e4b",
+      "derived_sha256": "db5b0a8ea580907c2ab052f1cc59008346ea1c941c66b3a1205fa5ac2ed2c8c2"
+    },
+    "floor-c-color.webp": {
+      "size": 256,
+      "bytes": 4608,
+      "sha256": "d138949ff33471e999167321992eb2d71cbcce53a44597d933c9c3c389f68981",
+      "source": "board-floor-temple-c-v4.jpg",
+      "source_sha256": "ef0d5e919d86f71edc85c4cf38c04d41b3b3351fa7e323bcf9b919cc3fb95766",
+      "derived_sha256": "b2020320a45d64f1694113c8a8f1c60984b82dcce8528b3fb4e5bcbeb384e8ab"
+    },
+    "floor-c-normal.png": {
+      "size": 256,
+      "bytes": 114126,
+      "sha256": "a24a78c569611e3acae01925ac15d8c99c4f8e5115970bc749fbfd245c9e5cd4",
+      "source": "board-floor-temple-c-v4.jpg",
+      "source_sha256": "ef0d5e919d86f71edc85c4cf38c04d41b3b3351fa7e323bcf9b919cc3fb95766",
+      "derived_sha256": "7c9dcc712c2500779b45ba5e53eb28c7bf1fecc3d4bb83efbe8195088e3a1fe8"
+    },
+    "floor-c-surface.png": {
+      "size": 256,
+      "bytes": 27817,
+      "sha256": "c54d901277a5979afaed5ea505a0d81a596fdd0ee8a35debdc3637ad8cd619c4",
+      "source": "board-floor-temple-c-v4.jpg",
+      "source_sha256": "ef0d5e919d86f71edc85c4cf38c04d41b3b3351fa7e323bcf9b919cc3fb95766",
+      "derived_sha256": "c0b5595d9e0f60c06e32b0b77e319525b1b3551a8b5bb9f4db1a7586f45963a3"
+    },
+    "floor-d-color.webp": {
+      "size": 256,
+      "bytes": 3630,
+      "sha256": "481ffb5503a467ebcb45b8a82d0a0a1c484b3ee38a5e5e630ba04e72de979ffa",
+      "source": "board-floor-temple-d-v4.jpg",
+      "source_sha256": "f3adab732eccaf034b68101833bfae6a36b34686acdb961611fcbf38b61d2826",
+      "derived_sha256": "0c38d629c8aaf6aa236e4e0fc2e1b6608c634381e495d5530fb66eb78bcc96d7"
+    },
+    "floor-d-normal.png": {
+      "size": 256,
+      "bytes": 110657,
+      "sha256": "8626423040352f2b83192da86f47545297a67caaa1a95a32eeff1cf33ddeced4",
+      "source": "board-floor-temple-d-v4.jpg",
+      "source_sha256": "f3adab732eccaf034b68101833bfae6a36b34686acdb961611fcbf38b61d2826",
+      "derived_sha256": "b84d1cbc2d0c3151d5ddcf56065f9f61c7fc84e78c70adbcbde5d96a6751ce74"
+    },
+    "floor-d-surface.png": {
+      "size": 256,
+      "bytes": 26951,
+      "sha256": "4ddafdf3a416c4563a2b493b3726d5c9e338efd5475e817ff35165630ece8efb",
+      "source": "board-floor-temple-d-v4.jpg",
+      "source_sha256": "f3adab732eccaf034b68101833bfae6a36b34686acdb961611fcbf38b61d2826",
+      "derived_sha256": "0fb18e0c654d99d5dc4b9e2d6b20ba6deab133432b9ed40942ec2973c8d7e4ba"
+    }
+  },
+  "totalBytes": 1433771
+}

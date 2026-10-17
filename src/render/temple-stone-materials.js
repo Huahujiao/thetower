@@ -46,7 +46,7 @@ export function templeStoneMaterial(texture, tint = 0x89978e) {
   const { normal = null, surface = null } = surfaces.get(texture) || {}
   const color = new THREE.Color(0xb7c2b1).lerp(new THREE.Color(tint), .18)
   return new THREE.MeshStandardMaterial({
-    color, map: texture, normalMap: normal, normalScale: new THREE.Vector2(.8, .8),
+    color, map: texture, normalMap: normal, normalScale: new THREE.Vector2(1, 1),
     roughnessMap: surface, aoMap: surface, aoMapIntensity: .75,
     roughness: 1, metalness: 0, vertexColors: true,
   })
@@ -57,14 +57,17 @@ export function foundationStoneMaterial(texture, tint = 0x7e9388, depthScale = 1
   // Keep the closed foundation solid; only the separate mist is transparent.
   material.transparent = false
   material.depthWrite = true
+  // Depth falloff for the platform skirt. At 0.34 the lower wall sank to a third of
+  // its albedo and read as a black void rather than as stone in shadow, which
+  // also made it look like a different material from the rails above it.
   material.onBeforeCompile = shader => {
     shader.uniforms.uTempleDepthScale = { value: depthScale }
     shader.vertexShader = 'varying float vTempleHeight;\n' + shader.vertexShader
     shader.vertexShader = shader.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vTempleHeight = (modelMatrix * vec4(transformed, 1.0)).y;')
     shader.fragmentShader = 'uniform float uTempleDepthScale;\n varying float vTempleHeight;\n' + shader.fragmentShader
     shader.fragmentShader = shader.fragmentShader.replace('#include <color_fragment>',
-      '#include <color_fragment>\n float stoneHeight = -0.43 + (vTempleHeight + 0.43) / uTempleDepthScale;\n diffuseColor.rgb *= mix(0.34, 1.0, smoothstep(-2.65, -0.85, stoneHeight));')
+      '#include <color_fragment>\n float stoneHeight = -0.43 + (vTempleHeight + 0.43) / uTempleDepthScale;\n diffuseColor.rgb *= mix(0.58, 1.0, smoothstep(-2.65, -0.85, stoneHeight));')
   }
-  material.customProgramCacheKey = () => 'temple-foundation-solid-depth-v3'
+  material.customProgramCacheKey = () => 'temple-foundation-solid-depth-v4'
   return material
 }

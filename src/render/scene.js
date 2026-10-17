@@ -22,6 +22,11 @@ import { weaponTierRoman } from '../game/data/content.js'
 const TILE_SIZE = 1.14
 const CARD_SIZE = TILE_SIZE
 const CARD_THICKNESS = 0.08
+// Per-tile value jitter for card backs, since one texture is shared per attribute.
+const CARD_TILE_VALUE_RANGE = .085
+// One pattern texture is shared per attribute; the tone layer is picked per tile
+// from a small set so no two backs repeat the same stain layout.
+const CARD_WEAR_VARIANT_RANGE = 3
 const WALL_THICKNESS = 0.14
 const DOOR_DEPTH = WALL_THICKNESS * 1.4
 const BOUNDARY_GAP = 0.012
@@ -49,6 +54,12 @@ const ENEMY_STATUS_HEALTH_Y = CARD_SIZE * 0.46
 const ENEMY_STATUS_NAME_Y = CARD_SIZE * 0.58
 const ENEMY_STATUS_HINT_Y = CARD_SIZE * 0.72
 const ENEMY_STATUS_BOTTOM_Y = -CARD_SIZE * 0.43
+// Status rows used to sit at fixed CARD_SIZE fractions. Raising the global
+// enemy display scale pushed the taller rigs through those constants, so their
+// health bars ended up inside the model. Anchor to the measured silhouette
+// instead and keep the original row spacing above it.
+const ENEMY_STATUS_ROW_GAP = CARD_SIZE * 0.12
+const ENEMY_STATUS_HEAD_CLEARANCE = CARD_SIZE * 0.07
 const ITEM_SPRITE_SIZE = CARD_SIZE * 0.7
 const ITEM_SPRITE_PITCH = -Math.PI / 4
 const ITEM_SPRITE_MIN_SPEED = 0.22
@@ -347,7 +358,7 @@ export class GameScene {
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
     if (run.sceneView?.environment === 'mountain-temple') {
       this.renderer.toneMapping = THREE.NeutralToneMapping
-      this.renderer.toneMappingExposure = 1
+      this.renderer.toneMappingExposure = 1.02
     }
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
     this.renderer.shadowMap.enabled = true
@@ -573,10 +584,16 @@ export class GameScene {
     this.tileMeshByKey.set(tileKey(position), face)
   }
 
+  // The patch has to ride on the card surface. Anchoring it to the raw floor
+  // slab buried it under the stone once cards started hovering, which is why the
+  // contact shadows had all but vanished.
+  _contactShadowY() { return cardFaceY(false, CARD_THICKNESS) + .009 }
+
   _makeContactShadow() {
     const shadow = new THREE.Mesh(new THREE.PlaneGeometry(CARD_SIZE * .82, CARD_SIZE * .56),
       new THREE.MeshBasicMaterial({ map: this.contactShadowTexture, transparent: true, depthTest: false, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 }))
     shadow.rotation.x = -Math.PI / 2
+    shadow.position.y = this._contactShadowY()
     shadow.raycast = NO_RAYCAST
     this.roomGroup.add(shadow)
     return shadow
@@ -602,7 +619,7 @@ export class GameScene {
       shadow = this._makeContactShadow()
       face.userData.contactShadow = shadow
     }
-    shadow.position.set(face.position.x + .09, CARD_THICKNESS / 2 + .009, face.position.z + .05)
+    shadow.position.set(face.position.x + .09, this._contactShadowY(), face.position.z + .05)
     shadow.renderOrder = tileRenderOrder(face.userData.position, 2)
   }
 
@@ -610,7 +627,7 @@ export class GameScene {
     const actor = this.movementAnimation?.actor !== 'enemy' ? this.movementAnimation?.group || this.playerMarker : this.playerMarker
     const movingShadow = actor?.userData.contactShadow
     if (movingShadow) {
-      movingShadow.position.set(actor.position.x + .09, CARD_THICKNESS / 2 + .009, actor.position.z + .05)
+      movingShadow.position.set(actor.position.x + .09, this._contactShadowY(), actor.position.z + .05)
       movingShadow.renderOrder = (actor.children[0]?.renderOrder || 8) - 6
     }
     for (const face of this.tileMeshes) {
@@ -705,7 +722,7 @@ export class GameScene {
     // The face still carries interaction/status overlays. Cancel its billboard
     // lean, scaling and vertical motion for the actual actor's floor pivot.
     face.updateMatrix()
-    const world = new THREE.Matrix4().makeTranslation(face.position.x, CARD_THICKNESS / 2 + CARD_FACE_CLEARANCE, face.position.z)
+    const world = new THREE.Matrix4().makeTranslation(face.position.x, cardFaceY(false, CARD_THICKNESS), face.position.z)
       .multiply(new THREE.Matrix4().makeRotationY(this.cameraAzimuth))
       .multiply(new THREE.Matrix4().makeRotationX(-ENEMY_BACK_LEAN))
       .multiply(new THREE.Matrix4().makeRotationY(this._enemyFacingOffset(figure, face.userData.position)))
@@ -869,11 +886,31 @@ export class GameScene {
       this._makeGroundMaterial(this.boardTextures.floor(position)),
     )
     groundFace.rotation.x = -Math.PI / 2
-    groundFace.position.set(point.x, groundSurfaceY(CARD_THICKNESS), point.z)
+    // Takes the card's place at the same height, so the flip has no visible step.
+    groundFace.position.set(point.x, cardFaceY(false, CARD_THICKNESS), point.z)
     groundFace.userData.position = position ? { ...position } : null
     groundFace.receiveShadow = Boolean(this.environment)
     groundFace.raycast = THREE.Mesh.prototype.raycast
     return groundFace
+  }
+
+  _measureFigureTopLocalY(face) {
+    const figure = face?.userData?.enemyFigure
+    if (!figure) return null
+    figure.updateMatrixWorld(true)
+    face.updateMatrixWorld(true)
+    const box = new THREE.Box3().setFromObject(figure)
+    if (box.isEmpty() || !Number.isFinite(box.max.y)) return null
+    // Bring the world-space silhouette back into the face's own plane, so the
+    // overlay stays above the head however the board is rotated.
+    const inverse = new THREE.Matrix4().copy(face.matrixWorld).invert()
+    const corner = new THREE.Vector3()
+    let top = -Infinity
+    for (const x of [box.min.x, box.max.x]) for (const y of [box.min.y, box.max.y]) for (const z of [box.min.z, box.max.z]) {
+      corner.set(x, y, z).applyMatrix4(inverse)
+      if (corner.y > top) top = corner.y
+    }
+    return Number.isFinite(top) ? top : null
   }
 
   _setEnemyStatusOverlay(face, groundFace, enemy) {
@@ -890,9 +927,15 @@ export class GameScene {
     healthOverlay.position.z = ENEMY_STATUS_LAYER_OFFSET
     healthOverlay.userData.renderOrder = tileRenderOrder(face.userData.position, 6)
     healthOverlay.raycast = NO_RAYCAST
-    this._addEnemyHealthMeter(healthOverlay, enemy)
-    this._addEnemyNameLabel(healthOverlay, enemy)
-    this._addEnemyHintLabel(healthOverlay, enemy)
+    const measuredTop = this._measureFigureTopLocalY(face)
+    const rows = measuredTop == null ? null : {
+      health: measuredTop + ENEMY_STATUS_HEAD_CLEARANCE,
+      name: measuredTop + ENEMY_STATUS_HEAD_CLEARANCE + ENEMY_STATUS_ROW_GAP,
+      hint: measuredTop + ENEMY_STATUS_HEAD_CLEARANCE + ENEMY_STATUS_ROW_GAP * 2,
+    }
+    this._addEnemyHealthMeter(healthOverlay, enemy, rows)
+    this._addEnemyNameLabel(healthOverlay, enemy, rows)
+    this._addEnemyHintLabel(healthOverlay, enemy, rows)
     face.add(healthOverlay)
     face.userData.enemyHealthOverlay = healthOverlay
 
@@ -919,13 +962,14 @@ export class GameScene {
     }
   }
 
-  _addEnemyHealthMeter(overlay, enemy) {
+  _addEnemyHealthMeter(overlay, enemy, rows = null) {
     const width = CARD_SIZE * 0.7
     const height = CARD_SIZE * 0.062
+    const y = rows?.health ?? ENEMY_STATUS_HEALTH_Y
     const maxHealth = Math.max(1, turnCounter(enemy.maxHp))
     const healthRatio = Math.min(1, turnCounter(enemy.hp) / maxHealth)
-    this._addEnemyStatusPlane(overlay, width + CARD_SIZE * 0.018, height + CARD_SIZE * 0.018, 0, ENEMY_STATUS_HEALTH_Y, 0x1a1014, 0.92)
-    this._addEnemyStatusPlane(overlay, width, height, 0, ENEMY_STATUS_HEALTH_Y, 0x36191f, 0.96)
+    this._addEnemyStatusPlane(overlay, width + CARD_SIZE * 0.018, height + CARD_SIZE * 0.018, 0, y, 0x1a1014, 0.92)
+    this._addEnemyStatusPlane(overlay, width, height, 0, y, 0x36191f, 0.96)
     if (healthRatio <= 0) return
     const fillWidth = width * healthRatio
     this._addEnemyStatusPlane(
@@ -933,13 +977,13 @@ export class GameScene {
       fillWidth,
       height * 0.62,
       -width / 2 + fillWidth / 2,
-      ENEMY_STATUS_HEALTH_Y,
+      y,
       enemy.boss ? 0xff7777 : 0xe95b62,
       1,
     )
   }
 
-  _addEnemyNameLabel(overlay, enemy) {
+  _addEnemyNameLabel(overlay, enemy, rows = null) {
     const label = String(enemy?.name || '').trim()
     if (!label) return
     // This texture deliberately matches the label plane's wide aspect ratio.
@@ -968,13 +1012,13 @@ export class GameScene {
         side: THREE.DoubleSide,
       }),
     )
-    nameLabel.position.set(0, ENEMY_STATUS_NAME_Y, overlay.children.length * 0.0002)
+    nameLabel.position.set(0, rows?.name ?? ENEMY_STATUS_NAME_Y, overlay.children.length * 0.0002)
     nameLabel.raycast = NO_RAYCAST
     nameLabel.renderOrder = (overlay.userData.renderOrder || 1) + overlay.children.length * 0.001
     overlay.add(nameLabel)
   }
 
-  _addEnemyHintLabel(overlay, enemy) {
+  _addEnemyHintLabel(overlay, enemy, rows = null) {
     const range = Math.max(1, turnCounter(enemy?.range))
     const tokens = [
       ...(enemy.statuses?.rooted ? ['缠'] : []),
@@ -1009,7 +1053,7 @@ export class GameScene {
         side: THREE.DoubleSide,
       }),
     )
-    hintLabel.position.set(0, ENEMY_STATUS_HINT_Y, overlay.children.length * 0.0002)
+    hintLabel.position.set(0, rows?.hint ?? ENEMY_STATUS_HINT_Y, overlay.children.length * 0.0002)
     hintLabel.raycast = NO_RAYCAST
     hintLabel.renderOrder = (overlay.userData.renderOrder || 1) + overlay.children.length * 0.001
     overlay.add(hintLabel)
@@ -1489,7 +1533,7 @@ export class GameScene {
       ? this._makeFrontTexture(card, position, revealed)
       : this._makeBackTexture(this._backAttributeFor(room, position), { unflippable: !flippable })
     const oldMaterial = face.material
-    face.material = this._makeCardFaceMaterial(texture)
+    face.material = this._makeCardFaceMaterial(texture, {}, position)
     oldMaterial.dispose()
     // Click-through is handled by the custom raycast below. Standing tokens
     // remain visually opaque while their cleared canvas pixels stay transparent.
@@ -1513,11 +1557,13 @@ export class GameScene {
     }
     if (face.userData.groundFace) face.userData.groundFace.visible = emptyGround
     this._attachGroundSprite(face, card, this._gridPosition(room, position), position, revealed)
-    this._setEnemyStatusOverlay(face, face.userData.groundFace, revealed && card?.type === 'monster' ? room.entityAt(position) : null)
     this._setContactShadow(face, card, revealed)
     face.userData.visualKey = visual.key
     face.userData.enemyId = card?.type === 'monster' ? card.enemyId : null
+    // Attach before measuring: the status rows anchor to the silhouette top, so
+    // the figure has to exist before the overlay is laid out.
     this._attachEnemyFigure(face, revealed && card?.type === 'monster' ? card.enemyId : null)
+    this._setEnemyStatusOverlay(face, face.userData.groundFace, revealed && card?.type === 'monster' ? room.entityAt(position) : null)
     return true
   }
 
@@ -1628,7 +1674,7 @@ export class GameScene {
       const ground = this._makeEmptyGroundFace(point, position)
       this.roomGroup.add(ground)
       group.scale.setScalar(ENEMY_DISPLAY_SCALE)
-      group.position.y = CARD_THICKNESS / 2 + CARD_FACE_CLEARANCE
+      group.position.y = cardFaceY(false, CARD_THICKNESS)
       group.rotation.set(-ENEMY_BACK_LEAN, this.cameraAzimuth, 0, 'YXZ')
       const hinge = new THREE.Group()
       hinge.rotation.x = -Math.PI
@@ -2346,7 +2392,7 @@ export class GameScene {
         animation.group.rotation.y = this.cameraAzimuth
       } else {
         animation.group.rotation.x = Math.PI * (1 - eased)
-        animation.group.position.y = THREE.MathUtils.lerp(animation.startY, groundSurfaceY(CARD_THICKNESS) - .002, eased) + Math.sin(eased * Math.PI) * 0.28
+        animation.group.position.y = THREE.MathUtils.lerp(animation.startY, cardFaceY(false, CARD_THICKNESS), eased) + Math.sin(eased * Math.PI) * 0.28
         const thickness = HIDDEN_CARD_THICKNESS * (1 - eased)
         animation.front.position.y = thickness / 2 + 0.002
         if (animation.back) animation.back.position.y = -thickness / 2 - 0.002
@@ -2396,9 +2442,25 @@ export class GameScene {
       : new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide, ...options })
   }
 
-  _makeCardFaceMaterial(texture, options = {}) {
+  // One shared texture per attribute means every back of a kind is pixel-for-pixel
+  // identical. A stable per-tile value shift keeps the element readable while
+  // stopping the board from looking like a single repeated stamp; the shift is
+  // derived from the position, so it survives flips, moves and room rebuilds.
+  _makeCardFaceMaterial(texture, options = {}, position = null) {
     if (this.environment && texture?.userData.boardFloor) return this._makeGroundMaterial(texture, options)
-    return createCardFaceMaterial(texture, this.boardTextures.backNormal(texture), options, this.boardTextures.surfaceData(texture).surface)
+    const material = createCardFaceMaterial(texture, this.boardTextures.backNormal(texture), options, this.boardTextures.surfaceData(texture).surface, this.boardTextures.wear(texture, this._cardWearVariant(texture, position)))
+    if (position && texture?.userData.cardBackKind) {
+      const seed = stableHash(`${texture.userData.cardBackKind}:${position.c}:${position.r}`)
+      const value = 1 + ((seed % 1024)/1024*2 - 1)*CARD_TILE_VALUE_RANGE
+      const warmth = ((seed >>> 10) % 1024)/1024*2 - 1
+      material.color.setRGB(value + warmth*.018, value, value - warmth*.018)
+    }
+    return material
+  }
+
+  _cardWearVariant(texture, position) {
+    if (!position || !texture?.userData?.cardBackKind) return 0
+    return stableHash(`wear:${texture.userData.cardBackKind}:${position.c}:${position.r}`) % CARD_WEAR_VARIANT_RANGE
   }
 
   _makeBackTexture(attribute, { unflippable = false } = {}) {

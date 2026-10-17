@@ -1,0 +1,752 @@
+{
+  "stats": {
+    "ibl": true,
+    "camera": {
+      "zoom": 1,
+      "elevation": 0.6981317007977318,
+      "azimuth": 0,
+      "offset": [
+        -0.57,
+        0,
+        0.969
+      ]
+    },
+    "textures": [
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      }
+    ],
+    "toneMapping": 7,
+    "toneMappingExposure": 1.2,
+    "environmentIntensity": 0.32,
+    "lights": [
+      {
+        "type": "AmbientLight",
+        "intensity": 0
+      },
+      {
+        "type": "HemisphereLight",
+        "intensity": 0
+      },
+      {
+        "type": "DirectionalLight",
+        "intensity": 2.8
+      },
+      {
+        "type": "DirectionalLight",
+        "intensity": 0
+      }
+    ],
+    "floors": [
+      {
+        "type": "MeshPhysicalMaterial",
+        "color": "c0d4db",
+        "roughness": 1,
+        "clearcoat": 0,
+        "normalScale": 0.35,
+        "envMapIntensity": 0.0704,
+        "explicitEnvironment": true
+      },
+      {
+        "type": "MeshPhysicalMaterial",
+        "color": "c0d4db",
+        "roughness": 1,
+        "clearcoat": 0,
+        "normalScale": 0.35,
+        "envMapIntensity": 0.0704,
+        "explicitEnvironment": true
+      },
+      {
+        "type": "MeshPhysicalMaterial",
+        "color": "c0d4db",
+        "roughness": 1,
+        "clearcoat": 0,
+        "normalScale": 0.35,
+        "envMapIntensity": 0.0704,
+        "explicitEnvironment": true
+      },
+      {
+        "type": "MeshPhysicalMaterial",
+        "color": "c0d4db",
+        "roughness": 1,
+        "clearcoat": 0,
+        "normalScale": 0.35,
+        "envMapIntensity": 0.0704,
+        "explicitEnvironment": true
+      },
+      {
+        "type": "MeshPhysicalMaterial",
+        "color": "c0d4db",
+        "roughness": 1,
+        "clearcoat": 0,
+        "normalScale": 0.35,
+        "envMapIntensity": 0.0704,
+        "explicitEnvironment": true
+      },
+      {
+        "type": "MeshPhysicalMaterial",
+        "color": "c0d4db",
+        "roughness": 1,
+        "clearcoat": 0,
+        "normalScale": 0.35,
+        "envMapIntensity": 0.0704,
+        "explicitEnvironment": true
+      }
+    ]
+  },
+  "resources": [
+    {
+      "url": "/src/assets/environment/kloofendal-overcast-puresky-128.hdr",
+      "bytes": 24629,
+      "duration": 642.5,
+      "type": "fetch"
+    },
+    {
+      "url": "/src/assets/environment/runtime-lite/mountains.webp",
+      "bytes": 67162,
+      "duration": 170.39999997615814,
+      "type": "css"
+    },
+    {
+      "url": "/src/assets/environment/runtime-lite/peaks.webp",
+      "bytes": 109118,
+      "duration": 170.70000004768372,
+      "type": "css"
+    },
+    {
+      "url": "/src/assets/environment/runtime-lite/clouds.webp",
+      "bytes": 91460,
+      "duration": 170.29999995231628,
+      "type": "css"
+    },
+    {
+      "url": "/src/assets/environment/runtime-lite/brick.webp",
+      "bytes": 10636,
+      "duration": 160.60000002384186,
+      "type": "css"
+    },
+    {
+      "url": "/src/assets/ui/armor-shield-temple-v1.png",
+      "bytes": 90549,
+      "duration": 170,
+      "type": "css"
+    },
+    {
+      "url": "/src/assets/inventory/weapon-rust-sword-v2-small.png",
+      "bytes": 7178,
+      "duration": 116.70000004768372,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/inventory/weapon-root-axe-v1-small.png",
+      "bytes": 16007,
+      "duration": 116.10000002384186,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/inventory/defense-wood-shield-v1-small.png",
+      "bytes": 14310,
+      "duration": 122.70000004768372,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/inventory/defense-light-armor-v1-small.png",
+      "bytes": 35271,
+      "duration": 123,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/inventory/item-poison-v1-small.png",
+      "bytes": 24103,
+      "duration": 124,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/inventory/item-health-potion-v1-small.png",
+      "bytes": 20454,
+      "duration": 124.19999992847443,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/inventory/item-rage-wine-v1-small.png",
+      "bytes": 22109,
+      "duration": 167.30000007152557,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/inventory/item-money-pouch-v1-small.png",
+      "bytes": 26621,
+      "duration": 168.40000009536743,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/card-neutral-surface.png",
+      "bytes": 51982,
+      "duration": 168.20000004768372,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/card-wither-surface.png",
+      "bytes": 53027,
+      "duration": 169,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/card-scorch-surface.png",
+      "bytes": 50259,
+      "duration": 171.10000002384186,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/card-drown-surface.png",
+      "bytes": 53150,
+      "duration": 170.70000004768372,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/card-blocked-surface.png",
+      "bytes": 46656,
+      "duration": 225.29999995231628,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/floor-a-normal.png",
+      "bytes": 60555,
+      "duration": 225.89999997615814,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/floor-d-normal.png",
+      "bytes": 63155,
+      "duration": 226.5,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/floor-c-normal.png",
+      "bytes": 66226,
+      "duration": 237.29999995231628,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/floor-b-normal.png",
+      "bytes": 64094,
+      "duration": 228.5,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/floor-a-surface.png",
+      "bytes": 18615,
+      "duration": 226.70000004768372,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/floor-b-surface.png",
+      "bytes": 21511,
+      "duration": 271.8000000715256,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/floor-c-surface.png",
+      "bytes": 20307,
+      "duration": 272.60000002384186,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/floor-d-surface.png",
+      "bytes": 20644,
+      "duration": 272.2999999523163,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/floor-c-color.webp",
+      "bytes": 8522,
+      "duration": 273.89999997615814,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/floor-a-color.webp",
+      "bytes": 5850,
+      "duration": 274.10000002384186,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/floor-b-color.webp",
+      "bytes": 7428,
+      "duration": 274.2000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/floor-d-color.webp",
+      "bytes": 6810,
+      "duration": 322.2999999523163,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/card-neutral-color.webp",
+      "bytes": 9868,
+      "duration": 333.2999999523163,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/card-wither-color.webp",
+      "bytes": 12040,
+      "duration": 333.60000002384186,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/card-scorch-color.webp",
+      "bytes": 11616,
+      "duration": 334,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/card-drown-color.webp",
+      "bytes": 14516,
+      "duration": 334.8000000715256,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/card-blocked-color.webp",
+      "bytes": 6184,
+      "duration": 334.3000000715256,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/card-neutral-normal.png",
+      "bytes": 120216,
+      "duration": 371.10000002384186,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/card-scorch-normal.png",
+      "bytes": 111191,
+      "duration": 387.7000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/card-wither-normal.png",
+      "bytes": 116364,
+      "duration": 388,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/card-blocked-normal.png",
+      "bytes": 102042,
+      "duration": 392.1999999284744,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/board-runtime/card-drown-normal.png",
+      "bytes": 118064,
+      "duration": 392.60000002384186,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/environment/runtime-lite/clouds.webp",
+      "bytes": 91460,
+      "duration": 392.6999999284744,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/environment/palette-v1/stone.webp",
+      "bytes": 8970,
+      "duration": 413.90000009536743,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/environment/palette-v1/masonry.webp",
+      "bytes": 8220,
+      "duration": 429.3000000715256,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/environment/temple-dressed-stone-v1-surface.png",
+      "bytes": 32426,
+      "duration": 430.39999997615814,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/environment/temple-dressed-stone-v1-normal.png",
+      "bytes": 102706,
+      "duration": 441.8000000715256,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/environment/temple-foundation-masonry-v1-normal.png",
+      "bytes": 158622,
+      "duration": 443.7000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/environment/temple-foundation-masonry-v1-surface.png",
+      "bytes": 64154,
+      "duration": 432.89999997615814,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/environment/palette-v1/soil.webp",
+      "bytes": 2264,
+      "duration": 453.2999999523163,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/environment/palette-v1/wood.webp",
+      "bytes": 2592,
+      "duration": 479.2999999523163,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/environment/palette-v1/banner.webp",
+      "bytes": 39902,
+      "duration": 480.09999990463257,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/environment/palette-v1/maple.webp",
+      "bytes": 99608,
+      "duration": 490,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/runtime-lite/components-v1/gnawer/part_001.webp",
+      "bytes": 27414,
+      "duration": 482.5,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/runtime-lite/components-v1/gnawer/part_003.webp",
+      "bytes": 14766,
+      "duration": 491.2000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/runtime-lite/components-v1/gnawer/part_011.webp",
+      "bytes": 21780,
+      "duration": 491.90000009536743,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/runtime-lite/components-v1/gnawer/part_010.webp",
+      "bytes": 21526,
+      "duration": 527.7000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/runtime-lite/components-v1/gnawer/part_012.webp",
+      "bytes": 18036,
+      "duration": 528.3999999761581,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/runtime-lite/components-v1/gnawer/part_015.webp",
+      "bytes": 23934,
+      "duration": 528.3999999761581,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/runtime-lite/components-v1/gnawer/part_014.webp",
+      "bytes": 14666,
+      "duration": 534.2999999523163,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/runtime-lite/components-v1/gnawer/part_018.webp",
+      "bytes": 22756,
+      "duration": 534.8999999761581,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/runtime-lite/components-v1/gnawer/part_004.webp",
+      "bytes": 14986,
+      "duration": 535.2999999523163,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/runtime-lite/components-v1/gnawer/part_008.webp",
+      "bytes": 10344,
+      "duration": 572.8999999761581,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/runtime-lite/components-v1/gnawer/part_005.webp",
+      "bytes": 14408,
+      "duration": 573.3999999761581,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/runtime-lite/components-v1/gnawer/part_013.webp",
+      "bytes": 13968,
+      "duration": 573.8999999761581,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/runtime-lite/components-v1/gnawer/part_009.webp",
+      "bytes": 10306,
+      "duration": 574.5,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/inventory/gold-pile-7-v1-medium.png",
+      "bytes": 127801,
+      "duration": 584.5,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/runtime-lite/components-v1/rootrot-bud/part_012.webp",
+      "bytes": 30086,
+      "duration": 573.8999999761581,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/runtime-lite/components-v1/rootrot-bud/part_008.webp",
+      "bytes": 19784,
+      "duration": 621.8999999761581,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/runtime-lite/components-v1/rootrot-bud/part_002.webp",
+      "bytes": 22252,
+      "duration": 618.7999999523163,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/runtime-lite/components-v1/rootrot-bud/part_006.webp",
+      "bytes": 27686,
+      "duration": 619.3999999761581,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/runtime-lite/components-v1/rootrot-bud/part_003.webp",
+      "bytes": 22500,
+      "duration": 619.7999999523163,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/runtime-lite/components-v1/rootrot-bud/part_014.webp",
+      "bytes": 26230,
+      "duration": 620.1999999284744,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/runtime-lite/components-v1/rootrot-bud/part_013.webp",
+      "bytes": 26046,
+      "duration": 624.0999999046326,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/inventory/item-health-potion-v1-medium.png",
+      "bytes": 75299,
+      "duration": 674.6000000238419,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/runtime-lite/components-v1/tide-shadow-cub/part_005.webp",
+      "bytes": 18456,
+      "duration": 668.3000000715256,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/runtime-lite/components-v1/tide-shadow-cub/part_006.webp",
+      "bytes": 27628,
+      "duration": 670.3999999761581,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/runtime-lite/components-v1/tide-shadow-cub/part_014.webp",
+      "bytes": 28326,
+      "duration": 668.2000000476837,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/runtime-lite/components-v1/tide-shadow-cub/part_015.webp",
+      "bytes": 8652,
+      "duration": 668.6000000238419,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/runtime-lite/components-v1/tide-shadow-cub/part_012.webp",
+      "bytes": 6936,
+      "duration": 669.1000000238419,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/runtime-lite/components-v1/tide-shadow-cub/part_002.webp",
+      "bytes": 15494,
+      "duration": 714.3999999761581,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/runtime-lite/components-v1/tide-shadow-cub/part_009.webp",
+      "bytes": 12588,
+      "duration": 714.5,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/runtime-lite/components-v1/tide-shadow-cub/part_003.webp",
+      "bytes": 15614,
+      "duration": 713.5999999046326,
+      "type": "img"
+    },
+    {
+      "url": "/assets/enemies/runtime-lite/components-v1/tide-shadow-cub/part_010.webp",
+      "bytes": 14736,
+      "duration": 714.1999999284744,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/inventory/weapon-rust-sword-v2-medium.png",
+      "bytes": 24254,
+      "duration": 42.5,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/inventory/weapon-root-axe-v1-medium.png",
+      "bytes": 53737,
+      "duration": 51.39999997615814,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/inventory/defense-wood-shield-v1-medium.png",
+      "bytes": 49371,
+      "duration": 51.800000071525574,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/inventory/defense-light-armor-v1-medium.png",
+      "bytes": 123015,
+      "duration": 62.5,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/inventory/item-health-potion-v1-medium.png",
+      "bytes": 75299,
+      "duration": 62,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/inventory/item-poison-v1-medium.png",
+      "bytes": 85356,
+      "duration": 62.299999952316284,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/inventory/item-rage-wine-v1-medium.png",
+      "bytes": 79936,
+      "duration": 98.20000004768372,
+      "type": "img"
+    },
+    {
+      "url": "/src/assets/inventory/item-money-pouch-v1-medium.png",
+      "bytes": 92524,
+      "duration": 109.39999997615814,
+      "type": "img"
+    }
+  ],
+  "totalBytes": 3749919,
+  "errors": []
+}

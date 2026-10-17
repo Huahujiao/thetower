@@ -11,14 +11,14 @@ import { GameScene } from '/src/render/scene.js'
 import { applyTempleGroundEnvironment } from '/src/render/temple-lighting.js'
 import { loadTempleIBL } from '/src/render/temple-ibl.js'
 import { BoardTextures } from '/src/render/board-textures.js'
-import stoneUrl from '/src/assets/environment/temple-dressed-stone-v1.jpg'
+import stoneUrl from '/src/assets/environment/palette-v1/stone.webp'
 import stoneNormalUrl from '/src/assets/environment/temple-dressed-stone-v1-normal.png'
 import stoneSurfaceUrl from '/src/assets/environment/temple-dressed-stone-v1-surface.png'
-import masonryUrl from '/src/assets/environment/temple-foundation-masonry-v1.jpg'
+import masonryUrl from '/src/assets/environment/palette-v1/masonry.webp'
 import masonryNormalUrl from '/src/assets/environment/temple-foundation-masonry-v1-normal.png'
 import masonrySurfaceUrl from '/src/assets/environment/temple-foundation-masonry-v1-surface.png'
-import floorUrl from '/src/assets/board-floor-plain-v1.jpg'
-import woodUrl from '/src/assets/environment/temple-gate-lacquer-v1.jpg'
+import floorUrl from '/src/assets/environment/palette-v1/soil.webp'
+import woodUrl from '/src/assets/environment/palette-v1/wood.webp'
 const loader=new THREE.TextureLoader()
 function texture(url,linear=false){const map=loader.load(url,()=>{},undefined,error=>{document.querySelector('#status').textContent='贴图加载失败：'+error});map.colorSpace=linear?THREE.NoColorSpace:THREE.SRGBColorSpace;map.wrapS=map.wrapT=THREE.RepeatWrapping;map.anisotropy=4;return map}
 // LoadingManager provides a single completion for all shared surface maps.
@@ -31,7 +31,7 @@ const group=createTempleArchitectureReview(stone,masonry,texture(floorUrl),textu
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x28383b);scene.add(group)
 GameScene.prototype._addLights.call({scene,run:{sceneView:{environment:'mountain-temple'}}})
 const key=scene.getObjectByName('temple-key-light'),keyPosition=key.position.clone()
-const renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});renderer.toneMapping=THREE.NeutralToneMapping;renderer.toneMappingExposure=1;renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;document.body.appendChild(renderer.domElement)
+const renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});renderer.toneMapping=THREE.NeutralToneMapping;renderer.toneMappingExposure=1.2;renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;document.body.appendChild(renderer.domElement)
 const ibl=loadTempleIBL(renderer,scene,scene.getObjectByName('temple-lighting'))
 ibl.ready.then(loaded=>{document.querySelector('#ibl-status').textContent=loaded?'IBL 已加载 · 左三列为五种卡背，右三列为地板；拖动视角检查高光':'HDR 加载失败，当前保留原全局补光；npm run prepare:temple-ibl 可下载离线资源'})
 function syncFloorEnvironment(){group.traverse(mesh=>{if(mesh.material?.userData.templeGround)applyTempleGroundEnvironment(mesh.material,scene)})}

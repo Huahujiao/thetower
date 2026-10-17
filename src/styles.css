@@ -26,6 +26,13 @@ button { font: inherit; }
   --hud-action-height: clamp(30px, 8vw, 36px);
 }
 .vue-hud-root { display: contents; }
+.scene-loading-state { position: absolute; z-index: 30; top: var(--hud-scene-top); bottom: var(--hud-bottom-height); left: 0; right: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 20px; text-align: center; color: #ded9bf; background: radial-gradient(ellipse at 40% 30%,#728274,#354e50 65%,#263b3c); pointer-events: auto; }
+.scene-loading-state strong { font-size: 16px; font-weight: 500; letter-spacing: .08em; }
+.scene-loading-state > span:not(.scene-loading-mark) { font-size: 12px; color: #ced6cb; }
+.scene-loading-state button { border: 1px solid #c4b78c; border-radius: 4px; padding: 8px 20px; color: #263b3c; background: #cdbd96; cursor: pointer; }
+.scene-loading-mark { width: 22px; height: 22px; border: 2px solid #c3c7ad55; border-top-color: #e2d5b2; border-radius: 50%; animation: startup-spin 1.4s linear infinite; }
+.scene-asset-status { position: absolute; z-index: 8; left: 8px; bottom: 8px; padding: 5px 8px; border: 1px solid #c1b79444; border-radius: 4px; color: #dcd6bd; background: #263d3ee0; font-size: 11px; pointer-events: none; }
+@media(prefers-reduced-motion:reduce) { .scene-loading-mark { animation: none; } }
 
 /* Keep the full phone HUD visible while reviewing artwork on a desktop. */
 body.art-tweak-page #hud {
@@ -258,8 +265,10 @@ body.art-tweak-page #hud {
 .bag-item,.bag-item.weapon,.bag-item.weapon.attribute-scorch,.bag-item.weapon.attribute-wither,.bag-item.weapon.attribute-drown,.bag-item.potion,.bag-item.armor,.bag-item.energy,.bag-item.buff,.bag-item.relic,.bag-item.defense,.bag-item.material { --bag-fill: linear-gradient(145deg, rgba(42,54,54,.96), rgba(15,22,24,.98)); --bag-edge: rgba(74,94,91,.86); --bag-tint: rgba(58,76,74,.24); }
 .bag-item.weapon.attribute-scorch { --bag-fill: linear-gradient(145deg, rgba(83,45,51,.98), rgba(29,20,25,.98)); --bag-edge: rgba(205,94,88,.96); --bag-tint: rgba(205,94,88,.2); }.bag-item.weapon.attribute-wither { --bag-fill: linear-gradient(145deg, rgba(70,67,38,.98), rgba(23,24,19,.98)); --bag-edge: rgba(190,164,68,.96); --bag-tint: rgba(190,164,68,.2); }.bag-item.weapon.attribute-drown { --bag-fill: linear-gradient(145deg, rgba(35,70,84,.98), rgba(15,27,35,.98)); --bag-edge: rgba(72,160,178,.96); --bag-tint: rgba(72,160,178,.2); }.bag-item.potion { --bag-fill: linear-gradient(145deg, rgba(46,70,57,.98), rgba(17,30,24,.98)); --bag-edge: rgba(117,73,67,.88); --bag-tint: rgba(117,190,145,.18); }.bag-item.armor { --bag-fill: linear-gradient(145deg, rgba(58,65,70,.98), rgba(21,26,29,.98)); --bag-edge: rgba(141,155,162,.88); --bag-tint: rgba(141,155,162,.18); }.bag-item.energy { --bag-fill: linear-gradient(145deg, rgba(67,60,29,.98), rgba(26,25,17,.98)); --bag-edge: rgba(157,125,45,.88); --bag-tint: rgba(226,190,88,.2); }.bag-item.buff,.bag-item.relic { --bag-fill: linear-gradient(145deg, rgba(61,50,78,.98), rgba(24,21,35,.98)); --bag-edge: rgba(104,86,133,.88); --bag-tint: rgba(180,132,235,.18); }.bag-item.relic { --bag-edge: rgba(210,170,255,.92); --bag-tint: rgba(181,125,241,.24); }.bag-item.defense { --bag-fill: linear-gradient(145deg, rgba(38,65,69,.98), rgba(15,27,30,.98)); --bag-edge: rgba(67,91,96,.88); --bag-tint: rgba(67,150,160,.18); }.bag-item.material { --bag-fill: linear-gradient(145deg, rgba(56,57,43,.98), rgba(22,24,20,.98)); --bag-edge: rgba(110,112,82,.88); --bag-tint: rgba(170,155,88,.18); }
 .bag-item.selected { --bag-edge: #ffd56b; }
-.bag-shape { inset: 0; gap: 2px; }
-.bag-sprite { position: absolute; top: 50%; left: 50%; right: auto; bottom: auto; z-index: 3; display: block; width: 100%; height: 100%; object-fit: contain; pointer-events: none; cursor: pointer; transform-origin: center; -webkit-touch-callout: none; }
+.bag-shape { inset: 0; gap: 2px; container-type: size; }
+/* Fallback box for the sprite; inventorySpriteStyle() inlines the same total. */
+/* 1px cell border + 2px breathing room on each side => 6px. */
+.bag-sprite { position: absolute; top: 50%; left: 50%; right: auto; bottom: auto; z-index: 3; display: block; width: calc(100% - 6px); height: calc(100% - 6px); overflow: hidden; pointer-events: none; cursor: pointer; transform-origin: center; -webkit-touch-callout: none; }
 .backpack-grid .bag-item { pointer-events: none; }
 .bag-shape .occupied { position: relative; box-sizing: border-box; border-style: solid; border-color: var(--bag-edge); border-radius: 0; background: var(--bag-fill); }
 .bag-shape .shape-edge { position: absolute; z-index: 2; display: block; pointer-events: none; background: #ffe7a0; opacity: 0; }
@@ -386,12 +395,14 @@ body.art-tweak-page #hud {
 .detail-stat-lines,.detail-effect-lines { position: relative; z-index: 1; display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; color: rgba(243,246,255,.9); font-size: 11px; line-height: 1.25; }
 .detail-stat-lines > div,.detail-effect-lines > div { min-width: 0; max-width: 100%; padding: 3px 6px; overflow: hidden; border: 1px solid rgba(198,218,255,.24); border-radius: 999px; background: rgba(14,24,45,.42); color: rgba(237,244,255,.92); font-size: 10px; font-weight: 700; line-height: 1.1; text-overflow: ellipsis; white-space: nowrap; }
 .detail-stat-lines + .detail-effect-lines { width: 100%; padding-top: 5px; border-top: 1px solid rgba(198,218,255,.18); }
-.detail-sprite { display: block; box-sizing: border-box; width: 100%; max-width: 100%; height: 100%; max-height: 100%; min-width: 0; min-height: 0; object-fit: contain; object-position: center; pointer-events: none; user-select: none; -webkit-touch-callout: none; }
+/* Same tight-alpha crop as the backpack sprite, so one item reads identically
+   in every panel. The icon box itself is still sized by --detail-grid-cell. */
+.detail-sprite { display: block; box-sizing: border-box; width: 100%; max-width: 100%; height: 100%; max-height: 100%; min-width: 0; min-height: 0; pointer-events: none; user-select: none; -webkit-touch-callout: none; }
 .detail-icon:has(.detail-sprite) { padding: 3px; }
 .detail-upgrade-routes { position: relative; z-index: 1; grid-column: 1 / -1; display: grid; gap: 5px; min-width: 0; margin-top: 1px; padding-top: 7px; border-top: 1px solid rgba(198,218,255,.2); pointer-events: none; }
 .detail-upgrade-route { display: flex; align-items: center; justify-content: center; gap: clamp(5px, 1.8vw, 9px); min-width: 0; }
-.detail-upgrade-icon { --detail-upgrade-size: clamp(34px, 10vw, 44px); position: relative; display: block; box-sizing: border-box; flex: 0 0 var(--detail-upgrade-size); width: var(--detail-upgrade-size); min-width: var(--detail-upgrade-size); max-width: var(--detail-upgrade-size); height: var(--detail-upgrade-size); min-height: var(--detail-upgrade-size); max-height: var(--detail-upgrade-size); overflow: hidden; contain: size layout paint; }
-.detail-upgrade-icon img { position: absolute; inset: 0; display: block; box-sizing: border-box; width: 100%; min-width: 0; max-width: 100%; height: 100%; min-height: 0; max-height: 100%; margin: auto; object-fit: contain !important; object-position: center; pointer-events: none; user-select: none; -webkit-touch-callout: none; }
+.detail-upgrade-icon { --detail-upgrade-size: clamp(34px, 10vw, 44px); --detail-upgrade-inset: 2px; position: relative; display: block; box-sizing: border-box; flex: 0 0 var(--detail-upgrade-size); width: var(--detail-upgrade-size); min-width: var(--detail-upgrade-size); max-width: var(--detail-upgrade-size); height: var(--detail-upgrade-size); min-height: var(--detail-upgrade-size); max-height: var(--detail-upgrade-size); overflow: hidden; contain: size layout paint; }
+.detail-upgrade-sprite { position: absolute; top: var(--detail-upgrade-inset); left: var(--detail-upgrade-inset); display: block; box-sizing: border-box; width: calc(100% - 2 * var(--detail-upgrade-inset)); max-width: 100%; height: calc(100% - 2 * var(--detail-upgrade-inset)); max-height: 100%; min-width: 0; min-height: 0; pointer-events: none; user-select: none; -webkit-touch-callout: none; }
 .detail-upgrade-plus,.detail-upgrade-arrow { position: relative; display: block; flex: 0 0 auto; width: clamp(15px, 4.5vw, 21px); height: clamp(15px, 4.5vw, 21px); color: rgba(230,238,244,.9); filter: drop-shadow(0 1px 2px rgba(0,0,0,.72)); }
 .detail-upgrade-plus::before,.detail-upgrade-plus::after { content: ''; position: absolute; top: 50%; left: 50%; width: 72%; height: 2px; border-radius: 2px; background: currentColor; transform: translate(-50%, -50%); }
 .detail-upgrade-plus::after { transform: translate(-50%, -50%) rotate(90deg); }
@@ -613,7 +624,7 @@ body.art-tweak-page .hud-bottom {
   margin-top: auto;
   padding: var(--hud-bottom-padding-top) var(--hud-bottom-padding-inline) var(--hud-bottom-padding-bottom);
   row-gap: 8px;
-  background: linear-gradient(180deg, #101a1deb, #10191aef), url('./assets/board-floor-brick-v1.jpg') center / 300px;
+  background: linear-gradient(180deg, #101a1deb, #10191aef), url('./assets/environment/runtime-lite/brick.webp') center / 300px;
   border-top: 1px solid #5e6357;
 }
 body.art-tweak-page .backpack-toolbar { gap: var(--hud-toolbar-gap); }

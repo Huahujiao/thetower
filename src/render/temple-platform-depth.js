@@ -17,8 +17,11 @@ export class TemplePlatformDepth {
     const bottom = -.43 - 2.32 * depthScale
     const height = top - bottom
     this.group.userData.bounds = { halfX, minZ, maxZ, top, bottom: top - height }
-    const wallMaterial = foundationStoneMaterial(masonry, 0x71877b, depthScale)
-    const trimMaterial = foundationStoneMaterial(stone, 0x8c9e91, depthScale)
+    // The side walls are the same dressed stone as the rails and pillars. They used
+    // to take the darker foundation masonry plus a darker tint, so the platform
+    // read as a separate, murkier material from the structure standing on it.
+    const wallMaterial = foundationStoneMaterial(stone, 0x8ea396, depthScale)
+    const trimMaterial = foundationStoneMaterial(stone, 0x99a89a, depthScale)
     const add = (size, position, material, name, repeat = 1) => {
       const mesh = new THREE.Mesh(dressedStoneBox(size, .026, repeat), material)
       mesh.position.set(...position)

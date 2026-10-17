@@ -5,7 +5,7 @@ import skyUrl from '../assets/environment/kloofendal-overcast-puresky-128.hdr?ur
 
 export const TEMPLE_IBL = Object.freeze({
   localUrl: skyUrl,
-  intensity: .32,
+  intensity: .30,
   // Align the source sky glow (~29 degrees azimuth) with the tree-side sun.
   rotationY: 149 * Math.PI / 180,
 })

@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import cloudsUrl from '../assets/environment/temple-parallax-clouds-v1.webp'
+import cloudsUrl from '../assets/environment/runtime-lite/clouds.webp'
 
 const VERTEX = `
   uniform mat4 uWorldToPlatform;

@@ -5,8 +5,9 @@ import { projectShadowFaces } from '../animation/shadow-projection.js'
 import * as THREE from 'three'
 import { shadowPartGeometry } from '../animation/shadow-geometry.js'
 import { applyTextureBacking } from './texture-backing.js'
+import { applyEnemyOutline } from './enemy-outline.js'
 import { shadowPartFloor } from '../animation/shadow-grounding.js'
-import { enemyTextureUrl } from '../animation/enemy-texture-styles.js'
+import { gameplayEnemyTextureUrl } from './enemy-texture-runtime.js'
 
 const images = new Map()
 let projects = null
@@ -23,7 +24,7 @@ function imageFor(url) {
     const image = new Image()
     images.set(url, image)
     image.onload = () => assetReady?.()
-    image.src = enemyTextureUrl(url)
+    image.src = gameplayEnemyTextureUrl(url)
   }
   const image = images.get(url)
   return image.complete && image.naturalWidth ? image : null
@@ -34,7 +35,9 @@ export function prepareEnemyPuppets(onReady) {
   resetStaleShadowCache()
   projects = new Map(createEnemyShadowProjects({ includeBoss: true }).map((project) => [project.enemyId, project]))
   silhouettes = new WeakMap()
-  for (const project of projects.values()) for (const part of project.parts) {
+  // Only the common size reference is needed before a figure is displayed.
+  // Visible figures request their own parts through puppetTexture/drawProject.
+  for (const part of projects.get('gnawer')?.parts || []) {
     if (part.visual.type === 'texture') imageFor(part.visual.texture)
   }
 }
@@ -172,7 +175,7 @@ const skinTextures = new Map()
 function skinTexture(url) {
   if (!url) return null
   if (!skinTextures.has(url)) {
-    const texture = new THREE.TextureLoader().load(enemyTextureUrl(url), () => assetReady?.())
+    const texture = new THREE.TextureLoader().load(gameplayEnemyTextureUrl(url), () => assetReady?.())
     texture.colorSpace = THREE.SRGBColorSpace
     texture.userData.boardShared = true
     skinTextures.set(url, texture)
@@ -200,8 +203,17 @@ function puppetTexture(part) {
   return texture
 }
 
+// Ink width is expressed in texels, so every part strokes at the same visual
+// weight no matter how large its source crop is.
+function outlineOptions(texture) {
+  const image = texture?.image
+  const texel = new THREE.Vector2(1 / (image?.width || 256), 1 / (image?.height || 256))
+  const override = typeof window !== 'undefined' ? window.__enemyOutline : null
+  return { ...(override || {}), texel }
+}
+
 // Both textured and geometry-only enemies use the same articulated 3D actor.
-export function createEnemyFigure(enemyId, cardSize = 1.14) {
+export function createEnemyFigure(enemyId, cardSize = 1.14, outline = {}) {
   const project = enemyPuppetProject(enemyId)
   if (!project) return null
   const group = new THREE.Group(), rig = new THREE.Group()
@@ -218,11 +230,15 @@ export function createEnemyFigure(enemyId, cardSize = 1.14) {
       const uv = geometry.attributes.uv, position = geometry.attributes.position
       for (let i = 0; i < uv.count; i++) uv.setXY(i, position.getX(i) / part.width + part.pivotX, position.getY(i) / part.height + 1 - part.pivotY)
     }
+    const texture = textured ? puppetTexture(part) : null
     const mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({
-      color: textured ? 0xffffff : part.fill, map: textured ? puppetTexture(part) : null,
+      color: textured ? 0xffffff : part.fill, map: texture,
       side: THREE.DoubleSide, transparent: true, alphaTest: textured ? .04 : 0, depthTest: true, depthWrite: true,
     }))
-    if (textured) applyTextureBacking(mesh.material, part.visual.backingColor, skinTexture(part.visual.skinTexture))
+    if (textured) {
+      applyTextureBacking(mesh.material, part.visual.backingColor, skinTexture(part.visual.skinTexture))
+      applyEnemyOutline(mesh.material, outlineOptions(texture))
+    }
     mesh.matrixAutoUpdate = false
     mesh.raycast = () => {}
     rig.add(mesh)

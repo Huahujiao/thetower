@@ -1,7 +1,7 @@
 import * as THREE from 'three'
-import farUrl from '../assets/environment/temple-mountains-v1.jpg'
-import middleUrl from '../assets/environment/temple-parallax-peaks-v2.webp'
-import cloudsUrl from '../assets/environment/temple-parallax-clouds-v1.webp'
+import farUrl from '../assets/environment/runtime-lite/mountains.webp'
+import middleUrl from '../assets/environment/runtime-lite/peaks.webp'
+import cloudsUrl from '../assets/environment/runtime-lite/clouds.webp'
 
 export class TempleParallaxBackdrop {
   constructor(container) {

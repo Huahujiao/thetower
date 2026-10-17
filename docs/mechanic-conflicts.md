@@ -134,3 +134,50 @@
 
 - 用户反馈上一轮出现灰白斑块，已通过获授权的Playwright/Edge实际页面复现并多轮截图。去掉clearcoat，减弱地面使用的天空环境图强度，调整主光角度，收敛粗糙度/法线并启用Neutral色调映射。最终默认与转动视角截图已检查，页面与控制台错误为0。
 - 原“浏览器无法连接、没有实际WebGL画面验收”的限制在本轮通过Playwright解决。手机原生GPU性能仍未测量；X4122为已知官方精度警告，保留现状。最终截图见art/reviews/temple-lighting-final-*.png。
+
+## 棋盘与卡牌美术（2026-10-17）
+
+- 用户反馈的原始问题（均已复现）：画面里叠着三种渲染语言——远景是 `color-ref/` 那种柔和油画，敌人和物品是手绘低饱和，棋盘/卡牌/建筑是硬边 PBR 石材；卡牌与地板共用同一种石材固有色，均值都在0.50 左右，卡牌和地砖完全无法区分；卡牌厚度 0.18 而底板只有 0.08，卡牌是脚下石板的2.25 倍，直接读作铺装；补光过曝把固有色冲成一片平灰。
+- 已完成（卡背）：`prepare-board-runtime.py` 改为分层绘制卡背——外沿、细发丝色线、内嵌面板、手绘云纹，再叠大尺度污渍、边缘磨损和细划痕。四色编码严格保持原样：中性灰白、红、黄、蓝，外加不可翻的 dead grey；实测色相红 14°、黄 42°、蓝 200°，中性饱和度 0.10。整片明度比原来降约四分之一，符合用户选择的"压暗、沉静的寺庙氛围"。粗糙贴图按漆器重做。
+- 已完成（卡背起伏）：法线能量从高频"纹样浮雕"改为"纹样 0.55 + 漆面颗粒 0.45 + 面板笔触起伏 1.25"，强度 6 → 11，材质 normalScale 0.85 → 1.15。之前的贴图本身并不平（p90 倾角就有 20–29°），问题是能量几乎全在亚像素的高频上，256px 卡面缩到屏幕上被平均掉了；现在把能量推向 6–46px 的低频带，p50 倾角从 0.7–2.5° 升到 1.6–5.5°，p90 到 32–39°。
+- 已完成（地板色与质感）：固有色提到石灰色区间（均值 0.245 → 0.378，更白更清灰）；粗糙度分布整体上移，中位数 0.45 → 0.61、亮面占比 65–70% → **0%**，材质 specularIntensity 0.6 → 0.32，clearcoat 保持 0。卡背本身是 0.79–0.80 的哑光，现在两者终于在同一档表面语言上。
+- 已完成（裂纹分级）：`crack_mask` 拆成 `crack_masks`，返回主裂纹与发丝裂纹两张独立遮罩。主裂纹宽度 4→2px、变暗 65%→34%、高度 0.20→0.10、AO 0.16→0.08；发丝裂纹用固定随机种子生成 24 条短折线，宽度 1px、变暗 66%、高度 0.13、AO 0.20——细线本身只有一两个像素宽，必须给更高对比才看得见。原来只有"很深的沟"和"看不出的小纹"两档。
+- 已完成（卡背纯色区做旧）：原来的磨损（边缘压暗、大污渍、划痕、纤维）是均匀铺满整张卡的，所以花纹区有感觉、纯色面板反而干净。新增 `craze_mask`——固定种子生成 150 条细折线组成开片龟裂网，压暗 20% 并**同时进入法线高度场**；另加 `rub` 磨穿斑块（压暗 16%、高度 0.22），`polish` 光泽不匀由±15% 提到 ±23%。`lacquer_back` 现在返回 (rgb, wear)，磨损会真正影响起伏而不只是颜色。中性同时改为真灰（去掉奶油色偏），均值 0.457 → 0.404，饱和度 0.104 → 0.053。
+- 已完成（建筑配色）：`scene_color_palette` 的 stone/masonry/wood/soil 原本是暖色（R>B），与冷灰地板色温相反，实测色相差 90°以上。改为与地板同族：地板 174°、石材 170°、基础石 170°，**相差 4° 以内**，饱和度都在 0.10 上下；明度分三档（石材 0.461 亮于地板 0.376，基础石 0.364 暗于地板）。漆木门保留全场唯一暖色（18°，饱和度 0.31）。
+- 已完成（建筑纹理频率）：石材法线高度场原为 `blur(luma,1.1)-blur(luma,8)`，主能量在 1–2px 的砂粒上，256px 贴图铺满 1 米栏杆再被游戏相机缩小后全被平均掉，于是建筑只剩平剪影、读作 lowpoly。改为 `blur(luma,2.8)-blur(luma,17)`，把能量搬进相机还能分辨的 3–16px 频段，强度 8 → 11（石材）/ 13（基础石），cavity 也同步粗化，材质 normalScale 0.8 → 1.0。
+- 已完成（厚度与悬浮）：`HIDDEN_CARD_THICKNESS` 0.18 → 0.06，比底板还薄。新增 `CARD_FLOOR_GAP = 0.045`，并把 `groundSurfaceY`（石面高度）与新的 `cardRestY`（卡牌停放高度）拆开——之前的实现把 gap 加进了石面高度，地板跟着一起抬高，卡牌实际仍贴在石板上。卡牌停放面、翻牌动画落点、敌人站位和空地面都已改用 `cardRestY`。
+- 已完成（灯光）：补光从 ambient 0.90 + hemi 0.85 降到 0.34 + 0.46，主光 2.8 → 2.35，曝光 1.2 → 1.02。中途把全局 IBL 从 0.32 提到 0.55 抵消了这批降幅（`scene.environmentIntensity` 作用于每张卡），已回退到 0.30。
+- 已验证：`card-body-check` 新增"卡牌比底板薄 + 悬浮间隙大于贴面偏移 + 石面/停放面分离"三条契约；`temple-lighting-check` 里写死 0.18 厚度和"卡牌贴地"的旧断言已改为新契约。`prepare-board-runtime --check`、`prepare-temple-palette --check`、`generate-temple-stone-surfaces --check`、`board-textures-check`、`board-pointer-check`、`card-body-check`、`card-relief-check`、`wall-kit-check`、`temple-architecture-check`、`temple-lighting-check` 全部通过。Edge/Playwright 实机截图见 `art/reviews/board-style-*.png`，棋盘区域均值从 0.464 降到 0.298。
+- 已完成（皮影描边）：新增 `src/render/enemy-outline.js`。部件是 alpha 裁切的平面四边形，推顶点那套用不上，所以描边从**邻域 alpha 采样**算：8 个方向的偏移采样，中心透明而邻域不透明处即剪影边。**单侧和全描边的采样次数完全一样**，单侧只是把权重换成方向点积，所以单侧并不贵——8 次额外采样，敌人又小又少，开销可忽略。默认方向 `(0.7071, -0.7071)`（屏幕右下），对应山寺主光在左上后方；`direction` 传零向量即全描边。三种模式实机截图见 `art/reviews/enemy-outline-{directional,full,off}.png` 与对比图 `enemy-outline-compare.png`。链路：`applyTextureBacking` 已经占用了 `onBeforeCompile`，描边模块改为**链式**接管并用 `.call(this)` 保留 Three 默认 `customProgramCacheKey` 的 receiver，否则默认实现读 `this.onBeforeCompile` 会抛错。
+- 已完成（贴片阴影）：发现并修掉一个真 bug——接触阴影锚在 `CARD_THICKNESS/2 + .009`（即地面石板高度），而卡牌改成悬浮后停在 `cardFaceY(false, ...)`，阴影被埋进石头里，所以敌人和主角的接地阴影几乎看不见。现统一走 `_contactShadowY()`。渐变贴图也从峰值 0.65 加深到 0.86 并收紧衰减。物品走 `_groundSpriteMesh`，本身没有独立阴影，靠卡面自身。
+- 已完成（卡背明暗随机）：同一属性的卡共用一张贴图，逐像素相同，所以明暗差异分两处做——贴图内把 `polish` 低频场从 4×4/半径26/±23% 提到 3×3/半径42/**±62%**；运行时再按格子位置算稳定的 `stableHash`，给每张卡 ±8.5% 的明度加 ±1.8% 的冷暖偏移。翻面、移动、重建房间都不会跳变。
+- 已完成（卡背配色）：中性底色再压暗（ground `7e7c79`→`696764`，panel `8c8a86`→`77746f`）同时花纹提到近白（`454441`→`d4d2cb`）；红黄蓝整体减淡，实测饱和度红 0.377→0.274、黄 0.360→0.206、蓝 0.297→0.206，色相仍是红 17°/黄 42°/蓝 199°，四色编码不变。
+- 已完成（土壤）：调色板色相 84°、饱和度 0.081，明显偏离地板色族，改为 `('383f42','6a7172','979d9d')`，实测 157°/0.038，进入冷灰家族。
+- 已完成（种植带）：外圈土壤带原宽 0.9，视觉上像护城河。树只需要容下树干，收到 0.62；树干位置从 `backZ-0.46` 移到 `backZ-0.33`，落叶散布区间从 `0.12+0.64` 收到 `0.10+0.42`，都仍在带内。
+- 已验证：`prepare-board-runtime --check`、`prepare-temple-palette --check`、`enemy-grounding-check`、`temple-architecture-check`、`temple-lighting-check`、`card-body-check`、`board-textures-check` 全部通过。
+- 已修复（卡背"金属感"）：用户反馈卡背铺开后明暗像金属反光。根因是两条平滑项叠加——一条 `polish` 低频乘数场（3×3/半径42/±62%），以及一条**线性竖向渐变** `sheen = grid_y/WORK_SIZE - .5`，后者本身就是高光扫掠的形状。两条全部删除，改为四层**有明确边界的磨损**：grime 结垢斑块、veins 不规则细纹（`1-|2n-1|` 生成脉络而不是色块）、rubbed 磨穿区、stain 旧渍，配合加深的龟裂网（压暗 0.20→0.27）。半径从 15/24/29/20 收到 8/13/15/11，smoothstep 带宽同步收窄，斑块从"云"变成"磨蚀"。客观验证：亮度梯度方向集中度从有线性扫掠时的接近 0.5 降到 **0.004–0.013**（即不存在主导方向），粗/细结构能量比 1.7–2.2。`art/reviews/card-wear-review.png` 为四种卡背的贴图审查图。
+- 已修复（中性卡背发黄）：中性原先用的是暖灰（`696764`、`d4d2cb` 等，R>B），实测平均色相 41°、饱和度 0.064。现按用户要求改为**纯无彩色**——`#4f4f4f / #6a6a6a / #777777 / #d4d2d4 / #5e5e5e` 五档全部 R==G==B，`colour()` 改为同时接受带 `#` 的写法。实测输出平均 RGB 0.4218/0.4218/0.4218，通道差 0.00008，饱和度 0.0002，100% 像素落在 1/255 的无彩色范围内。后续所有磨损通道都是逐通道等值的乘/加运算，因此不会再引入偏色。
+- 已修复（卡背明暗"色块/lowpoly"）：上一版用 9×9、7×7 这类低分辨率随机场做 grime/rubbed/stain，双三次上采样出来的是**多边形块面**，于是又从"金属感"掉进了 low-poly。改为两步：(1) 大面积明暗改用**源图自身结构**——`wear = smooth(blur(source_luma,13), q12, q88)`，与地板 `board_colour` 同一套做法，因此继承石材本身的纹理起伏而不是合成块面；(2) 水渍改用 `organic_field`，4 倍频值噪声叠加后取 `smoothstep` 窄带等值线，得到一条**闭合的潮线**加内部积色，正是干涸水渍的形状——脉状纹路用 `1-|2n-1|` 生成而不是色块。梯度方向集中度 0.001–0.009。
+- 已修复（卡背黑框）：外沿那圈 rim 原色远低于底色（中性 `4f4f4f` vs 底 `6a6a6a`，红 `453733` vs `634840`），在暗棋盘上四种属性都被压成同一个黑框。改为 rim **略高于底色**，读作受光的斜切边，同时把 rim 的磨损压暗从 0.55 降到 0.30。
+- 已修复（侧壁太暗、与柱子不像一套材质）：平台侧壁原本用 `foundationStoneMaterial(masonry, 0x71877b)`——`masonry` 贴图均值 0.364 且 tint 更暗，而栏杆柱子用 `stone`（0.461），等于换了一套材质；深度渐变又压到 `mix(0.34, 1.0)`，底部只剩三分之一反照率、读成黑洞。现在侧壁与压顶线统一改用 `stone` 贴图，tint 提到 `0x8ea396` / `0x99a89a`，深度渐变下限 0.34 → **0.58**，program cache key 升到 v4。
+- 已完成（敌人血条高度）：血条/名字/提示的 Y 原本是写死常量 `CARD_SIZE * 0.46 / 0.58 / 0.72`，但敌人模型高度每个都不同，还要再乘全局 `ENEMY_DISPLAY_SCALE = 1.1`——用户之前统一调高敌人尺寸后，高个敌人的血条就被压进模型里。新增 `_measureFigureTopLocalY(face)`：取敌人世界包围盒八个角、逆变换回该卡片的局部平面，取最大 Y，因此棋盘旋转时也能正确贴在头顶上方；三行之间保留原有间距（`ENEMY_STATUS_ROW_GAP`、`ENEMY_STATUS_HEAD_CLEARANCE`）。**同时发现 `_refreshTile` 里调用顺序反了**——先 `_setEnemyStatusOverlay` 后 `_attachEnemyFigure`，测量必然拿不到模型，已调换。`_addTile` 路径顺序本来就正确。测不到模型时回退到原常量。`enemies-check`、`enemy-completion-check`、`enemy-grounding-check`、`temple-lighting-check` 全部通过。
+- 已完成（卡背明暗变体分层）：按用户要求把水渍明暗从卡背图案里彻底拆出。生成器新增 `card_wear(source_luma, kind, variant)`，输出**独立的明暗图层** `card-{kind}-wear{v}.png`，**分辨率降到 96**（图案层保持 256 不动），**每种属性 3 个变体**。图层内容：源图固有明暗（沿用地板那套 `smooth(blur(luma,13), q12, q88)`）+ 潮线 + 积色 + 流痕 + 脉络，编码成字节 128 = 1.0 的灰度乘数。`lacquer_back` 现在只画图案（外沿/色线/面板/云纹 + 边缘磨损 + 龟裂 + 纤维），不再含任何大面积明暗。运行时：`board-textures.js` 加载 15 张 wear 图并提供 `wear(texture, variant)`；`card-body.js` 在 `createCardFaceMaterial` 多接一个 `wearMap`，用 `onBeforeCompile` 把 `texture2D(uCardWear, vMapUv).rgb * 2.0` 乘到 diffuse；`scene.js` 的 `_cardWearVariant` 按格子位置 hash 选变体（`CARD_WEAR_VARIANT_RANGE = 3`）。原先的逐格明暗抖动保留，和变体叠加。贴图总数 27 → 42，但总字节 1.48MB → **1.43MB**（wear 层比它替换掉的合成更便宜）。
+- 已验证：`board-textures-check.mjs` 的贴图计数从 27 更新到 42，并新增"每种属性 3 个变体 + wear 用 NoColorSpace + cardWearKind 标记"三条断言。`prepare-board-runtime --check`、`board-textures-check`、`card-body-check`、`card-relief-check`、`temple-lighting-check`、`enemies-check`、`board-pointer-check` 全部通过。实机截图 `art/reviews/board-style-wear-board.png` 可见同色系卡背的明暗与水渍分布均不再重复。
+- 待验证：侧壁在 arttweak 移动端取景里位于画面下缘之外，本次只过了 `temple-architecture-check`，**未取得侧壁的实机截图**。
+- 待验证：描边只在**有贴图的部件**上生效；纯几何部件（`shadowPartGeometry` + `part.fill`，没有 alpha 图）没有剪影可描，暂时没有描边，需要实机确认这类部件占比和观感。敌人与物品贴图仍未按新暗调重新调色。
+- 用户明确不改：主角形象（尚未确定是谁），仍是原来的白色火柴人，也不在描边范围内。
+- 待验证：Wiki 物品清单页的背包格子既无内缩也无悬浮，仍是旧的一套。
+
+## 背包物品画面与格子边框间距（2026-10-17）
+
+- 已完成（背包）：`inventorySpriteStyle` 的画面视口由原来的 `calc(100% - 4px)` 改为 `calc(100% - 6px)`，即在1px 格子边框之外再留 2px。`.bag-sprite` 的 CSS 兜底值同步。SVG 仍以紧致 alpha 边界为 viewBox 并用 `xMidYMid meet`，画面比例不变，只是整体缩小一圈；奇数旋转继续用容器查询交换宽高。
+- 已复现的原问题：改动前画面边缘只离可见格子边框内侧约1px，武器、斧、护甲等大画面几乎贴住边框。浏览器实测单格物品格子53px、画面视口46.81px，每侧留白3px，即距1px边框内侧约2px。
+- 已完成（统一物品画面）：`InventorySprite.vue` 增加 `spriteClass` 与可选 `itemIndex`，不再写死 `bag-sprite`，且未传 `itemIndex` 时不输出 `data-bag-item`。游戏详情面板大图、合成配方三枚小图、Wiki物品详情图和Wiki配方图全部改用同一紧致裁切，不再用整张透明 PNG 配 `object-fit: contain`；`.detail-upgrade-icon` 另加2px 内缩，Wiki详情图标加2px 内边距。**详情面板自身的方框尺寸仍由 `--detail-grid-cell` 决定，与物品实际占格数无关**，本轮没有改动方框尺寸规则。
+- 已验证：`scripts/inventory-sprite-inset-check.mjs` 覆盖四个旋转档位、负数/越界旋转归一化、JS 与 CSS 的 6px 一致性、1px 边框假设，以及 SSR 渲染出的紧致 viewBox、无 `data-bag-item`、各面板 spriteClass；`bag-shape-check.mjs` 与 `wiki-items-ui-check.mjs` 通过。460×1000、dSF2 的 Edge/Playwright 实机截图：背包 `art/reviews/inventory-inset-before-bag.png`、`inventory-inset-after-bag.png`、`inventory-inset-compare.png`；详情面板 `art/reviews/detail-sprite-before-routes-锈蚀短剑.png`、`detail-sprite-after-routes-锈蚀短剑.png`、`detail-sprite-compare.png`。实测详情图标方框109×164.5、画面视口101×156.5（1px 边框 + 3px 内边距），配方小图方框44px、画面40px。页面除一个既有404外无报错。
+- 待验证：Wiki 物品清单页的背包格子仍用 `wiki-items.js` 里自己的一套百分比公式，**没有任何内缩**，画面会贴住格子边框；该页只加载 `wiki.css`（不含 `.bag-shape { container-type: size }`），要复用 `inventorySpriteStyle` 需要先给 Wiki 补容器查询环境。本轮未改，属于同一规则尚未覆盖的一处。
+- 待验证的视觉风险：详情面板对比图上下两幅截图的背景内容不同（同一帧内页面滚动位置差异），只用于比较图标区画面大小，不代表背景渲染差异。
+
+### 2026-10-17 开发检查依赖缺失（已确认，非本轮玩法变动）
+
+- 常规ESLint命令实际失败于本地未安装eslint-plugin-vue；也已确认node_modules缺少marked。两者均在package.json既有声明中。此次渐进启动没有改动依赖或扩展为安装/清理任务。
+- 本轮使用Vue SFC/script/template编译、JS定向ESLint和真实浏览器阶段/失败测试验证直接流程；入口限定生产构建将marked外置，只用于检查本轮入口/HUD拆分，不代表wiki或全量工程检查通过。

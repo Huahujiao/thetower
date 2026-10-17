@@ -1,0 +1,249 @@
+{
+  "viewport": {
+    "width": 460,
+    "height": 1000,
+    "deviceScaleFactor": 2
+  },
+  "browser": "Edge through Playwright",
+  "stats": {
+    "ibl": true,
+    "camera": {
+      "zoom": 1,
+      "elevation": 0.6981317007977318,
+      "azimuth": 0,
+      "offset": [
+        -0.57,
+        0,
+        0.969
+      ]
+    },
+    "textures": [
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      },
+      {
+        "width": 256,
+        "height": 256
+      }
+    ],
+    "toneMapping": 7,
+    "toneMappingExposure": 1.2,
+    "environmentIntensity": 0.32,
+    "lights": [
+      {
+        "type": "AmbientLight",
+        "intensity": 0
+      },
+      {
+        "type": "HemisphereLight",
+        "intensity": 0
+      },
+      {
+        "type": "DirectionalLight",
+        "intensity": 2.8
+      },
+      {
+        "type": "DirectionalLight",
+        "intensity": 0
+      }
+    ],
+    "floors": [
+      {
+        "type": "MeshPhysicalMaterial",
+        "color": "c0d4db",
+        "roughness": 1,
+        "clearcoat": 0,
+        "normalScale": 0.35,
+        "envMapIntensity": 0.0704,
+        "explicitEnvironment": true
+      },
+      {
+        "type": "MeshPhysicalMaterial",
+        "color": "c0d4db",
+        "roughness": 1,
+        "clearcoat": 0,
+        "normalScale": 0.35,
+        "envMapIntensity": 0.0704,
+        "explicitEnvironment": true
+      },
+      {
+        "type": "MeshPhysicalMaterial",
+        "color": "c0d4db",
+        "roughness": 1,
+        "clearcoat": 0,
+        "normalScale": 0.35,
+        "envMapIntensity": 0.0704,
+        "explicitEnvironment": true
+      },
+      {
+        "type": "MeshPhysicalMaterial",
+        "color": "c0d4db",
+        "roughness": 1,
+        "clearcoat": 0,
+        "normalScale": 0.35,
+        "envMapIntensity": 0.0704,
+        "explicitEnvironment": true
+      },
+      {
+        "type": "MeshPhysicalMaterial",
+        "color": "c0d4db",
+        "roughness": 1,
+        "clearcoat": 0,
+        "normalScale": 0.35,
+        "envMapIntensity": 0.0704,
+        "explicitEnvironment": true
+      },
+      {
+        "type": "MeshPhysicalMaterial",
+        "color": "c0d4db",
+        "roughness": 1,
+        "clearcoat": 0,
+        "normalScale": 0.35,
+        "envMapIntensity": 0.0704,
+        "explicitEnvironment": true
+      }
+    ]
+  },
+  "errors": [],
+  "warnings": [
+    "THREE.WebGLProgram: Program Info Log: (210,81-129): warning X4122: sum of 0.996094 and -2.98545e-017 cannot be represented accurately in double precision\n(209,37-61): warning X4122: sum of 1 and -1.49272e-017 cannot be represented accurately in double precision\n(210,82-106): warning X4122: sum of 1 and -1.49272e-017 cannot be represented accurately in double precision\n(209,37-61): warning X4122: sum of 1 and -1.66644e-018 cannot be represented accurately in double precision\n(210,82-106): warning X4122: sum of 1 and -1.66644e-018 cannot be represented accurately in double precision"
+  ],
+  "requests": [
+    "http://127.0.0.1:3000/src/assets/board-runtime/card-neutral-surface.png?t=1792226110754",
+    "http://127.0.0.1:3000/src/assets/board-runtime/card-wither-surface.png?t=1792226111914",
+    "http://127.0.0.1:3000/src/assets/board-runtime/card-scorch-surface.png?t=1792226111327",
+    "http://127.0.0.1:3000/src/assets/board-runtime/card-drown-surface.png?t=1792226112486",
+    "http://127.0.0.1:3000/src/assets/board-runtime/card-blocked-surface.png?t=1792226113028",
+    "http://127.0.0.1:3000/src/assets/board-runtime/floor-a-normal.png?t=1792226113463",
+    "http://127.0.0.1:3000/src/assets/board-runtime/floor-b-normal.png?t=1792226114023",
+    "http://127.0.0.1:3000/src/assets/board-runtime/floor-c-normal.png?t=1792226114586",
+    "http://127.0.0.1:3000/src/assets/board-runtime/floor-a-surface.png?t=1792226113569",
+    "http://127.0.0.1:3000/src/assets/board-runtime/floor-d-normal.png?t=1792226115130",
+    "http://127.0.0.1:3000/src/assets/board-runtime/floor-b-surface.png?t=1792226114155",
+    "http://127.0.0.1:3000/src/assets/board-runtime/floor-c-surface.png?t=1792226114706",
+    "http://127.0.0.1:3000/src/assets/board-runtime/floor-d-surface.png?t=1792226115273",
+    "http://127.0.0.1:3000/src/assets/board-runtime/floor-a-color.webp?t=1792226113230",
+    "http://127.0.0.1:3000/src/assets/board-runtime/floor-b-color.webp?t=1792226113792",
+    "http://127.0.0.1:3000/src/assets/board-runtime/floor-c-color.webp?t=1792226114375",
+    "http://127.0.0.1:3000/src/assets/board-runtime/floor-d-color.webp?t=1792226114921",
+    "http://127.0.0.1:3000/src/assets/board-runtime/card-scorch-color.webp?t=1792226111065",
+    "http://127.0.0.1:3000/src/assets/board-runtime/card-neutral-color.webp?t=1792226110486",
+    "http://127.0.0.1:3000/src/assets/board-runtime/card-wither-color.webp?t=1792226111633",
+    "http://127.0.0.1:3000/src/assets/board-runtime/card-drown-color.webp?t=1792226112277",
+    "http://127.0.0.1:3000/src/assets/board-runtime/card-blocked-color.webp?t=1792226112779",
+    "http://127.0.0.1:3000/src/assets/board-runtime/card-scorch-normal.png?t=1792226111233",
+    "http://127.0.0.1:3000/src/assets/board-runtime/card-neutral-normal.png?t=1792226110579",
+    "http://127.0.0.1:3000/src/assets/board-runtime/card-wither-normal.png?t=1792226111772",
+    "http://127.0.0.1:3000/src/assets/board-runtime/card-drown-normal.png?t=1792226112315",
+    "http://127.0.0.1:3000/src/assets/board-runtime/card-blocked-normal.png?t=1792226112922"
+  ],
+  "sceneryRequests": [
+    "http://127.0.0.1:3000/src/assets/environment/palette-v1/stone.webp?t=1792226115930",
+    "http://127.0.0.1:3000/src/assets/environment/palette-v1/masonry.webp?t=1792226116043",
+    "http://127.0.0.1:3000/src/assets/environment/palette-v1/soil.webp?t=1792226116265",
+    "http://127.0.0.1:3000/src/assets/environment/palette-v1/wood.webp?t=1792226116173",
+    "http://127.0.0.1:3000/src/assets/environment/palette-v1/banner.png?t=1792226120442",
+    "http://127.0.0.1:3000/src/assets/environment/palette-v1/maple.png?t=1792226119165"
+  ]
+}

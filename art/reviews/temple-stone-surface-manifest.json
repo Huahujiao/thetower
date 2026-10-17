@@ -1,13 +1,13 @@
 {
   "temple-dressed-stone-v1": {
     "sourceSha256": "8619e523356aef7b9e62b7ad0ec8f1d3e5392e4a3f6d73ac74f0489c916c2416",
-    "size": 512,
+    "size": 256,
     "normal": "OpenGL, linear",
     "surface": "R=ambient occlusion, G=roughness, B=0"
   },
   "temple-foundation-masonry-v1": {
     "sourceSha256": "d5793b2425cebe25fed5bb99d2f31702dac32011dd03058c98b81fe63bd6559c",
-    "size": 512,
+    "size": 256,
     "normal": "OpenGL, linear",
     "surface": "R=ambient occlusion, G=roughness, B=0"
   }
