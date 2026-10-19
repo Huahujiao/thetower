@@ -428,11 +428,11 @@ export function createContactShadowTexture() {
   // Puppets and the player draw no cast shadow, so this patch is all the grounding
   // the eye gets. It was previously buried under the paving and barely opaque.
   const gradient = ctx.createRadialGradient(64, 64, 0, 64, 64, 62)
-  gradient.addColorStop(0, 'rgba(6,9,10,.86)')
-  gradient.addColorStop(.28, 'rgba(6,9,10,.66)')
-  gradient.addColorStop(.58, 'rgba(6,9,10,.34)')
-  gradient.addColorStop(.82, 'rgba(6,9,10,.11)')
-  gradient.addColorStop(1, 'rgba(6,9,10,0)')
+  gradient.addColorStop(0, 'rgba(0,0,0,1)')
+  gradient.addColorStop(.24, 'rgba(0,0,0,.90)')
+  gradient.addColorStop(.52, 'rgba(0,0,0,.55)')
+  gradient.addColorStop(.78, 'rgba(0,0,0,.18)')
+  gradient.addColorStop(1, 'rgba(0,0,0,0)')
   ctx.fillStyle = gradient
   ctx.fillRect(0,0,128,128)
   const texture = new THREE.CanvasTexture(canvas)

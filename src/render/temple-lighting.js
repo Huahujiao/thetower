@@ -9,11 +9,18 @@ import { setSurfaceColor } from './surface-color.js'
 // keep their own colour.
 export const TEMPLE_LIGHTING = Object.freeze({
   keyPosition: Object.freeze([-4, 8, -7]),
-  keyColor: 0xf6ecdb, keyIntensity: 2.35,
-  ambientColor: 0xd8ded5, ambientIntensity: .34,
-  skyColor: 0xa8c4cf, groundColor: 0x4d5850, skyIntensity: .46,
-  fillPosition: Object.freeze([4, 5, 6]), fillColor: 0xa8c2cc, fillIntensity: .16,
+  keyColor: 0xf6ecdb, keyIntensity: 2.55,
+  // Cool grey-blue fill, not white light: the previous near-white ambient
+  // pasted a frost layer over every painted surface.
+  ambientColor: 0xaebec2, ambientIntensity: .28,
+  skyColor: 0x9fb8c0, groundColor: 0x4f5c57, skyIntensity: .38,
+  fillPosition: Object.freeze([4, 5, 6]), fillColor: 0x8fa9b4, fillIntensity: .16,
 })
+
+// The floor is the one surface that must stay luminous when the key light is
+// blocked by a rail or a card. Let it take much more of the cool sky probe
+// than the old 0.22 factor, which left the paving reading as dark slate.
+export const TEMPLE_GROUND_ENV_FACTOR = 2.5
 
 export function addTempleLighting(parent) {
   const rig = new THREE.Group()
@@ -50,7 +57,10 @@ export function createTempleGroundMaterial(texture, options = {}, maps = {}) {
     ...options,
   })
   material.userData.templeGround = true
-  return setSurfaceColor(material, material.color.clone(), 0xc0d4db)
+  // Keep the stone cool but let the hazy key light reach it. The old 0xc0d4db
+  // multiplied the already-mid-grey albedo down into near-black; the later
+  // 0xe4f1f4 overcorrected into a chalky white. Sit between them.
+  return setSurfaceColor(material, material.color.clone(), 0xd8e6e8)
 }
 
 // Stone keeps the directional glint without reflecting the entire cloudy sky
@@ -59,7 +69,7 @@ export function applyTempleGroundEnvironment(material, scene) {
   if (!scene?.environment || !material.userData.templeGround) return material
   const changed = material.envMap !== scene.environment
   material.envMap = scene.environment
-  material.envMapIntensity = scene.environmentIntensity * .22
+  material.envMapIntensity = scene.environmentIntensity * TEMPLE_GROUND_ENV_FACTOR
   material.envMapRotation.copy(scene.environmentRotation)
   if (changed) material.needsUpdate = true
   return material

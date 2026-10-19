@@ -19,10 +19,12 @@ PALETTES = {
     'wither': ('444d49', 'a1a081', 'd8cfac'),
     'drown': ('354a59', '789b9f', 'ccd3c1'),
     'blocked': ('363f49', '788482', 'b6bba9'),
-    # The board sits a full value step below the card backs and the backdrop,
-    # so a card reads as an object resting on a dark surface instead of another
-    # square of paving. Cool slate, wide low-frequency range, low chroma.
-    'floor': ('3b4244', '6e7977', 'a9b1ab'),
+    # The board still sits a value step below the card backs and the backdrop,
+    # so a card reads as an object resting on the stone instead of another
+    # square of paving. Cool slate, wide low-frequency range, low chroma. Lift
+    # the whole ramp a little: the hazy temple view needs a readable floor, not
+    # a near-black hole under the cards.
+    'floor': ('434c4e', '77837f', 'b0b8b2'),
     # The scenery is one material family with the paving: same cool grey-green
     # hue direction, separated by value and a little chroma, not by switching
     # to a warm palette. Dressed stone sits a step lighter than the floor,

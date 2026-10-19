@@ -10,8 +10,8 @@ globalThis.document = {createElement:tag=>tag==='img'?{}:{width:512,height:512,g
 try {
   const { BoardTextures } = await server.ssrLoadModule('/src/render/board-textures.js')
   const { setSurfaceColor } = await server.ssrLoadModule('/src/render/surface-color.js')
-  const { createCardFaceMaterial } = await server.ssrLoadModule('/src/render/card-body.js')
-  const { createTempleGroundMaterial, addTempleLighting, applyTempleGroundEnvironment } = await server.ssrLoadModule('/src/render/temple-lighting.js')
+  const { createCardFaceMaterial, CARD_BACK_NORMAL_SCALE } = await server.ssrLoadModule('/src/render/card-body.js')
+  const { createTempleGroundMaterial, addTempleLighting, applyTempleGroundEnvironment, TEMPLE_GROUND_ENV_FACTOR } = await server.ssrLoadModule('/src/render/temple-lighting.js')
   const { loadTempleIBL, TEMPLE_IBL } = await server.ssrLoadModule('/src/render/temple-ibl.js')
   const { registerTempleStoneSurface } = await server.ssrLoadModule('/src/render/temple-stone-materials.js')
   const { TempleEnvironment } = await server.ssrLoadModule('/src/render/temple-environment.js')
@@ -24,7 +24,7 @@ try {
     setSurfaceColor(material,0xffffff)
     assert(material.color.equals(artColor),'Refreshing reachability must preserve the dark card finish')
     assert.equal(material.roughnessMap,maps.surface);assert.equal(material.metalnessMap,maps.surface)
-    assert.equal(material.normalMap,maps.normal);assert.equal(material.normalScale.x,1.3)
+    assert.equal(material.normalMap,maps.normal);assert.equal(material.normalScale.x,CARD_BACK_NORMAL_SCALE)
     assert(material.emissiveIntensity<.05,'IBL must dominate the card lighting')
     material.dispose()
   }
@@ -66,7 +66,7 @@ try {
   assert.equal(scene.environment,filtered);assert.equal(scene.background,background)
   assert.equal(scene.environmentRotation.y,TEMPLE_IBL.rotationY)
   assert.equal(floorMaterial.envMap,filtered,'Floors created before HDR finishes loading must bind the shared PMREM')
-  assert.equal(floorMaterial.envMapIntensity,TEMPLE_IBL.intensity*.22)
+  assert.equal(floorMaterial.envMapIntensity,TEMPLE_IBL.intensity*TEMPLE_GROUND_ENV_FACTOR)
   const laterFloor=createTempleGroundMaterial(board.floor(),{},board.surfaceData(board.floor()))
   applyTempleGroundEnvironment(laterFloor,scene)
   const laterMesh=new THREE.Mesh(new THREE.PlaneGeometry(1,1),laterFloor);scene.add(laterMesh)

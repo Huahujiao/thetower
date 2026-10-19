@@ -3,11 +3,11 @@
   "files": {
     "card-neutral-color.webp": {
       "size": 256,
-      "bytes": 14278,
-      "sha256": "1d392913cea258e145b52695d94104a6836a1bcd9880ff420d7ed2a44eeb2df1",
+      "bytes": 9066,
+      "sha256": "a4d2a64016579565cd1c46de4febec69bee13ab764f9c675ceebfaf689a78fc8",
       "source": "board-card-back-temple-v2.jpg",
       "source_sha256": "bb58263a4072f929a605e43a52e31e1fbfd8d3d32e436826ae8f9af6285be297",
-      "derived_sha256": "142716bf97bf856f76573028efb136c8c0b2d44decddf706132554941b1ea96b"
+      "derived_sha256": "f1a76285f4241170902ffb46d966978d39c53e284c5a580d06526e33ff305060"
     },
     "card-neutral-normal.png": {
       "size": 256,
@@ -51,11 +51,11 @@
     },
     "card-scorch-color.webp": {
       "size": 256,
-      "bytes": 14110,
-      "sha256": "0b61c0880ec1cb0540c8746bd315e52ac8f75cf4ff18d1fb4e1a6d42a33c9e2d",
+      "bytes": 8392,
+      "sha256": "b1a2763d73ac5652261907e18e90f90f1a4adc4b2bc9e4ac749c05090e3a1515",
       "source": "board-card-back-scorch-temple-v2.jpg",
       "source_sha256": "0bc1125f2846f0a2528f8ca2e2c91f5cb4e3ce3cbe3246ffaabd85fc43ae457c",
-      "derived_sha256": "6a47e2978b2f54d882fbe366f4ac43ec73a8e7b10a8d84fa90e437c8b5ccb511"
+      "derived_sha256": "c12b55f146ce078ca4bc252ee4c038aaeaa983e2436434f0b735ed45d23744cb"
     },
     "card-scorch-normal.png": {
       "size": 256,
@@ -99,11 +99,11 @@
     },
     "card-wither-color.webp": {
       "size": 256,
-      "bytes": 15100,
-      "sha256": "439a4e2b40bd25d506982930deb4e5702578782e2a5aa48d134e622818140cbc",
+      "bytes": 9670,
+      "sha256": "26e7f26600cfc7655e028f669aa3b980348e9aa7423450565445e11f1eac6ffa",
       "source": "board-card-back-wither-temple-v2.jpg",
       "source_sha256": "f8df18a2a36797eb1d1b4d840952f9a1c6940ec27cda620fc794f7f79d39e08b",
-      "derived_sha256": "86282ae8fbdb2af19f40f0d2b0156c144db1d1cb71c7fd87d41b19b9ceae1997"
+      "derived_sha256": "b63e59ec8f8361d56cb2159004a502b568532e9e01f3e7f6428aec9c77113b81"
     },
     "card-wither-normal.png": {
       "size": 256,
@@ -147,11 +147,11 @@
     },
     "card-drown-color.webp": {
       "size": 256,
-      "bytes": 15726,
-      "sha256": "a9035f571219bf911556bc5db97a4014a36683fa4bd962748609bb0a7f06ed7d",
+      "bytes": 9922,
+      "sha256": "36ab9d6f63ed88c5cc32216a856989769a1a1bf3f54705b56be2c4a840d0e68c",
       "source": "board-card-back-drown-temple-v2.jpg",
       "source_sha256": "476faf273c67626ebc6e19ca009a77318a66ce6accff6b9874d2400d81c52f18",
-      "derived_sha256": "545eeea6dd2cee0310b37b9a34409c98a0c39e67c38f08bd820b00013a06ab6d"
+      "derived_sha256": "23520c36832a157ffd931b60480094b851be7a3d4868f1d969ef881cd1681047"
     },
     "card-drown-normal.png": {
       "size": 256,
@@ -195,11 +195,11 @@
     },
     "card-blocked-color.webp": {
       "size": 256,
-      "bytes": 10378,
-      "sha256": "820776fd35d5329202913a4eaf669b2f867e36e18ab5d626e6aa50cfd8cd6ba2",
+      "bytes": 5578,
+      "sha256": "ab001e7dc9a57b706d466f72fc19e89dcbc0defd9246fa32ac42714a07462266",
       "source": "board-card-back-blocked-v1.jpg",
       "source_sha256": "8bf47ef8d5ed1bc37c5f1f9b8eaa4454edb3bb322c07db83de3aa1ef97445200",
-      "derived_sha256": "a27df284a0bb806bc2de3477f7f6d80788ef7d2da109222b4312765a05325c4e"
+      "derived_sha256": "01b7cc69d587d2e2a39a8be60f61643530eefde699bdc347ff916b6f4dcb1d72"
     },
     "card-blocked-normal.png": {
       "size": 256,
@@ -243,11 +243,11 @@
     },
     "floor-a-color.webp": {
       "size": 256,
-      "bytes": 3004,
-      "sha256": "17a729baf26b22e59f6ade5087178263721bc87442efe953a95b5c0558f8b36b",
+      "bytes": 3126,
+      "sha256": "7d5a1494ef8f4e26f1cae72bb00c9686c77caef4ad37bfc6241e664e7c7b686f",
       "source": "board-floor-temple-a-v4.jpg",
       "source_sha256": "1cb85fdb33e72fbfc7deae730704c3e6e5dcc0130992b7466b4eb71b422cccfb",
-      "derived_sha256": "4c2cfc1dbb0f92d67ae3add93772cef9afe2c1b3e62642795c13ff75c8e05f04"
+      "derived_sha256": "3192a59d6d4fcf4170d846c2300120fa027d9af3de465ab1a8cddb289a87ea7e"
     },
     "floor-a-normal.png": {
       "size": 256,
@@ -267,11 +267,11 @@
     },
     "floor-b-color.webp": {
       "size": 256,
-      "bytes": 4080,
-      "sha256": "5be8fd57a62f62902d97044e2cc5959daafd72d4e47cae1f0fc2a3d774955df7",
+      "bytes": 3984,
+      "sha256": "ce6b8f83e06661bf87117e3db875d8bd1193e60a35123ef42d0bfedb2c4b951e",
       "source": "board-floor-temple-b-v4.jpg",
       "source_sha256": "9e58ce31df3bd58ec54483cfff598546766e5479caea30a15ae45337f2548e4b",
-      "derived_sha256": "6ccae9d478693d695bf766e90123a33088acdbc015be9c2c1e403feb0815d972"
+      "derived_sha256": "accdaf29c46e92913055c747d24f5462f3edb6f33571ff8396dcda6efed20158"
     },
     "floor-b-normal.png": {
       "size": 256,
@@ -291,11 +291,11 @@
     },
     "floor-c-color.webp": {
       "size": 256,
-      "bytes": 4608,
-      "sha256": "d138949ff33471e999167321992eb2d71cbcce53a44597d933c9c3c389f68981",
+      "bytes": 4602,
+      "sha256": "c6044294836d1bb0c6056783d9818d978242e4ac219b6a611def059d82904048",
       "source": "board-floor-temple-c-v4.jpg",
       "source_sha256": "ef0d5e919d86f71edc85c4cf38c04d41b3b3351fa7e323bcf9b919cc3fb95766",
-      "derived_sha256": "b2020320a45d64f1694113c8a8f1c60984b82dcce8528b3fb4e5bcbeb384e8ab"
+      "derived_sha256": "e33338d684e07aa1378f28380477f79c92e5ea268682823f6154cf614c25235d"
     },
     "floor-c-normal.png": {
       "size": 256,
@@ -315,11 +315,11 @@
     },
     "floor-d-color.webp": {
       "size": 256,
-      "bytes": 3630,
-      "sha256": "481ffb5503a467ebcb45b8a82d0a0a1c484b3ee38a5e5e630ba04e72de979ffa",
+      "bytes": 3742,
+      "sha256": "e3f9b5b1f4df99bc39d73b9c98d69554767898b8f52ed49cb2f0165116debee4",
       "source": "board-floor-temple-d-v4.jpg",
       "source_sha256": "f3adab732eccaf034b68101833bfae6a36b34686acdb961611fcbf38b61d2826",
-      "derived_sha256": "0c38d629c8aaf6aa236e4e0fc2e1b6608c634381e495d5530fb66eb78bcc96d7"
+      "derived_sha256": "e5d9dcaa5390faf1770b6cd073c8ba2196e9f3aa3fb0e25cb4978562690e8d96"
     },
     "floor-d-normal.png": {
       "size": 256,
@@ -338,5 +338,5 @@
       "derived_sha256": "0fb18e0c654d99d5dc4b9e2d6b20ba6deab133432b9ed40942ec2973c8d7e4ba"
     }
   },
-  "totalBytes": 1433771
+  "totalBytes": 1406939
 }

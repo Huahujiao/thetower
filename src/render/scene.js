@@ -76,6 +76,19 @@ const PLAYER_ATTACK_LIFT = 0.045
 const TILE_RENDER_ORDER_BASE = 100
 const TILE_RENDER_ORDER_ROW_STEP = 16
 const FOOTPRINT_PRESS_DEPTH = 0.1
+// Billboard actors are unlit cut-outs, so their only grounding is a painted
+// patch. Keep it dark enough to read on the hazy pale paving, and put it under
+// the artwork's feet instead of the tile centre.
+const ACTOR_SHADOW_WIDTH = CARD_SIZE * .78
+const ACTOR_SHADOW_DEPTH = CARD_SIZE * .42
+const TOKEN_SHADOW_WIDTH = CARD_SIZE * .58
+const TOKEN_SHADOW_DEPTH = CARD_SIZE * .32
+const ITEM_SHADOW_WIDTH = CARD_SIZE * .42
+const ITEM_SHADOW_DEPTH = CARD_SIZE * .22
+// The temple key sits up-left/back, so its contact patch falls down-right.
+// Tokens lean back in screen space; anchoring their patch to the tile centre
+// (rather than the face's literal floor projection) keeps it under the feet.
+const CONTACT_SHADOW_LIGHT = Object.freeze({ x: .09, z: .14 })
 
 const ITEM_SPRITE_TEXTURES = new Map()
 const ITEM_SPRITE_LOADER = new THREE.TextureLoader()
@@ -357,8 +370,10 @@ export class GameScene {
     this.camera = new THREE.PerspectiveCamera(CAMERA_FOV, 1, CAMERA_NEAR, CAMERA_FAR)
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
     if (run.sceneView?.environment === 'mountain-temple') {
+      // Neutral keeps the card/stone hues distinct. AgX was lifting and
+      // desaturating the whole board into a single white haze.
       this.renderer.toneMapping = THREE.NeutralToneMapping
-      this.renderer.toneMappingExposure = 1.02
+      this.renderer.toneMappingExposure = 1.04
     }
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
     this.renderer.shadowMap.enabled = true
@@ -589,8 +604,8 @@ export class GameScene {
   // contact shadows had all but vanished.
   _contactShadowY() { return cardFaceY(false, CARD_THICKNESS) + .009 }
 
-  _makeContactShadow() {
-    const shadow = new THREE.Mesh(new THREE.PlaneGeometry(CARD_SIZE * .82, CARD_SIZE * .56),
+  _makeContactShadow(width = ACTOR_SHADOW_WIDTH, depth = ACTOR_SHADOW_DEPTH) {
+    const shadow = new THREE.Mesh(new THREE.PlaneGeometry(width, depth),
       new THREE.MeshBasicMaterial({ map: this.contactShadowTexture, transparent: true, depthTest: false, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 }))
     shadow.rotation.x = -Math.PI / 2
     shadow.position.y = this._contactShadowY()
@@ -608,18 +623,25 @@ export class GameScene {
   }
 
   _setContactShadow(face, card, revealed) {
-    const actor = revealed && (card?.type === 'monster' || card?.type === 'entry')
+    const kind = card?.type === 'monster' ? 'enemy'
+      : card?.type === 'merchant' || card?.type === 'totem' || card?.type === 'entry' ? 'token'
+        : null
     let shadow = face.userData.contactShadow
-    if (!actor) {
+    if (!kind) {
       if (shadow) { this.roomGroup.remove(shadow); disposeObject(shadow) }
       face.userData.contactShadow = null
       return
     }
-    if (!shadow) {
-      shadow = this._makeContactShadow()
+    if (!shadow || shadow.userData.shadowKind !== kind) {
+      if (shadow) { this.roomGroup.remove(shadow); disposeObject(shadow) }
+      shadow = this._makeContactShadow(
+        kind === 'enemy' ? ACTOR_SHADOW_WIDTH : TOKEN_SHADOW_WIDTH,
+        kind === 'enemy' ? ACTOR_SHADOW_DEPTH : TOKEN_SHADOW_DEPTH,
+      )
+      shadow.userData.shadowKind = kind
       face.userData.contactShadow = shadow
     }
-    shadow.position.set(face.position.x + .09, this._contactShadowY(), face.position.z + .05)
+    shadow.position.set(face.position.x + CONTACT_SHADOW_LIGHT.x, this._contactShadowY(), face.position.z + CONTACT_SHADOW_LIGHT.z)
     shadow.renderOrder = tileRenderOrder(face.userData.position, 2)
   }
 
@@ -627,15 +649,16 @@ export class GameScene {
     const actor = this.movementAnimation?.actor !== 'enemy' ? this.movementAnimation?.group || this.playerMarker : this.playerMarker
     const movingShadow = actor?.userData.contactShadow
     if (movingShadow) {
-      movingShadow.position.set(actor.position.x + .09, this._contactShadowY(), actor.position.z + .05)
+      const offset = movingShadow.userData.followOffset || CONTACT_SHADOW_LIGHT
+      movingShadow.position.set(actor.position.x + offset.x, this._contactShadowY(), actor.position.z + offset.z)
       movingShadow.renderOrder = (actor.children[0]?.renderOrder || 8) - 6
     }
     for (const face of this.tileMeshes) {
       const shadow = face.userData.contactShadow
       if (!shadow) continue
       shadow.visible = face.visible && face.userData.standing
-      shadow.position.x = face.position.x + .09
-      shadow.position.z = face.position.z + .05
+      shadow.position.x = face.position.x + CONTACT_SHADOW_LIGHT.x
+      shadow.position.z = face.position.z + CONTACT_SHADOW_LIGHT.z
       shadow.renderOrder = face.renderOrder - 2
     }
   }
@@ -667,6 +690,12 @@ export class GameScene {
     if (sprite) {
       this.roomGroup.remove(sprite)
       disposeObject(sprite)
+    }
+    const spriteShadow = face?.userData?.groundSpriteShadow
+    if (spriteShadow) {
+      this.roomGroup.remove(spriteShadow)
+      disposeObject(spriteShadow)
+      face.userData.groundSpriteShadow = null
     }
     if (!preserveGlow) {
       const glow = face?.userData?.groundWeaponGlow
@@ -845,6 +874,14 @@ export class GameScene {
     face.userData.groundSprite = sprite
     face.userData.groundSpriteState = { source: descriptor.sources, position: position ? { ...position } : null }
     this.roomGroup.add(sprite)
+
+    // Loose loot hovers and spins above the card. Without its own patch it
+    // reads as a decal on the board, so give every item/gold sprite the same
+    // small contact shadow the actors use.
+    const shadow = this._makeContactShadow(ITEM_SHADOW_WIDTH, ITEM_SHADOW_DEPTH)
+    shadow.position.set(point.x + CONTACT_SHADOW_LIGHT.x * .7, this._contactShadowY(), point.z + CONTACT_SHADOW_LIGHT.z * .7)
+    shadow.renderOrder = tileRenderOrder(position, 6)
+    face.userData.groundSpriteShadow = shadow
   }
 
   _attachGroundSprite(face, card, point, position, revealed = false) {
@@ -978,7 +1015,7 @@ export class GameScene {
       height * 0.62,
       -width / 2 + fillWidth / 2,
       y,
-      enemy.boss ? 0xff7777 : 0xe95b62,
+      enemy.boss ? 0xd8796f : 0xbf5d55,
       1,
     )
   }
@@ -993,13 +1030,13 @@ export class GameScene {
       context.textAlign = 'center'
       context.textBaseline = 'middle'
       do {
-        context.font = `bold ${size}px sans-serif`
+        context.font = `600 ${size}px "Noto Serif SC", "Songti SC", SimSun, Georgia, serif`
         size -= 1
       } while (size > 16 && context.measureText(label).width > 154)
       context.lineWidth = 1
       context.strokeStyle = 'rgba(4,7,12,.88)'
       context.strokeText(label, 80, 20)
-      context.fillStyle = '#f0e6d2'
+      context.fillStyle = '#e8dfcd'
       context.fillText(label, 80, 20)
     }, { width: 480, height: 120 })
     const nameLabel = new THREE.Mesh(
@@ -1780,7 +1817,9 @@ export class GameScene {
     marker.position.y = CARD_SIZE / 2
     marker.renderOrder = tileRenderOrder(from, 8)
     group.add(marker)
-    group.userData.contactShadow = this._makeContactShadow()
+    const shadow = this._makeContactShadow(TOKEN_SHADOW_WIDTH, TOKEN_SHADOW_DEPTH)
+    shadow.userData.followOffset = { ...CONTACT_SHADOW_LIGHT }
+    group.userData.contactShadow = shadow
     this.roomGroup.add(group)
     const route = [{ ...from }, ...path.map((step) => ({ ...step }))]
     const distances = route.slice(1).map((step, index) => Math.hypot(step.c - route[index].c, step.r - route[index].r))

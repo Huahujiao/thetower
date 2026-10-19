@@ -14,6 +14,10 @@ export const CARD_FLOOR_GAP = 0.045
 
 // Keep the textured face clear of the card body's top surface at every camera angle.
 export const CARD_FACE_CLEARANCE = 0.02
+// The motif is painted onto aged lacquer, not carved relief. Keep enough
+// normal response to catch the key light, but well below the carved-stone
+// strength the board used before.
+export const CARD_BACK_NORMAL_SCALE = .65
 const EDGE_COLORS = { neutral: 0xb2a58d, scorch: 0xa66b50, wither: 0xafa16e, drown: 0x819eb2, blocked: 0x555a62 }
 
 // Every tile shares this ground level. This is the visible stone, which cards
@@ -69,7 +73,7 @@ export function createCardFaceMaterial(texture, normalMap = null, options = {}, 
 // key light. Too low and the face reads as a printed decal; the old 1.3 turned
 // it into carved stone instead.
   const material = new THREE.MeshStandardMaterial({
-    ...common, normalMap, normalScale: new THREE.Vector2(1.15, 1.15),
+    ...common, normalMap, normalScale: new THREE.Vector2(CARD_BACK_NORMAL_SCALE, CARD_BACK_NORMAL_SCALE),
     roughness: surfaceMap ? 1 : .82, metalness: 0,
     roughnessMap: surfaceMap, metalnessMap: surfaceMap, aoMap: surfaceMap, aoMapIntensity: .5,
     // Surface colour comes from the albedo and real light, without emissive fill.

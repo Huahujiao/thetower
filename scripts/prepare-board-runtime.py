@@ -120,6 +120,16 @@ def crack_masks(kind):
 # glance. Only the treatment changes: each colour is aged, knocked back toward
 # the temple's muted palette and dropped roughly a quarter in value, so the
 # board sits in shadow and the painted enemies standing on it stay the subject.
+# The four attribute backs should read as cool, low-saturation lacquer rather
+# than coloured game tokens. Desaturate them, but keep the surface light: the
+# temple is hazy and the board needs to sit in that haze, not sink into it.
+# Keeping the ratio between the five stops means the card still reads as one
+# lacquer surface. The blocked back is excluded because it already marks
+# unreachable ground and must stay visibly inert, not merely less coloured.
+BACK_TONE_SATURATION = .86
+BACK_TONE_EXPOSURE = 1.00
+BACK_TONE_KINDS = frozenset(('neutral', 'scorch', 'wither', 'drown'))
+LUMA_WEIGHTS = np.array([.2126, .7152, .0722], dtype=np.float32)
 LACQUER = {
     # Neutral is the plain card, and it is strictly achromatic: every stop is a
     # #XXXXXX grey with R == G == B. Any warm cast here reads as a yellow card
@@ -128,13 +138,24 @@ LACQUER = {
     # ground, which against a dark board turned every attribute into the same
     # black frame. A rim a shade *above* the ground reads as a lit bevel and
     # keeps each element's own colour at the card's edge.
-    'neutral': ('#787878', '#6a6a6a', '#777777', '#d4d4d4', '#5e5e5e'),
+    # The fourth stop is the pattern. It spent a while at both ends of the range -
+    # first near-white, then the darkest value of the family - and a bright or
+    # near-black motif both read as a line laid on top of the card rather than
+    # as the card's own surface. It now sits one gentle step above the ground,
+    # reusing the ground value this palette used before the motif was dropped:
+    # the relief and the lighting carry the pattern, the paint only tints it.
+    # Ground and panel now follow the motif down in short steps (0.95x and 0.90x of
+    # it, keyline 0.86x), so the field is only a little darker than the pattern
+    # and the card reads as one lacquer surface instead of a pale line on a dark
+    # ground. Darkening the field further only widens a gap that already exists.
+    # The rim stays where it is: it is the lit bevel at the card edge.
+    'neutral': ('#787878', '#5f5f5f', '#656565', '#6a6a6a', '#5b5b5b'),
     # The three elements stay legible as red, yellow and blue, but the earlier
     # values were loud enough to read as game tokens rather than aged lacquer.
-    'scorch': ('#75574e', '#634840', '#725850', '#cbbfaf', '#74544c'),
-    'wither': ('#726553', '#5f584a', '#6f6859', '#d2cbb8', '#6b6149'),
-    'drown': ('#4a5c65', '#3e4d55', '#4d5d66', '#bcc5c5', '#465b64'),
-    'blocked': ('#555b5f', '#464a4d', '#545a5e', '#949a9c', '#4a4f52'),
+    'scorch': ('#75574e', '#594139', '#5e443d', '#634840', '#553e37'),
+    'wither': ('#726553', '#564f43', '#5a5446', '#5f584a', '#524c40'),
+    'drown': ('#4a5c65', '#38454d', '#3b4951', '#3e4d55', '#354249'),
+    'blocked': ('#555b5f', '#3f4345', '#434649', '#464a4d', '#3c4042'),
 }
 # Normalised distance from the tile edge at which each painted layer starts.
 RIM_EDGE, RIM_INNER, LINE_INNER, PANEL_INNER = .028, .040, .052, .064
@@ -144,6 +165,16 @@ def colour(value):
     # Accepts bare hex or #RRGGBB.
     value = value.lstrip('#')
     return np.array([int(value[i:i+2], 16)/255 for i in (0, 2, 4)], dtype=np.float32)
+
+
+def surface_tone(value, kind):
+    """Cool the four attribute backs and lift their exposure without changing hue."""
+    rgb = colour(value)
+    if kind not in BACK_TONE_KINDS:
+        return rgb
+    luma = float(rgb @ LUMA_WEIGHTS)
+    rgb = luma+(rgb-luma)*BACK_TONE_SATURATION
+    return np.clip(rgb*BACK_TONE_EXPOSURE, 0, 1)
 
 
 def field(values, radius):
@@ -205,7 +236,7 @@ def organic_field(seed, octaves = 4, base = 3):
 
 def lacquer_back(ornament, source_luma, kind):
     """Compose the painted card back from layered masks instead of a stone ramp."""
-    rim, ground, panel, ink, keyline = (colour(value) for value in LACQUER[kind])
+    rim, ground, panel, ink, keyline = (surface_tone(value, kind) for value in LACQUER[kind])
     distance = edge_distance(kind)
     rim_t = 1-smooth(distance, RIM_EDGE, RIM_INNER)
     line_t = smooth(distance, RIM_EDGE, RIM_INNER)-smooth(distance, LINE_INNER, PANEL_INNER)
@@ -298,6 +329,10 @@ def assets():
         tooth = (blur(luma, .8)-blur(luma, 3.0))*.45
         brush = (blur(luma, 6)-blur(luma, 46))*1.25
         card_height = ornament*.55+tooth+brush
+        # The motif is only a shade above the ground now, so it is the raised
+        # relief and the lighting that carry the pattern; the colour alone is
+        # far too low-contrast to read it. Keep the height field positive so
+        # the ornament stands proud of the panel.
         yield 'card-'+kind+'-color.webp', encode(resize_data(rgb)), source, SIZE
         yield 'card-'+kind+'-normal.png', normal(blur(card_height, 1.2), 11.0), source, SIZE
         yield 'card-'+kind+'-surface.png', encode(resize_data(np.stack([ao, rough, np.zeros_like(rough)], axis=-1))), source, SIZE

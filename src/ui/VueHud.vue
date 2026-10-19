@@ -510,8 +510,7 @@
   </div>
   <section v-if="!scene" class="scene-loading-state" role="status" aria-live="polite">
     <span v-if="!sceneError" class="scene-loading-mark" aria-hidden="true"></span>
-    <strong>{{ sceneError ? '场景暂时没有加载完成' : '正在铺设场景' }}</strong>
-    <span>{{ sceneError ? '请检查网络连接后重新加载。' : '界面已就绪，场景和角色将陆续显示' }}</span>
+    <strong>{{ sceneError ? '场景暂时没有加载完成，请重新加载' : '正在铺设场景' }}</strong>
     <button v-if="sceneError" type="button" @click="reloadPage">重新加载</button>
   </section>
 </template>
