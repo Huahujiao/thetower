@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { setSurfaceColor } from './surface-color.js'
+import { applyCardPaletteMaterial } from './card-palette-material.js'
 
 // A card is a thin object resting just clear of the paving, not a second paving
 // slab. The body used to be 0.18 against a 0.08 floor - two and a quarter times
@@ -14,11 +15,9 @@ export const CARD_FLOOR_GAP = 0.045
 
 // Keep the textured face clear of the card body's top surface at every camera angle.
 export const CARD_FACE_CLEARANCE = 0.02
-// The motif is painted onto aged lacquer, not carved relief. Keep enough
-// normal response to catch the key light, but well below the carved-stone
-// strength the board used before.
+// Rough stone retains the ornament relief and its surface tooth.
 export const CARD_BACK_NORMAL_SCALE = .65
-const EDGE_COLORS = { neutral: 0xb2a58d, scorch: 0xa66b50, wither: 0xafa16e, drown: 0x819eb2, blocked: 0x555a62 }
+const EDGE_COLORS = { neutral: 0xb2a58d, scorch: 0x923b3b, wither: 0xa79736, drown: 0x3f6b9c, blocked: 0x3d4447 }
 
 // Every tile shares this ground level. This is the visible stone, which cards
 // deliberately do not touch.
@@ -56,33 +55,29 @@ export function styleCardBody(body, { hidden, attribute, texture, baseThickness,
   body.userData.baseY = hidden ? hiddenCardBodyY(baseThickness) : 0
   body.position.y = body.userData.baseY
   body.material.map = hidden ? texture : null
+  body.material.roughness = hidden ? .46 : .9
   body.material.color.setHex(hidden ? (blocked ? EDGE_COLORS.blocked : EDGE_COLORS[attribute] ?? EDGE_COLORS.neutral) : 0x262a36)
   body.material.needsUpdate = true
 }
 
 // Only hidden card artwork receives relief lighting. Front canvases and standing
 // token overlays retain their original unlit, transparent presentation.
-export function createCardFaceMaterial(texture, normalMap = null, options = {}, surfaceMap = null, wearMap = null) {
+export function createCardFaceMaterial(texture, normalMap = null, options = {}, surfaceMap = null, wearMap = null, paletteUniforms = null) {
   const common = {
     map: texture, side: THREE.DoubleSide,
     polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -4,
     ...options,
   }
   if (!normalMap) return new THREE.MeshBasicMaterial(common)
-  // Painted lacquer still needs tooth and brush relief so the card catches the
-// key light. Too low and the face reads as a printed decal; the old 1.3 turned
-// it into carved stone instead.
   const material = new THREE.MeshStandardMaterial({
     ...common, normalMap, normalScale: new THREE.Vector2(CARD_BACK_NORMAL_SCALE, CARD_BACK_NORMAL_SCALE),
     roughness: surfaceMap ? 1 : .82, metalness: 0,
     roughnessMap: surfaceMap, metalnessMap: surfaceMap, aoMap: surfaceMap, aoMapIntensity: .5,
-    // Surface colour comes from the albedo and real light, without emissive fill.
     emissive: 0xffffff, emissiveMap: texture, emissiveIntensity: 0,
   })
-  // The painted lacquer already carries dark ink in its albedo; avoid darkening twice.
   const tinted = setSurfaceColor(material, material.color.clone(), 0xf0f0ed)
-  if (!wearMap) return tinted
-  // Tone is a separate low-resolution layer so each tile can wear differently.
+  if (!wearMap) return applyCardPaletteMaterial(tinted, paletteUniforms)
+  // Pigment and water-stain variants remain independent of the rough relief.
   const previous = material.onBeforeCompile
   material.onBeforeCompile = shader => {
     previous?.(shader)
@@ -95,5 +90,5 @@ export function createCardFaceMaterial(texture, normalMap = null, options = {}, 
   }
   const key = material.customProgramCacheKey
   material.customProgramCacheKey = function () { return (key ? key.call(this) + '|' : '') + 'card-wear' }
-  return tinted
+  return applyCardPaletteMaterial(tinted, paletteUniforms)
 }

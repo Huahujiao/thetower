@@ -13,6 +13,7 @@ globalThis.localStorage = {
   removeItem: key => storageCalls.push(['remove', key]),
 }
 const run = createArtTweakRun()
+assert.equal(run.sceneView.showUnreachableCardAttributes, undefined, 'Art review must follow the ordinary unreachable-card rule')
 const snapshot = run.serialize()
 const room = run.currentRoom
 assert.equal(run.backpack.usedCells, 15)

@@ -26,11 +26,22 @@ button { font: inherit; }
   --hud-action-height: clamp(30px, 8vw, 36px);
 }
 .vue-hud-root { display: contents; }
-.scene-loading-state { position: absolute; z-index: 30; top: var(--hud-scene-top); bottom: var(--hud-bottom-height); left: 0; right: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 20px; text-align: center; color: #ded9bf; background: radial-gradient(ellipse at 40% 30%,#728274b8,#354e50a8 65%,#263b3cb0); pointer-events: auto; }
-.scene-loading-state strong { font-size: 16px; font-weight: 500; letter-spacing: .08em; }
-.scene-loading-state button { border: 1px solid #c4b78c; border-radius: 4px; padding: 8px 20px; color: #263b3c; background: #cdbd96; cursor: pointer; }
-.scene-loading-mark { width: 22px; height: 22px; border: 2px solid #c3c7ad55; border-top-color: #e2d5b2; border-radius: 50%; animation: startup-spin 1.4s linear infinite; }
-.scene-asset-status { position: absolute; z-index: 8; left: 8px; bottom: 8px; padding: 5px 8px; border: 1px solid #c1b79444; border-radius: 4px; color: #dcd6bd; background: #263d3ee0; font-size: 11px; pointer-events: none; }
+.scene-loading-state { position: absolute; z-index: 40; top: var(--hud-scene-top); bottom: var(--hud-bottom-height); left: 0; right: 0; display: grid; place-items: center; padding: 16px; color: #eee5cb; background: rgba(20,36,38,.12); pointer-events: auto; }
+.scene-loading-panel { width: min(100%,340px); max-height: 100%; overflow: auto; padding: 20px; border: 1px solid #c5bf9e66; border-radius: 12px; background: rgba(29,48,48,.54); box-shadow: 0 8px 30px #0003; text-align: center; }
+.scene-loading-state strong { display: block; margin: 10px 0 16px; font-size: 16px; font-weight: 500; letter-spacing: .06em; }
+.scene-loading-state button { margin-top: 12px; border: 1px solid #c4b78c; border-radius: 4px; padding: 8px 20px; color: #263b3c; background: #cdbd96; cursor: pointer; }
+.scene-loading-mark { display: inline-block; width: 22px; height: 22px; border: 2px solid #c3c7ad55; border-top-color: #e2d5b2; border-radius: 50%; animation: startup-spin 1.4s linear infinite; }
+.scene-loading-progress { height: 7px; overflow: hidden; border-radius: 10px; background: #0d202099; }
+.scene-loading-progress > span { display: block; height: 100%; border-radius: inherit; background: #d4bd83; transition: width .2s ease; }
+.scene-loading-numbers { display: flex; justify-content: space-between; margin-top: 7px; font-size: 11px; font-variant-numeric: tabular-nums; }
+.scene-loading-downloads { display: grid; gap: 4px; margin: 14px 0; font-size: 12px; font-variant-numeric: tabular-nums; }
+.scene-loading-downloads b { font-weight: 500; color: #ddcfaa; }
+.scene-loading-stages { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 10px; padding: 12px 0 0; margin: 0; border-top: 1px solid #d5c9a733; list-style: none; text-align: left; font-size: 11px; }
+.scene-loading-stages li { display: flex; align-items: center; gap: 5px; opacity: .5; }
+.scene-loading-stages li > span { display: inline-grid; place-items: center; flex-shrink: 0; width: 17px; height: 17px; border: 1px solid currentColor; border-radius: 50%; font-size: 10px; }
+.scene-loading-stages li.active { opacity: 1; color: #f2dca8; }
+.scene-loading-stages li.done { opacity: .85; color: #c5d0a6; }
+.scene-loading-panel > small { display: block; margin-top: 12px; font-size: 11px; }
 @media(prefers-reduced-motion:reduce) { .scene-loading-mark { animation: none; } }
 
 /* Keep the full phone HUD visible while reviewing artwork on a desktop. */
@@ -671,3 +682,34 @@ body.art-tweak-page .temple-backdrop.temple-parallax-backdrop { inset: 0; overfl
 .temple-parallax-middle { background-size: cover; background-position: center -24px; opacity: 1; filter: url(#temple-solid-rock-alpha) saturate(.50) brightness(.80) url(#temple-middle-aerial-perspective); }
 .temple-parallax-clouds { background-size: auto 115%; background-position: center 74%; opacity: .32; filter: saturate(.45) brightness(.92); }
 .temple-parallax-shade { position: absolute; inset: 0; background: linear-gradient(180deg,#0d16192e,transparent 35%,#0c1b2226 65%,#0b1922b8 100%); pointer-events: none; }
+
+/* Compact live card colours remain usable inside the scrolling settings menu. */
+.settings-palette { min-width: 0; margin: 0; padding: 10px 0 0; border: 0; border-top: 1px solid rgba(255,255,255,.12); }
+.settings-palette legend { padding: 0 7px 0 0; color: #e7ddc5; font-size: 13px; font-weight: 700; }
+.settings-palette-note { margin: 0 0 8px; color: #b5b7b5; font-size: 11px; line-height: 1.5; }
+.settings-palette-hex { user-select: text; -webkit-user-select: text; box-sizing: border-box; width: 88px; min-width: 0; height: 32px; padding: 4px 6px; border: 1px solid #596166; border-radius: 4px; background: #171e21; color: #e5e5dc; font: 12px ui-monospace, monospace; }
+.settings-palette-hex[aria-invalid="true"] { border-color: #d88872; }
+.settings-palette-surface:focus-visible, .settings-palette-trigger:focus-visible, .settings-palette-hue:focus-visible, .settings-palette-hex:focus-visible, .settings-palette-reset:focus-visible { outline: 2px solid #c9b376; outline-offset: 2px; }
+.settings-palette-reset { width: 100%; min-height: 31px; margin-top: 2px; border: 1px solid #716a56; border-radius: 5px; background: #303735; color: #e7ddc5; font-size: 12px; cursor: pointer; }
+.settings-palette-reset:disabled { opacity: .45; cursor: default; }
+
+.settings-palette-swatch { display: inline-block; flex-shrink: 0; width: 16px; height: 16px; border: 1px solid #ffffff66; border-radius: 4px; }
+.settings-palette-surface { position: relative; width: 100%; height: 138px; border-radius: 5px; background-image: linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, transparent); box-shadow: inset 0 0 0 1px #ffffff33; touch-action: none; cursor: crosshair; }
+.settings-palette-cursor { position: absolute; width: 12px; height: 12px; box-sizing: border-box; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 0 1px #000b; transform: translate(-50%, -50%); pointer-events: none; }
+.settings-palette-hue-label { display: block; margin-top: 9px; color: #c9cbc7; font-size: 11px; }
+.settings-palette-hue { appearance: none; -webkit-appearance: none; display: block; width: 100%; height: 16px; margin: 6px 0 12px; padding: 0; border: 1px solid #ffffff40; border-radius: 8px; background: linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00); cursor: pointer; touch-action: none; box-sizing: border-box; }
+.settings-palette-hue::-webkit-slider-thumb { appearance: none; -webkit-appearance: none; width: 11px; height: 22px; border: 2px solid white; border-radius: 4px; background: transparent; box-shadow: 0 0 2px #000; }
+.settings-palette-hue::-moz-range-thumb { width: 8px; height: 20px; border: 2px solid white; border-radius: 4px; background: transparent; box-shadow: 0 0 2px #000; }
+.settings-palette-value { display: flex; align-items: center; gap: 7px; margin-bottom: 8px; color: #e0ded7; font-size: 12px; }
+.settings-palette-value .settings-palette-hex { margin-left: auto; }
+
+.settings-palette-row { display: grid; grid-template-columns: minmax(62px, 1fr) 48px 88px; align-items: center; gap: 7px; margin-bottom: 7px; color: #e0ded7; font-size: 12px; }
+.settings-palette-trigger { display: flex; align-items: center; gap: 4px; width: 48px; height: 32px; padding: 4px; border: 1px solid #6e766d; border-radius: 5px; background: #222a2d; color: #d6d6ca; cursor: pointer; }
+.settings-palette-trigger > span:first-child { width: 25px; height: 22px; border-radius: 3px; box-shadow: inset 0 0 0 1px #ffffff40; }
+.settings-palette-trigger[aria-expanded="true"] { border-color: #d0b77b; box-shadow: 0 0 0 1px #d0b77b; }
+.settings-palette-chevron { font-size: 13px; line-height: 1; }
+.settings-palette-popover { position: fixed; z-index: 10000; box-sizing: border-box; width: min(248px, calc(100vw - 16px)); padding: 12px; border: 1px solid #60665d; border-radius: 8px; background: #1d2527; box-shadow: 0 8px 28px #0009; font-family: inherit; color: #e7ddc5; pointer-events: auto; }
+.settings-palette-popover-title { display: flex; align-items: center; justify-content: space-between; margin: -4px 0 9px; font-size: 12px; }
+.settings-palette-popover-title button { width: 26px; height: 26px; border: 0; border-radius: 4px; background: transparent; color: #d3d5cd; font-size: 20px; cursor: pointer; }
+.settings-palette-popover-title button:hover { background: #ffffff12; }
+.settings-palette-popover .settings-palette-value { margin-bottom: 0; }

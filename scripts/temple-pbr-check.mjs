@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises'
 import { HDRLoader } from 'three/addons/loaders/HDRLoader.js'
 import { createServer } from 'vite'
 import * as THREE from 'three'
-const server = await createServer({server:{middlewareMode:true},appType:'custom'})
+const server = await createServer({configFile:false,server:{middlewareMode:true,hmr:false,watch:null},optimizeDeps:{noDiscovery:true,include:[]},appType:'custom'})
 const previousDocument = globalThis.document
 const ctx = new Proxy({}, {get:()=>()=>{}})
 globalThis.document = {createElement:tag=>tag==='img'?{}:{width:512,height:512,getContext:()=>ctx}}
@@ -20,6 +20,7 @@ try {
     const texture = board.back(kind,kind==='blocked'), maps = board.surfaceData(texture)
     const material = createCardFaceMaterial(texture,maps.normal,{},maps.surface)
     assert(material.isMeshStandardMaterial)
+    assert.equal(material.metalness, 0)
     const artColor=material.color.clone()
     setSurfaceColor(material,0xffffff)
     assert(material.color.equals(artColor),'Refreshing reachability must preserve the dark card finish')
@@ -53,7 +54,9 @@ try {
   const skyBytes=await readFile(new URL('../src/assets/environment/kloofendal-overcast-puresky-128.hdr',import.meta.url))
   const compact=new HDRLoader().parse(skyBytes.buffer.slice(skyBytes.byteOffset,skyBytes.byteOffset+skyBytes.byteLength))
   assert.equal(compact.width,128);assert.equal(compact.height,64);assert(skyBytes.length<30000)
-  const rig=addTempleLighting(scene), hdr=new THREE.DataTexture(compact.data,compact.width,compact.height,THREE.RGBAFormat,compact.type), filtered=new THREE.Texture()
+  const rig=addTempleLighting(scene)
+  const fillBefore=new Map(rig.children.filter(light=>light.userData.iblFill).map(light=>[light,light.intensity]))
+  const hdr=new THREE.DataTexture(compact.data,compact.width,compact.height,THREE.RGBAFormat,compact.type), filtered=new THREE.Texture()
   const floorMaterial=createTempleGroundMaterial(board.floor(),{},board.surfaceData(board.floor()))
   const floorMesh=new THREE.Mesh(new THREE.PlaneGeometry(1,1),floorMaterial);scene.add(floorMesh)
   let hdrDisposals=0,targetDisposals=0,pmremDisposals=0,conversions=0
@@ -72,14 +75,18 @@ try {
   const laterMesh=new THREE.Mesh(new THREE.PlaneGeometry(1,1),laterFloor);scene.add(laterMesh)
   assert.equal(laterFloor.envMap,filtered,'Floors created after room rebuild use the same shared environment')
   assert.equal(laterFloor.envMapRotation.y,TEMPLE_IBL.rotationY)
-  assert.equal(rig.children.filter(light=>light.userData.iblFill&&light.intensity>0).length,0)
+  for (const light of rig.children.filter(light=>light.userData.iblFill)) {
+    assert.equal(light.intensity,fillBefore.get(light)*TEMPLE_IBL.fillScale,'HDR readiness must retain the configured diffuse bounce')
+    assert(light.intensity>0,'HDR readiness must preserve diffuse fill on back-facing stone')
+    assert(light.intensity<rig.getObjectByName('temple-key-light').intensity,'Fill must leave the sun dominant')
+  }
   assert(rig.getObjectByName('temple-key-light').castShadow)
   const room=new THREE.Group();scene.add(room);room.clear()
   assert.equal(scene.environment,filtered,'Rebuilding procedural rooms retains IBL')
   assert.equal(conversions,1);assert.equal(hdrDisposals,1);assert.equal(pmremDisposals,1)
   ibl.dispose();ibl.dispose();assert.equal(targetDisposals,1);assert.equal(scene.environment,null)
   assert.equal(floorMaterial.envMap,null);assert.equal(laterFloor.envMap,null)
-  assert(rig.children.some(light=>light.userData.iblFill&&light.intensity>0))
+  for(const [light,intensity] of fillBefore)assert.equal(light.intensity,intensity,'Disposal restores fallback fill exactly')
   // Disposal during loading must never create GPU resources or reattach the map.
   let finish
   const lateHDR=new THREE.Texture();let lateDisposals=0

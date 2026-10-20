@@ -32,7 +32,7 @@ export class TotemRules {
   summon(item, position) {
     const { run } = this
     if (!this.available(item)) return run._reject('该图腾已存在、召唤尚未冷却。')
-    if (!this.targets(item).some(target => samePos(target, position))) return run._reject('请选择距离4以内已翻开的空格，不能选择角色所在格。')
+    if (!this.targets(item).some(target => samePos(target, position))) return run._reject('请选择距离4以内已探索的空格，不能选择角色所在格。')
     if (!run._payAction(1)) return run._reject('体力不足。')
     const bornAt = run.globalTurn
     const totem = { id: nextEntityId('totem'), kind: 'totem', totemId: item.totemId, name: item.name,

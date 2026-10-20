@@ -29,8 +29,8 @@ import floorcSurfaceUrl from '../assets/board-runtime/floor-c-surface.png'
 import floordNormalUrl from '../assets/board-runtime/floor-d-normal.png'
 import floordSurfaceUrl from '../assets/board-runtime/floor-d-surface.png'
 
-// Card tone lives in its own low-resolution layer, kept apart from the painted
-// pattern so the scene can pick a different stain layout per tile.
+// Three low-resolution linear pigment multipliers vary hue/chroma, independent
+// of the ornament. Every pattern can carry every colour impression.
 import neutralWear0 from '../assets/board-runtime/card-neutral-wear0.png'
 import neutralWear1 from '../assets/board-runtime/card-neutral-wear1.png'
 import neutralWear2 from '../assets/board-runtime/card-neutral-wear2.png'
@@ -47,6 +47,51 @@ import blockedWear0 from '../assets/board-runtime/card-blocked-wear0.png'
 import blockedWear1 from '../assets/board-runtime/card-blocked-wear1.png'
 import blockedWear2 from '../assets/board-runtime/card-blocked-wear2.png'
 
+import neutralVariant1color from '../assets/board-runtime/card-neutral-variant1-color.webp'
+import neutralVariant1normal from '../assets/board-runtime/card-neutral-variant1-normal.png'
+import neutralVariant1surface from '../assets/board-runtime/card-neutral-variant1-surface.png'
+import neutralVariant2color from '../assets/board-runtime/card-neutral-variant2-color.webp'
+import neutralVariant2normal from '../assets/board-runtime/card-neutral-variant2-normal.png'
+import neutralVariant2surface from '../assets/board-runtime/card-neutral-variant2-surface.png'
+import neutralVariant3color from '../assets/board-runtime/card-neutral-variant3-color.webp'
+import neutralVariant3normal from '../assets/board-runtime/card-neutral-variant3-normal.png'
+import neutralVariant3surface from '../assets/board-runtime/card-neutral-variant3-surface.png'
+import scorchVariant1color from '../assets/board-runtime/card-scorch-variant1-color.webp'
+import scorchVariant1normal from '../assets/board-runtime/card-scorch-variant1-normal.png'
+import scorchVariant1surface from '../assets/board-runtime/card-scorch-variant1-surface.png'
+import scorchVariant2color from '../assets/board-runtime/card-scorch-variant2-color.webp'
+import scorchVariant2normal from '../assets/board-runtime/card-scorch-variant2-normal.png'
+import scorchVariant2surface from '../assets/board-runtime/card-scorch-variant2-surface.png'
+import scorchVariant3color from '../assets/board-runtime/card-scorch-variant3-color.webp'
+import scorchVariant3normal from '../assets/board-runtime/card-scorch-variant3-normal.png'
+import scorchVariant3surface from '../assets/board-runtime/card-scorch-variant3-surface.png'
+import witherVariant1color from '../assets/board-runtime/card-wither-variant1-color.webp'
+import witherVariant1normal from '../assets/board-runtime/card-wither-variant1-normal.png'
+import witherVariant1surface from '../assets/board-runtime/card-wither-variant1-surface.png'
+import witherVariant2color from '../assets/board-runtime/card-wither-variant2-color.webp'
+import witherVariant2normal from '../assets/board-runtime/card-wither-variant2-normal.png'
+import witherVariant2surface from '../assets/board-runtime/card-wither-variant2-surface.png'
+import witherVariant3color from '../assets/board-runtime/card-wither-variant3-color.webp'
+import witherVariant3normal from '../assets/board-runtime/card-wither-variant3-normal.png'
+import witherVariant3surface from '../assets/board-runtime/card-wither-variant3-surface.png'
+import drownVariant1color from '../assets/board-runtime/card-drown-variant1-color.webp'
+import drownVariant1normal from '../assets/board-runtime/card-drown-variant1-normal.png'
+import drownVariant1surface from '../assets/board-runtime/card-drown-variant1-surface.png'
+import drownVariant2color from '../assets/board-runtime/card-drown-variant2-color.webp'
+import drownVariant2normal from '../assets/board-runtime/card-drown-variant2-normal.png'
+import drownVariant2surface from '../assets/board-runtime/card-drown-variant2-surface.png'
+import drownVariant3color from '../assets/board-runtime/card-drown-variant3-color.webp'
+import drownVariant3normal from '../assets/board-runtime/card-drown-variant3-normal.png'
+import drownVariant3surface from '../assets/board-runtime/card-drown-variant3-surface.png'
+
+const BACK_VARIANT_ASSETS = {
+  neutral: [{ color: neutralVariant1color, normal: neutralVariant1normal, surface: neutralVariant1surface }, { color: neutralVariant2color, normal: neutralVariant2normal, surface: neutralVariant2surface }, { color: neutralVariant3color, normal: neutralVariant3normal, surface: neutralVariant3surface }],
+  scorch: [{ color: scorchVariant1color, normal: scorchVariant1normal, surface: scorchVariant1surface }, { color: scorchVariant2color, normal: scorchVariant2normal, surface: scorchVariant2surface }, { color: scorchVariant3color, normal: scorchVariant3normal, surface: scorchVariant3surface }],
+  wither: [{ color: witherVariant1color, normal: witherVariant1normal, surface: witherVariant1surface }, { color: witherVariant2color, normal: witherVariant2normal, surface: witherVariant2surface }, { color: witherVariant3color, normal: witherVariant3normal, surface: witherVariant3surface }],
+  drown: [{ color: drownVariant1color, normal: drownVariant1normal, surface: drownVariant1surface }, { color: drownVariant2color, normal: drownVariant2normal, surface: drownVariant2surface }, { color: drownVariant3color, normal: drownVariant3normal, surface: drownVariant3surface }],
+}
+const backKey = (kind, variant = 0) => variant ? `${kind}:${variant}` : kind
+
 const BACK_SURFACE_URLS = {neutral:neutralSurfaceUrl,scorch:scorchSurfaceUrl,wither:witherSurfaceUrl,drown:drownSurfaceUrl,blocked:blockedSurfaceUrl}
 const FLOOR_NORMAL_URLS = [flooraNormalUrl,floorbNormalUrl,floorcNormalUrl,floordNormalUrl]
 const FLOOR_SURFACE_URLS = [flooraSurfaceUrl,floorbSurfaceUrl,floorcSurfaceUrl,floordSurfaceUrl]
@@ -55,9 +100,9 @@ const SIZE = 256
 // Display-only exposure: keep bare stone behind the illustrated card backs.
 // Source artwork stays intact; the shared inset ornament is composited at runtime.
 export const FLOOR_URLS = [floorAUrl, floorBUrl, floorCUrl, floorDUrl]
-const NEUTRAL_BACK_BRIGHTNESS = 1
-const BLOCKED_BACK_COLOR = '#687574'
-const BACK_PLACEHOLDER_COLORS = { neutral: '#8d9b91', scorch: '#b18d7a', wither: '#aaa789', drown: '#7d9ca0' }
+const NEUTRAL_BACK_BRIGHTNESS = .96
+const BLOCKED_BACK_COLOR = '#343b3d'
+const BACK_PLACEHOLDER_COLORS = { neutral: '#8d9b91', scorch: '#793b3b', wither: '#847a24', drown: '#36567b' }
 const BACK_URLS = { neutral: cardBackUrl, scorch: scorchBackUrl, wither: witherBackUrl, drown: drownBackUrl }
 const CARD_WEAR_URLS = {
   neutral: [neutralWear0, neutralWear1, neutralWear2],
@@ -115,10 +160,13 @@ function surface(draw, colorSpace = THREE.SRGBColorSpace) {
 
 // Every explored floor shares the same restrained inset border and corner ornament.
 export class BoardTextures {
-  constructor() {
+  constructor({ assets = null, defer = false } = {}) {
+    this.assets = assets
+    this.deferred = defer
+    this.pendingLoads = []
     this.disposed = false
     this.floors = FLOOR_URLS.map(() => surface((ctx, image) => {
-      ctx.fillStyle = '#82988f'
+      ctx.fillStyle = '#353f40'
       ctx.fillRect(0, 0, SIZE, SIZE)
       // Each generated image is one complete metre-scale slab.
       if (image) ctx.drawImage(image, 0, 0, SIZE, SIZE)
@@ -126,19 +174,43 @@ export class BoardTextures {
     }))
     this.floors.forEach((entry, index) => { entry.texture.userData.boardFloor = true; entry.texture.userData.floorVariant = index })
     this.backs = new Map()
-    for (const attribute of Object.keys(BACK_URLS)) {
-      this.backs.set(attribute, surface((ctx, image) => {
-        ctx.fillStyle = BACK_PLACEHOLDER_COLORS[attribute]
-        ctx.fillRect(0, 0, SIZE, SIZE)
-        if (image) {
-          if (attribute === 'neutral') ctx.filter = `brightness(${NEUTRAL_BACK_BRIGHTNESS})`
-          ctx.drawImage(image, 0, 0, SIZE, SIZE)
-          ctx.filter = 'none'
-        }
-      }))
+    this.backVariants = new Map()
+    this.backNormals = new Map()
+    this.backSurfaces = new Map()
+    const backPending = []
+    for (const [kind, color] of Object.entries({ ...BACK_URLS, blocked: blockedBackUrl })) {
+      const assets = [{ color, normal: BACK_NORMAL_URLS[kind], surface: BACK_SURFACE_URLS[kind] }, ...(BACK_VARIANT_ASSETS[kind] || [])]
+      const entries = assets.map((maps, variant) => {
+        const entry = surface((ctx, image) => {
+          ctx.fillStyle = kind === 'blocked' ? BLOCKED_BACK_COLOR : BACK_PLACEHOLDER_COLORS[kind]
+          ctx.fillRect(0, 0, SIZE, SIZE)
+          if (image) {
+            if (kind === 'neutral') ctx.filter = `brightness(${NEUTRAL_BACK_BRIGHTNESS})`
+            ctx.drawImage(image, 0, 0, SIZE, SIZE)
+            ctx.filter = 'none'
+          }
+        })
+        Object.assign(entry.texture.userData, { cardBackKind: kind, cardBackVariant: variant })
+        const normal = surface((ctx, image) => {
+          ctx.fillStyle = '#8080ff'
+          ctx.fillRect(0, 0, SIZE, SIZE)
+          if (image) ctx.drawImage(image, 0, 0, SIZE, SIZE)
+        }, THREE.NoColorSpace)
+        const packed = surface((ctx, image) => {
+          ctx.fillStyle = '#ffc200'
+          ctx.fillRect(0, 0, SIZE, SIZE)
+          if (image) ctx.drawImage(image, 0, 0, SIZE, SIZE)
+        }, THREE.NoColorSpace)
+        this.backNormals.set(backKey(kind, variant), normal)
+        this.backSurfaces.set(backKey(kind, variant), packed)
+        backPending.push(this.load(maps.color, [entry]), this.load(maps.normal, [normal]), this.load(maps.surface, [packed]))
+        return entry
+      })
+      this.backVariants.set(kind, entries)
+      if (kind === 'blocked') this.blockedBack = entries[0]
+      else this.backs.set(kind, entries[0])
     }
-    for (const [attribute, entry] of this.backs) entry.texture.userData.cardBackKind = attribute
-    // Tone variants are data, not colour: sampled as a multiplier.
+    // Pigment variants are linear RGB multipliers, not sRGB colour textures.
     this.cardWear = new Map()
     const wearPending = []
     for (const [kind, urls] of Object.entries(CARD_WEAR_URLS)) {
@@ -154,41 +226,32 @@ export class BoardTextures {
       })
       this.cardWear.set(kind, list)
     }
-    this.blockedBack = surface((ctx, image) => {
-      ctx.fillStyle = BLOCKED_BACK_COLOR
-      ctx.fillRect(0, 0, SIZE, SIZE)
-      if (image) ctx.drawImage(image, 0, 0, SIZE, SIZE)
-    })
-    this.blockedBack.texture.userData.cardBackKind = 'blocked'
-    this.backNormals = new Map(Object.keys(BACK_NORMAL_URLS).map(kind => [kind, surface((ctx, image) => {
-      // Tangent-space vectors are linear data; the unloaded fallback is flat +Z.
-      ctx.fillStyle = '#8080ff'
-      ctx.fillRect(0, 0, SIZE, SIZE)
-      if (image) ctx.drawImage(image, 0, 0, SIZE, SIZE)
-    }, THREE.NoColorSpace)]))
     const dataSurface = color => surface((ctx, image) => {
       ctx.fillStyle = color
       ctx.fillRect(0, 0, SIZE, SIZE)
       if (image) ctx.drawImage(image, 0, 0, SIZE, SIZE)
     }, THREE.NoColorSpace)
-    this.backSurfaces = new Map(Object.keys(BACK_SURFACE_URLS).map(kind => [kind, dataSurface('#ffc200')]))
     this.floorNormals = FLOOR_NORMAL_URLS.map(() => dataSurface('#8080ff'))
     this.floorSurfaces = FLOOR_SURFACE_URLS.map(() => dataSurface('#ffb300'))
     this.ready = Promise.all([
-      ...wearPending,
-      ...Object.entries(BACK_SURFACE_URLS).map(([kind, url]) => this.load(url, [this.backSurfaces.get(kind)])),
+      ...backPending, ...wearPending,
       ...FLOOR_NORMAL_URLS.map((url, index) => this.load(url, [this.floorNormals[index]])),
       ...FLOOR_SURFACE_URLS.map((url, index) => this.load(url, [this.floorSurfaces[index]])),
       ...FLOOR_URLS.map((url, index) => this.load(url, [this.floors[index]])),
-      ...Object.entries(BACK_URLS).map(([attribute, url]) => this.load(url, [
-        this.backs.get(attribute),
-      ])),
-      this.load(blockedBackUrl, [this.blockedBack]),
-      ...Object.entries(BACK_NORMAL_URLS).map(([kind, url]) => this.load(url, [this.backNormals.get(kind)])),
     ])
   }
 
+  startLoading() {
+    this.deferred = false
+    for (const start of this.pendingLoads.splice(0)) start()
+  }
+
   load(url, surfaces) {
+    if (this.deferred) return new Promise(resolve => this.pendingLoads.push(() => resolve(this.load(url, surfaces))))
+    if (this.assets) return this.assets.image(url).then(image => {
+      if (!this.disposed) surfaces.forEach(entry => entry.repaint(image))
+      return true
+    }, error => { if (!this.assets.closed) console.warn('Board texture failed to load:', url, error); return false })
     return new Promise(resolve => {
       const image = document.createElement('img')
       image.onload = () => {
@@ -205,17 +268,18 @@ export class BoardTextures {
     return this.floors[floorTextureIndex(position)].texture
   }
 
-  back(attribute, blocked) {
-    if (blocked) return this.blockedBack.texture
-    return this.backs.get(BACK_URLS[attribute] ? attribute : 'neutral').texture
+  back(attribute, blocked, variant = 0) {
+    const kind = blocked ? 'blocked' : BACK_URLS[attribute] ? attribute : 'neutral'
+    const list = this.backVariants.get(kind)
+    return list[Math.abs(Math.trunc(variant)) % list.length].texture
   }
 
   backNormal(texture) {
     // The primitive kind tag survives Texture.clone() for queued flip snapshots.
-    return this.backNormals.get(texture?.userData.cardBackKind)?.texture || null
+    return this.backNormals.get(backKey(texture?.userData.cardBackKind, texture?.userData.cardBackVariant))?.texture || null
   }
 
-  // Wear is a greyscale multiplier encoded so byte 128 means "no change".
+  // Each RGB channel is a multiplier; byte 128 is approximately neutral after x2.
   wear(texture, variant = 0) {
     const kind = texture?.userData?.cardBackKind
     const list = this.cardWear.get(kind ? kind : 'neutral')
@@ -228,12 +292,12 @@ export class BoardTextures {
       const index = texture.userData.floorVariant ?? 0
       return { normal: this.floorNormals[index].texture, surface: this.floorSurfaces[index].texture }
     }
-    return { normal: this.backNormal(texture), surface: this.backSurfaces.get(texture?.userData.cardBackKind)?.texture || null }
+    return { normal: this.backNormal(texture), surface: this.backSurfaces.get(backKey(texture?.userData.cardBackKind, texture?.userData.cardBackVariant))?.texture || null }
   }
 
   dispose() {
     this.disposed = true
-    for (const entry of [...this.floors, ...this.backs.values(), this.blockedBack, ...this.backNormals.values(), ...this.backSurfaces.values(), ...this.floorNormals, ...this.floorSurfaces]) entry.texture.dispose()
+    for (const entry of [...this.floors, ...[...this.backVariants.values()].flat(), ...this.backNormals.values(), ...this.backSurfaces.values(), ...this.floorNormals, ...this.floorSurfaces]) entry.texture.dispose()
     for (const texture of [...this.cardWear.values()].flat()) texture.dispose()
   }
 }

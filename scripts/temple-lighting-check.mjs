@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { createServer } from 'vite'
 import * as THREE from 'three'
-const server=await createServer({server:{middlewareMode:true},appType:'custom'})
+const server=await createServer({configFile:false,server:{middlewareMode:true,hmr:false,watch:null},optimizeDeps:{noDiscovery:true,include:[]},appType:'custom'})
 const previousDocument=globalThis.document,previousImage=globalThis.Image
 const ctx=new Proxy({}, {get:(_target,key)=>key==='createLinearGradient'||key==='createRadialGradient'?()=>({addColorStop(){}}):()=>{}})
 globalThis.document={createElement:tag=>tag==='img'?{}:{width:512,height:512,getContext:()=>ctx}}
@@ -70,9 +70,12 @@ try{
   const playerFace=scene.tileMeshByKey.get('0:0')
   assert(playerFace.material.isMeshBasicMaterial,'Standing characters stay unlit')
   assert(playerFace.userData.groundFace.material.isMeshStandardMaterial&&playerFace.userData.groundFace.receiveShadow)
+  assert.deepEqual(Array.from(playerFace.userData.groundFace.geometry.attributes.uv.array),Array.from(playerFace.userData.floorBacking.geometry.attributes.uv.array),'Standing-token floor and backing retain identical rotation')
+  assert.equal(playerFace.geometry.userData.boardQuarterTurn,0,'Standing character artwork stays upright')
   assert(Math.abs(playerFace.userData.groundFace.position.y-floorY-.002-CARD_FLOOR_GAP)<1e-8,'Actor ground shares the same hovering card level')
   assert(scene._startMove({roomId:room.id,from,path:[{c:1,r:0}]}))
   assert(playerFace.material.isMeshStandardMaterial&&playerFace.material.depthTest,'Moving away must restore a lit floor')
+  assert.deepEqual(Array.from(playerFace.geometry.attributes.uv.array),Array.from(playerFace.userData.floorBacking.geometry.attributes.uv.array),'Moving away restores the same rotated stone surface')
   const marker=scene.movementAnimation.group.children.find(child=>child.isMesh)
   assert(marker.material.isMeshBasicMaterial&&!marker.castShadow)
   assert(scene.movementAnimation.group.userData.contactShadow,'Player retains its fake contact shadow')

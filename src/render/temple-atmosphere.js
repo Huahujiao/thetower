@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { loadSceneTexture } from './scene-texture-loader.js'
 import cloudsUrl from '../assets/environment/runtime-lite/clouds.webp'
 
 const VERTEX = `
@@ -53,12 +54,12 @@ const FRAGMENT = `
 // Clouds occupy fixed positions around the platform. Camera-facing patches
 // form a shallow volume; ordinary depth testing lets the board occlude them.
 export class TempleAtmosphere {
-  constructor(scene) {
+  constructor(scene, assets = null) {
     this.mesh = new THREE.Group()
     this.mesh.name = 'temple-world-mist'
     this.mesh.matrixAutoUpdate = false
     scene.add(this.mesh)
-    this.texture = new THREE.TextureLoader().load(cloudsUrl)
+    this.texture = loadSceneTexture(cloudsUrl, assets)
     // Mirror the horizontal tile so both texture edges join without a seam.
     this.texture.wrapS = THREE.MirroredRepeatWrapping
     this.texture.colorSpace = THREE.SRGBColorSpace

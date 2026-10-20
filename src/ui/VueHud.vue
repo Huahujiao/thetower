@@ -1,6 +1,6 @@
 <template>
   <div
-    class="vue-hud-root" :inert="!scene" :aria-busy="!scene"
+    class="vue-hud-root" :inert="sceneAssetsLoading || sceneError" :aria-busy="sceneAssetsLoading && !sceneError"
   >
     <div class="hud-top">
       <div class="hud-stats">
@@ -79,8 +79,8 @@
         }}/{{ state.player.experienceToNext }}</span>
       </div>
     </div>
-    <div id="app" ref="sceneContainer" :class="{ 'scene-battle-active': state.battle.active }" :data-scene-state="scene ? 'ready' : sceneError ? 'error' : 'loading'" aria-label="game board">
-      <span v-if="scene && sceneAssetsLoading" class="scene-asset-status" role="status">正在补全卡牌与光照…</span>
+    <div id="app" ref="sceneContainer" :class="{ 'scene-battle-active': state.battle.active }" :data-scene-state="sceneError ? 'error' : sceneAssetsLoading ? 'loading' : 'ready'" aria-label="game board">
+
       <section v-if="statusEntries.length" class="scene-status-tray" :aria-label="LABELS.status">
         <button
           v-for="entry in statusEntries" :key="entry.id" type="button"
@@ -214,7 +214,9 @@
             </button>
           </div>
         </div>
-      </div><button class="settings-restart" data-action="restart-settings" @click.stop="restartFromSettings">
+      </div>
+      <CardBackPalette :palette="cardBackPalette" :saved="cardPaletteSaved" @change="updateCardBackPalette" />
+      <button class="settings-restart" data-action="restart-settings" @click.stop="restartFromSettings">
         {{
           LABELS.restart }}
       </button>
@@ -508,10 +510,31 @@
       </button>
     </div>
   </div>
-  <section v-if="!scene" class="scene-loading-state" role="status" aria-live="polite">
-    <span v-if="!sceneError" class="scene-loading-mark" aria-hidden="true"></span>
-    <strong>{{ sceneError ? '场景暂时没有加载完成，请重新加载' : '正在铺设场景' }}</strong>
-    <button v-if="sceneError" type="button" @click="reloadPage">重新加载</button>
+  <section v-if="sceneAssetsLoading || sceneError" class="scene-loading-state" :aria-busy="sceneAssetsLoading && !sceneError">
+    <div class="scene-loading-panel">
+      <span v-if="!sceneError" class="scene-loading-mark" aria-hidden="true"></span>
+      <strong role="status" aria-live="polite">{{ sceneError ? '场景暂时没有加载完成' : loading.label }}</strong>
+      <div class="scene-loading-progress" role="progressbar" aria-label="场景加载进度" :aria-valuenow="loading.progress" :aria-valuemin="0" :aria-valuemax="100">
+        <span :style="{ width: loading.progress + '%' }"></span>
+      </div>
+      <div class="scene-loading-numbers">
+        <span>第 {{ loading.stage + 1 }} / {{ SCENE_LOAD_STAGES.length }} 阶段</span><b>{{ loading.progress }}%</b>
+      </div>
+      <p class="scene-loading-downloads">
+        <span v-if="loading.total">已下载 {{ loading.completed }} / 已发现 {{ loading.total }} 项资源</span>
+        <span v-else>正在发现资源…</span>
+        <b>已接收 {{ (loading.bytes / 1000000).toFixed(2) }} MB（含缓存）</b>
+      </p>
+      <ol class="scene-loading-stages" aria-label="场景搭建顺序">
+        <li v-for="(stage, index) in SCENE_LOAD_STAGES" :key="stage.id" :class="{ done: index < loading.stage || loading.progress === 100, active: index === loading.stage }">
+          <span>{{ index < loading.stage || loading.progress === 100 ? '✓' : index + 1 }}</span>{{ stage.label }}
+        </li>
+      </ol>
+      <small v-if="loading.failed">{{ loading.failed }} 项资源未下载成功，使用备用显示</small>
+      <small v-if="sceneError" role="alert">{{ sceneErrorDetail }}</small>
+      <small v-else-if="loading.detail">{{ loading.detail }}</small>
+      <button v-if="sceneError" type="button" @click="reloadPage">重新加载</button>
+    </div>
   </section>
 </template>
 
@@ -519,6 +542,8 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, shallowRef, watch } from 'vue'
 import { BALL_LABELS } from '../game/model/stamina-deck.js'
 import StaminaCost from './StaminaCost.vue'
+import CardBackPalette from './CardBackPalette.vue'
+import { loadCardBackPalette, normalizeCardBackPalette, saveCardBackPalette } from '../settings/card-back-palette.js'
 import StaminaHand from './StaminaHand.vue'
 import { merchantSellPrice } from '../game/data/merchants.js'
 import { getItemDefinition, upgradeRecipesForItem } from '../game/data/content.js'
@@ -527,6 +552,7 @@ import { isTotemBadge } from '../game/data/totems.js'
 import { consumableEnergyCost } from '../game/rules/consumables.js'
 import { INVENTORY_COLUMNS, INVENTORY_ROWS } from '../game/run.js'
 import { finishStartup } from './startup-status.js'
+import { SceneLoading, SCENE_LOAD_STAGES, nextScenePaint, waitForSceneModule } from '../render/scene-loading.js'
 import { DETAIL_HOLD_MS } from '../interaction-timing.js'
 import { bagShapeLayout } from './bag-shape.js'
 import { inventorySpriteStyle } from './inventory-sprite-layout.js'
@@ -562,7 +588,7 @@ const LABELS = Object.freeze({
 const DETAIL_ICONS = Object.freeze({ enemy: '\u2694', weapon: '\u2694', potion: '\u271a', armor: '\u26e8', energy: '\u26a1', buff: '\u2726', relic: '\u25c6', trap: '!', gold: '\u25cf', key: '\ud83d\udd11', merchant: '\u25c9', item: '\u25a0' })
 const EDGE_NAMES = ['top', 'right', 'bottom', 'left']
 const HELP_SECTIONS = Object.freeze([
-  { title: '行动与体力球', items: ['探索操作免费。球池初始红、黄、蓝各10球及2万能球；每个玩家回合抽2×激活敌人数+4球，新揭示敌人立即补2球。', '球不放回抽取，抽空后洗回弃球堆；剩余球先供宠物使用再弃掉。手动结束回合后执行宠物和敌人阶段。', '战斗中移动、翻牌、原地拾取、使用消耗品、整理和合成各耗1个任意球。点击球可指定优先支付；武器必须用同色和万能球付足费用，球不足时不能攻击。重复使用不额外加费；执一印使本回合再次使用同一实例减1球，不累加、最低1球。'] },
+  { title: '行动与体力球', items: ['探索操作免费。球池初始红、黄、蓝各10球及2万能球；每个玩家回合抽2×激活敌人数+4球，新揭示敌人立即补2球。', '球不放回抽取，抽空后洗回弃球堆；剩余球先供宠物使用再弃掉。手动结束回合后执行宠物和敌人阶段。', '战斗中移动、驱散迷雾、原地拾取、使用消耗品、整理和合成各耗1个任意球。点击球可指定优先支付；武器必须用同色和万能球付足费用，球不足时不能攻击。重复使用不额外加费；执一印使本回合再次使用同一实例减1球，不累加、最低1球。'] },
   { title: '\u80cc\u5305\u4e0e\u5408\u6210', items: ['\u80cc\u5305\u662f 8 \u5217 4 \u884c\uff0c\u7269\u54c1\u6309\u5f62\u72b6\u5360\u683c\u3002', '\u70b9\u6309\u7269\u54c1\u53ef\u9009\u4e2d\uff1b\u957f\u6309 150ms \u540e\u62d6\u52a8\u79fb\u52a8\uff0c\u4e0d\u518d\u7528\u70b9\u51fb\u7a7a\u683c\u79fb\u7269\u54c1\u3002', '拖动时可移入暂存区或红色丢弃区；探索免费，战斗中成功操作耗1体力。升级选择期间整理免费。', '\u5408\u6210\u9762\u677f\u53ea\u663e\u793a\u5f53\u524d\u80cc\u5305\u53ef\u5408\u6210\u7684\u914d\u65b9\u3002'] },
   { title: '\u5347\u7ea7\u4e0e\u5723\u9057\u7269', items: ['\u5347\u7ea7\u65f6\u4ece5\u79cd\u5956\u52b1\u4e2d\u968f\u673a\u63d0\u4f9b3\u9879\uff0c\u9009\u62e91\u9879\u3002', '\u6b66\u5668\u5f3a\u5316\u4ec5\u5f71\u54cd\u6240\u9009\u6b66\u5668\uff0c\u5408\u6210\u540e\u4e0d\u7ee7\u627f\u3002', '\u5723\u9057\u7269\u653e\u5728\u80cc\u5305\u4e2d\u5373\u53ef\u751f\u6548\uff0c\u79bb\u5f00\u623f\u95f4\u4e0d\u4f1a\u91cd\u7f6e\u3002'] },
   { title: '\u6218\u6597\u4e0e\u63a2\u7d22', items: ['\u9009\u62e9\u6b66\u5668\u540e\u70b9\u51fb\u654c\u4eba\u53d1\u8d77\u653b\u51fb\uff0c\u8fdc\u5904\u76ee\u6807\u4f1a\u5148\u9884\u89c8\u8def\u5f84\u3002', '\u957f\u6309\u68cb\u76d8\u6216\u80cc\u5305\u7269\u54c1\u67e5\u770b\u8be6\u60c5\uff0c\u8fde\u7eed\u79fb\u52a8\u89c6\u89d2\u53ef\u4f7f\u7528\u62d6\u62fd\u548c\u6eda\u8f6e\u7f29\u653e\u3002'] },
@@ -573,8 +599,14 @@ const detailRevision = ref(0)
 const uiRevision = ref(0)
 const sceneContainer = ref(null)
 const scene = shallowRef(null)
+const cardBackPalette = ref(loadCardBackPalette())
+const cardPaletteSaved = ref(true)
 const sceneError = ref(false)
-const sceneAssetsLoading = ref(false)
+const sceneErrorDetail = ref('')
+const sceneAssetsLoading = ref(true)
+const loading = shallowRef({ stage: 0, label: SCENE_LOAD_STAGES[0].label, progress: 0, total: 0, completed: 0, failed: 0, bytes: 0 })
+let sceneAssets = null
+let startupBackdrop = null
 let sceneDisposed = false
 const topPanel = ref(null)
 const craftOpen = ref(false)
@@ -1387,26 +1419,66 @@ function updateReveal() {
   if (run.persistenceEnabled && typeof localStorage !== 'undefined') localStorage.setItem('v2_opt_reveal', reveal.value ? '1' : '0')
 }
 
+function updateCardBackPalette(palette) {
+  cardBackPalette.value = normalizeCardBackPalette(palette)
+  scene.value?.setCardBackPalette(cardBackPalette.value)
+  cardPaletteSaved.value = saveCardBackPalette(cardBackPalette.value)
+}
+
 function reloadPage() { window.location.reload() }
 
 async function mountGameScene() {
-  // Let the HUD reach the screen before fetching/constructing the renderer.
-  await nextTick()
-  await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))
-  if (sceneDisposed) return
-  finishStartup()
   try {
-    const { GameScene } = await import('../render/scene.js')
+    sceneAssets = new SceneLoading(snapshot => { loading.value = snapshot })
+    await nextTick()
     if (sceneDisposed) return
-    scene.value = new GameScene(run, sceneContainer.value)
+    finishStartup()
+    await nextScenePaint()
+    if (sceneDisposed) return
+    // Load the small backdrop first; the main renderer and enemy rig module graph
+    // can then arrive over a slow connection while the mountains are visible.
+    if (run.sceneView?.environment === 'mountain-temple') {
+      sceneAssets.setDetail('加载背景显示模块')
+      const { TempleParallaxBackdrop } = await waitForSceneModule(import('../render/temple-parallax-backdrop.js'), '背景模块加载')
+      if (sceneDisposed) return
+      sceneAssets.completeStage()
+      sceneAssets.begin('background')
+      sceneAssets.setDetail('下载并解码远山、山峰与云层')
+      await nextScenePaint()
+      if (sceneDisposed) return
+      startupBackdrop = new TempleParallaxBackdrop(sceneContainer.value, sceneAssets)
+      await startupBackdrop.ready
+      await nextScenePaint()
+      if (sceneDisposed) return
+    } else {
+      sceneAssets.completeStage()
+      sceneAssets.begin('background')
+      await nextScenePaint()
+    }
+    sceneAssets.completeStage()
+    sceneAssets.begin('structure')
+    sceneAssets.setDetail('加载三维引擎与场景代码')
+    await nextScenePaint()
+    if (sceneDisposed) return
+    const { GameScene } = await waitForSceneModule(import('../render/scene.js'), '三维场景模块加载')
+    if (sceneDisposed) return
+    sceneAssets.setDetail('创建三维绘制环境')
+    await nextScenePaint()
+    if (sceneDisposed) return
+    scene.value = new GameScene(run, sceneContainer.value, { progressive: true, assets: sceneAssets, backdrop: startupBackdrop })
+    startupBackdrop = null // The scene now owns the backdrop and its cleanup.
+    scene.value.setCardBackPalette(cardBackPalette.value)
     run.setDebugReveal(reveal.value)
-    sceneAssetsLoading.value = true
-    // Basic geometry is already visible; these promises never gate first paint.
-    await Promise.allSettled([scene.value.boardTextures.ready, scene.value.templeIBL?.ready])
-    if (!sceneDisposed) sceneAssetsLoading.value = false
+    await scene.value.initializeProgressively(sceneAssets)
+    if (sceneDisposed) return
+    sceneAssets.finish()
+    sceneAssetsLoading.value = false
   } catch (error) {
     if (sceneDisposed) return
+    sceneErrorDetail.value = error instanceof Error ? error.message : String(error)
     sceneError.value = true
+    finishStartup()
+    sceneAssets?.dispose()
     console.error('Scene startup failed:', error)
   }
 }
@@ -1442,5 +1514,7 @@ onBeforeUnmount(() => {
   cancelLongPress()
   clearBagGesture()
   scene.value?.dispose()
+  startupBackdrop?.dispose()
+  sceneAssets?.dispose()
 })
 </script>

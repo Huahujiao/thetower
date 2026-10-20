@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { nextScenePaint } from './scene-loading.js'
 import { setSurfaceColor } from './surface-color.js'
 import { templeBoundaryLayout, templeDoorPlacement } from './temple-boundary-layout.js'
 import { TempleEnvironment, TEMPLE_BOUNDARY_INSET, createContactShadowTexture } from './temple-environment.js'
@@ -8,11 +9,16 @@ import { enemyCardSubtitle, enemyOverheadHints } from '../game/data/enemy-featur
 import { isAdjacent8 } from '../game/core/geometry.js'
 import { AttackRangeOverlay } from './attack-range-overlay.js'
 import { BoardTextures } from './board-textures.js'
+import { loadCardBackPalette, normalizeCardBackPalette } from '../settings/card-back-palette.js'
+import { applyCardPaletteMaterial, createCardPaletteUniforms, refreshCardPaletteMaterial, updateCardPaletteUniforms } from './card-palette-material.js'
+import { SealMist } from './seal-mist.js'
+import { ExplorationFog } from './exploration-fog.js'
+import { cardPatternIndex, cardColorIndex, cardValue, boardTextureRotation, rotateBoardUV } from './card-appearance.js'
 import { addTempleLighting, createTempleGroundMaterial, applyTempleGroundEnvironment } from './temple-lighting.js'
 import { loadTempleIBL } from './temple-ibl.js'
 import { combatMotionAt, deathMotion, explosionMotion, EXPLOSION_DURATION, hitMotion, idleMotion } from './character-motion.js'
 import { DEFAULT_CAMERA_ELEVATION, panAzimuth, roomOverviewDistance } from './camera-view.js'
-import { createCardFaceMaterial, cardBodyGeometry, styleCardBody, cardFaceY, groundSurfaceY, hiddenCardBodyY, CARD_FACE_CLEARANCE, HIDDEN_CARD_THICKNESS, HIDDEN_CARD_SCALE } from './card-body.js'
+import { createCardFaceMaterial, cardBodyGeometry, styleCardBody, cardFaceY, groundSurfaceY } from './card-body.js'
 import { boundaryPillarPoint, createDoorFrame, createStoneDoorFrame, createTempleLockedGate, stoneDoorVariant, createLowPolyPillar, createLowPolyWall, evenPillarOffsets } from './wall-kit.js'
 import { goldSpriteSources, itemSpriteSources } from '../ui/item-sprites.js'
 import { createEnemyFigure, drawEnemyPuppet, enemyPuppetProject, ENEMY_PUPPET_PADDING, prepareEnemyPuppets, updateEnemyFigure } from './enemy-puppet.js'
@@ -22,11 +28,6 @@ import { weaponTierRoman } from '../game/data/content.js'
 const TILE_SIZE = 1.14
 const CARD_SIZE = TILE_SIZE
 const CARD_THICKNESS = 0.08
-// Per-tile value jitter for card backs, since one texture is shared per attribute.
-const CARD_TILE_VALUE_RANGE = .085
-// One pattern texture is shared per attribute; the tone layer is picked per tile
-// from a small set so no two backs repeat the same stain layout.
-const CARD_WEAR_VARIANT_RANGE = 3
 const WALL_THICKNESS = 0.14
 const DOOR_DEPTH = WALL_THICKNESS * 1.4
 const BOUNDARY_GAP = 0.012
@@ -159,24 +160,28 @@ function stableHash(value) {
   return hash >>> 0
 }
 
-function itemSpriteTexture(sources, onReady) {
+function itemSpriteTexture(sources, onReady, assets = null) {
   const key = sources?.medium
   if (!key) return null
   let entry = ITEM_SPRITE_TEXTURES.get(key)
   if (!entry) {
     entry = { texture: null, listeners: new Set(), failed: false }
     ITEM_SPRITE_TEXTURES.set(key, entry)
-    ITEM_SPRITE_LOADER.load(key, (texture) => {
+    const loaded = (texture) => {
       texture.colorSpace = THREE.SRGBColorSpace
       texture.anisotropy = 4
       texture.userData.boardShared = true
       entry.texture = texture
       for (const listener of entry.listeners) listener(texture)
       entry.listeners.clear()
-    }, undefined, () => {
-      entry.failed = true
-      entry.listeners.clear()
-    })
+    }
+    const failed = () => { entry.failed = true; entry.listeners.clear() }
+    if (assets) assets.image(key).then(image => {
+      const texture = new THREE.Texture(image)
+      texture.needsUpdate = true
+      loaded(texture)
+    }, failed)
+    else ITEM_SPRITE_LOADER.load(key, loaded, undefined, failed)
   }
   if (entry.texture) return entry.texture
   if (!entry.failed && onReady) entry.listeners.add(onReady)
@@ -326,10 +331,15 @@ function disposeObject(object) {
 }
 
 export class GameScene {
-  constructor(run, container) {
+  constructor(run, container, { progressive = false, assets = null, backdrop = null } = {}) {
+    this.assets = assets
+    this.startupPending = progressive
+    this.actorsDeferred = progressive
+    this.disposed = false
     this.run = run
     this.container = container
-    this.boardTextures = new BoardTextures()
+    this.boardTextures = new BoardTextures({ assets, defer: progressive })
+    this.cardPaletteUniforms = createCardPaletteUniforms(loadCardBackPalette())
     this.raycaster = new THREE.Raycaster()
     this.pointer = new THREE.Vector2()
     this.groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0)
@@ -386,8 +396,8 @@ export class GameScene {
     this._addLights()
     this.contactShadowTexture = createContactShadowTexture()
     if (run.sceneView?.environment === 'mountain-temple') {
-      this.environment = new TempleEnvironment(container, this.scene)
-      this.templeIBL = loadTempleIBL(this.renderer, this.scene, this.templeLighting)
+      this.environment = new TempleEnvironment(container, this.scene, { assets, deferSurfaces: progressive, backdrop })
+      if (!progressive) this.templeIBL = loadTempleIBL(this.renderer, this.scene, this.templeLighting, { assets })
       this.scene.background = null
     }
     this._onResize = () => this._resize()
@@ -415,6 +425,7 @@ export class GameScene {
     this.renderer.domElement.addEventListener('click', this._onClick)
     this.renderer.domElement.addEventListener('wheel', this._onWheel, { passive: false })
     this.unsubscribe = this.run.on('change', () => {
+      if (this.startupPending) return
       if (!this.movementAnimation && !this.attackAnimation && !this.animationQueue.length && this.lastFootprintKey && this.run.turns.globalTurn > this.lastFootprintTurn) this._releaseFootprints()
       this._clearPathPreview()
       this.rebuild()
@@ -427,22 +438,80 @@ export class GameScene {
     this.attackUnsubscribe = this.run.on('animate:attack', this._onAttack)
     this.impactUnsubscribe = this.run.on('animate:impact', this._onImpact)
     this.explosionUnsubscribe = this.run.on('animate:explode', this._onExplosion)
-    prepareEnemyPuppets(() => {
-      const room = this.run.currentRoom
-      if (room?.id !== this.framedRoomId) return
-      if (this.movementAnimation || this.attackAnimation || this.flipAnimations.length || this.animationQueue.length) {
-        this.pendingRebuild = true
-        return
-      }
-      for (const face of this.tileMeshes) {
-        if (face.userData.enemyId) this._refreshTile(room, face.userData.position, { force: true })
-      }
-    })
-    this.rebuild()
+    if (!progressive) { this._prepareEnemyAssets(); this.rebuild() }
+    else if (this.run.currentRoom) this._frameRoom(this.run.currentRoom, { resetView: true })
     this.attackRangeOverlay.refresh()
     this._resize(true)
     this._animate = this._animate.bind(this)
     this._frame = requestAnimationFrame(this._animate)
+  }
+
+  _prepareEnemyAssets() {
+    const enemyIds = [...new Set(this.tileMeshes.filter(face => !face.userData.fogged).map(face => face.userData.enemyId).filter(Boolean))]
+    return prepareEnemyPuppets(() => {
+      if (this.disposed || this.startupPending) return
+      const room = this.run.currentRoom
+      if (room?.id !== this.framedRoomId) return
+      if (this.movementAnimation || this.attackAnimation || this.flipAnimations.length || this.animationQueue.length) { this.pendingRebuild = true; return }
+      for (const face of this.tileMeshes) if (face.userData.enemyId) this._refreshTile(room, face.userData.position, { force: true })
+    }, { assets: this.assets, enemyIds })
+  }
+
+  async initializeProgressively(loading) {
+    const room = this.run.currentRoom
+    if (!room) { this.startupPending = false; this.actorsDeferred = false; return }
+    const paint = async () => {
+      if (this.disposed) throw new Error('Scene loading cancelled')
+      await nextScenePaint()
+      if (this.disposed) throw new Error('Scene loading cancelled')
+    }
+    loading.begin('structure')
+    loading.setDetail('创建场地几何并准备光照贴图')
+    const surfaces = this.environment?.startSurfaceLoading()
+    if (this.environment) this.templeIBL = loadTempleIBL(this.renderer, this.scene, this.templeLighting, { assets: this.assets })
+    this._rebuildRoomStructure(room)
+    this._frameRoom(room, { resetView: true })
+    await paint()
+    loading.setDetail('等待场地贴图与光照预处理')
+    await Promise.allSettled([surfaces, this.templeIBL?.ready])
+    await paint()
+    loading.completeStage()
+
+    loading.begin('tiles')
+    loading.setDetail('逐行生成地板与迷雾')
+    this.boardTextures.startLoading()
+    for (let r = 0; r < room.height; r++) {
+      for (let c = 0; c < room.width; c++) this._addTile(room, { c, r })
+      this._syncExplorationFog(room)
+      loading.setWork(r + 1, room.height)
+      await paint()
+    }
+    loading.setDetail('下载并解码地板贴图')
+    await this.boardTextures.ready
+    await paint()
+    // Bind the small leaf spill to the newly created floor faces.
+    this._rebuildRoomStructure(room)
+    this.visibleDoorKey = this._visibleDoorKey(room)
+    this.structureKey = this.visibleDoorKey
+    this.framedRoomId = room.id
+    loading.completeStage()
+
+    loading.begin('actors')
+    loading.setDetail('下载并解码当前角色与物品')
+    await paint()
+    await this._prepareEnemyAssets()
+    await paint()
+    this.actorsDeferred = false
+    for (let r = 0; r < room.height; r++) {
+      for (let c = 0; c < room.width; c++) this._refreshTile(room, { c, r }, { force: true })
+      loading.setWork(r + 1, room.height)
+      await paint()
+    }
+    await this.assets?.idle()
+    await paint()
+    this.startupPending = false
+    this.attackRangeOverlay.refresh()
+    loading.completeStage()
   }
 
   _addLights() {
@@ -488,7 +557,7 @@ export class GameScene {
 
   rebuild() {
     const room = this.run.currentRoom
-    if (this.movementAnimation || this.attackAnimation || this.animationQueue.length || (this.flipAnimations.length && room?.id === this.framedRoomId)) {
+    if (this.movementAnimation || this.attackAnimation || this.animationQueue.length || (this.flipAnimations.some(animation => !animation.dispelling) && room?.id === this.framedRoomId)) {
       this.pendingRebuild = true
       return
     }
@@ -518,6 +587,8 @@ export class GameScene {
     this._clearPathPreview()
     this._clearMovementAnimation()
     this._clearPlayerMarker()
+    this.explorationFog?.dispose()
+    this.explorationFog = null
     disposeObject(this.roomGroup)
     this.roomGroup.clear()
     this.tileMeshes = []
@@ -532,6 +603,7 @@ export class GameScene {
     for (let r = 0; r < room.height; r++) {
       for (let c = 0; c < room.width; c++) this._addTile(room, { c, r })
     }
+    this._syncExplorationFog(room)
     this._rebuildRoomStructure(room)
     this._frameRoom(room, { resetView: room.id !== this.framedRoomId })
     this.visibleDoorKey = visibleDoorKey
@@ -556,7 +628,7 @@ export class GameScene {
     const emptyGround = standing && (card?.type === 'monster' || card?.type === 'merchant' || card?.type === 'entry' || card?.type === 'totem')
     const texture = card
       ? this._makeFrontTexture(card, position, revealed)
-      : this._makeBackTexture(this._backAttributeFor(room, position), { unflippable: !flippable })
+      : this._makeBackTexture(this._backAttributeFor(room, position), { unflippable: !flippable, position })
     const face = new THREE.Mesh(
       new THREE.PlaneGeometry(CARD_SIZE, CARD_SIZE),
       this._makeCardFaceMaterial(texture, {
@@ -572,10 +644,10 @@ export class GameScene {
         polygonOffset: true,
         polygonOffsetFactor: -1,
         polygonOffsetUnits: -4,
-      }),
+      }, position),
     )
     face.receiveShadow = true
-    this._setFacePose(face, point, standing, !revealed)
+    this._setFacePose(face, point, standing, !revealed, position)
     this._styleTileBody(mesh, room, position, visual)
     face.renderOrder = tileRenderOrder(position, standing ? 4 : 1)
     // Standing tokens are visual overlays. Let the ground tile receive the
@@ -583,6 +655,7 @@ export class GameScene {
     face.raycast = standing ? NO_RAYCAST : THREE.Mesh.prototype.raycast
     face.userData.position = { ...position }
     face.userData.enemyId = card?.type === 'monster' ? card.enemyId : null
+    face.userData.actorFace = ['monster', 'merchant', 'entry', 'totem'].includes(card?.type)
     face.userData.lift = 0
     face.userData.press = 0
     face.userData.body = mesh
@@ -597,6 +670,7 @@ export class GameScene {
     this._setContactShadow(face, card, revealed)
     this.tileMeshes.push(face)
     this.tileMeshByKey.set(tileKey(position), face)
+    this._applyExplorationVisibility(face, visual)
   }
 
   // The patch has to ride on the card surface. Anchoring it to the raw floor
@@ -623,6 +697,7 @@ export class GameScene {
   }
 
   _setContactShadow(face, card, revealed) {
+    if (this.actorsDeferred) return
     const kind = card?.type === 'monster' ? 'enemy'
       : card?.type === 'merchant' || card?.type === 'totem' || card?.type === 'entry' ? 'token'
         : null
@@ -667,17 +742,35 @@ export class GameScene {
     const attribute = this._backAttributeFor(room, position)
     styleCardBody(body, {
       hidden: !revealed, attribute, blocked: !flippable, baseThickness: CARD_THICKNESS,
-      texture: this._makeBackTexture(attribute, { unflippable: !flippable }),
+      texture: this._makeBackTexture(attribute, { unflippable: !flippable, position }),
     })
+    applyCardPaletteMaterial(body.material, this.cardPaletteUniforms?.[body.material.map?.userData.cardBackKind])
+    this._applySurfaceRotation(body, position)
   }
 
-  _setFacePose(face, point, standing, hidden = false) {
+  _applySurfaceRotation(mesh, position) {
+    const texture = mesh.material.map
+    const surface = texture?.userData.boardFloor ? 'floor' : texture?.userData.cardBackKind ? 'card' : null
+    rotateBoardUV(mesh.geometry, surface ? boardTextureRotation(position, this.run.currentRoom?.id, surface) : 0)
+  }
+
+  _setFacePose(face, point, standing, hidden = false, position = face.userData.position) {
+    this._applySurfaceRotation(face, position)
+    if (face.userData.sealVeil) {
+      face.remove(face.userData.sealVeil)
+      disposeObject(face.userData.sealVeil)
+      face.userData.sealVeil = null
+    }
+    if (face.material.userData.sealMist) {
+      face.userData.sealVeil = this.sealMist.veil(face.material, CARD_SIZE)
+      face.add(face.userData.sealVeil)
+    }
     const extent = face.material.map?.userData.canvasExtent || 1
     const previousExtent = face.userData.canvasExtent || 1
     if (extent !== previousExtent) face.geometry.scale(extent / previousExtent, extent / previousExtent, 1)
     face.userData.canvasExtent = extent
-    const baseY = standing ? CARD_SIZE / 2 + CARD_THICKNESS / 2 : cardFaceY(hidden, CARD_THICKNESS)
-    face.scale.setScalar(hidden ? HIDDEN_CARD_SCALE : 1)
+    const baseY = standing ? CARD_SIZE / 2 + CARD_THICKNESS / 2 : hidden && face.material.userData.sealMist ? cardFaceY(false, CARD_THICKNESS) + .015 : cardFaceY(hidden, CARD_THICKNESS)
+    face.scale.setScalar(hidden && face.material.userData.sealMist ? 1.02 : 1)
     face.rotation.order = standing ? 'YXZ' : 'XYZ'
     face.rotation.set(standing ? -STANDING_BACK_LEAN : -Math.PI / 2, standing ? this.cameraAzimuth : 0, 0)
     face.position.set(point.x, baseY, point.z)
@@ -711,6 +804,7 @@ export class GameScene {
   }
 
   _attachEnemyFigure(face, enemyId, instanceId = null) {
+    if (this.actorsDeferred) return
     let figure = face.userData.enemyFigure
     if (figure && figure.userData.enemyId !== enemyId) {
       face.remove(figure)
@@ -885,6 +979,7 @@ export class GameScene {
   }
 
   _attachGroundSprite(face, card, point, position, revealed = false) {
+    if (this.actorsDeferred) return
     this._clearGroundSprite(face)
     if (!revealed) return
     this._addGroundWeaponGlow(face, this._groundItem(card, position), point, position)
@@ -899,7 +994,7 @@ export class GameScene {
       this._clearGroundSprite(face, { preserveGlow: true })
       this._groundSpriteMesh(face, texture, descriptor, point, position, Math.max(0, (Date.now() - startedAt) / 1000))
     }
-    const texture = itemSpriteTexture(sources, applyTexture)
+    const texture = itemSpriteTexture(sources, applyTexture, this.assets)
     if (texture) applyTexture(texture)
   }
 
@@ -914,6 +1009,7 @@ export class GameScene {
     floor.position.set(point.x, groundSurfaceY(CARD_THICKNESS) - .002, point.z)
     floor.raycast = NO_RAYCAST
     floor.receiveShadow = Boolean(this.environment)
+    this._applySurfaceRotation(floor, position)
     return floor
   }
 
@@ -928,6 +1024,7 @@ export class GameScene {
     groundFace.userData.position = position ? { ...position } : null
     groundFace.receiveShadow = Boolean(this.environment)
     groundFace.raycast = THREE.Mesh.prototype.raycast
+    this._applySurfaceRotation(groundFace, position)
     return groundFace
   }
 
@@ -951,6 +1048,7 @@ export class GameScene {
   }
 
   _setEnemyStatusOverlay(face, groundFace, enemy) {
+    if (this.actorsDeferred) return
     for (const [owner, key] of [[face, 'enemyHealthOverlay'], [groundFace, 'enemyTurnOverlay']]) {
       const previous = owner?.userData?.[key]
       if (!previous) continue
@@ -1568,22 +1666,22 @@ export class GameScene {
     const emptyGround = standing && (card?.type === 'monster' || card?.type === 'merchant' || card?.type === 'entry' || card?.type === 'totem')
     const texture = card
       ? this._makeFrontTexture(card, position, revealed)
-      : this._makeBackTexture(this._backAttributeFor(room, position), { unflippable: !flippable })
+      : this._makeBackTexture(this._backAttributeFor(room, position), { unflippable: !flippable, position })
     const oldMaterial = face.material
     face.material = this._makeCardFaceMaterial(texture, {}, position)
     oldMaterial.dispose()
     // Click-through is handled by the custom raycast below. Standing tokens
     // remain visually opaque while their cleared canvas pixels stay transparent.
-    face.material.transparent = standing || peeked
+    face.material.transparent = Boolean(face.material.userData.sealMist) || standing || peeked
     face.material.opacity = peeked ? 0.46 : 1
-    face.material.depthWrite = !standing
+    face.material.depthWrite = !standing && !face.material.userData.sealMist
     face.material.depthTest = !standing
     setSurfaceColor(face.material, revealed || peeked || flippable ? 0xffffff : UNREACHABLE_HIDDEN_CARD_TINT)
     if (!oldTexture?.userData.boardShared) oldTexture?.dispose()
     face.visible = true
     face.userData.lift = 0
     face.userData.press ??= 0
-    this._setFacePose(face, this._gridPosition(room, position), standing, !revealed)
+    this._setFacePose(face, this._gridPosition(room, position), standing, !revealed, position)
     face.renderOrder = tileRenderOrder(position, standing ? 4 : 1)
     face.raycast = standing ? NO_RAYCAST : THREE.Mesh.prototype.raycast
     body.visible = true
@@ -1597,10 +1695,12 @@ export class GameScene {
     this._setContactShadow(face, card, revealed)
     face.userData.visualKey = visual.key
     face.userData.enemyId = card?.type === 'monster' ? card.enemyId : null
+    face.userData.actorFace = ['monster', 'merchant', 'entry', 'totem'].includes(card?.type)
     // Attach before measuring: the status rows anchor to the silhouette top, so
     // the figure has to exist before the overlay is laid out.
     this._attachEnemyFigure(face, revealed && card?.type === 'monster' ? card.enemyId : null)
     this._setEnemyStatusOverlay(face, face.userData.groundFace, revealed && card?.type === 'monster' ? room.entityAt(position) : null)
+    this._applyExplorationVisibility(face, visual)
     return true
   }
 
@@ -1610,7 +1710,38 @@ export class GameScene {
         if (!this._refreshTile(room, { c, r })) return false
       }
     }
+    this._syncExplorationFog(room)
     return true
+  }
+
+  _applyExplorationVisibility(face, { revealed, peeked, flippable }) {
+    const fogged = !revealed && !peeked && !flippable
+    face.userData.fogged = fogged
+    // Keep unknown faces available for picking but suppress their card art
+    // and bodies. Ordinary ground remains visible through fragmented haze.
+    if (face.userData.sealVeil) {
+      face.userData.sealVeil.visible = !fogged
+      face.userData.sealVeil.renderOrder = face.renderOrder + 1
+      face.userData.sealVeil.userData.upperMist.renderOrder = face.renderOrder + 2
+      face.userData.sealVeil.userData.runes.renderOrder = face.renderOrder + 3
+      face.userData.sealVeil.userData.plumes.renderOrder = face.renderOrder + 4
+      face.userData.sealVeil.userData.plumes.userData.filaments.renderOrder = face.renderOrder + 5
+    }
+    face.material.visible = !fogged
+    face.userData.body.visible = revealed && !fogged
+    face.userData.floorBacking.visible = true
+    if (this.actorsDeferred && (face.userData.standing || face.userData.actorFace)) face.material.visible = false
+  }
+
+  _syncExplorationFog(room) {
+    this.explorationFog ||= new ExplorationFog(this.roomGroup, { tileSize: TILE_SIZE, surfaceY: groundSurfaceY(CARD_THICKNESS) + .004 })
+    const flipping = new Set(this.flipAnimations.map(animation => animation.key))
+    const hidden = new Uint8Array(room.width * room.height)
+    for (const face of this.tileMeshes) {
+      const { c, r } = face.userData.position
+      hidden[r * room.width + c] = face.userData.fogged && !flipping.has(tileKey(face.userData.position)) ? 1 : 0
+    }
+    this.explorationFog.sync(room, hidden)
   }
 
   _queueAnimation(type, payload) {
@@ -1652,8 +1783,12 @@ export class GameScene {
   }
 
   _drainAnimationQueue() {
-    if (this.movementAnimation || this.attackAnimation || this.flipAnimations.length) return
+    if (this.movementAnimation || this.attackAnimation || this.flipAnimations.some(animation => !animation.dispelling)) return
     while (this.animationQueue.length) {
+      const next = this.animationQueue[0]
+      // Pickup movement can accompany a cosmetic dissolve. Other queued
+      // actions retain their original ordering and wait for the fog to finish.
+      if (this.flipAnimations.length && !(next.type === 'move' && next.payload?.purpose === 'pickup')) return
       const animation = this.animationQueue.shift()
       const started = animation.type === 'move'
         ? this._startMove(animation.payload)
@@ -1683,7 +1818,7 @@ export class GameScene {
   }
 
   _flushPendingRebuild() {
-    if (!this.pendingRebuild || this.movementAnimation || this.attackAnimation || this.flipAnimations.length || this.animationQueue.length) return
+    if (!this.pendingRebuild || this.movementAnimation || this.attackAnimation || this.flipAnimations.some(animation => !animation.dispelling) || this.animationQueue.length) return
     this.pendingRebuild = false
     this.rebuild()
   }
@@ -1694,70 +1829,28 @@ export class GameScene {
     const key = tileKey(position)
     const face = this.tileMeshByKey.get(key)
     if (!face || !face.visible || this.flipAnimations.some((animation) => animation.key === key)) return false
+    // Reveal contents in their resting pose; only the seal cloud dissolves.
+    const backTexture = sourceBackTexture || this._makeBackTexture(this._backAttributeFor(room, position), { unflippable: backUnflippable, position })
     const point = this._gridPosition(room, position)
     const group = new THREE.Group()
-    const startY = hiddenCardBodyY(CARD_THICKNESS) + (face.userData.lift || 0)
-    group.position.set(point.x, startY, point.z)
-    group.scale.set(HIDDEN_CARD_SCALE, 1, HIDDEN_CARD_SCALE)
-    group.rotation.x = Math.PI
-    const card = this._cardFaceData(room, position)
-    const flippingEnemy = card?.type === 'monster'
-    if (flippingEnemy) {
-      sourceBackTexture?.dispose()
-      const figure = createEnemyFigure(card.enemyId, CARD_SIZE)
-      if (!figure) return false
-      figure.userData.enemyInstanceId = room.entityAt(position)?.id
-      figure.rotation.y = this._enemyFacingOffset(figure, position)
-      const ground = this._makeEmptyGroundFace(point, position)
-      this.roomGroup.add(ground)
-      group.scale.setScalar(ENEMY_DISPLAY_SCALE)
-      group.position.y = cardFaceY(false, CARD_THICKNESS)
-      group.rotation.set(-ENEMY_BACK_LEAN, this.cameraAzimuth, 0, 'YXZ')
-      const hinge = new THREE.Group()
-      hinge.rotation.x = -Math.PI
-      hinge.add(figure)
-      group.add(hinge)
-      face.visible = false
-      face.userData.body.visible = false
-      this.roomGroup.add(group)
-      this.flipAnimations.push({ key, group, hinge, figure, ground, elapsed: 0, duration: .52 })
-      return true
-    }
-    const frontTexture = this._makeFrontTexture(card, position, true)
-    const backTexture = sourceBackTexture || this._makeBackTexture(this._backAttributeFor(room, position), { unflippable: backUnflippable })
-    const front = new THREE.Mesh(
-      new THREE.PlaneGeometry(CARD_SIZE * (frontTexture.userData.canvasExtent || 1), CARD_SIZE * (frontTexture.userData.canvasExtent || 1)),
-      this._makeCardFaceMaterial(frontTexture, { transparent: true, depthWrite: false }),
-    )
-    front.receiveShadow = Boolean(this.environment)
-    front.rotation.x = -Math.PI / 2
-    front.position.y = HIDDEN_CARD_THICKNESS / 2 + CARD_FACE_CLEARANCE
-    const back = new THREE.Mesh(
-      new THREE.PlaneGeometry(CARD_SIZE, CARD_SIZE),
-      this._makeCardFaceMaterial(backTexture, { depthWrite: false }),
-    )
-    if (back) {
-      back.receiveShadow = true
-      back.rotation.x = Math.PI / 2
-      back.position.y = -HIDDEN_CARD_THICKNESS / 2 - CARD_FACE_CLEARANCE
-    }
-    const edge = new THREE.Mesh(cardBodyGeometry(CARD_SIZE, CARD_THICKNESS), new THREE.MeshStandardMaterial({ roughness: 0.9 }))
-    if (edge) {
-      this._styleTileBody(edge, room, position, { revealed: false, flippable: !backUnflippable })
-      edge.position.y = 0
-      edge.scale.x = edge.scale.z = 1
-    }
-    const flipRenderOrder = tileRenderOrder(position, 2)
-    front.renderOrder = flipRenderOrder
-    if (back) back.renderOrder = flipRenderOrder
-    if (edge) edge.renderOrder = flipRenderOrder
-    group.add(front)
-    if (back) group.add(back)
-    if (edge) group.add(edge)
-    face.visible = false
-    face.userData.body.visible = false
+    const back = new THREE.Mesh(new THREE.PlaneGeometry(CARD_SIZE * 1.02, CARD_SIZE * 1.02), this._makeCardFaceMaterial(backTexture, {}, position))
+    this._applySurfaceRotation(back, position)
+    back.rotation.x = -Math.PI / 2
+    back.position.set(point.x, cardFaceY(false, CARD_THICKNESS) + .030, point.z)
+    back.renderOrder = tileRenderOrder(position, 5)
+    const veil = this.sealMist.veil(back.material, CARD_SIZE)
+    veil.renderOrder = back.renderOrder + 1
+    veil.userData.upperMist.renderOrder = back.renderOrder + 2
+    veil.userData.runes.renderOrder = back.renderOrder + 3
+    veil.userData.plumes.renderOrder = back.renderOrder + 4
+    veil.userData.plumes.userData.filaments.renderOrder = back.renderOrder + 5
+    back.add(veil)
+    back.raycast = NO_RAYCAST
+    group.add(back)
+    this._refreshTile(room, position, { force: true })
     this.roomGroup.add(group)
-    this.flipAnimations.push({ key, group, front, back, edge, startY, frontTexture, backTexture, elapsed: 0, duration: 0.34 })
+    this.flipAnimations.push({ key, group, back, backTexture, elapsed: 0, duration: .72, dispelling: true })
+    this._syncExplorationFog(room)
     return true
   }
 
@@ -2047,6 +2140,7 @@ export class GameScene {
   }
 
   _updateCharacterIdle(delta) {
+    if (this.actorsDeferred) return
     this.characterIdleTime += delta
     const room = this.run.currentRoom
     if (!room) return
@@ -2389,7 +2483,8 @@ export class GameScene {
     for (const [key, face] of this.tileMeshByKey) {
       const position = face.userData.position
       const canLift = face.visible && key === this.hoveredTileKey && this.run.tileCanBeFlipped(position)
-      const target = canLift ? 0.16 : 0
+      if (face.material.userData.sealMist) face.material.uniforms.mistHover.value = canLift ? 1 : 0
+      const target = 0
       face.userData.lift += (target - face.userData.lift) * 0.22
       const pressTarget = this.depressedTileKeys.has(key) ? -FOOTPRINT_PRESS_DEPTH : 0
       face.userData.press = (face.userData.press || 0) + (pressTarget - (face.userData.press || 0)) * 0.2
@@ -2425,19 +2520,10 @@ export class GameScene {
       const animation = this.flipAnimations[index]
       animation.elapsed += delta
       const progress = Math.min(1, animation.elapsed / animation.duration)
-      const eased = 1 - Math.pow(1 - progress, 3)
-      if (animation.figure) {
-        animation.hinge.rotation.x = -Math.PI * (1 - eased)
-        animation.group.rotation.y = this.cameraAzimuth
-      } else {
-        animation.group.rotation.x = Math.PI * (1 - eased)
-        animation.group.position.y = THREE.MathUtils.lerp(animation.startY, cardFaceY(false, CARD_THICKNESS), eased) + Math.sin(eased * Math.PI) * 0.28
-        const thickness = HIDDEN_CARD_THICKNESS * (1 - eased)
-        animation.front.position.y = thickness / 2 + 0.002
-        if (animation.back) animation.back.position.y = -thickness / 2 - 0.002
-        if (animation.edge) animation.edge.scale.y = Math.max(0.001, thickness / CARD_THICKNESS)
-        animation.group.scale.x = animation.group.scale.z = THREE.MathUtils.lerp(HIDDEN_CARD_SCALE, 1, eased)
-      }
+      const eased = progress * progress * (3 - 2 * progress)
+      animation.back.material.uniforms.mistDissolve.value = eased
+      animation.back.position.y += delta * .045
+      animation.back.scale.setScalar(1 + eased * .16)
       if (progress < 1) continue
       this.roomGroup.remove(animation.group)
       disposeObject(animation.group)
@@ -2448,7 +2534,18 @@ export class GameScene {
       this.flipAnimations.splice(index, 1)
       const room = this.run.currentRoom
       const face = this.tileMeshByKey.get(animation.key)
-      if (room?.id === this.framedRoomId && face?.userData?.position) this._refreshTile(room, face.userData.position, { force: true })
+      if (room?.id === this.framedRoomId && face?.userData?.position) {
+        // The contents already animate during dispelling. Refresh only if their
+        // visual state changed, so the live item keeps its spin and float phase.
+        if (this.movementAnimation || this.attackAnimation || this.animationQueue.length) {
+          // Logical pickup may already have moved the player. Wait for the
+          // foreground animation before drawing its resting pose here.
+          this.pendingRebuild = true
+        } else {
+          this._refreshTile(room, face.userData.position)
+          this._syncExplorationFog(room)
+        }
+      }
     }
     if (this.flipAnimations.length === 0) {
       this._drainAnimationQueue()
@@ -2481,29 +2578,44 @@ export class GameScene {
       : new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide, ...options })
   }
 
-  // One shared texture per attribute means every back of a kind is pixel-for-pixel
-  // identical. A stable per-tile value shift keeps the element readable while
-  // stopping the board from looking like a single repeated stamp; the shift is
-  // derived from the position, so it survives flips, moves and room rebuilds.
+  // Pattern and pigment colour are independent and fixed for each tile.
+  // The small value jitter stays within a tone family and survives refreshes.
   _makeCardFaceMaterial(texture, options = {}, position = null) {
+    if (texture?.userData.cardBackKind) {
+      this.sealMist ||= new SealMist(this.sealMistPalette)
+      return this.sealMist.material(texture, position ? cardPatternIndex(position, this.run.currentRoom?.id) + cardValue(position, this.run.currentRoom?.id) : 0, this.boardTextures.backNormal(texture))
+    }
     if (this.environment && texture?.userData.boardFloor) return this._makeGroundMaterial(texture, options)
-    const material = createCardFaceMaterial(texture, this.boardTextures.backNormal(texture), options, this.boardTextures.surfaceData(texture).surface, this.boardTextures.wear(texture, this._cardWearVariant(texture, position)))
-    if (position && texture?.userData.cardBackKind) {
-      const seed = stableHash(`${texture.userData.cardBackKind}:${position.c}:${position.r}`)
-      const value = 1 + ((seed % 1024)/1024*2 - 1)*CARD_TILE_VALUE_RANGE
-      const warmth = ((seed >>> 10) % 1024)/1024*2 - 1
-      material.color.setRGB(value + warmth*.018, value, value - warmth*.018)
+    const material = createCardFaceMaterial(texture, this.boardTextures.backNormal(texture), options, this.boardTextures.surfaceData(texture).surface, this.boardTextures.wear(texture, this._cardColorVariant(texture, position)), this.cardPaletteUniforms?.[texture?.userData.cardBackKind])
+    if (position && texture?.userData.cardBackKind && texture.userData.cardBackKind !== 'blocked') {
+      const tint = new THREE.Color(material.userData.surfaceTint)
+        .multiplyScalar(cardValue(position, this.run.currentRoom?.id))
+      setSurfaceColor(material, 0xffffff, tint)
     }
     return material
   }
 
-  _cardWearVariant(texture, position) {
-    if (!position || !texture?.userData?.cardBackKind) return 0
-    return stableHash(`wear:${texture.userData.cardBackKind}:${position.c}:${position.r}`) % CARD_WEAR_VARIANT_RANGE
+  setCardBackPalette(palette) {
+    const colors = normalizeCardBackPalette(palette)
+    this.sealMistPalette = colors
+    this.sealMist?.setPalette(colors)
+    this.cardPaletteUniforms ||= createCardPaletteUniforms(colors)
+    updateCardPaletteUniforms(this.cardPaletteUniforms, colors)
+    // Update existing card faces, rims and queued flip materials in place.
+    this.roomGroup.traverse(object => {
+      for (const material of (Array.isArray(object.material) ? object.material : [object.material])) {
+        if (material) refreshCardPaletteMaterial(material)
+      }
+    })
   }
 
-  _makeBackTexture(attribute, { unflippable = false } = {}) {
-    return this.boardTextures.back(attribute, unflippable && !this.run.sceneView?.showUnreachableCardAttributes)
+  _cardColorVariant(texture, position) {
+    if (!texture?.userData?.cardBackKind || texture.userData.cardBackKind === 'blocked') return 0
+    return cardColorIndex(position, this.run.currentRoom?.id)
+  }
+
+  _makeBackTexture(attribute, { unflippable = false, position = null } = {}) {
+    return this.boardTextures.back(attribute, unflippable, cardPatternIndex(position, this.run.currentRoom?.id))
   }
 
   _makeFrontTexture(card, position = null, revealed = false) {
@@ -2933,12 +3045,30 @@ export class GameScene {
     this._setZoom(this.zoom * Math.exp(-event.deltaY * 0.0015))
   }
 
+  _handleDispelPickup(event) {
+    if (this.run.itemTargeting || this.flipAnimations.some(animation => !animation.dispelling)) return
+    const position = this._pickTile(event)?.userData?.position
+    if (!position) return
+    const face = this.tileMeshByKey.get(tileKey(position))
+    if (!face || face.material.userData.sealMist) return
+    const preview = this.run.previewTileAction(position.c, position.r)
+    if (preview?.kind !== 'pickup') return
+    if (preview.path.length === 0 || isAdjacent8(this.run.player.pos, position) || samePosition(this.pathPreview?.target, position)) {
+      this._clearPathPreview()
+      this.run.clickTile(position.c, position.r)
+    } else this._showPathPreview(preview)
+  }
+
   _handleClick(event) {
     if (this.lastDragMoved) {
       this.lastDragMoved = false
       return
     }
-    if (this.movementAnimation || this.attackAnimation || this.flipAnimations.length || this.animationQueue.length) return
+    if (this.movementAnimation || this.attackAnimation || this.animationQueue.length) return
+    if (this.flipAnimations.length) {
+      this._handleDispelPickup(event)
+      return
+    }
     if (this.run.itemTargeting) {
       const position = this._pickTile(event)?.userData?.position
       this._clearPathPreview()
@@ -2998,12 +3128,15 @@ export class GameScene {
     this.attackRangeOverlay.syncPosition()
     this.attackRangeOverlay.update(delta)
     this._updateContactShadows()
+    this.explorationFog?.update(delta)
+    this.sealMist?.update(delta)
     this.environment?.update(now, this.roomGroup, delta, this.camera)
     this.renderer.render(this.scene, this.camera)
     this._frame = requestAnimationFrame(this._animate)
   }
 
   dispose() {
+    this.disposed = true
     cancelAnimationFrame(this._frame)
     this._cancelBoardHold({ close: true })
     this.unsubscribe?.()
@@ -3028,7 +3161,9 @@ export class GameScene {
     this._clearAttackAnimation()
     this._clearMovementAnimation()
     this._clearPlayerMarker()
+    this.explorationFog?.dispose()
     disposeObject(this.roomGroup)
+    this.sealMist?.dispose()
     this.boardTextures?.dispose()
     this.contactShadowTexture.dispose()
     this.templeLighting?.traverse(object => object.shadow?.dispose())

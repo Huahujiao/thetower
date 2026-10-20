@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { loadSceneTexture } from './scene-texture-loader.js'
 import { createTempleWindRig, updateTempleWindRig, TempleFallingLeaves } from './temple-wind.js'
 import { TempleParallaxBackdrop } from './temple-parallax-backdrop.js'
 import stoneUrl from '../assets/environment/palette-v1/stone.webp'
@@ -24,14 +25,14 @@ const fraction = value => { const seed = Math.sin(value) * 43758.5453; return se
 
 // Scenery owns only presentation resources; it never changes the room or save.
 export class TempleEnvironment {
-  constructor(container, scene) {
+  constructor(container, scene, { assets = null, deferSurfaces = false, backdrop = null } = {}) {
     this.container = container
-    this.atmosphere = new TempleAtmosphere(scene)
-    this.parallax = new TempleParallaxBackdrop(container)
+    this.atmosphere = new TempleAtmosphere(scene, assets)
+    this.parallax = backdrop || new TempleParallaxBackdrop(container, assets)
     this.backdrop = this.parallax.element
     this.reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
     const loadStone = (url, colorSpace = THREE.SRGBColorSpace) => {
-      const texture = new THREE.TextureLoader().load(url)
+      const texture = loadSceneTexture(url, assets, { defer: deferSurfaces })
       texture.colorSpace = colorSpace
       texture.userData.boardShared = true
       texture.anisotropy = 4
@@ -46,11 +47,17 @@ export class TempleEnvironment {
     this.soilStone = loadStone(soilStoneUrl)
     this.gateWood = loadStone(gateWoodUrl)
     this.props = new Map([mapleUrl, bannerUrl].map(url => {
-      const texture = new THREE.TextureLoader().load(url)
+      const texture = loadSceneTexture(url, assets, { defer: deferSurfaces })
       texture.colorSpace = THREE.SRGBColorSpace
       texture.userData.boardShared = true
       return [url, texture]
     }))
+  }
+
+  startSurfaceLoading() {
+    const textures = [this.stone, this.masonry, this.soilStone, this.gateWood, ...this.surfaceMaps, ...this.props.values()]
+    for (const texture of textures) texture.userData.startLoading?.()
+    return Promise.allSettled(textures.map(texture => texture.userData.ready))
   }
 
   block(group, size, position, color = 0x777b72, bevel = .016) {

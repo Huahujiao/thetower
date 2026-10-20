@@ -1,10 +1,13 @@
-import * as THREE from 'three'
 import farUrl from '../assets/environment/runtime-lite/mountains.webp'
 import middleUrl from '../assets/environment/runtime-lite/peaks.webp'
 import cloudsUrl from '../assets/environment/runtime-lite/clouds.webp'
 
+const clamp = (value, min, max) => Math.max(min, Math.min(max, value))
+
 export class TempleParallaxBackdrop {
-  constructor(container) {
+  constructor(container, assets = null) {
+    const pending = []
+    this.disposed = false
     this.container = container
     this.element = document.createElement('div')
     this.element.className = 'temple-backdrop temple-parallax-backdrop'
@@ -24,7 +27,10 @@ export class TempleParallaxBackdrop {
     ].map(layer => {
       const element = document.createElement('div')
       element.className = 'temple-parallax-layer temple-parallax-' + layer.name
-      element.style.backgroundImage = 'url("' + layer.url + '")'
+      if (assets) pending.push(assets.image(layer.url).then(image => {
+        if (!this.disposed) element.style.backgroundImage = 'url("' + image.src + '")'
+      }))
+      else element.style.backgroundImage = 'url("' + layer.url + '")'
       this.element.appendChild(element)
       return { ...layer, element }
     })
@@ -32,12 +38,14 @@ export class TempleParallaxBackdrop {
     shade.className = 'temple-parallax-shade'
     this.element.appendChild(shade)
     container.prepend(this.element)
-    this.point = new THREE.Vector3()
+    this.ready = Promise.allSettled(pending)
+    this.point = null
     this.reference = null
   }
 
   update(seconds, still, camera, platform) {
     if (!camera || !platform) return
+    this.point ||= camera.position.clone()
     camera.updateMatrixWorld()
     platform.group.updateWorldMatrix(true, false)
     this.point.set(0, 0, 0).applyMatrix4(platform.group.matrixWorld).project(camera)
@@ -52,9 +60,9 @@ export class TempleParallaxBackdrop {
     const zoom = reference.distance / Math.max(distance, .01)
     for (const layer of this.layers) {
       const drift = !still && layer.name === 'clouds' ? Math.sin(seconds * .012) * 12 : 0
-      const dx = THREE.MathUtils.clamp(x * layer.strength, -width * .09, width * .09)
-      const dy = THREE.MathUtils.clamp(y * layer.strength, -height * .09, height * .09)
-      const scale = 1.05 + THREE.MathUtils.clamp((zoom - 1) * layer.zoomStrength, -.035, .15)
+      const dx = clamp(x * layer.strength, -width * .09, width * .09)
+      const dy = clamp(y * layer.strength, -height * .09, height * .09)
+      const scale = 1.05 + clamp((zoom - 1) * layer.zoomStrength, -.035, .15)
       layer.element.style.transform = 'translate3d(' + dx.toFixed(2) + 'px,' + dy.toFixed(2) + 'px,0) scale(' + scale.toFixed(4) + ')'
       // Autonomous cloud drift belongs to the image, not the camera transform.
       if (layer.name === 'clouds') layer.element.style.backgroundPosition = 'calc(50% + ' + drift.toFixed(2) + 'px) 74%'
@@ -63,5 +71,5 @@ export class TempleParallaxBackdrop {
     }
   }
 
-  dispose() { this.element.remove() }
+  dispose() { this.disposed = true; this.element.remove() }
 }

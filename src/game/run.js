@@ -26,7 +26,7 @@ import { TACTICAL_LAYOUT_LABELS } from './model/tactical-layouts.js'
 import { RECIPES } from './data/content.js'
 import { RelicEngine } from './rules/relics.js'
 import { stepEnemy } from './rules/enemies.js'
-import { findAttackPath, findDoorPath, findInteractionPath, findPath, findRevealPath } from './rules/pathfinding.js'
+import { findAttackPath, findDoorPath, findInteractionPath, findPath, findRevealPath, hasRevealApproach } from './rules/pathfinding.js'
 import { terrainDamageModifiers } from './rules/terrain.js'
 import { suggestedSynergyId } from './rules/synergies.js'
 import { isSummonedEnemy } from './data/enemies.js'
@@ -870,7 +870,7 @@ export class GameRun {
   tileCanBeFlipped(position) {
     const room = this.currentRoom
     const revealDistance = 1
-    return !!room && !room.isRevealed(position) && !!findRevealPath(room, this.player.pos, position, { distance: revealDistance })
+    return !!room && hasRevealApproach(room, position, { distance: revealDistance })
   }
 
   previewTileAction(c, r) {
@@ -1159,7 +1159,7 @@ export class GameRun {
     if (isTotemBadge(item)) {
       if (!this.totems.available(item)) return this._reject('该图腾徽章当前不能召唤。')
       this.itemTargeting = true
-      this._log('请选择距离4以内已翻开的空格召唤图腾。')
+      this._log('请选择距离4以内已探索的空格召唤图腾。')
       this._changed()
       return true
     }
@@ -1482,7 +1482,7 @@ export class GameRun {
     if (!route) return this._reject('\u76ee\u6807\u4e0d\u53ef\u8fbe\u3002')
     const pickupCost = route.length === 0 ? 1 : 0
     if (this.battle.active && this.energyAfterMovement(route.length, route) < pickupCost) return this._reject('体力不足。')
-    this._walk(route)
+    this._walk(route, { purpose: 'pickup' })
     // Arrival and collection are one action. An ambush stops further movement,
     // but cannot undo a pickup after the player has reached this cell.
     const arrived = !this.gameOver && this.currentRoom === room
@@ -1676,7 +1676,7 @@ export class GameRun {
     return true
   }
 
-  _walk(path) {
+  _walk(path, { purpose = null } = {}) {
     const roomId = this.currentRoom?.id
     const startingPhase = this.phase
     const startingBattle = this.battle.active
@@ -1691,6 +1691,7 @@ export class GameRun {
           roomId,
           from: previous,
           path: [{ ...step }],
+          ...(purpose ? { purpose } : {}),
         })
       }
       this.player.pos = { ...step }

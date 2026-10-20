@@ -34,7 +34,7 @@ for (const attribute of ['neutral', 'scorch', 'wither', 'drown']) {
 }
 assert.equal(colors.size, 4)
 styleCardBody(body, { hidden: true, attribute: 'scorch', blocked: true, texture, baseThickness: 0.08 })
-assert.equal(body.material.color.getHex(), 0x555a62)
+assert.equal(body.material.color.getHex(), 0x3d4447)
 for (let i = 0; i < geometry.attributes.uv.count; i++) {
   const v = geometry.attributes.uv.getY(i)
   assert(v >= 0.0349 && v <= 0.0901)
@@ -49,7 +49,9 @@ const normal = new THREE.Texture()
 normal.colorSpace = THREE.NoColorSpace
 normal.userData.boardShared = true
 const back = createCardFaceMaterial(texture, normal, { depthWrite: false })
-assert(back.isMeshStandardMaterial, 'Relief backs must respond to scene lighting')
+assert(back.isMeshStandardMaterial, 'Rough stone backs respond to scene lighting')
+assert(back.roughness >= .75, 'Restore the matte stone finish')
+assert.equal(back.metalness, 0)
 assert.equal(back.normalMap, normal)
 assert.equal(back.normalMapType, THREE.TangentSpaceNormalMap)
 assert.equal(back.emissiveMap, texture)

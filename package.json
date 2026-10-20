@@ -6,6 +6,15 @@
   "scripts": {
     "predev": "node scripts/generate-enemy-thumbnails.mjs && node scripts/open-firewall.mjs",
     "dev": "vite",
+    "predev:hmr": "npm run predev",
+    "dev:hmr": "vite --mode hmr",
+    "start": "npm run build && vite preview",
+    "check:dev-session": "node scripts/dev-session-check.mjs",
+    "check:runtime-cache": "node scripts/runtime-cache-check.mjs",
+    "check:scene-loading": "node scripts/scene-loading-check.mjs",
+    "check:dispel-pickup": "node scripts/dispel-pickup-check.mjs",
+    "check:seal-runes": "node scripts/seal-runes-check.mjs",
+    "check:seal-motion": "node scripts/seal-motion-check.mjs",
     "firewall:setup": "scripts\\firewall-setup.bat",
     "build": "vite build",
     "prebuild": "node scripts/generate-enemy-thumbnails.mjs",
@@ -48,7 +57,9 @@
     "prepare:board-textures": "python scripts/prepare-board-runtime.py",
     "prepare:scene-colors": "python scripts/prepare-board-runtime.py && python scripts/prepare-temple-palette.py",
     "prepare:runtime-textures": "python scripts/prepare-runtime-textures.py && python scripts/prepare-temple-palette.py && python scripts/generate-temple-stone-surfaces.py && python scripts/generate-sprite-resolutions.py",
-    "check:runtime-textures": "python scripts/prepare-runtime-textures.py --check && python scripts/prepare-temple-palette.py --check && python scripts/generate-temple-stone-surfaces.py --check"
+    "check:runtime-textures": "python scripts/prepare-runtime-textures.py --check && python scripts/prepare-temple-palette.py --check && python scripts/generate-temple-stone-surfaces.py --check",
+    "check:exploration-fog": "node scripts/exploration-fog-check.mjs",
+    "check:card-palette": "node scripts/card-palette-check.mjs"
   },
   "dependencies": {
     "@vitejs/plugin-vue": "^6.0.9",

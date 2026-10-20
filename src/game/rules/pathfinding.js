@@ -79,6 +79,13 @@ function revealApproaches(room, target, distance) {
   return approaches
 }
 
+// A frontier card is exposed by explored walkable ground, independently of the
+// player's current position. Finding a route to act on it is a separate step.
+export function hasRevealApproach(room, target, { distance = 1 } = {}) {
+  return room.contains(target) && !room.isRevealed(target) && revealApproaches(room, target, distance)
+    .some(candidate => room.isRevealed(candidate) && room.isEmpty(candidate))
+}
+
 export function findRevealPath(room, start, target, { distance = 1 } = {}) {
   if (room.isRevealed(target)) return null
   const approaches = revealApproaches(room, target, distance)

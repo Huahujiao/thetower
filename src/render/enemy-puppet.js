@@ -3,6 +3,7 @@ import { evaluateShadowProject } from '../animation/shadow-rig.js'
 import { resetStaleShadowCache } from '../animation/shadow-editor-cache.js'
 import { projectShadowFaces } from '../animation/shadow-projection.js'
 import * as THREE from 'three'
+import { loadSceneTexture } from './scene-texture-loader.js'
 import { shadowPartGeometry } from '../animation/shadow-geometry.js'
 import { applyTextureBacking } from './texture-backing.js'
 import { applyEnemyOutline } from './enemy-outline.js'
@@ -12,6 +13,7 @@ import { gameplayEnemyTextureUrl } from './enemy-texture-runtime.js'
 const images = new Map()
 let projects = null
 let assetReady = null
+let sceneAssets = null
 let silhouettes = new WeakMap()
 const GNAWER_DISPLAY_SCALE = .34 * 1.2
 // Transparent animation margin; the scene enlarges the plane by the same
@@ -23,23 +25,33 @@ function imageFor(url) {
   if (!images.has(url)) {
     const image = new Image()
     images.set(url, image)
-    image.onload = () => assetReady?.()
-    image.src = gameplayEnemyTextureUrl(url)
+    if (sceneAssets) sceneAssets.image(gameplayEnemyTextureUrl(url)).then(loaded => {
+      images.set(url, loaded)
+      assetReady?.()
+    }, () => assetReady?.())
+    else {
+      image.onload = () => assetReady?.()
+      image.src = gameplayEnemyTextureUrl(url)
+    }
   }
   const image = images.get(url)
   return image.complete && image.naturalWidth ? image : null
 }
 
-export function prepareEnemyPuppets(onReady) {
+export function prepareEnemyPuppets(onReady, { assets = null, enemyIds = [] } = {}) {
   assetReady = onReady
+  sceneAssets = assets
   resetStaleShadowCache()
   projects = new Map(createEnemyShadowProjects({ includeBoss: true }).map((project) => [project.enemyId, project]))
   silhouettes = new WeakMap()
-  // Only the common size reference is needed before a figure is displayed.
-  // Visible figures request their own parts through puppetTexture/drawProject.
-  for (const part of projects.get('gnawer')?.parts || []) {
-    if (part.visual.type === 'texture') imageFor(part.visual.texture)
+  const urls = new Set()
+  for (const id of new Set(['gnawer', ...enemyIds])) for (const part of projects.get(id)?.parts || []) {
+    if (part.visual.type === 'texture') urls.add(part.visual.texture)
+    if (part.visual.skinTexture) urls.add(part.visual.skinTexture)
   }
+  for (const url of urls) imageFor(url)
+  return assets ? Promise.allSettled([...urls].map(url => assets.image(gameplayEnemyTextureUrl(url)))) : Promise.resolve()
+
 }
 
 export function enemyPuppetProject(enemyId) {
@@ -175,7 +187,7 @@ const skinTextures = new Map()
 function skinTexture(url) {
   if (!url) return null
   if (!skinTextures.has(url)) {
-    const texture = new THREE.TextureLoader().load(gameplayEnemyTextureUrl(url), () => assetReady?.())
+    const texture = loadSceneTexture(gameplayEnemyTextureUrl(url), sceneAssets, { onLoad: () => assetReady?.() })
     texture.colorSpace = THREE.SRGBColorSpace
     texture.userData.boardShared = true
     skinTextures.set(url, texture)
