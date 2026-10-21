@@ -44,13 +44,13 @@ button { font: inherit; }
 .scene-loading-panel > small { display: block; margin-top: 12px; font-size: 11px; }
 @media(prefers-reduced-motion:reduce) { .scene-loading-mark { animation: none; } }
 
-/* Keep the full phone HUD visible while reviewing artwork on a desktop. */
-body.art-tweak-page #hud {
-  --art-tweak-width: min(100vw, 520px, 64dvh);
-  --hud-unit: calc(var(--art-tweak-width) / 9 - 4px);
-  --hud-grid-cell: calc((var(--art-tweak-width) - 32px) / 8);
-  --hud-backpack-height: calc((var(--art-tweak-width) - 16px) / 2);
-  width: var(--art-tweak-width);
+/* Shared portrait game layout, including the artwork review route. */
+body.temple-game-page #hud {
+  --game-width: min(100vw, 520px, 64dvh);
+  --hud-unit: calc(var(--game-width) / 9 - 4px);
+  --hud-grid-cell: calc((var(--game-width) - 32px) / 8);
+  --hud-backpack-height: calc((var(--game-width) - 16px) / 2);
+  width: var(--game-width);
   right: auto;
   left: 50%;
   transform: translateX(-50%);
@@ -584,53 +584,53 @@ body.art-tweak-page #hud {
 }
 .detail-description { overflow-wrap: anywhere; }
 
-/* Mountain temple art review: proportions follow the supplied 9:16 reference. */
-body.art-tweak-page { background: #11191b; }
-body.art-tweak-page #hud {
-  --hud-top-height: max(38px, calc(var(--art-tweak-width) * .09));
+/* Mountain temple game theme: proportions follow the supplied 9:16 reference. */
+body.temple-game-page { background: #11191b; }
+body.temple-game-page #hud {
+  --hud-top-height: max(38px, calc(var(--game-width) * .09));
   --hud-experience-height: 6px;
   --hud-toolbar-height: 46px;
-  --hud-action-height: clamp(28px, calc(var(--art-tweak-width) * .066), 34px);
-  --hud-armor-size: clamp(26px, calc(var(--art-tweak-width) * .066), 34px);
-  --hud-action-width: clamp(64px, calc(var(--art-tweak-width) * .17), 88px);
-  --hud-toolbar-gap: clamp(6px, calc(var(--art-tweak-width) * .0255), 12px);
-  --hud-bottom-padding-inline: calc(var(--art-tweak-width) * .0255);
-  --hud-bottom-padding-top: calc(var(--art-tweak-width) * .017);
-  --hud-bottom-padding-bottom: calc(var(--art-tweak-width) * .0468 + env(safe-area-inset-bottom));
-  --hud-backpack-height: calc((var(--art-tweak-width) - var(--hud-bottom-padding-inline) * 2) / 2);
+  --hud-action-height: clamp(28px, calc(var(--game-width) * .066), 34px);
+  --hud-armor-size: clamp(26px, calc(var(--game-width) * .066), 34px);
+  --hud-action-width: clamp(64px, calc(var(--game-width) * .17), 88px);
+  --hud-toolbar-gap: clamp(6px, calc(var(--game-width) * .0255), 12px);
+  --hud-bottom-padding-inline: calc(var(--game-width) * .0255);
+  --hud-bottom-padding-top: calc(var(--game-width) * .017);
+  --hud-bottom-padding-bottom: calc(var(--game-width) * .0468 + env(safe-area-inset-bottom));
+  --hud-backpack-height: calc((var(--game-width) - var(--hud-bottom-padding-inline) * 2) / 2);
   --hud-bottom-height: calc(var(--hud-toolbar-height) + var(--hud-backpack-height) + var(--hud-bottom-padding-top) + var(--hud-bottom-padding-bottom) + 9px);
   font-family: 'Noto Serif SC', 'Songti SC', SimSun, Georgia, serif;
   background: #141d1e;
 }
-body.art-tweak-page .hud-top {
-  padding: 0 calc(var(--art-tweak-width) * .022);
+body.temple-game-page .hud-top {
+  padding: 0 calc(var(--game-width) * .022);
   position: relative;
   z-index: 30;
   pointer-events: auto;
   background: linear-gradient(180deg, rgba(7, 27, 29, .64), rgba(8, 25, 28, .46));
 }
-body.art-tweak-page .hud-stats { gap: clamp(6px, calc(var(--art-tweak-width) * .02), 11px); }
-body.art-tweak-page .stat { flex-direction: row; min-width: 0; gap: 4px; padding-top: 0; white-space: nowrap; }
-body.art-tweak-page .stat.level { border-left: 1px solid #8c7857; padding-left: clamp(6px, calc(var(--art-tweak-width) * .02), 10px); }
-body.art-tweak-page .stat .label { color: #d0c4af; opacity: .9; font-size: clamp(9px, calc(var(--art-tweak-width) * .022), 11px); letter-spacing: 0; line-height: 1.4; }
-body.art-tweak-page .stat .value { font-family: Georgia, 'Times New Roman', serif; font-size: clamp(16px, calc(var(--art-tweak-width) * .038), 20px); font-weight: 500; color: #eee2ce; line-height: 1.2; }
-body.art-tweak-page .stat.floor .value { color: #a5d9bb; }
-body.art-tweak-page .hud-btns { gap: clamp(3px, calc(var(--art-tweak-width) * .0085), 4px); }
-body.art-tweak-page .hud-icon {
-  width: clamp(24px, calc(var(--art-tweak-width) * .065), 34px); height: clamp(24px, calc(var(--art-tweak-width) * .065), 34px);
+body.temple-game-page .hud-stats { gap: clamp(6px, calc(var(--game-width) * .02), 11px); }
+body.temple-game-page .stat { flex-direction: row; min-width: 0; gap: 4px; padding-top: 0; white-space: nowrap; }
+body.temple-game-page .stat.level { border-left: 1px solid #8c7857; padding-left: clamp(6px, calc(var(--game-width) * .02), 10px); }
+body.temple-game-page .stat .label { color: #d0c4af; opacity: .9; font-size: clamp(9px, calc(var(--game-width) * .022), 11px); letter-spacing: 0; line-height: 1.4; }
+body.temple-game-page .stat .value { font-family: Georgia, 'Times New Roman', serif; font-size: clamp(16px, calc(var(--game-width) * .038), 20px); font-weight: 500; color: #eee2ce; line-height: 1.2; }
+body.temple-game-page .stat.floor .value { color: #a5d9bb; }
+body.temple-game-page .hud-btns { gap: clamp(3px, calc(var(--game-width) * .0085), 4px); }
+body.temple-game-page .hud-icon {
+  width: clamp(24px, calc(var(--game-width) * .065), 34px); height: clamp(24px, calc(var(--game-width) * .065), 34px);
   border: 1px solid #a88c63; border-radius: 3px; background: linear-gradient(145deg,#24292bea,#13191bec);
   color: #d2c1a6; font-size: 20px; box-shadow: inset 0 0 0 2px #161d20, 0 2px 2px #0008;
   clip-path: polygon(9% 0,91% 0,100% 9%,100% 91%,91% 100%,9% 100%,0 91%,0 9%);
 }
-body.art-tweak-page .hud-icon svg { width: 66%; height: auto; aspect-ratio: 1; }
-body.art-tweak-page .experience-bar-row { z-index: 30; padding: 0 14px; background: rgba(8, 25, 28, .46); pointer-events: auto; }
-body.art-tweak-page .experience-bar { border: 1px solid #b29b72; border-radius: 2px; background: #131b1d; box-shadow: 0 0 0 1px #3a3d38; }
-body.art-tweak-page .experience-value { display: none; }
-body.art-tweak-page #app { position: absolute; inset: 0 0 var(--hud-bottom-height); background: #28383b; border: 0; }
+body.temple-game-page .hud-icon svg { width: 66%; height: auto; aspect-ratio: 1; }
+body.temple-game-page .experience-bar-row { z-index: 30; padding: 0 14px; background: rgba(8, 25, 28, .46); pointer-events: auto; }
+body.temple-game-page .experience-bar { border: 1px solid #b29b72; border-radius: 2px; background: #131b1d; box-shadow: 0 0 0 1px #3a3d38; }
+body.temple-game-page .experience-value { display: none; }
+body.temple-game-page #app { position: absolute; inset: 0 0 var(--hud-bottom-height); background: #28383b; border: 0; }
 /* A quiet warm centre and cool edge tone, so the high-key board still has a
    focal point. Kept as an overlay rather than a full-screen filter so the HUD
    and text stay crisp. */
-body.art-tweak-page #app::before {
+body.temple-game-page #app::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -640,43 +640,43 @@ body.art-tweak-page #app::before {
     radial-gradient(ellipse at 50% 46%, transparent 58%, rgba(22,38,40,.16) 100%);
 }
 .temple-backdrop { position: absolute; inset: -4%; background-size: cover; background-position: center 46%; pointer-events: none; z-index: 0; will-change: transform; }
-body.art-tweak-page #app canvas { z-index: 1; }
-body.art-tweak-page #app.scene-battle-active::after { animation: none; opacity: 1; box-shadow: inset 0 0 22px 5px #0a14194d; }
-body.art-tweak-page .hud-bottom {
+body.temple-game-page #app canvas { z-index: 1; }
+body.temple-game-page #app.scene-battle-active::after { animation: none; opacity: 1; box-shadow: inset 0 0 22px 5px #0a14194d; }
+body.temple-game-page .hud-bottom {
   margin-top: auto;
   padding: var(--hud-bottom-padding-top) var(--hud-bottom-padding-inline) var(--hud-bottom-padding-bottom);
   row-gap: 8px;
   background: linear-gradient(180deg, #101a1deb, #10191aef), url('./assets/environment/runtime-lite/brick.webp') center / 300px;
   border-top: 1px solid #5e6357;
 }
-body.art-tweak-page .backpack-toolbar { gap: var(--hud-toolbar-gap); }
-body.art-tweak-page .vital-armor {
+body.temple-game-page .backpack-toolbar { gap: var(--hud-toolbar-gap); }
+body.temple-game-page .vital-armor {
   width: var(--hud-armor-size); height: var(--hud-armor-size);
   clip-path: none; background: url('./assets/ui/armor-shield-temple-v1.png') center / contain no-repeat;
   filter: drop-shadow(0 1px 2px #0009);
 }
-body.art-tweak-page .vital-armor::before { display: none; }
-body.art-tweak-page .vital-armor strong { font-size: min(clamp(13px, calc(var(--art-tweak-width) * .0319), 16px), calc(var(--hud-armor-size) * .92 / var(--armor-digits, 1))); font-weight: 600; transform: translateY(-1px); }
-body.art-tweak-page .vital-bars, body.art-tweak-page .vital-bars:has(.stamina-hand) { grid-template-rows: 11px 24px; height: 41px; row-gap: 6px; }
-body.art-tweak-page .vital-health { min-height: 11px; overflow: visible; border: 1px solid #aa7560; border-radius: 12px; background: #2d1b1bf0; box-shadow: inset 0 0 3px #090d0d; }
-body.art-tweak-page .vital-health-fill { border-radius: inherit; background: linear-gradient(110deg,#74342f,#984840 65%,#bd6d5e); box-shadow: inset 0 1px 2px #d8a08244; }
-body.art-tweak-page .vital-health strong { font-size: 10px; line-height: 1; font-weight: 500; }
-body.art-tweak-page .stamina-hand { --fire-size: 24px; }
-body.art-tweak-page .backpack-action-slot.act-use-slot { width: var(--hud-action-width); }
-body.art-tweak-page .backpack-action { height: var(--hud-action-height); border: 1px solid #9e8b67; border-radius: 1px; color: #2b241a; font-size: clamp(12px, calc(var(--art-tweak-width) * .034), 17px); font-weight: 600; background: radial-gradient(ellipse at 35% 25%,#d8c69e,#a68f66); box-shadow: inset 0 0 0 2px #bfae86,0 2px 3px #0007; clip-path: polygon(7% 0,96% 0,100% 8%,100% 91%,95% 100%,4% 100%,0 91%,0 9%); }
-body.art-tweak-page .backpack-grid { background: transparent; }
-body.art-tweak-page .bag-cell { border-color: #56605a80; border-radius: 3px; box-shadow: inset 0 0 2px #a0aaa522; background: linear-gradient(140deg,#26313388,#0e171aa6); }
-body.art-tweak-page .bag-item.has-sprite .occupied { border-radius: 2px; border-color: color-mix(in srgb,var(--bag-edge),#5c665e 40%); }
+body.temple-game-page .vital-armor::before { display: none; }
+body.temple-game-page .vital-armor strong { font-size: min(clamp(13px, calc(var(--game-width) * .0319), 16px), calc(var(--hud-armor-size) * .92 / var(--armor-digits, 1))); font-weight: 600; transform: translateY(-1px); }
+body.temple-game-page .vital-bars, body.temple-game-page .vital-bars:has(.stamina-hand) { grid-template-rows: 11px 24px; height: 41px; row-gap: 6px; }
+body.temple-game-page .vital-health { min-height: 11px; overflow: visible; border: 1px solid #aa7560; border-radius: 12px; background: #2d1b1bf0; box-shadow: inset 0 0 3px #090d0d; }
+body.temple-game-page .vital-health-fill { border-radius: inherit; background: linear-gradient(110deg,#74342f,#984840 65%,#bd6d5e); box-shadow: inset 0 1px 2px #d8a08244; }
+body.temple-game-page .vital-health strong { font-size: 10px; line-height: 1; font-weight: 500; }
+body.temple-game-page .stamina-hand { --fire-size: 24px; }
+body.temple-game-page .backpack-action-slot.act-use-slot { width: var(--hud-action-width); }
+body.temple-game-page .backpack-action { height: var(--hud-action-height); border: 1px solid #9e8b67; border-radius: 1px; color: #2b241a; font-size: clamp(12px, calc(var(--game-width) * .034), 17px); font-weight: 600; background: radial-gradient(ellipse at 35% 25%,#d8c69e,#a68f66); box-shadow: inset 0 0 0 2px #bfae86,0 2px 3px #0007; clip-path: polygon(7% 0,96% 0,100% 8%,100% 91%,95% 100%,4% 100%,0 91%,0 9%); }
+body.temple-game-page .backpack-grid { background: transparent; }
+body.temple-game-page .bag-cell { border-color: #56605a80; border-radius: 3px; box-shadow: inset 0 0 2px #a0aaa522; background: linear-gradient(140deg,#26313388,#0e171aa6); }
+body.temple-game-page .bag-item.has-sprite .occupied { border-radius: 2px; border-color: color-mix(in srgb,var(--bag-edge),#5c665e 40%); }
 
-body.art-tweak-page .temple-backdrop { background-size: auto 170%; background-position: 55% 62%; filter: saturate(.65) brightness(.78); }
+body.temple-game-page .temple-backdrop { background-size: auto 170%; background-position: 55% 62%; filter: saturate(.65) brightness(.78); }
 
-body.art-tweak-page .experience-bar-row { position: relative; }
-body.art-tweak-page .experience-bar-row::before, body.art-tweak-page .experience-bar-row::after { content: ''; position: absolute; top: 50%; width: 5px; height: 5px; border: 1px solid #b39a6e; background: #29302b; transform: translateY(-50%) rotate(45deg); z-index: 2; box-shadow: 0 0 0 1px #302e26; }
-body.art-tweak-page .experience-bar-row::before { left: 4px; }
-body.art-tweak-page .experience-bar-row::after { right: 4px; }
+body.temple-game-page .experience-bar-row { position: relative; }
+body.temple-game-page .experience-bar-row::before, body.temple-game-page .experience-bar-row::after { content: ''; position: absolute; top: 50%; width: 5px; height: 5px; border: 1px solid #b39a6e; background: #29302b; transform: translateY(-50%) rotate(45deg); z-index: 2; box-shadow: 0 0 0 1px #302e26; }
+body.temple-game-page .experience-bar-row::before { left: 4px; }
+body.temple-game-page .experience-bar-row::after { right: 4px; }
 
 /* Depth-separated temple backdrop; each image moves independently. */
-body.art-tweak-page .temple-backdrop.temple-parallax-backdrop { inset: 0; overflow: hidden; background: none; filter: none; will-change: auto; }
+body.temple-game-page .temple-backdrop.temple-parallax-backdrop { inset: 0; overflow: hidden; background: none; filter: none; will-change: auto; }
 .temple-parallax-layer { position: absolute; inset: -12%; pointer-events: none; background-repeat: no-repeat; will-change: transform; }
 .temple-parallax-far { background-size: auto 170%; background-position: 55% 62%; filter: saturate(.65) brightness(.78); }
 .temple-parallax-middle { background-size: cover; background-position: center -24px; opacity: 1; filter: url(#temple-solid-rock-alpha) saturate(.50) brightness(.80) url(#temple-middle-aerial-perspective); }

@@ -24,6 +24,7 @@
     "check:combat-motion": "node scripts/combat-motion-check.mjs && node scripts/enemy-camera-animation-check.mjs",
     "check:board-pointer": "node scripts/board-pointer-check.mjs",
     "check:arttweak": "node scripts/art-tweak-check.mjs",
+    "check:game-art": "node scripts/game-art-check.mjs",
     "check:traps": "node scripts/traps-check.mjs",
     "check:items": "node scripts/items-check.mjs && node scripts/pickup-ambush-check.mjs",
     "check:basics": "node scripts/basic-rules-check.mjs",

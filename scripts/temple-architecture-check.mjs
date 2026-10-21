@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { createServer } from 'vite'
 import * as THREE from 'three'
-const server = await createServer({server:{middlewareMode:true},appType:'custom'})
+const server = await createServer({configFile:false,server:{middlewareMode:true,hmr:false,watch:null},optimizeDeps:{noDiscovery:true,include:[]},appType:'custom'})
 const previousDocument=globalThis.document
 const context=new Proxy({}, {get:(_target,key)=>key==='createRadialGradient'||key==='createLinearGradient'?()=>({addColorStop(){}}):()=>{}})
 globalThis.document={createElement:()=>({width:0,height:0,getContext:()=>context})}
@@ -10,6 +10,7 @@ try {
   const { createStoneDoorFrame, createTempleLockedGate }=await server.ssrLoadModule('/src/render/wall-kit.js')
   const { createTempleArchitectureReview }=await server.ssrLoadModule('/src/render/temple-architecture-review.js')
   const { GameScene }=await server.ssrLoadModule('/src/render/scene.js')
+  const { TempleEnvironment }=await server.ssrLoadModule('/src/render/temple-environment.js')
   for(const size of [[.53,.12,.53],[3,.1,.2],[.095,.62,.23],[10,10,9]]){
     const geometry=dressedStoneBox(size)
     geometry.computeBoundingBox()
@@ -40,6 +41,16 @@ try {
     assert.equal(ray.intersectObject(frame,true).length,0,'Open portal centre must remain empty: '+variant)
     const gate=createTempleLockedGate({horizontal:true,width:.98,depth:.196,height:.8,variant,texture:wood})
     gate.updateMatrixWorld(true)
+    const leafBounds=new THREE.Box3().setFromObject(gate)
+    assert(leafBounds.max.y < .90,'Wood and fittings must stay below the spring line, including an arched gate')
+    frame.traverse(mesh=>{if(mesh.isMesh)assert.equal(mesh.material.map,stone,'The entire door surround uses stone')})
+    if(variant==='arch'){
+      const crownRay=new THREE.Raycaster(new THREE.Vector3(0,1.46,2),new THREE.Vector3(0,0,-1))
+      assert(crownRay.intersectObject(frame,true).length>0,'The crown must remain solid stone')
+      const openingRay=new THREE.Raycaster(new THREE.Vector3(0,1.12,2),new THREE.Vector3(0,0,-1))
+      assert.equal(openingRay.intersectObject(gate,true).length,0,'The space below the crown cannot be filled by wood')
+      assert.equal(openingRay.intersectObject(frame,true).length,0,'Retain the open arch silhouette')
+    }
     for(const sign of [-1,1]){
       const gateRay=new THREE.Raycaster(new THREE.Vector3(.13,.35,sign*2),new THREE.Vector3(0,0,-sign))
       assert(gateRay.intersectObject(gate,true).length>0,'Locked gate must cover both sides')
@@ -69,6 +80,36 @@ try {
     const ray=new THREE.Raycaster(point.clone().addScaledVector(outward,2),outward.clone().negate())
     assert(ray.intersectObject(mesh,false).length>0,'Invisible door hit volume must remain clickable')
   }
+  // Carving must preserve PBR maps, unit bounds, click-through and draw count.
+  const environment=Object.create(TempleEnvironment.prototype);environment.stone=stone
+  for(const horizontal of [true,false]){
+    const rail=environment.wall({horizontal,length:1.14,thickness:.14,height:.62})
+    assert.equal(rail.children.length,3,'Carving adds no geometry or draw calls')
+    const cap=rail.children.find(mesh=>mesh.material.userData.stoneCarving)
+    assert(cap,'The coping carries a carved band')
+    const shader={uniforms:{},vertexShader:THREE.ShaderLib.standard.vertexShader,fragmentShader:THREE.ShaderLib.standard.fragmentShader}
+    cap.material.onBeforeCompile(shader)
+    assert.equal(shader.uniforms.uCarveAlongZ.value,horizontal?0:1,'Patterns follow the rail direction')
+    assert.equal(cap.material.normalMap,normal);assert.equal(cap.material.roughnessMap,surface)
+    assert.equal(shader.uniforms.uCarvePost.value,0)
+    assert(shader.fragmentShader.includes('float carvedHeight = -0.0022'))
+    assert(shader.fragmentShader.includes('carveGradient'))
+    assert(shader.fragmentShader.includes('#include <normal_fragment_maps>'),'Retain the existing stone normal map')
+    assert(shader.vertexShader.includes('vCarvePosition = position;'))
+    cap.geometry.computeBoundingBox()
+    const size=cap.geometry.boundingBox.getSize(new THREE.Vector3())
+    assert(size.distanceTo(shader.uniforms.uCarveSize.value)<1e-6,'Pattern scale matches the actual bevelled block')
+    let hits=0;cap.raycast(null,{push(){hits++}});assert.equal(hits,0,'Scenery cannot intercept board picking')
+  }
+  for(const kind of ['small','medium']){
+    const post=environment.railingPost(kind,.62)
+    assert.equal(post.children.length,kind==='small'?3:5)
+    const shaft=post.children.find(mesh=>mesh.material.userData.stoneCarving)
+    assert.equal(shaft.material.userData.stoneCarving.kind,'post')
+    assert.equal(shaft.material.map,stone);assert.equal(shaft.material.normalMap,normal)
+    const shader={uniforms:{},vertexShader:THREE.ShaderLib.standard.vertexShader,fragmentShader:THREE.ShaderLib.standard.fragmentShader}
+    shaft.material.onBeforeCompile(shader);assert.equal(shader.uniforms.uCarvePost.value,1)
+  }
   const group=createTempleArchitectureReview(stone,stone,stone,wood)
   group.updateMatrixWorld(true)
   const foundationMesh=group.getObjectByName('platform-foundation-wall')
@@ -84,5 +125,5 @@ try {
   let triangles=0
   group.traverse(mesh=>{if(!mesh.isMesh)return;triangles+=(mesh.geometry.index?.count||mesh.geometry.attributes.position.count)/3;for(const [attribute,data] of Object.entries(mesh.geometry.attributes))assert([...data.array].every(Number.isFinite),mesh.name+': '+attribute)})
   assert(triangles<110000,'Full four-door review fixture geometry budget')
-  console.log('Temple architecture passed: rounded bounds/UVs, material ownership, solid foundation, three open portals, two-sided gates, all four door directions, lock/unlock visibility and picking; '+triangles+' triangles in review fixture.')
+  console.log('Temple architecture passed: rounded bounds/UVs, material ownership, solid foundation, stone crowns above flat-topped wood leaves, carved coping/posts without added draw calls, three open portals, two-sided gates, all four door directions, lock/unlock visibility and picking; '+triangles+' triangles in review fixture.')
 }finally{globalThis.document=previousDocument;await server.close()}

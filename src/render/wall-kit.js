@@ -184,10 +184,12 @@ export function createStoneDoorFrame({ horizontal, width, depth, height, variant
 export function createTempleLockedGate({ horizontal, width, depth, height, variant = 'arch', texture }) {
   const group = new THREE.Group()
   group.name = 'temple-locked-gate'
+  group.userData.variant = variant
   const wood = new THREE.MeshStandardMaterial({ map: texture, color: 0xc8bbb0, roughness: .86, metalness: .015, bumpMap: texture, bumpScale: .003 })
   const bronze = new THREE.MeshStandardMaterial({ color: 0x77715a, roughness: .64, metalness: .63 })
   const leafDepth = depth * .43, springY = height + .10
-  const topAt = x => variant === 'arch' ? springY + Math.sqrt(Math.max(0, (width / 2) ** 2 - x * x)) - .012 : springY - .025
+  // Door leaves end below the spring line; the stone arch crown stays open.
+  const leafTop = springY - .025
   const add = (geometry, material, x, y, z) => {
     const mesh = new THREE.Mesh(geometry, material)
     mesh.position.set(x, y, z); mesh.castShadow = mesh.receiveShadow = true
@@ -197,15 +199,13 @@ export function createTempleLockedGate({ horizontal, width, depth, height, varia
     const left = -width / 2 + index * width / 6 + .004
     const right = -width / 2 + (index + 1) * width / 6 - .004
     const shape = new THREE.Shape()
-    shape.moveTo(left, .008);shape.lineTo(right, .008);shape.lineTo(right, topAt(right))
-    for (let step = 1; step <= 4; step++) {
-      const x = right + (left - right) * step / 4
-      shape.lineTo(x, topAt(x))
-    }
+    shape.moveTo(left, .008);shape.lineTo(right, .008);shape.lineTo(right, leafTop)
+    shape.lineTo(left, leafTop)
     shape.closePath()
     const geometry = new THREE.ExtrudeGeometry(shape,{ depth: leafDepth, bevelEnabled:true, bevelSegments:2, steps:1, bevelSize:.002, bevelThickness:.002 })
     metricStoneUV(geometry)
-    add(geometry,wood,0,0,-leafDepth/2)
+    const leaf = add(geometry,wood,0,0,-leafDepth/2)
+    leaf.name = 'temple-gate-leaf-' + index
   }
   for (const face of [-1, 1]) for (const sign of [-1, 1]) {
     for (const y of [.20, .68]) {

@@ -1,3 +1,4 @@
+import { GAME_SCENE_VIEW } from '../settings/scene-view.js'
 import { DETAIL_LABELS, detailForItem } from './data/item-details.js'
 import { StaminaDeck } from './model/stamina-deck.js'
 import { createEmitter } from './core/emitter.js'
@@ -154,6 +155,7 @@ const MERCHANT_SERVICE_LABELS = Object.freeze({
 
 export class GameRun {
   constructor({ autoLoad = true, random = Math.random, persistence = true } = {}) {
+    this.sceneView = GAME_SCENE_VIEW
     this.bus = createEmitter()
     this.on = this.bus.on
     this.off = this.bus.off

@@ -11,6 +11,7 @@ import masonryNormalUrl from '../assets/environment/temple-foundation-masonry-v1
 import masonrySurfaceUrl from '../assets/environment/temple-foundation-masonry-v1-surface.png'
 import soilStoneUrl from '../assets/environment/palette-v1/soil.webp'
 import { dressedStoneBox, templeStoneMaterial, registerTempleStoneSurface } from './temple-stone-materials.js'
+import { carvedStoneMaterial } from './temple-stone-carving.js'
 import { TemplePlatformDepth } from './temple-platform-depth.js'
 import { TempleAtmosphere } from './temple-atmosphere.js'
 import mapleUrl from '../assets/environment/palette-v1/maple.webp'
@@ -60,8 +61,9 @@ export class TempleEnvironment {
     return Promise.allSettled(textures.map(texture => texture.userData.ready))
   }
 
-  block(group, size, position, color = 0x777b72, bevel = .016) {
-    const mesh = new THREE.Mesh(dressedStoneBox(size, bevel), templeStoneMaterial(this.stone, color))
+  block(group, size, position, color = 0x777b72, bevel = .016, carving = null) {
+    const material = carving ? carvedStoneMaterial(this.stone, color, { size, ...carving }) : templeStoneMaterial(this.stone, color)
+    const mesh = new THREE.Mesh(dressedStoneBox(size, bevel), material)
     mesh.position.set(...position)
     mesh.castShadow = mesh.receiveShadow = true
     mesh.raycast = NO_RAYCAST
@@ -76,7 +78,7 @@ export class TempleEnvironment {
     // A narrow lower fillet and broad softened coping make a carved rail,
     // with a readable underside instead of two unrelated rectangular bars.
     this.block(group, dims(length + .008, .045, thickness * 1.16), [0, height * .76 - .06, 0], 0x69756a, .009)
-    this.block(group, dims(length + .008, .10, thickness * 1.55), [0, height * .76 + .008, 0], 0xa1a696, .021)
+    this.block(group, dims(length + .008, .10, thickness * 1.55), [0, height * .76 + .008, 0], 0xa1a696, .021, { kind: 'rail', horizontal })
     return group
   }
 
@@ -86,11 +88,11 @@ export class TempleEnvironment {
     group.userData.kind = kind
     if (kind === 'small') {
       this.block(group, [.12, .075, .27], [0, .0375, 0], 0x747e73)
-      this.block(group, [.095, height - .095, .23], [0, (height - .095) / 2 + .065, 0], 0x858b7f, .013)
+      this.block(group, [.095, height - .095, .23], [0, (height - .095) / 2 + .065, 0], 0x858b7f, .013, { kind: 'post' })
       this.block(group, [.15, .065, .29], [0, height, 0], 0xaba99a, .017)
     } else {
       this.block(group, [.25, .075, .29], [0, .0375, 0], 0x747e73, .019)
-      this.block(group, [.18, height - .025, .23], [0, height / 2 + .055, 0], 0x899387, .023)
+      this.block(group, [.18, height - .025, .23], [0, height / 2 + .055, 0], 0x899387, .023, { kind: 'post' })
       this.block(group, [.22, .045, .26], [0, height + .04, 0], 0x727e72, .011)
       this.block(group, [.26, .075, .30], [0, height + .095, 0], 0xa3aa99, .022)
       this.block(group, [.15, .055, .18], [0, height + .15, 0], 0x798779, .018)

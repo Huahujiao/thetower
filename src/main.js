@@ -21,6 +21,8 @@ async function mountPage() {
     window.addEventListener('beforeunload', () => app.unmount(), { once: true })
     return
   }
+  // Both real runs and the review fixture use the same finished art direction.
+  document.body.classList.add('temple-game-page')
   const artTweak = pathname === '/arttweak'
   if (artTweak) {
     document.title = '\u7f8e\u672f\u8c03\u6574\u6b8b\u5c40'

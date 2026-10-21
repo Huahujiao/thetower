@@ -9,7 +9,7 @@
 - 背景：`src/assets/environment/temple-mountains-v1.jpg`。
 - 透明道具：`src/assets/environment/temple-maple-v1.png`、`temple-banner-v1.png`。裁切时保留透明通道。
 - 三张原始生成图：`art/generated/temple-mountains-v1.png`、`temple-floor-atlas-v2.png`、`temple-props-sheet-v1.png`。
-- 山寺环境、灰石栏杆、树、旗帜、落叶、主角脚下纹框及参考图 HUD 仅在 arttweak 的 `sceneView.environment === 'mountain-temple'` 中启用。贴片阴影也用于普通游戏场景。
+- 2026-10-21 起，山寺环境、灰石栏杆、树、旗帜、落叶、主角脚下纹框及参考图 HUD 已成为正式游戏与 arttweak 共用的默认美术；此前仅美术页启用的范围限制已取消。正式局保留正常关卡与存档，arttweak 保留固定残局和专用构图。
 - 背景随指针和棋盘移动做小幅平滑视差，旗帜轻微摆动；系统启用减少动态效果时停止这些环境运动。装饰物不参与棋盘点击判定。
 
 ## 复现

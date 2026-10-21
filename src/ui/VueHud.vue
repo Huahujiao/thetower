@@ -923,11 +923,11 @@ function restartGame() {
   closeDetailPanel()
   run.clearSave()
   run.reset()
-  if (run.sceneView) {
+  if (!run.persistenceEnabled) {
     reveal.value = false
     run.setDebugReveal(false)
-    scene.value?.resetView()
   }
+  scene.value?.resetView()
   topPanel.value = null
   helpOpen.value = false
   craftOpen.value = false
