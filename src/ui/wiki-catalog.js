@@ -24,7 +24,7 @@ const COPY = Object.freeze({
   attack: '\u653b\u51fb',
   health: '\u751f\u547d',
   range: '\u5c04\u7a0b',
-  energy: '体力球消耗',
+  energy: '灵火消耗',
   footprint: '\u5360\u683c',
   weaponEffect: '\u7279\u6548',
   fatigue: '疲劳',

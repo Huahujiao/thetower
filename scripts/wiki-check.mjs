@@ -2,6 +2,8 @@ import assert from 'node:assert/strict'
 import { existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { marked } from 'marked'
+import { LEVEL_UP_OPTIONS } from '../src/game/data/progression.js'
+import { FIRE_ENCHANTMENTS } from '../src/game/data/spirit-fire.js'
 import { ARTICLE_PAGES, CATALOG_PAGES, WIKI_PAGES, WIKI_PAGE_BY_ID, WIKI_SECTIONS } from '../src/ui/wiki-pages.js'
 import { catalogContent } from '../src/ui/wiki-catalog.js'
 import { ALL_ITEM_DEFS } from '../src/game/data/content.js'
@@ -89,7 +91,10 @@ for (const item of ACTIVE_ITEMS) {
   const entry = inventory.entries.find(entry => entry.item.id === item.id)
   if (item.type === 'money-pouch') continue
   assert(entry, `Missing active item: ${item.id}`)
-  for (const url of Object.values(itemSpriteSources(item) || {})) assert(existsSync(fileURLToPath(url)), `Missing sprite file: ${item.id}`)
+  for (const size of ['small', 'medium']) {
+    const url = itemSpriteSources(item)?.[size]
+    assert(url && existsSync(fileURLToPath(url)), `Missing ${size} sprite file: ${item.id}`)
+  }
   assert(itemSpriteSources(item)?.small && itemSpriteSources(item)?.medium, `Missing sprite sizes: ${item.id}`)
   assert.deepEqual(entry.item.shape, item.shape)
   assert.deepEqual(entry.shape, rotateShape(item.shape, entry.rotation))
@@ -128,12 +133,13 @@ assert.deepEqual(colors.entries.map(entry => entry.item.id), ['red', 'yellow', '
 assert.deepEqual(colors.entries.map(entry => entry.originIndex), [8, 9, 10])
 assert(!ALL_ITEM_DEFS.some(item => item.type === 'energy'))
 assert(articles.get('03-turn-and-combat').includes('32个球'))
-assert(articles.get('06-progression').includes('万能球+1'))
+for (const option of LEVEL_UP_OPTIONS.filter(option => option.kind !== 'enchant')) assert(articles.get('06-progression').includes('| ' + option.name + ' | ' + option.description + ' |'))
+for (const effect of FIRE_ENCHANTMENTS) assert(articles.get('06-progression').includes('| ' + effect.name + ' | ' + effect.trigger + ' | ' + effect.description + ' |'))
 for (const item of ALL_ITEM_DEFS.filter(item => item.disabled)) {
   assert(!inventory.entries.some(entry => entry.item.id === item.id), `Disabled item in live catalog: ${item.id}`)
 }
 assert(!catalogContent('growth').includes('物品压缩'))
-assert.equal(catalogContent('growth').match(/<article\b/g).length, 5)
+assert.equal(catalogContent('growth').match(/<article\b/g).length, LEVEL_UP_OPTIONS.length)
 for (const project of createEnemyShadowProjects({ includeBoss: true })) for (const part of project.parts) {
   if (part.visual.type !== 'texture') continue
   assert(existsSync(new URL(`../public${part.visual.texture}`, import.meta.url)), `Missing enemy texture: ${project.enemyId}/${part.id}`)

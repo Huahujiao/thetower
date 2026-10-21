@@ -1,41 +1,107 @@
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
-import { fixture, add, enemy, attack, select, setBalls } from './item-test-helpers.mjs'
+import { fixture, add, enemy, attack, setBalls } from './item-test-helpers.mjs'
 import { GameRun } from '../src/game/run.js'
 import { LEVEL_UP_OPTIONS, buildLevelUpChoices } from '../src/game/data/progression.js'
-import { RELIC_DEFS } from '../src/game/data/relics.js'
-import { RECIPES, getItemDefinition, makeItemById } from '../src/game/data/content.js'
+import { FIRE_ENCHANTMENTS } from '../src/game/data/spirit-fire.js'
+import { StaminaDeck } from '../src/game/model/stamina-deck.js'
+import { makeItemById } from '../src/game/data/content.js'
 
-function offer(run, id, other = ['max-health', 'wild-ball']) {
+function offer(run, id) {
   run.player.experience = run.player.experienceToNext
   run.phase = 'level-up'
-  run.levelUp = { choices: [id, ...other.filter(value => value !== id)].slice(0, 3) }
+  run.levelUp = { choices: [id, ...LEVEL_UP_OPTIONS.map(option => option.id).filter(value => value !== id)].slice(0, 4) }
 }
-function restore(run, mutate = () => {}) {
-  const data = run.serialize()
-  mutate(data)
+function restore(run) {
   const previous = globalThis.localStorage
-  let payload = JSON.stringify(data), removed = false
-  globalThis.localStorage = { getItem: () => payload, setItem: (_key, value) => { payload = value }, removeItem: () => { removed = true } }
-  try {
-    const loaded = new GameRun({ autoLoad: true, random: () => .99 })
-    assert.equal(removed, false, 'save must remain valid')
-    return loaded
-  } finally { globalThis.localStorage = previous }
+  globalThis.localStorage = { getItem: () => JSON.stringify(run.serialize()), setItem() {}, removeItem() { assert.fail('Save rejected') } }
+  try { const loaded = new GameRun({ random: () => .99 }); assert(loaded._loaded); return loaded } finally { globalThis.localStorage = previous }
 }
-
-assert.equal(LEVEL_UP_OPTIONS.length, 5)
-assert.equal(LEVEL_UP_OPTIONS[0].name, '\u56de\u590d5\u70b9\u751f\u547d')
-assert(!LEVEL_UP_OPTIONS.some(option => option.id === 'item-compression'))
+assert.equal(LEVEL_UP_OPTIONS.length, 27)
+for (const option of LEVEL_UP_OPTIONS) assert(!/随机展示|可跳过|替换已有附魔|每颗灵火每次|每回合最多触发/.test(option.description), option.id)
+assert.equal(LEVEL_UP_OPTIONS.filter(option => option.kind === 'add').length, 4)
+assert.equal(LEVEL_UP_OPTIONS.filter(option => option.kind === 'convert').length, 4)
+assert.equal(LEVEL_UP_OPTIONS.filter(option => option.kind === 'remove').length, 1)
+assert.equal(LEVEL_UP_OPTIONS.filter(option => option.kind === 'enchant').length, 18)
 const seen = new Set()
-for (let index = 0; index <= 100; index++) {
-  const choices = buildLevelUpChoices({ random: () => index / 101 })
-  assert.equal(choices.length, 3)
-  assert.equal(new Set(choices).size, 3)
+for (let n = 0; n < 200; n++) {
+  let seed = n + 1
+  const choices = buildLevelUpChoices({ random: () => ((seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 2 ** 32) })
+  assert.equal(choices.length, 4); assert.equal(new Set(choices).size, 4)
   choices.forEach(id => seen.add(id))
 }
-assert.equal(seen.size, 5, 'all five rewards participate in the pool')
-
+assert.equal(seen.size, 27)
+for (const option of LEVEL_UP_OPTIONS) {
+  const run = fixture(), before = { level: run.player.level, hp: run.player.hp, maxHp: run.player.maxHp, turn: run.globalTurn, count: run.staminaDeck.all.length }
+  offer(run, option.id)
+  const originalOrder = run.staminaDeck.serialize()
+  assert(run.chooseLevelUpOption(option.id))
+  if (option.kind === 'add') {
+    assert.equal(run.staminaDeck.all.length, before.count + 1)
+    assert.equal(run.staminaDeck.discardPile.at(-1).attribute, option.attribute)
+  } else {
+    assert.deepEqual(run.staminaDeck.serialize(), originalOrder, 'Sampling cannot change deck order or draw flames')
+    const targets = run.levelUpSpiritFires(), ids = targets.map(ball => ball.id)
+    assert.equal(ids.length, 5); assert.equal(new Set(ids).size, 5)
+    assert(run.backToLevelUpChoices()); assert(run.chooseLevelUpOption(option.id))
+    assert.deepEqual(run.levelUpSpiritFires().map(ball => ball.id), ids, 'Back/reselect cannot reroll five targets')
+    const loaded = restore(run)
+    assert.deepEqual(loaded.levelUpSpiritFires().map(ball => ball.id), ids, 'Reload keeps the offered sample')
+    assert.equal(loaded.chooseLevelUpSpiritFire(-1), false)
+    const chosen = loaded.levelUpSpiritFires()[0]
+    if (option.kind === 'convert') chosen.enchantment = 'rekindle', chosen.rekindleReturns = 2
+    assert(loaded.chooseLevelUpSpiritFire(chosen.id))
+    if (option.kind === 'remove') assert(!loaded.staminaDeck.all.some(ball => ball.id === chosen.id))
+    if (option.kind === 'convert') { assert.equal(chosen.attribute, option.attribute); assert.equal(chosen.enchantment, 'rekindle'); assert.equal(chosen.rekindleReturns, 2) }
+    if (option.kind === 'enchant') assert.equal(chosen.enchantment, option.enchantment)
+    assert(StaminaDeck.valid(loaded.staminaDeck.serialize()))
+    assert.equal(loaded.player.level, before.level + 1)
+    assert.equal(loaded.chooseLevelUpSpiritFire(chosen.id), false)
+    assert.equal(loaded.globalTurn, before.turn)
+    continue
+  }
+  assert.equal(run.player.level, before.level + 1); assert.equal(run.player.hp, before.hp); assert.equal(run.player.maxHp, before.maxHp); assert.equal(run.globalTurn, before.turn)
+}
+// Replacement keeps the physical flame identity/color and removes old effect state.
+{
+  const run = fixture(); offer(run, 'enchant-sharp'); run.chooseLevelUpOption('enchant-sharp')
+  const ball = run.levelUpSpiritFires()[0], attribute = ball.attribute
+  Object.assign(ball, { enchantment: 'rekindle', rekindleReturns: 4 })
+  assert(run.chooseLevelUpSpiritFire(ball.id))
+  assert.equal(ball.enchantment, 'sharp'); assert.equal(ball.rekindleReturns, undefined); assert.equal(ball.attribute, attribute)
+  assert(run.showSpiritFireDetail(ball.id)); assert(run.detailPanel.description.includes('攻击力+3'))
+}
+for (const location of ['hand', 'drawPile', 'discardPile']) {
+  const run = fixture(), deck = run.staminaDeck, ball = deck.all[0]
+  for (const key of ['hand', 'drawPile', 'discardPile']) deck[key] = deck[key].filter(entry => entry.id !== ball.id)
+  deck[location].push(ball); if (location === 'hand') deck.selected = [ball.id]
+  const nextId = deck.nextId; assert(deck.remove(ball.id)); assert.equal(deck.selected.length, 0)
+  assert.equal(deck.add('wild').id, nextId, 'A destroyed flame ID is never reused')
+  assert(StaminaDeck.valid(deck.serialize()))
+  assert(StaminaDeck.valid(restore(run).staminaDeck.serialize()))
+}
+{
+  const run = fixture(); offer(run, 'enchant-leech'); run.chooseLevelUpOption('enchant-leech')
+  const before = run.staminaDeck.serialize()
+  assert(run.skipLevelUpSpiritFire()); assert.deepEqual(run.staminaDeck.serialize(), before)
+  assert.equal(run.player.level, 2); assert.equal(run.skipLevelUpSpiritFire(), false)
+  for (const ball of run.staminaDeck.all) run.staminaDeck.remove(ball.id)
+  offer(run, 'purify'); assert(run.chooseLevelUpOption('purify')); assert.deepEqual(run.levelUpSpiritFires(), [])
+  assert(run.skipLevelUpSpiritFire()); assert.equal(run.player.level, 3)
+  assert(StaminaDeck.valid(run.staminaDeck.serialize()))
+}
+{
+  const run = fixture()
+  run.player.experience = run.player.experienceToNext + 10
+  assert(run._queueLevelUp()); assert.equal(run.levelUp.choices.length, 4)
+  const first = run.levelUp.choices[0]; assert(run.chooseLevelUpOption(first))
+  if (run.levelUp?.selectedOption) run.skipLevelUpSpiritFire()
+  assert.equal(run.player.level, 2); assert.equal(run.phase, 'level-up')
+  assert.equal(run.levelUp.choices.length, 4)
+  const option = run.levelUp.choices[0]; assert(run.chooseLevelUpOption(option))
+  if (run.levelUp?.selectedOption) run.skipLevelUpSpiritFire()
+  assert.equal(run.player.level, 3); assert.equal(run.phase, 'explore')
+}
+assert.equal(FIRE_ENCHANTMENTS.length, 18)
 // Room rewards overflow without spending turns or granting the choice twice.
 for (const full of [false, true]) {
   for (const choice of [{ kind: 'item', itemId: 'rust-sword' }, { kind: 'relic', relicId: 'r-loot-pouch' }]) {
@@ -67,6 +133,8 @@ for (const full of [false, true]) {
   while (run.backpack.add(makeItemById('health-potion'))) { /* Fill every cell. */ }
   run.player.experience = run.player.experienceToNext - 1
   const target = enemy(run, { hp: 1, noExperience: false, experience: 1 })
+  run._synchronizeBattle()
+  setBalls(run, 6, weapon.attribute)
   attack(run, weapon, target)
   assert.equal(run.phase, 'level-up')
   assert.equal(run.inventoryStash.length, 1, 'loot-pouch reward overflows into staging')
@@ -91,190 +159,11 @@ for (const full of [false, true]) {
   const loaded = restore(run)
   assert.deepEqual(loaded.levelUp, run.levelUp)
   assert.equal(loaded.inventoryStash.length, 0)
-  assert(loaded.chooseLevelUpOption(loaded.levelUp.choices.find(id => ['heal', 'max-health', 'wild-ball'].includes(id))))
+  assert(loaded.chooseLevelUpOption(loaded.levelUp.choices[0]))
+  if (loaded.levelUp?.selectedOption) assert(loaded.skipLevelUpSpiritFire())
   assert.equal(loaded.player.level, 2)
   assert.equal(loaded.globalTurn, before.turn)
 }
 
-// A pending upgrade permits only inventory management after combat has settled.
-{
-  const run = fixture(), weapon = add(run, 'rust-sword')
-  add(run, 'shield-core')
-  offer(run, 'weapon-upgrade')
-  run.combatResolving = true
-  assert.equal(run.discardInventoryItem(weapon.uid), false)
-  run.combatResolving = false; run.enemyDeathAnimationsPending = 1
-  assert.equal(run.moveInventoryToStash(weapon.uid), false)
-  run.enemyDeathAnimationsPending = 0
-  select(run, weapon)
-  assert.equal(run.useSelected(), false)
-  assert.equal(run.clickTile(3, 2), false)
-  assert.equal(run.craft('silver-guard'), false)
-  assert(run.chooseLevelUpOption('weapon-upgrade'))
-  assert(run.moveInventoryToStash(weapon.uid))
-  assert.equal(run.levelUp.selectedOption, undefined, 'empty weapon selection returns to the main choices')
-  assert(run.backpack.add(weapon))
-  run.unstageInventoryItem(weapon.uid, { notify: false })
-  for (const relic of RELIC_DEFS.filter(relic => !relic.disabled)) run.relics.acquire(relic.id)
-  run.levelUp.choices = ['weapon-upgrade', 'relic', 'max-health']
-  assert(run.discardInventoryItem(weapon.uid))
-  assert(run.levelUp.choices.some(id => run.canChooseLevelUpOption(id)), 'removing the sole upgrade target cannot deadlock')
-  assert.equal(run.globalTurn, 0)
-}
 
-// Immediate rewards do not refill the stats whose caps they increase or spend turns.
-{
-  const run = fixture(), turn = run.globalTurn
-  run.player.hp = 18
-  offer(run, 'heal'); assert(run.chooseLevelUpOption('heal'))
-  assert.equal(run.player.hp, 20); assert.equal(run.player.level, 2)
-  run.player.hp = 8
-  offer(run, 'heal'); assert(run.chooseLevelUpOption('heal')); assert.equal(run.player.hp, 13)
-  offer(run, 'max-health'); assert(run.chooseLevelUpOption('max-health'))
-  assert.equal(run.player.maxHp, 22); assert.equal(run.player.hp, 13)
-  setBalls(run, 3)
-  offer(run, 'wild-ball'); assert(run.chooseLevelUpOption('wild-ball'))
-  offer(run, 'wild-ball'); assert(run.chooseLevelUpOption('wild-ball'))
-  assert.equal(run.staminaDeck.composition().wild, 4)
- assert.equal(run.player.energy, 3)
-  assert.equal(run.globalTurn, turn)
-  const loaded = restore(run)
-  assert.equal(loaded.staminaDeck.composition().wild, 4); assert.equal(loaded.player.energy, 3)
-}
-
-// Excess experience queues the next upgrade only after the current selection completes.
-{
-  const run = fixture()
-  run.player.experience = 18
-  assert(run._queueLevelUp())
-  run.levelUp.choices = ['heal', 'max-health', 'wild-ball']
-  assert(run.chooseLevelUpOption('max-health'))
-  assert.equal(run.player.level, 2); assert.equal(run.phase, 'level-up')
-  assert.equal(run.player.experience, 10); assert.equal(run.levelUpChoices().length, 3)
-  run.levelUp.choices = ['heal', 'max-health', 'wild-ball']
-  assert(run.chooseLevelUpOption('max-health'))
-  assert.equal(run.player.level, 3); assert.equal(run.player.maxHp, 24)
-  assert.equal(run.phase, 'explore'); assert.equal(run.player.experience, 0)
-}
-
-// Permanent capacity survives a totem reserving a point and later returning it.
-{
-  const run = fixture(), badge = add(run, 'r-totem-drum')
-  offer(run, 'wild-ball'); assert(run.chooseLevelUpOption('wild-ball'))
-  select(run, badge); assert(run.useSelected()); assert(run.clickTile(2, 3))
-  assert.equal(run.staminaDeck.composition().wild, 3)
-  const loaded = restore(run), totem = loaded.totems.active('drum')
-  assert(totem); assert.equal(loaded.staminaDeck.composition().wild, 3)
-  assert(loaded.totems.remove(totem)); assert.equal(loaded.staminaDeck.composition().wild, 3)
-}
-
-// Nested relic choices are unique, exclude ownership, persist, and cannot be rerolled by returning.
-{
-  const run = fixture(), owned = add(run, 'r-empty'), level = run.player.level
-  offer(run, 'relic'); assert(run.chooseLevelUpOption('relic'))
-  const choices = [...run.levelUp.relicChoices]
-  assert.equal(choices.length, 3); assert.equal(new Set(choices).size, 3)
-  assert(!choices.includes(owned.id)); assert.equal(run.player.level, level)
-  assert.equal(run.chooseLevelUpOption('max-health'), false)
-  assert.equal(run.chooseLevelUpRelic(owned.id), false)
-  const loaded = restore(run)
-  assert.equal(loaded.levelUp.selectedOption, 'relic'); assert.deepEqual(loaded.levelUp.relicChoices, choices)
-  assert(loaded.backToLevelUpChoices()); assert(loaded.chooseLevelUpOption('relic'))
-  assert.deepEqual(loaded.levelUp.relicChoices, choices)
-  assert(loaded.chooseLevelUpRelic(choices[0])); assert(loaded.relics.has(choices[0]))
-  assert.equal(loaded.player.level, level + 1)
-  assert.equal(loaded.chooseLevelUpRelic(choices[0]), false)
-}
-{
-  const run = fixture()
-  while (run.backpack.add(makeItemById('money-pouch'))) { /* Fill every cell. */ }
-  offer(run, 'relic'); assert(run.chooseLevelUpOption('relic'))
-  const id = run.levelUp.relicChoices[0]
-  assert(run.chooseLevelUpRelic(id)); assert(run.inventoryStash.some(item => item.id === id))
-  assert(restore(run).relics.has(id))
-}
-{
-  const run = fixture(), active = RELIC_DEFS.filter(relic => !relic.disabled)
-  for (const relic of active.slice(0, -1)) run.relics.acquire(relic.id)
-  offer(run, 'relic'); assert(run.chooseLevelUpOption('relic'))
-  assert.deepEqual(run.levelUp.relicChoices, [active.at(-1).id])
-  run.relics.acquire(active.at(-1).id); run.backToLevelUpChoices()
-  assert.equal(run.canChooseLevelUpOption('relic'), false)
-  assert.equal(run.chooseLevelUpOption('relic'), false)
-  // Even with no relic or weapon targets, the five-option pool offers a usable reward.
-  run.levelUp = null; run.phase = 'explore'
-  run.random = () => .4
-  assert(run._queueLevelUp()); assert.equal(run.levelUp.choices.length, 3)
-  assert(run.levelUp.choices.some(id => run.canChooseLevelUpOption(id)))
-}
-
-// Reinforcement targets a UID, updates actual damage, and persists only on that instance.
-{
-  const run = fixture(), weapon = add(run, 'rust-sword'), other = add(run, 'rust-sword'), potion = add(run, 'health-potion')
-  const base = weapon.attack
-  offer(run, 'weapon-upgrade'); assert(run.chooseLevelUpOption('weapon-upgrade'))
-  assert.equal(run.chooseLevelUpWeapon(potion.uid), false)
-  assert.equal(run.chooseLevelUpWeapon('missing'), false)
-  const pending = restore(run)
-  assert.equal(pending.levelUp.selectedOption, 'weapon-upgrade')
-  assert(pending.chooseLevelUpWeapon(weapon.uid))
-  const enhanced = pending.backpack.items.find(item => item.uid === weapon.uid)
-  assert.equal(enhanced.attack, base + 1)
-  assert.equal(pending.backpack.items.find(item => item.uid === other.uid).attack, base)
-  offer(pending, 'weapon-upgrade'); assert(pending.chooseLevelUpOption('weapon-upgrade'))
-  assert(pending.chooseLevelUpWeapon(weapon.uid)); assert.equal(enhanced.attack, base + 2)
-  assert.equal(getItemDefinition('rust-sword').attack, base); assert.equal(makeItemById('rust-sword').attack, base)
-  const target = enemy(pending), hp = target.hp
-  attack(pending, enhanced, target); assert.equal(hp - target.hp, base + 2)
-  const loaded = restore(pending), saved = loaded.backpack.items.find(item => item.uid === weapon.uid)
-  assert.equal(saved.attack, base + 2); assert.equal(saved.reinforcement, 2)
-}
-for (const recipe of RECIPES) {
-  const run = fixture(), ingredient = add(run, recipe.a)
-  ingredient.attack += 2; ingredient.reinforcement = 2
-  add(run, recipe.b)
-  assert(run.craft(recipe.id))
-  const output = run.backpack.items.find(item => item.id === recipe.result)
-  assert.equal(output.attack, getItemDefinition(recipe.result).attack, recipe.id)
-  assert.equal(output.reinforcement, undefined, recipe.id)
-}
-
-// Compression is absent and cannot consume an upgrade or mutate an item.
-{
-  const run = fixture(), weapon = add(run, 'rust-sword')
-  offer(run, 'item-compression')
-  const before = JSON.stringify(weapon), level = run.player.level
-  assert(!run.levelUpChoices().some(choice => choice.id === 'item-compression'))
-  assert.equal(run.chooseLevelUpOption('item-compression'), false)
-  assert.equal(run.player.level, level); assert.equal(JSON.stringify(weapon), before)
-  assert.equal(run.chooseLevelUpOption('not-offered'), false)
-}
-
-// Retired saves retain earned stats but remove talent ownership, effects, and pending choices.
-{
-  const run = fixture(), weapon = add(run, 'rust-sword')
-  run.itemRules.buff('guard-reply', { flat: 1 })
-  run.itemRules.buff('guard-last', { flat: 2 })
-  run.itemRules.buff('flow-relay', { discount: 1 })
-  run.itemRules.buff('harmony-resist', { flat: 2 })
-  const affected = enemy(run)
-  run.applyStatus(affected, 'attack-reduction', { amount: 1 })
-  const loaded = restore(run, data => {
-    delete data.player.baseMaxEnergy
-    data.player.talents = ['flow-step', 'guard-hard', 'survival-heal', 'harmony-switch']
-    data.player.talentRuntime = { bodyStrength: 2 }
-    data.player.maxHp = 24
-    data.player.experience = data.player.experienceToNext
-    data.phase = 'level-up'; data.levelUp = { choices: ['flow-walk', 'guard-last', 'body-strength'] }
-  })
-  assert.equal(loaded.player.talents, undefined); assert.equal(loaded.player.talentRuntime, undefined)
-  assert.equal(loaded.player.maxHp, 24); assert.equal(loaded.levelUpChoices().length, 3)
-  assert.deepEqual(loaded.itemRules.state.buffs, {})
-  assert.equal(loaded.getStatus(loaded.currentRoom.entity(affected.id), 'attack-reduction'), null)
-  const actual = loaded.backpack.items.find(item => item.uid === weapon.uid)
-  assert.equal(loaded.itemRules.attackContext(actual, loaded.currentRoom.entity(affected.id)).flat, 0)
-}
-const hud = readFileSync(new URL('../src/ui/VueHud.vue', import.meta.url), 'utf8')
-assert(!hud.includes('talent'))
-assert(hud.includes('data-level-up-relic')); assert(hud.includes('data-level-up-weapon'))
-console.log('progression-check passed: five rewards, nested selections, instance upgrades, recipes, saves, totems and retired effects')
+console.log('Progression passed: 27 unique rewards/four offers, four fire gains, fixed five-target samples, all conversions/enchantments, deletion/replacement/skips, repeated levels, save/restore and room reward overflow.');

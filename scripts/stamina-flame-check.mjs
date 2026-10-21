@@ -13,6 +13,7 @@ async function compile(name, replacements = {}) {
   let { content } = compileScript(descriptor, { id: name, inlineTemplate: true })
   content = content.replace(/from (['"])vue\1/g, 'from ' + JSON.stringify(import.meta.resolve('vue')))
   for (const [specifier, url] of Object.entries(replacements)) content = content.replace(JSON.stringify(specifier), JSON.stringify(url)).replace("'" + specifier + "'", JSON.stringify(url))
+  content = content.replace(/from (['"])(\.[^'"]+\.js)\1/g, (_match, _quote, path) => 'from ' + JSON.stringify(new URL(path, filename).href))
   return moduleUrl(content)
 }
 const glyph = await compile('StaminaFlame')
@@ -53,8 +54,10 @@ run._synchronizeBattle()
 const revision = ref(0), root = makeNode('root')
 const off = run.on('change', () => { revision.value++ })
 const previousWindow = globalThis.window
+const previousDocument = globalThis.document
 let reducedMotion = false
-globalThis.window = { matchMedia: () => ({ matches: reducedMotion }) }
+globalThis.window = { matchMedia: () => ({ matches: reducedMotion }), addEventListener() {}, removeEventListener() {} }
+globalThis.document = { addEventListener() {}, removeEventListener() {} }
 const app = renderer.createApp({
   setup: () => () => {
     revision.value
@@ -100,7 +103,7 @@ try {
   assert.deepEqual(run.staminaDeck.selected, [])
   assert.equal(find('manual-selected').length, 0)
   assert.equal(find('stamina-selection-arc').length, 2)
-  assert(find('stamina-ball').every(button => button.props.disabled), 'Weapon selection must disable manual ball buttons')
+  assert(find('stamina-ball').every(button => button.props['aria-disabled']), 'Weapon selection must disable manual ball buttons')
   manualOther.props.onClick({ stopPropagation() {} })
   find('stamina-ball')[1].props.onClick({ stopPropagation() {} })
   await nextTick()
@@ -121,7 +124,7 @@ try {
   run.staminaDeck.pay(1, weapon.attribute, { selection: false })
   await nextTick()
   assert.equal(run.selectedItem, null)
-  assert(find('stamina-ball').every(button => !button.props.disabled), 'Losing the weapon payment must unlock manual ball selection')
+  assert(find('stamina-ball').every(button => !button.props['aria-disabled']), 'Losing the weapon payment must unlock manual ball selection')
   find('stamina-ball')[0].props.onClick({ stopPropagation() {} })
   await nextTick()
   assert.deepEqual(run.staminaDeck.selected, [otherBall.id])
@@ -373,6 +376,8 @@ try {
 } finally {
   if (mounted) app.unmount()
   off()
+  if (previousDocument === undefined) delete globalThis.document
+  else globalThis.document = previousDocument
   if (previousWindow === undefined) delete globalThis.window
   else globalThis.window = previousWindow
 }

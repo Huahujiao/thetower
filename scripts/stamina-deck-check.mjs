@@ -386,8 +386,8 @@ for (const action of ['move', 'flip', 'pickup']) for (const armed of [false, tru
   const run = fixture(), badge = add(run, 'r-totem-drum')
   const before = run.staminaDeck.composition()
   run.phase = 'level-up'; run.player.experience = run.player.experienceToNext
-  run.levelUp = { choices: ['wild-ball', 'heal', 'max-health'] }
-  assert(run.chooseLevelUpOption('wild-ball'))
+  run.levelUp = { choices: ['wild-fire', 'scorch-fire', 'wither-fire', 'drown-fire'] }
+  assert(run.chooseLevelUpOption('wild-fire'))
   assert.equal(run.staminaDeck.composition().wild, before.wild + 1)
   assert.equal(run.player.energy, 0)
   select(run, badge); assert(run.useSelected()); assert(run.clickTile(2, 3))

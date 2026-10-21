@@ -70,7 +70,7 @@ export class PetRules {
           if (bounce) run._damageEnemy(bounce, 1, { source: `pet:${pet.uid}` })
         }
         const ballSpent = transaction.refunded ? 0 : cost
-        run._log(`${pet.name} 对 ${target.name} 造成 ${hit.damage} 伤害，${transaction.refunded ? '击杀返还' : '消耗'}${cost}个体力球。`)
+        run._log(`${pet.name} 对 ${target.name} 造成 ${hit.damage} 伤害，${transaction.refunded ? '击杀返还' : '消耗'}${cost}颗灵火。`)
         run.bus.emit('pet:attacked', { pet, enemy: target, hit, ballSpent: transaction.refunded ? 0 : ballSpent })
       } finally {
         this.activeAttack = null

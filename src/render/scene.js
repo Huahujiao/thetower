@@ -1,3 +1,5 @@
+import { TrapEffects, createTrapDevice } from './trap-effects.js'
+import { getTrapDefinition } from '../game/data/traps.js'
 import * as THREE from 'three'
 import { nextScenePaint } from './scene-loading.js'
 import { setSurfaceColor } from './surface-color.js'
@@ -416,6 +418,7 @@ export class GameScene {
     this._onAttack = (payload) => this._queueAnimation('attack', payload)
     this._onImpact = (payload) => this._queueAnimation('impact', payload)
     this._onExplosion = (payload) => this._queueAnimation('explode', payload)
+    this._onTrap = (payload) => this._startTrapEffect(payload)
     window.addEventListener('resize', this._onResize)
     this.renderer.domElement.addEventListener('pointerdown', this._onPointerDown)
     this.renderer.domElement.addEventListener('pointermove', this._onPointerMove)
@@ -438,6 +441,7 @@ export class GameScene {
     this.attackUnsubscribe = this.run.on('animate:attack', this._onAttack)
     this.impactUnsubscribe = this.run.on('animate:impact', this._onImpact)
     this.explosionUnsubscribe = this.run.on('animate:explode', this._onExplosion)
+    this.trapUnsubscribe = this.run.on('animate:trap', this._onTrap)
     if (!progressive) { this._prepareEnemyAssets(); this.rebuild() }
     else if (this.run.currentRoom) this._frameRoom(this.run.currentRoom, { resetView: true })
     this.attackRangeOverlay.refresh()
@@ -589,6 +593,9 @@ export class GameScene {
     this._clearPlayerMarker()
     this.explorationFog?.dispose()
     this.explorationFog = null
+    this.trapEffects?.dispose()
+    this.trapEffects = null
+    this.pendingTrapEffects?.clear()
     disposeObject(this.roomGroup)
     this.roomGroup.clear()
     this.tileMeshes = []
@@ -982,6 +989,15 @@ export class GameScene {
     if (this.actorsDeferred) return
     this._clearGroundSprite(face)
     if (!revealed) return
+    const trapKind = card?.type === 'trap' && getTrapDefinition(card.trapId)?.animation
+    if (trapKind) {
+      const device = createTrapDevice(trapKind, TILE_SIZE)
+      device.position.set(point.x, cardFaceY(false, CARD_THICKNESS) + .006, point.z)
+      device.traverse(object => { object.renderOrder = tileRenderOrder(position, 7) })
+      face.userData.groundSprite = device
+      this.roomGroup.add(device)
+      return
+    }
     this._addGroundWeaponGlow(face, this._groundItem(card, position), point, position)
     const descriptor = this._groundSpriteDescriptor(card, position)
     if (!descriptor) return
@@ -1744,6 +1760,23 @@ export class GameScene {
     this.explorationFog.sync(room, hidden)
   }
 
+  _startTrapEffect(payload, { afterReveal = false } = {}) {
+    const room = this.run.currentRoom
+    if (!room || room.id !== payload?.roomId || room.id !== this.framedRoomId) return false
+    // A distant reveal can still be waiting behind its walking animation.
+    const queuedReveal = !afterReveal && this.animationQueue?.some(animation =>
+      animation.payload?.roomId === room.id && (animation.type === 'flip' && samePosition(animation.payload.position, payload.position)
+        || animation.type === 'flip-batch' && animation.payload.flips?.some(flip => samePosition(flip.position, payload.position))))
+    if (queuedReveal) {
+      this.pendingTrapEffects ||= new Map()
+      this.pendingTrapEffects.set(payload.entityId, payload)
+      return true
+    }
+    this.trapEffects ||= new TrapEffects(this.roomGroup, { tileSize: TILE_SIZE, surfaceY: cardFaceY(false, CARD_THICKNESS) + .006 })
+    const maxRow = Math.max(...payload.cells.map(cell => cell.r))
+    return this.trapEffects.start(payload, room, tileRenderOrder({ r: maxRow }, 11))
+  }
+
   _queueAnimation(type, payload) {
     if (type === 'enemy-move') {
       const moving = this.movementAnimation
@@ -1851,6 +1884,11 @@ export class GameScene {
     this.roomGroup.add(group)
     this.flipAnimations.push({ key, group, back, backTexture, elapsed: 0, duration: .72, dispelling: true })
     this._syncExplorationFog(room)
+    for (const [id, payload] of this.pendingTrapEffects || []) {
+      if (payload.roomId !== room.id || !samePosition(payload.position, position)) continue
+      this.pendingTrapEffects.delete(id)
+      this._startTrapEffect(payload, { afterReveal: true })
+    }
     return true
   }
 
@@ -2620,7 +2658,7 @@ export class GameScene {
 
   _makeFrontTexture(card, position = null, revealed = false) {
     if (revealed && card.type !== 'entry' && this._groundSpriteDescriptor(card, position)) return this.boardTextures.floor(position)
-    if (card.type === 'empty') return this.boardTextures.floor(position)
+    if (card.type === 'empty' || (revealed && card.type === 'trap' && getTrapDefinition(card.trapId)?.animation)) return this.boardTextures.floor(position)
     return makeCanvasTexture((context) => {
       if (card.type === 'monster') {
         if (!revealed) drawEnemyPuppet(context, card.enemyId)
@@ -2701,6 +2739,7 @@ export class GameScene {
       const triggered = entity.triggered === true
       return {
         type: 'trap',
+        trapId: entity.trapId,
         title: entity.name,
         value: triggered ? '✓' : '!',
         valueColor: triggered ? '#d2b9c0' : '#ffabb7',
@@ -3124,6 +3163,7 @@ export class GameScene {
     this._updateHoverLift()
     this._updateCharacterIdle(delta)
     this._updateAttackAnimation(delta)
+    this.trapEffects?.update(now / 1000)
     this._emitMoveCompleteIfIdle()
     this.attackRangeOverlay.syncPosition()
     this.attackRangeOverlay.update(delta)
@@ -3156,12 +3196,15 @@ export class GameScene {
     this.attackUnsubscribe?.()
     this.impactUnsubscribe?.()
     this.explosionUnsubscribe?.()
+    this.trapUnsubscribe?.()
     this._clearPathPreview()
     this.attackRangeOverlay.dispose()
     this._clearAttackAnimation()
     this._clearMovementAnimation()
     this._clearPlayerMarker()
     this.explorationFog?.dispose()
+    this.trapEffects?.dispose()
+    this.pendingTrapEffects?.clear()
     disposeObject(this.roomGroup)
     this.sealMist?.dispose()
     this.boardTextures?.dispose()

@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict'
 import { createServer } from 'vite'
+import vue from '@vitejs/plugin-vue'
 import { createSSRApp } from 'vue'
 import { renderToString } from '@vue/server-renderer'
 import { fixture, add, enemy, select, settleAnimations, setBalls } from './item-test-helpers.mjs'
 
-const server = await createServer({ server: { middlewareMode: true }, appType: 'custom' })
+const server = await createServer({ configFile: false, plugins: [vue()], server: { middlewareMode: true, hmr: false, ws: false, watch: null }, optimizeDeps: { noDiscovery: true, include: [] }, appType: 'custom' })
 try {
   const { default: Hud } = await server.ssrLoadModule('/src/ui/VueHud.vue')
   const run = fixture(), weapon = add(run, 'rust-sword'), potion = add(run, 'health-potion')
@@ -55,17 +56,17 @@ try {
   const renderedBalls = html.match(/<button\b[^>]*class="[^"]*stamina-ball[^>]*>[\s\S]*?<\/button>/g) || []
   assert(renderedBalls.every(button => !button.replace(/<[^>]+>/g, '').trim()))
   assert(html.includes('--ball-slots:10'))
-  assert(html.includes('原地攻击')); assert(html.includes('球池'))
+  assert(html.includes('原地攻击')); assert(html.includes('灵火池'))
   assert(/class="(?=[^"]*stamina-ball-icon)(?=[^"]*scorch)[^"]*"/.test(html))
   assert(!endButton(html).includes('disabled'))
   assert(!useButton(html))
   const id = run.staminaDeck.hand[0].id
   assert.equal(run.toggleStaminaBall(id), false)
-  assert(ballButtons(html).every(button => button.includes('disabled')))
+  assert(ballButtons(html).every(button => button.includes('aria-disabled="true"')))
   assert(run.clearSelection())
   assert(run.toggleStaminaBall(id)); html = await render()
   assert.equal(ballButtons(html).filter(button => button.includes('aria-pressed="true"')).length, 1)
-  assert(ballButtons(html).every(button => !button.includes('disabled')))
+  assert(ballButtons(html).every(button => !button.includes('aria-disabled="true"')))
   weapon.energyCost = 3
   setBalls(run, 2, weapon.attribute)
   assert.equal(run.selectInventory(weaponIndex), false)
@@ -81,7 +82,7 @@ try {
   html = await render()
   assert.equal(run.selectedItem, null)
   assert(!html.includes('原地攻击'))
-  assert(ballButtons(html).every(button => !button.includes('disabled')))
+  assert(ballButtons(html).every(button => !button.includes('aria-disabled="true"')))
   setBalls(run, 3, weapon.attribute)
   assert(run.selectInventory(weaponIndex))
   run.staminaDeck.discardHand()

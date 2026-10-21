@@ -713,3 +713,10 @@ body.temple-game-page .temple-backdrop.temple-parallax-backdrop { inset: 0; over
 .settings-palette-popover-title button { width: 26px; height: 26px; border: 0; border-radius: 4px; background: transparent; color: #d3d5cd; font-size: 20px; cursor: pointer; }
 .settings-palette-popover-title button:hover { background: #ffffff12; }
 .settings-palette-popover .settings-palette-value { margin-bottom: 0; }
+
+/* Four distinct growth offers, then a fixed sample of up to five spirit fires. */
+.level-up { max-height: calc(100dvh - var(--hud-scene-top) - 28px); overflow-y: auto; overscroll-behavior: contain; }
+.level-up .relic-choice-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.level-up-fire-hint { margin: 10px 0; font-size: 12px; line-height: 1.6; color: #ded5be; }
+.level-up-fire .spirit-fire { display: block; width: 44px; height: 44px; margin: 0 auto 6px; }
+.stamina-ball[aria-disabled="true"] { cursor: help; }

@@ -240,10 +240,10 @@
             state.player.maxHp }}</strong>
         </div>
         <div class="character-stat">
-          <span>球池</span><strong>{{ ballComposition }}</strong>
+          <span>灵火池</span><strong>{{ ballComposition }}</strong>
         </div>
         <div class="character-stat">
-          <span>抽球堆 / 弃球堆</span><strong>{{ state.staminaDeck.drawPile.length }} / {{ state.staminaDeck.discardPile.length }}</strong>
+          <span>待抽灵火堆 / 弃灵火堆</span><strong>{{ state.staminaDeck.drawPile.length }} / {{ state.staminaDeck.discardPile.length }}</strong>
         </div>
       </div>
       <div class="character-expbar"><span :style="{ width: `${characterExperienceProgress}%` }"></span></div>
@@ -328,24 +328,16 @@
           <small v-if="!choice.disabled && !levelUpOptionAvailable(choice.id)">{{ LABELS.noUpgradeTarget }}</small>
         </button>
       </div>
-      <div v-else-if="state.levelUp.selectedOption === 'relic'" class="relic-choice-row">
-        <button
-          v-for="relic in levelUpRelics" :key="relic.id" class="relic-choice-card"
-          :data-level-up-relic="relic.id" @click="run.chooseLevelUpRelic(relic.id)"
-        >
-          <span class="relic-name">{{ relic.name }}</span>
-          <img v-if="itemSpriteSources(relic)" class="relic-choice-sprite" :src="itemSpriteSources(relic).medium" :alt="relic.name" draggable="false">
-          <span class="relic-desc">{{ relic.description }}</span>
-        </button>
-      </div>
-      <div v-else-if="state.levelUp.selectedOption === 'weapon-upgrade'" class="relic-choice-row level-up-weapons">
-        <button v-for="weapon in levelUpWeapons" :key="weapon.uid" class="relic-choice-card" :data-level-up-weapon="weapon.uid" @click="run.chooseLevelUpWeapon(weapon.uid)">
-          <span class="relic-name">{{ weapon.name }}</span>
-          <img v-if="itemSpriteSources(weapon)" class="relic-choice-sprite" :src="itemSpriteSources(weapon).medium" :alt="weapon.name" draggable="false">
-          <span class="relic-desc">{{ LABELS.baseAttack }} {{ weapon.attack }} → {{ weapon.attack + 1 }}</span>
-          <small>{{ LABELS.bagPosition }} {{ weapon.slot }}</small>
-        </button>
-      </div>
+      <template v-else>
+        <div class="relic-choice-row level-up-fire-choices">
+          <button v-for="ball in levelUpSpiritFires" :key="ball.id" class="relic-choice-card level-up-fire" :data-level-up-fire="ball.id" :aria-label="[spiritFireName(ball), fireEnchantment(ball.enchantment)?.name].filter(Boolean).join('，')" @click="run.chooseLevelUpSpiritFire(ball.id)">
+            <StaminaFlame :attribute="ball.attribute" :mark="spiritFireMark(ball)" />
+            <span v-if="fireEnchantment(ball.enchantment)" class="relic-name">{{ fireEnchantment(ball.enchantment).name }}</span>
+          </button>
+        </div>
+        <p v-if="!levelUpSpiritFires.length" class="level-up-fire-hint">暂无灵火。</p>
+        <button class="reward-skip" data-action="skip-level-up-fire" @click="run.skipLevelUpSpiritFire()">跳过</button>
+      </template>
       <button v-if="state.levelUp?.selectedOption" class="level-up-back" @click="run.backToLevelUpChoices()">{{ LABELS.backToGrowth }}</button>
     </div>
 
@@ -452,7 +444,7 @@
         <div v-if="state.battle.active && selectedItem?.type === 'weapon'" class="stamina-payment" :class="{ unavailable: !weaponBallPreview }">
           <span>原地攻击</span>
           <StaminaCost :cost="state.weaponEnergyCost(selectedItem)" :attribute="selectedItem.attribute" />
-          <span v-if="!weaponBallPreview">体力球不足</span>
+          <span v-if="!weaponBallPreview">灵火不足</span>
         </div>
       </div>
       <section class="backpack-panel">
@@ -473,7 +465,7 @@
         <header>
           <h2>{{ LABELS.craft }}</h2><button data-action="craft-close" @click="handleAction('craft-close')">{{ LABELS.close }}</button>
         </header>
-        <p>合成消耗原料，战斗中消耗 1 个体力球；探索中免费。成品放不下时进入暂存区。长按配方中的物品查看详情。</p>
+        <p>合成消耗原料，战斗中消耗 1 颗灵火；探索中免费。成品放不下时进入暂存区。长按配方中的物品查看详情。</p>
         <div>
           <div v-for="recipe in craftRows" :key="recipe.id" class="craft-row">
             <button
@@ -545,6 +537,9 @@ import StaminaCost from './StaminaCost.vue'
 import CardBackPalette from './CardBackPalette.vue'
 import { loadCardBackPalette, normalizeCardBackPalette, saveCardBackPalette } from '../settings/card-back-palette.js'
 import StaminaHand from './StaminaHand.vue'
+import StaminaFlame from './StaminaFlame.vue'
+import { getLevelUpOption } from '../game/data/progression.js'
+import { fireEnchantment, spiritFireName, spiritFireMark } from '../game/data/spirit-fire.js'
 import { merchantSellPrice } from '../game/data/merchants.js'
 import { getItemDefinition, upgradeRecipesForItem } from '../game/data/content.js'
 import { getRelicDefinition } from '../game/data/relics.js'
@@ -567,7 +562,7 @@ const props = defineProps({ run: { type: Object, required: true } })
 const run = props.run
 
 const LABELS = Object.freeze({
-  floor: '\u697c\u5c42', health: '\u751f\u547d', armor: '\u62a4\u7532', energy: '\u4f53\u529b', gold: '\u91d1\u5e01',
+  floor: '\u697c\u5c42', health: '\u751f\u547d', armor: '\u62a4\u7532', energy: '灵火', gold: '\u91d1\u5e01',
   turn: '\u5168\u5c40\u56de\u5408', poison: '\u4e2d\u6bd2', burning: '\u71c3\u70e7', level: '\u7b49\u7ea7', experience: '\u7ecf\u9a8c',
   character: '\u89d2\u8272', characterGrowth: '\u89d2\u8272\u6210\u957f', maxHealth: '\u751f\u547d\u4e0a\u9650', maxEnergy: '\u4f53\u529b\u4e0a\u9650',
   help: '\u5e2e\u52a9', basicGameplay: '\u57fa\u672c\u73a9\u6cd5',
@@ -588,7 +583,7 @@ const LABELS = Object.freeze({
 const DETAIL_ICONS = Object.freeze({ enemy: '\u2694', weapon: '\u2694', potion: '\u271a', armor: '\u26e8', energy: '\u26a1', buff: '\u2726', relic: '\u25c6', trap: '!', gold: '\u25cf', key: '\ud83d\udd11', merchant: '\u25c9', item: '\u25a0' })
 const EDGE_NAMES = ['top', 'right', 'bottom', 'left']
 const HELP_SECTIONS = Object.freeze([
-  { title: '行动与体力球', items: ['探索操作免费。球池初始红、黄、蓝各10球及2万能球；每个玩家回合抽2×激活敌人数+4球，新揭示敌人立即补2球。', '球不放回抽取，抽空后洗回弃球堆；剩余球先供宠物使用再弃掉。手动结束回合后执行宠物和敌人阶段。', '战斗中移动、驱散迷雾、原地拾取、使用消耗品、整理和合成各耗1个任意球。点击球可指定优先支付；武器必须用同色和万能球付足费用，球不足时不能攻击。重复使用不额外加费；执一印使本回合再次使用同一实例减1球，不累加、最低1球。'] },
+  { title: '行动与灵火', items: ['探索操作免费。灵火池初始赤、黄、蓝各10颗及2颗万能灵火；每个玩家回合抽取2×激活敌人数+4颗灵火，新揭示敌人立即补2颗灵火。', '灵火不放回抽取，抽空后洗回弃灵火堆；剩余灵火先供宠物使用，留存灵火保留，其余弃掉。手动结束回合后执行宠物和敌人阶段。', '战斗中移动、驱散迷雾、原地拾取、使用消耗品、整理和合成各耗1颗任意灵火。点击灵火可指定优先支付；武器必须用同色和万能灵火付足费用，灵火不足时不能攻击。重复使用不额外加费；执一印使本回合再次使用同一实例减1颗灵火，不累加、最低1颗灵火。'] },
   { title: '\u80cc\u5305\u4e0e\u5408\u6210', items: ['\u80cc\u5305\u662f 8 \u5217 4 \u884c\uff0c\u7269\u54c1\u6309\u5f62\u72b6\u5360\u683c\u3002', '\u70b9\u6309\u7269\u54c1\u53ef\u9009\u4e2d\uff1b\u957f\u6309 150ms \u540e\u62d6\u52a8\u79fb\u52a8\uff0c\u4e0d\u518d\u7528\u70b9\u51fb\u7a7a\u683c\u79fb\u7269\u54c1\u3002', '拖动时可移入暂存区或红色丢弃区；探索免费，战斗中成功操作耗1体力。升级选择期间整理免费。', '\u5408\u6210\u9762\u677f\u53ea\u663e\u793a\u5f53\u524d\u80cc\u5305\u53ef\u5408\u6210\u7684\u914d\u65b9\u3002'] },
   { title: '\u5347\u7ea7\u4e0e\u5723\u9057\u7269', items: ['\u5347\u7ea7\u65f6\u4ece5\u79cd\u5956\u52b1\u4e2d\u968f\u673a\u63d0\u4f9b3\u9879\uff0c\u9009\u62e91\u9879\u3002', '\u6b66\u5668\u5f3a\u5316\u4ec5\u5f71\u54cd\u6240\u9009\u6b66\u5668\uff0c\u5408\u6210\u540e\u4e0d\u7ee7\u627f\u3002', '\u5723\u9057\u7269\u653e\u5728\u80cc\u5305\u4e2d\u5373\u53ef\u751f\u6548\uff0c\u79bb\u5f00\u623f\u95f4\u4e0d\u4f1a\u91cd\u7f6e\u3002'] },
   { title: '\u6218\u6597\u4e0e\u63a2\u7d22', items: ['\u9009\u62e9\u6b66\u5668\u540e\u70b9\u51fb\u654c\u4eba\u53d1\u8d77\u653b\u51fb\uff0c\u8fdc\u5904\u76ee\u6807\u4f1a\u5148\u9884\u89c8\u8def\u5f84\u3002', '\u957f\u6309\u68cb\u76d8\u6216\u80cc\u5305\u7269\u54c1\u67e5\u770b\u8be6\u60c5\uff0c\u8fde\u7eed\u79fb\u52a8\u89c6\u89d2\u53ef\u4f7f\u7528\u62d6\u62fd\u548c\u6eda\u8f6e\u7f29\u653e\u3002'] },
@@ -849,13 +844,9 @@ const levelUpChoices = computed(() => {
   state.value
   return run.levelUpChoices()
 })
-const levelUpRelics = computed(() => (state.value.levelUp?.relicChoices || []).map(getRelicDefinition).filter(Boolean))
-const levelUpWeapons = computed(() => {
-  state.value
-  return run.levelUpWeapons().map(weapon => ({ ...weapon, slot: run.backpack.originIndex(run.backpack.placementOf(weapon.uid)) + 1 }))
-})
-const levelUpTitle = computed(() => state.value.levelUp?.selectedOption === 'relic' ? LABELS.relicChoice
-  : state.value.levelUp?.selectedOption === 'weapon-upgrade' ? LABELS.chooseWeaponUpgrade : LABELS.growthChoice)
+const levelUpSpiritFires = computed(() => { state.value; return run.levelUpSpiritFires() })
+const selectedLevelUpOption = computed(() => getLevelUpOption(state.value.levelUp?.selectedOption))
+const levelUpTitle = computed(() => selectedLevelUpOption.value ? selectedLevelUpOption.value.name : '升级奖励 · 四选一')
 function levelUpOptionAvailable(id) { state.value; return run.canChooseLevelUpOption(id) }
 const merchant = computed(() => state.value.merchantEntity)
 const merchantOpen = computed(() => {

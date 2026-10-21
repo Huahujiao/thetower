@@ -1,3 +1,5 @@
+import { SpiritFireRules } from './rules/spirit-fire.js'
+import { spiritFireName, spiritFireDescription, fireEnchantment } from './data/spirit-fire.js'
 import { GAME_SCENE_VIEW } from '../settings/scene-view.js'
 import { DETAIL_LABELS, detailForItem } from './data/item-details.js'
 import { StaminaDeck } from './model/stamina-deck.js'
@@ -10,10 +12,10 @@ import { createLootEntity, createMinion, getItemDefinition, makeItemById, makeRe
 import { applyStatus, bindStatusAccessors, consumeStatus, getStatus, normalizeStatus, normalizeStatuses, POISON_TURNS, prepareStatusDamage, removeStatus, resolveStatusDamage, statusCounterText, statusSnapshot, tickStatusSnapshot } from './rules/statuses.js'
 import { enemyFeatureDetailLabel } from './data/enemy-features.js'
 import { getMerchantDefinition, merchantSellPrice, refreshMerchantSlot, refreshMerchantStock } from './data/merchants.js'
-import { buildRelicChoices, getRelicDefinition, RELIC_DEFS } from './data/relics.js'
+import { buildRelicChoices, getRelicDefinition } from './data/relics.js'
 import { buildRoomRewardChoices } from './data/rewards.js'
 import { LEVEL_UP_OPTIONS, PROGRESSION, buildLevelUpChoices, experienceToNextLevel, getLevelUpOption } from './data/progression.js'
-import { getTrapDefinition } from './data/traps.js'
+import { getTrapDefinition, trapEffectCells } from './data/traps.js'
 import { createChapterDungeon, Dungeon } from './model/dungeon.js'
 import { BackpackGrid } from './model/backpack.js'
 import { RelicCollection } from './model/relics.js'
@@ -160,6 +162,7 @@ export class GameRun {
     this.on = this.bus.on
     this.off = this.bus.off
     this._itemRules = new ItemRules(this)
+    this.spiritFire = new SpiritFireRules(this)
     this.consumables = new ConsumableRules(this)
     this.totems = new TotemRules(this)
     this.pets = new PetRules(this)
@@ -394,9 +397,10 @@ export class GameRun {
     const active = this._activatedEnemies().length > 0 && !this.gameOver
     if (active && !this.battle.active) {
       this.battle = { active: true, stage: 'player', round: 1, knownEnemyIds: this._activatedEnemies().map(enemy => enemy.id) }
+      this.spiritFire.startBattle()
       this.itemRules.startPlayerTurn()
       this._drawPlayerTurnBalls()
-      this._log(`进入战斗，抽取${this.player.energy}个体力球。`)
+      this._log(`进入战斗，抽取${this.player.energy}颗灵火。`)
       this.bus.emit('battle:started', { round: 1 })
     } else if (active && this.battle.active) {
       this.battle.knownEnemyIds ||= []
@@ -424,6 +428,7 @@ export class GameRun {
     if (!this._synchronizeBattle()) return
     this.battle.stage = 'player'
     this.battle.round += 1
+    this.spiritFire.startTurn()
     this.itemRules.startPlayerTurn()
     this._drawPlayerTurnBalls()
     this.itemRules.action('turn-start')
@@ -444,8 +449,15 @@ export class GameRun {
       && !!this.staminaDeck.plan(amount, null, this._actionPaymentOptions()))
   }
 
-  _payAction(amount = 1) {
-    return this.canPayAction(amount) && !!this.staminaDeck.pay(this.actionEnergyCost(amount), null, this._actionPaymentOptions())
+  _payActionPlan(amount = 1) {
+    return this.canPayAction(amount) ? this.staminaDeck.pay(this.actionEnergyCost(amount), null, this._actionPaymentOptions()) : null
+  }
+
+  _payAction(amount = 1, { kind = 'other' } = {}) {
+    const payment = this._payActionPlan(amount)
+    if (!payment) return false
+    this.spiritFire.consumedAction(payment.balls, kind)
+    return true
   }
 
   endPlayerTurn() {
@@ -577,7 +589,7 @@ export class GameRun {
       const available = LEVEL_UP_OPTIONS.filter(option => this.canChooseLevelUpOption(option.id))
       choices[0] = available[Math.floor(this.random() * available.length)].id
     }
-    this.levelUp = { choices }
+    this.levelUp = { choices, ballOffers: {} }
     this.phase = 'level-up'
     this._log(`\u5347\u81f3 ${this.player.level + 1} \u7ea7\uff0c\u8bf7\u9009\u62e9\u6210\u957f\u3002`)
     return true
@@ -593,24 +605,21 @@ export class GameRun {
 
   chooseLevelUpOption(id) {
     if (this.phase !== 'level-up' || this.levelUp?.selectedOption || !this.levelUp?.choices.includes(id) || !this.canChooseLevelUpOption(id)) return false
-    if (id === 'relic' || id === 'weapon-upgrade') {
-      if (id === 'relic' && !this.levelUp.relicChoices) {
-        this.levelUp.relicChoices = buildRelicChoices(this.relics, { random: this.random }).map(relic => relic.id)
-      }
-      this.levelUp.selectedOption = id
-      this._changed()
+    const option = getLevelUpOption(id)
+    if (option.kind === 'add') {
+      this.staminaDeck.add(option.attribute)
+      this._log('成长选择：获得1颗' + option.name + '。')
+      this._finishLevelUp()
       return true
     }
-    return this._applyLevelUpOption(id)
-  }
-
-  canChooseLevelUpOption(id) {
-    const option = getLevelUpOption(id)
-    if (!option || option.disabled) return false
-    if (id === 'weapon-upgrade') return this.backpack.items.some(item => item.type === 'weapon')
-    if (id === 'relic') return RELIC_DEFS.some(relic => !relic.disabled && !this.relics.has(relic.id))
+    this.levelUp.ballOffers ||= {}
+    this.levelUp.ballOffers[id] ||= this.staminaDeck.sample(5)
+    this.levelUp.selectedOption = id
+    this._changed()
     return true
   }
+
+  canChooseLevelUpOption(id) { return !!getLevelUpOption(id) }
 
   _activateRevealedEnemy(room, enemy) {
     if (room?.id !== this.currentRoom?.id || !enemy) return
@@ -634,35 +643,45 @@ export class GameRun {
     return true
   }
 
-  chooseLevelUpRelic(id) {
-    if (this.phase !== 'level-up' || this.levelUp?.selectedOption !== 'relic' || !this.levelUp.relicChoices?.includes(id)) return false
-    if (!this.acquireRelic(id, { notify: false, allowStash: true })) return false
+  levelUpSpiritFires() {
+    const id = this.levelUp?.selectedOption
+    const ids = this.levelUp?.ballOffers?.[id] || []
+    return ids.map(id => this.staminaDeck.all.find(ball => ball.id === id)).filter(Boolean)
+  }
+
+  chooseLevelUpSpiritFire(id) {
+    const option = getLevelUpOption(this.levelUp?.selectedOption)
+    if (this.phase !== 'level-up' || !option || option.kind === 'add') return false
+    const ball = this.levelUpSpiritFires().find(ball => ball.id === id)
+    if (!ball) return false
+    if (option.kind === 'remove') this.staminaDeck.remove(ball.id)
+    else if (option.kind === 'convert') ball.attribute = option.attribute
+    else if (option.kind === 'enchant') {
+      ball.enchantment = option.enchantment
+      delete ball.rekindleReturns
+    } else return false
+    this._log('成长选择：' + option.name + '（' + spiritFireName(ball) + '）。')
+    this._synchronizeStaminaSelection()
     this._finishLevelUp()
     return true
   }
 
-  levelUpWeapons() { return this.backpack.items.filter(item => item.type === 'weapon') }
-
-  chooseLevelUpWeapon(uid) {
-    if (this.phase !== 'level-up' || this.levelUp?.selectedOption !== 'weapon-upgrade') return false
-    const weapon = this.levelUpWeapons().find(item => item.uid === uid)
-    if (!weapon) return false
-    weapon.attack += 1
-    weapon.reinforcement = (weapon.reinforcement || 0) + 1
-    this._log(`${weapon.name}\u57fa\u7840\u653b\u51fb\u529b+1\u3002`)
+  skipLevelUpSpiritFire() {
+    const option = getLevelUpOption(this.levelUp?.selectedOption)
+    if (this.phase !== 'level-up' || !option || option.kind === 'add') return false
+    this._log('跳过了［' + option.name + '］的灵火选择。')
     this._finishLevelUp()
     return true
   }
 
-  _applyLevelUpOption(id) {
-    if (id === 'heal') this._healPlayer(5, { source: 'level-up:heal' })
-    else if (id === 'max-health') this.player.maxHp += 2
-    else if (id === 'wild-ball') this.staminaDeck.add('wild')
-    else return false
-    const option = getLevelUpOption(id)
-    if (option) this._log(`\u6210\u957f\u9009\u62e9\uff1a${option.name}\u3002`)
-    this._finishLevelUp()
-    return true
+  showSpiritFireDetail(id) {
+    const ball = this.staminaDeck.all.find(ball => ball.id === id)
+    if (!ball) return false
+    const effect = fireEnchantment(ball.enchantment)
+    return this._showDetail({ position: 'top', title: spiritFireName(ball), type: '灵火', icon: 'energy',
+      badges: effect ? ['附魔：' + effect.name] : ['未附魔'], description: spiritFireDescription(ball),
+      statLines: ['灵火编号：' + (ball.id + 1)],
+    })
   }
 
   _finishLevelUp() {
@@ -700,7 +719,7 @@ export class GameRun {
     detail.lines = [...detail.statLines, ...detail.effectLines]
     if (isTotemBadge(item)) {
       const active = this.totems.active(item.totemId)
-      detail.lines.push('召唤范围4；战斗中消耗1个任意体力球；战斗结束消失；所有图腾徽章共享2个大回合冷却')
+      detail.lines.push('召唤范围4；战斗中消耗1个任意灵火；战斗结束消失；所有图腾徽章共享2个大回合冷却')
       detail.lines.push(active ? '图腾已存在，保留到本次或下一次战斗结束' :
         this.totems.cooldown ? `召唤冷却：剩余${this.totems.cooldown}回合` : '点击使用，再选择场地中的空格召唤')
     }
@@ -1068,12 +1087,6 @@ export class GameRun {
       this._payAction(1)
       return this._endTurn({ action: 'organize' })
     }
-    if (this.phase !== 'level-up') return
-    // Inventory management during a reward choice keeps the world paused.
-    // Removing the last weapon must not strand its nested selection or leave
-    // a choice set with unavailable targets.
-    if (this.levelUp.selectedOption === 'weapon-upgrade' && !this.levelUpWeapons().length) delete this.levelUp.selectedOption
-    if (!this.levelUp.choices.some(id => this.canChooseLevelUpOption(id))) this.levelUp.choices[0] = 'heal'
   }
 
   stageInventoryItem(item, { notify = true } = {}) {
@@ -1142,7 +1155,7 @@ export class GameRun {
       recipe = candidate; preview = candidatePreview; break
     }
     if (!preview) return this._reject('材料不足。')
-    if (!this._payAction(1)) return this._reject('体力不足。')
+    if (!this._payAction(1)) return this._reject('灵火不足。')
     this.backpack.removeByUid(preview.a.uid)
     this.backpack.removeByUid(preview.b.uid)
     const result = makeItemById(recipe.result)
@@ -1186,7 +1199,7 @@ export class GameRun {
     if (this.consumables.target(item, position, true) === false) return this._reject('请选择有效目标。')
     const baseCost = consumableEnergyCost(item)
     const cost = baseCost + (this.consumables.boosted(item, true) ? 2 : 0)
-    if (!this.canPayAction(cost) || !this._payAction(baseCost)) return this._reject('体力不足。')
+    if (!this.canPayAction(cost) || !this._payAction(baseCost)) return this._reject('灵火不足。')
     if (!this.consumables.useSequence(item, position)) return false
     this._endTurn({ action: item.type === 'teleport' ? 'teleport' : 'consume' })
     this._changed()
@@ -1376,11 +1389,11 @@ export class GameRun {
     const revealDistance = 1
     const route = findRevealPath(this.currentRoom, this.player.pos, position, { distance: revealDistance })
     if (!route) return this._reject('\u65e0\u6cd5\u8d70\u5230\u8fd9\u5f20\u724c\u7684\u9644\u8fd1\u3002')
-    if (this.battle.active && this.energyAfterMovement(route.path.length, route.path) < 1) return this._reject('体力不足。')
+    if (this.battle.active && this.energyAfterMovement(route.path.length, route.path) < 1) return this._reject('灵火不足。')
     const start = { ...this.player.pos }
     const movement = this._walk(route.path)
     if (!movement.stopped) {
-      if (!this._payAction(1)) return this._reject('体力不足。')
+      if (!this._payAction(1, { kind: 'reveal' })) return this._reject('灵火不足。')
       if (this.player.pos.c !== start.c || this.player.pos.r !== start.r) this.bus.emit('change')
       this._revealTile(position, { logReveal: true })
     }
@@ -1420,7 +1433,7 @@ export class GameRun {
   _triggerTrap(trap, { cause = 'player' } = {}) {
     const room = this.currentRoom
     const definition = getTrapDefinition(trap.trapId)
-    if (!room || !definition || trap.triggered === true) return false
+    if (!room || !definition || trap.triggered === true || room.entity(trap.id) !== trap) return false
     if (!this.suppressedTrapIds) this.suppressedTrapIds = new Set()
     this.suppressedTrapIds.delete(trap.id)
     this._emitRelicEvent('trap:before-trigger', { trap, definition, cause })
@@ -1432,7 +1445,14 @@ export class GameRun {
     }
     trap.triggered = true
     trap.triggeredAtGlobalTurn = this.globalTurn
-    trap.removeAfterGlobalTurn = this.globalTurn + 2
+    if (definition.animation) {
+      // Gameplay is settled immediately; the renderer owns the short-lived visual.
+      room.removeEntity(trap.id)
+      this.bus.emit('animate:trap', {
+        roomId: room.id, trapId: trap.trapId, entityId: trap.id,
+        position: { ...trap.pos }, cells: trapEffectCells(room, trap.pos, trap.trapId),
+      })
+    } else trap.removeAfterGlobalTurn = this.globalTurn + 2
     if (definition.effect === 'explosion') {
       const result = this._damagePlayer(definition.damage, { source: 'trap:explosion' })
       this._log(`${definition.name}\u89e6\u53d1\uff0c${damageReductionLog(result)}\u3002`)
@@ -1483,14 +1503,14 @@ export class GameRun {
     const route = findPath(room, this.player.pos, entity.pos, { allowGoalOccupied: true })
     if (!route) return this._reject('\u76ee\u6807\u4e0d\u53ef\u8fbe\u3002')
     const pickupCost = route.length === 0 ? 1 : 0
-    if (this.battle.active && this.energyAfterMovement(route.length, route) < pickupCost) return this._reject('体力不足。')
+    if (this.battle.active && this.energyAfterMovement(route.length, route) < pickupCost) return this._reject('灵火不足。')
     this._walk(route, { purpose: 'pickup' })
     // Arrival and collection are one action. An ambush stops further movement,
     // but cannot undo a pickup after the player has reached this cell.
     const arrived = !this.gameOver && this.currentRoom === room
       && manhattan(this.player.pos, entity.pos) === 0 && !!room.entity(entity.id)
     if (arrived) {
-      if (pickupCost && !this._payAction(pickupCost)) return this._reject('体力不足。')
+      if (pickupCost && !this._payAction(pickupCost, { kind: 'pickup' })) return this._reject('灵火不足。')
       if (entity.kind === 'item') {
         if (entity.item?.type === 'relic') {
           const entry = this.acquireRelic(entity.item.relicId, { notify: false, allowStash: true })
@@ -1623,13 +1643,17 @@ export class GameRun {
     if (weapon?.type !== 'weapon') return this._reject('请先选择武器。')
     const route = this._weaponRoute(weapon, enemy)
     if (!route) return this._reject('没有可达的攻击位置。')
-    if (this.energyAfterMovement(route.path.length, route.path) < this.weaponEnergyCost(weapon) || !this.weaponPayment(weapon)) return this._reject('体力球不足。')
+    if (this.energyAfterMovement(route.path.length, route.path) < this.weaponEnergyCost(weapon) || !this.weaponPayment(weapon)) return this._reject('灵火不足。')
     const movement = this._walk(route.path)
     if (movement.stopped || !this.currentRoom.entity(enemy.id)) { this._changed(); return true }
     const range = this.weaponRange(weapon)
     if (combatDistance(this.player.pos, enemy.pos, range) > range) return this._reject('敌人已经离开射程。')
     const context = this.itemRules.attackContext(weapon, enemy)
-    if (!this.staminaDeck.pay(this.weaponEnergyCost(weapon), weapon.attribute, { selection: false })) return this._reject('体力球不足。')
+    const payment = this.staminaDeck.pay(this.weaponEnergyCost(weapon), weapon.attribute, { selection: false })
+    if (!payment) return this._reject('灵火不足。')
+    const fire = this.spiritFire.attack(payment.balls, weapon)
+    context.flat += fire.flat
+    context.multiplier += fire.multiplier
     this.itemRules.recordWeaponUse(weapon)
     this.itemRules.expansion.beforeAttack(weapon, context)
     this.pets.playerAttack(enemy)
@@ -1637,8 +1661,9 @@ export class GameRun {
       { stage: 'flat', value: context.flat },
       { stage: 'multiply', value: context.attackMultiplier },
       { stage: 'multiply', value: context.multiplier },
+      { stage: 'multiply', value: fire.factor },
       ...terrainDamageModifiers(this.currentRoom, this.player.pos),
-    ]).total + context.bonusDamage
+    ]).total + context.bonusDamage * fire.factor
     const damage = Math.max(0, Math.floor(fullDamage))
     const targetPosition = { ...enemy.pos }
     this.pendingAttackImpacts = []
@@ -1650,6 +1675,7 @@ export class GameRun {
     const primaryTargetStatus = weapon.id === 'erosion-knife' && !hit.defeated
       ? { position: { ...enemy.pos }, enemy: enemyStatusSnapshot(enemy) } : null
     this.itemRules.afterAttack(weapon, enemy, hit, context)
+    this.spiritFire.afterAttack(fire, hit)
     this._log(`${weapon.name} 对 ${enemy.name} 造成 ${hit.damage} 伤害。`, { insertAt: this._logSequence - logSequence })
     this._roomRuntime().firstAttackUsed = true
     this.combatResolving = true
@@ -1685,7 +1711,8 @@ export class GameRun {
     const startingRound = this.globalTurn
     for (let index = 0; index < path.length; index += 1) {
       const step = path[index]
-      if (!this._payAction(1)) return { stopped: true }
+      const payment = this._payActionPlan(1)
+      if (!payment) return { stopped: true }
       this.enemyAttackInterruptedRoute = false
       const previous = { ...this.player.pos }
       if (roomId) {
@@ -1697,6 +1724,7 @@ export class GameRun {
         })
       }
       this.player.pos = { ...step }
+      this.spiritFire.consumedAction(payment.balls, 'move')
       this.itemRules.move()
       this._discoverNearbyExitDoors()
       this._triggerAmbushes(step)
@@ -1735,7 +1763,8 @@ export class GameRun {
       this._emitTurnEvent('turn:started', turnContext)
       this.battle.stage = 'pets'
       if (!this.gameOver) this.pets.act()
-      this.staminaDeck.discardHand()
+      if (!this.gameOver) this.spiritFire.endTurn()
+      this.staminaDeck.discardHand({ retain: true })
       this.battle.stage = 'enemy'
       if (!this._activatedEnemies().length || this.gameOver) return true
       clock.push(...this._statusClockSnapshot().filter(isPeriodic))
@@ -2378,6 +2407,7 @@ export class GameRun {
       for (const room of this.dungeon.rooms.values()) {
         for (const entity of room.entities.values()) {
           refreshItemCopy(entity.item)
+          if (entity.kind === 'trap' && entity.triggered && getTrapDefinition(entity.trapId)?.animation) room.removeEntity(entity.id)
           if (entity.kind === 'enemy') {
             synchronizeEnemyBalance(entity)
             bindStatusAccessors(entity)
@@ -2427,21 +2457,19 @@ export class GameRun {
       this.roomRewardBag = Array.isArray(data.roomRewardBag) && data.roomRewardBag.every((type) => type === 'supply' || type === 'relic')
         ? [...data.roomRewardBag]
         : shuffled(['supply', 'supply', 'supply', 'relic'], this.random)
-      this.levelUp = Array.isArray(data.levelUp?.choices)
-        ? {
-            choices: data.levelUp.choices.filter((id) => !!getLevelUpOption(id)),
-            ...(data.levelUp.selectedOption && data.levelUp.choices.includes(data.levelUp.selectedOption) && ['relic', 'weapon-upgrade'].includes(data.levelUp.selectedOption)
-              ? { selectedOption: data.levelUp.selectedOption } : {}),
-            ...(Array.isArray(data.levelUp.relicChoices) ? { relicChoices: [...new Set(data.levelUp.relicChoices)].filter(id => getRelicDefinition(id) && !getRelicDefinition(id).disabled && !this.relics.has(id)).slice(0, 3) } : {}),
-          }
-        : null
-      if (this.levelUp && (this.levelUp.choices.length !== PROGRESSION.levelChoiceCount || new Set(this.levelUp.choices).size !== PROGRESSION.levelChoiceCount || !this.levelUp.choices.some(id => this.canChooseLevelUpOption(id)))) {
+      this.levelUp = Array.isArray(data.levelUp?.choices) ? {
+        choices: data.levelUp.choices.filter(id => !!getLevelUpOption(id)),
+        ballOffers: Object.fromEntries(Object.entries(data.levelUp.ballOffers || {}).filter(([id, ids]) =>
+          !!getLevelUpOption(id) && Array.isArray(ids) && ids.length <= 5 && new Set(ids).size === ids.length && ids.every(value => Number.isInteger(value) && value >= 0 && value < this.staminaDeck.nextId))),
+      } : null
+      if (this.levelUp && (this.levelUp.choices.length !== PROGRESSION.levelChoiceCount || new Set(this.levelUp.choices).size !== PROGRESSION.levelChoiceCount)) {
         this.levelUp = null
         this.phase = 'explore'
       }
-      if (this.levelUp?.relicChoices && !this.levelUp.relicChoices.length) delete this.levelUp.relicChoices
-      if (this.levelUp?.selectedOption === 'relic' && !this.levelUp.relicChoices?.length) delete this.levelUp.selectedOption
-      if (this.levelUp?.selectedOption === 'weapon-upgrade' && !this.levelUpWeapons().length) delete this.levelUp.selectedOption
+      if (this.levelUp?.choices.includes(data.levelUp.selectedOption) && getLevelUpOption(data.levelUp.selectedOption)?.kind !== 'add') {
+        this.levelUp.selectedOption = data.levelUp.selectedOption
+        this.levelUp.ballOffers[data.levelUp.selectedOption] ||= this.staminaDeck.sample(5)
+      }
       this.relicEventQueue = []
       this.relicRuntime = data.relicRuntime && typeof data.relicRuntime === 'object' ? clone(data.relicRuntime) : {}
       this.detailPanel = null

@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { createServer } from 'vite'
+import vue from '@vitejs/plugin-vue'
 import { createSSRApp } from 'vue'
 import { renderToString } from '@vue/server-renderer'
 import { readFileSync } from 'node:fs'
@@ -8,7 +9,7 @@ import { detailForItem } from '../src/game/data/item-details.js'
 import { buildWikiInventory } from '../src/ui/wiki-items.js'
 import { rotateShape } from '../src/game/model/backpack.js'
 
-const server = await createServer({ server: { middlewareMode: true }, appType: 'custom' })
+const server = await createServer({ configFile: false, plugins: [vue()], server: { middlewareMode: true, hmr: false, ws: false, watch: null }, optimizeDeps: { noDiscovery: true, include: [] }, appType: 'custom' })
 try {
   const { default: Page } = await server.ssrLoadModule('/src/ui/WikiItems.vue')
   const { default: Cost } = await server.ssrLoadModule('/src/ui/StaminaCost.vue')

@@ -1,6 +1,8 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { BALL_LABELS } from '../game/model/stamina-deck.js'
+import { DETAIL_HOLD_MS } from '../interaction-timing.js'
+import { spiritFireDescription, spiritFireMark } from '../game/data/spirit-fire.js'
 import StaminaFlame from './StaminaFlame.vue'
 
 const props = defineProps({
@@ -13,7 +15,32 @@ const props = defineProps({
   active: { type: Boolean, default: false },
   round: { type: Number, default: 0 },
 })
-defineEmits(['select'])
+const emit = defineEmits(['select'])
+let heldFire = null
+let ignoreSelectUntil = 0
+function endFireHold() {
+  if (!heldFire) return
+  clearTimeout(heldFire.timer)
+  if (heldFire.opened) { props.run.closeDetail(); ignoreSelectUntil = Date.now() + 250 }
+  heldFire = null
+}
+function startFireHold(ball, event) {
+  if (event.isPrimary === false || (event.pointerType === 'mouse' && event.button !== 0)) return
+  endFireHold()
+  const hold = { id: ball.id, x: event.clientX, y: event.clientY, opened: false, timer: null }
+  heldFire = hold
+  event.currentTarget.setPointerCapture?.(event.pointerId)
+  hold.timer = setTimeout(() => {
+    if (heldFire !== hold) return
+    hold.opened = props.run.showSpiritFireDetail(ball.id)
+  }, DETAIL_HOLD_MS)
+}
+function moveFireHold(event) {
+  if (heldFire && Math.hypot(event.clientX - heldFire.x, event.clientY - heldFire.y) > 18) { ignoreSelectUntil = Date.now() + 250; endFireHold() }
+}
+function selectFire(id) {
+  if (props.enabled && Date.now() >= ignoreSelectUntil) emit('select', id)
+}
 const timers = new Map()
 const shiftTimers = new Map()
 const subscriptions = []
@@ -148,22 +175,28 @@ function refund({ balls }) {
 }
 watch([() => props.deck, () => props.balls, () => props.round, () => props.active], ([deck, balls, round, active], [previousDeck, , previousRound, previousActive]) => {
   if (deck !== previousDeck || round !== previousRound || active !== previousActive) {
+    endFireHold()
     clearTimers()
     slots.value = active ? balls.map(makeSlot) : []
   } else synchronize(balls)
 })
 onMounted(() => {
+  window.addEventListener('blur', endFireHold)
+  document.addEventListener('visibilitychange', endFireHold)
   subscriptions.push(props.run.on('stamina:spent', spend))
   subscriptions.push(props.run.on('stamina:refunded', refund))
 })
 onBeforeUnmount(() => {
+  endFireHold()
+  window.removeEventListener('blur', endFireHold)
+  document.removeEventListener('visibilitychange', endFireHold)
   for (const unsubscribe of subscriptions) unsubscribe()
   clearTimers()
 })
 </script>
 
 <template>
-  <div class="stamina-hand" :style="{ '--ball-slots': Math.max(10, slots.length) }" aria-label="体力灵火">
+  <div class="stamina-hand" :style="{ '--ball-slots': Math.max(10, slots.length) }" aria-label="灵火">
     <span
       v-for="(slot, index) in visibleSlots" :key="slot.key" class="stamina-slot" :data-stamina-id="slot.ball.id"
       :style="{ '--slot-index': index, '--slot-shift-delay': slot.shiftDelay + 'ms', '--fire-delay': (-slot.key * .17) + 's' }" :aria-hidden="slot.spent || slot.empty ? 'true' : undefined"
@@ -173,10 +206,12 @@ onBeforeUnmount(() => {
         v-if="!slot.spent && !slot.empty" type="button" class="stamina-ball"
         :class="[slot.ball.attribute, { selected: highlightedIds.includes(slot.ball.id), 'manual-selected': selected.includes(slot.ball.id) }]"
         :aria-label="BALL_LABELS[slot.ball.attribute] + '灵火' + (selected.includes(slot.ball.id) ? '，已手动选中，点击取消' : highlightedIds.includes(slot.ball.id) ? '，自动支付预览，点击优先支付' : '，点击优先支付')"
-        :aria-pressed="highlightedIds.includes(slot.ball.id)" :disabled="!enabled"
-        @click.stop="$emit('select', slot.ball.id)"
+        :aria-pressed="highlightedIds.includes(slot.ball.id)" :aria-disabled="!enabled" :title="spiritFireDescription(slot.ball)"
+        @pointerdown.stop="startFireHold(slot.ball, $event)" @pointermove.stop="moveFireHold"
+        @pointerup.stop="endFireHold" @pointercancel.stop="endFireHold" @lostpointercapture="endFireHold" @contextmenu.prevent
+        @click.stop="selectFire(slot.ball.id)"
       >
-        <StaminaFlame :attribute="slot.ball.attribute" :mark="slot.ball.mark || ''" />
+        <StaminaFlame :attribute="slot.ball.attribute" :mark="spiritFireMark(slot.ball)" />
         <svg v-if="highlightedIds.includes(slot.ball.id)" class="stamina-selection-arc" viewBox="0 0 32 10" aria-hidden="true">
           <path d="M7 2Q16 10 25 2" />
         </svg>
@@ -184,7 +219,7 @@ onBeforeUnmount(() => {
       <span
         v-if="slot.spent" class="stamina-spend-effect" :class="{ selected: slot.selected }"
         :data-stamina-id="slot.ball.id" aria-hidden="true" @animationend.self="finish(slot.key)"
-      ><StaminaFlame :attribute="slot.ball.attribute" :mark="slot.ball.mark || ''" /></span>
+      ><StaminaFlame :attribute="slot.ball.attribute" :mark="spiritFireMark(slot.ball)" /></span>
     </span>
     <span v-if="active && !balls.length && !slots.some(slot => slot.spent)" class="stamina-empty">灵火已用完</span>
   </div>

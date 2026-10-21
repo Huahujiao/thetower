@@ -1,3 +1,4 @@
+import { fireEnchantment } from '../data/spirit-fire.js'
 import { ATTRIBUTE_ORDER } from '../data/attributes.js'
 
 export const BALL_ATTRIBUTES = Object.freeze([...ATTRIBUTE_ORDER, 'wild'])
@@ -22,8 +23,10 @@ export class StaminaDeck {
     if (!state || !['drawPile', 'hand', 'discardPile', 'selected'].every(key => Array.isArray(state[key])) ||
         !Number.isInteger(state.nextId) || state.nextId < 32 || !Number.isInteger(state.supply) || state.supply < 0) return false
     const balls = [...state.drawPile, ...state.hand, ...state.discardPile]
-    return balls.length === state.nextId && new Set(balls.map(ball => ball.id)).size === balls.length &&
-      balls.every(ball => Number.isInteger(ball.id) && ball.id >= 0 && ball.id < state.nextId && BALL_ATTRIBUTES.includes(ball.attribute)) &&
+    return balls.length <= state.nextId && new Set(balls.map(ball => ball.id)).size === balls.length &&
+      balls.every(ball => Number.isInteger(ball.id) && ball.id >= 0 && ball.id < state.nextId && BALL_ATTRIBUTES.includes(ball.attribute) &&
+        (ball.enchantment == null || !!fireEnchantment(ball.enchantment)) &&
+        (ball.rekindleReturns == null || (Number.isInteger(ball.rekindleReturns) && ball.rekindleReturns >= 0 && ball.rekindleReturns <= 5))) &&
       new Set(state.selected).size === state.selected.length && state.selected.every(id => state.hand.some(ball => ball.id === id))
   }
   get all() { return [...this.drawPile, ...this.hand, ...this.discardPile] }
@@ -54,12 +57,29 @@ export class StaminaDeck {
     return drawn
   }
   startTurn(enemyCount, fatigueLayers = 0) {
-    this.discardHand()
+    this.discardHand({ retain: true })
     this.supply = Math.max(0, 2 * enemyCount + 4 - fatigueLayers)
     return this.draw(this.supply)
   }
   supplement() { this.supply += 2; return this.draw(2) }
-  discardHand() { this.discardPile.push(...this.hand.splice(0)); this.selected = [] }
+  discardHand({ retain = false } = {}) {
+    const kept = retain ? this.hand.filter(ball => ball.enchantment === 'retain') : []
+    this.discardPile.push(...this.hand.filter(ball => !kept.includes(ball)))
+    this.hand = kept
+    this.selected = []
+  }
+  remove(id) {
+    const ball = this.all.find(ball => ball.id === id)
+    if (!ball) return null
+    for (const key of ['hand', 'drawPile', 'discardPile']) this[key] = this[key].filter(entry => entry.id !== id)
+    this.selected = this.selected.filter(entry => entry !== id)
+    return ball
+  }
+  sample(amount = 5) {
+    const pool = this.all.slice()
+    this.shuffle(pool)
+    return pool.slice(0, amount).map(ball => ball.id)
+  }
   toggle(id) {
     if (!this.hand.some(ball => ball.id === id)) return false
     this.selected = this.selected.includes(id) ? [] : [id]
