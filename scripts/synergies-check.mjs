@@ -51,11 +51,12 @@ import { getItemDefinition } from '../src/game/data/content.js'
   attack(run, maul, target)
   assert.equal(run.player.armor, 0)
   run.itemRules.move()
-  assert.equal(run.getStatus(run.player, 'dodge').layers, 1)
+  assert.equal(run.getStatus(run.player, 'step-dodge').layers, 1)
   assert.equal(run.getStatus(run.player, 'counter').damage, 5)
   run._enemyAttack(enemy(run, { attack: 1, pos: { c: 2, r: 3 } }))
-  assert.equal(run.player.hp, 20)
-  assert.equal(run.getStatus(run.player, 'counter').layers, 1)
+  assert.equal(run.player.hp, 19)
+  assert.equal(run.getStatus(run.player, 'counter'), null)
+  assert.equal(run.getStatus(run.player, 'step-dodge').layers, 1)
 }
 
 {

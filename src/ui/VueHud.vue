@@ -324,7 +324,9 @@
           v-for="choice in levelUpChoices" :key="choice.id"
           class="relic-choice-card" :data-level-up-choice="choice.id" :disabled="!levelUpOptionAvailable(choice.id)" @click="handleAction('level-up-choice', choice.id)"
         >
-          <span class="relic-name">{{ choice.name }}</span><span class="relic-desc">{{ choice.description }}</span>
+          <span class="relic-name">{{ choice.kind === 'enchant' ? choice.description : choice.name }}</span>
+          <small v-if="choice.kind === 'enchant'" class="relic-desc">{{ choice.effectDescription }}</small>
+          <span v-else class="relic-desc">{{ choice.description }}</span>
           <small v-if="!choice.disabled && !levelUpOptionAvailable(choice.id)">{{ LABELS.noUpgradeTarget }}</small>
         </button>
       </div>

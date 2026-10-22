@@ -4,6 +4,7 @@ import { statusIconSource } from './status-icons.js'
 export function statusEffectText(status) {
   if (status.id === 'fatigue') return '下个战斗回合每层少获取1颗灵火，结算后清除'
   if (status.id === 'dodge') return '\u89c4\u907f\u4e00\u6b21\u653b\u51fb\u53ca\u5176\u9644\u52a0\u6548\u679c'
+  if (status.id === 'step-dodge') return '本回合第一次受攻击不触发；此后每层规避一次攻击及其附加效果，回合结束时清除'
   if (status.id === 'parry') return '\u4e0b\u6b21\u8fd1\u6218\u653b\u51fb\u51cf\u4f2430%'
   const spec = status.damage
   let damage = String(typeof spec === 'number' ? spec : spec?.value || 0)

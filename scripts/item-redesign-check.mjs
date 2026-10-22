@@ -76,7 +76,7 @@ import { getStatus, statusCounterText } from '../src/game/rules/statuses.js'
 }
 
 // The first attack->movement turn grants dodge and counter before enemies act.
-// A dodge does not consume counter; the second hit uses the rounded snapshot.
+// The first hit uses counter; the boot layer evades the second hit.
 {
   const run = fixture(), hook = add(run, 'gold-hook')
   add(run, 'r-step-boots'); add(run, 'r-turn-shield'); add(run, 'r-traveler')
@@ -86,15 +86,15 @@ import { getStatus, statusCounterText } from '../src/game/rules/statuses.js'
   run._synchronizeBattle(); setBalls(run, 5)
   run._walk([{ c: 2, r: 3 }])
   assert.equal(run.player.energy, 5); assert.equal(run.player.hp, 20)
-  assert(getStatus(run.player, 'dodge')); assert(getStatus(run.player, 'counter'))
+  assert(getStatus(run.player, 'step-dodge')); assert(getStatus(run.player, 'counter'))
   round(run)
   assert.equal(run.player.hp, 18)
-  assert.equal(first.hp, 100); assert.equal(second.hp, 98)
-  assert.equal(getStatus(run.player, 'dodge'), null); assert.equal(getStatus(run.player, 'counter'), null)
+  assert.equal(first.hp, 98); assert.equal(second.hp, 100)
+  assert.equal(getStatus(run.player, 'step-dodge'), null); assert.equal(getStatus(run.player, 'counter'), null)
   run.currentRoom.removeEntity(first.id); run.currentRoom.removeEntity(second.id)
   run._walk([{ c: 3, r: 3 }])
   assert.equal(run.player.energy, 9)
-  assert.equal(getStatus(run.player, 'dodge'), null)
+  assert.equal(getStatus(run.player, 'step-dodge'), null)
 }
 for (const interrupted of [false, true]) {
   const run = fixture(), hook = add(run, 'gold-hook')
@@ -102,10 +102,10 @@ for (const interrupted of [false, true]) {
   attack(run, hook, enemy(run))
   if (interrupted) run._endTurn({ skipEnemyPhase: true, action: 'organize' })
   run.itemRules.move()
-  assert.equal(!!getStatus(run.player, 'dodge'), !interrupted)
+  assert.equal(!!getStatus(run.player, 'step-dodge'), !interrupted)
   run._endTurn({ skipEnemyPhase: true, action: 'movement' })
   round(run)
-  assert.equal(getStatus(run.player, 'dodge'), null); assert.equal(getStatus(run.player, 'counter'), null)
+  assert.equal(getStatus(run.player, 'step-dodge'), null); assert.equal(getStatus(run.player, 'counter'), null)
 }
 {
   const run = fixture(), hook = add(run, 'gold-hook')
@@ -114,8 +114,8 @@ for (const interrupted of [false, true]) {
   const ambusher = enemy(run, { pos: { c: 1, r: 2 }, attack: 3, behavior: 'ambush', actionDelay: 0, attackCooldownMax: 3 })
   run.currentRoom.tile(ambusher.pos).revealed = false
   run._walk([{ c: 2, r: 3 }])
-  assert.equal(run.player.hp, 20)
-  assert.equal(getStatus(run.player, 'dodge'), null)
+  assert.equal(run.player.hp, 17)
+  assert.equal(getStatus(run.player, 'step-dodge').layers, 1)
 }
 {
   const run = fixture(), hook = add(run, 'gold-hook')
@@ -125,7 +125,7 @@ for (const interrupted of [false, true]) {
   run._synchronizeBattle(); select(run, hook); setBalls(run, 4, hook.attribute)
   assert(run._attack(target)) // One final step is paired with the strike.
   assert.equal(run.player.energy, 0)
-  assert(getStatus(run.player, 'dodge'))
+  assert(getStatus(run.player, 'step-dodge'))
 }
 
 // Single-weapon count ignores staging, and its power is saved before damage multipliers.

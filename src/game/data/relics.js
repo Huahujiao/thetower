@@ -87,7 +87,7 @@ export const RELIC_DEFS = Object.freeze([
   {
     "id": "r-step-boots",
     "name": "步痕靴",
-    "description": "攻击后紧接的第一个主动移动操作，获得1层闪避，持续至当次敌人阶段结束。",
+    "description": "攻击后紧接的第一个主动移动操作，获得1层步痕闪避，可叠加。本回合第一次受攻击不触发，此后每层闪避一次攻击；回合结束时清除。",
     "attribute": null
   },
   {

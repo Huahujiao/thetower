@@ -66,9 +66,13 @@ export class ItemRules {
   startPlayerTurn() {
     this.state.weaponUses = {}
     this.state.tideRefundUsed = false
+    this.state.attacksReceivedThisTurn = 0
+    removeStatus(this.run.player, 'step-dodge')
   }
   endBattle() {
     this.state.weaponUses = {}
+    this.state.attacksReceivedThisTurn = 0
+    removeStatus(this.run.player, 'step-dodge')
   }
   recordWeaponUse(weapon) {
     this.state.weaponUses ||= {}
@@ -134,7 +138,10 @@ export class ItemRules {
   move({ movementTurn = true } = {}) {
     // Grant before ambushes; these reactions last until the enemy stage ends.
     if (movementTurn && this.state.lastAction === 'attack') {
-      if (this.has('r-step-boots')) this.run.applyStatus(this.run.player, 'dodge', { layers: 1, turns: 1, source: 'r-step-boots' })
+      if (this.run.battle.active && this.has('r-step-boots')) {
+        const layers = (getStatus(this.run.player, 'step-dodge')?.layers || 0) + 1
+        this.run.applyStatus(this.run.player, 'step-dodge', { layers, turns: 1, source: 'r-step-boots' })
+      }
       if (this.has('r-turn-shield')) this.run.applyStatus(this.run.player, 'counter', {
         layers: 1, turns: 1, source: 'r-turn-shield',
         damage: { mode: 'last-player-attack', stage: 'gain', ratio: 0.5, rounding: 'ceil' },

@@ -4,6 +4,7 @@ import { GameRun, SAVE_VERSION } from '../src/game/run.js'
 import { ALL_ITEM_DEFS, makeItemById, randomNeutralItem, randomConsumableOfTier } from '../src/game/data/content.js'
 import { attributeModifier, ATTRIBUTE_ORDER } from '../src/game/data/attributes.js'
 import { fixture, add, select, enemy, settleAnimations } from './item-test-helpers.mjs'
+import { createMerchantEntity, merchantSellPrice } from '../src/game/data/merchants.js'
 
 function hand(run, attributes) {
   run.staminaDeck.discardHand()
@@ -107,18 +108,18 @@ function restore(data, accepted = true) {
   assert.equal(run.player.energy, 4)
   assert(StaminaDeck.valid(run.staminaDeck.serialize()))
 }
-// First enemy 6; each newly revealed enemy +2 once; deaths change next turn only.
+// First enemy 7; each newly revealed enemy +2 once; deaths change next turn only.
 {
   const run = fixture(), first = enemy(run), extra = enemy(run, { pos: { c: 3, r: 4 } })
   run.currentRoom.tile(extra.pos).revealed = false
-  run._synchronizeBattle(); assert.equal(run.player.energy, 6)
-  assert(run.clickTile(extra.pos.c, extra.pos.r)); assert.equal(run.player.energy, 7)
   run._synchronizeBattle(); assert.equal(run.player.energy, 7)
-  run.currentRoom.removeEntity(first.id); run._synchronizeBattle(); assert.equal(run.player.energy, 7)
+  assert(run.clickTile(extra.pos.c, extra.pos.r)); assert.equal(run.player.energy, 8)
+  run._synchronizeBattle(); assert.equal(run.player.energy, 8)
+  run.currentRoom.removeEntity(first.id); run._synchronizeBattle(); assert.equal(run.player.energy, 8)
   assert(run.endPlayerTurn()); assert.equal(run.player.energy, 0)
-  settleAnimations(run); assert.equal(run.player.energy, 6)
+  settleAnimations(run); assert.equal(run.player.energy, 7)
   assert.equal(run.battle.round, 2)
-  assert(run._spendEnergy(6)); assert.equal(run.roundResolving, false)
+  assert(run._spendEnergy(7)); assert.equal(run.roundResolving, false)
   assert.equal(run.battle.stage, 'player')
   run.currentRoom.removeEntity(extra.id); run._synchronizeBattle()
   assert.equal(run.battle.active, false); assert.equal(run.player.energy, 0)
@@ -144,7 +145,7 @@ function restore(data, accepted = true) {
   assert.equal(run.player.energy, 0, 'A delayed refund must not leave balls outside combat')
   const target = enemy(run)
   run._synchronizeBattle()
-  assert.equal(run.player.energy, 6)
+  assert.equal(run.player.energy, 7)
   hand(run, Array(4).fill(weapon.attribute))
   assert(run.selectInventory(index))
   run.currentRoom.removeEntity(target.id)
@@ -156,7 +157,52 @@ function restore(data, accepted = true) {
   assert(StaminaDeck.valid(run.staminaDeck.serialize()), 'Clearing the hand must preserve the physical deck')
   enemy(run)
   run._synchronizeBattle()
-  assert.equal(run.player.energy, 6, 'The next combat must still draw normally')
+  assert.equal(run.player.energy, 7, 'The next combat must still draw normally')
+}
+// Merchant selection is for selling and does not require a combat hand.
+{
+  const run = fixture(), weapon = add(run, 'rust-sword'), material = add(run, 'spring')
+  const potion = add(run, 'health-potion'), relic = add(run, 'r-scales'), pouch = add(run, 'money-pouch')
+  const merchant = createMerchantEntity('merchant', { c: 4, r: 3 })
+  run.currentRoom.addEntity(merchant)
+  assert(run._interactMerchant(merchant))
+  assert.equal(run.phase, 'merchant')
+  assert.equal(run.player.energy, 0)
+  const index = item => run.backpack.originIndex(run.backpack.placementOf(item.uid))
+  assert(run.selectInventory(index(weapon)))
+  assert.equal(run.selectedItem, weapon)
+  run._changed()
+  run._synchronizeBattle()
+  assert.equal(run.selectedItem, weapon, 'Shop selection must survive state updates without spirit fire')
+  assert(run.selectInventory(index(weapon)))
+  assert.equal(run.selectedItem, null, 'Clicking the selected shop item cancels selection')
+  assert(run.selectInventory(index(pouch)))
+  const gold = run.player.gold
+  assert.equal(run.sellSelectedMerchantItem(), false)
+  assert.equal(run.player.gold, gold)
+  assert(run.backpack.placementOf(pouch.uid))
+  for (const item of [material, potion, relic]) {
+    assert(run.selectInventory(index(item)))
+    assert.equal(run.selectedItem, item)
+    const before = run.player.gold
+    assert(run.sellSelectedMerchantItem())
+    assert.equal(run.player.gold, before + merchantSellPrice(item))
+    assert.equal(run.backpack.placementOf(item.uid), null)
+    assert.equal(run.selectedItem, null)
+  }
+  assert(!run.relics.has(relic.relicId))
+  assert(run.selectInventory(index(weapon)))
+  assert(run.closeMerchant())
+  assert.equal(run.selectedItem, null, 'Leaving the shop must clear noncombat weapon selection')
+  assert.equal(run.selectInventory(index(weapon)), false)
+  assert(run._interactMerchant(merchant))
+  assert(run.selectInventory(index(weapon)))
+  const before = run.player.gold
+  assert(run.sellSelectedMerchantItem())
+  assert.equal(run.player.gold, before + merchantSellPrice(weapon))
+  assert.equal(run.backpack.placementOf(weapon.uid), null)
+  assert.equal(run.player.energy, 0)
+  assert(StaminaDeck.valid(run.staminaDeck.serialize()))
 }
 // Repeated attacks never increase the weapon cost.
 {
@@ -371,7 +417,7 @@ for (const action of ['move', 'flip', 'pickup']) for (const armed of [false, tru
   let hits = 0; run.on('pet:attacked', () => hits++)
   assert(run.endPlayerTurn()); assert.equal(hits, 1); assert.equal(target.hp, 96)
   assert.equal(potion.heal, makeItemById('health-potion').heal)
-  assert.equal(run.player.energy, 0); settleAnimations(run); assert.equal(run.player.energy, 6)
+  assert.equal(run.player.energy, 0); settleAnimations(run); assert.equal(run.player.energy, 7)
 }
 {
   const run = fixture(); add(run, 'carrion-rat'); enemy(run, { hp: 1 }); enemy(run, { pos: { c: 3, r: 4 } })
@@ -394,16 +440,16 @@ for (const action of ['move', 'flip', 'pickup']) for (const armed of [false, tru
   assert.equal(run.staminaDeck.nextId, 33)
   assert.equal(run.player.energy, 0)
   const loaded = restore(run.serialize()); assert(loaded.totems.active('drum'))
-  enemy(run); run._synchronizeBattle(); assert.equal(run.player.energy, 6)
+  enemy(run); run._synchronizeBattle(); assert.equal(run.player.energy, 7)
   select(run, badge); assert.equal(run.useSelected(), false)
-  assert.equal(run.player.energy, 6)
+  assert.equal(run.player.energy, 7)
 }
 {
   const run = fixture(); enemy(run); enemy(run, { pos: { c: 3, r: 4 }, downed: true, reviveTurns: 2 })
-  run._synchronizeBattle(); assert.equal(run.player.energy, 8)
-  assert(run.endPlayerTurn()); settleAnimations(run); assert.equal(run.player.energy, 8)
-  const loaded = restore(run.serialize()); assert.equal(loaded.player.energy, 8)
-  loaded._synchronizeBattle(); assert.equal(loaded.player.energy, 8)
+  run._synchronizeBattle(); assert.equal(run.player.energy, 9)
+  assert(run.endPlayerTurn()); settleAnimations(run); assert.equal(run.player.energy, 9)
+  const loaded = restore(run.serialize()); assert.equal(loaded.player.energy, 9)
+  loaded._synchronizeBattle(); assert.equal(loaded.player.energy, 9)
 }
 assert(!ALL_ITEM_DEFS.some(item => item.type === 'energy' || item.id === 'r-vampire-fang'))
 for (let i = 0; i < 100; i++) {
@@ -418,7 +464,7 @@ for (let i = 0; i < 100; i++) {
   const fresh = restore(old, false); assert.equal(fresh.staminaDeck.nextId, 32); assert.equal(fresh.battle.active, false)
   target.hp = 99
   run.endPlayerTurn(); const data = run.serialize()
-  const loaded = restore(data); assert.equal(loaded.battle.round, 2); assert.equal(loaded.player.energy, 6)
+  const loaded = restore(data); assert.equal(loaded.battle.round, 2); assert.equal(loaded.player.energy, 7)
   assert.equal(loaded.currentRoom.entity(target.id).hp, 99)
 }
 console.log('stamina-deck-check passed: deck conservation, supply, payment, repeat costs, seal, pets, fresh saves')

@@ -29,6 +29,7 @@
     "check:items": "node scripts/items-check.mjs && node scripts/pickup-ambush-check.mjs",
     "check:basics": "node scripts/basic-rules-check.mjs",
     "check:statuses": "node scripts/statuses-check.mjs",
+    "check:step-boots": "node scripts/step-boots-check.mjs",
     "check:redesign": "node scripts/item-redesign-check.mjs",
     "check:weapons": "node scripts/weapon-rules-check.mjs",
     "check:expansion": "node scripts/expansion-check.mjs",

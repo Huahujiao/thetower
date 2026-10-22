@@ -8,6 +8,7 @@ export const STATUS_DEFS = Object.freeze({
   'enemy-poison': { name: '\u4e2d\u6bd2', owner: 'enemy', trigger: 'turn', turns: POISON_TURNS, damage: 1 },
   burning: { name: '\u71c3\u70e7', owner: 'player', trigger: 'turn', damage: 1 },
   dodge: { name: '\u95ea\u907f', trigger: 'before-hit', layers: 1 },
+  'step-dodge': { name: '步痕闪避', owner: 'player', trigger: 'before-hit', layers: 1 },
   rooted: { name: '缠绕', owner: 'enemy', trigger: 'before-action', turns: 1, blocksAttack: true },
   prey: { name: '\u730e\u7269', owner: 'enemy', trigger: 'pet-target', turns: 1 },
   counter: { name: '\u53cd\u51fb', trigger: 'after-hit', damage: 1 },

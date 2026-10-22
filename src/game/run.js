@@ -381,7 +381,7 @@ export class GameRun {
     const clearHand = !this.battle.active && (this.staminaDeck.hand.length > 0 || this.staminaDeck.selected.length > 0)
     if (clearHand) this.staminaDeck.discardHand()
     const weapon = this.selectedItem
-    if (weapon?.type !== 'weapon' || (this.battle.active && this.weaponPayment(weapon))) return clearHand
+    if (weapon?.type !== 'weapon' || this.phase === 'merchant' || (this.battle.active && this.weaponPayment(weapon))) return clearHand
     this.selectedInventoryIndex = null
     this.itemTargeting = false
     return true
@@ -954,7 +954,7 @@ export class GameRun {
     if (!placement) return this.clearSelection()
     const origin = this.backpack.originIndex(placement)
     if (this.selectedInventoryIndex === origin && !this.itemTargeting) return this.clearSelection()
-    if (placement.item.type === 'weapon' && (!this.battle.active || !this.weaponPayment(placement.item))) return false
+    if (placement.item.type === 'weapon' && this.phase !== 'merchant' && (!this.battle.active || !this.weaponPayment(placement.item))) return false
     if (placement.item.type === 'weapon') this.staminaDeck.selected = []
     this.selectedInventoryIndex = origin
     this.itemTargeting = false
@@ -1880,6 +1880,7 @@ export class GameRun {
   _damagePlayer(rawDamage, context = {}) {
     const attackDamage = Math.max(0, Math.floor(rawDamage || 0))
     const isAttack = context.source === 'enemy:attack' || context.attack === true
+    if (isAttack) this.itemRules.state.attacksReceivedThisTurn = (this.itemRules.state.attacksReceivedThisTurn || 0) + 1
     if (isAttack && this._tryDodge(this.player)) {
       return { attackDamage, rawDamage: 0, absorbed: 0, healthDamage: 0, evaded: true }
     }
@@ -1915,9 +1916,11 @@ export class GameRun {
   }
 
   _tryDodge(actor) {
-    const dodge = getStatus(actor, 'dodge')
+    const stepDodge = actor === this.player && this.itemRules.state.attacksReceivedThisTurn >= 2
+      ? getStatus(actor, 'step-dodge') : null
+    const dodge = stepDodge || getStatus(actor, 'dodge')
     if (!dodge) return false
-    consumeStatus(actor, 'dodge', dodge)
+    consumeStatus(actor, dodge.id, dodge)
     this.bus.emit('status:evaded', { actor })
     return true
   }

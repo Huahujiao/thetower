@@ -4,6 +4,7 @@ import vue from '@vitejs/plugin-vue'
 import { createSSRApp } from 'vue'
 import { renderToString } from '@vue/server-renderer'
 import { fixture, add, enemy, select, settleAnimations, setBalls } from './item-test-helpers.mjs'
+import { createMerchantEntity, merchantSellPrice } from '../src/game/data/merchants.js'
 
 const server = await createServer({ configFile: false, plugins: [vue()], server: { middlewareMode: true, hmr: false, ws: false, watch: null }, optimizeDeps: { noDiscovery: true, include: [] }, appType: 'custom' })
 try {
@@ -42,6 +43,28 @@ try {
   assert.equal(run.detailPanel.description, '')
   assert(!html.includes('首次进入新房间时获得该护甲值'))
   assert(!html.includes('vital-energy-fill'))
+  const merchant = createMerchantEntity('merchant', { c: 4, r: 3 })
+  run.currentRoom.addEntity(merchant)
+  assert(run._interactMerchant(merchant))
+  const shopWeapon = add(run, 'bone-knife')
+  const shopIndex = run.backpack.originIndex(run.backpack.placementOf(shopWeapon.uid))
+  const sellButton = html => html.match(/<button\b[^>]*data-action="merchant-sell"[^>]*>/)?.[0]
+  html = await render()
+  assert(sellButton(html).includes('disabled'))
+  assert(run.selectInventory(shopIndex))
+  html = await render()
+  assert(!sellButton(html).includes('disabled'), 'Selecting a shop weapon must enable selling without spirit fire')
+  assert.equal(run.selectedItem, shopWeapon)
+  assert(/class="(?=[^"]*\bhud-rest\b)(?=[^"]*\bshow\b)[^"]*"/.test(html))
+  assert.equal(ballButtons(html).length, 0)
+  const beforeSale = run.player.gold
+  assert(run.sellSelectedMerchantItem())
+  html = await render()
+  assert.equal(run.player.gold, beforeSale + merchantSellPrice(shopWeapon))
+  assert(sellButton(html).includes('disabled'))
+  assert.equal(run.backpack.placementOf(shopWeapon.uid), null)
+  assert(run.closeMerchant())
+  run.currentRoom.removeEntity(merchant.id)
   const target = enemy(run)
   run._synchronizeBattle()
   html = await render()
@@ -97,7 +120,7 @@ try {
   assert(run.endPlayerTurn()); html = await render()
   assert(endButton(html).includes('disabled')); assert.equal(ballButtons(html).length, 0)
   settleAnimations(run); html = await render()
-  assert.equal(ballButtons(html).length, 6)
+  assert.equal(ballButtons(html).length, 7)
   run._damageEnemy(target, 500); run._endTurn(); settleAnimations(run)
   html = await render(); assert(!endButton(html)); assert.equal(ballButtons(html).length, 0)
   assert(!html.includes('\ufffd'))
